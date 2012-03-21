@@ -1,0 +1,10 @@
+At the moment the directory structure is determined by convenience.
+
+All the should be needed to run canvas.html is to create an evil symbolic link to this project direcory in the apache http_docs
+
+e.g: ln -s /data/home/harald/workspace_java/TissueStack TissueStack  
+
+and then use your browser of choice: http://localhost/TissueStack/canvas.html
+
+
+ATTENTION: the example data consists of only 1 cross-section per plane. If you want more you need to tile your data and adjust the java script with the appropriate pixel bounds for each plain. !!!
