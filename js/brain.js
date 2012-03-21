@@ -585,13 +585,13 @@ function initMe() {
 	// create a brain extent for each of the three planes
 	// TODO: this info will come from the back-end most likely. for now hard-code!
 	var brain_extent_x_plane = new brain.extent();
-	brain_extent_x_plane.init("example_data", 0, 'x', Math.floor(679/2), 1311, 499);
+	brain_extent_x_plane.init("mouse_1", 0, 'x', Math.floor(679/2), 1311, 499);
 
 	var brain_extent_y_plane = new brain.extent();
-	brain_extent_y_plane.init("example_data", 0, 'y', Math.floor(1311/2), 679, 499);
+	brain_extent_y_plane.init("mouse_1", 0, 'y', Math.floor(1311/2), 679, 499);
 
 	var brain_extent_z_plane = new brain.extent();
-	brain_extent_z_plane.init("example_data", 0, 'z', Math.floor(499/2), 679, 1311);
+	brain_extent_z_plane.init("mouse_1", 0, 'z', Math.floor(499/2), 679, 1311);
 	
 	// create three instances of the brain canvas (1 for each plane)
 	var brain_canvas_x_plane = new brain.canvas();
