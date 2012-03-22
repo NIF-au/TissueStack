@@ -162,6 +162,9 @@ brain = {
 			getCoordinateCrossCanvas : function() {
 				return $("#" + this.canvas_id + "_cross_overlay");
 			},
+			getRelativeCrossCoordinates : function() {
+				return {x: (this.upper_left_x + this.cross_x), y: (this.upper_left_y + this.cross_y)};
+			},
 			registerMouseEvents : function () {
 				// look for the cross overlay which will be the top layer
 				var canvas = this.getCoordinateCrossCanvas();
@@ -187,6 +190,54 @@ brain = {
 					_this.mouse_y = 0;
 				});
 
+				// create the delay drawing if more requests come in in short intervals (to use for setTimeout)
+				var delayedDrawMe = function(notifyOthers, dX, dY) {
+					var now =new Date().getTime(); 
+					if (now > _this.most_recent_draw_request && now-_this.most_recent_draw_request < 0) {
+						// we don't draw if we have another draw request following within a short time span
+						// unless the overall delay exceeds a certain threshold (see if above)
+						return;
+					}
+					// update timestamp
+					_this.most_recent_draw_request = now;
+
+					// tidy up where we left debris
+					if (_this.dim_x > _this.getDataExtent().x && dX != 0) {
+						// first x debris
+						if (dX < 0) {	// up front 
+							_this.eraseCanvasPortion(0, 0, Math.abs(_this.upper_left_x), _this.dim_y);
+						} else { // behind us
+							_this.eraseCanvasPortion(
+									Math.abs(_this.upper_left_x) + _this.getDataExtent().x, 0,
+									_this.dim_x - _this.getDataExtent().x, _this.dim_y);
+						}
+					}
+					
+					if (_this.dim_y > _this.getDataExtent().y && dY != 0) {
+						// now y debris
+						if (dY < 0) {	// up front 
+							// erase x debris
+							_this.eraseCanvasPortion(0, 0, _this.dim_x, Math.abs(_this.upper_left_y));
+						} else {
+							_this.eraseCanvasPortion(
+									0, Math.abs(_this.upper_left_y) + _this.getDataExtent().y,
+									_this.dim_x, _this.dim_y - _this.getDataExtent().y);
+						}
+					}
+
+					// redraw
+					_this.drawMe();
+					
+					if (notifyOthers) {
+						// send message out to others that they need to redraw as well
+						_this.getCanvasElement().trigger("sync", [_this.getDataExtent().plane,
+						                        _this.getRelativeCrossCoordinates(),
+						                        {max_x: _this.getDataExtent().x, max_y: _this.getDataExtent().y},
+						                        true,
+						                        {x: dX, y: dY}]);
+					}
+				};
+				
 				// bind the mouse move event
 				canvas.bind("mousemove", function(e) {
 					var coords = utils.getRelativeMouseCoords(e);
@@ -197,7 +248,7 @@ brain = {
 					
 					var relCoordinates = _this.getDataCoordinates(coords);
 					log.html("Data Coordinates (in pixels) X: " + relCoordinates.x + ", Data Y: " + relCoordinates.y);
-
+					
 					if (_this.mouse_down) {
 						_this.isDragging = true;
 						var dX = _this.mouse_x - coords.x;
@@ -208,51 +259,7 @@ brain = {
 
 						_this.moveUpperLeftCorner(dX, dY);
 						
-						// create the delay drawing if more requests come in in short intervals (to use for setTimeout)
-						var delayedDrawMe = function() {
-							var now =new Date().getTime(); 
-							if (now > _this.most_recent_draw_request && now-_this.most_recent_draw_request < 5) {
-								// we don't draw if we have another draw request following within a short time span
-								// unless the overall delay exceeds a certain threshold (see if above)
-								return;
-							}
-							// update timestamp
-							_this.most_recent_draw_request = now;
-
-							// tidy up where we left debris
-							if (_this.dim_x > _this.getDataExtent().x && dX != 0) {
-								// first x debris
-								if (dX < 0) {	// up front 
-									_this.eraseCanvasPortion(0, 0, Math.abs(_this.upper_left_x), _this.dim_y);
-								} else { // behind us
-									_this.eraseCanvasPortion(
-											Math.abs(_this.upper_left_x) + _this.getDataExtent().x, 0,
-											_this.dim_x - _this.getDataExtent().x, _this.dim_y);
-								}
-							}
-							
-							if (_this.dim_y > _this.getDataExtent().y && dY != 0) {
-								// now y debris
-								if (dY < 0) {	// up front 
-									// erase x debris
-									_this.eraseCanvasPortion(0, 0, _this.dim_x, Math.abs(_this.upper_left_y));
-								} else {
-									_this.eraseCanvasPortion(
-											0, Math.abs(_this.upper_left_y) + _this.getDataExtent().y,
-											_this.dim_x, _this.dim_y - _this.getDataExtent().y);
-								}
-							}
-
-							// redraw
-							_this.drawMe();
-							
-							// send message out to others that they need to redraw as well
-							_this.getCanvasElement().trigger("sync", [_this.getDataExtent().plane,
-							                        _this.getDataCoordinates(coords),
-							                        {max_x: _this.getDataExtent().x, max_y: _this.getDataExtent().y}
-							                       ]);
-						};
-						setTimeout(delayedDrawMe, 10);
+						setTimeout(delayedDrawMe, 0, true, dX, dY);
 
 					} else {
 						_this.isDragging = false;
@@ -265,20 +272,26 @@ brain = {
 					canvas.bind("click", function(e) {
 						var coords = utils.getRelativeMouseCoords(e);
 
-						// send message out to others that they need to redraw as well
-						canvas.trigger("sync", [_this.getDataExtent().plane,
-						                        _this.getDataCoordinates(coords),
-						                        {max_x: _this.getDataExtent().x, max_y: _this.getDataExtent().y}
-						                       ]);
-
 						if (_this.isDragging) {
 							return;
 						}
 
+
+						var dX = _this.cross_x - coords.x;
+						var dY = _this.cross_y - coords.y;
+						
+						// send message out to others that they need to redraw as well
+						canvas.trigger("sync", [_this.getDataExtent().plane,
+						                        _this.getDataCoordinates(coords),
+						                        {max_x: _this.getDataExtent().x, max_y: _this.getDataExtent().y},
+												false,
+												{x: dX, y: dY}
+						                       ]);
+
 						_this.drawCoordinateCross(coords);
 					});
 
-					$(document).bind("sync", function(e, plane, coords, max_coords_of_event_triggering_plane) {
+					$(document).bind("sync", function(e, plane, coords, max_coords_of_event_triggering_plane,  move, deltas) {
 						// ignore one's own events
 						var thisHerePlane = _this.getDataExtent().plane;
 						if (thisHerePlane === plane) {
@@ -287,65 +300,51 @@ brain = {
 						
 						if (thisHerePlane === 'x' && plane === 'z') {
 							_this.getDataExtent().slice = coords.x;
-							//_this.drawCoordinateCross(coords.x, _this.cross_y);
+							if (move && deltas.y != 0) {
+								_this.moveUpperLeftCorner(-deltas.y , 0);
+							} else if (!move) {
+								_this.drawCoordinateCross({x: _this.cross_x + deltas.y, y:  _this.cross_y});
+							}
 						} else if (thisHerePlane === 'y' && plane === 'z') {
 							_this.getDataExtent().slice = max_coords_of_event_triggering_plane.max_y - coords.y;
-							//_this.drawCoordinateCross(max_coords_of_event_triggering_plane.max_y - coords.y, _this.cross_y);
+							if (move && deltas.x != 0) {
+								_this.moveUpperLeftCorner(deltas.x , 0);
+							} else if (!move) {
+								_this.drawCoordinateCross({x: _this.cross_x - deltas.x, y: _this.cross_y});
+							}
 						} else if (thisHerePlane === 'x' && plane === 'y') {
 							_this.getDataExtent().slice = coords.x;
-							//_this.drawCoordinateCross(_this.cross_x, coords.x);
+							if (move && deltas.y != 0) {
+								_this.moveUpperLeftCorner(0 , deltas.y);
+							} else if (!move) {
+								_this.drawCoordinateCross({x: _this.cross_x, y:   _this.cross_y - deltas.y});
+							}
 						} else if (thisHerePlane === 'z' && plane === 'y') {
 							_this.getDataExtent().slice = max_coords_of_event_triggering_plane.max_y - coords.y;
-							//_this.drawCoordinateCross(max_coords_of_event_triggering_plane.max_y - coords.y, _this.cross_y);
+							if (move && deltas.x != 0) {
+								_this.moveUpperLeftCorner(deltas.x , 0);
+							} else if (!move) {
+								_this.drawCoordinateCross({x:  _this.cross_x - deltas.x, y:  _this.cross_y});
+							}
 						} else if (thisHerePlane === 'y' && plane === 'x') {
 							_this.getDataExtent().slice = coords.x;
-							//_this.drawCoordinateCross(_this.cross_x, coords.x);
+							if (move && deltas.y != 0) {
+								_this.moveUpperLeftCorner(0 , deltas.y);
+							} else if (!move) {
+										_this.drawCoordinateCross({x:   _this.cross_x , y: _this.cross_y - deltas.y});
+									}
 						} else if (thisHerePlane === 'z' && plane === 'x') {
 							_this.getDataExtent().slice = max_coords_of_event_triggering_plane.max_y - coords.y;
-							//_this.drawCoordinateCross(_this.cross_x, max_coords_of_event_triggering_plane.max_y - coords.y);
+							if (move && deltas.x != 0) {
+								_this.moveUpperLeftCorner(0 , -deltas.x);
+							} else if (!move) {
+								_this.drawCoordinateCross({x: _this.cross_x, y: _this.cross_y + deltas.x});
+							}
 						}
 						
-						var delayedDrawMe = function() {
-							var now =new Date().getTime(); 
-							if (now > _this.most_recent_draw_request && now-_this.most_recent_draw_request < 5) {
-								// we don't draw if we have another draw request following within a short time span
-								// unless the overall delay exceeds a certain threshold (see if above)
-								return;
-							}
-							// update timestamp
-							_this.most_recent_draw_request = now;
-
-							// tidy up where we left debris
-							if (_this.dim_x > _this.getDataExtent().x && dX != 0) {
-								// first x debris
-								if (dX < 0) {	// up front 
-									_this.eraseCanvasPortion(0, 0, Math.abs(_this.upper_left_x), _this.dim_y);
-								} else { // behind us
-									_this.eraseCanvasPortion(
-											Math.abs(_this.upper_left_x) + _this.getDataExtent().x, 0,
-											_this.dim_x - _this.getDataExtent().x, _this.dim_y);
-								}
-							}
-							
-							if (_this.dim_y > _this.getDataExtent().y && dY != 0) {
-								// now y debris
-								if (dY < 0) {	// up front 
-									// erase x debris
-									_this.eraseCanvasPortion(0, 0, _this.dim_x, Math.abs(_this.upper_left_y));
-								} else {
-									_this.eraseCanvasPortion(
-											0, Math.abs(_this.upper_left_y) + _this.getDataExtent().y,
-											_this.dim_x, _this.dim_y - _this.getDataExtent().y);
-								}
-							}
-
-							// redraw
-							_this.drawMe();
-						};
-						setTimeout(delayedDrawMe, 10);
-						
+						// redraw 
+						setTimeout(delayedDrawMe, 0, false);
 					});
-					
 				}
 			},
 			drawCoordinateCross : function(coords) {
@@ -613,14 +612,15 @@ function initMe() {
 	brain_canvas_x_plane.centerUpperLeftCorner();
 	brain_canvas_x_plane.drawCoordinateCross(brain_canvas_x_plane.getCenter());
 	brain_canvas_x_plane.drawMe();
-
+	
 	brain_canvas_y_plane.centerUpperLeftCorner();
 	brain_canvas_y_plane.drawCoordinateCross(brain_canvas_y_plane.getCenter());
 	brain_canvas_y_plane.drawMe();
 
 	brain_canvas_z_plane.centerUpperLeftCorner();
-	brain_canvas_z_plane.drawCoordinateCross(brain_canvas_y_plane.getCenter());
+	brain_canvas_z_plane.drawCoordinateCross(brain_canvas_z_plane.getCenter());
 	brain_canvas_z_plane.drawMe();
+
 }
 
 $(document).ready(function() {
