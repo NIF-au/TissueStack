@@ -1,98 +1,4 @@
-utils = {
-		getRelativeMouseCoords : function(event) {
-			var totalOffsetX = 0;
-			var totalOffsetY = 0;
-			var x = 0;
-			var y = 0;
-			var currentElement = event.currentTarget;
-
-			do {
-				totalOffsetX += currentElement.offsetLeft;
-				totalOffsetY += currentElement.offsetTop;
-			} while (currentElement = currentElement.offsetParent)
-
-			x = event.pageX - totalOffsetX;
-			y = event.pageY - totalOffsetY;
-
-			return {
-				x : x,
-				y : y
-			};
-		},
-		isLeftMouseButtonPressed : function(event) {
-			// IE compatibility
-			 if (!event.which && event.button) {
-				     if (event.button & 1) {
-				    	 event.which = 1;      // Left
-				     } else if (event.button & 4) {
-				    	 event.which = 2; // Middle
-				     } else if (e.button & 2) {
-				    	 event.which = 3; // Right
-				     }
-			}
-			if (event.which == 1) {
-				return true;
-			}
-			return false;
-		},
-		getCenter : function(x,y) {
-			return {x :  Math.floor(x / 2),  y : Math.floor(y / 2)};
-	}
-};
-
-brain = {
-	tile_directory : "tiles/",
-	extent : function () {
-		return {
-			tile_size : 256,	
-			x : 0,
-			y : 0,
-			data_id: "",
-			zoom_level : 0,
-			plane: 'z',
-			slice: 0,
-			init : function (data_id, zoom_level, plane, slice, x, y) {
-				this.setDataId(data_id);
-				this.setZoomLevel(zoom_level);
-				this.setPlane(plane);
-				this.setSlice(slice);
-				this.setDimensions(x, y);
-			}, setDataId : function(data_id) {
-				if (typeof(data_id) != "string" || data_id.trim().length == 0) {
-					throw "data_id has to be a non-empty string";
-				}
-				this.data_id = data_id;
-			}, setZoomLevel : function(zoom_level) {
-				if (typeof(zoom_level) != "number" || Math.floor(zoom_level) < 0) {
-					throw "zoom_level has to be a non-negative integer";
-				}
-				this.zoom_level = zoom_level;
-			}, setPlane : function(plane) {
-				if (typeof(plane) != "string" || !(plane == 'x' || plane == 'y' || plane == 'z')) {
-					throw "plane has to be one of the following: 'z', 'y' or 'z'";
-				}
-				this.plane = plane;
-			}, setSlice : function(slice) {
-				if (typeof(slice) != "number" || Math.floor(slice) < 0) {
-					throw "slice has to be a non-negative integer";
-				}
-				this.slice = slice;
-			}, setDimensions : function(x,y) {
-				if (typeof(x) != "number" || Math.floor(x) < 0) {
-					throw "x has to be a non-negative integer";
-				}
-				this.x = x;
-				if (typeof(y) != "number" || Math.floor(y) < 0) {
-					throw "y has to be a non-negative integer";
-				}
-				this.y = y;
-			},
-			getCenter : function () {
-				return utils.getCenter(this.x,this.y);
-			}
-		};
-	},
-	canvas : function () {
+TissueStack.Canvas = function () {
 		return {
 			data_extent: null,
 			canvas_id: "canvas_" + this.plane, 
@@ -157,7 +63,7 @@ brain = {
 				this.dim_y = y;
 			},
 			getCenter : function () {
-				return utils.getCenter(this.dim_x,this.dim_y);
+				return TissueStack.Utils.getCenter(this.dim_x,this.dim_y);
 			},
 			getCoordinateCrossCanvas : function() {
 				return $("#" + this.canvas_id + "_cross_overlay");
@@ -176,8 +82,8 @@ brain = {
 
 				// bind mouse down and up events
 				canvas.bind("mousedown", function(e) {
-					if (utils.isLeftMouseButtonPressed(e)) {
-						var coords = utils.getRelativeMouseCoords(e);
+					if (TissueStack.Utils.isLeftMouseButtonPressed(e)) {
+						var coords = TissueStack.Utils.getRelativeMouseCoords(e);
 
 						_this.mouse_down = true;
 						_this.mouse_x = coords.x;
@@ -240,7 +146,7 @@ brain = {
 				
 				// bind the mouse move event
 				canvas.bind("mousemove", function(e) {
-					var coords = utils.getRelativeMouseCoords(e);
+					var coords = TissueStack.Utils.getRelativeMouseCoords(e);
 					
 					var log = $('#coords');
 					log.html("Canvas Coordinates X: " + coords.x + ", Canvas Y: " + coords.y);
@@ -270,7 +176,7 @@ brain = {
 				var coordinateCrossCanvas = this.getCoordinateCrossCanvas();
 				if (coordinateCrossCanvas && coordinateCrossCanvas[0]) {
 					canvas.bind("click", function(e) {
-						var coords = utils.getRelativeMouseCoords(e);
+						var coords = TissueStack.Utils.getRelativeMouseCoords(e);
 
 						if (_this.isDragging) {
 							return;
@@ -547,7 +453,7 @@ brain = {
 						// create the image object that loads the tile we need
 						var imageTile = new Image();
 						imageTile.src = 
-							brain.tile_directory + this.getDataExtent().data_id + "/" + this.getDataExtent().zoom_level + "/" + this.getDataExtent().plane
+							TissueStack.tile_directory + this.getDataExtent().data_id + "/" + this.getDataExtent().zoom_level + "/" + this.getDataExtent().plane
 							+ "/" + this.getDataExtent().slice + "/" + rowIndex + '_' + colIndex + "." + this.image_format;
 	
 						(function(imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, dim_x, dim_y) {
@@ -575,54 +481,4 @@ brain = {
 				};
 			}
 		};
-
-	}
-};
-
-
-function initMe() {
-	// create a brain extent for each of the three planes
-	// TODO: this info will come from the back-end most likely. for now hard-code!
-	var brain_extent_x_plane = new brain.extent();
-	brain_extent_x_plane.init("mouse_1", 0, 'x', Math.floor(679/2), 1311, 499);
-
-	var brain_extent_y_plane = new brain.extent();
-	brain_extent_y_plane.init("mouse_1", 0, 'y', Math.floor(1311/2), 679, 499);
-
-	var brain_extent_z_plane = new brain.extent();
-	brain_extent_z_plane.init("mouse_1", 0, 'z', Math.floor(499/2), 679, 1311);
-	
-	// create three instances of the brain canvas (1 for each plane)
-	var brain_canvas_x_plane = new brain.canvas();
-	brain_canvas_x_plane.init(brain_extent_x_plane, "canvas_x_plane");
-
-	var brain_canvas_y_plane = new brain.canvas();
-	brain_canvas_y_plane.init(brain_extent_y_plane, "canvas_y_plane");
-
-	var brain_canvas_z_plane = new brain.canvas();
-	brain_canvas_z_plane.init(brain_extent_z_plane, "canvas_z_plane");
-
-	// show total data extent and canvas dimensions
-	var log = $('#total_data_extent');
-	log.html("Total Data Extent (z): " + brain_canvas_z_plane.getDataExtent().x  + " x " + brain_canvas_z_plane.getDataExtent().y);
-	log = $('#canvas_dimensions');
-	log.html("Canvas Dimensions: " + brain_canvas_z_plane.dim_x  + " x " + brain_canvas_z_plane.dim_y);
-	
-	// center and draw
-	brain_canvas_x_plane.centerUpperLeftCorner();
-	brain_canvas_x_plane.drawCoordinateCross(brain_canvas_x_plane.getCenter());
-	brain_canvas_x_plane.drawMe();
-	
-	brain_canvas_y_plane.centerUpperLeftCorner();
-	brain_canvas_y_plane.drawCoordinateCross(brain_canvas_y_plane.getCenter());
-	brain_canvas_y_plane.drawMe();
-
-	brain_canvas_z_plane.centerUpperLeftCorner();
-	brain_canvas_z_plane.drawCoordinateCross(brain_canvas_z_plane.getCenter());
-	brain_canvas_z_plane.drawMe();
-
-}
-
-$(document).ready(function() {
-	initMe();
-});
+	};
