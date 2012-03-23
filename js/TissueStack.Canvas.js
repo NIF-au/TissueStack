@@ -272,17 +272,19 @@ TissueStack.Canvas = function () {
 				
 				// draw bulls eye
 				ctx.beginPath();
-				ctx.strokeStyle="#FF0000";
-				ctx.moveTo(coords.x, 0);
-				ctx.lineTo(coords.x, coords.y - 10);
-				ctx.moveTo(coords.x, coords.y + 10);
-				ctx.lineTo(coords.x, this.dim_y);
+				ctx.strokeStyle="rgba(200,0,0,0.3)";
+				ctx.lineWidth=1.0;
+
+				ctx.moveTo(coords.x + 0.5, 0);
+				ctx.lineTo(coords.x + 0.5, (coords.y - 10));
+				ctx.moveTo(coords.x + 0.5, (coords.y + 10));
+				ctx.lineTo(coords.x + 0.5, this.dim_y);
 				ctx.stroke();
 
-				ctx.moveTo(0, coords.y);
-				ctx.lineTo(coords.x - 10, coords.y);
-				ctx.moveTo(coords.x + 10, coords.y);
-				ctx.lineTo(this.dim_x, coords.y);
+				ctx.moveTo(0, coords.y + 0.5);
+				ctx.lineTo(coords.x - 10, coords.y + 0.5);
+				ctx.moveTo(coords.x + 10, coords.y + 0.5);
+				ctx.lineTo(this.dim_x, coords.y + 0.5);
 				ctx.stroke();
 				ctx.closePath();
 			},
