@@ -26,19 +26,10 @@ TissueStack.Init = function () {
 	log = $('#canvas_dimensions');
 	log.html("Canvas Dimensions: " + brain_canvas_z_plane.dim_x  + " x " + brain_canvas_z_plane.dim_y);
 	
-	// center and draw
-	brain_canvas_x_plane.centerUpperLeftCorner();
-	brain_canvas_x_plane.drawCoordinateCross(brain_canvas_x_plane.getCenter());
+	// draw
 	brain_canvas_x_plane.drawMe();
-	
-	brain_canvas_y_plane.centerUpperLeftCorner();
-	brain_canvas_y_plane.drawCoordinateCross(brain_canvas_y_plane.getCenter());
 	brain_canvas_y_plane.drawMe();
-
-	brain_canvas_z_plane.centerUpperLeftCorner();
-	brain_canvas_z_plane.drawCoordinateCross(brain_canvas_z_plane.getCenter());
 	brain_canvas_z_plane.drawMe();
-
 };
 
 $(document).ready(function() {

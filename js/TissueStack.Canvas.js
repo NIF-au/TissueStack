@@ -20,6 +20,8 @@ TissueStack.Canvas = function () {
 				// set dimensions
 				var tmpCanvasElement = this.getCanvasElement()[0];
 				this.setDimensions(tmpCanvasElement.width, tmpCanvasElement.height);
+				this.centerUpperLeftCorner();
+				this.drawCoordinateCross(this.getCenter());
 				this.registerMouseEvents();
 			},
 			setDataExtent : function (data_extent) {
@@ -92,20 +94,26 @@ TissueStack.Canvas = function () {
 				});
 				$(document).bind("mouseup", function(e) {
 					_this.mouse_down = false;
-					_this.mouse_x = 0;
-					_this.mouse_y = 0;
 				});
 
-				// create the delay drawing if more requests come in in short intervals (to use for setTimeout)
-				var delayedDrawMe = function(notifyOthers, dX, dY) {
+				/* this is a legitimate poor-man's queue: 
+				 * the function below will be executed by setTimeout with a thresholdInMs passed in
+				 * to the effect that every draw request that is below it, will be ignored.
+				 * e.g. setTimeout(delayedDrawMe, 0, 50);
+				 */
+				var delayedDrawMe = function(thresholdInMs, dX, dY) {
 					var now =new Date().getTime(); 
-					if (now > _this.most_recent_draw_request && now-_this.most_recent_draw_request < 0) {
+					
+					if (now > _this.most_recent_draw_request && now-_this.most_recent_draw_request < thresholdInMs) {
 						// we don't draw if we have another draw request following within a short time span
 						// unless the overall delay exceeds a certain threshold (see if above)
 						return;
 					}
 					// update timestamp
 					_this.most_recent_draw_request = now;
+
+					// redraw
+					_this.drawMe();
 
 					// tidy up where we left debris
 					if (_this.dim_x > _this.getDataExtent().x && dX != 0) {
@@ -130,18 +138,6 @@ TissueStack.Canvas = function () {
 									_this.dim_x, _this.dim_y - _this.getDataExtent().y);
 						}
 					}
-
-					// redraw
-					_this.drawMe();
-					
-					if (notifyOthers) {
-						// send message out to others that they need to redraw as well
-						_this.getCanvasElement().trigger("sync", [_this.getDataExtent().plane,
-						                        _this.getRelativeCrossCoordinates(),
-						                        {max_x: _this.getDataExtent().x, max_y: _this.getDataExtent().y},
-						                        true,
-						                        {x: dX, y: dY}]);
-					}
 				};
 				
 				// bind the mouse move event
@@ -165,8 +161,14 @@ TissueStack.Canvas = function () {
 
 						_this.moveUpperLeftCorner(dX, dY);
 						
-						setTimeout(delayedDrawMe, 0, true, dX, dY);
-
+						setTimeout(delayedDrawMe, 0, 75, dX, dY);
+						
+						// send message out to others that they need to redraw as well
+						_this.getCanvasElement().trigger("sync", [_this.getDataExtent().plane,
+						                        _this.getRelativeCrossCoordinates(),
+						                        {max_x: _this.getDataExtent().x, max_y: _this.getDataExtent().y},
+						                        true,
+						                        {x: dX, y: dY}]);
 					} else {
 						_this.isDragging = false;
 					}
@@ -181,7 +183,6 @@ TissueStack.Canvas = function () {
 						if (_this.isDragging) {
 							return;
 						}
-
 
 						var dX = _this.cross_x - coords.x;
 						var dY = _this.cross_y - coords.y;
@@ -248,8 +249,8 @@ TissueStack.Canvas = function () {
 							}
 						}
 						
-						// redraw 
-						setTimeout(delayedDrawMe, 0, false);
+						// redraw
+						setTimeout(delayedDrawMe, 0, 200);
 					});
 				}
 			},
