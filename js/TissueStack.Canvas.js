@@ -134,10 +134,10 @@ TissueStack.Canvas = function () {
 						_this.getCanvasElement().trigger("sync", 
 									[	now,
 									 	_this.getDataExtent().plane,
-				                        _this.getDataExtent().zoom_level,
-				                        _this.getDataExtent().slice,
+									 	_this.getDataExtent().zoom_level,
+									 	_this.getDataExtent().slice,
 									 	_this.getRelativeCrossCoordinates(),
-						                {max_x: _this.getDataExtent().x, max_y: _this.getDataExtent().y},
+									 	{max_x: _this.getDataExtent().x, max_y: _this.getDataExtent().y},
 						                true,
 						                {x: dX, y: dY}
 						            ]);
@@ -294,8 +294,7 @@ TissueStack.Canvas = function () {
 				var log = $('#data_extent_displayed');
 				log.html("Data Extent displayed (z) X : " + (this.upper_left_x < 0 ? 0 : this.upper_left_x) + " => " + (this.getDataExtent().x > this.dim_x ? this.upper_left_x + this.dim_x : this.getDataExtent().x) + 
 						", Y: " + (this.upper_left_y < 0 ? 0 : this.upper_left_y) + " => " + (this.getDataExtent().y > this.dim_y ? this.upper_left_y + this.dim_y : this.getDataExtent().y));
-			},
-			drawMe : function() {
+			}, drawMe : function(timestamp) {
 				var ctx = this.getCanvasContext();
 	
 				// start tile range
@@ -400,7 +399,7 @@ TissueStack.Canvas = function () {
 							TissueStack.tile_directory + this.getDataExtent().data_id + "/" + this.getDataExtent().zoom_level + "/" + this.getDataExtent().plane
 							+ "/" + this.getDataExtent().slice + "/" + rowIndex + '_' + colIndex + "." + this.image_format;
 	
-						(function(imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, dim_x, dim_y) {
+						(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height) {
 							imageTile.onload = function() {
 								// check with actual image dimensions ...
 								if (this.width < width) {
@@ -410,11 +409,16 @@ TissueStack.Canvas = function () {
 									height = this.height;
 								}
 	
+								// damn you async loads
+								if (timestamp && timestamp < _this.queue.latestDrawRequestTimestamp) {
+									return;
+								}
+								
 								ctx.drawImage(this,
 										imageOffsetX, imageOffsetY, width, height, // tile dimensions
 										canvasX, canvasY, width, height); // canvas dimensions
 							};
-						})(imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, this.dim_x, this.dim_y);
+						})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height);
 						
 						// increment canvasY
 						canvasY += height;

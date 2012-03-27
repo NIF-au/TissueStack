@@ -6,12 +6,14 @@ TissueStack.Extent = function () {
 			data_id: "",
 			zoom_level : 0,
 			plane: 'z',
+			max_slices : 0,
 			slice: 0,
-			init : function (data_id, zoom_level, plane, slice, x, y) {
+			init : function (data_id, zoom_level, plane, max_slices, x, y) {
 				this.setDataId(data_id);
 				this.setZoomLevel(zoom_level);
 				this.setPlane(plane);
-				this.setSlice(slice);
+				this.max_slices = max_slices;
+				this.setSlice(Math.floor(max_slices / 2));
 				this.setDimensions(x, y);
 			}, setDataId : function(data_id) {
 				if (typeof(data_id) != "string" || data_id.trim().length == 0) {
