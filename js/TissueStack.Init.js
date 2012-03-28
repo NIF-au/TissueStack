@@ -30,12 +30,10 @@ TissueStack.Init = function () {
 	TissueStack.brain_canvas_y_plane.queue.drawLowResolutionPreview();
 	TissueStack.brain_canvas_z_plane.queue.drawLowResolutionPreview();
 	
-	// draw after a slight delay
-	setTimeout(function() {
-		TissueStack.brain_canvas_x_plane.drawMe();
-		TissueStack.brain_canvas_y_plane.drawMe();
-		TissueStack.brain_canvas_z_plane.drawMe();
-	}, 1000);
+	// draw 
+	TissueStack.brain_canvas_x_plane.queue.drawRequestAfterLowResolutionPreview();
+	TissueStack.brain_canvas_y_plane.queue.drawRequestAfterLowResolutionPreview();
+	TissueStack.brain_canvas_z_plane.queue.drawRequestAfterLowResolutionPreview();
 	
 	$('#drawing_interval').val(TissueStack.brain_canvas_x_plane.queue.drawingIntervalInMillis);
 	// bind event for queue interval change

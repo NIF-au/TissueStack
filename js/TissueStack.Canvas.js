@@ -24,7 +24,6 @@ TissueStack.Canvas = function () {
 				this.drawCoordinateCross(this.getCenter());
 				this.registerMouseEvents();
 				this.queue = new TissueStack.Queue(this);
-				this.queue.startQueue();
 			},
 			setDataExtent : function (data_extent) {
 				if (typeof(data_extent) != "object") {
