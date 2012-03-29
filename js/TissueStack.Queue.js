@@ -198,7 +198,7 @@ TissueStack.Queue = function (canvas) {
 			this.canvas.drawMe(draw_request.timestamp);
 
 			// tidy up where we left debris
-			if (this.canvas.dim_x > this.canvas.getDataExtent().x && draw_request.deltas.x < 0) { // in front of us
+			if (this.canvas.dim_x > this.canvas.getDataExtent().x && draw_request.deltas.x < 0 && this.canvas.upper_left_x != 0) { // in front of us
 				this.canvas.eraseCanvasPortion(0, 0, Math.abs(this.canvas.upper_left_x), this.canvas.dim_y);
 			} else if (this.canvas.dim_x > this.canvas.getDataExtent().x && draw_request.deltas.x > 0) { // behind us
 				this.canvas.eraseCanvasPortion(
@@ -206,7 +206,7 @@ TissueStack.Queue = function (canvas) {
 					this.canvas.dim_x - this.canvas.getDataExtent().x, this.canvas.dim_y);
 			}
 			
-			if (this.canvas.dim_y > this.canvas.getDataExtent().y && draw_request.deltas.y < 0) { // in front of us
+			if (this.canvas.dim_y > this.canvas.getDataExtent().y && draw_request.deltas.y < 0 && this.canvas.upper_left_y != 0) { // in front of us
 				this.canvas.eraseCanvasPortion(0, 0, this.canvas.dim_x, Math.abs(this.canvas.upper_left_y));
 			} else if (this.canvas.dim_y > this.canvas.getDataExtent().y && draw_request.deltas.y > 0) { // behind us
 				this.canvas.eraseCanvasPortion(
