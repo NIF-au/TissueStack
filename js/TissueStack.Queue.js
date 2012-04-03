@@ -36,6 +36,7 @@ TissueStack.Queue = function (canvas) {
 				}
 
 				var accumulatedRequestsDeepCopy = $.extend(true, {}, _this.accumulatedRequests);
+				
 				_this.clearRequestQueue();
 				_this.latestDrawRequestTimestamp = accumulatedRequestsDeepCopy.timestamp;
 
@@ -119,6 +120,14 @@ TissueStack.Queue = function (canvas) {
 			this.accumulatedRequests = [];
 			this.requests = [];
  		}, drawLowResolutionPreview : function(timestamp) {
+ 			// this is to prevent preview fetching for the cases when the user is navigating in a view that exceeds the data extent
+ 			// so that they can set the crosshair outside of the extent
+ 			var slice = this.canvas.getDataExtent().slice;
+ 			if (slice < 0 || slice > this.canvas.getDataExtent().max_slices) {
+ 				this.lowResolutionPreviewDrawn = true;
+ 				return;
+ 			}
+
  			this.lowResolutionPreviewDrawn = false;
  			
 			var ctx = this.canvas.getCanvasContext();
@@ -127,7 +136,7 @@ TissueStack.Queue = function (canvas) {
 			imageTile.src = 
 				TissueStack.tile_directory + this.canvas.getDataExtent().data_id + "/" + this.canvas.getDataExtent().zoom_level + "/" 
 				+ this.canvas.getDataExtent().plane
-				+ "/" + this.canvas.getDataExtent().slice + ".low.res." + this.canvas.image_format;
+				+ "/" + slice + ".low.res." + this.canvas.image_format;
 
 			(function(_this, imageOffsetX, imageOffsetY, viewXGreaterThanExtentX, viewYGreaterThanExtentY) {
 				imageTile.onload = function() {
@@ -145,12 +154,13 @@ TissueStack.Queue = function (canvas) {
 			})(this, Math.abs(this.canvas.upper_left_x), Math.abs(this.canvas.upper_left_y), this.canvas.dim_x > this.canvas.getDataExtent().x, this.canvas.dim_y > this.canvas.getDataExtent().y);
  		}, prepareDrawRequest : function(draw_request) {
 			var thisHerePlane = this.canvas.getDataExtent().plane;
+			var zoom_factor = this.canvas.getDataExtent().zoom_level_factor;
 			
 			if (draw_request.plane === thisHerePlane) { // this is the own canvas move
 				this.canvas.moveUpperLeftCorner(draw_request.deltas.x, draw_request.deltas.y);
 				// these are the moves caused by other canvases
 			} else if (thisHerePlane === 'x' && draw_request.plane === 'z') {
-				this.canvas.getDataExtent().slice = draw_request.coords.x;
+				this.canvas.getDataExtent().slice = Math.floor(draw_request.coords.x / zoom_factor);
 				if (draw_request.move && draw_request.deltas.y != 0) {
 					this.canvas.moveUpperLeftCorner(-draw_request.deltas.y , 0);
 				} else if (!draw_request.move) {
@@ -158,35 +168,35 @@ TissueStack.Queue = function (canvas) {
 							{x: this.canvas.cross_x + draw_request.deltas.y, y:  this.canvas.cross_y});
 				}
 			} else if (thisHerePlane === 'y' && draw_request.plane === 'z') {
-				this.canvas.getDataExtent().slice = draw_request.max_coords_of_event_triggering_plane.max_y - draw_request.coords.y;
+				this.canvas.getDataExtent().slice = Math.floor((draw_request.max_coords_of_event_triggering_plane.max_y - draw_request.coords.y) / zoom_factor);
 				if (draw_request.move && draw_request.deltas.x != 0) {
 					this.canvas.moveUpperLeftCorner(draw_request.deltas.x , 0);
 				} else if (!draw_request.move) {
 					this.canvas.drawCoordinateCross({x: this.canvas.cross_x - draw_request.deltas.x, y: this.canvas.cross_y});
 				}
 			} else if (thisHerePlane === 'x' && draw_request.plane === 'y') {
-				this.canvas.getDataExtent().slice = draw_request.coords.x;
+				this.canvas.getDataExtent().slice = Math.floor(draw_request.coords.x / zoom_factor);
 				if (draw_request.move && draw_request.deltas.y != 0) {
 					this.canvas.moveUpperLeftCorner(0 , draw_request.deltas.y);
 				} else if (!draw_request.move) {
 					this.canvas.drawCoordinateCross({x: this.canvas.cross_x, y:   this.canvas.cross_y - draw_request.deltas.y});
 				}
 			} else if (thisHerePlane === 'z' && draw_request.plane === 'y') {
-				this.canvas.getDataExtent().slice = draw_request.max_coords_of_event_triggering_plane.max_y - draw_request.coords.y;
+				this.canvas.getDataExtent().slice = Math.floor((draw_request.max_coords_of_event_triggering_plane.max_y - draw_request.coords.y) / zoom_factor);
 				if (draw_request.move && draw_request.deltas.x != 0) {
 					this.canvas.moveUpperLeftCorner(draw_request.deltas.x , 0);
 				} else if (!draw_request.move) {
 					this.canvas.drawCoordinateCross({x:  this.canvas.cross_x - draw_request.deltas.x, y:  this.canvas.cross_y});
 				}
 			} else if (thisHerePlane === 'y' && draw_request.plane === 'x') {
-				this.canvas.getDataExtent().slice = draw_request.coords.x;
+				this.canvas.getDataExtent().slice = Math.floor(draw_request.coords.x / zoom_factor);
 				if (draw_request.move && draw_request.deltas.y != 0) {
 					this.canvas.moveUpperLeftCorner(0 , draw_request.deltas.y);
 				} else if (!draw_request.move) {
 					this.canvas.drawCoordinateCross({x:   this.canvas.cross_x , y: this.canvas.cross_y - draw_request.deltas.y});
 				}
 			} else if (thisHerePlane === 'z' && draw_request.plane === 'x') {
-				this.canvas.getDataExtent().slice = draw_request.max_coords_of_event_triggering_plane.max_y - draw_request.coords.y;
+				this.canvas.getDataExtent().slice = Math.floor((draw_request.max_coords_of_event_triggering_plane.max_y - draw_request.coords.y) / zoom_factor);
 				if (draw_request.move && draw_request.deltas.x != 0) {
 					this.canvas.moveUpperLeftCorner(0 , -draw_request.deltas.x);
 				} else if (!draw_request.move) {
@@ -194,9 +204,6 @@ TissueStack.Queue = function (canvas) {
 				}
 			}
 		}, drawRequest : function(draw_request) {
-			// redraw
-			this.canvas.drawMe(draw_request.timestamp);
-
 			// tidy up where we left debris
 			if (this.canvas.dim_x > this.canvas.getDataExtent().x && draw_request.deltas.x < 0 && this.canvas.upper_left_x != 0) { // in front of us
 				this.canvas.eraseCanvasPortion(0, 0, Math.abs(this.canvas.upper_left_x), this.canvas.dim_y);
@@ -213,6 +220,9 @@ TissueStack.Queue = function (canvas) {
 					0, Math.abs(this.canvas.upper_left_y) + this.canvas.getDataExtent().y,
 					this.canvas.dim_x, this.canvas.dim_y - this.canvas.getDataExtent().y);
 			}
+
+			// redraw
+			this.canvas.drawMe(draw_request.timestamp);
 		}
 	};
 };

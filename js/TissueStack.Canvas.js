@@ -49,6 +49,17 @@ TissueStack.Canvas = function () {
 			getDataExtent : function() {
 				return this.data_extent;
 			},
+			changeToZoomLevel : function(zoom_level) {
+				// erase canvas content
+				this.eraseCanvasContent();
+				// delegate zoom level change to extent 
+				this.data_extent.changeToZoomLevel(zoom_level);
+				// recenter
+				this.centerUpperLeftCorner();
+				// redraw preview and finally canvas
+				this.queue.drawLowResolutionPreview();
+				this.queue.drawRequestAfterLowResolutionPreview();
+			},
 			getDataCoordinates : function(relative_mouse_coords) {
 				var relX = (this.upper_left_x + relative_mouse_coords.x);
 				var relY = (this.upper_left_y + relative_mouse_coords.y);
@@ -294,6 +305,12 @@ TissueStack.Canvas = function () {
 				log.html("Data Extent displayed (z) X : " + (this.upper_left_x < 0 ? 0 : this.upper_left_x) + " => " + (this.getDataExtent().x > this.dim_x ? this.upper_left_x + this.dim_x : this.getDataExtent().x) + 
 						", Y: " + (this.upper_left_y < 0 ? 0 : this.upper_left_y) + " => " + (this.getDataExtent().y > this.dim_y ? this.upper_left_y + this.dim_y : this.getDataExtent().y));
 			}, drawMe : function(timestamp) {
+				// preliminary check if we are within the slice range
+	 			var slice = this.getDataExtent().slice;
+	 			if (slice < 0 || slice > this.getDataExtent().max_slices) {
+	 				return;
+	 			}
+				
 				var ctx = this.getCanvasContext();
 	
 				// start tile range
@@ -305,13 +322,15 @@ TissueStack.Canvas = function () {
 				var endTileX = (Math.floor((this.upper_left_x + this.dim_x) / this.getDataExtent().tile_size) + (((this.upper_left_x + this.dim_x) % this.getDataExtent().tile_size) != 0 ? 1 : 0)) * this.getDataExtent().tile_size;
 				
 				if (this.dim_x > this.getDataExtent().x) {
-					(Math.floor((this.upper_left_x + this.getDataExtent().x) / this.getDataExtent().tile_size) + (((this.upper_left_x + this.getDataExtent().x) % this.getDataExtent().tile_size) != 0 ? 1 : 0)) * this.getDataExtent().tile_size;
+					endTileX =
+						(Math.floor(this.getDataExtent().x / this.getDataExtent().tile_size) + ((this.getDataExtent().x % this.getDataExtent().tile_size) != 0 ? 1 : 0)) * this.getDataExtent().tile_size;
 				}
 				var endTileY = 
 					(Math.floor((this.upper_left_y + this.dim_y) / this.getDataExtent().tile_size) + (((this.upper_left_y + this.dim_y) % this.getDataExtent().tile_size) != 0 ? 1 : 0)) * this.getDataExtent().tile_size;
 				
 				if (this.dim_y > this.getDataExtent().y) {
-					(Math.floor((this.upper_left_y + this.getDataExtent().y) / this.getDataExtent().tile_size) + (((this.upper_left_y + this.getDataExtent().y) % this.getDataExtent().tile_size) != 0 ? 1 : 0)) * this.getDataExtent().tile_size;
+					endTileY =
+						(Math.floor(this.getDataExtent().y / this.getDataExtent().tile_size) + ((this.getDataExtent().y % this.getDataExtent().tile_size) != 0 ? 1 : 0)) * this.getDataExtent().tile_size;
 				}
 				
 				// remember canvas x - position we'd like to write to
@@ -396,7 +415,7 @@ TissueStack.Canvas = function () {
 						var imageTile = new Image();
 						imageTile.src = 
 							TissueStack.tile_directory + this.getDataExtent().data_id + "/" + this.getDataExtent().zoom_level + "/" + this.getDataExtent().plane
-							+ "/" + this.getDataExtent().slice + "/" + rowIndex + '_' + colIndex + "." + this.image_format;
+							+ "/" + slice + "/" + rowIndex + '_' + colIndex + "." + this.image_format;
 	
 						(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height) {
 							imageTile.onload = function() {
