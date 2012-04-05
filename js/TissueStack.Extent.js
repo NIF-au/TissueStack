@@ -64,19 +64,9 @@ TissueStack.Extent = function () {
 				this.one_to_one_x = x;
 				this.one_to_one_y = y;
 			}, changeToZoomLevel : function(zoom_level) {
-				// zoom level is not a number greater than 0
-				if (typeof(zoom_level) != "number" || Math.floor(zoom_level) < 0) {
-					return;
-				}
-				zoom_level =  Math.floor(zoom_level);
-				// if requested zoom level matches the present, there is nothing to do
-				if (zoom_level == this.zoom_level) {
-					return;
-				}
-				
-				var zoom_level_factor = this.zoom_levels[zoom_level];
-				// if requested zoom level factor does not exist or is not a number greater than 0, say good bye
-				if (typeof(zoom_level_factor) != 'number' || zoom_level_factor <= 0) {
+				var zoom_level_factor = this.getZoomLevelFactorForZoomLevel(zoom_level);
+
+				if (zoom_level_factor == -1) {
 					return;
 				}
 				
@@ -84,7 +74,43 @@ TissueStack.Extent = function () {
 				// we floor the values by default
 				this.zoom_level_factor = zoom_level_factor;
 				this.setZoomLevel(zoom_level);
-				this.setDimensions(Math.floor(this.one_to_one_x * this.zoom_level_factor), Math.floor(this.one_to_one_y * this.zoom_level_factor));
+				var zoom_level_dim = this.getZoomLevelDimensions(zoom_level);
+				if (!zoom_level_dim) {
+					return;
+				}
+				this.setDimensions(zoom_level_dim.x, zoom_level_dim.y);
+			}, getZoomLevelFactorForZoomLevel : function(zoom_level) {
+				if (typeof(zoom_level) != "number" || Math.floor(zoom_level) < 0 || Math.floor(zoom_level) >= this.zoom_levels.length) {
+					return -1;
+				}
+				return this.zoom_levels[Math.floor(zoom_level)];
+			}, getZoomLevelDelta : function(zoom_level1, zoom_level2) {
+				if (typeof(zoom_level1) != "number" || typeof(zoom_level2) != "number") {
+					return 0;
+				}
+				zoom_level1 = Math.floor(zoom_level1);
+				zoom_level2 = Math.floor(zoom_level2);
+				
+				if (zoom_level1 == zoom_level2) {
+					return 0;
+				}
+				
+				var dimZoomLevel1 =  this.getZoomLevelDimensions(zoom_level1);
+				var dimZoomLevel2 =  this.getZoomLevelDimensions(zoom_level2);
+				
+				if (!dimZoomLevel1 || !dimZoomLevel2) {
+					return null;
+				}
+				
+				return {x: dimZoomLevel1.x - dimZoomLevel2.x, y: dimZoomLevel1.y - dimZoomLevel2.y};
+			}, getZoomLevelDimensions : function(zoom_level) {
+				var zoomLevelFactor = this.getZoomLevelFactorForZoomLevel(zoom_level);
+				
+				if (zoomLevelFactor == -1) {
+					return null;
+				}
+				
+				return {x: Math.floor(this.one_to_one_x * zoomLevelFactor), y: Math.floor(this.one_to_one_y * zoomLevelFactor)};
 			}, getSliceWithRespectToZoomLevel : function() {
 				return Math.floor(this.slice * this.zoom_level_factor);
 			}, getCenter : function () {

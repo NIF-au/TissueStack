@@ -82,17 +82,17 @@ TissueStack.Queue = function (canvas) {
 			// process through queue
 			this.startQueue();
 		},
-		drawRequestAfterLowResolutionPreview : function(draw_request) {
-			var lowResBackdrop = setInterval(function(_this, draw_request) {
+		drawRequestAfterLowResolutionPreview : function(draw_request, timestamp) {
+			var lowResBackdrop = setInterval(function(_this, draw_request, timestamp) {
 				if (_this.lowResolutionPreviewDrawn) {
 					if (draw_request) {
 						_this.drawRequest(draw_request);
 					} else {
-						_this.canvas.drawMe();
+						_this.canvas.drawMe(timestamp);
 					}
 					clearInterval(lowResBackdrop);
 				}
-			}, 50, this, draw_request);		
+			}, 50, this, draw_request, timestamp);		
 		},	accumulateRequests : function(draw_request, accumulatedRequests) {
 			if (typeof(accumulatedRequests === 'undefined') || !this.accumulatedRequests) {
 				this.accumulatedRequests = accumulatedRequests;
@@ -158,8 +158,11 @@ TissueStack.Queue = function (canvas) {
 			
 			if (draw_request.plane === thisHerePlane) { // this is the own canvas move
 				this.canvas.moveUpperLeftCorner(draw_request.deltas.x, draw_request.deltas.y);
-				// these are the moves caused by other canvases
-			} else if (thisHerePlane === 'x' && draw_request.plane === 'z') {
+				return;
+			}
+			
+			// these are the moves caused by other canvases
+			if (thisHerePlane === 'x' && draw_request.plane === 'z') {
 				this.canvas.getDataExtent().slice = Math.floor(draw_request.coords.x / zoom_factor);
 				if (draw_request.move && draw_request.deltas.y != 0) {
 					this.canvas.moveUpperLeftCorner(-draw_request.deltas.y , 0);

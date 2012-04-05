@@ -35,10 +35,6 @@ TissueStack.Init = function () {
 	log = $('#canvas_dimensions');
 	log.html("Canvas Dimensions: " + TissueStack.brain_canvas_z_plane.dim_x  + " x " + TissueStack.brain_canvas_z_plane.dim_y);
 	
-	TissueStack.brain_canvas_x_plane.changeToZoomLevel(0);
-	TissueStack.brain_canvas_y_plane.changeToZoomLevel(0);
-	TissueStack.brain_canvas_z_plane.changeToZoomLevel(0);
-	
 	TissueStack.brain_canvas_x_plane.queue.drawLowResolutionPreview();
 	TissueStack.brain_canvas_y_plane.queue.drawLowResolutionPreview();
 	TissueStack.brain_canvas_z_plane.queue.drawLowResolutionPreview();
@@ -55,12 +51,6 @@ TissueStack.Init = function () {
 		TissueStack.brain_canvas_x_plane.queue.setDrawingInterval(newValue);
 		TissueStack.brain_canvas_y_plane.queue.setDrawingInterval(newValue);
 		TissueStack.brain_canvas_z_plane.queue.setDrawingInterval(newValue);
-	});
-	$('#zoom_level_selection').bind("change", function() {
-		var newValue = parseInt($('#zoom_level_selection').val());
-		TissueStack.brain_canvas_x_plane.changeToZoomLevel(newValue);
-		TissueStack.brain_canvas_y_plane.changeToZoomLevel(newValue);
-		TissueStack.brain_canvas_z_plane.changeToZoomLevel(newValue);	
 	});
 };
 

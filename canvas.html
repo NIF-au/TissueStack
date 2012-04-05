@@ -4,7 +4,8 @@
 	<title>Test</title>
 	<!-- link href="css/styles.css" rel="stylesheet" type="text/css"-->
 	
-	<script src="js/libs/jquery-1.7.1.js"></script>
+	<script src="js/libs/jquery-1.7.1/jquery-1.7.1.js"></script>
+	<script src="js/libs/jquery-mousewheel-3.0.6/jquery.mousewheel.js"></script>
 	<script src="js/TissueStack.js" /></script>
 	<script src="js/TissueStack.Utils.js" /></script>
 	<script src="js/TissueStack.Queue.js" /></script>
@@ -16,15 +17,6 @@
 	<body>
 			<div style="display: none;" id="mousedragcoords">N/A</div>
 			<br />Drawing Interval (in millis):&nbsp;<input id="drawing_interval" type="text" value="">&nbsp;<input id="drawing_interval_button" value="Apply" type="button" />
-			<br />Zoom Level:&nbsp;<select id="zoom_level_selection">
-  				<option value="0">1 : 0.25</option>
-  				<option value="1">1 : 0.5</option>
-  				<option value="2">1 : 0.75</option>
-  				<option value="3" selected="selected">1 : 1</option>
-  				<option value="4">1 : 1.25</option>
-  				<option value="5">1 : 1.5</option>
-  				<option value="6">1 : 1.75</option>
-			</select>
 			<br /><br /><div id="canvas_dimensions">N/A</div>
 			<div id="total_data_extent">N/A</div>
 			<div id="data_extent_displayed">N/A</div>
