@@ -111,8 +111,12 @@ TissueStack.Extent = function () {
 				}
 				
 				return {x: Math.floor(this.one_to_one_x * zoomLevelFactor), y: Math.floor(this.one_to_one_y * zoomLevelFactor)};
-			}, getSliceWithRespectToZoomLevel : function() {
-				return Math.floor(this.slice * this.zoom_level_factor);
+			}, setSliceWithRespectToZoomLevel : function(slice) {
+				if (this.zoom_level == 1) {
+					this.slice = Math.floor(slice / this.zoom_level_factor);	
+				} else {
+					this.slice = Math.ceil(slice / this.zoom_level_factor);
+				}
 			}, getCenter : function () {
 				return TissueStack.Utils.getCenter(this.x,this.y);
 			}

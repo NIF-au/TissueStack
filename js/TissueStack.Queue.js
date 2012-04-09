@@ -109,7 +109,6 @@ TissueStack.Queue = function (canvas) {
 				this.accumulatedRequests.coords = draw_request.coords;
 				this.accumulatedRequests.max_coords_of_event_triggering_plane = draw_request.max_coords_of_event_triggering_plane;
 				this.accumulatedRequests.move = draw_request.move;
-				
 				this.accumulatedRequests.deltas.x += draw_request.deltas.x;
 				this.accumulatedRequests.deltas.y += draw_request.deltas.y;
 			}
@@ -129,103 +128,145 @@ TissueStack.Queue = function (canvas) {
  			}
 
  			this.lowResolutionPreviewDrawn = false;
- 			
-			var ctx = this.canvas.getCanvasContext();
 
+			var ctx = this.canvas.getCanvasContext();
+			
+			// nothing to do if we are totally outside
+			if (this.canvas.upper_left_x < 0 && (this.canvas.upper_left_x + this.canvas.getDataExtent().x) <=0
+					|| this.canvas.upper_left_x > 0 && this.canvas.upper_left_x > this.canvas.dim_x
+					|| this.canvas.upper_left_y <=0 || (this.canvas.upper_left_y - this.canvas.getDataExtent().y) >= this.canvas.dim_y) {
+				return;
+			} 
+			
+			var canvasX = 0;
+			var imageOffsetX = 0;
+			var width = this.canvas.getDataExtent().x;
+			if (this.canvas.upper_left_x < 0) {
+				width += this.canvas.upper_left_x;
+				imageOffsetX = this.canvas.getDataExtent().x - width;
+			} else {
+				canvasX = this.canvas.upper_left_x;
+			}
+			
+			if (canvasX + width > this.canvas.dim_x) {
+				width = this.canvas.dim_x - canvasX;
+			}
+
+			var canvasY = 0;
+			var imageOffsetY = 0;
+			var height = this.canvas.getDataExtent().y;
+			if (this.canvas.upper_left_y <= this.canvas.dim_y) {
+				canvasY = this.canvas.dim_y - this.canvas.upper_left_y;
+			} else {
+				imageOffsetY = this.canvas.upper_left_y - this.canvas.dim_y;
+				height = this.canvas.getDataExtent().y - imageOffsetY;
+			}
+			
+			if (height > this.canvas.dim_y) {
+				height = this.canvas.dim_y;
+			}
+			
 			var imageTile = new Image();
 			imageTile.src = 
 				TissueStack.tile_directory + this.canvas.getDataExtent().data_id + "/" + this.canvas.getDataExtent().zoom_level + "/" 
 				+ this.canvas.getDataExtent().plane
 				+ "/" + slice + ".low.res." + this.canvas.image_format;
 
-			(function(_this, imageOffsetX, imageOffsetY, viewXGreaterThanExtentX, viewYGreaterThanExtentY) {
+			(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height) {
 				imageTile.onload = function() {
 					if (timestamp < _this.latestDrawRequestTimestamp) {
 						return;
 					}
-					
-					ctx.drawImage(this,
-							viewXGreaterThanExtentX ? 0 : imageOffsetX, viewYGreaterThanExtentY ? 0 : imageOffsetY,
-							viewXGreaterThanExtentX ? this.width : this.width - imageOffsetX, viewYGreaterThanExtentY ? this.height : this.height - imageOffsetY,
-							viewXGreaterThanExtentX ? imageOffsetX : 0, viewYGreaterThanExtentY ? imageOffsetY : 0,
-							viewXGreaterThanExtentX ? this.width : this.width - imageOffsetX, viewYGreaterThanExtentY ? this.height : this.height - imageOffsetY);
+				
+					if (this.width < width) {
+						width = this.width;
+					}
+
+					if (this.height < height) {
+						height = this.height;
+					}
+
+					ctx.drawImage(this, imageOffsetX, imageOffsetY, width, height, canvasX, canvasY, width, height);
 					_this.lowResolutionPreviewDrawn = true;
 				};
-			})(this, Math.abs(this.canvas.upper_left_x), Math.abs(this.canvas.upper_left_y), this.canvas.dim_x > this.canvas.getDataExtent().x, this.canvas.dim_y > this.canvas.getDataExtent().y);
+			})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height);
  		}, prepareDrawRequest : function(draw_request) {
 			var thisHerePlane = this.canvas.getDataExtent().plane;
-			var zoom_factor = this.canvas.getDataExtent().zoom_level_factor;
 			
-			if (draw_request.plane === thisHerePlane) { // this is the own canvas move
-				this.canvas.moveUpperLeftCorner(draw_request.deltas.x, draw_request.deltas.y);
+			if (draw_request.plane === thisHerePlane) { // this is the own canvas  we disregard
+				this.canvas.moveUpperLeftCorner(draw_request.deltas.x, -draw_request.deltas.y);
 				return;
 			}
-			
+
 			// these are the moves caused by other canvases
 			if (thisHerePlane === 'x' && draw_request.plane === 'z') {
-				this.canvas.getDataExtent().slice = Math.floor(draw_request.coords.x / zoom_factor);
+				this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(draw_request.coords.x);
 				if (draw_request.move && draw_request.deltas.y != 0) {
 					this.canvas.moveUpperLeftCorner(-draw_request.deltas.y , 0);
 				} else if (!draw_request.move) {
 					this.canvas.drawCoordinateCross(
-							{x: this.canvas.cross_x + draw_request.deltas.y, y:  this.canvas.cross_y});
+							{x: this.canvas.cross_x - draw_request.deltas.y, y:  this.canvas.cross_y});
 				}
 			} else if (thisHerePlane === 'y' && draw_request.plane === 'z') {
-				this.canvas.getDataExtent().slice = Math.floor((draw_request.max_coords_of_event_triggering_plane.max_y - draw_request.coords.y) / zoom_factor);
+				this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(draw_request.max_coords_of_event_triggering_plane.max_y - draw_request.coords.y);
 				if (draw_request.move && draw_request.deltas.x != 0) {
 					this.canvas.moveUpperLeftCorner(draw_request.deltas.x , 0);
 				} else if (!draw_request.move) {
-					this.canvas.drawCoordinateCross({x: this.canvas.cross_x - draw_request.deltas.x, y: this.canvas.cross_y});
+					this.canvas.drawCoordinateCross({x: this.canvas.cross_x + draw_request.deltas.x, y: this.canvas.cross_y});
 				}
 			} else if (thisHerePlane === 'x' && draw_request.plane === 'y') {
-				this.canvas.getDataExtent().slice = Math.floor(draw_request.coords.x / zoom_factor);
+				this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(draw_request.coords.x);
 				if (draw_request.move && draw_request.deltas.y != 0) {
-					this.canvas.moveUpperLeftCorner(0 , draw_request.deltas.y);
+					this.canvas.moveUpperLeftCorner(0 , -draw_request.deltas.y);
 				} else if (!draw_request.move) {
-					this.canvas.drawCoordinateCross({x: this.canvas.cross_x, y:   this.canvas.cross_y - draw_request.deltas.y});
+					this.canvas.drawCoordinateCross({x: this.canvas.cross_x, y:   this.canvas.cross_y + draw_request.deltas.y});
 				}
 			} else if (thisHerePlane === 'z' && draw_request.plane === 'y') {
-				this.canvas.getDataExtent().slice = Math.floor((draw_request.max_coords_of_event_triggering_plane.max_y - draw_request.coords.y) / zoom_factor);
+				this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(draw_request.max_coords_of_event_triggering_plane.max_y - draw_request.coords.y);
 				if (draw_request.move && draw_request.deltas.x != 0) {
 					this.canvas.moveUpperLeftCorner(draw_request.deltas.x , 0);
 				} else if (!draw_request.move) {
-					this.canvas.drawCoordinateCross({x:  this.canvas.cross_x - draw_request.deltas.x, y:  this.canvas.cross_y});
+					this.canvas.drawCoordinateCross({x:  this.canvas.cross_x + draw_request.deltas.x, y:  this.canvas.cross_y});
 				}
 			} else if (thisHerePlane === 'y' && draw_request.plane === 'x') {
-				this.canvas.getDataExtent().slice = Math.floor(draw_request.coords.x / zoom_factor);
+				this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(draw_request.coords.x);
 				if (draw_request.move && draw_request.deltas.y != 0) {
-					this.canvas.moveUpperLeftCorner(0 , draw_request.deltas.y);
+					this.canvas.moveUpperLeftCorner(0 , -draw_request.deltas.y);
 				} else if (!draw_request.move) {
-					this.canvas.drawCoordinateCross({x:   this.canvas.cross_x , y: this.canvas.cross_y - draw_request.deltas.y});
+					this.canvas.drawCoordinateCross({x:   this.canvas.cross_x , y: this.canvas.cross_y + draw_request.deltas.y});
 				}
 			} else if (thisHerePlane === 'z' && draw_request.plane === 'x') {
-				this.canvas.getDataExtent().slice = Math.floor((draw_request.max_coords_of_event_triggering_plane.max_y - draw_request.coords.y) / zoom_factor);
+				this.canvas.getDataExtent().setSliceWithRespectToZoomLevel((draw_request.max_coords_of_event_triggering_plane.max_y - draw_request.coords.y));
 				if (draw_request.move && draw_request.deltas.x != 0) {
-					this.canvas.moveUpperLeftCorner(0 , -draw_request.deltas.x);
+					this.canvas.moveUpperLeftCorner(0 , draw_request.deltas.x);
 				} else if (!draw_request.move) {
-					this.canvas.drawCoordinateCross({x: this.canvas.cross_x, y: this.canvas.cross_y + draw_request.deltas.x});
+					this.canvas.drawCoordinateCross({x: this.canvas.cross_x, y: this.canvas.cross_y - draw_request.deltas.x});
 				}
 			}
 		}, drawRequest : function(draw_request) {
-			// tidy up where we left debris
-			if (this.canvas.dim_x > this.canvas.getDataExtent().x && draw_request.deltas.x < 0 && this.canvas.upper_left_x != 0) { // in front of us
-				this.canvas.eraseCanvasPortion(0, 0, Math.abs(this.canvas.upper_left_x), this.canvas.dim_y);
-			} else if (this.canvas.dim_x > this.canvas.getDataExtent().x && draw_request.deltas.x > 0) { // behind us
-				this.canvas.eraseCanvasPortion(
-					Math.abs(this.canvas.upper_left_x) + this.canvas.getDataExtent().x, 0,
-					this.canvas.dim_x - this.canvas.getDataExtent().x, this.canvas.dim_y);
-			}
+			this.canvas.eraseCanvasContent();
 			
-			if (this.canvas.dim_y > this.canvas.getDataExtent().y && draw_request.deltas.y < 0 && this.canvas.upper_left_y != 0) { // in front of us
-				this.canvas.eraseCanvasPortion(0, 0, this.canvas.dim_x, Math.abs(this.canvas.upper_left_y));
-			} else if (this.canvas.dim_y > this.canvas.getDataExtent().y && draw_request.deltas.y > 0) { // behind us
-				this.canvas.eraseCanvasPortion(
-					0, Math.abs(this.canvas.upper_left_y) + this.canvas.getDataExtent().y,
-					this.canvas.dim_x, this.canvas.dim_y - this.canvas.getDataExtent().y);
-			}
-
 			// redraw
 			this.canvas.drawMe(draw_request.timestamp);
+
+			/*
+			// tidy up where we left debris
+			if (draw_request.deltas.x > 0 && this.canvas.upper_left_x <= this.canvas.dim_x) { // in front of us
+				this.canvas.eraseCanvasPortion(0, 0, this.canvas.upper_left_x, this.canvas.dim_y);
+			} else if (draw_request.deltas.x < 0 && (this.canvas.upper_left_x + this.canvas.getDataExtent().x) > 0 && (this.canvas.upper_left_x + this.canvas.getDataExtent().x) > 0 && (this.canvas.upper_left_x + this.canvas.getDataExtent().x) <= this.canvas.dim_x){ // behind us
+				this.canvas.eraseCanvasPortion(
+					this.canvas.upper_left_x + this.canvas.getDataExtent().x, 0,
+					this.canvas.dim_x - (this.canvas.upper_left_x + this.canvas.getDataExtent().x), this.canvas.dim_y);
+			}
+			
+			if (draw_request.deltas.y > 0 && this.canvas.upper_left_y < this.canvas.dim_y && this.canvas.upper_left_y >= 0) { // in front of us
+				this.canvas.eraseCanvasPortion(0, 0, this.canvas.dim_x, this.canvas.dim_y - this.canvas.upper_left_y);
+			} else if (draw_request.deltas.y < 0 && this.canvas.upper_left_y - this.canvas.getDataExtent().y < this.canvas.dim_y) { // behind us
+				this.canvas.eraseCanvasPortion(
+					0, this.canvas.upper_left_y - this.canvas.getDataExtent().y,
+					this.canvas.dim_x, this.canvas.dim_y - (this.canvas.upper_left_y - this.canvas.getDataExtent().y));
+			}
+			*/
 		}
 	};
 };

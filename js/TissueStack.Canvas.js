@@ -69,29 +69,25 @@ TissueStack.Canvas = function () {
 				// delegate zoom level change to extent 
 				this.data_extent.changeToZoomLevel(zoom_level);
 				// recenter
-				this.moveUpperLeftCorner(Math.floor(zoomLevelDiffs.x / 2), Math.floor(zoomLevelDiffs.y / 2));
+				this.centerUpperLeftCorner();
 				
 				// redraw preview and finally canvas
 				this.queue.drawLowResolutionPreview(now);
 				this.queue.drawRequestAfterLowResolutionPreview(null, now);
 			},
 			getDataCoordinates : function(relative_mouse_coords) {
-				var relX = Math.ceil((this.upper_left_x + relative_mouse_coords.x) * ((this.getDataExtent().one_to_one_x) / this.getDataExtent().x));
-				var relY = Math.ceil((this.upper_left_y + relative_mouse_coords.y) * ((this.getDataExtent().one_to_one_y) / this.getDataExtent().y));
-
-				if (relX < 0) {
-					relX = 0;
-				} else if (relX >= this.getDataExtent().one_to_one_x) {
-					relX = this.getDataExtent().one_to_one_x - 1;
+				var relDataX = -1;
+				var relDataY = -1;
+				if (this.upper_left_x < 0 && relative_mouse_coords.x <= (this.upper_left_x + this.getDataExtent().x)) {
+					relDataX = Math.abs(this.upper_left_x) + relative_mouse_coords.x;
+				} else if (this.upper_left_x >= 0 && relative_mouse_coords.x >= this.upper_left_x && relative_mouse_coords.x <= this.upper_left_x + this.getDataExtent().x) {
+					relDataX = relative_mouse_coords.x - this.upper_left_x;
+				}
+				if (this.upper_left_y > 0 && this.upper_left_y - this.getDataExtent().y < this.dim_y && this.dim_y - relative_mouse_coords.y <= this.upper_left_y && this.dim_y - relative_mouse_coords.y >= this.upper_left_y - this.getDataExtent().y) {
+					relDataY = this.upper_left_y - (this.dim_y - relative_mouse_coords.y);
 				}
 				
-				if (relY < 0) {
-					relY = 0;
-				} else if (relY >= this.getDataExtent().one_to_one_y) {
-					relY = this.getDataExtent().one_to_one_y - 1;
-				}
-				
-				return {x: relX, y: relY};
+				return {x: relDataX, y: relDataY};
 			},
 			setDimensions : function(x,y) {
 				if (typeof(x) != "number" || Math.floor(x) < 0) {
@@ -110,7 +106,18 @@ TissueStack.Canvas = function () {
 				return $("#" + this.canvas_id + "_cross_overlay");
 			},
 			getRelativeCrossCoordinates : function() {
-				return {x: Math.floor((this.upper_left_x + this.cross_x) / this.getDataExtent().zoom_level_factor), y: Math.floor((this.upper_left_y + this.cross_y) / this.getDataExtent().zoom_level_factor)};
+				var relCrossX = -1;
+				var relCrossY = -1;
+				if (this.upper_left_x < 0 && this.cross_x <= (this.upper_left_x + this.getDataExtent().x)) {
+					relCrossX = Math.abs(this.upper_left_x) + this.cross_x;
+				} else if (this.upper_left_x >= 0 && this.cross_x >= this.upper_left_x && this.cross_x <= this.upper_left_x + this.getDataExtent().x) {
+					relCrossX = this.cross_x - this.upper_left_x;
+				}
+				if (this.upper_left_y > 0 && this.upper_left_y - this.getDataExtent().y < this.dim_y && this.dim_y - this.cross_y <= this.upper_left_y && this.dim_y - this.cross_y >= this.upper_left_y - this.getDataExtent().y) {
+					relCrossY = this.upper_left_y - (this.dim_y - this.cross_y);
+				}
+				
+				return {x: relCrossX, y: relCrossY};
 			},
 			registerMouseEvents : function () {
 				// look for the cross overlay which will be the top layer
@@ -139,7 +146,7 @@ TissueStack.Canvas = function () {
 				canvas.bind("mousemove", function(e) {
 					var now =new Date().getTime(); 
 					var coords = TissueStack.Utils.getRelativeMouseCoords(e);
-					
+										
 					var log = $('#coords');
 					log.html("Canvas Coordinates X: " + coords.x + ", Canvas Y: " + coords.y);
 					log = $('#relative_coords');
@@ -149,8 +156,8 @@ TissueStack.Canvas = function () {
 					
 					if (_this.mouse_down) {
 						_this.isDragging = true;
-						var dX = _this.mouse_x - coords.x;
-						var dY = _this.mouse_y - coords.y;
+						var dX = coords.x - _this.mouse_x;
+						var dY = coords.y - _this.mouse_y;
 
 						_this.mouse_x = coords.x;
 						_this.mouse_y = coords.y;
@@ -161,7 +168,7 @@ TissueStack.Canvas = function () {
 									plane: _this.getDataExtent().plane,
 									zoom_level : _this.getDataExtent().zoom_level,
 									slice : _this.getDataExtent().slice,
-									coords: coords,
+									coords: relCoordinates,
 									max_coords_of_event_triggering_plane : {max_x: _this.getDataExtent().x, max_y: _this.getDataExtent().y},
 									move : true,
 									deltas : {x: dX, y: dY}
@@ -194,9 +201,11 @@ TissueStack.Canvas = function () {
 							return;
 						}
 
-						var dX = _this.cross_x - coords.x;
-						var dY = _this.cross_y - coords.y;
-						
+						var dX = coords.x - _this.cross_x;
+						var dY = coords.y - _this.cross_y;
+
+						_this.drawCoordinateCross(coords);
+
 						// send message out to others that they need to redraw as well
 						canvas.trigger("sync", [now,
 						                        _this.getDataExtent().plane,
@@ -208,7 +217,6 @@ TissueStack.Canvas = function () {
 												{x: dX, y: dY}
 						                       ]);
 
-						_this.drawCoordinateCross(coords);
 					});
 
 					$(document).bind("sync", function(e, timestamp, plane, zoom_level, slice, coords, max_coords_of_event_triggering_plane,  move, deltas) {
@@ -294,19 +302,15 @@ TissueStack.Canvas = function () {
 			setUpperLeftCorner : function(x,y) {
 				this.upper_left_x = x;
 				this.upper_left_y = y;
-				this.correctUpperLeftCornerToFitExtent();
 			},
 			moveUpperLeftCorner : function(deltaX,deltaY) {
 				this.upper_left_x += deltaX;
 				this.upper_left_y += deltaY;
-				var log = $('#upper_left_corner');
-				log.html("Upper X: " + this.upper_left_x + ", Upper Y: " + this.upper_left_y);
-				this.correctUpperLeftCornerToFitExtent();
 			},
 			centerUpperLeftCorner : function() {
-				var brainExtentCenter = this.getDataExtent().getCenter();
-				var canvasExtentCenter = this.getCenter();
-				this.setUpperLeftCorner(brainExtentCenter.x - canvasExtentCenter.x, brainExtentCenter.y - canvasExtentCenter.y);
+				this.setUpperLeftCorner(
+						Math.floor((this.dim_x - this.getDataExtent().x) / 2), 
+						this.dim_x - Math.floor((this.dim_x - this.getDataExtent().y)) / 2);
 			},
 			eraseCanvasContent: function() {
 		    	var ctx = this.getCanvasContext();
@@ -327,34 +331,6 @@ TissueStack.Canvas = function () {
 	        		myImageData.data[i + 3] = 0;
 	        	}
 	        	ctx.putImageData(myImageData, x, y);
-			},
-			correctUpperLeftCornerToFitExtent : function() {
-				// canvas is bigger than data extent => allow negative upper left corner
-				// we can however not move the extent bounds out of the canvas entirely
-				if (this.dim_x > this.getDataExtent().x && this.upper_left_x < this.getDataExtent().x - this.dim_x) {
-					this.upper_left_x = this.getDataExtent().x - this.dim_x;
-				}	else  if (this.dim_x > this.getDataExtent().x && this.upper_left_x > 0) {
-					this.upper_left_x = 0;
-				} else if (this.dim_x < this.getDataExtent().x && this.upper_left_x < 0) {
-					this.upper_left_x = 0;
-				} else if (this.dim_x < this.getDataExtent().x && this.upper_left_x + this.dim_x > this.getDataExtent().x) {
-					this.upper_left_x = this.getDataExtent().x -this.dim_x;
-				}
-				
-				if (this.dim_y > this.getDataExtent().y && this.upper_left_y < this.getDataExtent().y - this.dim_y) {
-					this.upper_left_y = this.getDataExtent().y - this.dim_y;
-				}	else  if (this.dim_y > this.getDataExtent().y && this.upper_left_y > 0) {
-					this.upper_left_y = 0;
-				} else if (this.dim_y < this.getDataExtent().y && this.upper_left_y < 0) {
-					this.upper_left_y = 0;
-				} else if  (this.dim_y < this.getDataExtent().y && this.upper_left_y + this.dim_y > this.getDataExtent().y) {
-					this.upper_left_y = this.getDataExtent().y - this.dim_y;
-				}
-				
-				// show data extent displayed
-				var log = $('#data_extent_displayed');
-				log.html("Data Extent displayed (z) X : " + (this.upper_left_x < 0 ? 0 : this.upper_left_x) + " => " + (this.getDataExtent().x > this.dim_x ? this.upper_left_x + this.dim_x : this.getDataExtent().x) + 
-						", Y: " + (this.upper_left_y < 0 ? 0 : this.upper_left_y) + " => " + (this.getDataExtent().y > this.dim_y ? this.upper_left_y + this.dim_y : this.getDataExtent().y));
 			}, drawMe : function(timestamp) {
 				// preliminary check if we are within the slice range
 	 			var slice = this.getDataExtent().slice;
@@ -364,102 +340,79 @@ TissueStack.Canvas = function () {
 				
 				var ctx = this.getCanvasContext();
 	
-				// start tile range
-				var startTileX = Math.floor(this.upper_left_x / this.getDataExtent().tile_size);
-				var startTileY = Math.floor(this.upper_left_y / this.getDataExtent().tile_size);
-				var deltaStartTileXAndUpperLeftCornerX = this.upper_left_x - (startTileX * this.getDataExtent().tile_size);  
-				var deltaStartTileYAndUpperLeftCornerY = this.upper_left_y - (startTileY * this.getDataExtent().tile_size); 
-	
-				var endTileX = (Math.floor((this.upper_left_x + this.dim_x) / this.getDataExtent().tile_size) + (((this.upper_left_x + this.dim_x) % this.getDataExtent().tile_size) != 0 ? 1 : 0)) * this.getDataExtent().tile_size;
+				// nothing to do if we are totally outside
+				if (this.upper_left_x < 0 && (this.upper_left_x + this.getDataExtent().x) <=0
+						|| this.upper_left_x > 0 && this.upper_left_x > this.dim_x
+						|| this.upper_left_y <=0 || (this.upper_left_y - this.getDataExtent().y) >= this.dim_y) {
+					return;
+				} 
 				
-				if (this.dim_x > this.getDataExtent().x) {
-					endTileX =
-						(Math.floor(this.getDataExtent().x / this.getDataExtent().tile_size) + ((this.getDataExtent().x % this.getDataExtent().tile_size) != 0 ? 1 : 0)) * this.getDataExtent().tile_size;
+				var startTileX = this.upper_left_x / this.getDataExtent().tile_size;
+				var canvasX = 0;
+				var deltaStartTileXAndUpperLeftCornerX = 0;
+				if (startTileX < 0) {
+					startTileX = Math.abs(Math.ceil(startTileX));
+					deltaStartTileXAndUpperLeftCornerX =  this.getDataExtent().tile_size - Math.abs(this.upper_left_x + startTileX * this.getDataExtent().tile_size);
+				} else {
+					//startTileX = Math.floor(startTileX);
+					startTileX = 0;
+					canvasX = this.upper_left_x;
 				}
-				var endTileY = 
-					(Math.floor((this.upper_left_y + this.dim_y) / this.getDataExtent().tile_size) + (((this.upper_left_y + this.dim_y) % this.getDataExtent().tile_size) != 0 ? 1 : 0)) * this.getDataExtent().tile_size;
 				
-				if (this.dim_y > this.getDataExtent().y) {
-					endTileY =
-						(Math.floor(this.getDataExtent().y / this.getDataExtent().tile_size) + ((this.getDataExtent().y % this.getDataExtent().tile_size) != 0 ? 1 : 0)) * this.getDataExtent().tile_size;
+				var startTileY = 0;
+				var canvasY = 0;
+				var deltaStartTileYAndUpperLeftCornerY = 0;
+				if (this.upper_left_y <= this.dim_y) {
+					//startTileY = Math.floor((this.dim_y - this.upper_left_y)  / this.getDataExtent().tile_size);
+					canvasY = this.dim_y - this.upper_left_y;
+				} else {
+					startTileY = Math.floor((this.upper_left_y - this.dim_y)  / this.getDataExtent().tile_size);
+					deltaStartTileYAndUpperLeftCornerY = this.getDataExtent().tile_size - (this.upper_left_y - startTileY * this.getDataExtent().tile_size - this.dim_y);
 				}
-				
-				// remember canvas x - position we'd like to write to
-				var canvasX =  0;
-				var canvasY =  0;
-	
+
+				// for now set end at data extent, we cut off in the loop later once we hit the canvas bounds or data bounds which ever occurs first
+				var endTileX = Math.floor(this.getDataExtent().x / this.getDataExtent().tile_size) + ((this.getDataExtent().x % this.getDataExtent().tile_size == 0) ? 0 : 1);
+				var endTileY = Math.floor(this.getDataExtent().y / this.getDataExtent().tile_size) + ((this.getDataExtent().y % this.getDataExtent().tile_size == 0) ? 0 : 1);
+
+				var copyOfCanvasY = canvasY;
+
 				// loop over rows
-				for (var tileOffsetX = startTileX * this.getDataExtent().tile_size  ; tileOffsetX < endTileX ; tileOffsetX += this.getDataExtent().tile_size) {
-					// stop if we exceed extent
-					if (this.dim_x > this.getDataExtent().x && tileOffsetX >= this.getDataExtent().x) {
-						break;
-					} else if (this.dim_x > this.getDataExtent().x && tileOffsetX < 0) {
-						canvasX = Math.abs(this.upper_left_x);
-						continue;
-					}
-					
-					var canvasOffsetX = tileOffsetX + deltaStartTileXAndUpperLeftCornerX;
-	
-					// find cached tile by using rowIndex_colIndex naming convention
-					var rowIndex = Math.floor(tileOffsetX / this.getDataExtent().tile_size);
-					
-					// define the width and height for the portion of the tile taken and the canvas portion to be filled 
-					var width =  this.getDataExtent().tile_size;
-	
-					// remember the image offset
+				for (var tileX = startTileX  ; tileX < endTileX ; tileX++) {
+					var tileOffsetX = startTileX * this.getDataExtent().tile_size;
 					var imageOffsetX = 0;
-	
-					// we have hit the left canvas bound if canvas offsetX equals upper left x
-					if (canvasOffsetX == this.upper_left_x) {
-						// set canvas position to 0
-						canvasX = 0;
-						width = this.getDataExtent().tile_size - deltaStartTileXAndUpperLeftCornerX;
-						if (width < this.getDataExtent().tile_size) {
-							imageOffsetX = this.getDataExtent().tile_size - width; 
-						}
-					} 
+					var width =  this.getDataExtent().tile_size;
+					var rowIndex = tileX; 
 					
-					// see if we have hit the right and bottom bounds 
-					if (tileOffsetX + this.getDataExtent().tile_size == endTileX) {
-						//width = endTileX - canvasOffsetX;
-						width = this.dim_x -canvasX;
+					// reset to initial canvasX
+					canvasY = copyOfCanvasY;
+					
+					// we are at the beginning, do we have a partial?
+					if (canvasX == 0 && deltaStartTileXAndUpperLeftCornerX !=0) {
+						width = deltaStartTileXAndUpperLeftCornerX;
+						imageOffsetX =  this.getDataExtent().tile_size - width;
 					}
-	
+					
+					// we exceed canvas
+					if (canvasX >= this.dim_x) {
+						tileX = endTileX; // this will make us stop in the next iteration 
+						width =  this.dim_x - tileOffsetX;
+					}
+
 					// walk through columns
-					for (var tileOffsetY = startTileY *  this.getDataExtent().tile_size; tileOffsetY < endTileY ; tileOffsetY += this.getDataExtent().tile_size) {
-						// stop if we exceed extent
-						if (this.dim_y > this.getDataExtent().y && tileOffsetY >= this.getDataExtent().y) {
-							break;
-						} else if (this.dim_y > this.getDataExtent().y && tileOffsetY < 0) {
-							canvasY = Math.abs(this.upper_left_y);
-							continue;
-						}
-	
-						var canvasOffsetY = tileOffsetY + deltaStartTileYAndUpperLeftCornerY;
-						
-						// find cached tile by using rowIndex_colIndex naming convention
-						var colIndex = Math.floor(tileOffsetY / this.getDataExtent().tile_size);
-						
-						// define the width and height for the portion of the tile taken and the canvas portion to be filled 
-						var height =  this.getDataExtent().tile_size;
-	
-						// remember the image offset
+					for (var tileY = startTileY ; tileY < endTileY ; tileY++) {
 						var imageOffsetY = 0;
-	
-						// we have hit the left canvas bound if canvas offsetX equals upper left x
-						if (canvasOffsetY == this.upper_left_y) {
-							// set canvas position to 0
-							canvasY = 0;
-							height = this.getDataExtent().tile_size - deltaStartTileYAndUpperLeftCornerY;
-							if (height < this.getDataExtent().tile_size) {
-								imageOffsetY = this.getDataExtent().tile_size - height; 
-							};
-						} 
-	
-						// see if we have hit the right and bottom bounds 
-						if (tileOffsetY + this.getDataExtent().tile_size == endTileY) {
-							//height = endTileY - canvasOffsetY;
-							height = this.dim_y -canvasY;
+						var height =  this.getDataExtent().tile_size;
+						var colIndex = tileY; 
+
+						// we are at the beginning, do we have a partial?
+						if (canvasY == 0 && deltaStartTileYAndUpperLeftCornerY !=0) {
+							height = deltaStartTileYAndUpperLeftCornerY;
+							imageOffsetY =  this.getDataExtent().tile_size - height;
+						}
+
+						if (canvasY  >= this.dim_y) {
+							tileY = endTileY; // this will make us stop in the next iteration 
+							height = this.dim_y - canvasY;
 						}
 						
 						// create the image object that loads the tile we need
@@ -468,14 +421,21 @@ TissueStack.Canvas = function () {
 							TissueStack.tile_directory + this.getDataExtent().data_id + "/" + this.getDataExtent().zoom_level + "/" + this.getDataExtent().plane
 							+ "/" + slice + "/" + rowIndex + '_' + colIndex + "." + this.image_format;
 	
-						(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height) {
+						(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, tile_size) {
 							imageTile.onload = function() {
 								// check with actual image dimensions ...
-								if (this.width < width) {
-									width = this.width;
+								if (canvasX == 0 && width != tile_size && deltaStartTileXAndUpperLeftCornerX !=0) {
+									imageOffsetX = (tile_size - deltaStartTileXAndUpperLeftCornerX);
+									width = this.width - imageOffsetX;
+								} else if (this.width < width) {
+										width = this.width;
 								}
-								if (this.height < height) {
-									height = this.height;
+								
+								if (canvasY == 0 && height != tile_size && deltaStartTileYAndUpperLeftCornerY !=0) {
+										imageOffsetY = (tile_size - deltaStartTileYAndUpperLeftCornerY);
+										height = this.height - imageOffsetY;
+								} else	if (this.height < height) {
+										height = this.height;
 								}
 	
 								// damn you async loads
@@ -487,7 +447,7 @@ TissueStack.Canvas = function () {
 										imageOffsetX, imageOffsetY, width, height, // tile dimensions
 										canvasX, canvasY, width, height); // canvas dimensions
 							};
-						})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height);
+						})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, this.getDataExtent().tile_size);
 						
 						// increment canvasY
 						canvasY += height;
