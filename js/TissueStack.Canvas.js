@@ -310,7 +310,7 @@ TissueStack.Canvas = function () {
 			centerUpperLeftCorner : function() {
 				this.setUpperLeftCorner(
 						Math.floor((this.dim_x - this.getDataExtent().x) / 2), 
-						this.dim_x - Math.floor((this.dim_x - this.getDataExtent().y)) / 2);
+						this.dim_x - Math.floor((this.dim_x - this.getDataExtent().y) / 2));
 			},
 			eraseCanvasContent: function() {
 		    	var ctx = this.getCanvasContext();
