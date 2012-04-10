@@ -57,8 +57,8 @@ TissueStack.Queue = function (canvas) {
 				this.requests = [];
 			}
 			
-			// clicks are processed instantly
-			if (!draw_request.move) {
+			// clicks and zooms are processed instantly
+			if (draw_request.action == "CLICK" || draw_request.action == "ZOOM") {
 				this.clearRequestQueue();
 				this.latestDrawRequestTimestamp = draw_request.timestamp;
 				
@@ -164,52 +164,58 @@ TissueStack.Queue = function (canvas) {
 			})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height);
  		}, prepareDrawRequest : function(draw_request) {
 			var thisHerePlane = this.canvas.getDataExtent().plane;
-			
-			if (draw_request.plane === thisHerePlane) { // this is the own canvas  we disregard
+
+			if (draw_request.action == 'ZOOM') { // zoom request
+				this.canvas.changeToZoomLevel(draw_request.zoom_level);
+				return;
+			}
+
+			if (draw_request.plane === thisHerePlane) { 
+				// nothing to do for our own canvas
 				return;
 			}
 
 			// these are the moves caused by other canvases
 			if (thisHerePlane === 'x' && draw_request.plane === 'z') {
 				this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(draw_request.coords.x);
-				if (draw_request.move) {
+				if (draw_request.action == 'PAN') {
 					this.canvas.setUpperLeftCorner(draw_request.upperLeftCornerOrCrossCoords.y - draw_request.max_coords_of_event_triggering_plane.max_y, this.canvas.upper_left_y);
-				} else {
+				} else if (draw_request.action == 'CLICK') {
 					this.canvas.drawCoordinateCross({x: this.canvas.dim_x - draw_request.upperLeftCornerOrCrossCoords.y, y:  this.canvas.cross_y});
 				}
 			} else if (thisHerePlane === 'y' && draw_request.plane === 'z') {
 				this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(draw_request.max_coords_of_event_triggering_plane.max_y - draw_request.coords.y);
-				if (draw_request.move) {
+				if (draw_request.action == 'PAN') {
 					this.canvas.setUpperLeftCorner(draw_request.upperLeftCornerOrCrossCoords.x , this.canvas.upper_left_y);
-				} else {
+				} else if (draw_request.action == 'CLICK') {
 					this.canvas.drawCoordinateCross({x: draw_request.upperLeftCornerOrCrossCoords.x, y: this.canvas.cross_y});
 				}
 			} else if (thisHerePlane === 'x' && draw_request.plane === 'y') {
 				this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(draw_request.coords.x);
-				if (draw_request.move) {
+				if (draw_request.action == 'PAN') {
 					this.canvas.setUpperLeftCorner(this.canvas.upper_left_x, draw_request.upperLeftCornerOrCrossCoords.y);
-				} else {
+				} else if (draw_request.action == 'CLICK') {
 					this.canvas.drawCoordinateCross({x: this.canvas.cross_x, y: draw_request.upperLeftCornerOrCrossCoords.y});
 				}
 			} else if (thisHerePlane === 'z' && draw_request.plane === 'y') {
 				this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(draw_request.max_coords_of_event_triggering_plane.max_y - draw_request.coords.y);
-				if (draw_request.move) {
+				if (draw_request.action == 'PAN') {
 					this.canvas.setUpperLeftCorner(draw_request.upperLeftCornerOrCrossCoords.x , this.canvas.upper_left_y);
-				} else {
+				} else if (draw_request.action == 'CLICK') {
 					this.canvas.drawCoordinateCross({x: draw_request.upperLeftCornerOrCrossCoords.x, y:  this.canvas.cross_y});
 				}
 			} else if (thisHerePlane === 'y' && draw_request.plane === 'x') {
 				this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(draw_request.coords.x);
-				if (draw_request.move) {
+				if (draw_request.action == 'PAN') {
 					this.canvas.setUpperLeftCorner(this.canvas.upper_left_x , draw_request.upperLeftCornerOrCrossCoords.y);
-				} else {
+				} else if (draw_request.action == 'CLICK') {
 					this.canvas.drawCoordinateCross({x:   this.canvas.cross_x , y: draw_request.upperLeftCornerOrCrossCoords.y});
 				}
 			} else if (thisHerePlane === 'z' && draw_request.plane === 'x') {
 				this.canvas.getDataExtent().setSliceWithRespectToZoomLevel((draw_request.max_coords_of_event_triggering_plane.max_y - draw_request.coords.y));
-				if (draw_request.move) {
+				if (draw_request.action == 'PAN') {
 					this.canvas.setUpperLeftCorner(this.canvas.upper_left_x , draw_request.max_coords_of_event_triggering_plane.max_x + draw_request.upperLeftCornerOrCrossCoords.x);
-				} else {
+				} else if (draw_request.action == 'CLICK') {
 					this.canvas.drawCoordinateCross({x: this.canvas.cross_x, y: this.canvas.dim_y - draw_request.upperLeftCornerOrCrossCoords.x});
 				}
 			}
