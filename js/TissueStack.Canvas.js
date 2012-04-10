@@ -62,8 +62,6 @@ TissueStack.Canvas = function () {
 				// this should prevent evil async overdraw
 				this.queue.latestDrawRequestTimestamp = now;
 				
-				var zoomLevelDiffs = this.getDataExtent().getZoomLevelDelta(zoom_level, this.getDataExtent().zoom_level);
-				
 				// erase canvas content
 				this.eraseCanvasContent();
 				// delegate zoom level change to extent 
@@ -162,6 +160,10 @@ TissueStack.Canvas = function () {
 						_this.mouse_x = coords.x;
 						_this.mouse_y = coords.y;
 						
+						_this.moveUpperLeftCorner(dX, -dY);
+						
+						var upper_left_corner = {x: _this.upper_left_x, y: _this.upper_left_y};
+						
 						// queue events 
 						_this.queue.addToQueue(
 								{	timestamp : now,
@@ -171,7 +173,7 @@ TissueStack.Canvas = function () {
 									coords: relCoordinates,
 									max_coords_of_event_triggering_plane : {max_x: _this.getDataExtent().x, max_y: _this.getDataExtent().y},
 									move : true,
-									deltas : {x: dX, y: dY}
+									upperLeftCornerOrCrossCoords: upper_left_corner
 								});
 						
 						// send message out to others that they need to redraw as well
@@ -183,7 +185,7 @@ TissueStack.Canvas = function () {
 									 	_this.getRelativeCrossCoordinates(),
 									 	{max_x: _this.getDataExtent().x, max_y: _this.getDataExtent().y},
 						                true,
-						                {x: dX, y: dY}
+						                upper_left_corner
 						            ]);
 					} else {
 						_this.isDragging = false;
@@ -201,9 +203,6 @@ TissueStack.Canvas = function () {
 							return;
 						}
 
-						var dX = coords.x - _this.cross_x;
-						var dY = coords.y - _this.cross_y;
-
 						_this.drawCoordinateCross(coords);
 
 						// send message out to others that they need to redraw as well
@@ -214,12 +213,12 @@ TissueStack.Canvas = function () {
 						                        _this.getDataCoordinates(coords),
 						                        {max_x: _this.getDataExtent().x, max_y: _this.getDataExtent().y},
 												false,
-												{x: dX, y: dY}
+												{x: coords.x, y: coords.y}
 						                       ]);
 
 					});
 
-					$(document).bind("sync", function(e, timestamp, plane, zoom_level, slice, coords, max_coords_of_event_triggering_plane,  move, deltas) {
+					$(document).bind("sync", function(e, timestamp, plane, zoom_level, slice, coords, max_coords_of_event_triggering_plane,  move, upperLeftCornerOrCrossCoords) {
 						// ignore one's own events
 						var thisHerePlane = _this.getDataExtent().plane;
 						if (thisHerePlane === plane) {
@@ -235,7 +234,7 @@ TissueStack.Canvas = function () {
 									coords: coords,
 									max_coords_of_event_triggering_plane : max_coords_of_event_triggering_plane,
 									move : move,
-									deltas : deltas
+									upperLeftCornerOrCrossCoords : upperLeftCornerOrCrossCoords
 								});
 					});
 				}
