@@ -43,7 +43,7 @@ TissueStack.Canvas.prototype = {
 		this.data_extent = data_extent;
 	},
 	setCanvasElement : function(canvas_id) {
-		if (canvas_id && (typeof(canvas_id) != "string" || canvas_id.trim().length == 0)) {
+		if (canvas_id && (typeof(canvas_id) != "string" || canvas_id.length == 0)) {
 			throw "canvas_id has to be a non-empty string";
 		}
 		this.canvas_id = canvas_id;
