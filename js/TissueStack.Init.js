@@ -1,6 +1,4 @@
 TissueStack.Init = function () {
-	// create an extent for each of the three planes
-	// TODO: this info will come from the back-end most likely. for now hard-code!
 	var zoom_levels = [0.25, // level 0
 	                   0.5,  // level 1
 	                   0.75, // level 2
@@ -47,14 +45,9 @@ TissueStack.Init = function () {
 		// create extent
 		var extent = new TissueStack.Extent(dataForPlane.id, dataForPlane.one_to_one_zoom_level, planeId, dataForPlane.slices,
 				dataForPlane.extent_x, dataForPlane.extent_y, zoom_levels);
-		/*
-		extent.init(
-				dataForPlane.id, dataForPlane.one_to_one_zoom_level, planeId, dataForPlane.slices,
-				dataForPlane.extent_x, dataForPlane.extent_y, zoom_levels);
-		*/
+
 		// create canvas
 		var plane = new TissueStack.Canvas(extent, "canvas_" + planeId + "_plane");
-		//plane.init(extent, "canvas_" + planeId + "_plane");
 
 		// store plane  
 		TissueStack.planes[planeId] = plane;
