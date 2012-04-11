@@ -16,32 +16,52 @@
 	</head>
 	<body>
 			<div style="display: none;" id="mousedragcoords">N/A</div>
-			<br />Drawing Interval (in millis):&nbsp;<input id="drawing_interval" type="text" value="">&nbsp;<input id="drawing_interval_button" value="Apply" type="button" />
+			<br />Drawing Interval (in millis):&nbsp;<input id="drawing_interval" type="text" value="100">&nbsp;<input id="drawing_interval_button" value="Apply" type="button" />
 			<br /><br />
 			<div id="coords">&nbsp;</div>
 			<div id="relative_coords">&nbsp;</div>
 			<br />
+
+
 			<table style="width: 1400px;">
-				<tr style="position: relative;">
-					<td style="position: relative;">
-						<div style="position: relative;" id="viewport_x">
-							<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="450" height="450" id="canvas_x_plane"></canvas>
-							<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="450" height="450" id="canvas_x_plane_cross_overlay"></canvas>
-						</div>
-					</td>
-					<td style="position: relative;">	
-						<div style="position: relative;" id="viewport_y">
-							<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="450" height="450" id="canvas_y_plane"></canvas>
-							<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="450" height="450" id="canvas_y_plane_cross_overlay"></canvas>
-						</div>
-					</td>
-					<td style="position: relative;">	
-						<div style="position: relative;" id="viewport_z">
-							<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="450" height="450" id="canvas_z_plane"></canvas>
-							<canvas style=" position: absolute; left: 0px; top: 0px;z-index: 749;" width="450" height="450" id="canvas_z_plane_cross_overlay"></canvas>
-						</div>
-					</td>
-				</tr>	
+			 	<thead>
+					<tr>
+						<td style="text-align: center;" width="450">
+							<div id="canvas_x_extent"></div>
+							<div><input size="8" maxlength="7" type="text" id="canvas_x_x" value="0"/><input size="8" maxlength="7" type="text" id="canvas_x_y" value="0"/><button type="button" id="center_point_in_canvas_x">Center on Coordinates</button></div>
+						</td>
+						<td style="text-align: center;" width="450">
+							<div id="canvas_y_extent"></div>
+							<div><input size="8" maxlength="7" type="text" id="canvas_y_x" value="0"/><input size="8" maxlength="7" type="text" id="canvas_y_y" value="0"/><button type="button" id="center_point_in_canvas_y">Center on Coordinates</button></div>
+						</td>
+						<td style="text-align: center;" width="450">
+							<div id="canvas_z_extent"></div>
+							<div><input size="8" maxlength="7" type="text" id="canvas_z_x" value="0"/><input size="8" maxlength="7" type="text" id="canvas_z_y" value="0"/><button type="button" id="center_point_in_canvas_z">Center on Coordinates</button></div>
+						</td>
+					</tr>
+				</thead>
+				<tbody style="position: relative;">
+					<tr style="position: relative;">
+						<td style="position: relative;">
+							<div style="position: relative;">
+								<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="450" height="450" id="canvas_x_plane"></canvas>
+								<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="450" height="450" id="canvas_x_plane_cross_overlay"></canvas>
+							</div>
+						</td>
+						<td style="position: relative;">
+							<div style="position: relative;">
+								<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="450" height="450" id="canvas_y_plane"></canvas>
+								<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="450" height="450" id="canvas_y_plane_cross_overlay"></canvas>
+							</div>
+						</td>
+						<td style="position: relative;">	
+							<div style="position: relative;">
+								<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="450" height="450" id="canvas_z_plane"></canvas>
+								<canvas style="position: absolute; left: 0px; top: 0px;z-index: 749;" width="450" height="450" id="canvas_z_plane_cross_overlay"></canvas>
+							</div>
+						</td>
+					</tr>	
+				</tbody>
 			</table>
 	</body>
 </html>

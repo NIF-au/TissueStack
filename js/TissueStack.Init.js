@@ -10,41 +10,83 @@ TissueStack.Init = function () {
 	                   1.75  // level 6
 	                  ];
 	
-	var brain_extent_x_plane = new TissueStack.Extent();
-	brain_extent_x_plane.init("mouse_1", 3, 'x', 678, 1311, 499, zoom_levels);
+	var data = [
+	            { // x plane
+					id: "mouse_1",
+					one_to_one_zoom_level: 3,
+					plane: 'x',
+					slices: 678,
+					extent_x: 1311,
+					extent_y: 499
+	            },
+	            { // y plane
+					id: "mouse_1",
+					one_to_one_zoom_level: 3,
+					plane: 'y',
+					slices: 1310,
+					extent_x: 679,
+					extent_y: 499
+	            },
+	            { // z plane
+					id: "mouse_1",
+					one_to_one_zoom_level: 3,
+					plane: 'z',
+					slices: 498,
+					extent_x: 679,
+					extent_y: 1311
+	            }
+	];
 
-	var brain_extent_y_plane = new TissueStack.Extent();
-	brain_extent_y_plane.init("mouse_1", 3, 'y', 1310, 679, 499, zoom_levels);
+	TissueStack.planes = {};
 	
-	var brain_extent_z_plane = new TissueStack.Extent();
-	brain_extent_z_plane.init("mouse_1", 3, 'z', 498, 679, 1311, zoom_levels);
-	
-	// create three instances of the brain canvas (1 for each plane)
-	TissueStack.brain_canvas_x_plane = new TissueStack.Canvas();
-	TissueStack.brain_canvas_x_plane.init(brain_extent_x_plane, "canvas_x_plane");
+	// loop over data, create objects and listeners and then display them
+	for (var i=0; i < data.length; i++) {
+		var dataForPlane = data[i];
+		var planeId = dataForPlane.plane;
+		
+		// create extent
+		var extent = new TissueStack.Extent(dataForPlane.id, dataForPlane.one_to_one_zoom_level, planeId, dataForPlane.slices,
+				dataForPlane.extent_x, dataForPlane.extent_y, zoom_levels);
+		/*
+		extent.init(
+				dataForPlane.id, dataForPlane.one_to_one_zoom_level, planeId, dataForPlane.slices,
+				dataForPlane.extent_x, dataForPlane.extent_y, zoom_levels);
+		*/
+		// create canvas
+		var plane = new TissueStack.Canvas(extent, "canvas_" + planeId + "_plane");
+		//plane.init(extent, "canvas_" + planeId + "_plane");
 
-	TissueStack.brain_canvas_y_plane = new TissueStack.Canvas();
-	TissueStack.brain_canvas_y_plane.init(brain_extent_y_plane, "canvas_y_plane");
+		// store plane  
+		TissueStack.planes[planeId] = plane;
 
-	TissueStack.brain_canvas_z_plane = new TissueStack.Canvas();
-	TissueStack.brain_canvas_z_plane.init(brain_extent_z_plane, "canvas_z_plane");
+		// bind coordinate center functionality
+		(function (plane, planeId) {
+			$('#center_point_in_canvas_' + planeId).bind("click", function() {
+				var xCoord = parseInt($('#canvas_' + planeId + '_x').val());
+				var yCoord = parseInt($('#canvas_' + planeId + '_y').val());
+				
+				if (!plane.redrawWithCenterAndCrossAtGivenPixelCoordinates({x: xCoord, y: yCoord})) {
+					alert("Illegal coords");
+				}
+			});
+			
+			
+		})(plane, planeId);
+		
+		// display data extent info on page
+		$('#canvas_' + planeId + '_extent').html("Data Extent: " + plane.getDataExtent().x + " x " + plane.getDataExtent().y);
+		
+		// fill canvases
+		plane.queue.drawLowResolutionPreview();
+		plane.queue.drawRequestAfterLowResolutionPreview();
+	}
 	
-	TissueStack.brain_canvas_x_plane.queue.drawLowResolutionPreview();
-	TissueStack.brain_canvas_y_plane.queue.drawLowResolutionPreview();
-	TissueStack.brain_canvas_z_plane.queue.drawLowResolutionPreview();
-	
-	// draw 
-	TissueStack.brain_canvas_x_plane.queue.drawRequestAfterLowResolutionPreview();
-	TissueStack.brain_canvas_y_plane.queue.drawRequestAfterLowResolutionPreview();
-	TissueStack.brain_canvas_z_plane.queue.drawRequestAfterLowResolutionPreview();
-	
-	$('#drawing_interval').val(TissueStack.brain_canvas_y_plane.queue.drawingIntervalInMillis);
 	// bind event for queue interval change
 	$('#drawing_interval_button').bind("click", function() {
 		var newValue = parseInt($('#drawing_interval').val());
-		TissueStack.brain_canvas_x_plane.queue.setDrawingInterval(newValue);
-		TissueStack.brain_canvas_y_plane.queue.setDrawingInterval(newValue);
-		TissueStack.brain_canvas_z_plane.queue.setDrawingInterval(newValue);
+		TissueStack.planes['x'].queue.setDrawingInterval(newValue);
+		TissueStack.planes['y'].queue.setDrawingInterval(newValue);
+		TissueStack.planes['z'].queue.setDrawingInterval(newValue);
 	});
 };
 
