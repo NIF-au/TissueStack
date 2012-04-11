@@ -25,30 +25,19 @@ TissueStack.Canvas.prototype = {
 	cross_x : 0,
 	cross_y : 0,
 	queue : null,
-	init : function (data_extent, canvas_id) {
-		this.setDataExtent(data_extent);
-		this.setCanvasElement(canvas_id);
-		// set dimensions
-		var tmpCanvasElement = this.getCanvasElement()[0];
-		this.setDimensions(tmpCanvasElement.width, tmpCanvasElement.height);
-		this.centerUpperLeftCorner();
-		this.drawCoordinateCross(this.getCenter());
-		this.registerMouseEvents();
-		this.queue = new TissueStack.Queue(this);
-	},
 	setDataExtent : function (data_extent) {
 		if (typeof(data_extent) != "object") {
-			throw "we miss a data_extent";
+			throw new Error("we miss a data_extent");
 		}
 		this.data_extent = data_extent;
 	},
 	setCanvasElement : function(canvas_id) {
 		if (canvas_id && (typeof(canvas_id) != "string" || canvas_id.length == 0)) {
-			throw "canvas_id has to be a non-empty string";
+			throw new Error("canvas_id has to be a non-empty string");
 		}
 		this.canvas_id = canvas_id;
 		if (!$("#" + this.canvas_id)) {
-			throw "Canvas element with id " + this.canvas_id + " does not exist!";
+			throw new Error("Canvas element with id " + this.canvas_id + " does not exist!");
 		}
 	},
 	getCanvasElement : function() {
@@ -89,12 +78,18 @@ TissueStack.Canvas.prototype = {
 		return {x: relDataX, y: relDataY};
 	},
 	setDimensions : function(x,y) {
+		if (typeof(x) == "string") {
+			x = parseInt(x);
+		}
 		if (typeof(x) != "number" || Math.floor(x) < 0) {
-			throw "x has to be a non-negative integer";
+			throw new Error("x has to be a non-negative integer");
 		}
 		this.dim_x = x;
+		if (typeof(y) == "string") {
+			y = parseInt(y);
+		}
 		if (typeof(y) != "number" || Math.floor(y) < 0) {
-			throw "y has to be a non-negative integer";
+			throw new Error("y has to be a non-negative integer");
 		}
 		this.dim_y = y;
 	},

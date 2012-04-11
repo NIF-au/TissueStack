@@ -23,47 +23,44 @@ TissueStack.Extent.prototype = {
 	plane: 'z',
 	max_slices : 0,
 	slice: 0,
-	init : function (data_id, zoom_level, plane, max_slices, x, y, zoom_levels) {
-		this.setDataId(data_id);
-		this.setZoomLevel(zoom_level);
-		this.setPlane(plane);
-		this.max_slices = max_slices;
-		this.setSlice(Math.floor(max_slices / 2));
-		this.setDimensions(x, y);
-		this.rememberOneToOneZoomLevel(this.x, this.y, this.zoom_level);
-		this.setZoomLevels(zoom_levels);
-	}, setDataId : function(data_id) {
+	setDataId : function(data_id) {
 		if (typeof(data_id) != "string" || data_id.length == 0) {
-			throw "data_id has to be a non-empty string";
+			throw new Error("data_id has to be a non-empty string");
 		}
 		this.data_id = data_id;
 	}, setZoomLevel : function(zoom_level) {
 		if (typeof(zoom_level) != "number" || Math.floor(zoom_level) < 0) {
-			throw "zoom_level has to be a non-negative integer";
+			throw new Error("zoom_level has to be a non-negative integer");
 		}
 		this.zoom_level = Math.floor(zoom_level);
 	}, setZoomLevels : function(zoom_levels) {
 		if (typeof(zoom_levels) != "object" || zoom_levels.length == 0) {
-			throw "zoom_levels are missing";
+			throw new Error("zoom_levels are missing");
 		}
 		this.zoom_levels = zoom_levels;
 	}, setPlane : function(plane) {
 		if (typeof(plane) != "string" || !(plane == 'x' || plane == 'y' || plane == 'z')) {
-			throw "plane has to be one of the following: 'z', 'y' or 'z'";
+			throw new Error("plane has to be one of the following: 'z', 'y' or 'z'");
 		}
 		this.plane = plane;
 	}, setSlice : function(slice) {
 		if (typeof(slice) != "number" || Math.floor(slice) < 0) {
-			throw "slice has to be a non-negative integer";
+			throw new Error("slice has to be a non-negative integer");
 		}
 		this.slice = slice;
 	}, setDimensions : function(x,y) {
+		if (typeof(x) == "string") {
+			x = parseInt(x);
+		}
 		if (typeof(x) != "number" || Math.floor(x) < 0) {
-			throw "x has to be a non-negative integer";
+			throw new Error("x has to be a non-negative integer");
 		}
 		this.x = Math.floor(x);
+		if (typeof(y) == "string") {
+			y = parseInt(y);
+		}
 		if (typeof(y) != "number" || Math.floor(y) < 0) {
-			throw "y has to be a non-negative integer";
+			throw new Error("y has to be a non-negative integer");
 		}
 		this.y = Math.floor(y);
 	}, rememberOneToOneZoomLevel : function(x, y, zoom_level) {

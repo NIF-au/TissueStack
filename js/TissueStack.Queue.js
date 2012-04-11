@@ -12,7 +12,7 @@ TissueStack.Queue.prototype = {
 	latestDrawRequestTimestamp : 0,
 	setDrawingInterval : function(value) {
 		if (typeof(value) !== 'number' || value < 0) {
-			throw "Interval has to be greater or equal to 0";
+			throw new Error("Interval has to be greater or equal to 0");
 		}
 		this.stopQueue();
 		this.drawingIntervalInMillis = value;
