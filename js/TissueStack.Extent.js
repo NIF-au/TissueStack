@@ -33,7 +33,7 @@ TissueStack.Extent.prototype = {
 		this.rememberOneToOneZoomLevel(this.x, this.y, this.zoom_level);
 		this.setZoomLevels(zoom_levels);
 	}, setDataId : function(data_id) {
-		if (typeof(data_id) != "string" || data_id.trim().length == 0) {
+		if (typeof(data_id) != "string" || data_id.length == 0) {
 			throw "data_id has to be a non-empty string";
 		}
 		this.data_id = data_id;
