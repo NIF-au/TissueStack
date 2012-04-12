@@ -64,6 +64,9 @@ TissueStack.Canvas.prototype = {
 		this.getDataExtent().changeToZoomLevel(zoom_level);
 
 		this.setUpperLeftCorner(Math.floor(centerAfterZoom.x), Math.floor(centerAfterZoom.y));
+		
+		// update displayed info
+		$('#canvas_' + this.getDataExtent().plane + '_extent').html("Data Extent: " + this.getDataExtent().x + " x " + this.getDataExtent().y + " [Zoom Level: " + this.getDataExtent().zoom_level + "] ");
 	},
 	getDataCoordinates : function(relative_mouse_coords) {
 		var relDataX = -1;
