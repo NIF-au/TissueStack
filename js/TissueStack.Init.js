@@ -77,9 +77,16 @@ TissueStack.Init = function () {
 	// bind event for queue interval change
 	$('#drawing_interval_button').bind("click", function() {
 		var newValue = parseInt($('#drawing_interval').val());
-		TissueStack.planes['x'].queue.setDrawingInterval(newValue);
-		TissueStack.planes['y'].queue.setDrawingInterval(newValue);
-		TissueStack.planes['z'].queue.setDrawingInterval(newValue);
+		for (var i=0; i < data.length; i++) {	
+			TissueStack.planes[data[i].plane].queue.setDrawingInterval(newValue);
+		}
+	});
+	
+	// bind event listener for sync checkbox
+	$('#sync_canvases').bind("change", function() {
+		for (var i=0; i < data.length; i++) {	
+			TissueStack.planes[data[i].plane].sync_canvases = $('#sync_canvases')[0].checked;
+		}
 	});
 };
 

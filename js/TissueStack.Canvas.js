@@ -25,6 +25,7 @@ TissueStack.Canvas.prototype = {
 	cross_x : 0,
 	cross_y : 0,
 	queue : null,
+	sync_canvases : true,
 	setDataExtent : function (data_extent) {
 		if (typeof(data_extent) != "object") {
 			throw new Error("we miss a data_extent");
@@ -57,10 +58,11 @@ TissueStack.Canvas.prototype = {
 		if (zoom_level < 0 || zoom_level >= this.getDataExtent().zoom_levels.length || zoom_level ==  this.getDataExtent().zoom_level) {
 			return;
 		}
-		
+
+		var centerAfterZoom = this.getNewUpperLeftCornerForPointZoom({x: this.cross_x, y: this.cross_y}, zoom_level);
+
 		this.getDataExtent().changeToZoomLevel(zoom_level);
 
-		var centerAfterZoom = this.getCenterForPoint({x: this.cross_x, y: this.cross_y});
 		this.setUpperLeftCorner(Math.floor(centerAfterZoom.x), Math.floor(centerAfterZoom.y));
 	},
 	getDataCoordinates : function(relative_mouse_coords) {
@@ -172,17 +174,19 @@ TissueStack.Canvas.prototype = {
 							upperLeftCornerOrCrossCoords: upper_left_corner
 						});
 				
-				// send message out to others that they need to redraw as well
-				_this.getCanvasElement().trigger("sync", 
-							[	now,
-							 	'PAN',
-							 	_this.getDataExtent().plane,
-							 	_this.getDataExtent().zoom_level,
-							 	_this.getDataExtent().slice,
-							 	_this.getRelativeCrossCoordinates(),
-							 	{max_x: _this.getDataExtent().x, max_y: _this.getDataExtent().y},
-				                upper_left_corner
-				            ]);
+				if (_this.sync_canvases) {				
+					// send message out to others that they need to redraw as well
+					_this.getCanvasElement().trigger("sync", 
+								[	now,
+								 	'PAN',
+								 	_this.getDataExtent().plane,
+								 	_this.getDataExtent().zoom_level,
+								 	_this.getDataExtent().slice,
+								 	_this.getRelativeCrossCoordinates(),
+								 	{max_x: _this.getDataExtent().x, max_y: _this.getDataExtent().y},
+					                upper_left_corner
+					            ]);
+				}
 			} else {
 				_this.isDragging = false;
 			}
@@ -201,17 +205,18 @@ TissueStack.Canvas.prototype = {
 
 				_this.drawCoordinateCross(coords);
 
-				// send message out to others that they need to redraw as well
-				canvas.trigger("sync", [now,
-										'CLICK',
-				                        _this.getDataExtent().plane,
-				                        _this.getDataExtent().zoom_level,
-				                        _this.getDataExtent().slice,
-				                        _this.getDataCoordinates(coords),
-				                        {max_x: _this.getDataExtent().x, max_y: _this.getDataExtent().y},
-										{x: coords.x, y: coords.y}
-				                       ]);
-
+				if (_this.sync_canvases) {				
+					// send message out to others that they need to redraw as well
+					canvas.trigger("sync", [now,
+											'CLICK',
+					                        _this.getDataExtent().plane,
+					                        _this.getDataExtent().zoom_level,
+					                        _this.getDataExtent().slice,
+					                        _this.getDataCoordinates(coords),
+					                        {max_x: _this.getDataExtent().x, max_y: _this.getDataExtent().y},
+											{x: coords.x, y: coords.y}
+					                       ]);
+				}
 			});
 
 			$(document).bind("sync", function(e, timestamp, action, plane, zoom_level, slice, coords, max_coords_of_event_triggering_plane, upperLeftCornerOrCrossCoords) {
@@ -237,7 +242,18 @@ TissueStack.Canvas.prototype = {
 
 		// bind the mouse wheel scroll event
 		canvas.bind('mousewheel', function(event, delta) {
+			// make sure zoom delta is whole number
+			if (delta < 0) {
+				delta = -1;
+			} else if (delta > 0) {
+				delta = 1;
+			}
+			
 			var newZoomLevel = _this.getDataExtent().zoom_level + delta;
+			if (newZoomLevel == _this.data_extent.zoom_level ||  newZoomLevel < 0 || newZoomLevel >= _this.data_extent.zoom_levels.length) {
+				return;
+			}
+			
 			var now = new Date().getTime();
 			
 			_this.queue.addToQueue(
@@ -248,14 +264,16 @@ TissueStack.Canvas.prototype = {
 						slice : _this.getDataExtent().slice
 					});
 
-			// send message out to others that they need to redraw as well
-			canvas.trigger("zoom", 
-						[	now,
-						 	"ZOOM",
-						 	_this.getDataExtent().plane,
-						 	newZoomLevel,
-						 	_this.getDataExtent().slice
-			            ]);
+			if (_this.sync_canvases) {				
+				// send message out to others that they need to redraw as well
+				canvas.trigger("zoom", 
+							[	now,
+							 	"ZOOM",
+							 	_this.getDataExtent().plane,
+							 	newZoomLevel,
+							 	_this.getDataExtent().slice
+				            ]);
+			}
 		});
 		
 		$(document).bind("zoom", function(e, timestamp, action, plane, zoom_level, slice) {
@@ -326,10 +344,31 @@ TissueStack.Canvas.prototype = {
 				y: this.dim_y - ((this.dim_y - this.getDataExtent().y) / 2)
 		};
 	}, 
-	getCenterForPoint : function(coords) {
-		return {x: (this.dim_x - this.getDataExtent().x) / (this.dim_x / coords.x),
-				y: this.dim_y - ((this.dim_y - this.getDataExtent().y) / (this.dim_y / coords.y))
-		};
+	getNewUpperLeftCornerForPointZoom : function(coords, zoom_level) {
+		var newZoomLevelDims = this.getDataExtent().getZoomLevelDimensions(zoom_level);
+		
+		var deltaXBetweenCrossAndUpperLeftCorner = (this.upper_left_x < 0) ? (coords.x - this.upper_left_x) : Math.abs(coords.x - this.upper_left_x); 
+		var deltaYBetweenCrossAndUpperLeftCorner = (this.upper_left_y < 0) ? ((this.dim_y - coords.y) - this.upper_left_y) : Math.abs((this.dim_y - coords.y) - this.upper_left_y);
+		
+		var zoomLevelCorrectionX = deltaXBetweenCrossAndUpperLeftCorner * (newZoomLevelDims.x / this.data_extent.x);
+		var zoomLevelCorrectionY = deltaYBetweenCrossAndUpperLeftCorner * (newZoomLevelDims.y / this.data_extent.y);
+		
+		var newX = Math.floor((this.upper_left_x <= coords.x) ? (coords.x - zoomLevelCorrectionX) : (coords.x + zoomLevelCorrectionX));
+		var newY = Math.floor((this.upper_left_y <= (this.dim_y - coords.y)) ? ((this.dim_y - coords.y) - zoomLevelCorrectionY) : ((this.dim_y - coords.y) + zoomLevelCorrectionY));
+
+		// correction id crosshair is not inside extent
+		if (coords.x < this.upper_left_x) {
+			newX = coords.x + deltaXBetweenCrossAndUpperLeftCorner;
+		} else if (coords.x > (this.upper_left_x + this.getDataExtent().x)) {
+			newX = coords.x - (this.upper_left_x + this.getDataExtent().x + deltaXBetweenCrossAndUpperLeftCorner);
+		}
+		if ((this.dim_y - coords.y) > this.upper_left_y) {
+			newY = (this.dim_y - coords.y) + (this.upper_left_x - this.getDataExtent().x + deltaYBetweenCrossAndUpperLeftCorner);
+		} else if ((this.dim_y - coords.y) < (this.upper_left_y - this.getDataExtent().y)) {
+			newY = (this.dim_y - coords.y) + deltaYBetweenCrossAndUpperLeftCorner;
+		}
+
+		return {x: newX, y: newY};
 	},
 	redrawWithCenterAndCrossAtGivenPixelCoordinates: function(coords) {
 		if (coords.x < 0 || coords.x > this.getDataExtent().x 
@@ -350,6 +389,23 @@ TissueStack.Canvas.prototype = {
 				Math.floor(this.dim_y / 2) + coords.y);
 		this.queue.drawLowResolutionPreview(now);
 		this.queue.drawRequestAfterLowResolutionPreview(null,now);
+
+		// look for the cross overlay which will be the top layer
+		var canvas = this.getCoordinateCrossCanvas();
+		if (!canvas || !canvas[0]) {
+			canvas = this.getCanvasElement();
+		}
+		
+		// send message out to others that they need to redraw as well
+		canvas.trigger("sync", [now,
+								'POINT',
+		                        this.getDataExtent().plane,
+		                        this.getDataExtent().zoom_level,
+		                        this.getDataExtent().slice,
+		                        {x: this.cross_x, y: this.cross_y},
+		                        {max_x: this.getDataExtent().x, max_y: this.getDataExtent().y},
+								{x: this.upper_left_x, y: this.upper_left_y}
+		                       ]);
 		
 		return true;
 	},
@@ -364,6 +420,10 @@ TissueStack.Canvas.prototype = {
     	ctx.putImageData(myImageData, 0, 0);
 	},
 	eraseCanvasPortion: function(x, y, w, h) {
+		if (x<0 || y<0 || x>this.dim_x || y>this.dim_y || w <=0 || h<=0 || w>this.dim_x || h>this.dim_y) {
+			return;
+		}
+		
     	var ctx = this.getCanvasContext();
     	
     	var myImageData = ctx.getImageData(x, y, w, h);

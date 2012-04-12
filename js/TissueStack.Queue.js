@@ -67,10 +67,6 @@ TissueStack.Queue.prototype = {
 			
 			this.prepareDrawRequest(draw_request);
 			
-			if (draw_request.action == 'ZOOM') {
-				this.canvas.eraseCanvasContent();
-			}
-			
 			this.drawLowResolutionPreview(draw_request.timestamp);
 			this.drawRequestAfterLowResolutionPreview(draw_request);
 
@@ -186,55 +182,75 @@ TissueStack.Queue.prototype = {
 		// these are the moves caused by other canvases
 		if (thisHerePlane === 'x' && draw_request.plane === 'z') {
 			this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(draw_request.coords.x);
-			if (draw_request.action == 'PAN') {
-				this.canvas.setUpperLeftCorner(draw_request.upperLeftCornerOrCrossCoords.y - draw_request.max_coords_of_event_triggering_plane.max_y, this.canvas.upper_left_y);
+			if (draw_request.action == 'PAN' || draw_request.action == 'POINT') {
+				this.canvas.setUpperLeftCorner(draw_request.upperLeftCornerOrCrossCoords.y - (draw_request.max_coords_of_event_triggering_plane.max_y - 1), this.canvas.upper_left_y);
 			} else if (draw_request.action == 'CLICK') {
 				this.canvas.drawCoordinateCross({x: this.canvas.dim_x - draw_request.upperLeftCornerOrCrossCoords.y, y:  this.canvas.cross_y});
 			}
 		} else if (thisHerePlane === 'y' && draw_request.plane === 'z') {
-			this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(draw_request.max_coords_of_event_triggering_plane.max_y - draw_request.coords.y);
-			if (draw_request.action == 'PAN') {
+			this.canvas.getDataExtent().setSliceWithRespectToZoomLevel((draw_request.max_coords_of_event_triggering_plane.max_y - 1) - draw_request.coords.y);
+			if (draw_request.action == 'PAN' || draw_request.action == 'POINT') {
 				this.canvas.setUpperLeftCorner(draw_request.upperLeftCornerOrCrossCoords.x , this.canvas.upper_left_y);
 			} else if (draw_request.action == 'CLICK') {
 				this.canvas.drawCoordinateCross({x: draw_request.upperLeftCornerOrCrossCoords.x, y: this.canvas.cross_y});
 			}
 		} else if (thisHerePlane === 'x' && draw_request.plane === 'y') {
 			this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(draw_request.coords.x);
-			if (draw_request.action == 'PAN') {
+			if (draw_request.action == 'PAN' || draw_request.action == 'POINT') {
 				this.canvas.setUpperLeftCorner(this.canvas.upper_left_x, draw_request.upperLeftCornerOrCrossCoords.y);
 			} else if (draw_request.action == 'CLICK') {
 				this.canvas.drawCoordinateCross({x: this.canvas.cross_x, y: draw_request.upperLeftCornerOrCrossCoords.y});
 			}
 		} else if (thisHerePlane === 'z' && draw_request.plane === 'y') {
-			this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(draw_request.max_coords_of_event_triggering_plane.max_y - draw_request.coords.y);
-			if (draw_request.action == 'PAN') {
+			this.canvas.getDataExtent().setSliceWithRespectToZoomLevel((draw_request.max_coords_of_event_triggering_plane.max_y - 1) - draw_request.coords.y);
+			if (draw_request.action == 'PAN' || draw_request.action == 'POINT') {
 				this.canvas.setUpperLeftCorner(draw_request.upperLeftCornerOrCrossCoords.x , this.canvas.upper_left_y);
 			} else if (draw_request.action == 'CLICK') {
 				this.canvas.drawCoordinateCross({x: draw_request.upperLeftCornerOrCrossCoords.x, y:  this.canvas.cross_y});
 			}
 		} else if (thisHerePlane === 'y' && draw_request.plane === 'x') {
 			this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(draw_request.coords.x);
-			if (draw_request.action == 'PAN') {
+			if (draw_request.action == 'PAN' || draw_request.action == 'POINT') {
 				this.canvas.setUpperLeftCorner(this.canvas.upper_left_x , draw_request.upperLeftCornerOrCrossCoords.y);
 			} else if (draw_request.action == 'CLICK') {
 				this.canvas.drawCoordinateCross({x:   this.canvas.cross_x , y: draw_request.upperLeftCornerOrCrossCoords.y});
 			}
 		} else if (thisHerePlane === 'z' && draw_request.plane === 'x') {
-			this.canvas.getDataExtent().setSliceWithRespectToZoomLevel((draw_request.max_coords_of_event_triggering_plane.max_y - draw_request.coords.y));
-			if (draw_request.action == 'PAN') {
-				this.canvas.setUpperLeftCorner(this.canvas.upper_left_x , draw_request.max_coords_of_event_triggering_plane.max_x + draw_request.upperLeftCornerOrCrossCoords.x);
+			this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(((draw_request.max_coords_of_event_triggering_plane.max_y - 1) - draw_request.coords.y));
+			if (draw_request.action == 'PAN' || draw_request.action == 'POINT') {
+				this.canvas.setUpperLeftCorner(this.canvas.upper_left_x , (draw_request.max_coords_of_event_triggering_plane.max_x - 1) + draw_request.upperLeftCornerOrCrossCoords.x);
 			} else if (draw_request.action == 'CLICK') {
 				this.canvas.drawCoordinateCross({x: this.canvas.cross_x, y: this.canvas.dim_y - draw_request.upperLeftCornerOrCrossCoords.x});
 			}
 		}
 	}, drawRequest : function(draw_request) {
-		// redraw
+		if (draw_request.action == 'ZOOM') {
+			this.canvas.eraseCanvasContent();
+		}
+		
+		// redraw 
 		this.canvas.drawMe(draw_request.timestamp);
+
+		if (draw_request.action == 'POINT') {
+			this.canvas.drawCoordinateCross(draw_request.coords);
+		}
+
 		// tidy up where we left debris
+		if ((this.canvas.upper_left_x + this.canvas.getDataExtent().x) < 0
+				|| (this.canvas.upper_left_x + this.canvas.getDataExtent().x) > this.canvas.dim_x
+				|| this.canvas.upper_left_y < 0
+				|| (this.canvas.upper_left_y - this.canvas.getDataExtent().y) > this.canvas.dim_y
+				|| this.canvas.getDataExtent().slice < 0 || this.canvas.getDataExtent().slice > this.canvas.getDataExtent().max_slices
+				|| (draw_request && draw_request.coords && draw_request.coords.x < 0) || (draw_request && draw_request.coords && draw_request.coords.y < 0)) {
+			this.canvas.eraseCanvasContent(); // in these cases we erase the entire content
+			return;
+		}
+		
+		// we do a more efficient erase
 		if (this.canvas.upper_left_x > 0) { // in front of us
 			this.canvas.eraseCanvasPortion(0, 0, this.canvas.upper_left_x, this.canvas.dim_y);
 		}
-		if (this.canvas.upper_left_x <= 0 || this.canvas.upper_left_x <= 0 + this.canvas.getDataExtent().x < + this.canvas.dim_x){ // behind us
+		if (this.canvas.upper_left_x <= 0 || (this.canvas.upper_left_x >= 0 && (this.canvas.upper_left_x + this.canvas.getDataExtent().x) < this.canvas.dim_x)){ // behind us
 			this.canvas.eraseCanvasPortion(
 					this.canvas.upper_left_x + this.canvas.getDataExtent().x, 0,
 					this.canvas.dim_x - (this.canvas.upper_left_x + this.canvas.getDataExtent().x), this.canvas.dim_y);
