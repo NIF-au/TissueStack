@@ -63,7 +63,7 @@ TissueStack.Canvas.prototype = {
 
 		this.getDataExtent().changeToZoomLevel(zoom_level);
 
-		this.setUpperLeftCorner(Math.floor(centerAfterZoom.x), Math.floor(centerAfterZoom.y));
+		this.setUpperLeftCorner(centerAfterZoom.x, centerAfterZoom.y);
 		
 		// update displayed info
 		$('#canvas_' + this.getDataExtent().plane + '_extent').html("Data Extent: " + this.getDataExtent().x + " x " + this.getDataExtent().y + " [Zoom Level: " + this.getDataExtent().zoom_level + "] ");
@@ -164,6 +164,7 @@ TissueStack.Canvas.prototype = {
 				_this.moveUpperLeftCorner(dX, -dY);
 				
 				var upper_left_corner = {x: _this.upper_left_x, y: _this.upper_left_y};
+				var cross_coords = {x: _this.cross_x, y: _this.cross_y};
 				
 				// queue events 
 				_this.queue.addToQueue(
@@ -173,8 +174,8 @@ TissueStack.Canvas.prototype = {
 							slice : _this.getDataExtent().slice,
 							coords: relCoordinates,
 							max_coords_of_event_triggering_plane : {max_x: _this.getDataExtent().x, max_y: _this.getDataExtent().y},
-							move : true,
-							upperLeftCornerOrCrossCoords: upper_left_corner
+							upperLeftCorner : upper_left_corner,
+							crossCoords : cross_coords 
 						});
 				
 				if (_this.sync_canvases) {				
@@ -187,7 +188,8 @@ TissueStack.Canvas.prototype = {
 								 	_this.getDataExtent().slice,
 								 	_this.getRelativeCrossCoordinates(),
 								 	{max_x: _this.getDataExtent().x, max_y: _this.getDataExtent().y},
-					                upper_left_corner
+								 	upper_left_corner,
+								 	cross_coords
 					            ]);
 				}
 			} else {
@@ -206,7 +208,11 @@ TissueStack.Canvas.prototype = {
 					return;
 				}
 
-				_this.drawCoordinateCross(coords);
+				var upper_left_corner = {x: _this.upper_left_x, y: _this.upper_left_y};
+				var cross_coords = {x: coords.x, y: coords.y};
+
+				_this.drawCoordinateCross(cross_coords);
+
 
 				if (_this.sync_canvases) {				
 					// send message out to others that they need to redraw as well
@@ -217,12 +223,13 @@ TissueStack.Canvas.prototype = {
 					                        _this.getDataExtent().slice,
 					                        _this.getDataCoordinates(coords),
 					                        {max_x: _this.getDataExtent().x, max_y: _this.getDataExtent().y},
-											{x: coords.x, y: coords.y}
+					                        upper_left_corner,
+					                        cross_coords
 					                       ]);
 				}
 			});
 
-			$(document).bind("sync", function(e, timestamp, action, plane, zoom_level, slice, coords, max_coords_of_event_triggering_plane, upperLeftCornerOrCrossCoords) {
+			$(document).bind("sync", function(e, timestamp, action, plane, zoom_level, slice, coords, max_coords_of_event_triggering_plane, upperLeftCorner, crossCoords) {
 				// ignore one's own events
 				var thisHerePlane = _this.getDataExtent().plane;
 				if (thisHerePlane === plane) {
@@ -238,7 +245,8 @@ TissueStack.Canvas.prototype = {
 							slice : slice,
 							coords: coords,
 							max_coords_of_event_triggering_plane : max_coords_of_event_triggering_plane,
-							upperLeftCornerOrCrossCoords : upperLeftCornerOrCrossCoords
+							upperLeftCorner: upperLeftCorner,
+							crossCoords : crossCoords
 						});
 			});
 		}
@@ -366,7 +374,7 @@ TissueStack.Canvas.prototype = {
 			newX = coords.x - (this.upper_left_x + this.getDataExtent().x + deltaXBetweenCrossAndUpperLeftCorner);
 		}
 		if ((this.dim_y - coords.y) > this.upper_left_y) {
-			newY = (this.dim_y - coords.y) + (this.upper_left_x - this.getDataExtent().x + deltaYBetweenCrossAndUpperLeftCorner);
+			newY = (this.dim_y - coords.y) + (this.upper_left_y - this.getDataExtent().y + deltaYBetweenCrossAndUpperLeftCorner);
 		} else if ((this.dim_y - coords.y) < (this.upper_left_y - this.getDataExtent().y)) {
 			newY = (this.dim_y - coords.y) + deltaYBetweenCrossAndUpperLeftCorner;
 		}
@@ -405,9 +413,10 @@ TissueStack.Canvas.prototype = {
 		                        this.getDataExtent().plane,
 		                        this.getDataExtent().zoom_level,
 		                        this.getDataExtent().slice,
-		                        {x: this.cross_x, y: this.cross_y},
+		                        this.getRelativeCrossCoordinates(),
 		                        {max_x: this.getDataExtent().x, max_y: this.getDataExtent().y},
-								{x: this.upper_left_x, y: this.upper_left_y}
+								{x: this.upper_left_x, y: this.upper_left_y},
+								{x: this.cross_x, y: this.cross_y}
 		                       ]);
 		
 		return true;
@@ -532,21 +541,11 @@ TissueStack.Canvas.prototype = {
 				(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, tile_size) {
 					imageTile.onload = function() {
 						// check with actual image dimensions ...
-						if (canvasX == 0 && width != tile_size && deltaStartTileXAndUpperLeftCornerX !=0) {
-							imageOffsetX = (tile_size - deltaStartTileXAndUpperLeftCornerX);
-							width = this.width - imageOffsetX;
-						} else if (this.width < width) {
+						if (this.width < width) {
 								width = this.width;
 						}
 
-						if (imageOffsetX < 0 || imageOffsetY < 0 || width < 0 || height < 0 || canvasX < 0 || canvasY < 0) {
-							console.info("no!");
-						}
-
-						if (canvasY == 0 && height != tile_size && deltaStartTileYAndUpperLeftCornerY !=0) {
-								imageOffsetY = (tile_size - deltaStartTileYAndUpperLeftCornerY);
-								height = this.height - imageOffsetY;
-						} else	if (this.height < height) {
+						if (this.height < height) {
 								height = this.height;
 						}
 
