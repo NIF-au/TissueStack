@@ -541,11 +541,17 @@ TissueStack.Canvas.prototype = {
 				(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, tile_size) {
 					imageTile.onload = function() {
 						// check with actual image dimensions ...
-						if (this.width < width) {
+						if (canvasX == 0 && width != tile_size && deltaStartTileXAndUpperLeftCornerX !=0) {
+							imageOffsetX = (tile_size - deltaStartTileXAndUpperLeftCornerX);
+							width = this.width - imageOffsetX;
+						} else if (this.width < width) {
 								width = this.width;
 						}
 
-						if (this.height < height) {
+						if (canvasY == 0 && height != tile_size && deltaStartTileYAndUpperLeftCornerY !=0) {
+							imageOffsetY = (tile_size - deltaStartTileYAndUpperLeftCornerY);
+							height = this.height - imageOffsetY;
+						} else	if (this.height < height) {
 								height = this.height;
 						}
 
