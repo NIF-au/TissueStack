@@ -105,8 +105,8 @@ TissueStack.Canvas.prototype = {
 		return $("#" + this.canvas_id + "_cross_overlay");
 	},
 	getRelativeCrossCoordinates : function() {
-		var relCrossX = -1;
-		var relCrossY = -1;
+		var relCrossX = (this.cross_x > (this.upper_left_x + this.getDataExtent().x)) ? -(this.cross_x - (this.upper_left_x + this.getDataExtent().x)) : (this.getDataExtent().x -1) +  (this.upper_left_x - this.cross_x);
+		var relCrossY = ((this.dim_y - this.cross_y) > this.upper_left_y) ? ((this.getDataExtent().y - 1) - (this.upper_left_y - (this.cross_y - this.cross_y))) : -((this.upper_left_y - this.getDataExtent().y) - (this.dim_y - this.cross_y)) ;
 		if (this.upper_left_x < 0 && this.cross_x <= (this.upper_left_x + this.getDataExtent().x)) {
 			relCrossX = Math.abs(this.upper_left_x) + this.cross_x;
 		} else if (this.upper_left_x >= 0 && this.cross_x >= this.upper_left_x && this.cross_x <= this.upper_left_x + this.getDataExtent().x) {
@@ -165,6 +165,7 @@ TissueStack.Canvas.prototype = {
 				
 				var upper_left_corner = {x: _this.upper_left_x, y: _this.upper_left_y};
 				var cross_coords = {x: _this.cross_x, y: _this.cross_y};
+				var canvas_dims = {x: _this.dim_x, y: _this.dim_y};
 				
 				// queue events 
 				_this.queue.addToQueue(
@@ -175,7 +176,8 @@ TissueStack.Canvas.prototype = {
 							coords: relCoordinates,
 							max_coords_of_event_triggering_plane : {max_x: _this.getDataExtent().x, max_y: _this.getDataExtent().y},
 							upperLeftCorner : upper_left_corner,
-							crossCoords : cross_coords 
+							crossCoords : cross_coords,
+							canvasDims : canvas_dims
 						});
 				
 				if (_this.sync_canvases) {				
@@ -189,7 +191,8 @@ TissueStack.Canvas.prototype = {
 								 	_this.getRelativeCrossCoordinates(),
 								 	{max_x: _this.getDataExtent().x, max_y: _this.getDataExtent().y},
 								 	upper_left_corner,
-								 	cross_coords
+								 	cross_coords,
+								 	canvas_dims
 					            ]);
 				}
 			} else {
@@ -210,9 +213,9 @@ TissueStack.Canvas.prototype = {
 
 				var upper_left_corner = {x: _this.upper_left_x, y: _this.upper_left_y};
 				var cross_coords = {x: coords.x, y: coords.y};
+				var canvas_dims = {x: _this.dim_x, y: _this.dim_y};
 
 				_this.drawCoordinateCross(cross_coords);
-
 
 				if (_this.sync_canvases) {				
 					// send message out to others that they need to redraw as well
@@ -224,12 +227,13 @@ TissueStack.Canvas.prototype = {
 					                        _this.getDataCoordinates(coords),
 					                        {max_x: _this.getDataExtent().x, max_y: _this.getDataExtent().y},
 					                        upper_left_corner,
-					                        cross_coords
+					                        cross_coords,
+					                        canvas_dims
 					                       ]);
 				}
 			});
 
-			$(document).bind("sync", function(e, timestamp, action, plane, zoom_level, slice, coords, max_coords_of_event_triggering_plane, upperLeftCorner, crossCoords) {
+			$(document).bind("sync", function(e, timestamp, action, plane, zoom_level, slice, coords, max_coords_of_event_triggering_plane, upperLeftCorner, crossCoords, canvasDims) {
 				// ignore one's own events
 				var thisHerePlane = _this.getDataExtent().plane;
 				if (thisHerePlane === plane) {
@@ -246,7 +250,8 @@ TissueStack.Canvas.prototype = {
 							coords: coords,
 							max_coords_of_event_triggering_plane : max_coords_of_event_triggering_plane,
 							upperLeftCorner: upperLeftCorner,
-							crossCoords : crossCoords
+							crossCoords : crossCoords,
+							canvasDims : canvasDims
 						});
 			});
 		}
@@ -416,7 +421,8 @@ TissueStack.Canvas.prototype = {
 		                        this.getRelativeCrossCoordinates(),
 		                        {max_x: this.getDataExtent().x, max_y: this.getDataExtent().y},
 								{x: this.upper_left_x, y: this.upper_left_y},
-								{x: this.cross_x, y: this.cross_y}
+								{x: this.cross_x, y: this.cross_y},
+								{x: this.dim_x, y: this.dim_y}
 		                       ]);
 		
 		return true;
@@ -491,6 +497,11 @@ TissueStack.Canvas.prototype = {
 
 		// loop over rows
 		for (var tileX = startTileX  ; tileX < endTileX ; tileX++) {
+			// prelim check
+			if (this.data_extent.slice < 0 || this.data_extent.slice >= this.data_extent.x) {
+				//break;
+			}
+			
 			var tileOffsetX = startTileX * this.getDataExtent().tile_size;
 			var imageOffsetX = 0;
 			var width =  this.getDataExtent().tile_size;

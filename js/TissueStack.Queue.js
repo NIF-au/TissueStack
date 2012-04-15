@@ -53,10 +53,6 @@ TissueStack.Queue.prototype = {
 		this.queue_handle = null;
 	},
 	addToQueue : function(draw_request) {
-		if (draw_request && draw_request.upperLeftCorner && (draw_request.upperLeftCorner.x - Math.floor(draw_request.upperLeftCorner.x) > 0 || draw_request.upperLeftCorner.y - Math.floor(draw_request.upperLeftCorner.y) > 0)) {
-			console.warn(this.canvas_id);
-		}
-
 		// we have no existing queue for the zoom level and slice =>
 		// this means: A) we have to create it AND B) we have to empty the queue to get rid of old requests
 		if (this.presentlyQueuedZoomLevelAndSlice !== ('' + draw_request.zoom_level + '_' + draw_request.slice)) {
@@ -183,68 +179,78 @@ TissueStack.Queue.prototype = {
 			return;
 		}
 
+		var originalZoomLevelDims = this.canvas.getDataExtent().getZoomLevelDimensions(draw_request.zoom_level);
+		var originalCoords = draw_request.coords;
 		if (draw_request.zoom_level != this.canvas.getDataExtent().zoom_level) {
-			// TODO: outside of range
-			if (draw_request.coords.x < 0 && (draw_request.upperLeftCorner.x + draw_request.max_coords_of_event_triggering_plane.max_x) < draw_request.crossCoords.x) {
+			originalCoords.x = (draw_request.zoom_level == 1) ?
+					Math.floor(originalCoords.x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x)) :
+					Math.ceil(originalCoords.x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x));
+			originalCoords.y = (draw_request.zoom_level == 1) ?
+					Math.floor(originalCoords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y)) :
+					Math.ceil(originalCoords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y));
+			
+			draw_request.max_coords_of_event_triggering_plane.max_x = (draw_request.zoom_level == 1) ?
+					Math.floor(draw_request.max_coords_of_event_triggering_plane.max_x / this.canvas.data_extent.zoom_level_factor) :
+					Math.ceil(draw_request.max_coords_of_event_triggering_plane.max_x / this.canvas.data_extent.zoom_level_factor);
+			draw_request.max_coords_of_event_triggering_plane.max_y = (draw_request.zoom_level == 1) ?
+					Math.floor(draw_request.max_coords_of_event_triggering_plane.max_y / this.canvas.data_extent.zoom_level_factor) :
+					Math.ceil(draw_request.max_coords_of_event_triggering_plane.max_y / this.canvas.data_extent.zoom_level_factor);
+
+			// TODO: modify to accomodate canvases at various zoomlevels and dimensions in sync with each other
+			if ((draw_request.upperLeftCorner.x +  draw_request.max_coords_of_event_triggering_plane.max_x -1) <  draw_request.crossCoords.x) {
 				draw_request.coords.x = Math.abs(draw_request.coords.x);
-				draw_request.upperLeftCorner.x = this.canvas.cross_x - draw_request.coords.x * (this.canvas.getDataExtent().x / draw_request.max_coords_of_event_triggering_plane.max_x);				
-			} else if (draw_request.coords.x < 0 && draw_request.upperLeftCorner.x > draw_request.crossCoords.x) {
-				draw_request.coords.x = Math.abs(draw_request.coords.x);
+				draw_request.upperLeftCorner.x = this.canvas.cross_x - draw_request.coords.x * (this.canvas.getDataExtent().x / draw_request.max_coords_of_event_triggering_plane.max_x) - this.canvas.getDataExtent().x;				
+			} else if (draw_request.upperLeftCorner.x >draw_request.crossCoords.x) {
+				draw_request.coords.x = draw_request.upperLeftCorner.x - draw_request.crossCoords.x;
 				draw_request.upperLeftCorner.x = this.canvas.cross_x + draw_request.coords.x * (this.canvas.getDataExtent().x / draw_request.max_coords_of_event_triggering_plane.max_x);
 			} else {
 				draw_request.upperLeftCorner.x = this.canvas.cross_x - draw_request.coords.x * (this.canvas.getDataExtent().x / draw_request.max_coords_of_event_triggering_plane.max_x);				
 			}
 
-			// TODO: include dim_y
-			if (draw_request.coords.y < 0 && (draw_request.upperLeftCorner.y + draw_request.max_coords_of_event_triggering_plane.max_y) < draw_request.crossCoords.y) {
-				draw_request.coords.y = Math.abs(draw_request.coords.x);
-				draw_request.upperLeftCorner.y = this.canvas.cross_y - draw_request.coords.y * (this.canvas.getDataExtent().y / draw_request.max_coords_of_event_triggering_plane.max_y);				
-			} else if (draw_request.coords.y < 0 && draw_request.upperLeftCorner.y > draw_request.crossCoords.y) {
-				draw_request.coords.y = Math.abs(draw_request.coords.x);
-				draw_request.upperLeftCorner.y = this.canvas.cross_y + draw_request.coords.y * (this.canvas.getDataExtent().y / draw_request.max_coords_of_event_triggering_plane.max_y);
-			} else {
-				draw_request.upperLeftCorner.y = this.canvas.cross_y - draw_request.coords.y * (this.canvas.getDataExtent().y / draw_request.max_coords_of_event_triggering_plane.max_y);				
-			}
+			draw_request.upperLeftCorner.x = Math.ceil(draw_request.upperLeftCorner.x);
+		} else {
+			originalCoords.x = Math.floor(originalCoords.x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x));
+			originalCoords.y = Math.floor(originalCoords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y));
 		}
 		
 		// these are the moves caused by other canvases
 		if (thisHerePlane === 'x' && draw_request.plane === 'z') {
-			this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(draw_request.coords.x);
+			this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(originalCoords.x);
 			if (draw_request.action == 'PAN' || draw_request.action == 'POINT') {
 				this.canvas.setUpperLeftCorner(draw_request.upperLeftCorner.y - (draw_request.max_coords_of_event_triggering_plane.max_y - 1), this.canvas.upper_left_y);
 			} else if (draw_request.action == 'CLICK') {
 				this.canvas.drawCoordinateCross({x: this.canvas.dim_x - draw_request.crossCoords.y, y:  this.canvas.cross_y});
 			}
 		} else if (thisHerePlane === 'y' && draw_request.plane === 'z') {
-			this.canvas.getDataExtent().setSliceWithRespectToZoomLevel((draw_request.max_coords_of_event_triggering_plane.max_y - 1) - draw_request.coords.y);
+			this.canvas.getDataExtent().setSliceWithRespectToZoomLevel((draw_request.upperLeftCorner.y < (draw_request.canvasDims.y -  draw_request.crossCoords.y)) ? -99 : ((draw_request.max_coords_of_event_triggering_plane.max_y - 1) - originalCoords.y));
 			if (draw_request.action == 'PAN' || draw_request.action == 'POINT') {
 				this.canvas.setUpperLeftCorner(draw_request.upperLeftCorner.x , this.canvas.upper_left_y);
 			} else if (draw_request.action == 'CLICK') {
 				this.canvas.drawCoordinateCross({x: draw_request.crossCoords.x, y: this.canvas.cross_y});
 			}
 		} else if (thisHerePlane === 'x' && draw_request.plane === 'y') {
-			this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(draw_request.coords.x);
+			this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(originalCoords.x);
 			if (draw_request.action == 'PAN' || draw_request.action == 'POINT') {
 				this.canvas.setUpperLeftCorner(this.canvas.upper_left_x, draw_request.upperLeftCorner.y);
 			} else if (draw_request.action == 'CLICK') {
 				this.canvas.drawCoordinateCross({x: this.canvas.cross_x, y: draw_request.crossCoords.y});
 			}
 		} else if (thisHerePlane === 'z' && draw_request.plane === 'y') {
-			this.canvas.getDataExtent().setSliceWithRespectToZoomLevel((draw_request.max_coords_of_event_triggering_plane.max_y - 1) - draw_request.coords.y);
+			this.canvas.getDataExtent().setSliceWithRespectToZoomLevel((draw_request.upperLeftCorner.y < (draw_request.canvasDims.y - draw_request.crossCoords.y)) ? -99 : ((draw_request.max_coords_of_event_triggering_plane.max_y - 1) - originalCoords.y));
 			if (draw_request.action == 'PAN' || draw_request.action == 'POINT') {
 				this.canvas.setUpperLeftCorner(draw_request.upperLeftCorner.x , this.canvas.upper_left_y);
 			} else if (draw_request.action == 'CLICK') {
 				this.canvas.drawCoordinateCross({x: draw_request.crossCoords.x, y:  this.canvas.cross_y});
 			}
 		} else if (thisHerePlane === 'y' && draw_request.plane === 'x') {
-			this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(draw_request.coords.x);
+			this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(originalCoords.x);
 			if (draw_request.action == 'PAN' || draw_request.action == 'POINT') {
 				this.canvas.setUpperLeftCorner(this.canvas.upper_left_x , draw_request.upperLeftCorner.y);
 			} else if (draw_request.action == 'CLICK') {
 				this.canvas.drawCoordinateCross({x:   this.canvas.cross_x , y: draw_request.crossCoords.y});
 			}
 		} else if (thisHerePlane === 'z' && draw_request.plane === 'x') {
-			this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(((draw_request.max_coords_of_event_triggering_plane.max_y - 1) - draw_request.coords.y));
+			this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(((draw_request.max_coords_of_event_triggering_plane.max_y - 1) - originalCoords.y));
 			if (draw_request.action == 'PAN' || draw_request.action == 'POINT') {
 				this.canvas.setUpperLeftCorner(this.canvas.upper_left_x , (draw_request.max_coords_of_event_triggering_plane.max_x - 1) + draw_request.upperLeftCorner.x);
 			} else if (draw_request.action == 'CLICK') {
