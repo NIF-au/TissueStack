@@ -5,7 +5,7 @@
 	<!-- link href="css/styles.css" rel="stylesheet" type="text/css"-->
 	
 	<script src="js/libs/jquery-1.7.1/jquery-1.7.1.js"></script>
-	<script src="js/libs/jquery-mousewheel-3.0.6/jquery.mousewheel.js"></script>
+	<script src="js/TissueStack.MouseWheel.js"></script>
 	<script src="js/TissueStack.js" /></script>
 	<script src="js/TissueStack.Utils.js" /></script>
 	<script src="js/TissueStack.Queue.js" /></script>
@@ -15,53 +15,51 @@
 	
 	</head>
 	<body>
-			<div style="display: none;" id="mousedragcoords">N/A</div>
-			<br />Drawing Interval (in millis):&nbsp;<input id="drawing_interval" type="text" value="100">&nbsp;<input id="drawing_interval_button" value="Apply" type="button" />
-			&nbsp;<input type="checkbox" id="sync_canvases" checked="checked" />Sync Canvases<br /><br />
-			<div id="coords">&nbsp;</div>
-			<div id="relative_coords">&nbsp;</div>
-			<br />
-
-
-			<table style="width: 1400px;">
-			 	<thead>
-					<tr>
-						<td style="text-align: center;" width="450">
-							<div id="canvas_x_extent"></div>
-							<div><input size="8" maxlength="7" type="text" id="canvas_x_x" value="0"/><input size="8" maxlength="7" type="text" id="canvas_x_y" value="0"/><button type="button" id="center_point_in_canvas_x">Center on Coordinates</button></div>
-						</td>
-						<td style="text-align: center;" width="450">
-							<div id="canvas_y_extent"></div>
-							<div><input size="8" maxlength="7" type="text" id="canvas_y_x" value="0"/><input size="8" maxlength="7" type="text" id="canvas_y_y" value="0"/><button type="button" id="center_point_in_canvas_y">Center on Coordinates</button></div>
-						</td>
-						<td style="text-align: center;" width="450">
-							<div id="canvas_z_extent"></div>
-							<div><input size="8" maxlength="7" type="text" id="canvas_z_x" value="0"/><input size="8" maxlength="7" type="text" id="canvas_z_y" value="0"/><button type="button" id="center_point_in_canvas_z">Center on Coordinates</button></div>
-						</td>
-					</tr>
-				</thead>
-				<tbody style="position: relative;">
-					<tr style="position: relative;">
-						<td style="position: relative;">
-							<div style="position: relative;">
-								<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="450" height="450" id="canvas_x_plane"></canvas>
-								<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="450" height="450" id="canvas_x_plane_cross_overlay"></canvas>
-							</div>
-						</td>
-						<td style="position: relative;">
-							<div style="position: relative;">
-								<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="450" height="450" id="canvas_y_plane"></canvas>
-								<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="450" height="450" id="canvas_y_plane_cross_overlay"></canvas>
-							</div>
-						</td>
-						<td style="position: relative;">	
-							<div style="position: relative;">
-								<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="450" height="450" id="canvas_z_plane"></canvas>
-								<canvas style="position: absolute; left: 0px; top: 0px;z-index: 749;" width="450" height="450" id="canvas_z_plane_cross_overlay"></canvas>
-							</div>
-						</td>
-					</tr>	
-				</tbody>
-			</table>
+		<div style="display: none;" id="mousedragcoords">N/A</div>
+		<br />Drawing Interval (in millis):&nbsp;<input id="drawing_interval" type="text" value="100">&nbsp;<input id="drawing_interval_button" value="Apply" type="button" />
+		&nbsp;<input type="checkbox" id="sync_canvases" checked="checked" />Sync Canvases<br /><br />
+		<div id="coords">&nbsp;</div>
+		<div id="relative_coords">&nbsp;</div>
+		
+		<div style="position: relative; left: 20px; width: 1200px; height: 900px;">
+			<div style="position: relative; left: 0px; top: 10px; width: 1200px; height: 450px;">
+				<div style="position: relative; left: 0px; top: 0px; text-align: center;">
+					<div style="text-align: center;">
+						<div id="canvas_y_extent"></div>
+						<input size="8" maxlength="7" type="text" id="canvas_y_x" value="0"/>
+						<input size="8" maxlength="7" type="text" id="canvas_y_y" value="0"/>
+						<button type="button" id="center_point_in_canvas_y">Center on Coordinates</button>
+					</div>
+					<div style="position: relative; left: 0px; top: 10px; width: 1200px;">
+						<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="1200" height="450" id="canvas_y_plane"></canvas>
+						<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="1200" height="450" id="canvas_y_plane_cross_overlay"></canvas>
+					</div>							
+				</div>						
+			</div>
+			<div style="position: relative; left: 100px; top: 75px; width: 500px; height: 400px; float: left">
+				<div style="position: relative; left: 0px; top: 0px; text-align: center;">
+					<div id="canvas_x_extent"></div>
+					<input size="8" maxlength="7" type="text" id="canvas_x_x" value="0"/>
+					<input size="8" maxlength="7" type="text" id="canvas_x_y" value="0"/>
+					<button type="button" id="center_point_in_canvas_x">Center on Coordinates</button>
+				</div>
+				<div style="position: relative; left: 0px; top: 10px;">
+					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="450" height="300" id="canvas_x_plane"></canvas>
+					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="450" height="300" id="canvas_x_plane_cross_overlay"></canvas>
+				</div>
+			</div>
+			<div style="position: relative; left: 100px; top: 75px; width: 500px; height: 400px; float: left;">
+				<div style="position: relative; left: 0px; top: 0px; text-align: center;">
+					<div id="canvas_z_extent"></div>
+					<input size="8" maxlength="7" type="text" id="canvas_z_x" value="0"/>
+					<input size="8" maxlength="7" type="text" id="canvas_z_y" value="0"/>
+					<button type="button" id="center_point_in_canvas_z">Center on Coordinates</button>
+				</div>
+				<div style="position: relative; left: 0px; top: 10px;">
+					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="450" height="300" id="canvas_z_plane"></canvas>
+					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="450" height="300" id="canvas_z_plane_cross_overlay"></canvas>
+				</div>
+			</div>
+		</div>
 	</body>
 </html>

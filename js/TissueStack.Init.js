@@ -69,6 +69,11 @@ TissueStack.Init = function () {
 		// display data extent info on page
 		$('#canvas_' + planeId + '_extent').html("Data Extent: " + plane.getDataExtent().x + " x " + plane.getDataExtent().y + " [Zoom Level: " + plane.getDataExtent().zoom_level + "] ");
 		
+		// change zoom levels of x and z to 0
+		if (planeId == 'x' || planeId == 'z') {
+			plane.changeToZoomLevel(0);
+		}
+		
 		// fill canvases
 		plane.queue.drawLowResolutionPreview();
 		plane.queue.drawRequestAfterLowResolutionPreview();

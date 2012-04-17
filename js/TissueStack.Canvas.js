@@ -281,6 +281,7 @@ TissueStack.Canvas.prototype = {
 						slice : _this.getDataExtent().slice
 					});
 
+			/* let's not sync zooms for now
 			if (_this.sync_canvases) {				
 				// send message out to others that they need to redraw as well
 				canvas.trigger("zoom", 
@@ -290,7 +291,7 @@ TissueStack.Canvas.prototype = {
 							 	newZoomLevel,
 							 	_this.getDataExtent().slice
 				            ]);
-			}
+			}*/
 		});
 		
 		$(document).bind("zoom", function(e, timestamp, action, plane, zoom_level, slice) {
@@ -372,18 +373,6 @@ TissueStack.Canvas.prototype = {
 		
 		var newX = Math.floor((this.upper_left_x <= coords.x) ? (coords.x - zoomLevelCorrectionX) : (coords.x + zoomLevelCorrectionX));
 		var newY = Math.floor((this.upper_left_y <= (this.dim_y - coords.y)) ? ((this.dim_y - coords.y) - zoomLevelCorrectionY) : ((this.dim_y - coords.y) + zoomLevelCorrectionY));
-
-		// correction id crosshair is not inside extent
-		if (coords.x < this.upper_left_x) {
-			newX = coords.x + deltaXBetweenCrossAndUpperLeftCorner;
-		} else if (coords.x > (this.upper_left_x + this.getDataExtent().x)) {
-			newX = coords.x - (this.upper_left_x + this.getDataExtent().x + deltaXBetweenCrossAndUpperLeftCorner);
-		}
-		if ((this.dim_y - coords.y) > this.upper_left_y) {
-			newY = (this.dim_y - coords.y) + (this.upper_left_y - this.getDataExtent().y + deltaYBetweenCrossAndUpperLeftCorner);
-		} else if ((this.dim_y - coords.y) < (this.upper_left_y - this.getDataExtent().y)) {
-			newY = (this.dim_y - coords.y) + deltaYBetweenCrossAndUpperLeftCorner;
-		}
 
 		return {x: newX, y: newY};
 	},
