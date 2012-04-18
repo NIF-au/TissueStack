@@ -257,8 +257,19 @@ TissueStack.Canvas.prototype = {
 			});
 		}
 
+		// this is sadly necessary to keep the window from scrolling when only the canvas should be scrolled
+		TissueStack.Utils.preventBrowserWindowScrollingWhenInCanvas();
+		canvas.hover(function() {
+			if(TissueStack.Utils.forceWindowScrollY == -1) {
+				  TissueStack.Utils.forceWindowScrollY = $(window).scrollTop();
+			}
+		}, function() {
+			TissueStack.Utils.forceWindowScrollY = -1;
+		});
+		
 		// bind the mouse wheel scroll event
-		canvas.bind('mousewheel', function(event, delta) {
+		$(canvas).bind('mousewheel', function(event, delta) {
+			
 			// make sure zoom delta is whole number
 			if (delta < 0) {
 				delta = -1;
@@ -280,7 +291,8 @@ TissueStack.Canvas.prototype = {
 						zoom_level : newZoomLevel,
 						slice : _this.getDataExtent().slice
 					});
-
+			
+			event.stopPropagation();
 			/* let's not sync zooms for now
 			if (_this.sync_canvases) {				
 				// send message out to others that they need to redraw as well

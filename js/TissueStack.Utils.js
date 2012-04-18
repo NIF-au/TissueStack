@@ -1,4 +1,12 @@
 TissueStack.Utils = {
+		forceWindowScrollY : -1,
+		preventBrowserWindowScrollingWhenInCanvas : function() {
+			$(window).scroll(function(event) {
+				  if(TissueStack.Utils.forceWindowScrollY != -1 && window.scrollY != TissueStack.Utils.forceWindowScrollY) {
+				    $(window).scrollTop(TissueStack.Utils.forceWindowScrollY);    
+				  }
+			});
+		},
 		getRelativeMouseCoords : function(event) {
 			var totalOffsetX = 0;
 			var totalOffsetY = 0;
