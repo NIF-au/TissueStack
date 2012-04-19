@@ -389,10 +389,12 @@ TissueStack.Canvas.prototype = {
 		return {x: newX, y: newY};
 	},
 	redrawWithCenterAndCrossAtGivenPixelCoordinates: function(coords) {
+		/*
 		if (coords.x < 0 || coords.x > this.getDataExtent().x 
 				|| coords.y < 0 || coords.y > this.getDataExtent().y) {
 			return false;
-		}
+		}*/
+		
 		// this stops any still running draw requests 
 		var now = new Date().getTime(); 
 		this.queue.latestDrawRequestTimestamp = now;

@@ -1,17 +1,19 @@
+<!DOCTYPE html>
 <html>
 
 	<head>
+	<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
 	<title>Test</title>
 	<!-- link href="css/styles.css" rel="stylesheet" type="text/css"-->
 	
 	<script src="js/libs/jquery-1.7.1/jquery-1.7.1.js"></script>
 	<script src="js/TissueStack.MouseWheel.js"></script>
-	<script src="js/TissueStack.js" /></script>
-	<script src="js/TissueStack.Utils.js" /></script>
-	<script src="js/TissueStack.Queue.js" /></script>
-	<script src="js/TissueStack.Extent.js" /></script>
-	<script src="js/TissueStack.Canvas.js" /></script>
-	<script src="js/TissueStack.Init.js" /></script>
+	<script src="js/TissueStack.js"></script>
+	<script src="js/TissueStack.Utils.js"></script>
+	<script src="js/TissueStack.Queue.js"></script>
+	<script src="js/TissueStack.Extent.js"></script>
+	<script src="js/TissueStack.Canvas.js"></script>
+	<script src="js/TissueStack.Init.js"></script>
 	
 	</head>
 	<body>
@@ -23,39 +25,42 @@
 		
 		<div style="position: relative; left: 20px; width: 1200px; height: 900px;">
 			<div style="position: relative; left: 0px; top: 10px; width: 1200px; height: 450px;">
-				<div style="position: relative; left: 0px; top: 0px; text-align: center;">
-					<div style="text-align: center;">
+				<div id="main_view_div" class="canvas_y" style="position: relative; left: 0px; top: 0px; text-align: center;">
+					<div id="main_view_info" style="text-align: center;">
 						<div id="canvas_y_extent"></div>
 						<input size="8" maxlength="7" type="text" id="canvas_y_x" value="0"/>
 						<input size="8" maxlength="7" type="text" id="canvas_y_y" value="0"/>
 						<button type="button" id="center_point_in_canvas_y">Center on Coordinates</button>
 					</div>
-					<div style="position: relative; left: 0px; top: 10px; width: 1200px;">
+					<div id="main_view_canvas" style="position: relative; left: 0px; top: 10px; width: 1200px;">
 						<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="1200" height="450" id="canvas_y_plane"></canvas>
 						<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="1200" height="450" id="canvas_y_plane_cross_overlay"></canvas>
 					</div>							
 				</div>						
 			</div>
-			<div style="position: relative; left: 100px; top: 75px; width: 500px; height: 400px; float: left">
-				<div style="position: relative; left: 0px; top: 0px; text-align: center;">
+			<div style="position: relative; left: 100px; top: 75px; width: 450px; height: 400px; float: left">
+				<div id="left_side_view_info" style="position: relative; left: 0px; top: 0px; text-align: center;">
 					<div id="canvas_x_extent"></div>
 					<input size="8" maxlength="7" type="text" id="canvas_x_x" value="0"/>
 					<input size="8" maxlength="7" type="text" id="canvas_x_y" value="0"/>
 					<button type="button" id="center_point_in_canvas_x">Center on Coordinates</button>
 				</div>
-				<div style="position: relative; left: 0px; top: 10px;">
+				
+				<div id="left_side_view_canvas" style="position: relative; left: 0px; top: 10px;">
+					<img id="left_side_view_maximize" class="canvas_x" style="position: absolute; z-index: 99999; right: 0px; top: 0px;" src="images/maximize.png" alt="Maximize View" />
 					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="450" height="300" id="canvas_x_plane"></canvas>
 					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="450" height="300" id="canvas_x_plane_cross_overlay"></canvas>
 				</div>
 			</div>
-			<div style="position: relative; left: 100px; top: 75px; width: 500px; height: 400px; float: left;">
-				<div style="position: relative; left: 0px; top: 0px; text-align: center;">
+			<div style="position: relative; left: 100px; top: 75px; width: 450px; height: 400px; float: left;">
+				<div id="right_side_view_info" style="position: relative; left: 0px; top: 0px; text-align: center;">
 					<div id="canvas_z_extent"></div>
 					<input size="8" maxlength="7" type="text" id="canvas_z_x" value="0"/>
 					<input size="8" maxlength="7" type="text" id="canvas_z_y" value="0"/>
 					<button type="button" id="center_point_in_canvas_z">Center on Coordinates</button>
 				</div>
-				<div style="position: relative; left: 0px; top: 10px;">
+				<div id="right_side_view_canvas" style="position: relative; left: 50px; top: 10px;">
+					<img id="right_side_view_maximize" class="canvas_z" style="position: absolute; z-index: 99999; right: 0px; top: 0px;" src="images/maximize.png" alt="Maximize View" />
 					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="450" height="300" id="canvas_z_plane"></canvas>
 					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="450" height="300" id="canvas_z_plane_cross_overlay"></canvas>
 				</div>

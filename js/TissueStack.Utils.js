@@ -45,5 +45,16 @@ TissueStack.Utils = {
 		},
 		getCenter : function(x,y) {
 			return {x :  Math.floor(x / 2),  y : Math.floor(y / 2)};
+	},
+	returnFirstOccurranceOfPatternInStringArray : function(someArray, pattern) {
+		if (!someArray) {
+			return;
+		}
+		
+		for (var i=0 ; i<someArray.length;i++) {
+			if (someArray[i].match(pattern)) {
+				return someArray[i];
+			}
+		}
 	}
 };
