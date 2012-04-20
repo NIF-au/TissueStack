@@ -80,7 +80,7 @@ TissueStack.Init = function () {
 				var yCoord = parseInt($('#canvas_' + planeId + '_y').val());
 				
 				if (xCoord < 0 || xCoord > plane.getDataExtent().x 
-						|| yCoord < 0 || yCoords > plane.getDataExtent().y) {
+						|| yCoord < 0 || yCoord > plane.getDataExtent().y) {
 					alert("Illegal coords");
 					return;
 				}
