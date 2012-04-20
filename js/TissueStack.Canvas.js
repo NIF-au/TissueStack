@@ -145,13 +145,18 @@ TissueStack.Canvas.prototype = {
 		canvas.bind("mousemove", function(e) {
 			var now =new Date().getTime(); 
 			var coords = TissueStack.Utils.getRelativeMouseCoords(e);
-								
+
+			// output coordinates for mouse position on canvas, its corresponding pixel coordinate and real world coordinate
 			var log = $('#coords');
 			log.html("Canvas Coordinates X: " + coords.x + ", Canvas Y: " + coords.y);
-			log = $('#relative_coords');
-			
+			log = $('#pixel_coords');
 			var relCoordinates = _this.getDataCoordinates(coords);
-			log.html("Data Coordinates (in pixels) X: " + relCoordinates.x + ", Data Y: " + relCoordinates.y);
+			log.html("Pixel Coordinates X: " + relCoordinates.x + ", Data Y: " + relCoordinates.y);
+			log = $('#world_coords');
+			var worldCoordinates = _this.getDataExtent().getWorldCoordinatesForPixel(relCoordinates);
+			if (worldCoordinates) {
+					log.html("World Coordinates X: " + Math.round(worldCoordinates[0] * 1000) / 1000 + ", Data Y: " + Math.round(worldCoordinates[1] * 1000) / 1000);	
+			}
 			
 			if (_this.mouse_down) {
 				_this.isDragging = true;
@@ -389,12 +394,6 @@ TissueStack.Canvas.prototype = {
 		return {x: newX, y: newY};
 	},
 	redrawWithCenterAndCrossAtGivenPixelCoordinates: function(coords) {
-		/*
-		if (coords.x < 0 || coords.x > this.getDataExtent().x 
-				|| coords.y < 0 || coords.y > this.getDataExtent().y) {
-			return false;
-		}*/
-		
 		// this stops any still running draw requests 
 		var now = new Date().getTime(); 
 		this.queue.latestDrawRequestTimestamp = now;
@@ -428,8 +427,6 @@ TissueStack.Canvas.prototype = {
 								{x: this.cross_x, y: this.cross_y},
 								{x: this.dim_x, y: this.dim_y}
 		                       ]);
-		
-		return true;
 	},
 	eraseCanvasContent: function() {
     	var ctx = this.getCanvasContext();

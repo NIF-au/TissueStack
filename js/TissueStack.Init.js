@@ -15,7 +15,14 @@ TissueStack.Init = function () {
 					plane: 'x',
 					slices: 678,
 					extent_x: 1311,
-					extent_y: 499
+					extent_y: 499,
+					worldCoordinatesTransformationMatrix : 
+						[
+						 	[0.5, 0   , 0   , -327.15 ],
+						 	[0   , 0.5, 0   , -124.2   ],
+						 	[0   , 0   , 0.5, -169.2   ],
+						 	[0   , 0   , 0   ,  1          ]
+						]
 	            },
 	            { // y plane
 					id: "mouse_1",
@@ -23,7 +30,14 @@ TissueStack.Init = function () {
 					plane: 'y',
 					slices: 1310,
 					extent_x: 679,
-					extent_y: 499
+					extent_y: 499,
+					worldCoordinatesTransformationMatrix : 
+						[
+						 	[0.5, 0   , 0   , -169.2   ],
+						 	[0   , 0.5, 0   , -124.2   ],
+						 	[0   , 0   , 0.5, -327.15 ],
+						 	[0   , 0   , 0   ,  1          ]
+						]
 	            },
 	            { // z plane
 					id: "mouse_1",
@@ -31,7 +45,14 @@ TissueStack.Init = function () {
 					plane: 'z',
 					slices: 498,
 					extent_x: 679,
-					extent_y: 1311
+					extent_y: 1311,
+					worldCoordinatesTransformationMatrix : 
+						[
+						 	[0.5, 0   , 0   , -124.2   ],
+						 	[0   , 0.5, 0   , -327.15 ],
+						 	[0   , 0   , 0.5, -169.2   ],
+						 	[0   , 0   , 0   ,  1           ]
+						]
 	            }
 	];
 
@@ -44,7 +65,7 @@ TissueStack.Init = function () {
 		
 		// create extent
 		var extent = new TissueStack.Extent(dataForPlane.id, dataForPlane.one_to_one_zoom_level, planeId, dataForPlane.slices,
-				dataForPlane.extent_x, dataForPlane.extent_y, zoom_levels);
+				dataForPlane.extent_x, dataForPlane.extent_y, zoom_levels, dataForPlane.worldCoordinatesTransformationMatrix);
 
 		// create canvas
 		var plane = new TissueStack.Canvas(extent, "canvas_" + planeId + "_plane");
@@ -58,9 +79,12 @@ TissueStack.Init = function () {
 				var xCoord = parseInt($('#canvas_' + planeId + '_x').val());
 				var yCoord = parseInt($('#canvas_' + planeId + '_y').val());
 				
-				if (!plane.redrawWithCenterAndCrossAtGivenPixelCoordinates({x: xCoord, y: yCoord})) {
+				if (xCoord < 0 || xCoord > plane.getDataExtent().x 
+						|| yCoord < 0 || yCoords > plane.getDataExtent().y) {
 					alert("Illegal coords");
+					return;
 				}
+				plane.redrawWithCenterAndCrossAtGivenPixelCoordinates({x: xCoord, y: yCoord});
 			});
 			
 			

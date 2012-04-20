@@ -1,4 +1,4 @@
-TissueStack.Extent = function (data_id, zoom_level, plane, max_slices, x, y, zoom_levels) {
+TissueStack.Extent = function (data_id, zoom_level, plane, max_slices, x, y, zoom_levels, worldCoordinatesTransformationMatrix) {
 	this.setDataId(data_id);
 	this.setZoomLevel(zoom_level);
 	this.setPlane(plane);
@@ -7,6 +7,7 @@ TissueStack.Extent = function (data_id, zoom_level, plane, max_slices, x, y, zoo
 	this.setDimensions(x, y);
 	this.rememberOneToOneZoomLevel(this.x, this.y, this.zoom_level);
 	this.setZoomLevels(zoom_levels);
+	this.worldCoordinatesTransformationMatrix = worldCoordinatesTransformationMatrix;
 };
 
 TissueStack.Extent.prototype = {
@@ -23,6 +24,7 @@ TissueStack.Extent.prototype = {
 	plane: 'z',
 	max_slices : 0,
 	slice: 0,
+	worldCoordinatesTransformationMatrix: null,
 	setDataId : function(data_id) {
 		if (typeof(data_id) != "string" || data_id.length == 0) {
 			throw new Error("data_id has to be a non-empty string");
@@ -126,5 +128,25 @@ TissueStack.Extent.prototype = {
 		}
 	}, getCenter : function () {
 		return TissueStack.Utils.getCenter(this.x,this.y);
-	}
+	}, getWorldCoordinatesForPixel : function(pixelCoords) {
+		if (pixelCoords.x < 0 || pixelCoords.x > this.x 
+				|| pixelCoords.y < 0 || pixelCoords.y > this.y
+				|| this.slice < 0 || this.slice > this.max_slices) {
+			return;
+		}
+
+		// now we'll have to correct x and y according to their zoom level to get the 1:1 pixel Coordinates which can then be transformed
+		if (this.zoom_level == 1) {
+			pixelCoords.x = Math.floor(pixelCoords.x / this.zoom_level_factor);
+			pixelCoords.y = Math.floor(pixelCoords.y / this.zoom_level_factor);
+		} else {
+			pixelCoords.x = Math.ceil(pixelCoords.x / this.zoom_level_factor);
+			pixelCoords.y = Math.ceil(pixelCoords.y / this.zoom_level_factor);
+		}
+		
+		// return world coordinates
+		return TissueStack.Utils.transformPixelCoordinateToWorldCoordinate(
+				[pixelCoords.x, pixelCoords.y, this.slice, 1], 
+				this.worldCoordinatesTransformationMatrix);
+	},	
 };

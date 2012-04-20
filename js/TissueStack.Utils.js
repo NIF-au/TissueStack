@@ -56,5 +56,31 @@ TissueStack.Utils = {
 				return someArray[i];
 			}
 		}
+	},
+	transformPixelCoordinateToWorldCoordinate : function(pixelVector, transformationMatrix) {
+		// not everything we need has been supplied
+		if (!pixelVector || !transformationMatrix || pixelVector.length == 0 || transformationMatrix.length == 0) {
+			return;
+		}
+		// lengths need to match
+		if (pixelVector.length != transformationMatrix.length) {
+			return;
+		}
+		
+		// create result matrix
+		var result = [];
+		// initialize the darn thing, how I wish this was java and then I wouldn't have to do this.
+		for (var i=0; i< transformationMatrix.length; i++) {
+			result[i] = 0;
+		}
+		
+		// multiply
+		for (var i=0; i< transformationMatrix.length; i++) {
+			for (var j=0; j<pixelVector.length; j++) {
+				result[i] += (transformationMatrix[i][j] * pixelVector[j]);
+			}
+		}
+		
+		return result;
 	}
 };
