@@ -1,0 +1,179 @@
+TissueStack-TissueStack.o: TissueStack.cpp /usr/include/stdio.h \
+ /usr/include/features.h /usr/include/bits/predefs.h \
+ /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h \
+ /usr/include/gnu/stubs.h /usr/include/gnu/stubs-64.h \
+ /usr/lib/gcc/x86_64-linux-gnu/4.4.5/include/stddef.h \
+ /usr/include/bits/types.h /usr/include/bits/typesizes.h \
+ /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h \
+ /usr/lib/gcc/x86_64-linux-gnu/4.4.5/include/stdarg.h \
+ /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h \
+ /usr/local/bic/include/minc.h /usr/include/netcdf.h /usr/include/errno.h \
+ /usr/include/bits/errno.h /usr/include/linux/errno.h \
+ /usr/include/asm/errno.h /usr/include/asm-generic/errno.h \
+ /usr/include/asm-generic/errno-base.h /usr/local/bic/include/volume_io.h \
+ /usr/local/bic/include/volume_io/basic.h /usr/include/math.h \
+ /usr/include/bits/huge_val.h /usr/include/bits/huge_valf.h \
+ /usr/include/bits/huge_vall.h /usr/include/bits/inf.h \
+ /usr/include/bits/nan.h /usr/include/bits/mathdef.h \
+ /usr/include/bits/mathcalls.h /usr/include/stdlib.h \
+ /usr/include/bits/waitflags.h /usr/include/bits/waitstatus.h \
+ /usr/include/endian.h /usr/include/bits/endian.h \
+ /usr/include/bits/byteswap.h /usr/include/xlocale.h \
+ /usr/include/sys/types.h /usr/include/time.h /usr/include/sys/select.h \
+ /usr/include/bits/select.h /usr/include/bits/sigset.h \
+ /usr/include/bits/time.h /usr/include/sys/sysmacros.h \
+ /usr/include/bits/pthreadtypes.h /usr/include/alloca.h \
+ /usr/include/memory.h /usr/include/string.h \
+ /usr/local/bic/include/volume_io/def_math.h \
+ /usr/local/bic/include/volume_io/system_dependent.h \
+ /usr/local/bic/include/volume_io/string_funcs.h \
+ /usr/local/bic/include/volume_io/files.h \
+ /usr/local/bic/include/volume_io/arrays.h \
+ /usr/local/bic/include/volume_io/alloc.h \
+ /usr/local/bic/include/volume_io/geom_structs.h \
+ /usr/local/bic/include/volume_io/progress.h \
+ /usr/local/bic/include/volume_io/geometry.h \
+ /usr/local/bic/include/volume_io/volume.h \
+ /usr/local/bic/include/volume_io/transforms.h \
+ /usr/local/bic/include/volume_io/multidim.h \
+ /usr/local/bic/include/volume_io/volume_cache.h \
+ /usr/local/bic/include/volume_io/vol_io_prototypes.h TissueStack.h jni.h \
+ jni_md.h
+
+/usr/include/stdio.h:
+
+/usr/include/features.h:
+
+/usr/include/bits/predefs.h:
+
+/usr/include/sys/cdefs.h:
+
+/usr/include/bits/wordsize.h:
+
+/usr/include/gnu/stubs.h:
+
+/usr/include/gnu/stubs-64.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/4.4.5/include/stddef.h:
+
+/usr/include/bits/types.h:
+
+/usr/include/bits/typesizes.h:
+
+/usr/include/libio.h:
+
+/usr/include/_G_config.h:
+
+/usr/include/wchar.h:
+
+/usr/lib/gcc/x86_64-linux-gnu/4.4.5/include/stdarg.h:
+
+/usr/include/bits/stdio_lim.h:
+
+/usr/include/bits/sys_errlist.h:
+
+/usr/local/bic/include/minc.h:
+
+/usr/include/netcdf.h:
+
+/usr/include/errno.h:
+
+/usr/include/bits/errno.h:
+
+/usr/include/linux/errno.h:
+
+/usr/include/asm/errno.h:
+
+/usr/include/asm-generic/errno.h:
+
+/usr/include/asm-generic/errno-base.h:
+
+/usr/local/bic/include/volume_io.h:
+
+/usr/local/bic/include/volume_io/basic.h:
+
+/usr/include/math.h:
+
+/usr/include/bits/huge_val.h:
+
+/usr/include/bits/huge_valf.h:
+
+/usr/include/bits/huge_vall.h:
+
+/usr/include/bits/inf.h:
+
+/usr/include/bits/nan.h:
+
+/usr/include/bits/mathdef.h:
+
+/usr/include/bits/mathcalls.h:
+
+/usr/include/stdlib.h:
+
+/usr/include/bits/waitflags.h:
+
+/usr/include/bits/waitstatus.h:
+
+/usr/include/endian.h:
+
+/usr/include/bits/endian.h:
+
+/usr/include/bits/byteswap.h:
+
+/usr/include/xlocale.h:
+
+/usr/include/sys/types.h:
+
+/usr/include/time.h:
+
+/usr/include/sys/select.h:
+
+/usr/include/bits/select.h:
+
+/usr/include/bits/sigset.h:
+
+/usr/include/bits/time.h:
+
+/usr/include/sys/sysmacros.h:
+
+/usr/include/bits/pthreadtypes.h:
+
+/usr/include/alloca.h:
+
+/usr/include/memory.h:
+
+/usr/include/string.h:
+
+/usr/local/bic/include/volume_io/def_math.h:
+
+/usr/local/bic/include/volume_io/system_dependent.h:
+
+/usr/local/bic/include/volume_io/string_funcs.h:
+
+/usr/local/bic/include/volume_io/files.h:
+
+/usr/local/bic/include/volume_io/arrays.h:
+
+/usr/local/bic/include/volume_io/alloc.h:
+
+/usr/local/bic/include/volume_io/geom_structs.h:
+
+/usr/local/bic/include/volume_io/progress.h:
+
+/usr/local/bic/include/volume_io/geometry.h:
+
+/usr/local/bic/include/volume_io/volume.h:
+
+/usr/local/bic/include/volume_io/transforms.h:
+
+/usr/local/bic/include/volume_io/multidim.h:
+
+/usr/local/bic/include/volume_io/volume_cache.h:
+
+/usr/local/bic/include/volume_io/vol_io_prototypes.h:
+
+TissueStack.h:
+
+jni.h:
+
+jni_md.h:
