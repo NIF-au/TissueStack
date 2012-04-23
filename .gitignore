@@ -12,3 +12,5 @@ tiles
 *.so
 config.status
 libtool
+*.class
+/target
