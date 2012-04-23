@@ -6,3 +6,9 @@ tiles
 .cproject
 .libs
 .deps
+.lo
+.la
+.o
+.so
+config.status
+libtool
