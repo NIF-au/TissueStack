@@ -7,7 +7,7 @@ public class TissueStack {
         try {
             System.loadLibrary("TissueStack");
         } catch(UnsatisfiedLinkError failedToLoadNativeLibrary) {
-            throw new RuntimeException("NativeGdalDataProvider: Failed to load native library!", failedToLoadNativeLibrary);
+            throw new RuntimeException("Failed to load native library!", failedToLoadNativeLibrary);
         }
     }
 	
