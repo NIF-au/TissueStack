@@ -1,0 +1,187 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<properties>
+		<deployment.directory>${env.CATALINA_HOME}/webapps</deployment.directory>
+		<!-- hibernate.version>3.5.6-Final</hibernate.version>
+		<hibernate.libs.version>3.2.0.Final</hibernate.libs.version-->
+	</properties>
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>au.edu.cai</groupId>
+	<artifactId>TissueStack</artifactId>
+	<packaging>war</packaging>
+	<version>1.0</version>
+	<name>TissueStack Web Services and Toolkit</name>
+	<repositories>
+	   	<repository>
+      			<id>jboss</id>
+      			<name>jboss repo</name>
+      			<url>https://repository.jboss.org/nexus/content/groups/public/</url>
+      			<snapshots>
+        			<enabled>false</enabled>
+      			</snapshots>
+    		</repository>
+
+		<repository>
+			<id>maven repo</id>
+			<name>maven repo</name>
+			<url>http://repo1.maven.org/maven2/</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+    		</repository>
+	</repositories>
+
+	<build>
+		<finalName>TissueStack</finalName>
+		<sourceDirectory>${basedir}/src/java/main/java</sourceDirectory>
+		<pluginManagement>
+		      	<plugins>
+        			<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-eclipse-plugin</artifactId>
+					<version>2.8</version>
+				</plugin>
+		       </plugins>
+		</pluginManagement>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
+			<plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>2.0.2</version>
+                <configuration>
+                		<warSourceDirectory>${basedir}/src/java/main/webapp</warSourceDirectory>
+                        <!-- excludes>**/...</excludes-->
+                </configuration>
+          </plugin>
+			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.4.3</version>
+				<executions>
+					<execution>
+						<id>deploy-package</id>
+						<phase>install</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${deployment.directory}</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${project.build.directory}</directory>
+									<includes>
+										<include>${project.build.finalName}.${project.packaging}</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+		<filters>
+		</filters>
+	</build>
+
+	<dependencies>
+		<!-- RestEasy -->
+		<dependency>
+			<groupId>org.jboss.resteasy</groupId>
+			<artifactId>resteasy-jaxrs</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.resteasy</groupId>
+			<artifactId>resteasy-jaxb-provider</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.resteasy</groupId>
+			<artifactId>resteasy-multipart-provider</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.resteasy</groupId>
+			<artifactId>resteasy-cache-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.resteasy</groupId>
+			<artifactId>resteasy-yaml-provider</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.resteasy</groupId>
+			<artifactId>resteasy-atom-provider</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.resteasy</groupId>
+			<artifactId>abdera-atom-provider</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.resteasy</groupId>
+			<artifactId>resteasy-spring</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.resteasy</groupId>
+			<artifactId>resteasy-guice</artifactId>
+		</dependency>
+		<!-- Asynchronous HTTP support with JBossWeb -->
+		<dependency>
+			<groupId>org.jboss.resteasy</groupId>
+			<artifactId>async-http-jbossweb</artifactId>
+		</dependency>
+		<!-- Asynchronous HTTP support with Servlet 3.0 (Jetty 7 pre5) -->
+		<dependency>
+			<groupId>org.jboss.resteasy</groupId>
+			<artifactId>async-http-servlet-3.0</artifactId>
+		</dependency>
+		<!-- Asynchronous HTTP support with Tomcat 6 -->
+		<dependency>
+			<groupId>org.jboss.resteasy</groupId>
+			<artifactId>async-http-tomcat6</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<!-- Json Marshalling -->
+		<dependency> 
+			<groupId>net.sf.json-lib</groupId> 
+			<artifactId>json-lib</artifactId> 
+			<version>2.4</version> 
+			<classifier>jdk15</classifier>
+		</dependency>
+		<dependency>
+             <groupId>log4j</groupId>
+             <artifactId>log4j</artifactId>
+             <version>1.2.16</version>
+         </dependency>
+		<!-- Hibernate Persistence >
+		<dependency>
+			<groupId>org.hibernate</groupId>
+		      	<artifactId>hibernate-entitymanager</artifactId>
+			<version>${hibernate.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-commons-annotations</artifactId>
+			<version>${hibernate.libs.version}</version>
+		</dependency-->
+		</dependencies>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.jboss.resteasy</groupId>
+				<artifactId>resteasy-bom</artifactId>
+				<version>2.0-beta-4</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+</project>

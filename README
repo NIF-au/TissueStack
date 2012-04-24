@@ -11,3 +11,5 @@ For deployment use the following for each component:
 1) Anything under src/web just needs to be taken and copied wherever the webserver's document root lives
 2) Use Apache Maven to build the .war file ('mvn clean install' in the project's root directory) which can then be deployed in any java application server 
 3) Use GNU automake: in the project's root directory type './configure' and 'make install'
+
+!!!!!! NOTE: This is a work in progress !!!!!! 
