@@ -3,7 +3,6 @@ package au.edu.uq.cai.TissueStack.resources;
 import java.io.File;
 
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
