@@ -4,7 +4,7 @@ AC_INIT([TissueStack], [1.0], [harald.waxenegger@gmail.com])
 
 AM_INIT_AUTOMAKE
 
-AC_CONFIG_SRCDIR([.])
+AC_CONFIG_SRCDIR([src/c])
 #AC_CONFIG_HEADERS([config.h])
 
 LT_INIT
@@ -45,5 +45,6 @@ CXXFLAGS="$CXXFLAGS $MINC2_CFLAGS $MINC2_LIBS"
 # Checks for library functions.
 AC_CONFIG_FILES([
 	Makefile
+	src/c/Makefile
 ])
 AC_OUTPUT

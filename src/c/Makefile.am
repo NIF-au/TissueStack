@@ -1,6 +1,6 @@
-bin_PROGRAMS=TissueStack
-TissueStack_SOURCES=TissueStack.cpp
-TissueStack_CXXFLAGS = $(AM_CFLAGS)
+bin_PROGRAMS=$(top_builddir)/bin/TissueStack
+__top_builddir__bin_TissueStack_SOURCES=TissueStack.cpp
+__top_builddir__bin_TissueStack_CXXFLAGS = $(AM_CFLAGS)
 
 lib_LTLIBRARIES=libTissueStack.la
 libTissueStack_la_SOURCES=TissueStack.cpp

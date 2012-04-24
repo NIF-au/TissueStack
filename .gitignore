@@ -17,3 +17,4 @@ libtool
 autom4te.cache
 *.scan
 *.tar.gz
+/bin
