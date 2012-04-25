@@ -14,8 +14,8 @@ class MincTest
 	public:
 		MincTest() {};
 		~MincTest() {
-			delete _dimensions;
-			delete _sizes;
+			delete [] _dimensions;
+			delete [] _sizes;
 		};
 
 		std::string getFilename() {
