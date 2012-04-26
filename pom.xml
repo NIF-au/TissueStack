@@ -33,7 +33,12 @@
 
 	<build>
 		<finalName>TissueStack</finalName>
-		<sourceDirectory>${basedir}/src/java/main/java</sourceDirectory>
+		<sourceDirectory>${project.basedir}/src/java/main/java</sourceDirectory>
+                <resources>
+                	<resource>
+        			<directory>${project.basedir}/src/java/main/resources</directory>
+      			</resource>
+    		</resources>
 		<pluginManagement>
 		      	<plugins>
         			<plugin>
@@ -58,7 +63,7 @@
                 <artifactId>maven-war-plugin</artifactId>
                 <version>2.0.2</version>
                 <configuration>
-                		<warSourceDirectory>${basedir}/src/java/main/webapp</warSourceDirectory>
+                		<warSourceDirectory>${project.basedir}/src/java/main/webapp</warSourceDirectory>
                         <!-- excludes>**/...</excludes-->
                 </configuration>
           </plugin>

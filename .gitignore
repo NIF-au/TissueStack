@@ -18,3 +18,6 @@ autom4te.cache
 *.scan
 *.tar.gz
 /bin
+aclocal.m4
+*Makefile*
+configure
