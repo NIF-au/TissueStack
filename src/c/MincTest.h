@@ -3,51 +3,50 @@
 
 #include <string>
 
-class MincTest
-{
+class MincTest {
 	private:
-	    std::string  _filename;
-	    int _number_of_dimensions;
-	    std::string * _dimensions;
-	    long  * _sizes;
+	    std::string  filename;
+	    int number_of_dimensions;
+	    std::string * dimensions;
+	    long  * sizes;
 
 	public:
 		MincTest() {};
 		~MincTest() {
-			delete [] _dimensions;
-			delete [] _sizes;
+			delete [] dimensions;
+			delete [] sizes;
 		};
 
-		std::string getFilename() {
-	    	return _filename;
+		std::string getFilename() const {
+	    	return this->filename;
 	    }
 
 	    void setFilename(std::string filename) {
-	    	_filename = filename;
+	    	this->filename = filename;
 	    }
 
-		std::string * getDimensions() {
-	    	return _dimensions;
+		std::string * getDimensions() const {
+	    	return this->dimensions;
 	    }
 
 	    void setDimensions(std::string * dimensions) {
-	    	_dimensions = dimensions;
+	    	this->dimensions = dimensions;
 	    }
 
-		long * getSizes() {
-	    	return _sizes;
+		long * getSizes() const {
+	    	return this->sizes;
 	    }
 
 	    void setSizes(long * sizes) {
-	    	_sizes = sizes;
+	    	this->sizes = sizes;
 	    }
 
 	    void setNumberOfDimensions(int number_of_dimensions) {
-	    	_number_of_dimensions = number_of_dimensions;
+	    	this->number_of_dimensions = number_of_dimensions;
 	    }
 
-	    int getNumberOfDimensions() {
-	    	return _number_of_dimensions;
+	    int getNumberOfDimensions() const {
+	    	return this->number_of_dimensions;
 	    }
 };
 

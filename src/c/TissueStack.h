@@ -7,7 +7,7 @@ class TissueStack
 {
 	public:
 		TissueStack();
-		MincTest * test(const char * filename);
+		MincTest * test(const char * filename) const;
 		~TissueStack();
 };
 

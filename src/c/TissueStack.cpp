@@ -12,7 +12,7 @@ TissueStack::~TissueStack() {
 // destructor: empty for now
 }
 
-MincTest * TissueStack::test(const char * filename) {
+MincTest * TissueStack::test(const char * filename) const {
 	if (filename == NULL) {
 		return NULL;
 	}
@@ -26,11 +26,11 @@ MincTest * TissueStack::test(const char * filename) {
 
 	   volume_input_struct input_info;
 	   Volume   in_volume;
-	   char    *axis_order[3] = { MIzspace, MIyspace, MIxspace };
+	   const char * axis_order[3] = {const_cast<const char *>(MIzspace), const_cast<const char *>(MIyspace), const_cast<const char *>(MIxspace) };
 
 	   MincTest * result = NULL;
 
-	    if (start_volume_input(const_cast<char *>(filename), MAX_VAR_DIMS, axis_order, NC_UNSPECIFIED,
+	    if (start_volume_input(const_cast<char *>(filename), MAX_VAR_DIMS, const_cast<char **>(axis_order), NC_UNSPECIFIED,
 	                       TRUE, 0.0, 0.0, TRUE, &in_volume, (minc_input_options *) NULL,
 	                       &input_info) != OK) {
 	    	return NULL;
