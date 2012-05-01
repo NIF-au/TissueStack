@@ -48,9 +48,9 @@ TissueStack.Init = function () {
 					extent_y: 1311,
 					worldCoordinatesTransformationMatrix : 
 						[
-						 	[0.5, 0   , 0   , -124.2   ],
+						 	[0.5, 0   , 0   , -169.2   ],
 						 	[0   , 0.5, 0   , -327.15 ],
-						 	[0   , 0   , 0.5, -169.2   ],
+						 	[0   , 0   , 0.5, -124.2  ],
 						 	[0   , 0   , 0   ,  1           ]
 						]
 	            }
@@ -67,6 +67,7 @@ TissueStack.Init = function () {
 		var extent = new TissueStack.Extent(dataForPlane.id, dataForPlane.one_to_one_zoom_level, planeId, dataForPlane.slices,
 				dataForPlane.extent_x, dataForPlane.extent_y, zoom_levels, dataForPlane.worldCoordinatesTransformationMatrix);
 
+		
 		// create canvas
 		var plane = new TissueStack.Canvas(extent, "canvas_" + planeId + "_plane");
 

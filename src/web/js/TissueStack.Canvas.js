@@ -155,7 +155,7 @@ TissueStack.Canvas.prototype = {
 			log = $('#world_coords');
 			var worldCoordinates = _this.getDataExtent().getWorldCoordinatesForPixel(relCoordinates);
 			if (worldCoordinates) {
-					log.html("World Coordinates X: " + Math.round(worldCoordinates[0] * 1000) / 1000 + ", Data Y: " + Math.round(worldCoordinates[1] * 1000) / 1000);	
+					log.html("World Coordinates X: " + Math.round(worldCoordinates.x * 1000) / 1000 + ", Data Y: " + Math.round(worldCoordinates.y * 1000) / 1000);	
 			}
 			
 			if (_this.mouse_down) {

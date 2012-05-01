@@ -57,7 +57,7 @@ TissueStack.Utils = {
 			}
 		}
 	},
-	transformPixelCoordinateToWorldCoordinate : function(pixelVector, transformationMatrix) {
+	transformPixelCoordinatesToWorldCoordinates : function(pixelVector, transformationMatrix) {
 		// not everything we need has been supplied
 		if (!pixelVector || !transformationMatrix || pixelVector.length == 0 || transformationMatrix.length == 0) {
 			return;
@@ -67,20 +67,42 @@ TissueStack.Utils = {
 			return;
 		}
 		
-		// create result matrix
-		var result = [];
-		// initialize the darn thing, how I wish this was java and then I wouldn't have to do this.
-		for (var i=0; i< transformationMatrix.length; i++) {
-			result[i] = 0;
+		// use sylvester library since we also want to go the opposite way which requires the inverse which I don't want to code.
+		transformationMatrix = Matrix.create(transformationMatrix);
+		pixelVector = Vector.create(pixelVector);
+		
+		// multiply to get results
+		var results = transformationMatrix.multiply(pixelVector);
+		if (results == null || results.elements.length != 4) {
+			return;
 		}
 		
-		// multiply
-		for (var i=0; i< transformationMatrix.length; i++) {
-			for (var j=0; j<pixelVector.length; j++) {
-				result[i] += (transformationMatrix[i][j] * pixelVector[j]);
-			}
+		results = [results.elements[0], results.elements[1], results.elements[2]];
+		
+		return results;
+	},
+	transformWorldCoordinatesToPixelCoordinates : function(worldVector, transformationMatrix) {
+		// not everything we need has been supplied
+		if (!worldVector || !transformationMatrix || worldVector.length == 0 || transformationMatrix.length == 0) {
+			return;
+		}
+		// lengths need to match
+		if (worldVector.length != transformationMatrix.length) {
+			return;
+		}
+
+		// use sylvester library since we also want to go the opposite way which requires the inverse which I don't want to code.
+		transformationMatrix = Matrix.create(transformationMatrix).inverse();
+		worldVector = Vector.create(worldVector);
+		
+		// multiply to get results
+		var results = transformationMatrix.multiply(worldVector);
+		if (results == null || results.elements.length != 4) {
+			return;
 		}
 		
-		return result;
+		results = [results.elements[0], results.elements[1], results.elements[2]];
+		
+		return results;
 	}
 };
