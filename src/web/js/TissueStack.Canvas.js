@@ -26,6 +26,7 @@ TissueStack.Canvas.prototype = {
 	cross_y : 0,
 	queue : null,
 	sync_canvases : true,
+	color_map : null,
 	setDataExtent : function (data_extent) {
 		if (typeof(data_extent) != "object") {
 			throw new Error("we miss a data_extent");
@@ -117,268 +118,9 @@ TissueStack.Canvas.prototype = {
 		}
 		
 		return {x: relCrossX, y: relCrossY};
-	},
-	registerMouseEvents : function () {
-		// look for the cross overlay which will be the top layer
-		var	pinch_delta = 3; //start with level 3
-		
-		var canvas = this.getCoordinateCrossCanvas();
-		if (!canvas || !canvas[0]) {
-			canvas = this.getCanvasElement();
-		}
-
-		var _this = this;
-
-		// bind mouse down and up events
-		canvas.bind("touchstart mousedown", function(e) {
-			//if (TissueStack.Utils.isLeftMouseButtonPressed(e)) {
-			var touches = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
-			e.pageX = touches.pageX;
-			e.pageY = touches.pageY;
-				var coords = TissueStack.Utils.getRelativeMouseCoords(e);
-
-				_this.mouse_down = true;
-				_this.mouse_x = coords.x;
-				_this.mouse_y = coords.y;
-			// } 
-		});
-		$(document).bind("touchend mouseup", function(e) {
-			_this.mouse_down = false;
-		});
-		
-		// bind the mouse move event
-		canvas.bind("touchmove mousemove", function(e) {
-			// TODO: look for distinction between 2 fingers and 1 in event
-			console.info("what's up");
-			var touches = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
-			e.pageX = touches.pageX;
-			e.pageY = touches.pageY;
-			
-			var now =new Date().getTime(); 
-			var coords = TissueStack.Utils.getRelativeMouseCoords(e);
-			
-			// output coordinates for mouse position on canvas, its corresponding pixel coordinate and real world coordinate
-			var log = $('#coords');
-			log.html("Canvas Coordinates X: " + coords.x + ", Canvas Y: " + coords.y);
-			log = $('#pixel_coords');
-			var relCoordinates = _this.getDataCoordinates(coords);
-			log.html("Pixel Coordinates X: " + relCoordinates.x + ", Data Y: " + relCoordinates.y);
-			log = $('#world_coords');
-			var worldCoordinates = _this.getDataExtent().getWorldCoordinatesForPixel(relCoordinates);
-			if (worldCoordinates) {
-					log.html("World Coordinates X: " + Math.round(worldCoordinates.x * 1000) / 1000 + ", Data Y: " + Math.round(worldCoordinates.y * 1000) / 1000);	
-			}
-			
-			if (_this.mouse_down) {
-				_this.isDragging = true;
-				var dX = coords.x - _this.mouse_x;
-				var dY = coords.y - _this.mouse_y;
-
-				_this.mouse_x = coords.x;
-				_this.mouse_y = coords.y;
-				
-				_this.moveUpperLeftCorner(dX, -dY);
-				
-				var upper_left_corner = {x: _this.upper_left_x, y: _this.upper_left_y};
-				var cross_coords = {x: _this.cross_x, y: _this.cross_y};
-				var canvas_dims = {x: _this.dim_x, y: _this.dim_y};
-				
-				// queue events 
-				_this.queue.addToQueue(
-						{	timestamp : now,
-							action: 'PAN',
-							plane: _this.getDataExtent().plane,
-							zoom_level : _this.getDataExtent().zoom_level,
-							slice : _this.getDataExtent().slice,
-							coords: relCoordinates,
-							max_coords_of_event_triggering_plane : {max_x: _this.getDataExtent().x, max_y: _this.getDataExtent().y},
-							upperLeftCorner : upper_left_corner,
-							crossCoords : cross_coords,
-							canvasDims : canvas_dims
-						});
-				
-				if (_this.sync_canvases) {				
-					// send message out to others that they need to redraw as well
-					_this.getCanvasElement().trigger("sync", 
-								[	now,
-								 	'PAN',
-								 	_this.getDataExtent().plane,
-								 	_this.getDataExtent().zoom_level,
-								 	_this.getDataExtent().slice,
-								 	_this.getRelativeCrossCoordinates(),
-								 	{max_x: _this.getDataExtent().x, max_y: _this.getDataExtent().y},
-								 	upper_left_corner,
-								 	cross_coords,
-								 	canvas_dims
-					            ]);
-				}
-			} else {
-				_this.isDragging = false;
-			}
-		});
-
-		// optionally, if the overlay canvas is defined, we register the mouse handler for click, to draw the cross
-		var coordinateCrossCanvas = this.getCoordinateCrossCanvas();
-		if (coordinateCrossCanvas && coordinateCrossCanvas[0]) {
-			canvas.bind("click", function(e) {
-				var now = new Date().getTime(); 
-				var coords = TissueStack.Utils.getRelativeMouseCoords(e);
-
-				if (_this.isDragging) {
-					return;
-				}
-
-				var upper_left_corner = {x: _this.upper_left_x, y: _this.upper_left_y};
-				var cross_coords = {x: coords.x, y: coords.y};
-				var canvas_dims = {x: _this.dim_x, y: _this.dim_y};
-
-				_this.drawCoordinateCross(cross_coords);
-
-				if (_this.sync_canvases) {				
-					// send message out to others that they need to redraw as well
-					canvas.trigger("sync", [now,
-											'CLICK',
-					                        _this.getDataExtent().plane,
-					                        _this.getDataExtent().zoom_level,
-					                        _this.getDataExtent().slice,
-					                        _this.getRelativeCrossCoordinates(),
-					                        {max_x: _this.getDataExtent().x, max_y: _this.getDataExtent().y},
-					                        upper_left_corner,
-					                        cross_coords,
-					                        canvas_dims
-					                       ]);
-				}
-			});
-
-			$(document).bind("sync", function(e, timestamp, action, plane, zoom_level, slice, coords, max_coords_of_event_triggering_plane, upperLeftCorner, crossCoords, canvasDims) {
-				// ignore one's own events
-				var thisHerePlane = _this.getDataExtent().plane;
-				if (thisHerePlane === plane) {
-					return;
-				}
-				
-				// queue events 
-				_this.queue.addToQueue(
-						{	timestamp : timestamp,
-							action : action,
-							plane: plane,
-							zoom_level : zoom_level,
-							slice : slice,
-							coords: coords,
-							max_coords_of_event_triggering_plane : max_coords_of_event_triggering_plane,
-							upperLeftCorner: upperLeftCorner,
-							crossCoords : crossCoords,
-							canvasDims : canvasDims
-						});
-			});
-		}
-
-		// this is sadly necessary to keep the window from scrolling when only the canvas should be scrolled
-		TissueStack.Utils.preventBrowserWindowScrollingWhenInCanvas();
-		canvas.hover(function() {
-			if(TissueStack.Utils.forceWindowScrollY == -1) {
-				  TissueStack.Utils.forceWindowScrollY = $(window).scrollTop();
-			}
-		}, function() {
-			TissueStack.Utils.forceWindowScrollY = -1;
-		});
-		
-		
-		// bind the mouse wheel scroll event
-		$(canvas).bind('mousewheel', function(event, delta) {
-			// make sure zoom delta is whole number
-		
-			if (delta < 1) {
-				delta = -1;
-			} else if (delta > 1) {
-				delta = 1;
-			} 
-								
-			var newZoomLevel = _this.getDataExtent().zoom_level + delta;
-			if (newZoomLevel == _this.data_extent.zoom_level ||  newZoomLevel < 0 || newZoomLevel >= _this.data_extent.zoom_levels.length) {
-				return;
-				}
-			
-			var now = new Date().getTime();
-			
-			_this.queue.addToQueue(
-					{	timestamp : now,
-						action : "ZOOM",
-						plane: _this.getDataExtent().plane,
-						zoom_level : newZoomLevel,
-						slice : _this.getDataExtent().slice
-						
-					});
-			event.stopPropagation();
-						
-			/* let's not sync zooms for now
-			if (_this.sync_canvases) {				
-				// send message out to others that they need to redraw as well
-				canvas.trigger("zoom", 
-							[	now,
-							 	"ZOOM",
-							 	_this.getDataExtent().plane,
-							 	newZoomLevel,
-							 	_this.getDataExtent().slice
-				            ]);
-			}*/
-			
-							
-		});
-		
-
-		
-		var delta = 0;
-		
-		canvas.bind('gesturestart', function(e) {
-			delta = e.originalEvent.scale;
-		});
-			
-		canvas.bind('gestureend', function(e) {
-			delta = e.originalEvent.scale - delta;
-			// make sure zoom delta is whole number
-			if (delta < 1) {
-				delta = -1;
-			} else if (delta > 1) {
-				delta = 1;
-			} 
-			
-			var newZoomLevel = _this.getDataExtent().zoom_level + delta;
-			if (newZoomLevel == _this.data_extent.zoom_level ||  newZoomLevel < 0 || newZoomLevel >= _this.data_extent.zoom_levels.length) {
-				return;
-				}
-			
-			var now = new Date().getTime();
-			
-			_this.queue.addToQueue(
-					{	timestamp : now,
-						action : "ZOOM",
-						plane: _this.getDataExtent().plane,
-						zoom_level : newZoomLevel,
-						slice : _this.getDataExtent().slice
-						
-					});
-			event.stopPropagation();
-		});
-		
-		$(document).bind("zoom", function(e, timestamp, action, plane, zoom_level, slice) {
-			// ignore one's own events
-			var thisHerePlane = _this.getDataExtent().plane;
-			if (thisHerePlane === plane) {
-				return;
-			}
-
-			_this.queue.addToQueue(
-					{	timestamp : timestamp,
-						action : action,
-						plane: plane,
-						zoom_level : zoom_level,
-						slice : slice
-					});
-		});
-	},
-	
-	drawCoordinateCross : function(coords) {
+	},registerMouseEvents : function () {
+		new TissueStack.Events(this);
+	},drawCoordinateCross : function(coords) {
 		var coordinateCrossCanvas = this.getCoordinateCrossCanvas();
 		if (!coordinateCrossCanvas || !coordinateCrossCanvas[0]) {
 			return;
@@ -502,6 +244,118 @@ TissueStack.Canvas.prototype = {
     		myImageData.data[i + 3] = 0;
     	}
     	ctx.putImageData(myImageData, x, y);
+	}, colorCanvasContent: function() {
+			// TODO: we will use the color_map specified
+		
+        	var ctx = this.getCanvasContext();
+        	
+        	var myImageData = ctx.getImageData(0, 0, this.dim_x, this.dim_y);
+        	for ( var x = 0; x < this.dim_x * this.dim_y * 4; x += 4) {
+        		var val = myImageData.data[x];
+        		/*
+        		if (val == 255) {
+        			continue;
+        		} else if (val == 0) {
+        			myImageData.data[x] = myImageData.data[x + 1] = myImageData.data[x + 2] =  0;
+        		} else if (val > 0 && val <= 63) {
+        			myImageData.data[x] = val * 0.5; 
+        			myImageData.data[x + 1] = myImageData.data[x + 2] = 0;
+        		} else if (val > 63 && val <= 126) {
+        			myImageData.data[x] = val; 
+        			myImageData.data[x + 1] = val * 0.5;
+        			myImageData.data[x + 2] = 0;
+        		} else if (val > 126 && val <= 189) {
+        			myImageData.data[x] = myImageData.data[x + 1] = val; 
+        			myImageData.data[x + 2] =  val * 0.5;
+        		}*/
+        		
+        		if (val == 255) {
+        			continue;
+        		} else if (val == 0) {
+        			myImageData.data[x] = myImageData.data[x + 1] = myImageData.data[x + 2] =  0;
+        		} else if (val > 0 && val <= 12.5) {
+        			myImageData.data[x] = val * 0.4667; 
+        			myImageData.data[x + 1] = 0; 
+       				myImageData.data[x + 2] = val * 0.5333;
+        		} else if (val > 12.5 && val <= 25) {
+        			myImageData.data[x] = val * 0.5333; 
+        			myImageData.data[x + 1] = 0; 
+       				myImageData.data[x + 2] = val * 0.6;
+        		} else if (val > 25 && val <= 37.5) {
+        			myImageData.data[x] = 0; 
+        			myImageData.data[x + 1] = 0; 
+       				myImageData.data[x + 2] = val * 0.66667;
+        		} else if (val > 37.5 && val <= 50) {
+        			myImageData.data[x] = 0; 
+        			myImageData.data[x + 1] = 0; 
+       				myImageData.data[x + 2] = val * 0.8667;
+        		} else if (val > 50 && val <= 62.5) {
+        			myImageData.data[x] = 0; 
+        			myImageData.data[x + 1] = val * 0.4667; 
+       				myImageData.data[x + 2] = val * 0.8667;
+        		} else if (val > 62.5 && val <= 75) {
+        			myImageData.data[x] = 0; 
+        			myImageData.data[x + 1] = val * 0.6; 
+       				myImageData.data[x + 2] = val * 0.8667;
+        		} else if (val > 75 && val <= 87.5) {
+        			myImageData.data[x] = 0; 
+        			myImageData.data[x + 1] = val * 0.6667; 
+       				myImageData.data[x + 2] = val * 0.6667;
+        		} else if (val > 87.5 && val <= 100) {
+        			myImageData.data[x] = 0; 
+        			myImageData.data[x + 1] = val * 0.6667; 
+       				myImageData.data[x + 2] = val * 0.5333;
+        		} else if (val > 100 && val <= 112.5) {
+        			myImageData.data[x] = 0; 
+        			myImageData.data[x + 1] = val * 0.6; 
+       				myImageData.data[x + 2] = 0;
+        		} else if (val > 112.5 && val <= 125) {
+        			myImageData.data[x] = 0; 
+        			myImageData.data[x + 1] = val * 0.7333; 
+       				myImageData.data[x + 2] = 0;
+        		} else if (val > 125 && val <= 137.5) {
+        			myImageData.data[x] = 0; 
+        			myImageData.data[x + 1] = val * 0.86667; 
+       				myImageData.data[x + 2] = 0;
+        		} else if (val > 137.5 && val <= 150) {
+        			myImageData.data[x] = 0; 
+        			myImageData.data[x + 1] = val; 
+       				myImageData.data[x + 2] = 0;
+        		} else if (val > 150 && val <= 162.5) {
+        			myImageData.data[x] = val * 0.7333; 
+        			myImageData.data[x + 1] = val; 
+       				myImageData.data[x + 2] = 0;
+        		} else if (val > 162.5 && val <= 175) {
+        			myImageData.data[x] = val * 0.9333; 
+        			myImageData.data[x + 1] = val * 0.9333; 
+       				myImageData.data[x + 2] = 0;
+        		} else if (val > 175 && val <= 187.5) {
+        			myImageData.data[x] = val; 
+        			myImageData.data[x + 1] = val * 0.8; 
+       				myImageData.data[x + 2] = 0;
+        		} else if (val > 187.5 && val <= 200) {
+        			myImageData.data[x] = val; 
+        			myImageData.data[x + 1] = val * 0.6; 
+       				myImageData.data[x + 2] = 0;
+        		} else if (val > 200 && val <= 212.5) {
+        			myImageData.data[x] = val; 
+        			myImageData.data[x + 1] = 0; 
+       				myImageData.data[x + 2] = 0;
+        		} else if (val > 212.5 && val <= 225) {
+        			myImageData.data[x] = val * 0.8667; 
+        			myImageData.data[x + 1] = 0; 
+       				myImageData.data[x + 2] = 0;
+        		} else if (val > 225 && val <= 237.5) {
+        			myImageData.data[x] = val * 0.8; 
+        			myImageData.data[x + 1] = 0; 
+       				myImageData.data[x + 2] = 0;
+        		} else {
+        			myImageData.data[x] = val * 0.8; 
+        			myImageData.data[x + 1] = val * 0.8; 
+       				myImageData.data[x + 2] = val * 0.8;
+        		}
+        	}
+        	ctx.putImageData(myImageData, 0, 0);  	
 	}, drawMe : function(timestamp) {
 		// preliminary check if we are within the slice range
 		var slice = this.getDataExtent().slice;
@@ -517,7 +371,8 @@ TissueStack.Canvas.prototype = {
 				|| this.upper_left_y <=0 || (this.upper_left_y - this.getDataExtent().y) >= this.dim_y) {
 			return;
 		} 
-		
+
+		var counter = 0;
 		var startTileX = this.upper_left_x / this.getDataExtent().tile_size;
 		var canvasX = 0;
 		var deltaStartTileXAndUpperLeftCornerX = 0;
@@ -600,7 +455,8 @@ TissueStack.Canvas.prototype = {
 				imageTile.src = 
 					TissueStack.tile_directory + this.getDataExtent().data_id + "/" + this.getDataExtent().zoom_level + "/" + this.getDataExtent().plane
 					+ "/" + slice + "/" + rowIndex + '_' + colIndex + "." + this.image_format;
-
+				counter++;
+				
 				(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, tile_size) {
 					imageTile.onload = function() {
 						// check with actual image dimensions ...
@@ -626,6 +482,17 @@ TissueStack.Canvas.prototype = {
 						ctx.drawImage(this,
 								imageOffsetX, imageOffsetY, width, height, // tile dimensions
 								canvasX, canvasY, width, height); // canvas dimensions
+						
+						counter--;
+						
+						// TODO: make configurable with array/closure
+						// apply to preview as well
+						// display byte value on mouse over 
+						// tree view on the left: which one is active
+						// histogram and brightness
+						if (counter == 0) {
+							//_this.colorCanvasContent();
+						}						
 					};
 				})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, this.getDataExtent().tile_size);
 				

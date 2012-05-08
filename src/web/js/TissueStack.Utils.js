@@ -2,9 +2,9 @@ TissueStack.Utils = {
 		forceWindowScrollY : -1,
 		preventBrowserWindowScrollingWhenInCanvas : function() {
 			$(window).scroll(function(event) {
-				  if(TissueStack.Utils.forceWindowScrollY != -1 && window.scrollY != TissueStack.Utils.forceWindowScrollY) {
-				    $(window).scrollTop(TissueStack.Utils.forceWindowScrollY);    
-				  }
+				if(TissueStack.Utils.forceWindowScrollY != -1 && window.scrollY != TissueStack.Utils.forceWindowScrollY) {
+					$(window).scrollTop(TissueStack.Utils.forceWindowScrollY);    
+				}
 			});
 		},
 		getRelativeMouseCoords : function(event) {
