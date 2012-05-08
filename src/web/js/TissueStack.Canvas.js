@@ -120,6 +120,8 @@ TissueStack.Canvas.prototype = {
 	},
 	registerMouseEvents : function () {
 		// look for the cross overlay which will be the top layer
+		var	pinch_delta = 3; //start with level 3
+		
 		var canvas = this.getCoordinateCrossCanvas();
 		if (!canvas || !canvas[0]) {
 			canvas = this.getCanvasElement();
@@ -128,24 +130,33 @@ TissueStack.Canvas.prototype = {
 		var _this = this;
 
 		// bind mouse down and up events
-		canvas.bind("mousedown", function(e) {
-			if (TissueStack.Utils.isLeftMouseButtonPressed(e)) {
+		canvas.bind("touchstart mousedown", function(e) {
+			//if (TissueStack.Utils.isLeftMouseButtonPressed(e)) {
+			var touches = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
+			e.pageX = touches.pageX;
+			e.pageY = touches.pageY;
 				var coords = TissueStack.Utils.getRelativeMouseCoords(e);
 
 				_this.mouse_down = true;
 				_this.mouse_x = coords.x;
 				_this.mouse_y = coords.y;
-			 } 
+			// } 
 		});
-		$(document).bind("mouseup", function(e) {
+		$(document).bind("touchend mouseup", function(e) {
 			_this.mouse_down = false;
 		});
 		
 		// bind the mouse move event
-		canvas.bind("mousemove", function(e) {
+		canvas.bind("touchmove mousemove", function(e) {
+			// TODO: look for distinction between 2 fingers and 1 in event
+			console.info("what's up");
+			var touches = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
+			e.pageX = touches.pageX;
+			e.pageY = touches.pageY;
+			
 			var now =new Date().getTime(); 
 			var coords = TissueStack.Utils.getRelativeMouseCoords(e);
-
+			
 			// output coordinates for mouse position on canvas, its corresponding pixel coordinate and real world coordinate
 			var log = $('#coords');
 			log.html("Canvas Coordinates X: " + coords.x + ", Canvas Y: " + coords.y);
@@ -272,20 +283,21 @@ TissueStack.Canvas.prototype = {
 			TissueStack.Utils.forceWindowScrollY = -1;
 		});
 		
+		
 		// bind the mouse wheel scroll event
 		$(canvas).bind('mousewheel', function(event, delta) {
-			
 			// make sure zoom delta is whole number
-			if (delta < 0) {
+		
+			if (delta < 1) {
 				delta = -1;
-			} else if (delta > 0) {
+			} else if (delta > 1) {
 				delta = 1;
-			}
-			
+			} 
+								
 			var newZoomLevel = _this.getDataExtent().zoom_level + delta;
 			if (newZoomLevel == _this.data_extent.zoom_level ||  newZoomLevel < 0 || newZoomLevel >= _this.data_extent.zoom_levels.length) {
 				return;
-			}
+				}
 			
 			var now = new Date().getTime();
 			
@@ -295,9 +307,10 @@ TissueStack.Canvas.prototype = {
 						plane: _this.getDataExtent().plane,
 						zoom_level : newZoomLevel,
 						slice : _this.getDataExtent().slice
+						
 					});
-			
 			event.stopPropagation();
+						
 			/* let's not sync zooms for now
 			if (_this.sync_canvases) {				
 				// send message out to others that they need to redraw as well
@@ -309,6 +322,43 @@ TissueStack.Canvas.prototype = {
 							 	_this.getDataExtent().slice
 				            ]);
 			}*/
+			
+							
+		});
+		
+
+		
+		var delta = 0;
+		
+		canvas.bind('gesturestart', function(e) {
+			delta = e.originalEvent.scale;
+		});
+			
+		canvas.bind('gestureend', function(e) {
+			delta = e.originalEvent.scale - delta;
+			// make sure zoom delta is whole number
+			if (delta < 1) {
+				delta = -1;
+			} else if (delta > 1) {
+				delta = 1;
+			} 
+			
+			var newZoomLevel = _this.getDataExtent().zoom_level + delta;
+			if (newZoomLevel == _this.data_extent.zoom_level ||  newZoomLevel < 0 || newZoomLevel >= _this.data_extent.zoom_levels.length) {
+				return;
+				}
+			
+			var now = new Date().getTime();
+			
+			_this.queue.addToQueue(
+					{	timestamp : now,
+						action : "ZOOM",
+						plane: _this.getDataExtent().plane,
+						zoom_level : newZoomLevel,
+						slice : _this.getDataExtent().slice
+						
+					});
+			event.stopPropagation();
 		});
 		
 		$(document).bind("zoom", function(e, timestamp, action, plane, zoom_level, slice) {
@@ -327,6 +377,7 @@ TissueStack.Canvas.prototype = {
 					});
 		});
 	},
+	
 	drawCoordinateCross : function(coords) {
 		var coordinateCrossCanvas = this.getCoordinateCrossCanvas();
 		if (!coordinateCrossCanvas || !coordinateCrossCanvas[0]) {

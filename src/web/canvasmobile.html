@@ -1,0 +1,161 @@
+<html>
+  <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable = no" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        
+        <title> TissueStack Mobile </title>
+        
+        <link rel="stylesheet" href="css/jquery.mobile-1.1.0.min.css" />
+        <link rel="stylesheet" href="css/mobilestyle.css" />
+        
+        <script src="js/libs/jquery/jquery-1.7.1.js"></script>
+        <script src="js/libs/jquery/jquery.mobile-1.1.0.min.js"></script>
+		<script src="js/libs/sylvester/sylvester.js"></script>
+		
+		<script src="js/TissueStack.MouseWheel.js"></script>
+		<script src="js/TissueStack.js"></script>
+		<script src="js/TissueStack.Utils.js"></script>
+		<script src="js/TissueStack.Queue.js"></script>
+		<script src="js/TissueStack.Extent.js"></script>
+		<script src="js/TissueStack.Canvas.js"></script>
+		<script src="js/TissueStack.Init.js"></script>
+		
+		<script type="text/javascript">
+			document.addEventListener('touchmove', function(event) {
+  			   event.preventDefault();
+			}, false);
+		</script>
+		
+  </head>
+    <body >
+      <div data-role="page" data-theme="a" id="tissuex" >
+            <div data-role="content">
+   				<div data-theme="a" data-role="header" data-position="fixed">
+        	  	     <div data-role="navbar">
+						<ul>
+							<li><a href="#tissuex" data-icon="plus" class="ui-btn-active">TissueX</a></li>
+							<li><a href="#tissuey" data-icon="minus">TissueY</a></li>
+							<li><a href="#tissuez" data-icon="minus">TissueZ</a></li>
+							<li><a href="#setting" data-icon="gear">Setting</a></li>
+						</ul>
+			  		 </div>
+                </div>
+     	    </div>
+     	  
+			<div style="position: relative; left: 7px; width: 300px; height: 300px;">
+					<div id="main_view_div" class="canvas_y" style="position: relative; left: 0px; top: 0px; text-align: center;">
+						<div id="main_view_canvas" style="position: relative; left: 0px; top: 5px; width: 300px;">
+						<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_y_plane"></canvas>
+						<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_y_plane_cross_overlay"></canvas>
+						</div>
+					</div>											
+			</div>
+       	  <!-- Footer --> 
+		  <!--  <div data-role="footer" data-position="fixed" >	  
+			 <div style = "text-align: center;">
+            	<div data-role="fieldcontain">
+   					<label for="slider-0">Level</label>
+   					<input type="range" name="slider" id="slider-0" value="3" min="0" max="6" data-highlight="true" data-mini="true" />
+			    </div>
+			 </div>
+           </div>  -->  
+      </div>  
+         
+<!-- tissue Y page-->
+        
+   <div data-role="page" data-theme="a" id="tissuey" >
+            <div data-role="content">
+   				<div data-theme="a" data-role="header" data-position="fixed">
+        	  	     <div data-role="navbar">
+						<ul>
+							<li><a href="#tissuex" data-icon="minus">TissueX</a></li>
+							<li><a href="#tissuey" data-icon="plus" class="ui-btn-active">TissueY</a></li>
+							<li><a href="#tissuez" data-icon="minus">TissueZ</a></li>
+							<li><a href="#setting" data-icon="gear">Setting</a></li>
+						</ul>
+			  		 </div>
+                </div>
+     	    </div>
+		<div style=" position: relative; left: 7px; width: 300px;">
+			<div style="position: relative; left: 0px; top: 5px; width: 300px; height: 300px;">
+				<div id="left_side_view_canvas" style="position: relative; left: 0px; top: 5px;">
+<!-- 					<img id="left_side_view_maximize" class="canvas_x" style="position: absolute; z-index: 99999; right: 0px; top: 0px;" src="images/maximize.png" alt="Maximize View" />
+ -->					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_x_plane"></canvas>
+						<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_x_plane_cross_overlay"></canvas>
+				</div>
+			</div>
+		</div>
+       	  <!-- <!--Footer  -->
+		  <!-- <div data-role="footer" data-position="fixed" >	  
+			 <div style = "text-align: center;">
+            	<div data-role="fieldcontain">
+   					<label for="slider-0">Level</label>
+   					<input type="range" name="slider" id="slider-0" value="1" min="0" max="6" data-highlight="true" data-mini="true" />
+			    </div>
+			 </div>
+           </div>   -->  
+      </div>  
+      
+<!--   Tissue Z page    -->
+      <div data-role="page" data-theme="a" id="tissuez" >
+            <div data-role="content">
+   				<div data-theme="a" data-role="header" data-position="fixed">
+        	  	     <div data-role="navbar">
+						<ul>
+							<li><a href="#tissuex" data-icon="minus" >TissueX</a></li>
+							<li><a href="#tissuey" data-icon="minus">TissueY</a></li>
+							<li><a href="#tissuez" data-icon="plus" class="ui-btn-active">TissueZ</a></li>
+							<li><a href="#setting" data-icon="gear">Setting</a></li>
+						</ul>
+			  		 </div>
+                </div>
+     	    </div>
+     	  
+		<div style=" position: relative; left: 7px; width: 300px;">
+			<div style="position: relative; left: 0px; top: 5px; width: 300px; height: 300px;">
+				<div id="right_side_view_canvas" style="position: relative; left: 0px; top: 5px;">
+<!-- 					<img id="right_side_view_maximize" class="canvas_z" style="position: absolute; z-index: 99999; right: 0px; top: 0px;" src="images/maximize.png" alt="Maximize View" />
+ -->					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_z_plane"></canvas>
+						<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_z_plane_cross_overlay"></canvas>
+				</div>
+			</div>
+		</div>
+       	  <!-- <!--Footer  -->
+		  <!-- <div data-role="footer" data-position="fixed" >	  
+			 <div style = "text-align: center;">
+            	<div data-role="fieldcontain">
+   					<label for="slider-0">Level</label>
+   					<input type="range" name="slider" id="slider-0" value="1" min="0" max="6" data-highlight="true" data-mini="true"/>
+			    </div>
+			 </div>
+           </div>    --> 
+      </div>
+    
+<!-- Setting page    -->   
+      <div data-role="page" data-theme="a" id="setting" >
+            <div data-role="content">
+   				<div data-theme="a" data-role="header" data-position="fixed">
+        	  	     <div data-role="navbar">
+						<ul>
+							<li><a href="#tissuex" data-icon="minus">TissueX</a></li>
+							<li><a href="#tissuey" data-icon="minus" >TissueY</a></li>
+							<li><a href="#tissuez" data-icon="minus">TissueZ</a></li>
+							<li><a href="#setting" data-icon="gear" class="ui-btn-active">Setting</a></li>
+						</ul>
+			  		 </div>
+                </div>
+     	    </div>
+     	<div style="text-align: center">
+     		
+     		<!-- <input type="checkbox" name="sync" checked="checked" id="checkbox-0" class="" />
+			<label for="checkbox-0">Sync Canvases</label>   
+			 -->
+			<p>Drawing Interval (in millis):</p>
+				<input id="drawing_interval" type="text" value="100">
+				<input data-role="button" id="drawing_interval_button" value="Apply" type="button" />
+				<!-- <input type="checkbox" id="sync_canvases" checked="checked" />Sync Canvases -->
+		</div>
+       	    
+      </div>         
+    </body>
+</html>

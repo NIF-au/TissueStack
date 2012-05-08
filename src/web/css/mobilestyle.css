@@ -1,0 +1,15 @@
+.text-align-center {
+  text-align: center;
+}
+.text-align-right {
+  text-align: right;
+}
+.scrollable {
+position: absolute;
+top: 50px;
+left: 0;
+right: 0;
+bottom: 0;
+overflow: scroll;
+-webkit-overflow-scrolling: touch;
+}
