@@ -244,8 +244,7 @@ TissueStack.Queue.prototype = {
 				draw_request.coords.y = Math.abs(draw_request.coords.y);
 				draw_request.upperLeftCorner.y = (draw_request.canvasDims.y - draw_request.crossCoords.y) - draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);				
 			} else if (draw_request.coords.y > (draw_request.max_coords_of_event_triggering_plane.max_y - 1)) {
-				draw_request.coords.y = draw_request.coords.y - (draw_request.max_coords_of_event_triggering_plane.max_y - 1);
-				draw_request.upperLeftCorner.y = (draw_request.canvasDims.y - draw_request.crossCoords.y) - draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);
+				draw_request.upperLeftCorner.y = (draw_request.canvasDims.y - draw_request.crossCoords.y) + draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);
 			} else {
 				draw_request.upperLeftCorner.y = (draw_request.canvasDims.y - draw_request.crossCoords.y) + draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);				
 			}
