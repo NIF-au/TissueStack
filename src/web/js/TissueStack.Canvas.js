@@ -455,7 +455,7 @@ TissueStack.Canvas.prototype = {
 				imageTile.src = 
 					TissueStack.tile_directory + this.getDataExtent().data_id + "/" + this.getDataExtent().zoom_level + "/" + this.getDataExtent().plane
 					+ "/" + slice + "/" + rowIndex + '_' + colIndex + "." + this.image_format;
-				counter++;
+				++counter;
 				
 				(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, tile_size) {
 					imageTile.onload = function() {
@@ -483,15 +483,17 @@ TissueStack.Canvas.prototype = {
 								imageOffsetX, imageOffsetY, width, height, // tile dimensions
 								canvasX, canvasY, width, height); // canvas dimensions
 						
-						counter--;
+						--counter;
 						
 						// TODO: make configurable with array/closure
 						// apply to preview as well
 						// display byte value on mouse over 
 						// tree view on the left: which one is active
-						// histogram and brightness
+						// histogram and brightness\
+						// add favicon
+						// add apache rewrite for mobile
 						if (counter == 0) {
-							//_this.colorCanvasContent();
+						//	_this.colorCanvasContent();
 						}						
 					};
 				})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, this.getDataExtent().tile_size);

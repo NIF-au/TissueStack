@@ -159,6 +159,7 @@ TissueStack.Queue.prototype = {
 		(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height) {
 			imageTile.onload = function() {
 				if (timestamp < _this.latestDrawRequestTimestamp) {
+					_this.lowResolutionPreviewDrawn = true;
 					return;
 				}
 			
