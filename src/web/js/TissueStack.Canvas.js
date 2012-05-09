@@ -26,7 +26,7 @@ TissueStack.Canvas.prototype = {
 	cross_y : 0,
 	queue : null,
 	sync_canvases : true,
-	color_map : null,
+	color_map : "grey",
 	setDataExtent : function (data_extent) {
 		if (typeof(data_extent) != "object") {
 			throw new Error("we miss a data_extent");
@@ -244,118 +244,52 @@ TissueStack.Canvas.prototype = {
     		myImageData.data[i + 3] = 0;
     	}
     	ctx.putImageData(myImageData, x, y);
-	}, colorCanvasContent: function() {
-			// TODO: we will use the color_map specified
+	}, applyColorMapToCanvasContent: function() {
+		if (!this.color_map || this.color_map == "grey") {
+			return;
+		}
 		
-        	var ctx = this.getCanvasContext();
-        	
-        	var myImageData = ctx.getImageData(0, 0, this.dim_x, this.dim_y);
-        	for ( var x = 0; x < this.dim_x * this.dim_y * 4; x += 4) {
-        		var val = myImageData.data[x];
-        		/*
-        		if (val == 255) {
-        			continue;
-        		} else if (val == 0) {
-        			myImageData.data[x] = myImageData.data[x + 1] = myImageData.data[x + 2] =  0;
-        		} else if (val > 0 && val <= 63) {
-        			myImageData.data[x] = val * 0.5; 
-        			myImageData.data[x + 1] = myImageData.data[x + 2] = 0;
-        		} else if (val > 63 && val <= 126) {
-        			myImageData.data[x] = val; 
-        			myImageData.data[x + 1] = val * 0.5;
-        			myImageData.data[x + 2] = 0;
-        		} else if (val > 126 && val <= 189) {
-        			myImageData.data[x] = myImageData.data[x + 1] = val; 
-        			myImageData.data[x + 2] =  val * 0.5;
-        		}*/
-        		
-        		if (val == 255) {
-        			continue;
-        		} else if (val == 0) {
-        			myImageData.data[x] = myImageData.data[x + 1] = myImageData.data[x + 2] =  0;
-        		} else if (val > 0 && val <= 12.5) {
-        			myImageData.data[x] = val * 0.4667; 
-        			myImageData.data[x + 1] = 0; 
-       				myImageData.data[x + 2] = val * 0.5333;
-        		} else if (val > 12.5 && val <= 25) {
-        			myImageData.data[x] = val * 0.5333; 
-        			myImageData.data[x + 1] = 0; 
-       				myImageData.data[x + 2] = val * 0.6;
-        		} else if (val > 25 && val <= 37.5) {
-        			myImageData.data[x] = 0; 
-        			myImageData.data[x + 1] = 0; 
-       				myImageData.data[x + 2] = val * 0.66667;
-        		} else if (val > 37.5 && val <= 50) {
-        			myImageData.data[x] = 0; 
-        			myImageData.data[x + 1] = 0; 
-       				myImageData.data[x + 2] = val * 0.8667;
-        		} else if (val > 50 && val <= 62.5) {
-        			myImageData.data[x] = 0; 
-        			myImageData.data[x + 1] = val * 0.4667; 
-       				myImageData.data[x + 2] = val * 0.8667;
-        		} else if (val > 62.5 && val <= 75) {
-        			myImageData.data[x] = 0; 
-        			myImageData.data[x + 1] = val * 0.6; 
-       				myImageData.data[x + 2] = val * 0.8667;
-        		} else if (val > 75 && val <= 87.5) {
-        			myImageData.data[x] = 0; 
-        			myImageData.data[x + 1] = val * 0.6667; 
-       				myImageData.data[x + 2] = val * 0.6667;
-        		} else if (val > 87.5 && val <= 100) {
-        			myImageData.data[x] = 0; 
-        			myImageData.data[x + 1] = val * 0.6667; 
-       				myImageData.data[x + 2] = val * 0.5333;
-        		} else if (val > 100 && val <= 112.5) {
-        			myImageData.data[x] = 0; 
-        			myImageData.data[x + 1] = val * 0.6; 
-       				myImageData.data[x + 2] = 0;
-        		} else if (val > 112.5 && val <= 125) {
-        			myImageData.data[x] = 0; 
-        			myImageData.data[x + 1] = val * 0.7333; 
-       				myImageData.data[x + 2] = 0;
-        		} else if (val > 125 && val <= 137.5) {
-        			myImageData.data[x] = 0; 
-        			myImageData.data[x + 1] = val * 0.86667; 
-       				myImageData.data[x + 2] = 0;
-        		} else if (val > 137.5 && val <= 150) {
-        			myImageData.data[x] = 0; 
-        			myImageData.data[x + 1] = val; 
-       				myImageData.data[x + 2] = 0;
-        		} else if (val > 150 && val <= 162.5) {
-        			myImageData.data[x] = val * 0.7333; 
-        			myImageData.data[x + 1] = val; 
-       				myImageData.data[x + 2] = 0;
-        		} else if (val > 162.5 && val <= 175) {
-        			myImageData.data[x] = val * 0.9333; 
-        			myImageData.data[x + 1] = val * 0.9333; 
-       				myImageData.data[x + 2] = 0;
-        		} else if (val > 175 && val <= 187.5) {
-        			myImageData.data[x] = val; 
-        			myImageData.data[x + 1] = val * 0.8; 
-       				myImageData.data[x + 2] = 0;
-        		} else if (val > 187.5 && val <= 200) {
-        			myImageData.data[x] = val; 
-        			myImageData.data[x + 1] = val * 0.6; 
-       				myImageData.data[x + 2] = 0;
-        		} else if (val > 200 && val <= 212.5) {
-        			myImageData.data[x] = val; 
-        			myImageData.data[x + 1] = 0; 
-       				myImageData.data[x + 2] = 0;
-        		} else if (val > 212.5 && val <= 225) {
-        			myImageData.data[x] = val * 0.8667; 
-        			myImageData.data[x + 1] = 0; 
-       				myImageData.data[x + 2] = 0;
-        		} else if (val > 225 && val <= 237.5) {
-        			myImageData.data[x] = val * 0.8; 
-        			myImageData.data[x + 1] = 0; 
-       				myImageData.data[x + 2] = 0;
-        		} else {
-        			myImageData.data[x] = val * 0.8; 
-        			myImageData.data[x + 1] = val * 0.8; 
-       				myImageData.data[x + 2] = val * 0.8;
-        		}
-        	}
-        	ctx.putImageData(myImageData, 0, 0);  	
+    	var ctx = this.getCanvasContext();
+    	var myImageData = ctx.getImageData(0, 0, this.dim_x, this.dim_y);
+
+		for ( var y = 1; y < TissueStack.color_maps[this.color_map].length; y++) {
+			// find start and end of value range
+			var valueRangeStart = TissueStack.color_maps[this.color_map][y-1][0] * 255;
+			var valueRangeEnd = TissueStack.color_maps[this.color_map][y][0] * 255;
+			
+			var valueRangeDelta = valueRangeEnd - valueRangeStart;
+			var redRangeStart = TissueStack.color_maps[this.color_map][y-1][1];
+			var redRangeEnd = TissueStack.color_maps[this.color_map][y][1];
+			var greenRangeStart = TissueStack.color_maps[this.color_map][y-1][2];
+			var greenRangeEnd = TissueStack.color_maps[this.color_map][y][2];
+			var blueRangeStart = TissueStack.color_maps[this.color_map][y-1][3];
+			var blueRangeEnd = TissueStack.color_maps[this.color_map][y][3];
+			// compute deltas to get values in between color ranges 
+			var redDelta = (redRangeEnd - redRangeStart) / valueRangeDelta;
+			var greenDelta = (greenRangeEnd - greenRangeStart) / valueRangeDelta;
+			var blueDelta = (blueRangeEnd - blueRangeStart) / valueRangeDelta;
+
+			
+	    	for ( var x = 0; x < this.dim_x * this.dim_y * 4; x += 4) {
+	    		var val = myImageData.data[x];
+	    		
+	    		if (val == 255) { // this is the no data points so to speak
+	    			continue;
+	    		}
+
+				// do we fall into the range ?
+				if (val >= valueRangeStart && val <= valueRangeEnd) {
+					// set new red value
+					myImageData.data[x] = (val * redRangeStart) + ((redRangeEnd - val) * redDelta);
+					// set new green value
+					myImageData.data[x + 1] = (val * greenRangeStart) + ((greenRangeEnd - val) * greenDelta);
+					// set new blue value
+					myImageData.data[x + 2] = (val * blueRangeStart) + ((greenRangeEnd - val) * blueDelta);
+				}
+	    	}
+		}
+    	// put altered data back into canvas
+    	ctx.putImageData(myImageData, 0, 0);  	
 	}, drawMe : function(timestamp) {
 		// preliminary check if we are within the slice range
 		var slice = this.getDataExtent().slice;
@@ -455,7 +389,7 @@ TissueStack.Canvas.prototype = {
 				imageTile.src = 
 					TissueStack.tile_directory + this.getDataExtent().data_id + "/" + this.getDataExtent().zoom_level + "/" + this.getDataExtent().plane
 					+ "/" + slice + "/" + rowIndex + '_' + colIndex + "." + this.image_format;
-				++counter;
+				counter++;
 				
 				(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, tile_size) {
 					imageTile.onload = function() {
@@ -483,7 +417,7 @@ TissueStack.Canvas.prototype = {
 								imageOffsetX, imageOffsetY, width, height, // tile dimensions
 								canvasX, canvasY, width, height); // canvas dimensions
 						
-						--counter;
+						counter--;
 						
 						// TODO: make configurable with array/closure
 						// apply to preview as well
@@ -493,7 +427,7 @@ TissueStack.Canvas.prototype = {
 						// add favicon
 						// add apache rewrite for mobile
 						if (counter == 0) {
-						//	_this.colorCanvasContent();
+							_this.applyColorMapToCanvasContent();
 						}						
 					};
 				})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, this.getDataExtent().tile_size);

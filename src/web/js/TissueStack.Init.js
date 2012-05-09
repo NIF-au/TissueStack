@@ -119,6 +119,19 @@ TissueStack.Init = function () {
 		}
 	});
 
+	// bind event listener for color map radio group
+	$('input[name="color_map"]').bind("click", function(e) {
+		for (var i=0; i < data.length; i++) {	
+			if (e.target.value === TissueStack.planes[data[i].plane].color_map) {
+				return;
+			}
+			TissueStack.planes[data[i].plane].color_map = e.target.value;
+			TissueStack.planes[data[i].plane].drawMe();
+			TissueStack.planes[data[i].plane].applyColorMapToCanvasContent();
+		}
+	});
+
+	
 	// bind event listener for maximizing side views
 	$('#left_side_view_maximize, #right_side_view_maximize').bind("click", function(event) {
 		// what side view and canvas called for maximization

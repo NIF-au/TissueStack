@@ -173,6 +173,8 @@ TissueStack.Queue.prototype = {
 
 				ctx.drawImage(this, imageOffsetX, imageOffsetY, width, height, canvasX, canvasY, width, height);
 				_this.lowResolutionPreviewDrawn = true;
+				
+				_this.canvas.applyColorMapToCanvasContent();
 			};
 		})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height);
 	}, prepareDrawRequest : function(draw_request) {

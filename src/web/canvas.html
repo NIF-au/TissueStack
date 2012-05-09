@@ -20,9 +20,14 @@
 	
 	</head>
 	<body>
-		<div style="display: none;" id="mousedragcoords">N/A</div>
-		<br />Drawing Interval (in millis):&nbsp;<input id="drawing_interval" type="text" value="100">&nbsp;<input id="drawing_interval_button" value="Apply" type="button" />
-		&nbsp;<input type="checkbox" id="sync_canvases" checked="checked" />Sync Canvases<br /><br />
+		<br />Drawing Interval (in millis):&nbsp;<input id="drawing_interval" type="text" value="100">&nbsp;
+		<input id="drawing_interval_button" value="Apply" type="button" />&nbsp;
+		<input type="checkbox" id="sync_canvases" checked="checked" />Sync Canvases<br />
+		Color Mapping:&nbsp;
+		<input type="radio" name="color_map" value="grey" checked="checked" /> grey&nbsp;
+		<input type="radio" name="color_map" value="hot" /> hot&nbsp;
+		<input type="radio" name="color_map" value="spectral" />spectral<br />
+		<hr />
 		<div id="coords">&nbsp;</div>
 		<div id="pixel_coords">&nbsp;</div>
 		<div id="world_coords">&nbsp;</div>
