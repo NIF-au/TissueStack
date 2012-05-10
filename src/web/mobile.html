@@ -25,13 +25,23 @@
   			   event.preventDefault();
 			}, false);
 		</script>
+		<script type="text/javascript">
+			$(document).ready(function(){  
+			    //To switch directions up/down and left/right just place a "-" in front of the top/left attribute  
+			    //Vertical Sliding  
+			    $('.boxgrid.slidedown').hover(function(){  
+			        $(".cover", this).stop().animate({top:'-260px'},{queue:false,duration:300});  
+			    }, function() {  
+			        $(".cover", this).stop().animate({top:'0px'},{queue:false,duration:300});  
+			    });  
+		</script>
 		
   </head>
     <body >
       <div data-role="page" data-theme="a" id="tissuex" >
             <div data-role="content">
    				<div data-theme="a" data-role="header" data-position="fixed">
-        	  	     <div data-role="navbar">
+           	  	     <div data-role="navbar">
 						<ul>
 							<li><a href="#tissuex" data-icon="plus" class="ui-btn-active">TissueX</a></li>
 							<li><a href="#tissuey" data-icon="minus">TissueY</a></li>
@@ -41,15 +51,16 @@
 			  		 </div>
                 </div>
      	    </div>
-     	  
-			<div style="position: relative; left: 7px; width: 300px; height: 300px;">
-					<div id="main_view_div" class="canvas_y" style="position: relative; left: 0px; top: 0px; text-align: center;">
-						<div id="main_view_canvas" style="position: relative; left: 0px; top: 5px; width: 300px;">
-						<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_y_plane"></canvas>
-						<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_y_plane_cross_overlay"></canvas>
-						</div>
-					</div>											
-			</div>
+     	  <div class="boxgrid captionfull" align ="center">
+				<div style="position: relative; left: 0px; width: 300px; height: 300px;">
+						<div id="main_view_div" class="canvas_y" style="position: relative; left: 0px; top: 0px; text-align: center;">
+							<div id="main_view_canvas" style="position: relative; left: 0px; top: 5px; width: 300px;">
+							<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_y_plane"></canvas>
+							<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_y_plane_cross_overlay"></canvas>
+							</div>
+						</div>											
+				</div>
+		  </div>
        	  <!-- Footer --> 
 		  <!--  <div data-role="footer" data-position="fixed" >	  
 			 <div style = "text-align: center;">
@@ -76,15 +87,16 @@
 			  		 </div>
                 </div>
      	    </div>
-		<div style=" position: relative; left: 7px; width: 300px;">
-			<div style="position: relative; left: 0px; top: 5px; width: 300px; height: 300px;">
-				<div id="left_side_view_canvas" style="position: relative; left: 0px; top: 5px;">
-<!-- 					<img id="left_side_view_maximize" class="canvas_x" style="position: absolute; z-index: 99999; right: 0px; top: 0px;" src="images/maximize.png" alt="Maximize View" />
- -->					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_x_plane"></canvas>
-						<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_x_plane_cross_overlay"></canvas>
+     	    <div align ="center">
+				<div style=" position: relative; left: 0px; width: 300px;">
+					<div style="position: relative; left: 0px; top: 5px; width: 300px; height: 300px;">
+						<div id="left_side_view_canvas" style="position: relative; left: 0px; top: 5px;">
+								<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_x_plane"></canvas>
+								<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_x_plane_cross_overlay"></canvas>
+						</div>
+					</div>
 				</div>
 			</div>
-		</div>
        	  <!-- <!--Footer  -->
 		  <!-- <div data-role="footer" data-position="fixed" >	  
 			 <div style = "text-align: center;">
@@ -110,13 +122,13 @@
 			  		 </div>
                 </div>
      	    </div>
-     	  
-		<div style=" position: relative; left: 7px; width: 300px;">
-			<div style="position: relative; left: 0px; top: 5px; width: 300px; height: 300px;">
-				<div id="right_side_view_canvas" style="position: relative; left: 0px; top: 5px;">
-<!-- 					<img id="right_side_view_maximize" class="canvas_z" style="position: absolute; z-index: 99999; right: 0px; top: 0px;" src="images/maximize.png" alt="Maximize View" />
- -->					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_z_plane"></canvas>
-						<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_z_plane_cross_overlay"></canvas>
+     	<div align ="center">  
+			<div style=" position: relative; left: 0px; width: 300px;">
+				<div style="position: relative; left: 0px; top: 5px; width: 300px; height: 300px;">
+					<div id="right_side_view_canvas" style="position: relative; left: 0px; top: 5px;">
+							<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_z_plane"></canvas>
+							<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_z_plane_cross_overlay"></canvas>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -145,21 +157,29 @@
 			  		 </div>
                 </div>
      	    </div>
-     	<div style="text-align: center">
-     		
-     		<!-- <input type="checkbox" name="sync" checked="checked" id="checkbox-0" class="" />
-			<label for="checkbox-0">Sync Canvases</label>   
-			 -->
-			<p>Drawing Interval (in millis):</p>
-				<input id="drawing_interval" type="text" value="100">
-				<input data-role="button" id="drawing_interval_button" value="Apply" type="button" />
-				<input type="checkbox" id="sync_canvases" checked="checked" />Sync Canvases
-				Color Mapping:
-				<input type="radio" name="color_map" value="grey" checked="checked" /> grey
-				<input type="radio" name="color_map" value="hot" /> hot
-				<input type="radio" name="color_map" value="spectral" />spectral
-		</div>
-       	    
-      </div>         
+     	
+	     	<div style="text-align: center" data-role="fieldcontain">
+	     	    <fieldset data-role="controlgroup">
+	     	    	<!--<legend>Color Mapping:</legend>	-->			
+	     				<input type="radio" name="color_map" id="radio-choice-1" value="grey" checked="checked" />
+	     	         	<label for="radio-choice-1">Grey</label>
+	     	
+	     	         	<input type="radio" name="color_map" id="radio-choice-2" value="hot"  />
+	     	         	<label for="radio-choice-2">Hot</label>
+	     	
+	     	         	<input type="radio" name="color_map" id="radio-choice-3" value="spectral"  />
+	     	         	<label for="radio-choice-3">Spectral</label>
+	     		</fieldset>
+	     	</div>
+     	
+	     	<div align ="center" >
+				<p>Drawing Interval (in millis):</p>
+					<input id="drawing_interval" type="text" value="100" >
+					<a href="../canvasmobile.html" data-role="button" id="drawing_interval_button" type="button" >Apply</a>
+			</div>
+			
+			<!--<input type="checkbox" id="sync_canvases" checked="checked" />Sync Canvases </br>    -->
+      </div>
+           
     </body>
 </html>
