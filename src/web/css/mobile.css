@@ -17,9 +17,9 @@ overflow: scroll;
     width: 300px;  
     height: 300px;  
     margin:10px;  
-    float:left;  
+    float:center;  
     background:#161613;  
-    border: solid 0px #8399AF;  
+    border: solid 1px white;  
     overflow: hidden;  
     position: relative;  
 }  
@@ -30,7 +30,7 @@ overflow: scroll;
     border: 0;  
 }  
 .boxcaption{  
-    float: left;  
+    float: center;  
     position: absolute;  
     background: #000;  
     height: 100px;  
@@ -42,12 +42,13 @@ overflow: scroll;
     -MS-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=60)";  
     }  
 .captionfull .boxcaption {  
+		text-align: left;
         top: 260;  
         left: 0;
         font-size: 10px;
         z-index: 2000;  
     }  
-.caption .boxcaption {  
+.caption .boxcaption {
         top: 220;  
         left: 0;  
         font-size: 10px;

@@ -12,7 +12,6 @@
         <script src="js/libs/jquery/jquery.mobile-1.1.0.min.js"></script>
 		<script src="js/libs/sylvester/sylvester.js"></script>
 		
-		<script src="js/TissueStack.MouseWheel.js"></script>
 		<script src="js/TissueStack.js"></script>
 		<script src="js/TissueStack.Utils.js"></script>
 		<script src="js/TissueStack.Extent.js"></script>
@@ -42,20 +41,20 @@
 			  		 </div>
                 </div>
      	    </div>
-     	  <div align ="center">
-				<div style="border: 1px solid #fff; position: relative; left: 100px; width: 800px; height: 500px;">
-						<div id="main_view_div" class="canvas_y" style="position: relative; left:0px; top: 0px; text-align: center;">
-							<div id="main_view_canvas" style="position: relative; left: 0px; top: 0px; width: 800px; height: 500px">
-							<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="800" height="500" id="canvas_y_plane"></canvas>
-							<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="800" height="500" id="canvas_y_plane_cross_overlay"></canvas>
+     	  <div class="boxgrid captionfull" align ="center">
+				<div id="img" style="position: relative; left: 0px; width: 300px; height: 300px;">
+						<div id="main_view_div" class="canvas_y" style="position: relative; left: 0px; top: 0px; text-align: center;">
+							<div id="main_view_canvas" style="position: relative; left: 0px; top: 5px; width: 300px;">
+							<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_y_plane"></canvas>
+							<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_y_plane_cross_overlay"></canvas>
 							</div>
 						</div>											
 				</div>
-				<!--<div class="cover boxcaption"> 
+				<div class="cover boxcaption"> 
 					<div id="coords">&nbsp;</div>
 					<div id="pixel_coords">&nbsp;</div>
 					<div id="world_coords">&nbsp;</div>
-				</div> -->
+				</div> 
 		  </div>
        	  <!-- Footer --> 
 		  <!--  <div data-role="footer" data-position="fixed" >	  

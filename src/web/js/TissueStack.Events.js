@@ -21,13 +21,20 @@ TissueStack.Events.prototype = {
 		// TOUCH END and MOUSE UP
 		$(document).bind("touchend mouseup", function(e) {
 			// call pan move
-			_this.panEnd(e);
+			_this.panEnd();
 		});
 		
 		// CLICK
 		this.getCanvasElement().bind("click", function(e) {
+		
+			if (e.originalEvent.touches) {
+				var touches = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
+				e.pageX = touches.pageX;
+				e.pageY = touches.pageY;
+			}
+		
 			// call click
-			_this.click(e);
+			_this.click(e );
 		});
 
 		// SYNC
@@ -46,6 +53,11 @@ TissueStack.Events.prototype = {
 		
 		// TOUCH START
 		this.getCanvasElement().bind("touchstart", function(e) {
+		
+		    if (e.originalEvent.touches.length > 1) {
+				return;
+			};
+		
 			var touches = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
 			e.pageX = touches.pageX;
 			e.pageY = touches.pageY;
@@ -56,7 +68,11 @@ TissueStack.Events.prototype = {
 
 		// TOUCH MOVE
 		this.getCanvasElement().bind("touchmove", function(e) {
-			// TODO: look for distinction between 2 fingers and 1 in event
+		
+			if (e.originalEvent.touches.length > 1) {
+				return;
+			};
+			
 			var touches = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
 			e.pageX = touches.pageX;
 			e.pageY = touches.pageY;
@@ -118,11 +134,11 @@ TissueStack.Events.prototype = {
 		});		
 	},panStart : function(e) {
 		var coords = TissueStack.Utils.getRelativeMouseCoords(e);
-
+		
 		this.canvas.mouse_down = true;
 		this.canvas.mouse_x = coords.x;
 		this.canvas.mouse_y = coords.y;
-	}, panEnd : function(e) {
+	}, panEnd : function() {
 		this.canvas.mouse_down = false;
 	}, panAndMove : function(e) {
 		var now =new Date().getTime(); 

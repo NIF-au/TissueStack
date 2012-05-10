@@ -322,7 +322,7 @@ TissueStack.Queue.prototype = {
 		// redraw 
 		this.canvas.drawMe(draw_request.timestamp);
 
-		// tidy up where we left debris
+		/*
 		if ((this.canvas.upper_left_x + this.canvas.getDataExtent().x) < 0
 				|| (this.canvas.upper_left_x + this.canvas.getDataExtent().x) > this.canvas.dim_x
 				|| this.canvas.upper_left_y < 0
@@ -331,9 +331,9 @@ TissueStack.Queue.prototype = {
 				|| (draw_request && draw_request.coords && draw_request.coords.x < 0) || (draw_request && draw_request.coords && draw_request.coords.y < 0)) {
 			this.canvas.eraseCanvasContent(); // in these cases we erase the entire content
 			return;
-		}
+		}*/
 		
-		// we do a more efficient erase
+		// tidy up where we left debris
 		if (this.canvas.upper_left_x > 0) { // in front of us
 			this.canvas.eraseCanvasPortion(0, 0, this.canvas.upper_left_x, this.canvas.dim_y);
 		}
