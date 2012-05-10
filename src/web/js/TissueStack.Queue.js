@@ -159,6 +159,7 @@ TissueStack.Queue.prototype = {
 		(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height) {
 			imageTile.onload = function() {
 				if (timestamp < _this.latestDrawRequestTimestamp) {
+					_this.lowResolutionPreviewDrawn = true;
 					return;
 				}
 			
@@ -172,6 +173,8 @@ TissueStack.Queue.prototype = {
 
 				ctx.drawImage(this, imageOffsetX, imageOffsetY, width, height, canvasX, canvasY, width, height);
 				_this.lowResolutionPreviewDrawn = true;
+				
+				_this.canvas.applyColorMapToCanvasContent();
 			};
 		})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height);
 	}, prepareDrawRequest : function(draw_request) {
