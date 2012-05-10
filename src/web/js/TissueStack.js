@@ -29,5 +29,10 @@ TissueStack = {
 						   [0.9, 0.8667, 0, 0],
 						   [0.95, 0.8, 0, 0],
 						   [1, 0.8, 0.8, 0.8]]
+		},
+		indexed_color_maps : {
+			"grey" : null,
+			"hot" : null,
+			"spectral" : null
 		}
 };
