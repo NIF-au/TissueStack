@@ -33,7 +33,8 @@
 			        $(".cover", this).stop().animate({top:'-260px'},{queue:false,duration:300});  
 			    }, function() {  
 			        $(".cover", this).stop().animate({top:'0px'},{queue:false,duration:300});  
-			    });  
+			    }); 
+			 }); 
 		</script>
 		
   </head>
@@ -52,7 +53,7 @@
                 </div>
      	    </div>
      	  <div class="boxgrid captionfull" align ="center">
-				<div style="position: relative; left: 0px; width: 300px; height: 300px;">
+				<div id="img" style="position: relative; left: 0px; width: 300px; height: 300px;">
 						<div id="main_view_div" class="canvas_y" style="position: relative; left: 0px; top: 0px; text-align: center;">
 							<div id="main_view_canvas" style="position: relative; left: 0px; top: 5px; width: 300px;">
 							<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_y_plane"></canvas>
@@ -60,6 +61,11 @@
 							</div>
 						</div>											
 				</div>
+				<div class="cover boxcaption"> 
+					<div id="coords">&nbsp;</div>
+					<div id="pixel_coords">&nbsp;</div>
+					<div id="world_coords">&nbsp;</div>
+				</div> 
 		  </div>
        	  <!-- Footer --> 
 		  <!--  <div data-role="footer" data-position="fixed" >	  
@@ -175,7 +181,7 @@
 	     	<div align ="center" >
 				<p>Drawing Interval (in millis):</p>
 					<input id="drawing_interval" type="text" value="100" >
-					<a href="../canvasmobile.html" data-role="button" id="drawing_interval_button" type="button" >Apply</a>
+					<a href="../mobile.html" data-role="button" id="drawing_interval_button" type="button" >Apply</a>
 			</div>
 			
 			<!--<input type="checkbox" id="sync_canvases" checked="checked" />Sync Canvases </br>    -->

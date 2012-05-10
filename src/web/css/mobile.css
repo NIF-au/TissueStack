@@ -13,3 +13,43 @@ bottom: 0;
 overflow: scroll;
 -webkit-overflow-scrolling: touch;
 }
+.boxgrid{  
+    width: 300px;  
+    height: 300px;  
+    margin:10px;  
+    float:left;  
+    background:#161613;  
+    border: solid 0px #8399AF;  
+    overflow: hidden;  
+    position: relative;  
+}  
+.boxgrid img{  
+    position: absolute;  
+    top: 0;  
+    left: 0;  
+    border: 0;  
+}  
+.boxcaption{  
+    float: left;  
+    position: absolute;  
+    background: #000;  
+    height: 100px;  
+    width: 100%;  
+    opacity: .6;  
+    /* For IE 5-7 */  
+    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=60);  
+    /* For IE 8 */  
+    -MS-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=60)";  
+    }  
+.captionfull .boxcaption {  
+        top: 260;  
+        left: 0;
+        font-size: 10px;
+        z-index: 2000;  
+    }  
+.caption .boxcaption {  
+        top: 220;  
+        left: 0;  
+        font-size: 10px;
+        z-index: 2000;    
+    }  
