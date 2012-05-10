@@ -8,6 +8,7 @@ TissueStack.Canvas = function(data_extent, canvas_id) {
 	this.drawCoordinateCross(this.getCenter());
 	this.registerMouseEvents();
 	this.queue = new TissueStack.Queue(this);
+	TissueStack.Utils.indexColorMaps();
 };
 
 TissueStack.Canvas.prototype = {
@@ -252,42 +253,17 @@ TissueStack.Canvas.prototype = {
     	var ctx = this.getCanvasContext();
     	var myImageData = ctx.getImageData(0, 0, this.dim_x, this.dim_y);
 
-		for ( var y = 1; y < TissueStack.color_maps[this.color_map].length; y++) {
-			// find start and end of value range
-			var valueRangeStart = TissueStack.color_maps[this.color_map][y-1][0] * 255;
-			var valueRangeEnd = TissueStack.color_maps[this.color_map][y][0] * 255;
-			
-			var valueRangeDelta = valueRangeEnd - valueRangeStart;
-			var redRangeStart = TissueStack.color_maps[this.color_map][y-1][1];
-			var redRangeEnd = TissueStack.color_maps[this.color_map][y][1];
-			var greenRangeStart = TissueStack.color_maps[this.color_map][y-1][2];
-			var greenRangeEnd = TissueStack.color_maps[this.color_map][y][2];
-			var blueRangeStart = TissueStack.color_maps[this.color_map][y-1][3];
-			var blueRangeEnd = TissueStack.color_maps[this.color_map][y][3];
-			// compute deltas to get values in between color ranges 
-			var redDelta = (redRangeEnd - redRangeStart) / valueRangeDelta;
-			var greenDelta = (greenRangeEnd - greenRangeStart) / valueRangeDelta;
-			var blueDelta = (blueRangeEnd - blueRangeStart) / valueRangeDelta;
-
-			
-	    	for ( var x = 0; x < this.dim_x * this.dim_y * 4; x += 4) {
-	    		var val = myImageData.data[x];
-	    		
-	    		if (val == 255) { // this is the no data points so to speak
-	    			continue;
-	    		}
-
-				// do we fall into the range ?
-				if (val >= valueRangeStart && val <= valueRangeEnd) {
-					// set new red value
-					myImageData.data[x] = (val * redRangeStart) + ((redRangeEnd - val) * redDelta);
-					// set new green value
-					myImageData.data[x + 1] = (val * greenRangeStart) + ((greenRangeEnd - val) * greenDelta);
-					// set new blue value
-					myImageData.data[x + 2] = (val * blueRangeStart) + ((greenRangeEnd - val) * blueDelta);
-				}
-	    	}
-		}
+    	for ( var x = 0; x < this.dim_x * this.dim_y * 4; x += 4) {
+    		var val = myImageData.data[x];
+    		
+			// set new red value
+			myImageData.data[x] = TissueStack.indexed_color_maps[this.color_map][val][0];
+			// set new green value
+			myImageData.data[x + 1] = TissueStack.indexed_color_maps[this.color_map][val][1];			
+			// set new blue value
+			myImageData.data[x + 2] = TissueStack.indexed_color_maps[this.color_map][val][2];
+    	}
+    	
     	// put altered data back into canvas
     	ctx.putImageData(myImageData, 0, 0);  	
 	}, drawMe : function(timestamp) {
