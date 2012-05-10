@@ -155,5 +155,24 @@ TissueStack.Utils = {
 			// no data: 255
 			TissueStack.indexed_color_maps[map][255] = [255, 255, 255];
 		}
-	}
+	},getScreenSize : function (){
+		var screenW = 640, screenH = 480;
+		if (parseInt(navigator.appVersion)>3) {
+		 screenW = screen.width;
+		 screenH = screen.height;
+		}
+		else if (navigator.appName == "Netscape" 
+		    && parseInt(navigator.appVersion)==3
+		    && navigator.javaEnabled()
+		   ) 
+		{
+		 var jToolkit = java.awt.Toolkit.getDefaultToolkit();
+		 var jScreenSize = jToolkit.getScreenSize();
+		 screenW = jScreenSize.width;
+		 screenH = jScreenSize.height;
+		}
+		
+		return screenW, screenH;
+		console.info (screenW + "" + screenH);
+	},
 };
