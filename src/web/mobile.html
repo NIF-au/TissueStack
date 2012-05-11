@@ -25,13 +25,16 @@
 			document.addEventListener('touchmove', function(event) {
   			   event.preventDefault();
 			}, false);
-		</script>
-			
+		</script>	
   </head>
-    <body >
+    <body>
+    
+<!--    tissue X page-->
+
       <div data-role="page" data-theme="a" id="tissuex" >
             <div data-role="content">
-   				<div data-theme="a" data-role="header" data-position="fixed">
+   				<div data-theme="a" data-role="header" data-position="fixed" >
+   					 <h3>Tissue Stack</h3>
            	  	     <div data-role="navbar">
 						<ul>
 							<li><a href="#tissuex" data-icon="plus" class="ui-btn-active">TissueX</a></li>
@@ -42,30 +45,19 @@
 			  		 </div>
                 </div>
      	    </div>
-     	  <div align ="center">
-				<div style="border: 1px solid #fff; position: relative; left: 100px; width: 800px; height: 500px;">
-						<div id="main_view_div" class="canvas_y" style="position: relative; left:0px; top: 0px; text-align: center;">
-							<div id="main_view_canvas" style="position: relative; left: 0px; top: 0px; width: 800px; height: 500px">
-							<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="800" height="500" id="canvas_y_plane"></canvas>
-							<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="800" height="500" id="canvas_y_plane_cross_overlay"></canvas>
-							</div>
-						</div>											
+     	  <div class="canvalocate">
+			<div id="plane_view" class="canvas_y">
+				<div class="canvas_view" >
+					<canvas id="canvas_y_plane" class="plane"></canvas>	
+					<canvas id="canvas_y_plane_cross_overlay" class="cross_overlay"></canvas>
 				</div>
-				<!--<div class="cover boxcaption"> 
-					<div id="coords">&nbsp;</div>
-					<div id="pixel_coords">&nbsp;</div>
-					<div id="world_coords">&nbsp;</div>
-				</div> -->
+			</div>											
 		  </div>
-       	  <!-- Footer --> 
-		  <!--  <div data-role="footer" data-position="fixed" >	  
-			 <div style = "text-align: center;">
-            	<div data-role="fieldcontain">
-   					<label for="slider-0">Level</label>
-   					<input type="range" name="slider" id="slider-0" value="3" min="0" max="6" data-highlight="true" data-mini="true" />
-			    </div>
-			 </div>
-           </div>  -->  
+		  <div class="coords_show_left"> 
+		  	<div id="coords">&nbsp;</div>
+		  	<div id="pixel_coords">&nbsp;</div>
+		  	<div id="world_coords">&nbsp;</div>
+		  </div>
       </div>  
          
 <!-- tissue Y page-->
@@ -73,6 +65,7 @@
    <div data-role="page" data-theme="a" id="tissuey" >
             <div data-role="content">
    				<div data-theme="a" data-role="header" data-position="fixed">
+   					 <h1>Tissue Stack</h1>
         	  	     <div data-role="navbar">
 						<ul>
 							<li><a href="#tissuex" data-icon="minus">TissueX</a></li>
@@ -83,36 +76,22 @@
 			  		 </div>
                 </div>
      	    </div>
-     	    <div class="boxgrid captionfull" align ="center">
-				<div id="img" style=" position: relative; left: 0px; width: 300px;">
-					<div style="position: relative; left: 0px; top: 5px; width: 300px; height: 300px;">
-						<div id="left_side_view_canvas" style="position: relative; left: 0px; top: 5px;">
-								<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_x_plane"></canvas>
-								<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_x_plane_cross_overlay"></canvas>
-						</div>
-					</div>
-				</div>
-				<div class="cover boxcaption"> 
-					<div id="coords">&nbsp;</div>
-					<div id="pixel_coords">&nbsp;</div>
-					<div id="world_coords">&nbsp;</div>
-				</div> 
-			</div>
-       	  <!-- <!--Footer  -->
-		  <!-- <div data-role="footer" data-position="fixed" >	  
-			 <div style = "text-align: center;">
-            	<div data-role="fieldcontain">
-   					<label for="slider-0">Level</label>
-   					<input type="range" name="slider" id="slider-0" value="1" min="0" max="6" data-highlight="true" data-mini="true" />
-			    </div>
-			 </div>
-           </div>   -->  
-      </div>  
+     	    <div class="canvalocate">
+     	    	<div id="plane_view" class="canvas_x">
+     	    		<div class="canvas_view" >
+     	    			<canvas id="canvas_x_plane" class="plane"></canvas>	
+     	    			<canvas id="canvas_x_plane_cross_overlay" class="cross_overlay"></canvas>
+     	    		</div>
+     	    	</div>											
+     	    </div>
+    </div>  
       
 <!--   Tissue Z page    -->
+
       <div data-role="page" data-theme="a" id="tissuez" >
             <div data-role="content">
    				<div data-theme="a" data-role="header" data-position="fixed">
+   					 <h1>Tissue Stack</h1>
         	  	     <div data-role="navbar">
 						<ul>
 							<li><a href="#tissuex" data-icon="minus" >TissueX</a></li>
@@ -123,36 +102,22 @@
 			  		 </div>
                 </div>
      	    </div>
-     	<div class="boxgrid captionfull" align ="center">  
-			<div id="img" style=" position: relative; left: 0px; width: 300px;">
-				<div style="position: relative; left: 0px; top: 5px; width: 300px; height: 300px;">
-					<div id="right_side_view_canvas" style="position: relative; left: 0px; top: 5px;">
-							<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_z_plane"></canvas>
-							<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_z_plane_cross_overlay"></canvas>
-					</div>
-				</div>
-			</div>
-			<div class="cover boxcaption"> 
-				<div id="coords">&nbsp;</div>
-				<div id="pixel_coords">&nbsp;</div>
-				<div id="world_coords">&nbsp;</div>
-			</div> 
-		</div>
-       	  <!-- <!--Footer  -->
-		  <!-- <div data-role="footer" data-position="fixed" >	  
-			 <div style = "text-align: center;">
-            	<div data-role="fieldcontain">
-   					<label for="slider-0">Level</label>
-   					<input type="range" name="slider" id="slider-0" value="1" min="0" max="6" data-highlight="true" data-mini="true"/>
-			    </div>
-			 </div>
-           </div>    --> 
-      </div>
+	     	<div class="canvalocate">
+	     		<div id="plane_view" class="canvas_z">
+	     			<div class="canvas_view" >
+	     				<canvas id="canvas_z_plane" class="plane"></canvas>	
+	     				<canvas id="canvas_z_plane_cross_overlay" class="cross_overlay"></canvas>
+	     			</div>
+	     		</div>											
+	     	</div>      
+     </div>
     
-<!-- Setting page    -->   
+<!-- Setting page    --> 
+  
       <div data-role="page" data-theme="a" id="setting" >
             <div data-role="content">
    				<div data-theme="a" data-role="header" data-position="fixed">
+   					 <h1>Tissue Stack</h1>
         	  	     <div data-role="navbar">
 						<ul>
 							<li><a href="#tissuex" data-icon="minus">TissueX</a></li>

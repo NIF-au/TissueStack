@@ -13,6 +13,9 @@ bottom: 0;
 overflow: scroll;
 -webkit-overflow-scrolling: touch;
 }
+
+/*for coords, pixel and world coords*/
+
 .boxgrid{  
     width: 300px;  
     height: 300px;  
@@ -53,4 +56,51 @@ overflow: scroll;
         left: 0;  
         font-size: 10px;
         z-index: 2000;    
-    }  
+    } 
+    
+    
+/* detect screen size and locate the area of width and height and overlay vanvas  */
+ 
+.canvalocate {  
+ 	float: right; 
+	border: 1px solid #fff;
+	right: 20; 
+	position: relative; 
+	width: 640px;
+	height: 480px;
+} 
+.plan_view{
+ 	float: right; 
+	position: relative; 
+	top: 0; 
+	right: 20;
+	width: 640px;
+	height: 480px;
+}
+.canvas_view{
+	position: relative; 
+	left: 0; 
+	top: 0; 
+	width: 640px;
+	height: 480px;
+}
+.plane{
+	position: absolute; 
+	left: 0; 
+	top: 0; 
+	z-index: 749;
+}
+.cross_overlay{ 
+	position: absolute; 
+	left: 0; 
+	top: 0; 
+	z-index: 9999;
+}
+
+.coords_show_left{
+	float: left; 
+	color: white;
+	left: 20; 
+	position: relative; 
+	font-size: 12px;
+}

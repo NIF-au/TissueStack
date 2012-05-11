@@ -45,7 +45,7 @@ TissueStack.Utils = {
 		},
 		getCenter : function(x,y) {
 			return {x :  Math.floor(x / 2),  y : Math.floor(y / 2)};
-	},
+		},
 	returnFirstOccurranceOfPatternInStringArray : function(someArray, pattern) {
 		if (!someArray) {
 			return;
@@ -155,24 +155,35 @@ TissueStack.Utils = {
 			// no data: 255
 			TissueStack.indexed_color_maps[map][255] = [255, 255, 255];
 		}
-	},getScreenSize : function (){
-		var screenW = 640, screenH = 480;
-		if (parseInt(navigator.appVersion)>3) {
-		 screenW = screen.width;
-		 screenH = screen.height;
-		}
-		else if (navigator.appName == "Netscape" 
-		    && parseInt(navigator.appVersion)==3
-		    && navigator.javaEnabled()
-		   ) 
-		{
-		 var jToolkit = java.awt.Toolkit.getDefaultToolkit();
-		 var jScreenSize = jToolkit.getScreenSize();
-		 screenW = jScreenSize.width;
-		 screenH = jScreenSize.height;
-		}
-		
-		return screenW, screenH;
-		console.info (screenW + "" + screenH);
-	},
+	},getScreenSize : function (){	
+		if($(document).width() > 480 || $(document).height() > 480)
+			{	
+				var screenW = $(document).width()-$(document).width()/4;
+				var screenH = $(document).height()-$(document).height()/4;
+								
+				$('.canvalocate').css({'width': screenW, 'height':screenH });
+				$('.canvas_view').css({'width': screenW, 'height':screenH });
+				$('#plane_view').css({'width': screenW, 'height':screenH });
+				////// set up canvas y, x, z if screen size is greater then phone screen size
+					
+						document.getElementById('canvas_y_plane_cross_overlay').width = screenW;
+						document.getElementById('canvas_y_plane_cross_overlay').height = screenH;
+						
+						document.getElementById('canvas_y_plane').width = screenW;
+						document.getElementById('canvas_y_plane').height = screenH;
+					
+						document.getElementById('canvas_x_plane_cross_overlay').width = screenW;
+						document.getElementById('canvas_x_plane_cross_overlay').height = screenH;
+						
+						document.getElementById('canvas_x_plane').width = screenW;
+						document.getElementById('canvas_x_plane').height = screenH;
+						
+						document.getElementById('canvas_z_plane_cross_overlay').width = screenW;
+						document.getElementById('canvas_z_plane_cross_overlay').height = screenH;
+						
+						document.getElementById('canvas_z_plane').width = screenW;
+						document.getElementById('canvas_z_plane').height = screenH;	
+				}
+		return;			
+	}
 };
