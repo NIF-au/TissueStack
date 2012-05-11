@@ -158,32 +158,23 @@ TissueStack.Utils = {
 	},getScreenSize : function (){	
 		if($(document).width() > 480 || $(document).height() > 480)
 			{	
+				var diman = ["y","x","z"];
 				var screenW = $(document).width()-$(document).width()/4;
 				var screenH = $(document).height()-$(document).height()/4;
-								
+				
 				$('.canvalocate').css({'width': screenW, 'height':screenH });
 				$('.canvas_view').css({'width': screenW, 'height':screenH });
 				$('#plane_view').css({'width': screenW, 'height':screenH });
+
 				////// set up canvas y, x, z if screen size is greater then phone screen size
-					
-						document.getElementById('canvas_y_plane_cross_overlay').width = screenW;
-						document.getElementById('canvas_y_plane_cross_overlay').height = screenH;
-						
-						document.getElementById('canvas_y_plane').width = screenW;
-						document.getElementById('canvas_y_plane').height = screenH;
-					
-						document.getElementById('canvas_x_plane_cross_overlay').width = screenW;
-						document.getElementById('canvas_x_plane_cross_overlay').height = screenH;
-						
-						document.getElementById('canvas_x_plane').width = screenW;
-						document.getElementById('canvas_x_plane').height = screenH;
-						
-						document.getElementById('canvas_z_plane_cross_overlay').width = screenW;
-						document.getElementById('canvas_z_plane_cross_overlay').height = screenH;
-						
-						document.getElementById('canvas_z_plane').width = screenW;
-						document.getElementById('canvas_z_plane').height = screenH;	
-				}
+					for (var i=0; i<3; i++)
+					{
+						document.getElementById('canvas_'+diman[i]+'_plane_cross_overlay').width = screenW;
+						document.getElementById('canvas_'+diman[i]+'_plane_cross_overlay').height = screenH;
+						document.getElementById('canvas_'+diman[i]+'_plane').width = screenW;
+						document.getElementById('canvas_'+diman[i]+'_plane').height = screenH;
+					}
+			}
 		return;			
-	}
+	},
 };

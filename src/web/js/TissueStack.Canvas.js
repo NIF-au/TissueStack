@@ -10,7 +10,6 @@ TissueStack.Canvas = function(data_extent, canvas_id) {
 	this.registerMouseEvents();
 	this.queue = new TissueStack.Queue(this);
 	TissueStack.Utils.indexColorMaps();
-	TissueStack.Utils.getScreenSize();
 };
 
 TissueStack.Canvas.prototype = {

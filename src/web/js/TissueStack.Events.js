@@ -303,3 +303,6 @@ TissueStack.Events.prototype = {
 		
 	}
 };
+$(document).ready(function() {
+	TissueStack.Utils.getScreenSize();
+});
