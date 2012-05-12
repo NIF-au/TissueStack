@@ -48,6 +48,7 @@ TissueStack.Events.prototype = {
 			// call sync zoom
 			_this.sync_zoom(e, timestamp, action, plane, zoom_level, slice);
 		});
+				
 	}, registerMobileEvents: function() {
 		var _this = this;
 		
@@ -95,6 +96,15 @@ TissueStack.Events.prototype = {
 			// call zoom
 			_this.zoom(e, delta);
 		});
+		
+		//DOUBLE TAP TO ENLARGE IMAGES
+		this.getCanvasElement().bind('doubletap', function(e) {
+			if(delta < 7){
+				delta = e.originalEvent.scale + delta;
+				_this.zoom(e, delta);
+			}
+		});
+		
 	}, registerDesktopEvents: function() {
 		var _this = this;
 		

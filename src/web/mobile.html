@@ -25,10 +25,10 @@
 			document.addEventListener('touchmove', function(event) {
   			   event.preventDefault();
 			}, false);
-		</script>	
+		</script>
   </head>
-    <body>
-    
+<body>
+		    
 <!--    tissue X page-->
 
       <div data-role="page" data-theme="a" id="tissuex" >
@@ -45,23 +45,27 @@
 			  		 </div>
                 </div>
      	    </div>
-     	  <div class="canvalocate">
-			<div id="plane_view" class="canvas_y">
-				<div class="canvas_view" >
-					<canvas id="canvas_y_plane" class="plane"></canvas>	
-					<canvas id="canvas_y_plane_cross_overlay" class="cross_overlay"></canvas>
-				</div>
-			</div>											
-		  </div>
+     	   	<div class="canvalocate" >
+				<div id="plane_view" class="canvas_y">
+					<div class="canvas_view" >
+						<canvas id="canvas_y_plane" class="plane"></canvas>	
+						<canvas id="canvas_y_plane_cross_overlay" class="cross_overlay"></canvas>
+					</div>
+				</div>									
+			</div>
 		  <div class="coords_show_left"> 
 		  	<div id="main_view_info" style="text-align: center;">
 		  		<div id="canvas_y_extent"></div>
 		  		<input size="8" maxlength="5" type="text" id="canvas_y_x" value="0"/>
 		  		<input size="8" maxlength="5" type="text" id="canvas_y_y" value="0"/>
 		  		<button type="button" id="center_point_in_canvas_y">Center Coordinates</button>
+		  		<div align ="left"> 
+		  			<div id="coords">&nbsp;</div>
+		  			<div id="pixel_coords">&nbsp;</div>
+		  			<div id="world_coords">&nbsp;</div>
+		  		</div> 		
 		  	</div>
 		  </div>
-		  
       </div>  
          
 <!-- tissue Y page-->
@@ -94,6 +98,11 @@
      	    		<input size="8" maxlength="5" type="text" id="canvas_x_x" value="0"/>
      	    		<input size="8" maxlength="5" type="text" id="canvas_x_y" value="0"/>
      	    		<button type="button" id="center_point_in_canvas_x">Center Coordinates</button>
+     	    		<div align ="left"> 
+     	    			<div id="coords">&nbsp;</div>
+     	    			<div id="pixel_coords">&nbsp;</div>
+     	    			<div id="world_coords">&nbsp;</div>
+     	    		</div> 
      	    	</div>
      	    </div>
     </div>  
@@ -128,6 +137,11 @@
 	     			<input size="8" maxlength="5" type="text" id="canvas_z_x" value="0"/>
 	     			<input size="8" maxlength="5" type="text" id="canvas_z_y" value="0"/>
 	     			<button type="button" id="center_point_in_canvas_z">Center Coordinates</button>
+	     			<div align ="left"> 
+	     				<div id="coords">&nbsp;</div>
+	     				<div id="pixel_coords">&nbsp;</div>
+	     				<div id="world_coords">&nbsp;</div>
+	     			</div> 
 	     		</div>
 	     	</div>     
      </div>

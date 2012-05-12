@@ -159,12 +159,13 @@ TissueStack.Utils = {
 		if($(document).width() > 480 || $(document).height() > 480)
 			{	
 				var diman = ["y","x","z"];
-				var screenW = $(document).width()-$(document).width()/4;
-				var screenH = $(document).height()-$(document).height()/4;
+				var screenW = $(document).width()-$(document).width()/3;
+				var screenH = $(document).height()-$(document).height()/3;
 				
 				$('.canvalocate').css({'width': screenW, 'height':screenH });
 				$('.canvas_view').css({'width': screenW, 'height':screenH });
 				$('#plane_view').css({'width': screenW, 'height':screenH });
+				
 
 				////// set up canvas y, x, z if screen size is greater then phone screen size
 					for (var i=0; i<3; i++)
@@ -174,7 +175,8 @@ TissueStack.Utils = {
 						document.getElementById('canvas_'+diman[i]+'_plane').width = screenW;
 						document.getElementById('canvas_'+diman[i]+'_plane').height = screenH;
 					}
+				return;
 			}
-		return;			
+
 	},
 };
