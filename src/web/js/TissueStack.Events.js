@@ -155,15 +155,15 @@ TissueStack.Events.prototype = {
 		var coords = TissueStack.Utils.getRelativeMouseCoords(e);
 		
 		// output coordinates for mouse position on canvas, its corresponding pixel coordinate and real world coordinate
-		var log = $('#coords');
-		log.html("Canvas Coordinates X: " + coords.x + ", Canvas Y: " + coords.y);
-		log = $('#pixel_coords');
+		var log = $('.coords');
+		log.html("Canvas => X: " + coords.x + ", Y: " + coords.y);
+		log = $('.pixel_coords');
 		var relCoordinates = this.canvas.getDataCoordinates(coords);
-		log.html("Pixel Coordinates X: " + relCoordinates.x + ", Data Y: " + relCoordinates.y);
-		log = $('#world_coords');
+		log.html("Pixels => X: " + (relCoordinates.x < 0 ? 0 : relCoordinates.x) + ", Y: " + (relCoordinates.y < 0 ? 0 : relCoordinates.y));
+		log = $('.world_coords');
 		var worldCoordinates = this.canvas.getDataExtent().getWorldCoordinatesForPixel(relCoordinates);
 		if (worldCoordinates) {
-				log.html("World Coordinates X: " + Math.round(worldCoordinates.x * 1000) / 1000 + ", Data Y: " + Math.round(worldCoordinates.y * 1000) / 1000);	
+				log.html("World => X: " + Math.round(worldCoordinates.x * 1000) / 1000 + ", Y: " + Math.round(worldCoordinates.y * 1000) / 1000);	
 		}
 		
 		if (this.canvas.mouse_down) {
@@ -313,6 +313,3 @@ TissueStack.Events.prototype = {
 		
 	}
 };
-$(document).ready(function() {
-	TissueStack.Utils.getScreenSize();
-});

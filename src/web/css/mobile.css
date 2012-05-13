@@ -7,9 +7,9 @@
 .scrollable {
 position: absolute;
 top: 50px;
-left: 0;
-right: 0;
-bottom: 0;
+left: 0px;
+right: 0px;
+bottom: 0px];
 overflow: scroll;
 -webkit-overflow-scrolling: touch;
 }
@@ -27,9 +27,9 @@ overflow: scroll;
 }  
 .boxgrid img{  
     position: absolute;  
-    top: 0;  
-    left: 0;  
-    border: 0;  
+    top: 0px;  
+    left: 0px;  
+    border: 0px;  
 }  
 .boxcaption{  
     position: absolute;  
@@ -44,61 +44,76 @@ overflow: scroll;
     }  
 .captionfull .boxcaption {  
 		text-align: left;
-        top: 260;  
-        left: 0;
+        top: 260px;  
+        left: 0px;
         font-size: 10px;
         z-index: 2000;  
     }  
 .caption .boxcaption {
         top: 220;  
-        left: 0;  
+        left: 0px;  
         font-size: 10px;
         z-index: 2000;    
     } 
     
     
 /* detect screen size and locate the area of width and height and overlay vanvas  */
- 
-.canvalocate {  
- 	float: right; 
-	border: 1px solid #fff;
-	right: 20; 
+
+.canvaslocate {  
+	margin: 5px;
+ 	float: left; 
+	border: 1px solid #fff;	
 	position: relative; 
 	width: 640px;
-	height: 200px; 
+	height: 200px;
 } 
-.plan_view{
- 	float: right; 
+.plane_view{
 	position: relative; 
-	top: 0; 
-	right: 20;
+	top: 0px; 
+	left: 0px;
 	width: 640px;
 	height: 200px;
 }
 .canvas_view{
 	position: relative; 
-	left: 0; 
-	top: 0; 
+	left: 0px; 
+	top: 0px;
 	width: 640px;
 	height: 200px;
 }
 .plane{
 	position: absolute; 
-	left: 0; 
-	top: 0; 
+	left: 0px; 
+	top: 0px; 
 	z-index: 749;
 }
 .cross_overlay{ 
 	position: absolute; 
-	left: 0; 
-	top: 0; 
+	left: 0px; 
+	top: 0px; 
 	z-index: 1490;
 }
 
 .coords_show_left{
+	margin: 5px;
+	width: 20%;
 	float: left; 
 	color: white;
-	left: 20; 
+	left: 0px; 
 	position: relative; 
 	font-size: 12px;
+}
+
+.settings-left-column {
+	text-align: center;
+	margin: 5px;
+	float: left;
+	width: 45%	
+}
+
+.settings-right-column {
+	text-align: center;
+	margin: 5px;
+	float: left;
+	width: 45%	
 }

@@ -122,8 +122,8 @@ TissueStack.Utils = {
 			// Note: 255 is reserved for no data value
 			for ( var y = 1; y < TissueStack.color_maps[map].length; y++) {
 				// find start and end of value range
-				var valueRangeStart = Math.floor(TissueStack.color_maps[map][y-1][0] * 254);
-				var valueRangeEnd = Math.floor(TissueStack.color_maps[map][y][0] * 254);
+				var valueRangeStart = Math.floor(TissueStack.color_maps[map][y-1][0] * 255);
+				var valueRangeEnd = Math.floor(TissueStack.color_maps[map][y][0] * 255);
 				var valueRangeDelta = valueRangeEnd - valueRangeStart;
 				// find start and end of RGB range
 				var redRangeStart = TissueStack.color_maps[map][y-1][1];
@@ -155,28 +155,17 @@ TissueStack.Utils = {
 			// no data: 255
 			TissueStack.indexed_color_maps[map][255] = [255, 255, 255];
 		}
-	},getScreenSize : function (){	
-		if($(document).width() > 480 || $(document).height() > 480)
-			{	
-				var diman = ["y","x","z"];
-				var screenW = $(document).width()-$(document).width()/3;
-				var screenH = $(document).height()-$(document).height()/3;
-				
-				$('.canvalocate').css({'width': screenW, 'height':screenH });
-				$('.canvas_view').css({'width': screenW, 'height':screenH });
-				$('#plane_view').css({'width': screenW, 'height':screenH });
-				
+	},adjustScreenContentToActualScreenSize : function (){	
+		if (!TissueStack || typeof(TissueStack.phone) === 'undefined' || TissueStack.phone) {
+			return;
+		}
+		
+		var screenWidth = $(document).width();
+		var screenHeight = $(document).height();
 
-				////// set up canvas y, x, z if screen size is greater then phone screen size
-					for (var i=0; i<3; i++)
-					{
-						document.getElementById('canvas_'+diman[i]+'_plane_cross_overlay').width = screenW;
-						document.getElementById('canvas_'+diman[i]+'_plane_cross_overlay').height = screenH;
-						document.getElementById('canvas_'+diman[i]+'_plane').width = screenW;
-						document.getElementById('canvas_'+diman[i]+'_plane').height = screenH;
-					}
-				return;
-			}
-
-	},
+		$('.coords_show_left').css({"width" : Math.floor(screenWidth * 0.20)});
+		$('.canvaslocate, .canvaslocate *').css({"width" : Math.floor(screenWidth * 0.77), "height" : Math.floor(screenHeight * 0.75)});
+		$('canvas').attr("width", Math.floor(screenWidth * 0.77));
+		$('canvas').attr("height", Math.floor(screenHeight * 0.75));
+	}
 };

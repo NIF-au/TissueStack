@@ -1,7 +1,9 @@
+<!DOCTYPE html>
 <html>
   <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable = no" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
         
         <title> Tissue Stack - Mobile </title>
         
@@ -22,6 +24,7 @@
 		<script src="js/TissueStack.Init.js"></script>
 		
 		<script type="text/javascript">
+		    //TissueStack.phone = false;
 			document.addEventListener('touchmove', function(event) {
   			   event.preventDefault();
 			}, false);
@@ -34,116 +37,111 @@
       <div data-role="page" data-theme="a" id="tissuex" >
             <div data-role="content">
    				<div data-theme="a" data-role="header" data-position="fixed" >
-   					 <h3>Tissue Stack</h3>
-           	  	     <div data-role="navbar">
+         	  	     <div data-role="navbar">
 						<ul>
-							<li><a href="#tissuex" data-icon="plus" class="ui-btn-active">TissueX</a></li>
-							<li><a href="#tissuey" data-icon="minus">TissueY</a></li>
-							<li><a href="#tissuez" data-icon="minus">TissueZ</a></li>
+							<li><a href="#tissuex" data-icon="plus" class="ui-btn-active">X</a></li>
+							<li><a href="#tissuey" data-icon="minus">Y</a></li>
+							<li><a href="#tissuez" data-icon="minus">Z</a></li>
 							<li><a href="#setting" data-icon="gear">Setting</a></li>
 						</ul>
 			  		 </div>
                 </div>
      	    </div>
-     	   	<div class="canvalocate" >
-				<div id="plane_view" class="canvas_y">
-					<div class="canvas_view" >
-						<canvas id="canvas_y_plane" class="plane"></canvas>	
-						<canvas id="canvas_y_plane_cross_overlay" class="cross_overlay"></canvas>
-					</div>
-				</div>									
-			</div>
-		  <div class="coords_show_left"> 
-		  	<div id="main_view_info" style="text-align: center;">
-		  		<div id="canvas_y_extent"></div>
-		  		<input size="8" maxlength="5" type="text" id="canvas_y_x" value="0"/>
-		  		<input size="8" maxlength="5" type="text" id="canvas_y_y" value="0"/>
-		  		<button type="button" id="center_point_in_canvas_y">Center Coordinates</button>
-		  		<div align ="left"> 
-		  			<div id="coords">&nbsp;</div>
-		  			<div id="pixel_coords">&nbsp;</div>
-		  			<div id="world_coords">&nbsp;</div>
-		  		</div> 		
-		  	</div>
-		  </div>
-      </div>  
+     	    <div style="min-width: 1400px;">
+     	    	<div class="coords_show_left"> 
+     	    		<div id="canvas_x_extent" class="text-align-center"></div>
+     	    		<input size="8" maxlength="5" type="text" id="canvas_x_x" value="0"/>
+     	    		<input size="8" maxlength="5" type="text" id="canvas_x_y" value="0"/>
+     	    		<button type="button" id="center_point_in_canvas_x">Center Coordinates</button>
+     	    		<div> 
+     	    			<div class="coords">&nbsp;</div>
+     	    			<div class="pixel_coords">&nbsp;</div>
+     	    			<div class="world_coords">&nbsp;</div>
+     	    		</div> 
+     	    	</div>
+     	    	<div class="canvaslocate canvas_x">
+     	    		<div class="canvas_view" >
+     	    			<canvas id="canvas_x_plane" class="plane"></canvas>	
+     	    			<canvas id="canvas_x_plane_cross_overlay" class="cross_overlay"></canvas>
+     	    		</div>
+     	    	</div>
+     	    </div>
+       </div>  
          
 <!-- tissue Y page-->
         
    <div data-role="page" data-theme="a" id="tissuey" >
             <div data-role="content">
    				<div data-theme="a" data-role="header" data-position="fixed">
-   					 <h1>Tissue Stack</h1>
         	  	     <div data-role="navbar">
 						<ul>
-							<li><a href="#tissuex" data-icon="minus">TissueX</a></li>
-							<li><a href="#tissuey" data-icon="plus" class="ui-btn-active">TissueY</a></li>
-							<li><a href="#tissuez" data-icon="minus">TissueZ</a></li>
+							<li><a href="#tissuex" data-icon="minus">X</a></li>
+							<li><a href="#tissuey" data-icon="plus" class="ui-btn-active">Y</a></li>
+							<li><a href="#tissuez" data-icon="minus">Z</a></li>
 							<li><a href="#setting" data-icon="gear">Setting</a></li>
 						</ul>
 			  		 </div>
                 </div>
      	    </div>
-     	    <div class="canvalocate">
-     	    	<div id="plane_view" class="canvas_x">
-     	    		<div class="canvas_view" >
-     	    			<canvas id="canvas_x_plane" class="plane"></canvas>	
-     	    			<canvas id="canvas_x_plane_cross_overlay" class="cross_overlay"></canvas>
-     	    		</div>
-     	    	</div>											
-     	    </div>
-     	    <div class="coords_show_left"> 
-     	    	<div id="main_view_info" style="text-align: center;">
-     	    		<div id="canvas_x_extent"></div>
-     	    		<input size="8" maxlength="5" type="text" id="canvas_x_x" value="0"/>
-     	    		<input size="8" maxlength="5" type="text" id="canvas_x_y" value="0"/>
-     	    		<button type="button" id="center_point_in_canvas_x">Center Coordinates</button>
-     	    		<div align ="left"> 
-     	    			<div id="coords">&nbsp;</div>
-     	    			<div id="pixel_coords">&nbsp;</div>
-     	    			<div id="world_coords">&nbsp;</div>
-     	    		</div> 
-     	    	</div>
-     	    </div>
-    </div>  
+     	    
+     	    <div style="min-width: 1400px">
+	     	   	<div class="coords_show_left"> 
+			  		<div id="canvas_y_extent" class="text-align-center"></div>
+			  		<input size="8" maxlength="5" type="text" id="canvas_y_x" value="0"/>
+			  		<input size="8" maxlength="5" type="text" id="canvas_y_y" value="0"/>
+			  		<button type="button" id="center_point_in_canvas_y">Center Coordinates</button>
+			  		<div> 
+			  			<div class="coords">&nbsp;</div>
+			  			<div class="pixel_coords">&nbsp;</div>
+			  			<div class="world_coords">&nbsp;</div>
+			  		</div> 		
+			  </div>
+		  
+     	   	<div class="canvaslocate canvas_y" >
+					<div class="canvas_view" >
+						<canvas id="canvas_y_plane" class="plane"></canvas>	
+						<canvas id="canvas_y_plane_cross_overlay" class="cross_overlay"></canvas>
+					</div>
+			</div>
+		</div>
+     </div>  
       
 <!--   Tissue Z page    -->
 
       <div data-role="page" data-theme="a" id="tissuez" >
             <div data-role="content">
    				<div data-theme="a" data-role="header" data-position="fixed">
-   					 <h1>Tissue Stack</h1>
         	  	     <div data-role="navbar">
 						<ul>
-							<li><a href="#tissuex" data-icon="minus" >TissueX</a></li>
-							<li><a href="#tissuey" data-icon="minus">TissueY</a></li>
-							<li><a href="#tissuez" data-icon="plus" class="ui-btn-active">TissueZ</a></li>
+							<li><a href="#tissuex" data-icon="minus" >X</a></li>
+							<li><a href="#tissuey" data-icon="minus">Y</a></li>
+							<li><a href="#tissuez" data-icon="plus" class="ui-btn-active">Z</a></li>
 							<li><a href="#setting" data-icon="gear">Setting</a></li>
 						</ul>
 			  		 </div>
                 </div>
      	    </div>
-	     	<div class="canvalocate">
-	     		<div id="plane_view" class="canvas_z">
+	     	
+	     	<div style="min-width: 1400px">
+	     		<div class="coords_show_left"> 
+	     			<div id="canvas_z_extent" class="text-align-center"></div>
+	     			<input size="8" maxlength="5" type="text" id="canvas_z_x" value="0"/>
+	     			<input size="8" maxlength="5" type="text" id="canvas_z_y" value="0"/>
+	     			<button type="button" id="center_point_in_canvas_z">Center Coordinates</button>
+	     			<div> 
+	     				<div class="coords">&nbsp;</div>
+	     				<div class="pixel_coords">&nbsp;</div>
+	     				<div class="world_coords">&nbsp;</div>
+	     			</div> 
+	     		</div>          	    
+	     		
+	     		<div class="canvaslocate canvas_z">
 	     			<div class="canvas_view" >
 	     				<canvas id="canvas_z_plane" class="plane"></canvas>	
 	     				<canvas id="canvas_z_plane_cross_overlay" class="cross_overlay"></canvas>
 	     			</div>
-	     		</div>											
-	     	</div> 
-	     	<div class="coords_show_left"> 
-	     		<div id="main_view_info" style="text-align: center;">
-	     			<div id="canvas_z_extent"></div>
-	     			<input size="8" maxlength="5" type="text" id="canvas_z_x" value="0"/>
-	     			<input size="8" maxlength="5" type="text" id="canvas_z_y" value="0"/>
-	     			<button type="button" id="center_point_in_canvas_z">Center Coordinates</button>
-	     			<div align ="left"> 
-	     				<div id="coords">&nbsp;</div>
-	     				<div id="pixel_coords">&nbsp;</div>
-	     				<div id="world_coords">&nbsp;</div>
-	     			</div> 
 	     		</div>
-	     	</div>     
+	     	</div>											
      </div>
     
 <!-- Setting page    --> 
@@ -151,22 +149,20 @@
       <div data-role="page" data-theme="a" id="setting" >
             <div data-role="content">
    				<div data-theme="a" data-role="header" data-position="fixed">
-   					 <h1>Tissue Stack</h1>
         	  	     <div data-role="navbar">
 						<ul>
-							<li><a href="#tissuex" data-icon="minus">TissueX</a></li>
-							<li><a href="#tissuey" data-icon="minus" >TissueY</a></li>
-							<li><a href="#tissuez" data-icon="minus">TissueZ</a></li>
+							<li><a href="#tissuex" data-icon="minus">X</a></li>
+							<li><a href="#tissuey" data-icon="minus" >Y</a></li>
+							<li><a href="#tissuez" data-icon="minus">Z</a></li>
 							<li><a href="#setting" data-icon="gear" class="ui-btn-active">Setting</a></li>
 						</ul>
 			  		 </div>
                 </div>
      	    </div>
      	
-	     	<div style="text-align: center" data-role="fieldcontain">
-	     	    <p>Color Mapping:</p>
-	     	    <fieldset data-role="controlgroup">
-	     	    	<!--<legend>Color Mapping:</legend>	-->			
+	     	<div class="settings-left-column">
+	     		Color Mapping:
+	     	    <fieldset data-role="radio-choice-1">
 	     				<input type="radio" name="color_map" id="radio-choice-1" value="grey" checked="checked" />
 	     	         	<label for="radio-choice-1">Grey</label>
 	     	
@@ -178,13 +174,17 @@
 	     		</fieldset>
 	     	</div>
      	
-	     	<div align ="center" >
-				<p>Drawing Interval (in millis):</p>
+	     	<div class="settings-right-column">
+				<label for="drawing_interval">Drawing Interval (in millis): </label>
 				<input id="drawing_interval" type="text" value="100" >
-				<a href="mobile.html" data-role="button" id="drawing_interval_button" type="button" >Apply</a>
+				<fieldset data-role="controlgroup">
+				<input type="checkbox" id="sync_canvases" checked="checked" />
+				<label for="sync_canvases">Sync Canvases</label>
+				</fieldset>
+				<a href="mobile.html" data-role="button" id="drawing_interval_button">Apply</a>
 			</div>
 			
-			<!--<input type="checkbox" id="sync_canvases" checked="checked" />Sync Canvases </br>    -->
+			
       </div>
            
     </body>

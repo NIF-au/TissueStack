@@ -1,4 +1,7 @@
 TissueStack.Init = function () {
+	TissueStack.Utils.adjustScreenContentToActualScreenSize();
+	TissueStack.Utils.indexColorMaps();
+	
 	var zoom_levels = [0.25, // level 0
 	                   0.5,  // level 1
 	                   0.75, // level 2
@@ -93,11 +96,6 @@ TissueStack.Init = function () {
 		
 		// display data extent info on page
 		$('#canvas_' + planeId + '_extent').html("Data Extent: " + plane.getDataExtent().x + " x " + plane.getDataExtent().y + " [Zoom Level: " + plane.getDataExtent().zoom_level + "] ");
-		
-		// change zoom levels of x and z to 0
-		if (planeId == 'x' || planeId == 'z') {
-			plane.changeToZoomLevel(0);
-		}
 		
 		// fill canvases
 		plane.queue.drawLowResolutionPreview();
