@@ -1,6 +1,10 @@
 TissueStack.Init = function () {
 	TissueStack.Utils.adjustScreenContentToActualScreenSize();
 	TissueStack.Utils.indexColorMaps();
+
+	if (TissueStack.phone) {
+		new TissueStack.PhoneMenu();
+	}
 	
 	var zoom_levels = [0.25, // level 0
 	                   0.5,  // level 1

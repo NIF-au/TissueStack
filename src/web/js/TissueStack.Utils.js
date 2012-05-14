@@ -157,6 +157,7 @@ TissueStack.Utils = {
 		}
 	},adjustScreenContentToActualScreenSize : function (){	
 		if (!TissueStack || typeof(TissueStack.phone) === 'undefined' || TissueStack.phone) {
+			console.info("return 1");
 			return;
 		}
 		
