@@ -11,12 +11,11 @@ void		*percentage(void *args)
     {
       pthread_mutex_lock(&(a->p->lock));
       percent = (100 / (float)a->volume->total_slices_to_do) * a->volume->slices_done;
-      //  printf("\r%.2f - %u Slices done on %u", percent, a->volume->slices_done, a->volume->total_slices_to_do);
+      printf("\r%.2f - %u Slices done on %u", percent, a->volume->slices_done, a->volume->total_slices_to_do);
       pthread_mutex_unlock(&(a->p->lock));
       usleep(1000);
     }
-  //  printf("\r%.2f - %u Slices done on %u\n", (float)100, a->volume->slices_done, a->volume->total_slices_to_do);
-  printf("nb slices = %i ------ nb threads = %i ------- step = %i\n", a->volume->total_slices_to_do, a->p->nb_workers - 1, a->volume->step);
+  printf("\r%.2f - %u Slices done on %u\n", (float)100, a->volume->slices_done, a->volume->total_slices_to_do);
   free(a);
   pthread_cond_broadcast(&(a->p->condvar_main));
   return (NULL);
@@ -102,7 +101,7 @@ t_thread_pool	*thread_lunch(t_vol *vol, int **dim_start_end, int step, int worke
  
   i = 0;
   p = malloc(sizeof(*p));
-  thread_pool_init(p, workers + 1);//+ 1);
+  thread_pool_init(p, workers + 1);
   lunch_percent_display(p, vol);
   while (i < 3)
     {

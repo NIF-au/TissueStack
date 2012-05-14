@@ -22,6 +22,7 @@ typedef struct		s_thread_pool
   pthread_cond_t	condvar_main;
   pthread_mutex_t	lock_main;
   t_queue		*first;
+  t_queue		*last;
   int			nb_workers;
   int			tasks_to_do;
 }			t_thread_pool;
