@@ -100,25 +100,33 @@ DIST_ARCHIVES = $(distdir).tar.gz
 GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
 distcleancheck_listfiles = find . -type f -print
-ACLOCAL = ${SHELL} /opt/workspace/TissueStack/missing --run aclocal-1.11
-AMTAR = ${SHELL} /opt/workspace/TissueStack/missing --run tar
+ACLOCAL = ${SHELL} /home/oliver/workspace/TissueStack/missing --run aclocal-1.11
+AMTAR = ${SHELL} /home/oliver/workspace/TissueStack/missing --run tar
 AR = ar
+<<<<<<< HEAD
+AUTOCONF = ${SHELL} /home/oliver/workspace/TissueStack/missing --run autoconf
+AUTOHEADER = ${SHELL} /home/oliver/workspace/TissueStack/missing --run autoheader
+AUTOMAKE = ${SHELL} /home/oliver/workspace/TissueStack/missing --run automake-1.11
+AWK = mawk
+=======
 AUTOCONF = ${SHELL} /opt/workspace/TissueStack/missing --run autoconf
 AUTOHEADER = ${SHELL} /opt/workspace/TissueStack/missing --run autoheader
 AUTOMAKE = ${SHELL} /opt/workspace/TissueStack/missing --run automake-1.11
-AWK = mawk
+AWK = gawk
+>>>>>>> d67e96c7113b7e9878ef99f9cc347b572e9027b7
 CC = gcc
 CCDEPMODE = depmode=gcc3
 CFLAGS = -g -O2
 CPP = gcc -E
 CPPFLAGS = 
 CXX = g++
-CXXCPP = g++ -E
-CXXDEPMODE = depmode=gcc3
+CXXCPP = 
+CXXDEPMODE = depmode=none
 CXXFLAGS =  -g -Wall -lstdc++ -lm -shared -I/usr/local/bic/include -I/usr/local/bic/include -lminc2 -lvolume_io2
 CYGPATH_W = echo
 DEFS = -DPACKAGE_NAME=\"TissueStack\" -DPACKAGE_TARNAME=\"tissuestack\" -DPACKAGE_VERSION=\"1.0\" -DPACKAGE_STRING=\"TissueStack\ 1.0\" -DPACKAGE_BUGREPORT=\"harald.waxenegger@gmail.com\" -DPACKAGE_URL=\"\" -DPACKAGE=\"tissuestack\" -DVERSION=\"1.0\" -DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_MEMORY_H=1 -DHAVE_STRINGS_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_UNISTD_H=1 -DHAVE_DLFCN_H=1 -DLT_OBJDIR=\".libs/\"
 DEPDIR = .deps
+DLLTOOL = false
 DSYMUTIL = 
 DUMPBIN = 
 ECHO_C = 
@@ -141,7 +149,12 @@ LIBTOOL = $(SHELL) $(top_builddir)/libtool
 LIPO = 
 LN_S = ln -s
 LTLIBOBJS = 
+<<<<<<< HEAD
+MAKEINFO = ${SHELL} /home/oliver/workspace/TissueStack/missing --run makeinfo
+=======
 MAKEINFO = ${SHELL} /opt/workspace/TissueStack/missing --run makeinfo
+MANIFEST_TOOL = :
+>>>>>>> d67e96c7113b7e9878ef99f9cc347b572e9027b7
 MINC2_CFLAGS = -I/usr/local/bic/include
 MINC2_LIBS = -lminc2 -lvolume_io2
 MKDIR_P = /bin/mkdir -p
@@ -162,15 +175,23 @@ PATH_SEPARATOR = :
 RANLIB = ranlib
 SED = /bin/sed
 SET_MAKE = 
-SHELL = /bin/bash
+SHELL = /bin/sh
 STRIP = strip
 VERSION = 1.0
+<<<<<<< HEAD
+abs_builddir = /home/oliver/workspace/TissueStack
+abs_srcdir = /home/oliver/workspace/TissueStack
+abs_top_builddir = /home/oliver/workspace/TissueStack
+abs_top_srcdir = /home/oliver/workspace/TissueStack
+=======
 abs_builddir = /opt/workspace/TissueStack
 abs_srcdir = /opt/workspace/TissueStack
 abs_top_builddir = /opt/workspace/TissueStack
 abs_top_srcdir = /opt/workspace/TissueStack
+ac_ct_AR = ar
+>>>>>>> d67e96c7113b7e9878ef99f9cc347b572e9027b7
 ac_ct_CC = gcc
-ac_ct_CXX = g++
+ac_ct_CXX = 
 ac_ct_DUMPBIN = 
 am__include = include
 am__leading_dot = .
@@ -197,12 +218,11 @@ host_vendor = unknown
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /opt/workspace/TissueStack/install-sh
+install_sh = ${SHELL} /home/oliver/workspace/TissueStack/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
 localstatedir = ${prefix}/var
-lt_ECHO = echo
 mandir = ${datarootdir}/man
 mkdir_p = /bin/mkdir -p
 oldincludedir = /usr/include

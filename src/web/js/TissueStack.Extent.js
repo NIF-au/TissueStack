@@ -132,21 +132,68 @@ TissueStack.Extent.prototype = {
 		if (pixelCoords.x < 0 || pixelCoords.x > this.x 
 				|| pixelCoords.y < 0 || pixelCoords.y > this.y
 				|| this.slice < 0 || this.slice > this.max_slices) {
-			return;
+			return null;
 		}
 
 		// now we'll have to correct x and y according to their zoom level to get the 1:1 pixel Coordinates which can then be transformed
 		if (this.zoom_level == 1) {
-			pixelCoords.x = Math.floor(pixelCoords.x / this.zoom_level_factor);
-			pixelCoords.y = Math.floor(pixelCoords.y / this.zoom_level_factor);
+			pixelCoords.x = Math.floor(pixelCoords.x * (this.one_to_one_x / this.x));
+			pixelCoords.y = Math.floor(pixelCoords.y * (this.one_to_one_y / this.y));
 		} else {
-			pixelCoords.x = Math.ceil(pixelCoords.x / this.zoom_level_factor);
-			pixelCoords.y = Math.ceil(pixelCoords.y / this.zoom_level_factor);
+			pixelCoords.x = Math.ceil(pixelCoords.x * (this.one_to_one_x / this.x));
+			pixelCoords.y = Math.ceil(pixelCoords.y * (this.one_to_one_y / this.y));
+		}
+		
+		pixelCoords = TissueStack.Utils.transformPixelCoordinatesToWorldCoordinates(
+				[pixelCoords.x, this.one_to_one_y - pixelCoords.y, 0, 1], 
+				this.worldCoordinatesTransformationMatrix);
+
+		if (!pixelCoords) {
+			return null;
 		}
 		
 		// return world coordinates
-		return TissueStack.Utils.transformPixelCoordinateToWorldCoordinate(
-				[pixelCoords.x, pixelCoords.y, this.slice, 1], 
+		return {x: pixelCoords[0], y: pixelCoords[1]};
+
+	},
+	getPixelForWorldCoordinates : function(worldCoords) {
+		if (worldCoords == null) {
+			return null;
+		}
+
+		var pixelCoords = TissueStack.Utils.transformWorldCoordinatesToPixelCoordinates(
+				[worldCoords.x, worldCoords.y, 0, 1],
 				this.worldCoordinatesTransformationMatrix);
-	},	
+		
+		if (pixelCoords == null) {
+			return null;
+		}
+		
+		pixelCoords = {x: pixelCoords[0], y: pixelCoords[1]};
+		
+		// now we have to correct x and y according to their zoom level
+		if (this.zoom_level == 1) {
+			pixelCoords.x = Math.floor(pixelCoords.x * (this.x / this.one_to_one_x));
+			pixelCoords.y = this.y - Math.floor(pixelCoords.y * (this.y / this.one_to_one_y));
+		} else {
+			pixelCoords.x = Math.ceil(pixelCoords.x * (this.x / this.one_to_one_x));
+			pixelCoords.y = this.y - Math.ceil(pixelCoords.y * (this.y /this.one_to_one_y));
+		}
+		
+		// because of rounding inaccuracies it can happen that exceed the image's pixel dimensions by 1,
+		// not to mention that we could have been handed in extreme coordinates that exceeded the world coordinates to begin with 
+		if (pixelCoords.x < 0) {
+			pixelCoords.x = 0;
+		} else if (pixelCoords.x >= this.x) {
+			pixelCoords.x = this.x - 1;
+		}
+		if (pixelCoords.y < 0) {
+			pixelCoords.y = 0;
+		} else if (pixelCoords.y >= this.y) {
+			pixelCoords.y = this.y - 1;
+		}
+		
+		// return pixel coordinates
+		return pixelCoords;
+	}	
 };

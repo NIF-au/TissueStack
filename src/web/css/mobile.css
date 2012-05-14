@@ -1,0 +1,119 @@
+.text-align-center {
+  text-align: center;
+}
+.text-align-right {
+  text-align: right;
+}
+.scrollable {
+position: absolute;
+top: 50px;
+left: 0px;
+right: 0px;
+bottom: 0px;
+overflow: scroll;
+-webkit-overflow-scrolling: touch;
+}
+
+/*for coords, pixel and world coords*/
+
+.boxgrid{  
+    width: 300px;  
+    height: 300px;  
+    margin:10px;   
+    background:#161613;  
+    border: solid 1px white;  
+    overflow: hidden;  
+    position: relative;  
+}  
+.boxgrid img{  
+    position: absolute;  
+    top: 0px;  
+    left: 0px;  
+    border: 0px;  
+}  
+.boxcaption{  
+    position: absolute;  
+    background: #000;  
+    height: 100px;  
+    width: 100%;  
+    opacity: .6;  
+    /* For IE 5-7 */  
+    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=60);  
+    /* For IE 8 */  
+    -MS-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=60)";  
+    }  
+.captionfull .boxcaption {  
+		text-align: left;
+        top: 260px;  
+        left: 0px;
+        font-size: 10px;
+        z-index: 2000;  
+    }  
+.caption .boxcaption {
+        top: 220;  
+        left: 0px;  
+        font-size: 10px;
+        z-index: 2000;    
+    } 
+    
+    
+/* detect screen size and locate the area of width and height and overlay vanvas  */
+
+.canvaslocate {  
+	margin: 5px;
+ 	float: left; 
+	border: 1px solid #fff;	
+	position: relative; 
+	width: 640px;
+	height: 200px;
+} 
+.plane_view{
+	position: relative; 
+	top: 0px; 
+	left: 0px;
+	width: 640px;
+	height: 200px;
+}
+.canvas_view{
+	position: relative; 
+	left: 0px; 
+	top: 0px;
+	width: 640px;
+	height: 200px;
+}
+.plane{
+	position: absolute; 
+	left: 0px; 
+	top: 0px; 
+	z-index: 749;
+}
+.cross_overlay{ 
+	position: absolute; 
+	left: 0px; 
+	top: 0px; 
+	z-index: 1490;
+}
+
+.coords_show_left{
+	margin: 5px;
+	width: 20%;
+	float: left; 
+	color: white;
+	left: 0px; 
+	position: relative; 
+	font-size: 12px;
+}
+
+.settings-left-column {
+	text-align: center;
+	margin: 5px;
+	float: left;
+	width: 45%	
+}
+
+.settings-right-column {
+	text-align: center;
+	margin: 5px;
+	float: left;
+	width: 45%	
+}

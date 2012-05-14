@@ -18,6 +18,8 @@ void		*worker_start(void *pool)
 	{
 	  task = p->first;
 	  p->first = p->first->next;
+	  if (p->first == NULL)
+	    p->last = NULL;
 	  p->tasks_to_do--;
 	}
       // unlock the mutex locked before
@@ -36,22 +38,21 @@ void		thread_pool_add_task(void *(*function)(void *), void *args, t_thread_pool 
   t_queue	*tmp;
   
   pthread_mutex_lock(&(p->lock));
-  tmp = p->first;
-  if (p->first != NULL)
+  if (p->last != NULL)
     {
-      while (tmp->next != NULL)
-	tmp = tmp->next;
+      tmp = p->last;
       tmp->next = malloc(sizeof(*tmp->next));
       tmp = tmp->next;
       tmp->function = function;
       tmp->argument = args;
-      pthread_mutex_unlock(&(p->lock));
+      p->last = tmp;
     }
   else
     {
       p->first = malloc(sizeof(*p->first));
       p->first->function = function;
       p->first->argument = args;
+      p->last = p->first;
     }
   p->tasks_to_do++;
   pthread_mutex_unlock(&(p->lock));
@@ -68,6 +69,7 @@ void		thread_pool_init(t_thread_pool *p, unsigned int nb_threads)
 
   i = 0;
   p->first = NULL;
+  p->last = NULL;
   p->tasks_to_do = 0;
   p->nb_workers = nb_threads;
   // malloc the number of threads which we want in the threadpool
@@ -115,7 +117,6 @@ void		thread_pool_destroy(t_thread_pool *p)
 	}
       i++;
     }
-  //  printf("Bye Bye\n");
   // destroy condvar and mutex
   pthread_mutex_destroy(&(p->lock));
   pthread_cond_destroy(&(p->condvar));

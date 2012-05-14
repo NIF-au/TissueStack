@@ -159,6 +159,7 @@ TissueStack.Queue.prototype = {
 		(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height) {
 			imageTile.onload = function() {
 				if (timestamp < _this.latestDrawRequestTimestamp) {
+					_this.lowResolutionPreviewDrawn = true;
 					return;
 				}
 			
@@ -172,6 +173,8 @@ TissueStack.Queue.prototype = {
 
 				ctx.drawImage(this, imageOffsetX, imageOffsetY, width, height, canvasX, canvasY, width, height);
 				_this.lowResolutionPreviewDrawn = true;
+				
+				_this.canvas.applyColorMapToCanvasContent();
 			};
 		})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height);
 	}, prepareDrawRequest : function(draw_request) {
@@ -244,8 +247,7 @@ TissueStack.Queue.prototype = {
 				draw_request.coords.y = Math.abs(draw_request.coords.y);
 				draw_request.upperLeftCorner.y = (draw_request.canvasDims.y - draw_request.crossCoords.y) - draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);				
 			} else if (draw_request.coords.y > (draw_request.max_coords_of_event_triggering_plane.max_y - 1)) {
-				draw_request.coords.y = draw_request.coords.y - (draw_request.max_coords_of_event_triggering_plane.max_y - 1);
-				draw_request.upperLeftCorner.y = (draw_request.canvasDims.y - draw_request.crossCoords.y) - draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);
+				draw_request.upperLeftCorner.y = (draw_request.canvasDims.y - draw_request.crossCoords.y) + draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);
 			} else {
 				draw_request.upperLeftCorner.y = (draw_request.canvasDims.y - draw_request.crossCoords.y) + draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);				
 			}
@@ -320,7 +322,7 @@ TissueStack.Queue.prototype = {
 		// redraw 
 		this.canvas.drawMe(draw_request.timestamp);
 
-		// tidy up where we left debris
+		/*
 		if ((this.canvas.upper_left_x + this.canvas.getDataExtent().x) < 0
 				|| (this.canvas.upper_left_x + this.canvas.getDataExtent().x) > this.canvas.dim_x
 				|| this.canvas.upper_left_y < 0
@@ -329,9 +331,9 @@ TissueStack.Queue.prototype = {
 				|| (draw_request && draw_request.coords && draw_request.coords.x < 0) || (draw_request && draw_request.coords && draw_request.coords.y < 0)) {
 			this.canvas.eraseCanvasContent(); // in these cases we erase the entire content
 			return;
-		}
+		}*/
 		
-		// we do a more efficient erase
+		// tidy up where we left debris
 		if (this.canvas.upper_left_x > 0) { // in front of us
 			this.canvas.eraseCanvasPortion(0, 0, this.canvas.upper_left_x, this.canvas.dim_y);
 		}
