@@ -131,97 +131,99 @@ TissueStack.Init = function () {
 
 	
 	// bind event listener for maximizing side views
-	$('#left_side_view_maximize, #right_side_view_maximize').bind("click", function(event) {
-		// what side view and canvas called for maximization
-		if (!event.target.id || !$("#" + event.target.id).attr("class")) {
-			return;
-		}
-		
-		var plane = TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray($("#" + event.target.id).attr("class").split(" "), "^canvas_");
-		if (!plane) {
-			return;
-		}
-		var startPos = "canvas_".length;
-		var sideViewPlaneId = plane.substring(startPos, startPos + 1);
-		
-		plane = TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray($("#main_view_div").attr("class").split(" "), "^canvas_");
-		if (!plane) {
-			return;
-		}
-		var mainViewPlaneId = plane.substring(startPos, startPos + 1);
-		
-		// with the id we get the can get the main canvas and the side canvas and swap them, including their dimensions and zoom levels
-		var mainCanvas = $("#main_view_canvas");
-		var mainCanvasChildren = mainCanvas.children("canvas");
-		if (!mainCanvasChildren || mainCanvasChildren.length == 0) {
-			return;
-		}
-		mainCanvasChildren.detach();
-		
-		startPos = event.target.id.indexOf("_maximize");
-		if (startPos < 0) {
-			return;
-		}
-		var sideCanvasId = event.target.id.substring(0, startPos);
-		
-		var sideCanvas = $("#" + sideCanvasId + "_canvas");
-		var sideCanvasChildren = sideCanvas.children("canvas");
-		if (!sideCanvasChildren || sideCanvasChildren.length == 0) {
-			return;
-		}
-		sideCanvasChildren.detach();
-		
-		// swap dimensions
-		var sideCanvasRelativeCross = TissueStack.planes[sideViewPlaneId].getRelativeCrossCoordinates(); 
-		var mainCanvasRelativeCross = TissueStack.planes[mainViewPlaneId].getRelativeCrossCoordinates();
-		
-		var sideCanvasDims = {x: sideCanvasChildren[0].width, y: sideCanvasChildren[0].height};
-		var mainCanvasDims = {x: mainCanvasChildren[0].width, y: mainCanvasChildren[0].height};
-		for (var i=0; i < sideCanvasChildren.length; i++) {
-			sideCanvasChildren[i].width = mainCanvasDims.x;
-			sideCanvasChildren[i].height = mainCanvasDims.y;
-		}
-		TissueStack.planes[sideViewPlaneId].setDimensions(mainCanvasDims.x, mainCanvasDims.y);
-		// store zoom level for side view
-		var zoomLevelSideView = TissueStack.planes[sideViewPlaneId].getDataExtent().zoom_level;
-		
-		for (var i=0; i < mainCanvasChildren.length; i++) {
-			mainCanvasChildren[i].width = sideCanvasDims.x;
-			mainCanvasChildren[i].height = sideCanvasDims.y;
-		}
-		TissueStack.planes[mainViewPlaneId].setDimensions(sideCanvasDims.x, sideCanvasDims.y);
-		
-		mainCanvas.append(sideCanvasChildren);
-		sideCanvas.append(mainCanvasChildren);
-
-		// remember change in class
-		$("#" + event.target.id).attr("class", "canvas_" + mainViewPlaneId);
-		$("#main_view_div").attr("class", "canvas_" + sideViewPlaneId);
-
-		
-		// redraw and change the zoom level as well
-		TissueStack.planes[mainViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(mainCanvasRelativeCross);
-		TissueStack.planes[sideViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(sideCanvasRelativeCross);
-		TissueStack.planes[sideViewPlaneId].changeToZoomLevel(TissueStack.planes[mainViewPlaneId].getDataExtent().zoom_level);
-		TissueStack.planes[mainViewPlaneId].changeToZoomLevel(zoomLevelSideView);
-		
-		// last but not least, swap their associated info above
-		var sideViewInfo = $("#"+ sideCanvasId + "_info");
-		var mainViewInfo = $("#main_view_info");
-		if (!sideViewInfo || !mainViewInfo) {
-			return;
-		}
-		var sideViewInfoChildren = sideViewInfo.children();
-		var mainViewInfoChildren = mainViewInfo.children();
-		if (!sideViewInfoChildren || !mainViewInfoChildren || sideViewInfoChildren.length == 0 || mainViewInfoChildren.length == 0) {
-			return;
-		}
-		
-		sideViewInfoChildren.detach();
-		mainViewInfoChildren.detach();
-		sideViewInfo.append(mainViewInfoChildren);
-		mainViewInfo.append(sideViewInfoChildren);
-	});
+	if (!TissueStack.phone) {
+		$('#left_side_view_maximize, #right_side_view_maximize').bind("click", function(event) {
+			// what side view and canvas called for maximization
+			if (!event.target.id || !$("#" + event.target.id).attr("class")) {
+				return;
+			}
+			
+			var plane = TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray($("#" + event.target.id).attr("class").split(" "), "^canvas_");
+			if (!plane) {
+				return;
+			}
+			var startPos = "canvas_".length;
+			var sideViewPlaneId = plane.substring(startPos, startPos + 1);
+			
+			plane = TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray($("#main_view_div").attr("class").split(" "), "^canvas_");
+			if (!plane) {
+				return;
+			}
+			var mainViewPlaneId = plane.substring(startPos, startPos + 1);
+			
+			// with the id we get the can get the main canvas and the side canvas and swap them, including their dimensions and zoom levels
+			var mainCanvas = $("#main_view_canvas");
+			var mainCanvasChildren = mainCanvas.children("canvas");
+			if (!mainCanvasChildren || mainCanvasChildren.length == 0) {
+				return;
+			}
+			mainCanvasChildren.detach();
+			
+			startPos = event.target.id.indexOf("_maximize");
+			if (startPos < 0) {
+				return;
+			}
+			var sideCanvasId = event.target.id.substring(0, startPos);
+			
+			var sideCanvas = $("#" + sideCanvasId + "_canvas");
+			var sideCanvasChildren = sideCanvas.children("canvas");
+			if (!sideCanvasChildren || sideCanvasChildren.length == 0) {
+				return;
+			}
+			sideCanvasChildren.detach();
+			
+			// swap dimensions
+			var sideCanvasRelativeCross = TissueStack.planes[sideViewPlaneId].getRelativeCrossCoordinates(); 
+			var mainCanvasRelativeCross = TissueStack.planes[mainViewPlaneId].getRelativeCrossCoordinates();
+			
+			var sideCanvasDims = {x: sideCanvasChildren[0].width, y: sideCanvasChildren[0].height};
+			var mainCanvasDims = {x: mainCanvasChildren[0].width, y: mainCanvasChildren[0].height};
+			for (var i=0; i < sideCanvasChildren.length; i++) {
+				sideCanvasChildren[i].width = mainCanvasDims.x;
+				sideCanvasChildren[i].height = mainCanvasDims.y;
+			}
+			TissueStack.planes[sideViewPlaneId].setDimensions(mainCanvasDims.x, mainCanvasDims.y);
+			// store zoom level for side view
+			var zoomLevelSideView = TissueStack.planes[sideViewPlaneId].getDataExtent().zoom_level;
+			
+			for (var i=0; i < mainCanvasChildren.length; i++) {
+				mainCanvasChildren[i].width = sideCanvasDims.x;
+				mainCanvasChildren[i].height = sideCanvasDims.y;
+			}
+			TissueStack.planes[mainViewPlaneId].setDimensions(sideCanvasDims.x, sideCanvasDims.y);
+			
+			mainCanvas.append(sideCanvasChildren);
+			sideCanvas.append(mainCanvasChildren);
+	
+			// remember change in class
+			$("#" + event.target.id).attr("class", "canvas_" + mainViewPlaneId);
+			$("#main_view_div").attr("class", "canvas_" + sideViewPlaneId);
+	
+			
+			// redraw and change the zoom level as well
+			TissueStack.planes[mainViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(mainCanvasRelativeCross);
+			TissueStack.planes[sideViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(sideCanvasRelativeCross);
+			TissueStack.planes[sideViewPlaneId].changeToZoomLevel(TissueStack.planes[mainViewPlaneId].getDataExtent().zoom_level);
+			TissueStack.planes[mainViewPlaneId].changeToZoomLevel(zoomLevelSideView);
+			
+			// last but not least, swap their associated info above
+			var sideViewInfo = $("#"+ sideCanvasId + "_info");
+			var mainViewInfo = $("#main_view_info");
+			if (!sideViewInfo || !mainViewInfo) {
+				return;
+			}
+			var sideViewInfoChildren = sideViewInfo.children();
+			var mainViewInfoChildren = mainViewInfo.children();
+			if (!sideViewInfoChildren || !mainViewInfoChildren || sideViewInfoChildren.length == 0 || mainViewInfoChildren.length == 0) {
+				return;
+			}
+			
+			sideViewInfoChildren.detach();
+			mainViewInfoChildren.detach();
+			sideViewInfo.append(mainViewInfoChildren);
+			mainViewInfo.append(sideViewInfoChildren);
+		});
+	}
 };
 
 $(document).ready(function() {

@@ -3,8 +3,8 @@ TissueStack.Canvas = function(data_extent, canvas_id) {
 	this.setDataExtent(data_extent);
 	this.setCanvasElement(canvas_id);
 	// set dimensions
-	var tmpCanvasElement = this.getCanvasElement();
-	this.setDimensions(tmpCanvasElement.width(), tmpCanvasElement.height());
+	var tmpCanvasElement = this.getCanvasElement()[0];
+	this.setDimensions(tmpCanvasElement.width, tmpCanvasElement.height);
 	this.centerUpperLeftCorner();
 	this.drawCoordinateCross(this.getCenter());
 	this.registerMouseEvents();

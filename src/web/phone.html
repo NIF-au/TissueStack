@@ -33,49 +33,7 @@
   </head>
     <body >
       <div data-role="page" data-theme="a" id="tissuex" >
-                  <div data-role="content">
-   				<div data-theme="a" data-role="header" data-position="fixed">
-        	  	     <div data-role="navbar">
-						<ul>
-							<li><a href="#tissuex" data-icon="minus">X</a></li>
-							<li><a href="#tissuey" data-icon="plus" class="ui-btn-active">Y</a></li>
-							<li><a href="#tissuez" data-icon="minus">Z</a></li>
-							<li><a href="#setting" data-icon="gear">Setting</a></li>
-						</ul>
-			  		 </div>
-                </div>
-     	    </div>
-     	    <div class="boxgrid captionfull" align ="center">
-				<div style=" position: relative; left: 0px; width: 300px;">
-					<div style="position: relative; left: 0px; top: 5px; width: 300px; height: 300px;">
-						<div id="left_side_view_canvas" style="position: relative; left: 0px; top: 5px;">
-								<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_x_plane"></canvas>
-								<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_x_plane_cross_overlay"></canvas>
-						</div>
-					</div>
-				</div>
-				<div class="cover boxcaption"> 
-					<div id="coords">&nbsp;</div>
-					<div id="pixel_coords">&nbsp;</div>
-					<div id="world_coords">&nbsp;</div>
-				</div> 
-			</div>
-      
-       	  <!-- Footer  
-		  <div data-role="footer" data-position="fixed" >	  
-			 <div style = "text-align: center;">
-            	<div data-role="fieldcontain">
-   					<label for="slider-0">Level</label>
-   					<input type="range" name="slider" id="slider-0" value="3" min="0" max="6" data-highlight="true" data-mini="true" />
-			    </div>
-			 </div>
-           </div>  -->  
-      </div>  
-         
-<!-- tissue Y page-->
-        
-   <div data-role="page" data-theme="a" id="tissuey" >
-               <div data-role="content">
+           <div data-role="content">
    				<div data-theme="a" data-role="header" data-position="fixed">
            	  	     <div data-role="navbar">
 						<ul>
@@ -87,30 +45,46 @@
 			  		 </div>
                 </div>
      	    </div>
-     	  <div class="boxgrid captionfull" align ="center">
-				<div style="position: relative; left: 0px; width: 300px; height: 300px;">
-						<div id="main_view_div" class="canvas_y" style="position: relative; left: 0px; top: 0px; text-align: center;">
-							<div id="main_view_canvas" style="position: relative; left: 0px; top: 5px; width: 300px;">
-							<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_y_plane"></canvas>
-							<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_y_plane_cross_overlay"></canvas>
-							</div>
-						</div>											
+     	  <div class="boxgrid captionfull">
+				<div id="main_view_canvas" style="position: relative; left: 0px; top: 0px; width: 300px; height: 300px;">
+					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_x_plane"></canvas>
+					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_x_plane_cross_overlay"></canvas>
+				</div>
+			<div class="cover boxcaption"> 
+				<div class="coords">&nbsp;</div>
+				<div class="pixel_coords">&nbsp;</div>
+				<div class="world_coords">&nbsp;</div>
+			</div> 
+		  </div>
+      
+      </div>  
+         
+<!-- tissue Y page-->
+        
+   <div data-role="page" data-theme="a" id="tissuey" >
+           <div data-role="content">
+   				<div data-theme="a" data-role="header" data-position="fixed">
+        	  	     <div data-role="navbar">
+						<ul>
+							<li><a href="#tissuex" data-icon="minus">X</a></li>
+							<li><a href="#tissuey" data-icon="plus" class="ui-btn-active">Y</a></li>
+							<li><a href="#tissuez" data-icon="minus">Z</a></li>
+							<li><a href="#setting" data-icon="gear">Setting</a></li>
+						</ul>
+			  		 </div>
+                </div>
+     	    </div>
+     	    <div class="boxgrid captionfull">
+				<div style="position: relative; left: 0px; top: 0px; width: 300px; height: 300px;">
+					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_y_plane"></canvas>
+					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_y_plane_cross_overlay"></canvas>
 				</div>
 				<div class="cover boxcaption"> 
-					<div id="coords">&nbsp;</div>
-					<div id="pixel_coords">&nbsp;</div>
-					<div id="world_coords">&nbsp;</div>
+					<div class="coords">&nbsp;</div>
+					<div class="pixel_coords">&nbsp;</div>
+					<div class="world_coords">&nbsp;</div>
 				</div> 
-		  </div>
-       	  <!-- Footer
-		  <div data-role="footer" data-position="fixed" >	  
-			 <div style = "text-align: center;">
-            	<div data-role="fieldcontain">
-   					<label for="slider-0">Level</label>
-   					<input type="range" name="slider" id="slider-0" value="1" min="0" max="6" data-highlight="true" data-mini="true" />
-			    </div>
-			 </div>
-           </div>   -->  
+			</div>
       </div>  
       
 <!--   Tissue Z page    -->
@@ -127,33 +101,20 @@
 			  		 </div>
                 </div>
      	    </div>
-     	<div class="boxgrid captionfull" align ="center">  
-			<div style=" position: relative; left: 0px; width: 300px;">
-				<div style="position: relative; left: 0px; top: 5px; width: 300px; height: 300px;">
-					<div id="right_side_view_canvas" style="position: relative; left: 0px; top: 5px;">
-							<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_z_plane"></canvas>
-							<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_z_plane_cross_overlay"></canvas>
-					</div>
-				</div>
+     	<div class="boxgrid captionfull">  
+			<div style="position: relative; left: 0px; top: 0px; width: 300px; height: 300px;">
+				<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_z_plane"></canvas>
+				<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_z_plane_cross_overlay"></canvas>
 			</div>
 			<div class="cover boxcaption"> 
-				<div id="coords">&nbsp;</div>
-				<div id="pixel_coords">&nbsp;</div>
-				<div id="world_coords">&nbsp;</div>
+				<div class="coords">&nbsp;</div>
+				<div class="pixel_coords">&nbsp;</div>
+				<div class="world_coords">&nbsp;</div>
 			</div> 
 		</div>
-       	  <!--Footer
-		  <!-- <div data-role="footer" data-position="fixed" >	  
-			 <div style = "text-align: center;">
-            	<div data-role="fieldcontain">
-   					<label for="slider-0">Level</label>
-   					<input type="range" name="slider" id="slider-0" value="1" min="0" max="6" data-highlight="true" data-mini="true"/>
-			    </div>
-			 </div>
-           </div>    --> 
       </div>
     
-<!-- Setting page    -->   
+	  <!-- Setting page    -->   
       <div data-role="page" data-theme="a" id="setting" >
             <div data-role="content">
    				<div data-theme="a" data-role="header" data-position="fixed">
@@ -170,25 +131,22 @@
      	
 	     	<div style="text-align: center" data-role="fieldcontain">
 	     	    <fieldset data-role="controlgroup">
-	     	    	<!--<legend>Color Mapping:</legend>	-->			
-	     				<input type="radio" name="color_map" id="radio-choice-1" value="grey" checked="checked" />
-	     	         	<label for="radio-choice-1">Grey</label>
+     				<input type="radio" name="color_map" id="radio-choice-1" value="grey" checked="checked" />
+     	         	<label for="radio-choice-1">Grey</label>
 	     	
-	     	         	<input type="radio" name="color_map" id="radio-choice-2" value="hot"  />
-	     	         	<label for="radio-choice-2">Hot</label>
+     	         	<input type="radio" name="color_map" id="radio-choice-2" value="hot"  />
+     	         	<label for="radio-choice-2">Hot</label>
 	     	
-	     	         	<input type="radio" name="color_map" id="radio-choice-3" value="spectral"  />
-	     	         	<label for="radio-choice-3">Spectral</label>
+     	         	<input type="radio" name="color_map" id="radio-choice-3" value="spectral"  />
+     	         	<label for="radio-choice-3">Spectral</label>
 	     		</fieldset>
 	     	</div>
      	
-	     	<div align ="center" >
+	     	<div>
 				<p>Drawing Interval (in millis):</p>
 					<input id="drawing_interval" type="text" value="100" >
-					<a href="phone.html" data-role="button" id="drawing_interval_button" type="button" >Apply</a>
+					<a href="phone.html" data-role="button" id="drawing_interval_button">Apply</a>
 			</div>
-			
-			<!--<input type="checkbox" id="sync_canvases" checked="checked" />Sync Canvases </br>    -->
       </div>
            
     </body>
