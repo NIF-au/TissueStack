@@ -92,9 +92,9 @@ body{
 							}
 							a.menuBtn{
 								background: transparent url(../images/phone/menuBgT.png) top left no-repeat !important;
-								width:31px;
-								height:31px;
-								background-size: 30px 30px;
+								width:24px;
+								height:21px;
+								background-size: 24px 21px;
 								text-indent:-999em !important;
 								display:block !important;
 								-webkit-box-shadow: 0 0px 0 rgba(150,150,150,.3) !important;
