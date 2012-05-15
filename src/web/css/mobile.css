@@ -104,6 +104,16 @@ overflow: scroll;
 	font-size: 12px;
 }
 
+.coords_show_right{
+	position: relative;
+	width: 5%;
+	float: left;
+	color: white;
+	-webkit-transform: rotate(90deg); 
+	-moz-transform: rotate(90deg);
+	z-index: 1800;	
+}
+
 .settings-left-column {
 	text-align: center;
 	margin: 5px;

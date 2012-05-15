@@ -162,11 +162,14 @@ TissueStack.Utils = {
 		}
 		
 		var screenWidth = $(document).width();
-		var screenHeight = $(document).height();
+		var screenHeight = $(document).	height();
 
 		$('.coords_show_left').css({"width" : Math.floor(screenWidth * 0.20)});
-		$('.canvaslocate, .canvaslocate *').css({"width" : Math.floor(screenWidth * 0.77), "height" : Math.floor(screenHeight * 0.75)});
-		$('canvas').attr("width", Math.floor(screenWidth * 0.77));
-		$('canvas').attr("height", Math.floor(screenHeight * 0.75));
+		//$('.coords_show_right').css({"width": Math.floor(screenHeight * 0.84)});
+		$('.ui-slider').css({"width": Math.floor(screenHeight * 0.70)});
+		$('.ui-slider-input').css('-webkit-transform','rotate('+270+'deg)')
+		$('.canvaslocate, .canvaslocate *').css({"width" : Math.floor(screenWidth * 0.70), "height" : Math.floor(screenHeight * 0.75)});
+		$('canvas').attr("width", Math.floor(screenWidth * 0.70));
+		$('canvas').attr("height", Math.floor(screenHeight * 0.75));	
 	}
 };

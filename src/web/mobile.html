@@ -47,7 +47,7 @@
 			  		 </div>
                 </div>
      	    </div>
-     	    <div style="min-width: 1400px;">
+     	    <div>
      	    	<div class="coords_show_left"> 
      	    		<div id="canvas_x_extent" class="text-align-center"></div>
      	    		<input size="8" maxlength="5" type="text" id="canvas_x_x" value="0"/>
@@ -58,15 +58,18 @@
      	    			<div class="pixel_coords">&nbsp;</div>
      	    			<div class="world_coords">&nbsp;</div>
      	    		</div> 
-     	    	</div>
+     	    	</div>  	
      	    	<div class="canvaslocate canvas_x">
      	    		<div class="canvas_view" >
      	    			<canvas id="canvas_x_plane" class="plane"></canvas>	
-     	    			<canvas id="canvas_x_plane_cross_overlay" class="cross_overlay"></canvas>
-     	    		</div>
+     	    			<canvas id="canvas_x_plane_cross_overlay" class="cross_overlay"></canvas>     	    			
+     	    		</div> 		
      	    	</div>
+				<div class="coords_show_right">
+					<input type="range" name="slider" id="slider" value="0" min="0" max="100"  />
+				</div>
      	    </div>
-       </div>  
+           </div>  
          
 <!-- tissue Y page-->
         
