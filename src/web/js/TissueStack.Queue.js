@@ -171,6 +171,7 @@ TissueStack.Queue.prototype = {
 					height = this.height;
 				}
 
+				ctx.globalAlpha=1;
 				ctx.drawImage(this, imageOffsetX, imageOffsetY, width, height, canvasX, canvasY, width, height);
 				_this.lowResolutionPreviewDrawn = true;
 				

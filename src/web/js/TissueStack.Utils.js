@@ -164,12 +164,21 @@ TissueStack.Utils = {
 		var screenWidth = $(document).width();
 		var screenHeight = $(document).	height();
 
+		// mobile version dimension dynamic changes
+		var canvasDims = {width: Math.floor(screenWidth * 0.70), height: Math.floor(screenHeight * 0.75)};
 		$('.coords_show_left').css({"width" : Math.floor(screenWidth * 0.20)});
-		//$('.coords_show_right').css({"width": Math.floor(screenHeight * 0.84)});
-		$('.ui-slider').css({"width": Math.floor(screenHeight * 0.70)});
-		$('.ui-slider-input').css('-webkit-transform','rotate('+270+'deg)')
-		$('.canvaslocate, .canvaslocate *').css({"width" : Math.floor(screenWidth * 0.70), "height" : Math.floor(screenHeight * 0.75)});
-		$('canvas').attr("width", Math.floor(screenWidth * 0.70));
-		$('canvas').attr("height", Math.floor(screenHeight * 0.75));	
+		$('.ui-slider').css({"width": canvasDims.height});
+		$('.ui-slider-input').css('-webkit-transform','rotate('+270+'deg)');
+		$('.canvaslocate').css({"width" : canvasDims.width, "height" : canvasDims.height});
+		$('#main_view_canvas').css({"width" : canvasDims.width, "height" : canvasDims.height});
+		$('canvas').attr("width", canvasDims.width);
+		$('canvas').attr("height", canvasDims.height);
+		
+		// additional desktop version dimension changes
+		var sideCanvasDims = {width: Math.floor(canvasDims.width * 0.3), height: Math.floor(canvasDims.height * 0.2)};
+		$('#left_side_view_canvas').css({"width" : sideCanvasDims.width, "height" : sideCanvasDims.height});
+		$('#right_side_view_canvas').css({"width" : sideCanvasDims.width, "height" : sideCanvasDims.height});
+		$('.canvaslocate .side_canvas').attr("width", sideCanvasDims.width);
+		$('.canvaslocate .side_canvas').attr("height", sideCanvasDims.height);
 	}
 };
