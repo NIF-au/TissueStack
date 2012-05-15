@@ -64,6 +64,7 @@ TissueStack.Init = function () {
 	];
 
 	TissueStack.planes = {};
+	TissueStack.realWorldCoords = {};
 	
 	// loop over data, create objects and listeners and then display them
 	for (var i=0; i < data.length; i++) {
@@ -81,25 +82,34 @@ TissueStack.Init = function () {
 		// store plane  
 		TissueStack.planes[planeId] = plane;
 
+		// get the real world coordinates 
+		TissueStack.realWorldCoords[planeId] = plane.getDataExtent().getExtentCoordinates();
+		
 		// bind coordinate center functionality
 		(function (plane, planeId) {
 			$('#center_point_in_canvas_' + planeId).bind("click", function() {
-				var xCoord = parseInt($('#canvas_' + planeId + '_x').val());
-				var yCoord = parseInt($('#canvas_' + planeId + '_y').val());
+				var xCoord = parseFloat($('#canvas_' + planeId + '_x').val());
+				var yCoord = parseFloat($('#canvas_' + planeId + '_y').val());
 				
-				if (xCoord < 0 || xCoord > plane.getDataExtent().x 
-						|| yCoord < 0 || yCoord > plane.getDataExtent().y) {
+				if (xCoord < TissueStack.realWorldCoords[planeId].min_x || xCoord > TissueStack.realWorldCoords[planeId].max_x 
+						|| yCoord < TissueStack.realWorldCoords[planeId].min_y || yCoord > TissueStack.realWorldCoords[planeId].max_y) {
 					alert("Illegal coords");
 					return;
 				}
-				plane.redrawWithCenterAndCrossAtGivenPixelCoordinates({x: xCoord, y: yCoord});
+				
+				// if we had a transformation matrix, we know we have been handed in real word coords and therefore need to convert back to pixel
+				var givenCoords = {x: xCoord, y: yCoord};
+				if (plane.getDataExtent().worldCoordinatesTransformationMatrix) {
+					givenCoords = plane.getDataExtent().getPixelForWorldCoordinates(givenCoords);
+				}
+				plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords);
 			});
 			
 			
 		})(plane, planeId);
 		
 		// display data extent info on page
-		$('#canvas_' + planeId + '_extent').html("Data Extent: " + plane.getDataExtent().x + " x " + plane.getDataExtent().y + " [Zoom Level: " + plane.getDataExtent().zoom_level + "] ");
+		plane.updateExtentInfo(TissueStack.realWorldCoords[planeId]);
 		
 		// fill canvases
 		plane.queue.drawLowResolutionPreview();
