@@ -68,7 +68,7 @@ TissueStack.Canvas.prototype = {
 		this.setUpperLeftCorner(centerAfterZoom.x, centerAfterZoom.y);
 		
 		// update displayed info
-		$('#canvas_' + this.getDataExtent().plane + '_extent').html("Data Extent: " + this.getDataExtent().x + " x " + this.getDataExtent().y + " [Zoom Level: " + this.getDataExtent().zoom_level + "] ");
+		this.updateExtentInfo(this.getDataExtent().getExtentCoordinates());
 	},
 	getDataCoordinates : function(relative_mouse_coords) {
 		var relDataX = -1;
@@ -395,13 +395,6 @@ TissueStack.Canvas.prototype = {
 						
 						counter--;
 						
-						// TODO: make configurable with array/closure
-						// apply to preview as well
-						// display byte value on mouse over 
-						// tree view on the left: which one is active
-						// histogram and brightness\
-						// add favicon
-						// add apache rewrite for mobile
 						if (counter == 0) {
 							_this.applyColorMapToCanvasContent();
 						}						
@@ -415,5 +408,21 @@ TissueStack.Canvas.prototype = {
 			// increment canvasX
 			canvasX += width;
 		};
+	},
+	updateExtentInfo : function(realWorldCoords) {
+		$('#canvas_' + this.getDataExtent().plane + '_extent').html(
+				"Zoom Level: " + this.getDataExtent().zoom_level +
+				"<br/><hr />X: " + realWorldCoords.min_x + " to " + realWorldCoords.max_x + "<br/>Y: "
+				+ realWorldCoords.min_y + " to " + realWorldCoords.max_y + "<br /><hr />");
+	},
+	updateCoordinateInfo : function(mouseCoords, pixelCoords, worldCoords) {
+		var log = $('.coords');
+		log.html("Canvas => X: " + mouseCoords.x + ", Y: " + mouseCoords.y);
+		log = $('.pixel_coords');
+		log.html("Pixels => X: " + pixelCoords.x + ", Y: " + pixelCoords.y);
+		if (worldCoords) {
+			log = $('.world_coords');
+			log.html("World => X: " +  Math.round(worldCoords.x * 1000) / 1000 + ", Y: " +  Math.round(worldCoords.y * 1000) / 1000);
+		}
 	}
 };

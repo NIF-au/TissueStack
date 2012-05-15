@@ -152,19 +152,13 @@ TissueStack.Events.prototype = {
 		this.canvas.mouse_down = false;
 	}, panAndMove : function(e) {
 		var now =new Date().getTime(); 
+
 		var coords = TissueStack.Utils.getRelativeMouseCoords(e);
-		
-		// output coordinates for mouse position on canvas, its corresponding pixel coordinate and real world coordinate
-		var log = $('.coords');
-		log.html("Canvas => X: " + coords.x + ", Y: " + coords.y);
-		log = $('.pixel_coords');
 		var relCoordinates = this.canvas.getDataCoordinates(coords);
-		log.html("Pixels => X: " + (relCoordinates.x < 0 ? 0 : relCoordinates.x) + ", Y: " + (relCoordinates.y < 0 ? 0 : relCoordinates.y));
-		log = $('.world_coords');
 		var worldCoordinates = this.canvas.getDataExtent().getWorldCoordinatesForPixel(relCoordinates);
-		if (worldCoordinates) {
-				log.html("World => X: " + Math.round(worldCoordinates.x * 1000) / 1000 + ", Y: " + Math.round(worldCoordinates.y * 1000) / 1000);	
-		}
+		
+		// update coordinate info displayed
+		this.canvas.updateCoordinateInfo(coords, relCoordinates, worldCoordinates);
 		
 		if (this.canvas.mouse_down) {
 			this.canvas.isDragging = true;

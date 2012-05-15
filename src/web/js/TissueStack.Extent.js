@@ -195,5 +195,20 @@ TissueStack.Extent.prototype = {
 		
 		// return pixel coordinates
 		return pixelCoords;
-	}	
+	},
+	getExtentCoordinates : function() {
+		// if world coords translation matrix is missing => use the pixel coords as a fallback 
+		var realWorldCoords = {min_x: 0, max_x: this.x, min_y: 0, max_y: this.y};
+		
+		if (this.worldCoordinatesTransformationMatrix) {
+			var tmpTranslatedCoords = this.getWorldCoordinatesForPixel({x:0, y:0});
+			realWorldCoords.min_x = tmpTranslatedCoords.x;
+			realWorldCoords.max_y = tmpTranslatedCoords.y;
+			tmpTranslatedCoords = this.getWorldCoordinatesForPixel({x:this.x, y:this.y});
+			realWorldCoords.max_x = tmpTranslatedCoords.x;
+			realWorldCoords.min_y = tmpTranslatedCoords.y;
+		}
+		
+		return realWorldCoords;
+	}
 };
