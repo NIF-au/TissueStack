@@ -283,7 +283,9 @@ TissueStack.BindUniqueEvents = function () {
 		// z dimension slider: set proper length and min/max for dimension
 		// sadly a separate routine is necessary for the active page slider.
 		// for reasons unknown the active page slider does not refresh until after a page change has been performed 
-		$('.ui-slider-vertical').css({"height": TissueStack.canvasDimensions.height - 50});
+		if (TissueStack.mobile) {
+			$('.ui-slider-vertical').css({"height": TissueStack.canvasDimensions.height - 50});
+		} 
 		$('.canvas_slider').each(
 			function() {
 				var id = extractCanvasId(this.id);
@@ -302,7 +304,6 @@ TissueStack.BindUniqueEvents = function () {
 			if (TissueStack.mobile) {
 				$('.ui-slider-vertical').css({"height": TissueStack.canvasDimensions.height - 50});
 			}
-			
 			var res = $('#' + this.id).data('events');
 			// unbind previous change
 			$('#' + this.id).unbind("change");

@@ -228,15 +228,21 @@ $.widget( "mobile.slider", $.mobile.widget, {
 				// a slight tolerance helped get to the ends of the slider
 				tol = 8;
 				
-			if ( !this.dragging || data.pageY < this.slider.offset().top - tol || data.pageY > this.slider.offset().top + this.slider.height() + tol ) {
+			if (Orientation == "vertical" && (!this.dragging || data.pageY < this.slider.offset().top - tol || data.pageY > this.slider.offset().top + this.slider.height() + tol )) {
 				return;
 			}
-			
+
+			if (Orientation == "horizontal" && (!this.dragging || data.pageX < this.slider.offset().left - tol || data.pageX > this.slider.offset().left + this.slider.width() + tol )) {
+				return;
+			}
+
 		// apply to Vertical view 	
 	
 			if(Orientation == "vertical")
 			{
 				percent = Math.round( ( ( data.pageY - this.slider.offset().top ) / this.slider.height() ) * 10000 ) / 100;
+			} else {
+				percent = Math.round( ( ( data.pageX - this.slider.offset().left ) / this.slider.width() ) * 10000 ) / 100;
 			}				
 		
 			
@@ -272,6 +278,8 @@ $.widget( "mobile.slider", $.mobile.widget, {
 		if(Orientation == "vertical")
 		{
 			this.handle.css( "top", "" + Math.round(percent) + "%");
+		} else {
+			this.handle.css( "left", "" + Math.round(percent) + "%");
 		}		
 
 		
