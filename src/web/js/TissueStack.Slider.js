@@ -42,7 +42,7 @@ $.widget( "mobile.slider", $.mobile.widget, {
 
 			//set up orientation style ( overwrite for vertical version)
 			
-			Orientation = control.attr( "Orientation"),
+			Orientation = control.attr( "orientation"),
 			
 			step = window.parseFloat( control.attr( "step" ) || 1 ),
 			
@@ -221,7 +221,7 @@ $.widget( "mobile.slider", $.mobile.widget, {
 			cType = control[0].nodeName.toLowerCase(),
 			min = cType === "input" ? parseFloat( control.attr( "min" ) ) : 0,
 			max = cType === "input" ? parseFloat( control.attr( "max" ) ) : control.find( "option" ).length - 1;
-			Orientation = control.attr( "Orientation");
+			Orientation = control.attr( "orientation");
 			
 		if ( typeof val === "object" ) {
 			var data = val,

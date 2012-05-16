@@ -81,7 +81,8 @@
 			<h1>X</h1>
 		</div><!-- /header -->
 	
-		<div data-role="content">				
+		<div data-role="content">
+			<div id="canvas_x_extent" style="text-align: center; font-size: 10px;"></div></br>				
 			<div class="boxgrid captionfull" align ="center" style="margin: -5px;">
 					<div style="position: relative; left: 0px; top: 0px; width: 300px; height:300px;">
 						<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_x_plane"></canvas>
@@ -93,7 +94,10 @@
 						<div class="world_coords">&nbsp;</div>
 					</div> 
 			</div>
-			</br><div id="canvas_x_extent" style="text-align: center; font-size: 10px;"></div>
+			</br>
+			<input id="canvas_x_slider" class="canvas_slider" type="range" min="0" max="1000" value="500" step="5" />
+			
+			
 		</div><!-- /content -->
 	</div><!-- /page -->
 	
@@ -104,6 +108,7 @@
 		</div><!-- /header -->
 		<div data-role="content">	
 			<div class="boxgrid captionfull" align ="center" style="margin: -5px;">
+				<div id="canvas_y_extent" style="text-align: center; font-size: 10px;"></div><br />
 				<div style="position: relative; left: 0px; top: 0px; width: 300px; height:300px;">
 					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_y_plane"></canvas>
 					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_y_plane_cross_overlay"></canvas>
@@ -114,7 +119,7 @@
 					<div class="world_coords">&nbsp;</div>
 				</div> 
 			</div>
-			</br><div id="canvas_y_extent" style="text-align: center; font-size: 10px;"></div>
+			</br><input id="canvas_x_slider" class="canvas_slider" type="range" min="0" max="1000" value="500" step="5" />
 		</div><!-- /content -->
 	</div><!-- /page -->
 

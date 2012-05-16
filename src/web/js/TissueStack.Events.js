@@ -17,7 +17,7 @@ TissueStack.Events.prototype = {
 	},	
 	registerCommonEvents: function() {
 		var _this = this;
-		
+
 		// TOUCH END and MOUSE UP
 		$(document).bind("touchend mouseup", function(e) {
 			// call pan move

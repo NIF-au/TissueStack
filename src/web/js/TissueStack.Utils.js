@@ -156,8 +156,7 @@ TissueStack.Utils = {
 			TissueStack.indexed_color_maps[map][255] = [255, 255, 255];
 		}
 	},adjustScreenContentToActualScreenSize : function (){	
-		if (!TissueStack || typeof(TissueStack.phone) === 'undefined' || TissueStack.phone) {
-			console.info("return 1");
+		if (!TissueStack || TissueStack.phone) {
 			return;
 		}
 		
@@ -165,16 +164,16 @@ TissueStack.Utils = {
 		var screenHeight = $(document).	height();
 
 		// mobile version dimension dynamic changes
-		var canvasDims = {width: Math.floor(screenWidth * 0.70), height: Math.floor(screenHeight * 0.75)};
+		TissueStack.canvasDimensions = {width: Math.floor(screenWidth * 0.70), height: Math.floor(screenHeight * 0.75)};
 		$('.coords_show_left').css({"width" : Math.floor(screenWidth * 0.20)});
-		$('.ui-slider').css({"width": canvasDims.height});
-		$('.canvaslocate').css({"width" : canvasDims.width, "height" : canvasDims.height});
-		$('#main_view_canvas').css({"width" : canvasDims.width, "height" : canvasDims.height});
-		$('canvas').attr("width", canvasDims.width);
-		$('canvas').attr("height", canvasDims.height);
-		
+		$('.coords_show_right').css({"height": TissueStack.canvasDimensions.height});
+		$('.canvaslocate').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height});
+		$('#main_view_canvas').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height});
+		$('canvas').attr("width", TissueStack.canvasDimensions.width);
+		$('canvas').attr("height", TissueStack.canvasDimensions.height);
+
 		// additional desktop version dimension changes
-		var sideCanvasDims = {width: Math.floor(canvasDims.width * 0.3), height: Math.floor(canvasDims.height * 0.2)};
+		var sideCanvasDims = {width: Math.floor(TissueStack.canvasDimensions.width * 0.3), height: Math.floor(TissueStack.canvasDimensions.height * 0.2)};
 		$('#left_side_view_canvas').css({"width" : sideCanvasDims.width, "height" : sideCanvasDims.height});
 		$('#right_side_view_canvas').css({"width" : sideCanvasDims.width, "height" : sideCanvasDims.height});
 		$('.canvaslocate .side_canvas').attr("width", sideCanvasDims.width);

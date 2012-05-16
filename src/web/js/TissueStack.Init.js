@@ -120,8 +120,10 @@ TissueStack.Init = function () {
 		plane.queue.drawLowResolutionPreview();
 		plane.queue.drawRequestAfterLowResolutionPreview();
 	}
-	
-	// bind event for queue interval change
+};
+
+TissueStack.BindUniqueEvents = function () {
+	// DRAWING INTERVAL CHANGE HANDLER 
 	$('#drawing_interval_button').bind("click", function() {
 		var newValue = parseInt($('#drawing_interval').val());
 		for (var i=0; i < data.length; i++) {	
@@ -129,7 +131,7 @@ TissueStack.Init = function () {
 		}
 	});
 	
-	// bind event listener for sync checkbox
+	// SYNC CANVAS CHECKBOX CHANGE
 	if (TissueStack.desktop || TissueStack.mobile) {
 		$('#sync_canvases').bind("change", function() {
 			for (var i=0; i < data.length; i++) {	
@@ -138,7 +140,7 @@ TissueStack.Init = function () {
 		});
 	}
 	
-	// bind event listener for color map radio group
+	// COLOR MAP CHANGE HANDLER
 	$('input[name="color_map"]').bind("click", function(e) {
 		for (var i=0; i < data.length; i++) {	
 			if (e.target.value === TissueStack.planes[data[i].plane].color_map) {
@@ -151,7 +153,7 @@ TissueStack.Init = function () {
 	});
 
 	
-	// bind event listener for maximizing side views
+	// MAXIMIZING SIDE VIEWS
 	if (TissueStack.desktop) {
 		$('#left_side_view_maximize, #right_side_view_maximize').bind("click", function(event) {
 			// what side view and canvas called for maximization
@@ -234,8 +236,8 @@ TissueStack.Init = function () {
 					TissueStack.planes[sideViewPlaneId].getDataExtent().getExtentCoordinates());
 		});
 	}
-	
-	// bind coordinate center functionality
+
+	// COORDINATE CENTER FUNCTIONALITY FOR DESKTOP
 	if (TissueStack.desktop) {
 		$('#center_point_in_canvas').bind("click", function() {
 			var plane =
@@ -263,9 +265,34 @@ TissueStack.Init = function () {
 			}
 			plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords);
 		});
-	}			
+	}	
+	
+	// Z PLANE SLIDER 
+	if (TissueStack.mobile || TissueStack.phone) {
+		// z dimension slider
+		$('.ui-slider-vertical').css({"height": TissueStack.canvasDimensions.height - 50});
+		$('.canvas_slider').bind ("change", function (event, ui)  {
+			console.warn($(this).val());
+		});
+
+		$(".canvas_slider").live ("slidercreate", function () {
+			if (TissueStack.mobile) {
+				$('.ui-slider-vertical').css({"height": TissueStack.canvasDimensions.height - 50});
+			}
+			
+			var res = $('#' + this.id).data('events');
+			// unbind previous change
+			$('#' + this.id).unbind("change");
+			if (!res.change || res.change.length == 0) {
+				$('#' + this.id).bind("change", function (event, ui)  {
+					console.warn($(this).val());
+				});
+			}
+		});
+	}
 };
 
 $(document).ready(function() {
 	TissueStack.Init();
+	TissueStack.BindUniqueEvents();
 });
