@@ -139,7 +139,7 @@ $.widget( "mobile.slider", $.mobile.widget, {
 						var snapped = Math.round( curval / ( max - min ) * 100 );
 						handle
 							.addClass( "ui-slider-handle-snapping" )
-							.css( "left", snapped + "%" )
+							.css( "top", snapped + "%" )
 							.animationComplete( function() {
 								handle.removeClass( "ui-slider-handle-snapping" );
 							});
@@ -236,7 +236,7 @@ $.widget( "mobile.slider", $.mobile.widget, {
 	
 			if(Orientation == "vertical")
 			{
-			percent = Math.round( ( ( data.pageY - this.slider.offset().top ) / this.slider.height() ) * 100 );
+				percent = Math.round( ( ( data.pageY - this.slider.offset().top ) / this.slider.height() ) * 10000 ) / 100;
 			}				
 		
 			
@@ -271,7 +271,7 @@ $.widget( "mobile.slider", $.mobile.widget, {
 		
 		if(Orientation == "vertical")
 		{
-			this.handle.css( "top", percent + "%");
+			this.handle.css( "top", "" + Math.round(percent) + "%");
 		}		
 
 		

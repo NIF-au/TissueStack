@@ -126,29 +126,26 @@ TissueStack.BindUniqueEvents = function () {
 	// DRAWING INTERVAL CHANGE HANDLER 
 	$('#drawing_interval_button').bind("click", function() {
 		var newValue = parseInt($('#drawing_interval').val());
-		for (var i=0; i < data.length; i++) {	
-			TissueStack.planes[data[i].plane].queue.setDrawingInterval(newValue);
+		for (var id in TissueStack.planes) {	
+			TissueStack.planes[id].queue.setDrawingInterval(newValue);
 		}
 	});
 	
 	// SYNC CANVAS CHECKBOX CHANGE
 	if (TissueStack.desktop || TissueStack.mobile) {
 		$('#sync_canvases').bind("change", function() {
-			for (var i=0; i < data.length; i++) {	
-				TissueStack.planes[data[i].plane].sync_canvases = $('#sync_canvases')[0].checked;
+			for (var id in TissueStack.planes) {		
+				TissueStack.planes[id].sync_canvases = $('#sync_canvases')[0].checked;
 			}
 		});
 	}
 	
 	// COLOR MAP CHANGE HANDLER
 	$('input[name="color_map"]').bind("click", function(e) {
-		for (var i=0; i < data.length; i++) {	
-			if (e.target.value === TissueStack.planes[data[i].plane].color_map) {
-				return;
-			}
-			TissueStack.planes[data[i].plane].color_map = e.target.value;
-			TissueStack.planes[data[i].plane].drawMe();
-			TissueStack.planes[data[i].plane].applyColorMapToCanvasContent();
+		for (var id in TissueStack.planes) {	
+			TissueStack.planes[id].color_map = e.target.value;
+			TissueStack.planes[id].drawMe();
+			TissueStack.planes[id].applyColorMapToCanvasContent();
 		}
 	});
 
@@ -267,14 +264,40 @@ TissueStack.BindUniqueEvents = function () {
 		});
 	}	
 	
-	// Z PLANE SLIDER 
+	// Z PLANE AKA SLICE SLIDER 
 	if (TissueStack.mobile || TissueStack.phone) {
-		// z dimension slider
+		var extractCanvasId = function(sliderId) {
+			if (!sliderId) {
+				return;
+			}
+			return sliderId.substring("canvas_".length, "canvas_".length + 1);
+		};
+		var triggerQueuedRedraw = function(id, slice) {
+			if (!id) {
+				return;
+			}
+			TissueStack.planes[id].events.changeSliceForPlane(slice);			
+		};
+		
+		
+		// z dimension slider: set proper length and min/max for dimension
+		// sadly a separate routine is necessary for the active page slider.
+		// for reasons unknown the active page slider does not refresh until after a page change has been performed 
 		$('.ui-slider-vertical').css({"height": TissueStack.canvasDimensions.height - 50});
-		$('.canvas_slider').bind ("change", function (event, ui)  {
-			console.warn($(this).val());
-		});
+		$('.canvas_slider').each(
+			function() {
+				var id = extractCanvasId(this.id);
 
+				$(this).attr("min", 0);
+				$(this).attr("max", TissueStack.planes[id].data_extent.max_slices);
+				$(this).attr("value", TissueStack.planes[id].data_extent.slice);
+			}
+		);
+		$('.canvas_slider').bind ("change", function (event, ui)  {
+			var id = extractCanvasId(this.id);
+			triggerQueuedRedraw(id, this.value);
+		});
+		
 		$(".canvas_slider").live ("slidercreate", function () {
 			if (TissueStack.mobile) {
 				$('.ui-slider-vertical').css({"height": TissueStack.canvasDimensions.height - 50});
@@ -285,7 +308,8 @@ TissueStack.BindUniqueEvents = function () {
 			$('#' + this.id).unbind("change");
 			if (!res.change || res.change.length == 0) {
 				$('#' + this.id).bind("change", function (event, ui)  {
-					console.warn($(this).val());
+					var id = extractCanvasId(this.id);
+					triggerQueuedRedraw(id, this.value);
 				});
 			}
 		});

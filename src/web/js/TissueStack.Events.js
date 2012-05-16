@@ -206,6 +206,46 @@ TissueStack.Events.prototype = {
 		} else {
 			this.canvas.isDragging = false;
 		}
+	}, changeSliceForPlane : function(slice) {
+		var now =new Date().getTime(); 
+		this.canvas.data_extent.slice = slice;
+		
+		var upper_left_corner = {x: this.canvas.upper_left_x, y: this.canvas.upper_left_y};
+		var cross_coords = {x: this.canvas.cross_x, y: this.canvas.cross_y};
+		var canvas_dims = {x: this.canvas.dim_x, y: this.canvas.dim_y};
+		
+		// queue events 
+		this.canvas.queue.addToQueue(
+				{	timestamp : now,
+					action: 'PAN',
+					plane: this.canvas.getDataExtent().plane,
+					zoom_level : this.canvas.getDataExtent().zoom_level,
+					slice : this.canvas.getDataExtent().slice,
+					coords: {x: 0, y: 0},
+					max_coords_of_event_triggering_plane : {max_x: this.canvas.getDataExtent().x, max_y: this.canvas.getDataExtent().y},
+					upperLeftCorner : upper_left_corner,
+					crossCoords : cross_coords,
+					canvasDims : canvas_dims
+				});
+		
+		// TODO: this will require a slightly different event type than PAN
+		/*
+		if (this.canvas.sync_canvases) {				
+			// send message out to others that they need to redraw as well
+			this.canvas.getCanvasElement().trigger("sync", 
+						[	now,
+						 	'PAN',
+						 	this.canvas.getDataExtent().plane,
+						 	this.canvas.getDataExtent().zoom_level,
+						 	this.canvas.getDataExtent().slice,
+						 	{x: 0, y: 0},
+						 	{max_x: this.canvas.getDataExtent().x, max_y: this.canvas.getDataExtent().y},
+						 	{x: this.canvas.getDataExtent().slice, y: this.canvas.getDataExtent().slice},
+						 	cross_coords,
+						 	canvas_dims
+			            ]);
+		}
+		*/
 	}, click : function(e) {
 		var now = new Date().getTime(); 
 		var coords = TissueStack.Utils.getRelativeMouseCoords(e);

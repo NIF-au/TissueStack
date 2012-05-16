@@ -7,7 +7,7 @@ TissueStack.Canvas = function(data_extent, canvas_id) {
 	this.setDimensions(tmpCanvasElement.width, tmpCanvasElement.height);
 	this.centerUpperLeftCorner();
 	this.drawCoordinateCross(this.getCenter());
-	this.registerMouseEvents();
+	this.events = new TissueStack.Events(this); 
 	this.queue = new TissueStack.Queue(this);
 };
 
@@ -119,8 +119,6 @@ TissueStack.Canvas.prototype = {
 		}
 		
 		return {x: relCrossX, y: relCrossY};
-	},registerMouseEvents : function () {
-		new TissueStack.Events(this);
 	},drawCoordinateCross : function(coords) {
 		var coordinateCrossCanvas = this.getCoordinateCrossCanvas();
 		if (!coordinateCrossCanvas || !coordinateCrossCanvas[0]) {
