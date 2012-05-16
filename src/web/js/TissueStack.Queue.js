@@ -171,6 +171,7 @@ TissueStack.Queue.prototype = {
 					height = this.height;
 				}
 
+				ctx.globalAlpha=1;
 				ctx.drawImage(this, imageOffsetX, imageOffsetY, width, height, canvasX, canvasY, width, height);
 				_this.lowResolutionPreviewDrawn = true;
 				
@@ -234,8 +235,8 @@ TissueStack.Queue.prototype = {
 		
 		if (draw_request.zoom_level != this.canvas.getDataExtent().zoom_level) {
 			if (draw_request.coords.x < 0) {
-				draw_request.coords.x = Math.abs(draw_request.coords.x);
-				draw_request.upperLeftCorner.x = draw_request.crossCoords.x + draw_request.coords.x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x);				
+				draw_request.coords.x = Math.abs(draw_request.coords.x - draw_request.max_coords_of_event_triggering_plane.max_x);
+				draw_request.upperLeftCorner.x = draw_request.crossCoords.x - draw_request.coords.x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x);				
 			} else if (draw_request.coords.x > (draw_request.max_coords_of_event_triggering_plane.max_x - 1)) {
 				draw_request.coords.x = draw_request.coords.x - (draw_request.max_coords_of_event_triggering_plane.max_x - 1);
 				draw_request.upperLeftCorner.x = draw_request.crossCoords.x + draw_request.coords.x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x);
@@ -322,16 +323,10 @@ TissueStack.Queue.prototype = {
 		// redraw 
 		this.canvas.drawMe(draw_request.timestamp);
 
-		/*
-		if ((this.canvas.upper_left_x + this.canvas.getDataExtent().x) < 0
-				|| (this.canvas.upper_left_x + this.canvas.getDataExtent().x) > this.canvas.dim_x
-				|| this.canvas.upper_left_y < 0
-				|| (this.canvas.upper_left_y - this.canvas.getDataExtent().y) > this.canvas.dim_y
-				|| this.canvas.getDataExtent().slice < 0 || this.canvas.getDataExtent().slice > this.canvas.getDataExtent().max_slices
-				|| (draw_request && draw_request.coords && draw_request.coords.x < 0) || (draw_request && draw_request.coords && draw_request.coords.y < 0)) {
+		if (this.canvas.getDataExtent().slice < 0 || this.canvas.getDataExtent().slice > this.canvas.getDataExtent().max_slices) {
 			this.canvas.eraseCanvasContent(); // in these cases we erase the entire content
 			return;
-		}*/
+		}
 		
 		// tidy up where we left debris
 		if (this.canvas.upper_left_x > 0) { // in front of us

@@ -74,7 +74,8 @@ overflow: scroll;
 	width: 640px;
 	height: 200px;
 }
-.canvas_view{
+
+.canvasview{
 	position: relative; 
 	left: 0px; 
 	top: 0px;
@@ -135,7 +136,6 @@ overflow: scroll;
 }
 
 /*VERTICAL SLIDER CSS*/
-
 label.ui-slider-vertical { 
 	display: block; 
 }
@@ -171,4 +171,33 @@ a.ui-slider-handle-vertical, a.ui-slider-handle-verticalInverted {
 	height: 28px; 
 	margin-top: -15px; 
 	margin-left: -8px; 
+}
+
+.maximize_view_icon {
+	position: absolute;
+	z-index: 5000;
+	right: 0px;
+	top: 0px;
+}
+
+#left_side_view_canvas {
+	z-index: 2390;
+	border: 1px solid #fff;
+	position: absolute; left: 10px; bottom: 10px;
+	width: 300px;
+	height: 200px;	
+}
+
+#right_side_view_canvas {
+  	filter:alpha(opacity=0); /* For IE8 and earlier */
+	z-index: 2390;
+	border: 1px solid #fff;
+	position: absolute; right: 10px; bottom: 10px;
+	width: 300px;
+	height: 200px;
+}
+
+.side_canvas {
+	position: absolute; left: 0px; top: 0px;
+	z-index: 2400;
 }

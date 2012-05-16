@@ -86,30 +86,35 @@ TissueStack.Init = function () {
 		TissueStack.realWorldCoords[planeId] = plane.getDataExtent().getExtentCoordinates();
 		
 		// bind coordinate center functionality
-		(function (plane, planeId) {
-			$('#center_point_in_canvas_' + planeId).bind("click", function() {
-				var xCoord = parseFloat($('#canvas_' + planeId + '_x').val());
-				var yCoord = parseFloat($('#canvas_' + planeId + '_y').val());
-				
-				if (xCoord < TissueStack.realWorldCoords[planeId].min_x || xCoord > TissueStack.realWorldCoords[planeId].max_x 
-						|| yCoord < TissueStack.realWorldCoords[planeId].min_y || yCoord > TissueStack.realWorldCoords[planeId].max_y) {
-					alert("Illegal coords");
-					return;
-				}
-				
-				// if we had a transformation matrix, we know we have been handed in real word coords and therefore need to convert back to pixel
-				var givenCoords = {x: xCoord, y: yCoord};
-				if (plane.getDataExtent().worldCoordinatesTransformationMatrix) {
-					givenCoords = plane.getDataExtent().getPixelForWorldCoordinates(givenCoords);
-				}
-				plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords);
-			});
-			
-			
-		})(plane, planeId);
-		
+		if (TissueStack.mobile) {
+			(function (plane, planeId) {
+				$('#center_point_in_canvas_' + planeId).bind("click", function() {
+					var xCoord = parseFloat($('#canvas_' + planeId + '_x').val());
+					var yCoord = parseFloat($('#canvas_' + planeId + '_y').val());
+					
+					if (xCoord < TissueStack.realWorldCoords[planeId].min_x || xCoord > TissueStack.realWorldCoords[planeId].max_x 
+							|| yCoord < TissueStack.realWorldCoords[planeId].min_y || yCoord > TissueStack.realWorldCoords[planeId].max_y) {
+						alert("Illegal coords");
+						return;
+					}
+					
+					// if we had a transformation matrix, we know we have been handed in real word coords and therefore need to convert back to pixel
+					var givenCoords = {x: xCoord, y: yCoord};
+					if (plane.getDataExtent().worldCoordinatesTransformationMatrix) {
+						givenCoords = plane.getDataExtent().getPixelForWorldCoordinates(givenCoords);
+					}
+					plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords);
+				});
+			})(plane, planeId);
+		}			
+
 		// display data extent info on page
 		plane.updateExtentInfo(TissueStack.realWorldCoords[planeId]);
+		
+		// for desktop version show 2 small canvases
+		if (TissueStack.desktop && planeId != 'y') {
+			plane.changeToZoomLevel(0);
+		}
 		
 		// fill canvases
 		plane.queue.drawLowResolutionPreview();
@@ -125,12 +130,14 @@ TissueStack.Init = function () {
 	});
 	
 	// bind event listener for sync checkbox
-	$('#sync_canvases').bind("change", function() {
-		for (var i=0; i < data.length; i++) {	
-			TissueStack.planes[data[i].plane].sync_canvases = $('#sync_canvases')[0].checked;
-		}
-	});
-
+	if (TissueStack.desktop || TissueStack.mobile) {
+		$('#sync_canvases').bind("change", function() {
+			for (var i=0; i < data.length; i++) {	
+				TissueStack.planes[data[i].plane].sync_canvases = $('#sync_canvases')[0].checked;
+			}
+		});
+	}
+	
 	// bind event listener for color map radio group
 	$('input[name="color_map"]').bind("click", function(e) {
 		for (var i=0; i < data.length; i++) {	
@@ -145,7 +152,7 @@ TissueStack.Init = function () {
 
 	
 	// bind event listener for maximizing side views
-	if (!TissueStack.phone) {
+	if (TissueStack.desktop) {
 		$('#left_side_view_maximize, #right_side_view_maximize').bind("click", function(event) {
 			// what side view and canvas called for maximization
 			if (!event.target.id || !$("#" + event.target.id).attr("class")) {
@@ -159,7 +166,7 @@ TissueStack.Init = function () {
 			var startPos = "canvas_".length;
 			var sideViewPlaneId = plane.substring(startPos, startPos + 1);
 			
-			plane = TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray($("#main_view_div").attr("class").split(" "), "^canvas_");
+			plane = TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray($("#main_view_canvas").attr("class").split(" "), "^canvas_");
 			if (!plane) {
 				return;
 			}
@@ -192,7 +199,11 @@ TissueStack.Init = function () {
 			
 			var sideCanvasDims = {x: sideCanvasChildren[0].width, y: sideCanvasChildren[0].height};
 			var mainCanvasDims = {x: mainCanvasChildren[0].width, y: mainCanvasChildren[0].height};
+			var tmpAttr = [];
+			
 			for (var i=0; i < sideCanvasChildren.length; i++) {
+				tmpAttr[i] = sideCanvasChildren[i].getAttribute("class");
+				sideCanvasChildren[i].setAttribute("class", mainCanvasChildren[i].getAttribute("class"));
 				sideCanvasChildren[i].width = mainCanvasDims.x;
 				sideCanvasChildren[i].height = mainCanvasDims.y;
 			}
@@ -201,6 +212,7 @@ TissueStack.Init = function () {
 			var zoomLevelSideView = TissueStack.planes[sideViewPlaneId].getDataExtent().zoom_level;
 			
 			for (var i=0; i < mainCanvasChildren.length; i++) {
+				mainCanvasChildren[i].setAttribute("class", tmpAttr[i]);
 				mainCanvasChildren[i].width = sideCanvasDims.x;
 				mainCanvasChildren[i].height = sideCanvasDims.y;
 			}
@@ -210,34 +222,48 @@ TissueStack.Init = function () {
 			sideCanvas.append(mainCanvasChildren);
 	
 			// remember change in class
-			$("#" + event.target.id).attr("class", "canvas_" + mainViewPlaneId);
-			$("#main_view_div").attr("class", "canvas_" + sideViewPlaneId);
+			$("#" + event.target.id).attr("class", "maximize_view_icon canvas_" + mainViewPlaneId);
+			$("#main_view_canvas").attr("class", "canvas_" + sideViewPlaneId);
 	
-			
 			// redraw and change the zoom level as well
-			TissueStack.planes[mainViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(mainCanvasRelativeCross);
 			TissueStack.planes[sideViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(sideCanvasRelativeCross);
+			TissueStack.planes[mainViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(mainCanvasRelativeCross);
 			TissueStack.planes[sideViewPlaneId].changeToZoomLevel(TissueStack.planes[mainViewPlaneId].getDataExtent().zoom_level);
 			TissueStack.planes[mainViewPlaneId].changeToZoomLevel(zoomLevelSideView);
-			
-			// last but not least, swap their associated info above
-			var sideViewInfo = $("#"+ sideCanvasId + "_info");
-			var mainViewInfo = $("#main_view_info");
-			if (!sideViewInfo || !mainViewInfo) {
-				return;
-			}
-			var sideViewInfoChildren = sideViewInfo.children();
-			var mainViewInfoChildren = mainViewInfo.children();
-			if (!sideViewInfoChildren || !mainViewInfoChildren || sideViewInfoChildren.length == 0 || mainViewInfoChildren.length == 0) {
-				return;
-			}
-			
-			sideViewInfoChildren.detach();
-			mainViewInfoChildren.detach();
-			sideViewInfo.append(mainViewInfoChildren);
-			mainViewInfo.append(sideViewInfoChildren);
+			TissueStack.planes[sideViewPlaneId].updateExtentInfo(
+					TissueStack.planes[sideViewPlaneId].getDataExtent().getExtentCoordinates());
 		});
 	}
+	
+	// bind coordinate center functionality
+	if (TissueStack.desktop) {
+		$('#center_point_in_canvas').bind("click", function() {
+			var plane =
+				TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray($("#main_view_canvas").attr("class").split(" "), "^canvas_");
+			if (!plane) {
+				return;
+			}
+			var startPos = "canvas_".length;
+			var planeId = plane.substring(startPos, startPos + 1);
+			
+			var xCoord = parseFloat($('#canvas_point_x').val());
+			var yCoord = parseFloat($('#canvas_point_y').val());
+			
+			if (xCoord < TissueStack.realWorldCoords[planeId].min_x || xCoord > TissueStack.realWorldCoords[planeId].max_x 
+					|| yCoord < TissueStack.realWorldCoords[planeId].min_y || yCoord > TissueStack.realWorldCoords[planeId].max_y) {
+				alert("Illegal coords");
+				return;
+			}
+			
+			// if we had a transformation matrix, we know we have been handed in real word coords and therefore need to convert back to pixel
+			var givenCoords = {x: xCoord, y: yCoord};
+			plane = TissueStack.planes[planeId];
+			if (plane.getDataExtent().worldCoordinatesTransformationMatrix) {
+				givenCoords = plane.getDataExtent().getPixelForWorldCoordinates(givenCoords);
+			}
+			plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords);
+		});
+	}			
 };
 
 $(document).ready(function() {

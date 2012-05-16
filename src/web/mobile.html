@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html>
-  <head>
+  <head profile="http://www.w3.org/2005/10/profile">
         <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable = no" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-        
+
         <title> Tissue Stack - Mobile </title>
+
+		<link rel="icon" type="image/png" href="images/faviconTissue.png" />
+
         <link rel="apple-touch-icon" href="images/faviconTissue.png" />	
         <link rel="stylesheet" href="css/jquery.mobile-1.1.0.min.css" />
         <link rel="stylesheet" href="css/mobile.css" />
@@ -25,7 +28,7 @@
 		<script src="js/TissueStack.Init.js"></script>
 		
 		<script type="text/javascript">
-		    //TissueStack.phone = false;
+		    TissueStack.mobile = true;
 			document.addEventListener('touchmove', function(event) {
   			   event.preventDefault();
 			}, false);
@@ -62,7 +65,7 @@
      	    		</div> 
      	    	</div>  	
      	    	<div class="canvaslocate canvas_x">
-     	    		<div class="canvas_view" >
+     	    		<div class="canvasview" >
      	    			<canvas id="canvas_x_plane" class="plane"></canvas>	
      	    			<canvas id="canvas_x_plane_cross_overlay" class="cross_overlay"></canvas>     	    			
      	    		</div> 		
@@ -103,7 +106,7 @@
 			  </div>
 		  
      	   	<div class="canvaslocate canvas_y" >
-					<div class="canvas_view" >
+					<div class="canvasview" >
 						<canvas id="canvas_y_plane" class="plane"></canvas>	
 						<canvas id="canvas_y_plane_cross_overlay" class="cross_overlay"></canvas>
 					</div>
@@ -144,7 +147,7 @@
 	     		</div>          	    
 	     		
 	     		<div class="canvaslocate canvas_z">
-	     			<div class="canvas_view" >
+	     			<div class="canvasview" >
 	     				<canvas id="canvas_z_plane" class="plane"></canvas>	
 	     				<canvas id="canvas_z_plane_cross_overlay" class="cross_overlay"></canvas>
 	     			</div>
