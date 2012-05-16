@@ -15,6 +15,7 @@
 		<script src="js/libs/sylvester/sylvester.js"></script>
 		
 		<script src="js/TissueStack.MouseWheel.js"></script>
+		<script src="js/TissueStack.Slider.js"></script>
 		<script src="js/TissueStack.js"></script>
 		<script src="js/TissueStack.Utils.js"></script>
 		<script src="js/TissueStack.Extent.js"></script>
@@ -67,10 +68,10 @@
      	    		</div> 		
      	    	</div>
 				<div class="coords_show_right">
-					<input type="range" name="slider" id="slider" value="0" min="0" max="100"  />
+					<input type="range" min="0" max="1000" value="500" step="5" Orientation="vertical"  />
 				</div>
-     	    </div>
-           </div>  
+     	    </div>     	    
+        </div>  
          
 <!-- tissue Y page-->
         
@@ -106,6 +107,9 @@
 						<canvas id="canvas_y_plane" class="plane"></canvas>	
 						<canvas id="canvas_y_plane_cross_overlay" class="cross_overlay"></canvas>
 					</div>
+			</div>
+			<div class="coords_show_right">
+				<input type="range" min="0" max="1000" value="500" step="5" Orientation="vertical"  />
 			</div>
 		</div>
      </div>  
@@ -145,7 +149,10 @@
 	     				<canvas id="canvas_z_plane_cross_overlay" class="cross_overlay"></canvas>
 	     			</div>
 	     		</div>
-	     	</div>											
+	     	</div>	
+	     	<div class="coords_show_right">
+	     		<input type="range" min="0" max="1000" value="500" step="5" Orientation="vertical"  />
+	     	</div>										
      </div>
     
 <!-- Setting page    --> 
