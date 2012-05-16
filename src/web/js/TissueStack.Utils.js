@@ -168,7 +168,6 @@ TissueStack.Utils = {
 		var canvasDims = {width: Math.floor(screenWidth * 0.70), height: Math.floor(screenHeight * 0.75)};
 		$('.coords_show_left').css({"width" : Math.floor(screenWidth * 0.20)});
 		$('.ui-slider').css({"width": canvasDims.height});
-		$('.ui-slider-input').css('-webkit-transform','rotate('+270+'deg)');
 		$('.canvaslocate').css({"width" : canvasDims.width, "height" : canvasDims.height});
 		$('#main_view_canvas').css({"width" : canvasDims.width, "height" : canvasDims.height});
 		$('canvas').attr("width", canvasDims.width);
