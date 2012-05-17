@@ -193,34 +193,25 @@ TissueStack.Queue.prototype = {
 			return;
 		}
 		
-		var originalZoomLevelDims = this.canvas.getDataExtent().getZoomLevelDimensions(draw_request.zoom_level);
-
 		// SLICE CHANGE ACTION
 		if (draw_request.action == 'SLICE') {
-			var relCrossCoords = this.canvas.getRelativeCrossCoordinates();
+			var sliceX = draw_request.slice;
+			var sliceY = this.canvas.data_extent.one_to_one_y - draw_request.slice;
 			
-			// adjust relative crossCoords to zoom level if necessary 
-			if (draw_request.zoom_level != this.canvas.getDataExtent().zoom_level) {
-				relCrossCoords.x = (draw_request.zoom_level == 1) ?
-					Math.floor(relCrossCoords.x / (this.canvas.getDataExtent().x / originalZoomLevelDims.x)) :
-					Math.ceil(relCrossCoords.x / (this.canvas.getDataExtent().x / originalZoomLevelDims.x));
-				relCrossCoords.y = (draw_request.zoom_level == 1) ?
-					Math.floor(relCrossCoords.y / (this.canvas.getDataExtent().y / originalZoomLevelDims.y)) :
-					Math.ceil(relCrossCoords.y / (this.canvas.getDataExtent().y / originalZoomLevelDims.y));				
-			}
+			sliceX = (this.canvas.getDataExtent().zoom_level == 1) ?
+					Math.floor(sliceX * (this.canvas.getDataExtent().x / this.canvas.data_extent.one_to_one_x)) :
+					Math.ceil(sliceX * (this.canvas.getDataExtent().x / this.canvas.data_extent.one_to_one_x));
+			sliceY = (this.canvas.getDataExtent().zoom_level == 1) ?
+					Math.floor(sliceY * (this.canvas.getDataExtent().y / this.canvas.data_extent.one_to_one_y)) :
+					Math.ceil(sliceY * (this.canvas.getDataExtent().y / this.canvas.data_extent.one_to_one_y));
 
-			var deltaX = relCrossCoords.x - draw_request.slice; 
-			var deltaY = relCrossCoords.y - (this.canvas.data_extent.one_to_one_y - draw_request.slice); 
-
-			// adjust relative crossCoords to zoom level if necessary 
-			if (draw_request.zoom_level != this.canvas.getDataExtent().zoom_level) {
-				deltaX = (draw_request.zoom_level == 1) ?
-					Math.floor(deltaX * (this.canvas.getDataExtent().x / originalZoomLevelDims.x)) :
-					Math.ceil(deltaX * (this.canvas.getDataExtent().x / originalZoomLevelDims.x));
-				deltaY = (draw_request.zoom_level == 1) ?
-					Math.floor(deltaY * (this.canvas.getDataExtent().y / originalZoomLevelDims.y)) :
-					Math.ceil(deltaY * (this.canvas.getDataExtent().y / originalZoomLevelDims.y));				
+			var relativeCrossCoords = this.canvas.getRelativeCrossCoordinates();
+			// correct for negative 1 which indicates end 
+			if (relativeCrossCoords.x < 0) {
+				relativeCrossCoords.x = sliceX + 1;
 			}
+			var deltaX = relativeCrossCoords.x - sliceX;
+			var deltaY = relativeCrossCoords.y - sliceY;
 			
 			if (thisHerePlane === 'x' && draw_request.plane === 'z') {
 				this.canvas.moveUpperLeftCorner(0, -deltaY);
@@ -271,6 +262,7 @@ TissueStack.Queue.prototype = {
 		}
 		
 		// COORDINATE CHANGES DUE TO VARYING ZOOM LEVELS BETWEEN THE CANVASES 
+		var originalZoomLevelDims = this.canvas.getDataExtent().getZoomLevelDimensions(draw_request.zoom_level);
 		var crossXOutsideOfExtentX = (draw_request.coords.x < 0) ? -1 : 0;
 		if (draw_request.coords.x > (draw_request.max_coords_of_event_triggering_plane.max_x - 1)) {
 			crossXOutsideOfExtentX = 1;

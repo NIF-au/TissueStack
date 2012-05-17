@@ -239,7 +239,7 @@ TissueStack.Events.prototype = {
 						 	this.canvas.getDataExtent().slice,
 						 	{x: 0, y: 0},
 						 	{max_x: this.canvas.getDataExtent().x, max_y: this.canvas.getDataExtent().y},
-						 	{x: this.canvas.getDataExtent().slice, y: this.canvas.getDataExtent().slice},
+						 	upper_left_corner,
 						 	cross_coords,
 						 	canvas_dims
 			            ]);
