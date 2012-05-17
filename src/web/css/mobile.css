@@ -178,10 +178,6 @@ label.ui-slider-horizontal {
 	display: block; 
 }
 
-input.ui-input-text {
-	width: 65px;
-}
-
 a.ui-slider-handle-horizontal .ui-btn-inner{ 
 	padding-top: 0; 
 	padding-bottom: 0;
@@ -244,4 +240,8 @@ a.ui-slider-handle-horizontal{
 .side_canvas {
 	position: absolute; left: 0px; top: 0px;
 	z-index: 2400;
+}
+
+.side_canvas input {
+	width: 65px;
 }
