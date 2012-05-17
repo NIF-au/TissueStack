@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+typedef struct		s_thread_pool		t_thread_pool;
+
 typedef	struct		s_queue
 {
   void			*(*function)(void *);
@@ -14,18 +16,17 @@ typedef	struct		s_queue
   struct s_queue	*next;
 }			t_queue;
 
-typedef struct		s_thread_pool
+struct			s_thread_pool
 {
   pthread_t		*threads;
   pthread_cond_t	condvar;
   pthread_mutex_t	lock;
-  pthread_cond_t	condvar_main;
-  pthread_mutex_t	lock_main;
   t_queue		*first;
   t_queue		*last;
   int			nb_workers;
   int			tasks_to_do;
-}			t_thread_pool;
+  void			(*add)(void *(*function)(void *), void *args, t_thread_pool *p);
+};
 
 void            thread_pool_free(t_thread_pool *p);
 void            thread_pool_destroy(t_thread_pool *p);

@@ -21,7 +21,6 @@ typedef struct  s_vol
   unsigned int  *size;
   double        **slices;
   char          *path;
-  t_options	*opt;
   unsigned int	slices_max;
   unsigned int	total_slices_to_do;
   unsigned int	slices_done;

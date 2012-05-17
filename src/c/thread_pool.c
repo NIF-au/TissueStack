@@ -17,9 +17,9 @@ void		*worker_start(void *pool)
       if (p->first != NULL)
 	{
 	  task = p->first;
-	  p->first = p->first->next;
-	  if (p->first == NULL)
+	  if (p->first->next == NULL)
 	    p->last = NULL;
+	  p->first = p->first->next;
 	  p->tasks_to_do--;
 	}
       // unlock the mutex locked before
@@ -72,6 +72,7 @@ void		thread_pool_init(t_thread_pool *p, unsigned int nb_threads)
   p->last = NULL;
   p->tasks_to_do = 0;
   p->nb_workers = nb_threads;
+  p->add = thread_pool_add_task;
   // malloc the number of threads which we want in the threadpool
   p->threads = malloc(nb_threads * sizeof(*p->threads));
   // init mutex and cond var
