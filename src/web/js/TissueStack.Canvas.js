@@ -407,11 +407,15 @@ TissueStack.Canvas.prototype = {
 	},
 	updateExtentInfo : function(realWorldCoords) {
 		var log = TissueStack.desktop ? $('#canvas_extent') : $('#canvas_' + this.getDataExtent().plane + '_extent');
+		if(TissueStack.mobile){
+			log.html(
+					"Zoom Level: " + this.getDataExtent().zoom_level +
+					"<br/><hr />X: " + realWorldCoords.min_x + " to " + realWorldCoords.max_x + "<br/>Y: "
+					+ realWorldCoords.min_y + " to " + realWorldCoords.max_y + "<br /><hr />");
+		}else if(TissueStack.phone){
+			log.html("Zoom Level: " + this.getDataExtent().zoom_level);
+		}
 		
-		log.html(
-				"Zoom Level: " + this.getDataExtent().zoom_level +
-				"<br/><hr />X: " + realWorldCoords.min_x + " to " + realWorldCoords.max_x + "<br/>Y: "
-				+ realWorldCoords.min_y + " to " + realWorldCoords.max_y + "<br /><hr />");
 	},
 	updateCoordinateInfo : function(mouseCoords, pixelCoords, worldCoords) {
 		var log = $('.coords');
