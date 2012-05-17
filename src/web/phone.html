@@ -5,7 +5,13 @@
 	<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
 	
-	<link rel="apple-touch-icon" href="images/faviconTissue.png" />	
+	<link rel="apple-touch-icon" href="images/faviconTissue.png" />
+	
+	<!--Apple Device Start Up Splash Screen and ICON-->
+	<link rel="apple-touch-startup-image" sizes="640x960" href="images/phone/iphonescreen.png" /> <!--For iPhone4 and 4S-->
+	<link rel="apple-touch-icon" href="images/favicon_icon.png" />	
+	<!--END-->
+	
 	<link rel="stylesheet" href="css/jquery.mobile-1.0rc2.min.css" />
 	<link rel="stylesheet" href="css/phone.css" />
 	<link rel="stylesheet" href="css/jquery.mobile-1.1.0.min.css" />
@@ -76,6 +82,8 @@
 		</div><!-- /content -->
 	</div><!-- /page -->
 	
+	<!--Tissue X Page-->
+	
 	<div data-role="page" class="pages" id="tissueX" data-theme="a">
 		<div data-role="header">
 		<a href="#"class="showMenu menuBtn">Menu</a>
@@ -97,10 +105,10 @@
 			</div>
 			<br />
 			<input id="canvas_x_slider" orientation="horizontal" class="canvas_slider" type="range" min="0" max="1000" value="500" step="5" />
-			
-			
 		</div><!-- /content -->
 	</div><!-- /page -->
+	
+	<!--Tissue Y Page-->
 	
 	<div data-role="page" class="pages" id="tissueY" data-theme="a">
 		<div data-role="header">
@@ -120,9 +128,12 @@
 					<div class="world_coords">&nbsp;</div>
 				</div> 
 			</div>
-			<br /><input id="canvas_y_slider" orientation="horizontal" class="canvas_slider" type="range" min="0" max="1000" value="500" step="5" />
+			<br />
+			<input id="canvas_y_slider" orientation="horizontal" class="canvas_slider" type="range" min="0" max="1000" value="500" step="5" />
 		</div><!-- /content -->
 	</div><!-- /page -->
+
+	<!--Tissue Z Page-->
 
 	<div data-role="page" class="pages" id="tissueZ" data-theme="a">
 		<div data-role="header">
