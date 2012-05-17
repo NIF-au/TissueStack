@@ -1,8 +1,8 @@
 DIRSRC		=	./
 
-SRCS		=	$(DIRSRC)minc_extract_png.c					\
-			$(DIRSRC)slice.c						\
-			$(DIRSRC)png_creator.c						\
+SRCS		=	$(DIRSRC)core.c							\
+			$(DIRSRC)prompt.c						\
+			$(DIRSRC)plugin.c						\
 			$(DIRSRC)thread_pool.c
 
 INCLUDE		=	-I/home/oliver/workspace/minc-2.1.10/libsrc2 -I./headers
@@ -13,11 +13,12 @@ LIBS		=	-lhdf5								\
 			-lnetcdf 							\
 			-lminc2								\
 			-lpng								\
-			-lpthread
+			-lpthread							\
+			-ldl
 
 NAME		=	yop
 
-FLAGS		=	-g -Wall -Werror -DDEB
+FLAGS		=	-Wall -Werror -DDEB -g3
 
 all:	
 	@echo "\n================== Compilation ===================="
