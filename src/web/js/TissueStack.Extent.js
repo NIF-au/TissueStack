@@ -126,6 +126,13 @@ TissueStack.Extent.prototype = {
 		} else {
 			this.slice = Math.ceil(slice / this.zoom_level_factor);
 		}
+
+		var canvasSlider = $("#canvas_" + this.plane + "_slider");
+		if (canvasSlider && canvasSlider.length > 0) {
+			slice = this.slice < 0 ? 0 : this.slice;
+			canvasSlider.attr("value",slice > this.max_slices ? this.max_slices : slice);
+			canvasSlider.blur();
+		}
 	}, getCenter : function () {
 		return TissueStack.Utils.getCenter(this.x,this.y);
 	}, getWorldCoordinatesForPixel : function(pixelCoords) {

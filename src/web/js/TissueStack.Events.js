@@ -229,12 +229,11 @@ TissueStack.Events.prototype = {
 				});
 		
 		// TODO: this will require a slightly different event type than PAN
-		/*
 		if (this.canvas.sync_canvases) {				
 			// send message out to others that they need to redraw as well
 			this.canvas.getCanvasElement().trigger("sync", 
 						[	now,
-						 	'PAN',
+						 	'SLICE',
 						 	this.canvas.getDataExtent().plane,
 						 	this.canvas.getDataExtent().zoom_level,
 						 	this.canvas.getDataExtent().slice,
@@ -245,7 +244,6 @@ TissueStack.Events.prototype = {
 						 	canvas_dims
 			            ]);
 		}
-		*/
 	}, click : function(e) {
 		var now = new Date().getTime(); 
 		var coords = TissueStack.Utils.getRelativeMouseCoords(e);

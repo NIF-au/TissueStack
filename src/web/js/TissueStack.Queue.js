@@ -181,21 +181,54 @@ TissueStack.Queue.prototype = {
 	}, prepareDrawRequest : function(draw_request) {
 		var thisHerePlane = this.canvas.getDataExtent().plane;
 
+		// ZOOM CHANGE ACTION
 		if (draw_request.action == 'ZOOM') { // zoom request
 			this.canvas.changeToZoomLevel(draw_request.zoom_level);
 			return;
 		}
 
+		// for all the following actions do only the other planes,
+		// not the plane that triggered the event, otherwise it will get "served" twice !! 
 		if (draw_request.plane === thisHerePlane) { 
-			// nothing to do for our own canvas
 			return;
 		}
-
-		// we have to process the coordinate cross moves first
+		
+		// SLICE CHANGE ACTION
+		if (draw_request.action == 'SLICE') {
+			var slice = draw_request.slice;
+			// adjust slice to zoom level if needed
+			if (draw_request.zoom_level != this.canvas.getDataExtent().zoom_level) {
+				slice = (draw_request.zoom_level == 1) ?
+						Math.floor(slice * (this.canvas.getDataExtent().x / originalZoomLevelDims.x)) :
+						Math.ceil(slice * (this.canvas.getDataExtent().x / originalZoomLevelDims.x));				
+			}
+			
+			var relCrossCoords = this.canvas.getRelativeCrossCoordinates();
+			var deltaX = relCrossCoords.x - slice; 
+			var deltaY = relCrossCoords.y - (this.canvas.data_extent.one_to_one_y - slice); 
+			
+			if (thisHerePlane === 'x' && draw_request.plane === 'z') {
+				this.canvas.moveUpperLeftCorner(0, -deltaY);
+			} else if (thisHerePlane === 'y' && draw_request.plane === 'z') {
+				this.canvas.moveUpperLeftCorner(0, -deltaY);
+			} else if (thisHerePlane === 'x' && draw_request.plane === 'y') {
+				this.canvas.moveUpperLeftCorner(deltaX, 0);
+			} else if (thisHerePlane === 'z' && draw_request.plane === 'y') {
+				this.canvas.moveUpperLeftCorner(0, -deltaY);
+			} else if (thisHerePlane === 'y' && draw_request.plane === 'x') {
+				this.canvas.moveUpperLeftCorner(deltaX, 0);
+			} else if (thisHerePlane === 'z' && draw_request.plane === 'x') {
+				this.canvas.moveUpperLeftCorner(deltaX, 0);
+			}
+			return;
+		}
+		
+		// POINT FOCUS ACTION
 		if (draw_request.action == 'POINT') {
 			this.canvas.drawCoordinateCross(this.canvas.getCenter());
 		}
 
+		// CLICK ACTION 
 		if (thisHerePlane === 'x' && draw_request.plane === 'z' && draw_request.action == 'CLICK') {
 			this.canvas.drawCoordinateCross(
 					{x: draw_request.canvasDims.y - (draw_request.crossCoords.y + ((draw_request.canvasDims.y - draw_request.crossCoords.y)- this.canvas.cross_x)),
@@ -222,6 +255,7 @@ TissueStack.Queue.prototype = {
 					 y: this.canvas.dim_y - (draw_request.crossCoords.x + ((this.canvas.dim_y - this.canvas.cross_y) - draw_request.crossCoords.x))});
 		}
 		
+		// COORDINATE CHANGES DUE TO VARYING ZOOM LEVELS BETWEEN THE CANVASES 
 		var originalZoomLevelDims = this.canvas.getDataExtent().getZoomLevelDimensions(draw_request.zoom_level);
 		// we have to remember that beforehand before we manipulate the coords to fit the zoom level
 		var crossXOutsideOfExtentX = (draw_request.coords.x < 0) ? -1 : 0;
@@ -271,7 +305,7 @@ TissueStack.Queue.prototype = {
 					Math.ceil(draw_request.max_coords_of_event_triggering_plane.max_y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y));
 		} 
 		
-		// these are the moves caused by other canvases
+		// PAN AND CLICK ACTION
 		if (thisHerePlane === 'x' && draw_request.plane === 'z') {
 			this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(
 					(crossXOutsideOfExtentX < 0) ? -99 : ((crossXOutsideOfExtentX > 0) ? (draw_request.max_coords_of_event_triggering_plane.max_x + 99) : draw_request.coords.x));
@@ -316,7 +350,7 @@ TissueStack.Queue.prototype = {
 					((draw_request.max_coords_of_event_triggering_plane.max_x - 1) + draw_request.upperLeftCorner.x + ((this.canvas.dim_y - this.canvas.cross_y) - draw_request.crossCoords.x)));
 		}
 	}, drawRequest : function(draw_request) {
-		if (draw_request.action == 'ZOOM') {
+		if (draw_request.action == 'ZOOM' || draw_request.action == 'SLICE') {
 			this.canvas.eraseCanvasContent();
 		}
 		
