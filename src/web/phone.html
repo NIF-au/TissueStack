@@ -1,7 +1,8 @@
+<!DOCTYPE html>
 <html> 
 	<head> 
 	<title>Tissue Stack Phone</title> 
-	<meta id="extViewportMeta" name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
 	<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
 	
@@ -55,7 +56,7 @@
 
 	<div data-role="page" class="pages" id="home" data-theme="a">
 		<div data-role="header">
-			<a href="#"class="showMenu menuBtn">Menu</a>
+			<a href="#" class="showMenu menuBtn">Menu</a>
 				<h1>Dashboard</h1>
 		</div><!-- /header -->
 		<div data-role="content">
@@ -72,10 +73,10 @@
 					</fieldset>
 				</div>
 			
-				<div align ="center" >
+				<div style="text-align: center;" >
 					<p>Drawing Interval (in millis):</p>
 						<input id="drawing_interval" type="text" value="100" >
-						<a href="phone.html#tissueX" data-role="button" id="drawing_interval_button" type="button"  data-transition="flip">Apply</a>
+						<a href="phone.html#tissueX" data-role="button" id="drawing_interval_button" data-transition="flip">Apply</a>
 				</div>
 		</div><!-- /content -->
 	</div><!-- /page -->
@@ -84,13 +85,13 @@
 	
 	<div data-role="page" class="pages" id="tissueX" data-theme="a">
 		<div data-role="header">
-		<a href="#"class="showMenu menuBtn">Menu</a>
+		<a href="#" class="showMenu menuBtn">Menu</a>
 			<h1>X</h1>
 		</div><!-- /header -->
 	
 		<div data-role="content">
-			<div id="canvas_x_extent" style="text-align: center; font-size: 10px; width:310px"></div></br>				
-			<div class="boxgrid captionfull" align ="center" style="margin: -5px;">
+			<div id="canvas_x_extent" style="text-align: center; font-size: 10px; width:310px"></div><br />				
+			<div class="boxgrid captionfull" style="text-align: center;margin: -5px;">
 					<div style="position: relative; left: 0px; top: 0px; width: 300px; height:300px;">
 						<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_x_plane"></canvas>
 						<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_x_plane_cross_overlay"></canvas>
@@ -110,12 +111,12 @@
 	
 	<div data-role="page" class="pages" id="tissueY" data-theme="a">
 		<div data-role="header">
-		<a href="#"class="showMenu menuBtn">Menu</a>
+		<a href="#" class="showMenu menuBtn">Menu</a>
 			<h1>Y</h1>
 		</div><!-- /header -->
 		<div data-role="content">	
 			<div id="canvas_y_extent" style="text-align: center; font-size: 10px; width:310px"></div><br />
-			<div class="boxgrid captionfull" align ="center" style="margin: -5px;">
+			<div class="boxgrid captionfull" style="text-align: center;margin: -5px;">
 				<div style="position: relative; left: 0px; top: 0px; width: 300px; height:300px;">
 					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_y_plane"></canvas>
 					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_y_plane_cross_overlay"></canvas>
@@ -135,12 +136,12 @@
 
 	<div data-role="page" class="pages" id="tissueZ" data-theme="a">
 		<div data-role="header">
-		<a href="#"class="showMenu menuBtn">Menu</a>
+		<a href="#" class="showMenu menuBtn">Menu</a>
 			<h1>Z</h1>
 		</div><!-- /header -->
 		<div data-role="content">
 			<div id="canvas_z_extent" style="text-align: center; font-size: 10px; width:310px"></div><br />
-			<div class="boxgrid captionfull" align ="center" style="margin: -5px;">  
+			<div class="boxgrid captionfull" style="text-align: center; margin: -5px;">  
 				<div style="position: relative; left: 0px; top: 0px; width: 300px; height:300px;">
 					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_z_plane"></canvas>
 					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_z_plane_cross_overlay"></canvas>
