@@ -127,8 +127,17 @@ TissueStack.Extent.prototype = {
 			this.slice = Math.ceil(slice / this.zoom_level_factor);
 		}
 
-		var canvasSlider = $("#canvas_" + this.plane + "_slider");
-		if (canvasSlider && canvasSlider.length > 0) {
+		var canvasSlider = $("#canvas_" + (TissueStack.desktop ? "main" : this.plane) + "_slider");
+		var mainCanvas = this.plane;
+		
+		var planeId = 
+			TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray(canvasSlider.attr("class").split(" "), "^canvas_");
+		if (planeId) {
+			var startPos = "canvas_".length;
+			mainCanvas = planeId.substring(startPos, startPos + 1);
+		}
+		
+		if (mainCanvas == this.plane && canvasSlider && canvasSlider.length > 0) {
 			slice = this.slice < 0 ? 0 : this.slice;
 			canvasSlider.attr("value",slice > this.max_slices ? this.max_slices : slice);
 			canvasSlider.blur();

@@ -221,9 +221,16 @@ TissueStack.BindUniqueEvents = function () {
 			sideCanvas.append(mainCanvasChildren);
 	
 			// remember change in class
-			$("#" + event.target.id).attr("class", "maximize_view_icon canvas_" + mainViewPlaneId);
-			$("#main_view_canvas").attr("class", "canvas_" + sideViewPlaneId);
-	
+			$("#" + event.target.id).addClass("canvas_" + mainViewPlaneId);
+			$("#" + event.target.id).removeClass("canvas_" + sideViewPlaneId);
+			$("#main_view_canvas").addClass("canvas_" + sideViewPlaneId);
+			$("#main_view_canvas").removeClass("canvas_" + mainViewPlaneId);
+			$("#canvas_main_slider").addClass("canvas_" + sideViewPlaneId);
+			$("#canvas_main_slider").removeClass("canvas_" + mainViewPlaneId);
+			// swap slice dimension values
+			$("#canvas_main_slider").attr("value", TissueStack.planes[sideViewPlaneId].data_extent.slice);
+			$("#canvas_main_slider").attr("max", TissueStack.planes[sideViewPlaneId].data_extent.max_slices);
+			
 			// redraw and change the zoom level as well
 			TissueStack.planes[sideViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(sideCanvasRelativeCross);
 			TissueStack.planes[mainViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(mainCanvasRelativeCross);
@@ -265,56 +272,72 @@ TissueStack.BindUniqueEvents = function () {
 	}	
 	
 	// Z PLANE AKA SLICE SLIDER 
-	if (TissueStack.mobile || TissueStack.phone) {
-		var extractCanvasId = function(sliderId) {
-			if (!sliderId) {
+	var extractCanvasId = function(sliderId) {
+		if (!sliderId) {
+			return;
+		}
+		
+		var planeId = null;
+		if (TissueStack.desktop) {
+			var plane =
+				TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray($("#" + sliderId).attr("class").split(" "), "^canvas_");
+			if (!plane) {
 				return;
 			}
-			return sliderId.substring("canvas_".length, "canvas_".length + 1);
-		};
-		var triggerQueuedRedraw = function(id, slice) {
-			if (!id) {
-				return;
-			}
-			TissueStack.planes[id].events.changeSliceForPlane(slice);			
-		};
+			var startPos = "canvas_".length;
+			planeId = plane.substring(startPos, startPos + 1);
+		} else {
+			planeId = sliderId.substring("canvas_".length, "canvas_".length + 1);
+		}
 		
+		return planeId;
+	};
+	var triggerQueuedRedraw = function(id, slice) {
+		if (!id) {
+			return;
+		}
 		
-		// z dimension slider: set proper length and min/max for dimension
-		// sadly a separate routine is necessary for the active page slider.
-		// for reasons unknown the active page slider does not refresh until after a page change has been performed 
+		if (slice < 0 || slice > TissueStack.planes[id].data_extent.max_slices) {
+			return;
+		}
+		
+		TissueStack.planes[id].events.changeSliceForPlane(slice);			
+	};
+	
+	// z dimension slider: set proper length and min/max for dimension
+	// sadly a separate routine is necessary for the active page slider.
+	// for reasons unknown the active page slider does not refresh until after a page change has been performed 
+	if (TissueStack.mobile  || TissueStack.desktop) {
+		$('.ui-slider-vertical').css({"height": TissueStack.canvasDimensions.height - 50});
+	} 
+	$('.canvasslider').each(
+		function() {
+			var id = extractCanvasId(this.id);
+
+			$(this).attr("min", 0);
+			$(this).attr("max", TissueStack.planes[id].data_extent.max_slices);
+			$(this).attr("value", TissueStack.planes[id].data_extent.slice);
+		}
+	);
+	$('.canvasslider').bind ("change", function (event, ui)  {
+		var id = extractCanvasId(this.id);
+		triggerQueuedRedraw(id, this.value);
+	});
+	
+	$(".canvasslider").live ("slidercreate", function () {
 		if (TissueStack.mobile) {
 			$('.ui-slider-vertical').css({"height": TissueStack.canvasDimensions.height - 50});
-		} 
-		$('.canvas_slider').each(
-			function() {
+		}
+		var res = $('#' + this.id).data('events');
+		// unbind previous change
+		$('#' + this.id).unbind("change");
+		if (!res.change || res.change.length == 0) {
+			$('#' + this.id).bind("change", function (event, ui)  {
 				var id = extractCanvasId(this.id);
-
-				$(this).attr("min", 0);
-				$(this).attr("max", TissueStack.planes[id].data_extent.max_slices);
-				$(this).attr("value", TissueStack.planes[id].data_extent.slice);
-			}
-		);
-		$('.canvas_slider').bind ("change", function (event, ui)  {
-			var id = extractCanvasId(this.id);
-			triggerQueuedRedraw(id, this.value);
-		});
-		
-		$(".canvas_slider").live ("slidercreate", function () {
-			if (TissueStack.mobile) {
-				$('.ui-slider-vertical').css({"height": TissueStack.canvasDimensions.height - 50});
-			}
-			var res = $('#' + this.id).data('events');
-			// unbind previous change
-			$('#' + this.id).unbind("change");
-			if (!res.change || res.change.length == 0) {
-				$('#' + this.id).bind("change", function (event, ui)  {
-					var id = extractCanvasId(this.id);
-					triggerQueuedRedraw(id, this.value);
-				});
-			}
-		});
-	}
+				triggerQueuedRedraw(id, this.value);
+			});
+		}
+	});
 };
 
 $(document).ready(function() {
