@@ -5,7 +5,7 @@ TissueStack.Queue = function (canvas) {
 TissueStack.Queue.prototype = {
 	canvas : null,
 	queue_handle : null,
-	drawingIntervalInMillis : 100,
+	drawingIntervalInMillis : 150,
 	requests : [],
 	presentlyQueuedZoomLevelAndSlice: null,
 	lowResolutionPreviewDrawn : false,
@@ -97,7 +97,7 @@ TissueStack.Queue.prototype = {
 				}
 				clearInterval(lowResBackdrop);
 			}
-		}, 50, this, draw_request, timestamp);		
+		}, 10, this, draw_request, timestamp);		
 	},
 	clearRequestQueue : function() {
 		this.requests = [];

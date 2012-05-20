@@ -355,6 +355,11 @@ TissueStack.Canvas.prototype = {
 					break;
 				}
 
+				// brief check as to whether there exists a newer drawing request
+				if (timestamp && timestamp < this.queue.latestDrawRequestTimestamp) {
+					return;
+				}
+				
 				// create the image object that loads the tile we need
 				var imageTile = new Image();
 				imageTile.src = 
