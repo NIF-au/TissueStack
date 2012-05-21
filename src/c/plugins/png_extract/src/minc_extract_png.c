@@ -4,10 +4,9 @@ void		*percentage(void *args)
 {
   t_png_args	*a;
   float       	percent;
-  
+
   a = (t_png_args *)args;
   percent = 0;
-  printf("slices to do = %i \n", a->info->total_slices_to_do);
   while (percent < 100)
     {
       pthread_mutex_lock(&(a->p->lock));
@@ -35,7 +34,7 @@ unsigned int	get_total_slices_to_do(t_vol *v, int **dim_start_end)
       i++;
     }
   return (count);
-}		
+}
 
 int		**generate_dims_start_end(t_vol *v, int sx, int ex, int sy,
 					  int ey, int sz, int ez)
@@ -44,7 +43,7 @@ int		**generate_dims_start_end(t_vol *v, int sx, int ex, int sy,
   int		**dim_start_end;
 
   i = 0;
-  dim_start_end = malloc(3 * sizeof(*dim_start_end));  
+  dim_start_end = malloc(3 * sizeof(*dim_start_end));
   while (i < 3)
     {
       dim_start_end[i] = malloc(2 * sizeof(*dim_start_end[i]));
@@ -65,7 +64,7 @@ int		**generate_dims_start_end_thread(t_vol *v, int dim, int start, int end)
   int		**dim_start_end;
 
   i = 0;
-  dim_start_end = malloc(3 * sizeof(*dim_start_end));  
+  dim_start_end = malloc(3 * sizeof(*dim_start_end));
   while (i < 3)
     {
       dim_start_end[i] = malloc(2 * sizeof(*dim_start_end[i]));
@@ -108,7 +107,7 @@ void		png_creation_lunch(t_vol *vol, int step, t_thread_pool *p, t_png_extract *
   unsigned int	j;
   unsigned int	nb_slices;
   int		**dim_start_end;
- 
+
   i = 0;
   dim_start_end = png_general->dim_start_end;
   lunch_percent_display(p, vol, png_general, this);
@@ -117,7 +116,7 @@ void		png_creation_lunch(t_vol *vol, int step, t_thread_pool *p, t_png_extract *
       if (dim_start_end[i][0] != -1 && dim_start_end[i][1] != -1)
 	{
 	  j = 0;
-	  nb_slices = ((dim_start_end[i][1] == 0 ? vol->size[i] : dim_start_end[i][1]) - dim_start_end[i][0]); 
+	  nb_slices = ((dim_start_end[i][1] == 0 ? vol->size[i] : dim_start_end[i][1]) - dim_start_end[i][0]);
 	  while (j < nb_slices)
 	    {
 	      args = create_args_thread(p, vol, png_general, this);
@@ -156,8 +155,6 @@ void		*start(void *args)
 
   a = (t_args_plug *)args;
   a->this->busy = 1;
-  /*  printf("a = %p\ngeneral_info = %p\nvolume = %p\ncommands = %p\nname = %p\npath = %p\nthis = %p\n",
-      a, a->general_info, a->general_info->volume, a->commands, a->name, a->path, a->this); */
   png_args = (t_png_extract *)a->this->stock;
   png_args->dim_start_end = generate_dims_start_end(a->general_info->volume,
   						    atoi(a->commands[0]), atoi(a->commands[1]),
@@ -165,5 +162,24 @@ void		*start(void *args)
 						    atoi(a->commands[4]), atoi(a->commands[5]));
   png_args->total_slices_to_do = get_total_slices_to_do(a->general_info->volume, png_args->dim_start_end);
   png_creation_lunch(a->general_info->volume, atoi(a->commands[6]), a->general_info->tp, png_args, a->this);
+  return (NULL);
+}
+
+void		*unload(void *args)
+{
+  t_png_extract	*png_args;
+  t_args_plug	*a;
+
+  a = (t_args_plug *)args;
+  a->this->busy = 1;
+  png_args = (t_png_extract *)a->this->stock;
+  free(png_args->dim_start_end[0]);
+  free(png_args->dim_start_end[1]);
+  free(png_args->dim_start_end[2]);
+  free(png_args->dim_start_end);
+  free(png_args);
+  free(a->name);
+  free(a->path);
+  a->this->busy = 0;
   return (NULL);
 }

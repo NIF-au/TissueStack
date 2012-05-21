@@ -17,7 +17,7 @@ void		*worker_start(void *pool)
       if (p->first != NULL)
 	{
 	  task = p->first;
-	  if (p->first->next == NULL)
+	  if (p->first && p->first->next == NULL)
 	    p->last = NULL;
 	  p->first = p->first->next;
 	  p->tasks_to_do--;
@@ -55,12 +55,12 @@ void		thread_pool_add_task(void *(*function)(void *), void *args, t_thread_pool 
       p->last = p->first;
     }
   p->tasks_to_do++;
-  pthread_mutex_unlock(&(p->lock));
   if(pthread_cond_signal(&(p->condvar)) != 0)
     {
       write(2, "Error on condvar ThreadPool\n", strlen("Error on condvar ThreadPool\n"));
       exit(-1);
     }
+  pthread_mutex_unlock(&(p->lock));
 }
 
 void		thread_pool_init(t_thread_pool *p, unsigned int nb_threads)
