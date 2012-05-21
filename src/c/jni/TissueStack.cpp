@@ -1,7 +1,7 @@
 #include <stdio.h>
-#include <minc2.h>
-#include <volume_io.h>
-#include <volume_io/vol_io_prototypes.h>
+#include "minc.h"
+#include "volume_io.h"
+#include "volume_io/vol_io_prototypes.h"
 #include "TissueStack.h"
 
 TissueStack::TissueStack() {
@@ -84,7 +84,7 @@ JNIEXPORT jobject JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_test(JN
    }
 
 	const char * file = env->GetStringUTFChars(filename, 0);
-
+   
    TissueStack *instance = new TissueStack();
    MincTest * result = instance->test( file);
    if (result == NULL) {
@@ -118,7 +118,7 @@ JNIEXPORT jobject JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_test(JN
  	   for (int x=0;x<result->getNumberOfDimensions();x++) {
  		 env->SetObjectArrayElement(dim_names,x,env->NewStringUTF((result->getDimensions()[x]).c_str()));
  	   }
-	   env->SetLongArrayRegion(dim_sizes, 0, result->getNumberOfDimensions(), result->getSizes());
+       env->SetLongArrayRegion(dim_sizes, 0, result->getNumberOfDimensions(), result->getSizes());
 
  	    // get setDimensions() handle
  	   jmethodID setMethod = env->GetMethodID(MincTestClazz, "setDimensions", "([Ljava/lang/String;)V");
