@@ -1,16 +1,15 @@
+/*
+** core.c for hello in /home/oliver/workspace/TissueStack/src/c
+**
+** Made by Oliver Nicolini
+** E-Mail   o.nicolini@uq.edu.au
+**
+** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
+** Last update Mon May 21 17:41:15 2012 Oliver Nicolini
+*/
+
+
 #include "core.h"
-
-void		*test_load(t_args_plug *a)
-{
-  printf("loader func\n");
-  return (NULL);
-}
-
-void		*test_start(t_args_plug *a)
-{
-  printf("start\n");
-  return (NULL);
-}
 
 unsigned int            get_slices_max(t_vol *volume)
 {
@@ -32,12 +31,14 @@ void		init_func_ptr(t_tissue_stack *t)
   functions = malloc(4 * sizeof(*functions));
   functions[0].name = "load";
   functions[1].name = "start";
-  //  functions[2].name = "unload";
+  functions[2].name = "unload";
+  functions[2].name = "file";
   functions[0].ptr = plugin_load;
   functions[1].ptr = plugin_start;
-  // functions[2].ptr = plugin_unload;
+  functions[2].ptr = plugin_unload;
+  functions[2].ptr = load_new_file;
   t->functions = functions;
-  t->nb_func = 2;
+  t->nb_func = 3;
 }
 
 void            init_prog(t_tissue_stack *t, char *path_arg, int nb_args)
@@ -90,6 +91,16 @@ int		init_volume(t_vol *volume)
   return (0);
 }
 
+void		*load_new_file(void *args)
+{
+  t_args_plug	*a;
+
+  a = (t_args_plug *)args;
+  a->general_info->volume->path = path;
+  init_volume(a->general_info->volume);
+  return (NULL);
+}
+
 int		main(int argc, char **argv)
 {
   int			result;
@@ -104,21 +115,16 @@ int		main(int argc, char **argv)
       if ((result = init_volume(t->volume)) != 0)
 	return (result);
     }
-  
+
   // lunch thread_pool
   t->tp = malloc(sizeof(*t->tp));
   thread_pool_init(t->tp, 6);
 
   // lunch the prompt command
   prompt_start(t);
-  
-  // free all the stuff mallocked  
+
+  // free all the stuff mallocked
   thread_pool_destroy(t->tp);
 
-  /*
-  free(volume.dimensions);
-  free(volume.size);
-  free(volume.path);
-  */
   return (0);
 }
