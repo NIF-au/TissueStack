@@ -20,7 +20,13 @@ public class CustomRestfulBootstrap extends ResteasyBootstrap {
 		} catch(Exception any) {
 			logger.error("Failed to obtain rest easy resource information", any);
 		}
-		
+
+		// instantiate entity manager for configuration connectivity
+		try {
+			JPAUtils.instance().getEntityManager();
+		} catch(Exception any) {
+			logger.error("Failed to connect to configuration database", any);
+		}
 	}
 	
 	public void contextDestroyed(ServletContextEvent event) {

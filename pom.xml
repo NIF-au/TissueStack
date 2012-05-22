@@ -2,8 +2,8 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<properties>
 		<deployment.directory>${env.CATALINA_HOME}/webapps</deployment.directory>
-		<!-- hibernate.version>3.5.6-Final</hibernate.version>
-		<hibernate.libs.version>3.2.0.Final</hibernate.libs.version-->
+		<hibernate.version>3.5.6-Final</hibernate.version>
+		<hibernate.libs.version>3.2.0.Final</hibernate.libs.version>
 	</properties>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>au.edu.cai</groupId>
@@ -166,7 +166,7 @@
              <artifactId>log4j</artifactId>
              <version>1.2.16</version>
          </dependency>
-		<!-- Hibernate Persistence >
+		<!-- Hibernate Persistence -->
 		<dependency>
 			<groupId>org.hibernate</groupId>
 		      	<artifactId>hibernate-entitymanager</artifactId>
@@ -176,7 +176,7 @@
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-commons-annotations</artifactId>
 			<version>${hibernate.libs.version}</version>
-		</dependency-->
+		</dependency>
 		</dependencies>
 	<dependencyManagement>
 		<dependencies>
