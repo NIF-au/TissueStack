@@ -5,7 +5,7 @@ TissueStack.Queue = function (canvas) {
 TissueStack.Queue.prototype = {
 	canvas : null,
 	queue_handle : null,
-	drawingIntervalInMillis : 100,
+	drawingIntervalInMillis : 150,
 	requests : [],
 	presentlyQueuedZoomLevelAndSlice: null,
 	lowResolutionPreviewDrawn : false,
@@ -97,7 +97,7 @@ TissueStack.Queue.prototype = {
 				}
 				clearInterval(lowResBackdrop);
 			}
-		}, 50, this, draw_request, timestamp);		
+		}, 10, this, draw_request, timestamp);		
 	},
 	clearRequestQueue : function() {
 		this.requests = [];
@@ -362,7 +362,9 @@ TissueStack.Queue.prototype = {
 		// redraw 
 		this.canvas.drawMe(draw_request.timestamp);
 
-		if (this.canvas.getDataExtent().slice < 0 || this.canvas.getDataExtent().slice > this.canvas.getDataExtent().max_slices) {
+		if (this.canvas.getDataExtent().slice < 0 || this.canvas.getDataExtent().slice > this.canvas.getDataExtent().max_slices 
+				|| this.canvas.upper_left_x > this.canvas.dim_x || this.canvas.upper_left_x + this.canvas.data_extent.x < 0
+				|| this.canvas.upper_left_y < 0 || this.canvas.upper_left_y - this.canvas.data_extent.y > this.canvas.dim_y) {
 			this.canvas.eraseCanvasContent(); // in these cases we erase the entire content
 			return;
 		}

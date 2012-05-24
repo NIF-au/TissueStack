@@ -245,12 +245,25 @@ TissueStack.Canvas.prototype = {
 		if (!this.color_map || this.color_map == "grey") {
 			return;
 		}
-		
-    	var ctx = this.getCanvasContext();
-    	var myImageData = ctx.getImageData(0, 0, this.dim_x, this.dim_y);
-    	for ( var x = 0; x < this.dim_x * this.dim_y * 4; x += 4) {
-    		var val = myImageData.data[x];
+
+    	if (this.upper_left_x > this.dim_x || this.upper_left_x + this.data_extent.x < 0 || this.upper_left_y < 0 || this.upper_left_y - this.data_extent.y > this.dim_y) {
+    		return;
+    	}
     		
+    	var ctx = this.getCanvasContext();
+    	var xStart = this.upper_left_x < 0 ? 0 : this.upper_left_x;
+    	var yStart = this.upper_left_y > this.dim_y ? 0 : this.dim_y - this.upper_left_y;
+    	var width = xStart + this.data_extent.x;
+    	var height = (this.dim_y - yStart - this.data_extent.y) > 0 ? this.data_extent.y : this.dim_y - yStart;
+    	if (width > this.dim_x) {
+    		width = this.dim_x - xStart;
+    	}
+    	
+    	//var myImageData = ctx.getImageData(0, 0, this.dim_x, this.dim_y);
+    	var myImageData = ctx.getImageData(xStart, yStart, width, height);
+    	for ( var x = 0; x < myImageData.data.length; x += 4) {
+    		var val = myImageData.data[x];
+
 			// set new red value
 			myImageData.data[x] = TissueStack.indexed_color_maps[this.color_map][val][0];
 			// set new green value
@@ -260,7 +273,7 @@ TissueStack.Canvas.prototype = {
     	}
     	
     	// put altered data back into canvas
-    	ctx.putImageData(myImageData, 0, 0);  	
+    	ctx.putImageData(myImageData, xStart, yStart);  	
 	}, drawMe : function(timestamp) {
 		// preliminary check if we are within the slice range
 		var slice = this.getDataExtent().slice;
@@ -294,7 +307,6 @@ TissueStack.Canvas.prototype = {
 		var canvasY = 0;
 		var deltaStartTileYAndUpperLeftCornerY = 0;
 		if (this.upper_left_y <= this.dim_y) {
-			//startTileY = Math.floor((this.dim_y - this.upper_left_y)  / this.getDataExtent().tile_size);
 			canvasY = this.dim_y - this.upper_left_y;
 		} else {
 			startTileY = Math.floor((this.upper_left_y - this.dim_y)  / this.getDataExtent().tile_size);
@@ -355,6 +367,11 @@ TissueStack.Canvas.prototype = {
 					break;
 				}
 
+				// brief check whether we are not yet obsolete 
+				if (timestamp && timestamp < this.queue.latestDrawRequestTimestamp) {
+					return;
+				}
+				
 				// create the image object that loads the tile we need
 				var imageTile = new Image();
 				imageTile.src = 
