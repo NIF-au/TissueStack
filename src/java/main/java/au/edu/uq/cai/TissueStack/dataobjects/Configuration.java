@@ -30,6 +30,7 @@ public class Configuration {
 	public void setValue(String value) {
 		this.value = value;
 	}
+	
 	@Column(name="description")
 	public String getDescription() {
 		return description;

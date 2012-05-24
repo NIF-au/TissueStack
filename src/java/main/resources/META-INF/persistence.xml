@@ -6,6 +6,8 @@
       <jta-data-source>java:/comp/env/jdbc/defaultDatasource</jta-data-source>
       
       <class>au.edu.uq.cai.TissueStack.dataobjects.Configuration</class>
+      <class>au.edu.uq.cai.TissueStack.dataobjects.DataSet</class>
+      <class>au.edu.uq.cai.TissueStack.dataobjects.DataSetPlanes</class>
       
       <properties>
          <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
