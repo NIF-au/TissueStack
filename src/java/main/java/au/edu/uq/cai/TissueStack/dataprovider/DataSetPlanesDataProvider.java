@@ -22,6 +22,21 @@ public final class DataSetPlanesDataProvider {
 	}
 	
 	@SuppressWarnings("unchecked")
+	public static List<DataSetPlanes> queryFindMaxXYById(String name){
+		EntityManager em = null;
+		try{
+			em = JPAUtils.instance().getEntityManager();
+			
+			Query query = em.createQuery("SELECT datasetplanes FROM DataSetPlanes AS datasetplanes WHERE datasetplanes.name LIKE :name", DataSetPlanes.class);
+			query.setParameter("name",name);
+			return (List<DataSetPlanes>)query.getResultList();
+			
+		}finally{
+			JPAUtils.instance().closeEntityManager(em);
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
 	public static List<DataSetPlanes> queryDataSetPlanesAllValue(){
 		EntityManager em = null; 
 		try {
