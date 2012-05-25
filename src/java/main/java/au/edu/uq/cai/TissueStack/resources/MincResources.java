@@ -7,7 +7,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 
-import au.edu.uq.cai.TissueStack.dataobjects.MincTest;
+import au.edu.uq.cai.TissueStack.dataobjects.MincInfo;
 import au.edu.uq.cai.TissueStack.dataobjects.NoResults;
 import au.edu.uq.cai.TissueStack.dataobjects.Response;
 import au.edu.uq.cai.TissueStack.jni.TissueStack;
@@ -31,7 +31,7 @@ public final class MincResources extends AbstractRestfulMetaInformation {
 		} else if (!new File(mincFile).exists()) {
 			throw new IllegalArgumentException("File " + mincFile + " could not be found");
 		}
-		MincTest results = new TissueStack().test(mincFile);
+		MincInfo results = new TissueStack().getMincInfo(mincFile);
 		return new RestfulResource(new Response(results));
 	}
 

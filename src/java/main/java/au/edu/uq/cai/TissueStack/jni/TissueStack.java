@@ -1,6 +1,6 @@
 package au.edu.uq.cai.TissueStack.jni;
 
-import au.edu.uq.cai.TissueStack.dataobjects.MincTest;
+import au.edu.uq.cai.TissueStack.dataobjects.MincInfo;
 
 public class TissueStack {
     static {
@@ -11,7 +11,7 @@ public class TissueStack {
         }
     }
 	
-    public native MincTest test(String fileName);
+    public native MincInfo getMincInfo(String fileName);
 
     // main method was for testing only
     public static void main(String[] args) {
@@ -20,7 +20,7 @@ public class TissueStack {
     	 return;
      }
       
-      MincTest result = new TissueStack().test(args[0]);
+      MincInfo result = new TissueStack().getMincInfo(args[0]);
       assert result != null;
       System.out.println(result.getFilename());
       for (int i=0;i<result.getDimensions().length;i++) {
