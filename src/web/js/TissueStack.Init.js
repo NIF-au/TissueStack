@@ -114,6 +114,7 @@ TissueStack.Init = function () {
 		// for desktop version show 2 small canvases
 		if (TissueStack.desktop && planeId != 'y') {
 			plane.changeToZoomLevel(0);
+			
 		}
 		
 		// fill canvases
@@ -254,20 +255,27 @@ TissueStack.BindUniqueEvents = function () {
 			
 			var xCoord = parseFloat($('#canvas_point_x').val());
 			var yCoord = parseFloat($('#canvas_point_y').val());
+			var zCoord = parseFloat($('#canvas_point_z').val());
 			
 			if (xCoord < TissueStack.realWorldCoords[planeId].min_x || xCoord > TissueStack.realWorldCoords[planeId].max_x 
-					|| yCoord < TissueStack.realWorldCoords[planeId].min_y || yCoord > TissueStack.realWorldCoords[planeId].max_y) {
+					|| yCoord < TissueStack.realWorldCoords[planeId].min_y || yCoord > TissueStack.realWorldCoords[planeId].max_y
+					|| zCoord < TissueStack.realWorldCoords[planeId].min_z || zCoord > TissueStack.realWorldCoords[planeId].max_z) {
 				alert("Illegal coords");
 				return;
 			}
 			
 			// if we had a transformation matrix, we know we have been handed in real word coords and therefore need to convert back to pixel
-			var givenCoords = {x: xCoord, y: yCoord};
+			var givenCoords = {x: xCoord, y: yCoord, z: zCoord};
 			plane = TissueStack.planes[planeId];
 			if (plane.getDataExtent().worldCoordinatesTransformationMatrix) {
 				givenCoords = plane.getDataExtent().getPixelForWorldCoordinates(givenCoords);
 			}
 			plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords);
+			var slider = $("#canvas_main_slider");
+			if (slider) {
+				slider.val(givenCoords.z);
+				slider.blur();
+			}
 		});
 	}	
 	

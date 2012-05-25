@@ -14,7 +14,6 @@ TissueStack.Extent.prototype = {
 	tile_size : 256,	
 	x : 0,
 	y : 0,
-	one_to_one_x : 0,
 	one_to_one_y : 0,
 	data_id: "",
 	one_to_one_zoom_level : 0,
@@ -145,12 +144,21 @@ TissueStack.Extent.prototype = {
 	}, getCenter : function () {
 		return TissueStack.Utils.getCenter(this.x,this.y);
 	}, getWorldCoordinatesForPixel : function(pixelCoords) {
-		if (pixelCoords.x < 0 || pixelCoords.x > this.x 
-				|| pixelCoords.y < 0 || pixelCoords.y > this.y
+		if (pixelCoords.x < 0 || pixelCoords.x > this.x - 1 
+				|| pixelCoords.y < 0 || pixelCoords.y > this.y - 1 
 				|| this.slice < 0 || this.slice > this.max_slices) {
 			return null;
 		}
 
+		// check optional z aka slices
+		if (typeof(pixelCoords.z) !== 'undefined') {
+			if (pixelCoords.z < 0 || pixelCoords.z > this.max_slices) {
+				return;
+			}
+		} else {
+			pixelCoords.z = this.slice;
+		}
+		
 		// now we'll have to correct x and y according to their zoom level to get the 1:1 pixel Coordinates which can then be transformed
 		if (this.zoom_level == 1) {
 			pixelCoords.x = Math.floor(pixelCoords.x * (this.one_to_one_x / this.x));
@@ -161,7 +169,7 @@ TissueStack.Extent.prototype = {
 		}
 		
 		pixelCoords = TissueStack.Utils.transformPixelCoordinatesToWorldCoordinates(
-				[pixelCoords.x, this.one_to_one_y - pixelCoords.y, 0, 1], 
+				[pixelCoords.x, this.one_to_one_y - pixelCoords.y, pixelCoords.z, 1], 
 				this.worldCoordinatesTransformationMatrix);
 
 		if (!pixelCoords) {
@@ -169,7 +177,7 @@ TissueStack.Extent.prototype = {
 		}
 		
 		// return world coordinates
-		return {x: pixelCoords[0], y: pixelCoords[1]};
+		return {x: pixelCoords[0], y: pixelCoords[1], z: pixelCoords[2]};
 
 	},
 	getPixelForWorldCoordinates : function(worldCoords) {
@@ -178,22 +186,24 @@ TissueStack.Extent.prototype = {
 		}
 
 		var pixelCoords = TissueStack.Utils.transformWorldCoordinatesToPixelCoordinates(
-				[worldCoords.x, worldCoords.y, 0, 1],
+				[worldCoords.x, worldCoords.y, worldCoords.z, 1],
 				this.worldCoordinatesTransformationMatrix);
 		
 		if (pixelCoords == null) {
 			return null;
 		}
 		
-		pixelCoords = {x: pixelCoords[0], y: pixelCoords[1]};
+		pixelCoords = {x: pixelCoords[0], y: pixelCoords[1], z: pixelCoords[2]};
 		
 		// now we have to correct x and y according to their zoom level
 		if (this.zoom_level == 1) {
 			pixelCoords.x = Math.floor(pixelCoords.x * (this.x / this.one_to_one_x));
 			pixelCoords.y = this.y - Math.floor(pixelCoords.y * (this.y / this.one_to_one_y));
+			pixelCoords.z = Math.floor(pixelCoords.z);
 		} else {
 			pixelCoords.x = Math.ceil(pixelCoords.x * (this.x / this.one_to_one_x));
 			pixelCoords.y = this.y - Math.ceil(pixelCoords.y * (this.y /this.one_to_one_y));
+			pixelCoords.z = Math.ceil(pixelCoords.z);
 		}
 		
 		// because of rounding inaccuracies it can happen that exceed the image's pixel dimensions by 1,
@@ -208,21 +218,28 @@ TissueStack.Extent.prototype = {
 		} else if (pixelCoords.y >= this.y) {
 			pixelCoords.y = this.y - 1;
 		}
+		if (pixelCoords.z < 0) {
+			pixelCoords.z = 0;
+		} else if (pixelCoords.z >= this.max_slices) {
+			pixelCoords.z = this.max_slices;
+		}
 		
 		// return pixel coordinates
 		return pixelCoords;
 	},
 	getExtentCoordinates : function() {
 		// if world coords translation matrix is missing => use the pixel coords as a fallback 
-		var realWorldCoords = {min_x: 0, max_x: this.x, min_y: 0, max_y: this.y};
+		var realWorldCoords = {min_x: 0, max_x: this.x - 1, min_y: 0, max_y: this.y - 1, min_z: 0, max_z: this.max_slices};
 		
 		if (this.worldCoordinatesTransformationMatrix) {
-			var tmpTranslatedCoords = this.getWorldCoordinatesForPixel({x:0, y:0});
+			var tmpTranslatedCoords = this.getWorldCoordinatesForPixel({x:0, y:0, z:0});
 			realWorldCoords.min_x = tmpTranslatedCoords.x;
 			realWorldCoords.max_y = tmpTranslatedCoords.y;
-			tmpTranslatedCoords = this.getWorldCoordinatesForPixel({x:this.x, y:this.y});
+			realWorldCoords.min_z = tmpTranslatedCoords.z;
+			tmpTranslatedCoords = this.getWorldCoordinatesForPixel({x:this.x-1, y:this.y-1, z:this.max_slices});
 			realWorldCoords.max_x = tmpTranslatedCoords.x;
 			realWorldCoords.min_y = tmpTranslatedCoords.y;
+			realWorldCoords.max_z = tmpTranslatedCoords.z;
 		}
 		
 		return realWorldCoords;
