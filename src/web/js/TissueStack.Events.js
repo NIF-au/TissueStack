@@ -154,7 +154,9 @@ TissueStack.Events.prototype = {
 		var now =new Date().getTime(); 
 
 		var coords = TissueStack.Utils.getRelativeMouseCoords(e);
+		coords.z = this.canvas.data_extent.slice;
 		var relCoordinates = this.canvas.getDataCoordinates(coords);
+		relCoordinates.z = this.canvas.data_extent.slice;
 		var worldCoordinates = this.canvas.getDataExtent().getWorldCoordinatesForPixel(relCoordinates);
 		
 		// update coordinate info displayed

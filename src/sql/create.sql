@@ -77,7 +77,8 @@ CREATE TABLE dataset_planes
   zoom_levels TEXT NOT NULL,
   one_to_one_zoom_level INTEGER NOT NULL,
   transformation_matrix TEXT,
-  CONSTRAINT dataset_planes_pk FOREIGN KEY (dataset_id)
+  CONSTRAINT dataset_planes_pk PRIMARY KEY (id),
+  CONSTRAINT dataset_planes_fk FOREIGN KEY (dataset_id)
       REFERENCES dataset (id),
   CONSTRAINT dataset_planes_unique UNIQUE (dataset_id, name)
 );

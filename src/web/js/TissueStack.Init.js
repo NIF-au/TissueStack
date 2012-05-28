@@ -85,35 +85,13 @@ TissueStack.Init = function () {
 		// get the real world coordinates 
 		TissueStack.realWorldCoords[planeId] = plane.getDataExtent().getExtentCoordinates();
 		
-		// bind coordinate center functionality
-		if (TissueStack.mobile) {
-			(function (plane, planeId) {
-				$('#center_point_in_canvas_' + planeId).bind("click", function() {
-					var xCoord = parseFloat($('#canvas_' + planeId + '_x').val());
-					var yCoord = parseFloat($('#canvas_' + planeId + '_y').val());
-					
-					if (xCoord < TissueStack.realWorldCoords[planeId].min_x || xCoord > TissueStack.realWorldCoords[planeId].max_x 
-							|| yCoord < TissueStack.realWorldCoords[planeId].min_y || yCoord > TissueStack.realWorldCoords[planeId].max_y) {
-						alert("Illegal coords");
-						return;
-					}
-					
-					// if we had a transformation matrix, we know we have been handed in real word coords and therefore need to convert back to pixel
-					var givenCoords = {x: xCoord, y: yCoord};
-					if (plane.getDataExtent().worldCoordinatesTransformationMatrix) {
-						givenCoords = plane.getDataExtent().getPixelForWorldCoordinates(givenCoords);
-					}
-					plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords);
-				});
-			})(plane, planeId);
-		}			
-
 		// display data extent info on page
 		plane.updateExtentInfo(TissueStack.realWorldCoords[planeId]);
 		
 		// for desktop version show 2 small canvases
 		if (TissueStack.desktop && planeId != 'y') {
 			plane.changeToZoomLevel(0);
+			
 		}
 		
 		// fill canvases
@@ -130,15 +108,6 @@ TissueStack.BindUniqueEvents = function () {
 			TissueStack.planes[id].queue.setDrawingInterval(newValue);
 		}
 	});
-	
-	// SYNC CANVAS CHECKBOX CHANGE
-	if (TissueStack.desktop || TissueStack.mobile) {
-		$('#sync_canvases').bind("change", function() {
-			for (var id in TissueStack.planes) {		
-				TissueStack.planes[id].sync_canvases = $('#sync_canvases')[0].checked;
-			}
-		});
-	}
 	
 	// COLOR MAP CHANGE HANDLER
 	$('input[name="color_map"]').bind("click", function(e) {
@@ -244,6 +213,7 @@ TissueStack.BindUniqueEvents = function () {
 	// COORDINATE CENTER FUNCTIONALITY FOR DESKTOP
 	if (TissueStack.desktop) {
 		$('#center_point_in_canvas').bind("click", function() {
+			
 			var plane =
 				TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray($("#main_view_canvas").attr("class").split(" "), "^canvas_");
 			if (!plane) {
@@ -254,20 +224,29 @@ TissueStack.BindUniqueEvents = function () {
 			
 			var xCoord = parseFloat($('#canvas_point_x').val());
 			var yCoord = parseFloat($('#canvas_point_y').val());
+			var zCoord = parseFloat($('#canvas_point_z').val());
 			
-			if (xCoord < TissueStack.realWorldCoords[planeId].min_x || xCoord > TissueStack.realWorldCoords[planeId].max_x 
-					|| yCoord < TissueStack.realWorldCoords[planeId].min_y || yCoord > TissueStack.realWorldCoords[planeId].max_y) {
+			if (isNaN(xCoord) || isNaN(yCoord) || isNaN(zCoord)
+					|| xCoord.length == 0 || yCoord.length == 0 || zCoord.length == 0
+					|| xCoord < TissueStack.realWorldCoords[planeId].min_x || xCoord > TissueStack.realWorldCoords[planeId].max_x 
+					|| yCoord < TissueStack.realWorldCoords[planeId].min_y || yCoord > TissueStack.realWorldCoords[planeId].max_y
+					|| zCoord < TissueStack.realWorldCoords[planeId].min_z || zCoord > TissueStack.realWorldCoords[planeId].max_z) {
 				alert("Illegal coords");
 				return;
 			}
 			
 			// if we had a transformation matrix, we know we have been handed in real word coords and therefore need to convert back to pixel
-			var givenCoords = {x: xCoord, y: yCoord};
+			var givenCoords = {x: xCoord, y: yCoord, z: zCoord};
 			plane = TissueStack.planes[planeId];
 			if (plane.getDataExtent().worldCoordinatesTransformationMatrix) {
 				givenCoords = plane.getDataExtent().getPixelForWorldCoordinates(givenCoords);
 			}
 			plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords);
+			var slider = $("#canvas_main_slider");
+			if (slider) {
+				slider.val(givenCoords.z);
+				slider.blur();
+			}
 		});
 	}	
 	
@@ -307,7 +286,7 @@ TissueStack.BindUniqueEvents = function () {
 	// z dimension slider: set proper length and min/max for dimension
 	// sadly a separate routine is necessary for the active page slider.
 	// for reasons unknown the active page slider does not refresh until after a page change has been performed 
-	if (TissueStack.mobile  || TissueStack.desktop) {
+	if (TissueStack.desktop) {
 		$('.ui-slider-vertical').css({"height": TissueStack.canvasDimensions.height - 50});
 	} 
 	$('.canvasslider').each(
@@ -325,9 +304,6 @@ TissueStack.BindUniqueEvents = function () {
 	});
 	
 	$(".canvasslider").live ("slidercreate", function () {
-		if (TissueStack.mobile) {
-			$('.ui-slider-vertical').css({"height": TissueStack.canvasDimensions.height - 50});
-		}
 		var res = $('#' + this.id).data('events');
 		// unbind previous change
 		$('#' + this.id).unbind("change");
