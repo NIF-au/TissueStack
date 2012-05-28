@@ -36,6 +36,7 @@ public final class DataSetPlanesDataProvider {
 		}
 	}
 	
+	
 	@SuppressWarnings("unchecked")
 	public static List<DataSetPlanes> queryDataSetPlanesAllValue(){
 		EntityManager em = null; 
