@@ -80,7 +80,7 @@ int		**generate_dims_start_end_thread(t_vol *v, int dim, int start, int end)
   return (dim_start_end);
 }
 
-t_png_args	*create_args_thread(t_thread_pool *p, t_vol *vol, t_png_extract *png_general, t_plugin *this)
+t_png_args	*create_args_thread(t_thread_pool *p, t_vol *vol, t_png_extract *png_general, t_plugin *this, FILE *sock)
 {
   t_png_args   *args;
 
@@ -89,6 +89,7 @@ t_png_args	*create_args_thread(t_thread_pool *p, t_vol *vol, t_png_extract *png_
   args->p = p;
   args->info = png_general;
   args->this = this;
+  args->file = sock;
   return (args);
 }
 
@@ -96,11 +97,11 @@ void		lunch_percent_display(t_thread_pool *p, t_vol *vol, t_png_extract *png_gen
 {
   t_png_args   *args;
 
-  args = create_args_thread(p, vol, png_general, this);
+  args = create_args_thread(p, vol, png_general, this, NULL);
   (*p->add)(percentage, (void *)args, p);
 }
 
-void		png_creation_lunch(t_vol *vol, int step, t_thread_pool *p, t_png_extract *png_general, t_plugin *this)
+void		png_creation_lunch(t_vol *vol, int step, t_thread_pool *p, t_png_extract *png_general, t_plugin *this, FILE *sock)
 {
   t_png_args	*args;
   unsigned int	i;
@@ -119,7 +120,7 @@ void		png_creation_lunch(t_vol *vol, int step, t_thread_pool *p, t_png_extract *
 	  nb_slices = ((dim_start_end[i][1] == 0 ? vol->size[i] : dim_start_end[i][1]) - dim_start_end[i][0]);
 	  while (j < nb_slices)
 	    {
-	      args = create_args_thread(p, vol, png_general, this);
+	      args = create_args_thread(p, vol, png_general, this, sock);
 	      if ((dim_start_end[i][0] + step) <= dim_start_end[i][1])
 		args->dim_start_end = generate_dims_start_end_thread(vol, i, dim_start_end[i][0], dim_start_end[i][0] + step);
 	      else
@@ -152,16 +153,23 @@ void		*start(void *args)
 {
   t_png_extract	*png_args;
   t_args_plug	*a;
+  t_vol		*volume;
 
   a = (t_args_plug *)args;
   a->this->busy = 1;
+  if ((volume = a->general_info->get_volume(a->commands[0], a->general_info)) == NULL)
+    {
+      write(2, "MINC Volume not found\n", strlen("MINC Volume not found\n"));
+      a->this->busy = 0;
+      return (NULL);
+    }
   png_args = (t_png_extract *)a->this->stock;
-  png_args->dim_start_end = generate_dims_start_end(a->general_info->volume,
-  						    atoi(a->commands[0]), atoi(a->commands[1]),
-						    atoi(a->commands[2]), atoi(a->commands[3]),
-						    atoi(a->commands[4]), atoi(a->commands[5]));
-  png_args->total_slices_to_do = get_total_slices_to_do(a->general_info->volume, png_args->dim_start_end);
-  png_creation_lunch(a->general_info->volume, atoi(a->commands[6]), a->general_info->tp, png_args, a->this);
+  png_args->dim_start_end = generate_dims_start_end(volume,
+  						    atoi(a->commands[1]), atoi(a->commands[2]),
+						    atoi(a->commands[3]), atoi(a->commands[4]),
+						    atoi(a->commands[5]), atoi(a->commands[6]));
+  png_args->total_slices_to_do = get_total_slices_to_do(volume, png_args->dim_start_end);
+  png_creation_lunch(volume, atoi(a->commands[7]), a->general_info->tp, png_args, a->this, (FILE*)a->box);
   return (NULL);
 }
 

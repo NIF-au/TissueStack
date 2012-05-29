@@ -3,11 +3,12 @@ DIRSRC		=	./
 SRCS		=	$(DIRSRC)core.c							\
 			$(DIRSRC)prompt.c						\
 			$(DIRSRC)plugin.c						\
+			$(DIRSRC)volume.c						\
 			$(DIRSRC)thread_pool.c
 
-INCLUDE		=	-I/home/oliver/workspace/minc-2.1.10/libsrc2 -I./headers
+INCLUDE		=	-I./headers #-I/home/oliver/workspace/minc-2.1.10/libsrc2 -I./headers
 
-LIB_PATH	=	-L/home/oliver/workspace/minc-2.1.10/.libs
+LIB_PATH	=	#-L/home/oliver/workspace/minc-2.1.10/.libs
 
 LIBS		=	-lhdf5								\
 			-lnetcdf 							\

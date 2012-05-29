@@ -89,7 +89,7 @@ char		**copy_args(int start, char **commands)
   return (dest);
 }
 
-t_args_plug	*create_plug_args(char **commands, t_tissue_stack *general)
+t_args_plug	*create_plug_args(char **commands, t_tissue_stack *general, void *box)
 {
   t_args_plug	*args;
   char		**com;
@@ -125,10 +125,11 @@ t_args_plug	*create_plug_args(char **commands, t_tissue_stack *general)
   args->commands = com;
   args->general_info = general;
   args->this = NULL;
+  args->box = box;
   return (args);
 }
 
-void		prompt_exec(char **commands, t_tissue_stack *general)
+void		prompt_exec(char **commands, t_tissue_stack *general, void *box)
 {
   int		i;
   t_args_plug	*args;
@@ -137,22 +138,18 @@ void		prompt_exec(char **commands, t_tissue_stack *general)
 
 
   prog = commands[0];
-  args = create_plug_args(commands, general);
+  args = create_plug_args(commands, general, box);
   i = 0;
   while (i < general->nb_func)
     {
-      if (!strcmp(general->functions[i].name, prog))
+      if (strcmp(general->functions[i].name, prog) == 0)
 	{
-	  if (strcmp(prog, "load"))
-	    {
-	      p = get_plugin_by_name(args->name, general->first);
-	      if (p && p->busy != 0)
-		printf("%s: Plugin Busy. Try again later\n", args->name);
-	      else if (!p)
-	      	printf("%s: Unknown Plugin\n", args->name);
-	      else
-		thread_pool_add_task(general->functions[i].ptr, args, general->tp);
-	    }
+	  p = get_plugin_by_name(args->name, general->first);
+	  if (p && p->busy != 0)
+	    printf("%s: Plugin Busy. Try again later\n", args->name);
+	  else if (!p && strcmp(prog, "load") != 0 &&
+		   (strcmp(prog, "start") == 0 || strcmp(prog, "unload") == 0))
+	    printf("%s: Unknown Plugin\n", args->name);
 	  else
 	    thread_pool_add_task(general->functions[i].ptr, args, general->tp);
 	  break;
@@ -445,7 +442,7 @@ void		prompt_enter(t_tissue_stack *general)
     }
   else
     {
-      prompt_exec(commands, general);
+      prompt_exec(commands, general, NULL);
       clear_prompt_list(general);
       write(1, "TisseStack > ", 13);
       free(dest);
