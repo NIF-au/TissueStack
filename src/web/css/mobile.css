@@ -220,6 +220,8 @@ a.ui-slider-handle-horizontal{
 	top: 0px;
 }
 
+/*CANVAS VIEW*/
+
 #left_side_view_canvas {
 	z-index: 2390;
 	border: 1px solid #fff;
