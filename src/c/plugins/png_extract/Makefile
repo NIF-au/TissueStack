@@ -21,8 +21,8 @@ FLAGS		=	-g3 -Wall -Werror -DDEB
 
 all:	
 	@echo "\n================== Compilation ===================="
-	@gcc $(SRCS) -c $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -fPIC
-	@gcc *.o -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -shared
+	@clang $(SRCS) -c $(INCLUDE) $(FLAGS) -fPIC
+	@clang *.o -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -shared
 
 clean:
 	@echo "\n==================== Cleaning ====================="

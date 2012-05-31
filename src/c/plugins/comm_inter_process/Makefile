@@ -1,14 +1,10 @@
-DIRSRC		=	./
+DIRSRC		=	./src/
 
-SRCS		=	$(DIRSRC)core.c							\
-			$(DIRSRC)prompt.c						\
-			$(DIRSRC)plugin.c						\
-			$(DIRSRC)volume.c						\
-			$(DIRSRC)thread_pool.c
+SRCS		=	$(DIRSRC)serv.c
 
-INCLUDE		=	-I./headers #-I/home/oliver/workspace/minc-2.1.10/libsrc2 -I./headers
+INCLUDE		=	-I/home/oliver/workspace/minc-2.1.10/libsrc2 -I./headers -I../../../headers
 
-LIB_PATH	=	#-L/home/oliver/workspace/minc-2.1.10/.libs
+LIB_PATH	=	-L/home/oliver/workspace/minc-2.1.10/.libs
 
 LIBS		=	-lhdf5								\
 			-lnetcdf 							\
@@ -17,13 +13,14 @@ LIBS		=	-lhdf5								\
 			-lpthread							\
 			-ldl
 
-NAME		=	yop
+NAME		=	serv.so
 
-FLAGS		=	-Wall -Werror -DDEB -g3
+FLAGS		=	-g3 -Wall -Werror
 
 all:	
 	@echo "\n================== Compilation ===================="
-	@gcc $(SRCS) -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS)
+	@clang $(SRCS) -c $(INCLUDE) $(FLAGS) -fPIC
+	@clang *.o -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -shared
 
 clean:
 	@echo "\n==================== Cleaning ====================="

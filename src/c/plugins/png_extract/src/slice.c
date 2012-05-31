@@ -21,7 +21,7 @@ void            *get_all_slices_of_all_dimensions(void *args)
   int           i;
   unsigned long *start;
   long unsigned int *count;
-  
+
 
   a = (t_png_args *)args;
   volume = a->volume;
@@ -37,7 +37,7 @@ void            *get_all_slices_of_all_dimensions(void *args)
   start[X] = start[Y] = start[Z] = 0; // start to 0 = first slice
   // loop all dimensions
   i = 0;
-  while (i < volume->dim_nb)  
+  while (i < volume->dim_nb)
     {
       // check if the dimension need to be ignored
       if (a->dim_start_end[i][0] != -1 &&
@@ -78,7 +78,7 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
   get_width_height(&height, &width, current_dimension, volume);
   // loop all the slices
   while (current_slice < max)
-    { 
+    {
       memset(hyperslab, 0, (volume->slices_max * sizeof(*hyperslab)));
       start[current_dimension] = current_slice;
       // get the data of 1 slice
@@ -88,7 +88,7 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
       miget_real_value_hyperslab(volume->minc_volume, MI_TYPE_DOUBLE, start, count, hyperslab);
       pthread_mutex_unlock(&(a->p->lock));
       // print png
-      print_png(hyperslab, volume, current_dimension, current_slice, width, height);
+      print_png(hyperslab, volume, current_dimension, current_slice, width, height, a->file);
       pthread_mutex_lock(&(a->p->lock));
       a->info->slices_done++;
       pthread_mutex_unlock(&(a->p->lock));
