@@ -154,15 +154,13 @@ TissueStack.Events.prototype = {
 		var now =new Date().getTime(); 
 
 		var coords = TissueStack.Utils.getRelativeMouseCoords(e);
-		coords.z = this.canvas.data_extent.slice;
 		var relCoordinates = this.canvas.getDataCoordinates(coords);
-		relCoordinates.z = this.canvas.data_extent.slice;
-		var worldCoordinates = this.canvas.getDataExtent().getWorldCoordinatesForPixel(relCoordinates);
-		
+
 		// update coordinate info displayed
-		this.canvas.updateCoordinateInfo(coords, relCoordinates, worldCoordinates);
-		
+		this.updateCoordinateDisplay(coords);
+
 		if (this.canvas.mouse_down) {
+			
 			this.canvas.isDragging = true;
 			var dX = coords.x - this.canvas.mouse_x;
 			var dY = coords.y - this.canvas.mouse_y;
@@ -230,7 +228,6 @@ TissueStack.Events.prototype = {
 					canvasDims : canvas_dims
 				});
 		
-		// TODO: this will require a slightly different event type than PAN
 		if (this.canvas.sync_canvases) {				
 			// send message out to others that they need to redraw as well
 			this.canvas.getCanvasElement().trigger("sync", 
@@ -260,6 +257,9 @@ TissueStack.Events.prototype = {
 
 		this.canvas.drawCoordinateCross(cross_coords);
 
+		// update coordinate info displayed
+		this.updateCoordinateDisplay(coords);
+		
 		if (this.canvas.sync_canvases) {				
 			// send message out to others that they need to redraw as well
 			this.canvas.getCanvasElement().trigger("sync", [now,
@@ -345,5 +345,12 @@ TissueStack.Events.prototype = {
 					slice : slice
 				});
 		
+	}, updateCoordinateDisplay : function(mouse_coords) {
+		var relCrossCoords = this.canvas.getRelativeCrossCoordinates();
+		relCrossCoords.z = this.canvas.data_extent.slice;
+		var worldCoordinates = this.canvas.getDataExtent().getWorldCoordinatesForPixel(relCrossCoords);
+		
+		// update coordinate info displayed
+		this.canvas.updateCoordinateInfo(mouse_coords, relCrossCoords, worldCoordinates);
 	}
 };

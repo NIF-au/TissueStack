@@ -242,6 +242,7 @@ TissueStack.BindUniqueEvents = function () {
 				givenCoords = plane.getDataExtent().getPixelForWorldCoordinates(givenCoords);
 			}
 			plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords);
+			plane.events.changeSliceForPlane(plane.getDataExtent().slice);
 			var slider = $("#canvas_main_slider");
 			if (slider) {
 				slider.val(givenCoords.z);
@@ -280,6 +281,7 @@ TissueStack.BindUniqueEvents = function () {
 			return;
 		}
 		
+		TissueStack.planes[id].events.updateCoordinateDisplay();
 		TissueStack.planes[id].events.changeSliceForPlane(slice);			
 	};
 	

@@ -144,6 +144,7 @@ TissueStack.Extent.prototype = {
 	}, getCenter : function () {
 		return TissueStack.Utils.getCenter(this.x,this.y);
 	}, getWorldCoordinatesForPixel : function(pixelCoords) {
+		
 		if (pixelCoords.x < 0 || pixelCoords.x > this.x - 1 
 				|| pixelCoords.y < 0 || pixelCoords.y > this.y - 1 
 				|| this.slice < 0 || this.slice > this.max_slices) {
@@ -158,7 +159,7 @@ TissueStack.Extent.prototype = {
 		} else {
 			pixelCoords.z = this.slice;
 		}
-		
+
 		// now we'll have to correct x and y according to their zoom level to get the 1:1 pixel Coordinates which can then be transformed
 		if (this.zoom_level == 1) {
 			pixelCoords.x = Math.floor(pixelCoords.x * (this.one_to_one_x / this.x));
@@ -236,12 +237,27 @@ TissueStack.Extent.prototype = {
 			realWorldCoords.min_x = tmpTranslatedCoords.x;
 			realWorldCoords.max_y = tmpTranslatedCoords.y;
 			realWorldCoords.min_z = tmpTranslatedCoords.z;
-			tmpTranslatedCoords = this.getWorldCoordinatesForPixel({x:this.x-1, y:this.y-1, z:this.max_slices});
+			tmpTranslatedCoords = this.getWorldCoordinatesForPixel({x:this.x -1, y:this.y -1, z:this.max_slices});
 			realWorldCoords.max_x = tmpTranslatedCoords.x;
 			realWorldCoords.min_y = tmpTranslatedCoords.y;
 			realWorldCoords.max_z = tmpTranslatedCoords.z;
 		}
 		
 		return realWorldCoords;
+	}, getXYCoordinatesWithRespectToZoomLevel : function(coords) {
+		if (!coords) {
+			return;
+		}
+		
+		// correct x and y according to their zoom level to get the 1:1 pixel Coordinates which can then be transformed
+		if (this.zoom_level == 1) {
+			coords.x = Math.floor(coords.x * (this.x / this.one_to_one_x));
+			coords.y = Math.floor(coords.y * (this.y / this.one_to_one_y));
+		} else {
+			coords.x = Math.ceil(coords.x * (this.x / this.one_to_one_x));
+			coords.y = Math.ceil(coords.y * (this.y / this.one_to_one_y));
+		}
+	
+		return coords;
 	}
 };
