@@ -434,5 +434,7 @@ TissueStack.CreateTreeEvent = function () {
 $(document).ready(function() {
 	TissueStack.Init();
 	TissueStack.BindUniqueEvents();
-	TissueStack.CreateTreeEvent();	
+	if (TissueStack.desktop) {
+		TissueStack.CreateTreeEvent();
+	}
 });
