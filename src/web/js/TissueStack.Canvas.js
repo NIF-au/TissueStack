@@ -198,7 +198,10 @@ TissueStack.Canvas.prototype = {
 		this.setUpperLeftCorner(
 				Math.floor(this.dim_x / 2) - coords.x,
 				Math.floor(this.dim_y / 2) + coords.y);
-		this.data_extent.slice = coords.z;
+		
+		if (coords.z) {
+			this.data_extent.slice = coords.z;
+		}
 		this.queue.drawLowResolutionPreview(now);
 		this.queue.drawRequestAfterLowResolutionPreview(null,now);
 
@@ -439,22 +442,25 @@ TissueStack.Canvas.prototype = {
 	updateCoordinateInfo : function(mouseCoords, pixelCoords, worldCoords) {
 		var log;
 		
+		pixelCoords = this.getXYCoordinatesWithRespectToZoomLevel(pixelCoords);
+		// outside of extent check
+		if (!pixelCoords || pixelCoords.x < 0 || pixelCoords.x > this.data_extent.x -1 ||  pixelCoords.y < 0 || pixelCoords.y > this.data_extent.y -1) {
+			log = $("#canvas_point_x").val("");
+			log = $("#canvas_point_y").val("");
+			log = $("#canvas_point_z").val("");
+			
+			return;
+		}
+			
 		// for desktop
 		if(TissueStack.desktop){
 			var x = worldCoords ? worldCoords.x : pixelCoords.x;
 			var y = worldCoords ? worldCoords.y : pixelCoords.y;
 			var z = worldCoords ? worldCoords.z : pixelCoords.z;
 
-			if (pixelCoords.x < 0 || pixelCoords.y < 0) {
-				log = $("#canvas_point_x").val("");
-				log = $("#canvas_point_y").val("");
-				log = $("#canvas_point_z").val("");
-				
-			} else {
-				log = $("#canvas_point_x").val(Math.round(x *1000) / 1000);
-				log = $("#canvas_point_y").val(Math.round(y *1000) / 1000);
-				log = $("#canvas_point_z").val(Math.round(z *1000) / 1000);
-			}
+			log = $("#canvas_point_x").val(Math.round(x *1000) / 1000);
+			log = $("#canvas_point_y").val(Math.round(y *1000) / 1000);
+			log = $("#canvas_point_z").val(Math.round(z *1000) / 1000);
 			
 			this.updateExtentInfo(TissueStack.realWorldCoords[this.data_extent.plane]);
 			
@@ -462,13 +468,26 @@ TissueStack.Canvas.prototype = {
 		}
 		
 		// for everything else...
-		log = $('.coords');
-		log.html("Canvas => X: " + mouseCoords.x + ", Y: " + mouseCoords.y);
+		if (mouseCoords) {
+			log = $('.coords');
+			log.html("Canvas => X: " + mouseCoords.x + ", Y: " + mouseCoords.y);
+		}
 		log = $('.pixel_coords');
 		log.html("Pixels => X: " + pixelCoords.x + ", Y: " + pixelCoords.y);
 		if (worldCoords) {
 			log = $('.world_coords');
 			log.html("World => X: " +  Math.round(worldCoords.x * 1000) / 1000 + ", Y: " +  Math.round(worldCoords.y * 1000) / 1000);
 		}
+	}, getXYCoordinatesWithRespectToZoomLevel : function(coords) {
+		if (this.upper_left_y < this.dim_y - this.cross_y || this.upper_left_y - (this.data_extent.y - 1) > this.dim_y - this.cross_y) {
+			return;
+		}
+
+		if (this.cross_x < this.upper_left_x 
+				|| this.cross_x > (this.upper_left_x + (this.getDataExtent().x - 1))) {
+			return;
+		}
+
+		return this.data_extent.getXYCoordinatesWithRespectToZoomLevel(coords);
 	}
 };

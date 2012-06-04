@@ -28,7 +28,17 @@
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>
-    		</repository>
+    	</repository>
+
+        <repository>
+            <id>apache maven repo</id>
+            <name>apache maven repo</name>
+            <url>https://repository.apache.org/content/repositories/releases/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    	
 	</repositories>
 
 	<build>
@@ -177,7 +187,19 @@
 			<artifactId>hibernate-commons-annotations</artifactId>
 			<version>${hibernate.libs.version}</version>
 		</dependency>
-		</dependencies>
+        <!-- Batik Persistence -->
+        <dependency>
+            <groupId>org.apache.xmlgraphics</groupId>
+                <artifactId>batik-dom</artifactId>
+            <version>1.7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.xmlgraphics</groupId>
+                <artifactId>batik-svg-dom</artifactId>
+            <version>1.7</version>
+        </dependency>
+		
+	</dependencies>
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
