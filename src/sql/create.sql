@@ -4,9 +4,9 @@ CREATE ROLE tissuestack LOGIN PASSWORD 'tissuestack';
 -- CREATE DB INSTANCE 
 CREATE DATABASE tissuestack OWNER tissuestack;
 
--- !!!!! SWITCH TO tissuestack NOW before executing the following lines !!!!! --
+-- !!!!! SWITCH TO tissuestack NOW before executing the following lines !!!!!
 
--- GENERAL INSTANCE CONFIGURATION --
+-- GENERAL INSTANCE CONFIGURATION
 CREATE TABLE configuration
 (
   name VARCHAR(25) NOT NULL,
@@ -17,7 +17,7 @@ CREATE TABLE configuration
 );
 ALTER TABLE configuration OWNER TO tissuestack;
 
--- GENERAL INSTANCE CONFIGURATION - some default values --
+-- GENERAL INSTANCE CONFIGURATION - some default values
 INSERT INTO configuration VALUES('version', '0.4', 'version');
 INSERT INTO configuration VALUES('tiles', 'TRUE', 'supports tiled datasets (TRUE/FALSE)');
 INSERT INTO configuration VALUES('images', 'FALSE', 'supports querying image files directly (TRUE/FALSE)');
@@ -54,7 +54,7 @@ INSERT INTO configuration VALUES('color_maps',
 				   [1, 0.8, 0.8, 0.8]]
 		}', 'default color mapping: grey, hot and spectral');
 
--- DATASET LIST --
+-- DATASET LIST
 CREATE TABLE dataset
 (
   id bigserial NOT NULL,
@@ -65,7 +65,12 @@ CREATE TABLE dataset
 );
 ALTER TABLE dataset OWNER TO tissuestack;
 
--- DATASET LIST - PLANE INFORMATION --
+CREATE INDEX idx_dataset_description
+  ON dataset
+  USING btree
+  (description);
+  
+-- DATASET PLANE INFORMATION
 CREATE TABLE dataset_planes
 (
   id bigserial NOT NULL,
@@ -83,4 +88,11 @@ CREATE TABLE dataset_planes
   CONSTRAINT dataset_planes_unique UNIQUE (dataset_id, name)
 );
 ALTER TABLE dataset_planes OWNER TO tissuestack;
+
+-- INSERT SOME TEST DATA
+INSERT INTO dataset VALUES (1, '/opt/data/00-normal-model-nonsym.mnc', 'This is our prototype mouse for development');
+INSERT INTO dataset_planes VALUES (1, 1, 'x', 1311, 499, 678, '[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75 ]', 3, '[[0.5, 0   , 0   , -327.15 ],[0   , 0.5, 0   , -124.2   ],[0   , 0   , 0.5, -169.2   ],[0   , 0   , 0   ,  1 ]]');
+INSERT INTO dataset_planes VALUES (2, 1, 'y', 679, 499, 1310, '[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75 ]', 3, '[[0.5, 0   , 0   , -169.2   ],[0   , 0.5, 0   , -124.2   ],[0   , 0   , 0.5, -327.15 ],[0   , 0   , 0   ,  1  ]]');
+INSERT INTO dataset_planes VALUES (3, 1, 'z', 679, 1311, 498, '[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75 ]', 3, '[[0.5, 0   , 0   , -169.2   ],[0   , 0.5, 0   , -327.15 ],[0   , 0   , 0.5, -124.2  ],[0   , 0   , 0   ,  1 ]]');
+
 

@@ -4,9 +4,12 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 @Entity
 @Table(name="configuration")
+@XmlRootElement(name="Configuration", namespace=IGlobalConstants.XML_NAMESPACE)
 public class Configuration {
 	private String name;
 	private String value;
@@ -14,6 +17,7 @@ public class Configuration {
 	
 	@Id
 	@Column(name="name")
+	@XmlElement(name="Name", namespace=IGlobalConstants.XML_NAMESPACE)
 	public String getName() {
 		return name;
 	}
@@ -23,6 +27,7 @@ public class Configuration {
 	}
 	
 	@Column(name="value")
+	@XmlElement(name="Value", namespace=IGlobalConstants.XML_NAMESPACE)
 	public String getValue() {
 		return value;
 	}
@@ -32,6 +37,7 @@ public class Configuration {
 	}
 	
 	@Column(name="description")
+	@XmlElement(name="Description", namespace=IGlobalConstants.XML_NAMESPACE)
 	public String getDescription() {
 		return description;
 	}

@@ -10,7 +10,7 @@ import au.edu.uq.cai.TissueStack.dataobjects.DataSetPlanes;
 
 public final class DataSetPlanesDataProvider {
 
-	public static DataSetPlanes queryDataSetPlanesById(int id){
+	public static DataSetPlanes queryDataSetPlanesById(long id){
 		EntityManager em = null; 
 		try {
 			em = JPAUtils.instance().getEntityManager(); 
@@ -31,7 +31,7 @@ public final class DataSetPlanesDataProvider {
 			query.setParameter("name",name);
 			return (List<DataSetPlanes>)query.getResultList();
 			
-		}finally{
+		} finally{
 			JPAUtils.instance().closeEntityManager(em);
 		}
 	}

@@ -4,84 +4,112 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 @Entity
 @Table(name="dataset_planes")
+@XmlRootElement(name="DataSetPlanes", namespace=IGlobalConstants.XML_NAMESPACE)
 public class DataSetPlanes{
-	  private int id;
-	  private int dataset_id;
+	  private long id;
+	  private int datasetId;
 	  private String name;
-	  private int max_x; 
-	  private int max_y; 
-	  private int max_sclices; 
-	  private int zoom_levels; 
-	  private int one_to_one_zoom_level; 
-	  private String transformation_matrix;
+	  private int maxX; 
+	  private int maxY; 
+	  private int maxSclices; 
+	  private String zoomLevels; 
+	  private int oneToOneZoomLevel; 
+	  private String transformationMatrix;
 
 	@Id
 	@Column(name="id")
-	public int getId() {
+	@XmlTransient
+	public long getId() {
 		return id;
 	}
-	public void setId(int id) {
+	public void setId(long id) {
 		this.id = id;
 	}
 	
 	@Column(name="dataset_id")
-	public int getDataset_id() {
-		return dataset_id;
+	@XmlTransient
+	public int getDatasetId() {
+		return datasetId;
 	}
-	public void setDataset_id(int dataset_id) {
-		this.dataset_id = dataset_id;
+	
+	public void setDatasetId(int datasetId) {
+		this.datasetId = datasetId;
 	}
+	
 	@Column(name="name")
+	@XmlElement(name="Name", namespace=IGlobalConstants.XML_NAMESPACE)	
 	public String getName() {
 		return name;
 	}
+	
 	public void setName(String name) {
 		this.name = name;
 	}
+	
 	@Column(name="max_x")
-	public int getMax_x() {
-		return max_x;
+	@XmlElement(name="MaxX", namespace=IGlobalConstants.XML_NAMESPACE)	
+	public int getMaxX() {
+		return maxX;
 	}
-	public void setMax_x(int max_x) {
-		this.max_x = max_x;
+	
+	public void setMaxX(int maxX) {
+		this.maxX = maxX;
 	}
+	
 	@Column(name="max_y")
-	public int getMax_y() {
-		return max_y;
+	@XmlElement(name="MaxY", namespace=IGlobalConstants.XML_NAMESPACE)	
+	public int getMaxY() {
+		return maxY;
 	}
-	public void setMax_y(int max_y) {
-		this.max_y = max_y;
+	
+	public void setMaxY(int maxY) {
+		this.maxY = maxY;
 	}
+	
 	@Column(name="max_sclices")
-	public int getMax_sclices() {
-		return max_sclices;
+	@XmlElement(name="MaxSlices", namespace=IGlobalConstants.XML_NAMESPACE)	
+	public int getMaxSclices() {
+		return maxSclices;
 	}
-	public void setMax_sclices(int max_sclices) {
-		this.max_sclices = max_sclices;
+	
+	public void setMaxSclices(int maxSclices) {
+		this.maxSclices = maxSclices;
 	}
+	
 	@Column(name="zoom_levels")
-	public int getZoom_levels() {
-		return zoom_levels;
+	@XmlElement(name="ZoomLevels", namespace=IGlobalConstants.XML_NAMESPACE)	
+	public String getZoomLevels() {
+		return zoomLevels;
 	}
-	public void setZoom_levels(int zoom_levels) {
-		this.zoom_levels = zoom_levels;
+	
+	public void setZoomLevels(String zoomLevels) {
+		this.zoomLevels = zoomLevels;
 	}
+	
 	@Column(name="one_to_one_zoom_level")
-	public int getOne_to_one_zoom_level() {
-		return one_to_one_zoom_level;
+	@XmlElement(name="OneToOneZoomLevel", namespace=IGlobalConstants.XML_NAMESPACE)	
+	public int getOneToOneZoomLevel() {
+		return oneToOneZoomLevel;
 	}
-	public void setOne_to_one_zoom_level(int one_to_one_zoom_level) {
-		this.one_to_one_zoom_level = one_to_one_zoom_level;
+	
+	public void setOneToOneZoomLevel(int oneToOneZoomLevel) {
+		this.oneToOneZoomLevel = oneToOneZoomLevel;
 	}
+	
 	@Column(name="transformation_matrix")
-	public String getTransformation_matrix() {
-		return transformation_matrix;
+	@XmlElement(name="TransformationMatrix", namespace=IGlobalConstants.XML_NAMESPACE)	
+	public String getTransformationMatrix() {
+		return transformationMatrix;
 	}
-	public void setTransformation_matrix(String transformation_matrix) {
-		this.transformation_matrix = transformation_matrix;
+	
+	public void setTransformationMatrix(String transformationMatrix) {
+		this.transformationMatrix = transformationMatrix;
 	}
 }
 
