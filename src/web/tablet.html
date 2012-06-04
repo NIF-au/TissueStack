@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+  <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable = no" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+        
+        <title> Tissue Stack - Desktop </title>
+       	<link rel="icon" type="image/png" href="images/favicon.png" />
+       	
+        <link rel="stylesheet" href="css/jquery.mobile-1.1.0.min.css" />
+        <link rel="stylesheet" href="css/mobile.css" />
+        
+        <!--Apple Device Start Up Splash Screen and ICON-->
+		<link rel="apple-touch-startup-image" href="images/mobile/ipadscreen.png" /> <!--For iPad-->
+		<link rel="apple-touch-icon" href="images/favicon_icon.png" />
+		<!-- END -->
+		
+        <script src="js/libs/jquery/jquery-1.7.1.js"></script>
+        <script src="js/libs/jquery/jquery.mobile-1.1.0.min.js"></script>
+        <script src="js/TissueStack.Slider.js"></script>
+		<script src="js/libs/sylvester/sylvester.js"></script>
+		
+		<!--TREE DATA SETS-->
+		<script src="js/libs/jquery/jquery-ui.custom.js"></script>
+	    <script src="js/libs/jquery/jquery.cookie.js"></script>
+	    <script src="js/libs/jquery/jquery.dynatree.js"></script>
+	    <link rel="stylesheet" href="css/ui.dynatree.css">
+		<!--END-->
+		
+		<script src="js/TissueStack.MouseWheel.js"></script>
+		<script src="js/TissueStack.js"></script>
+		<script src="js/TissueStack.Utils.js"></script>
+		<script src="js/TissueStack.Extent.js"></script>
+		<script src="js/TissueStack.Queue.js"></script>
+		<script src="js/TissueStack.Canvas.js"></script>
+		<script src="js/TissueStack.Events.js"></script>
+		<script src="js/TissueStack.Init.js"></script>
+		
+		<script type="text/javascript">
+		    TissueStack.tablet = true;
+		 
+			document.addEventListener('touchmove', function(event) {
+  			   event.preventDefault();
+			}, false);
+		</script>
+  </head>
+<body>
+	<!--	TILE PAGE	    -->
+      <div data-role="page" data-theme="a" id="data" >
+            <div data-role="content">
+   				<div data-theme="a" data-role="header" data-position="fixed" data-id="Head1">
+         	  	     <div data-role="navbar">
+						<ul>
+							<li><a href="#data" data-icon="plus" class="ui-btn-active">Data</a></li>
+							<li><a href="#setting" data-icon="gear">Setting</a></li>
+						</ul>
+			  		 </div>
+                </div>
+     	    </div>
+     	    <div style="min-width: 1400px;">
+     	    	<div class="coords_show_left"> 
+     	    		<div id="canvas_extent" class="text-align-center"></div>
+     	    		<input size="8" maxlength="10" type="text" id="canvas_point_x" value="0"/>
+     	    		<input size="8" maxlength="10" type="text" id="canvas_point_y" value="0"/>
+     	    		<input size="8" maxlength="10" type="text" id="canvas_point_z" value="0"/>
+     	    		<button type="button" id="center_point_in_canvas">Center Coordinates</button>
+     	    		<hr />
+
+     	    		<!--ADD TREE DATA SET NAVI BAR-->
+	   	    		<input type="search" name="search" id="insert_link" value ="" placeholder="Insert Link"/>	
+					<hr />
+					
+					<div id="mobile_style_tree_dataset">
+						<div data-role="collapsible-set" data-theme="a" data-content-theme="d" data-mini="true">
+						
+							<div data-role="collapsible" data-collapsed="false">
+							<h3>CROSS</h3>
+							<p>Switch between YES / NO</p>
+								<fieldset data-role="controlgroup" data-mini="true">
+								     	<input type="radio" name="radio-choice-1" id="radio-choice-1" value="on" checked="checked" />
+								     	<label for="radio-choice-1">ON</label>
+								
+								     	<input type="radio" name="radio-choice-1" id="radio-choice-2" value="off"  />
+								     	<label for="radio-choice-2">OFF</label>
+								</fieldset>
+							</div>
+							
+							<div data-role="collapsible">
+							<h3>REGIONS</h3>
+							<p>Turn ON / OFF Overlay Region to interact</p>
+								<div data-role="collapsible-set" data-theme="d" data-content-theme="d" data-mini="true">
+									<div data-role="collapsible">
+									<h3>X</h3>
+										<fieldset data-role="controlgroup" data-mini="true" data-type="horizontal" >
+										     	<input type="radio" name="radio-choice-1" id="radio-choice-1" value="on" checked="checked" />
+										     	<label for="radio-choice-1">ON</label>
+										
+										     	<input type="radio" name="radio-choice-1" id="radio-choice-2" value="off"  />
+										     	<label for="radio-choice-2">OFF</label>
+										</fieldset>
+									</div>
+									
+									<div data-role="collapsible">
+									<h3>Y</h3>
+										<fieldset data-role="controlgroup" data-mini="true" data-type="horizontal" >
+										     	<input type="radio" name="radio-choice-1" id="radio-choice-1" value="on"/>
+										     	<label for="radio-choice-1">ON</label>
+										
+										     	<input type="radio" name="radio-choice-1" id="radio-choice-2" value="off"  />
+										     	<label for="radio-choice-2">OFF</label>
+										</fieldset>
+									</div>
+									
+									<div data-role="collapsible">
+									<h3>Z</h3>
+										<fieldset data-role="controlgroup" data-mini="true" data-type="horizontal" >
+										     	<input type="radio" name="radio-choice-1" id="radio-choice-1" value="on"/>
+										     	<label for="radio-choice-1">ON</label>
+										
+										     	<input type="radio" name="radio-choice-1" id="radio-choice-2" value="off"  />
+										     	<label for="radio-choice-2">OFF</label>
+										</fieldset>
+									</div>
+								</div>
+							</div>
+							
+							<div data-role="collapsible">
+							<h3>REMOTE SERVER</h3>
+							<p>Select tile to view with</p>
+								<div data-role="collapsible-set" data-theme="d" data-content-theme="d" data-mini="true">
+									<div data-role="collapsible">
+									<h3>Mouse Tile</h3>
+									<p>Server from CAI UQ location</p>
+										<fieldset data-role="controlgroup" data-mini="true">
+										     	<input type="radio" name="radio-choice-1" id="radio-choice-1" value="choice-1" checked="checked" />
+										     	<label for="radio-choice-1">Mouse Tile 1</label>
+										
+										     	<input type="radio" name="radio-choice-1" id="radio-choice-2" value="choice-2"  />
+										     	<label for="radio-choice-2">Mouse Tile 2</label>
+										</fieldset>
+									</div>
+									
+									<div data-role="collapsible">
+									<h3>Fish Tiles</h3>
+									<p>Server from CAI UQ location</p>
+										<fieldset data-role="controlgroup" data-mini="true">
+										     	<input type="radio" name="radio-choice-1" id="radio-choice-1" value="choice-1"/>
+										     	<label for="radio-choice-1">Fish Tile 1</label>
+										
+										     	<input type="radio" name="radio-choice-1" id="radio-choice-2" value="choice-2"  />
+										     	<label for="radio-choice-2">Fish Tile 2</label>
+										</fieldset>
+									</div>
+								</div>
+							</div>
+						</div>	
+					</div>
+					<!--<div id="treedataset"></div>-->
+					<!--END -->
+     	    	</div>
+     	    	
+     	    	<div class="canvaslocate">
+     	    		<div id="main_view_canvas" class="canvasview canvas_y" >
+     	    			<canvas id="canvas_y_plane" class="plane"></canvas>	
+     	    			<canvas id="canvas_y_plane_cross_overlay" class="cross_overlay"></canvas>
+					</div>
+						<div id="left_side_view_canvas" class="ui-bar-a">     	    			
+							<img id="left_side_view_maximize" class="canvas_x maximize_view_icon" src="images/maximize.png" alt="Maximize View" />
+							<canvas id="canvas_x_plane" class="side_canvas"></canvas>
+							<canvas id="canvas_x_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>
+						</div>
+			     	  	<div id="right_side_view_canvas" class="ui-bar-a">
+							<img id="right_side_view_maximize" class="maximize_view_icon canvas_z" src="images/maximize.png" alt="Maximize View" />
+							<canvas id="canvas_z_plane" class="side_canvas"></canvas>
+							<canvas id="canvas_z_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>
+						</div>					     	    			
+     	    	</div>
+		     	<div class="coords_show_right">
+		     		<input id="canvas_main_slider" class="canvasslider canvas_y" type="range" min="0" max="1000" value="500" step="1" orientation="vertical"  />
+		     	</div>										
+     	    </div>
+     	    <!--FOOTER -->
+     	    <!--<div data-role="footer" data-id="foo1" data-position="fixed">
+     	    	<div data-role="navbar">
+     	    		<ul>
+     	    			<li><a href="a.html">Information</a></li>
+     	    			<li><a href="b.html">About CAI</a></li>
+     	    			<li><a href="c.html">User Manual</a></li>
+     	    			<li><a href="d.html">Emails</a></li>
+     	    		</ul>
+     	    	</div> /navbar 
+     	    </div>-->
+     	    <!-- /END Footer -->
+       </div>  
+    <!-- END OF TILE PAGE -->     
+	<!-- SETTING PAGE --> 
+      <div data-role="page" data-theme="a" id="setting" data-id="Head1"  >
+            <div data-role="content">
+   				<div data-theme="a" data-role="header" data-position="fixed">
+        	  	     <div data-role="navbar">
+						<ul>
+							<li><a href="#data" data-icon="minus">Data</a></li>
+							<li><a href="#setting" data-icon="gear" class="ui-btn-active">Setting</a></li>
+						</ul>
+			  		 </div>
+                </div>
+     	    </div>
+     	
+	     	<div class="settings-left-column">
+	     		Color Mapping:
+	     	    <fieldset data-role="radio-choice-1">
+	     				<input type="radio" name="color_map" id="radio-choice-1" value="grey" checked="checked" />
+	     	         	<label for="radio-choice-1">Grey</label>
+	     	
+	     	         	<input type="radio" name="color_map" id="radio-choice-2" value="hot"  />
+	     	         	<label for="radio-choice-2">Hot</label>
+	     	
+	     	         	<input type="radio" name="color_map" id="radio-choice-3" value="spectral"  />
+	     	         	<label for="radio-choice-3">Spectral</label>
+	     		</fieldset>
+	     	</div>
+     	
+	     	<div class="settings-right-column">
+				<label for="drawing_interval">Drawing Interval (in millis): </label>
+				<input id="drawing_interval" type="text" value="150" >
+				<fieldset data-role="controlgroup">
+				<input type="checkbox" id="sync_canvases" checked="checked" />
+				<label for="sync_canvases">Sync Canvases</label>
+				</fieldset>
+				<a href="mobile.html" data-role="button" id="drawing_interval_button">Apply</a>
+			</div>
+			<!--FOOTER-->
+			<!--<div data-role="footer" data-id="foo1" data-position="fixed">
+				<div data-role="navbar">
+					<ul>
+						<li><a href="a.html">Information</a></li>
+						<li><a href="b.html">About CAI</a></li>
+						<li><a href="c.html">User Manual</a></li>
+						<li><a href="d.html">Emails</a></li>
+					</ul>
+				</div><!-- /navbar --*>
+			</div>-->
+			<!-- / END Footer -->	
+      </div>
+	<!--    END SETTING PAGE       -->
+    </body>
+</html>
