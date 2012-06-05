@@ -384,7 +384,7 @@ TissueStack.Canvas.prototype = {
 				
 				// create the image object that loads the tile we need
 				var imageTile = new Image();
-				var url = "http://" + dataSet.host + "/"
+				var url = (dataSet.host == 'localhost' ? "" : "http://" + dataSet.host) + "/"
 					+ (dataSet.imageService ? "imageservice/" : "tiles/")
 					+ dataSet.local_id;
 				
