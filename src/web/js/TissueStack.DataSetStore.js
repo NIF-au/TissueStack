@@ -67,7 +67,7 @@ TissueStack.DataSetStore.prototype = {
 		if (!host) {
 			host = "localhost";
 		}
-		var url = "http://" + host + "/backend/data";
+		var url = (host == 'localhost' ? "" : "http://" + host) + "/backend/data";
 		if (!id && host == "localhost") {
 			url += "/list?include_plane_data=true";
 		} else if (!id && host != "localhost") {

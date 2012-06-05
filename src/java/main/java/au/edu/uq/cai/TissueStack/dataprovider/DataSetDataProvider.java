@@ -18,7 +18,7 @@ public final class DataSetDataProvider {
 			
 			em = JPAUtils.instance().getEntityManager();
 			
-			Query query = em.createQuery("SELECT dataset FROM DataSet dataset LEFT JOIN FETCH dataset.planes WHERE dataset.id = :id");	
+			Query query = em.createQuery("SELECT DISTINCT dataset FROM DataSet dataset LEFT JOIN FETCH dataset.planes WHERE dataset.id = :id");	
 			query.setParameter("id", id);
 			
 			@SuppressWarnings("unchecked")
@@ -40,7 +40,7 @@ public final class DataSetDataProvider {
 		try {
 			em = JPAUtils.instance().getEntityManager(); 
 			
-		    String sql = "SELECT dataset FROM DataSet AS dataset";
+		    String sql = "SELECT DISTINCT dataset FROM DataSet AS dataset";
 		    if (includePlaneData) {
 		    	sql += " LEFT JOIN FETCH dataset.planes ";
 		    }
