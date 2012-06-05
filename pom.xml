@@ -10,7 +10,7 @@
 	<version>1.0</version>
 	<name>TissueStack Web Services and Toolkit</name>
 	<repositories>
-	   	<!-- repository>
+	   	<repository>
       			<id>jboss</id>
       			<name>jboss repo</name>
       			<url>https://repository.jboss.org/nexus/content/groups/public-jboss</url>
@@ -21,8 +21,7 @@
       			<snapshots>
         			<enabled>false</enabled>
       			</snapshots>
-    		</repository-->
-
+    		</repository>
 		<repository>
 			<id>maven repo</id>
 			<name>maven repo</name>

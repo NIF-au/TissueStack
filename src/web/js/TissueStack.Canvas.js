@@ -294,6 +294,12 @@ TissueStack.Canvas.prototype = {
 			return;
 		} 
 
+		var dataSet = TissueStack.dataSetStore.getDataSetById(this.data_extent.data_id);
+		if (!dataSet) {
+			alert("Couldn't find data set with id: " + this.data_extent.data_id);
+			return;
+		}
+		
 		var counter = 0;
 		var startTileX = this.upper_left_x / this.getDataExtent().tile_size;
 		var canvasX = 0;
@@ -378,8 +384,12 @@ TissueStack.Canvas.prototype = {
 				
 				// create the image object that loads the tile we need
 				var imageTile = new Image();
+				var url = "http://" + dataSet.host + "/"
+					+ (dataSet.imageService ? "imageservice/" : "tiles/")
+					+ dataSet.local_id;
+				
 				imageTile.src = 
-					TissueStack.tile_directory + this.getDataExtent().data_id + "/" + this.getDataExtent().zoom_level + "/" + this.getDataExtent().plane
+					url + "/" + this.getDataExtent().zoom_level + "/" + this.getDataExtent().plane
 					+ "/" + slice + "/" + rowIndex + '_' + colIndex + "." + this.image_format;
 				counter++;
 				
@@ -427,7 +437,7 @@ TissueStack.Canvas.prototype = {
 		};
 	},
 	updateExtentInfo : function(realWorldCoords) {
-		var log = TissueStack.desktop ? $('#canvas_extent') : $('#canvas_' + this.getDataExtent().plane + '_extent');
+		var log = (TissueStack.desktop || TissueStack.tablet) ? $('#canvas_extent') : $('#canvas_' + this.getDataExtent().plane + '_extent');
 		if(TissueStack.phone){
 			log.html("Zoom Level: " + this.getDataExtent().zoom_level);
 
@@ -452,8 +462,8 @@ TissueStack.Canvas.prototype = {
 			return;
 		}
 			
-		// for desktop
-		if(TissueStack.desktop){
+		// for desktop and tablet
+		if(TissueStack.desktop || TissueStack.tablet){
 			var x = worldCoords ? worldCoords.x : pixelCoords.x;
 			var y = worldCoords ? worldCoords.y : pixelCoords.y;
 			var z = worldCoords ? worldCoords.z : pixelCoords.z;
@@ -462,7 +472,7 @@ TissueStack.Canvas.prototype = {
 			log = $("#canvas_point_y").val(Math.round(y *1000) / 1000);
 			log = $("#canvas_point_z").val(Math.round(z *1000) / 1000);
 			
-			this.updateExtentInfo(TissueStack.realWorldCoords[this.data_extent.plane]);
+			this.updateExtentInfo(TissueStack.dataSetStore.getDataSetByIndex(0).realWorldCoords[this.data_extent.plane]);
 			
 			return;
 		}

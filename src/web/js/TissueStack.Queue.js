@@ -122,6 +122,12 @@ TissueStack.Queue.prototype = {
 			return;
 		} 
 		
+		var dataSet = TissueStack.dataSetStore.getDataSetById(this.canvas.data_extent.data_id);
+		if (!dataSet) {
+			alert("Couldn't find data set with id: " + this.canvas.data_extent.data_id);
+			return;
+		}
+		
 		var canvasX = 0;
 		var imageOffsetX = 0;
 		var width = this.canvas.getDataExtent().x;
@@ -151,8 +157,12 @@ TissueStack.Queue.prototype = {
 		}
 		
 		var imageTile = new Image();
-		imageTile.src = 
-			TissueStack.tile_directory + this.canvas.getDataExtent().data_id + "/" + this.canvas.getDataExtent().zoom_level + "/" 
+		var url = "http://" + dataSet.host + "/"
+		+ (dataSet.imageService ? "imageservice/" : "tiles/")
+		+ dataSet.local_id;
+	
+	imageTile.src = 
+		url + "/" + this.canvas.getDataExtent().zoom_level + "/" 
 			+ this.canvas.getDataExtent().plane
 			+ "/" + slice + ".low.res." + this.canvas.image_format;
 

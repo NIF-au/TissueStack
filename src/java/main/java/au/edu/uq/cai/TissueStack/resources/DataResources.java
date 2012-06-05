@@ -55,10 +55,15 @@ public final class DataResources extends AbstractRestfulMetaInformation {
 	@GET
 	@Produces(MediaType.APPLICATION_XML)
 	@Description("Returns the data set information for a given id (if exists) or a not found response")
-	public DataSet getDataSetByIdAsXML(
+	public Object getDataSetByIdAsXML(
 			@Description("Mandatory Paramter 'id': points towards the record id in the database")
 			@PathParam("id") String id) {
-		return this.getDataSetByIdInternal(id);
+		final DataSet result = this.getDataSetByIdInternal(id);
+		if (result == null) {
+			return new NoResults();
+		}
+		
+		return result;
 	}
 
 	private DataSet getDataSetByIdInternal(String id) {

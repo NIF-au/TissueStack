@@ -10,55 +10,28 @@ TissueStack.DataSetNavigation = function() {
 
 TissueStack.DataSetNavigation.prototype = {
 	buildDynaTree : function() {
-		//NOTE: key has to include local and remote id
-		//ALSO: in the first version, only allow 1 data set to be viewed at once !! 
-		
-		//CREATE DATA SET TREE 
-		var treeData = [
-		    {title: "CROSS", key: "cross_tree_id", select: true, tooltip: "cross overlay" },
-		    {title: "CANVAS TILES", key:"canvas_tree_id", select: true },
-		    {title: "REGIONS", isFolder: true, key: "id3", expand: true,
-		      children: [
-		        {title: "REGIONS X", key: "regions_tree_id", 
-		          children: [
-		            {title: "Sub-item 3.1.1", key: "regions_tree_x1.1" },
-		            {title: "Sub-item 3.1.2", key: "regions_tree_x1.2" }
-		          ]
-		        },
-		        {title: "REGIONS Y",
-		          children: [
-		            {title: "Sub-item 3.2.1", key: "regions_tree_y1.1" },
-		            {title: "Sub-item 3.2.2", key: "regions_tree_y1.2" }
-		          ]
-		        },
-		        {title: "REGIONS Z",
-		          children: [
-		            {title: "Sub-item 3.2.1", key: "regions_tree_y1.1" },
-		            {title: "Sub-item 3.2.2", key: "regions_tree_y1.2" }
-		          ]
-		        } 
-		      ]
-		    },
-		    {title: "REMOTE SERVER", key: "remote_server_id", expand: true,
-		      children: [
-		        {title: "FISH TILE",
-		          children: [
-		            {title: "FISH TILE 1", key: "remote_server_fish1" },
-		            {title: "FISH TILE 2", key: "remote_server_fish2" }
-		          ]
-		        },
-		        {title: "MOUSE TILE", expand: true,
-		          children: [
-		            {title: "MOUSE TILE 1", key: "remote_server_mouse1", select: true },
-		            {title: "MOUSE TILE 2", key: "remote_server_mouse2" }
-		          ]
-		        },
-		        {title: "Sub-item 4.3", hideCheckbox: true },
-		        {title: "Sub-item 4.4", hideCheckbox: true }
-		      ]
-		    }
-		  ];
-		 // TRIGGER DATA SET FUNCTION 
+		var treeData = [];
+
+		if (TissueStack.dataSetStore.getSize() == 0) {
+			treeData[0] = {title: "No Data Sets Found", tooltip: "No Data Sets Found"};
+		} else {
+			var counter = 0;
+			for (var dataSetKey in TissueStack.dataSetStore.datasets) {
+				var dataSet = TissueStack.dataSetStore.datasets[dataSetKey];
+				treeData[counter] = 
+					{title: dataSet.local_id + '@' +dataSet.host,
+						key: dataSet.id,
+						tooltip: (dataSet.description ? "Description " + dataSet.description : "") 
+							+ "\nFile: " + dataSet.filename,
+						select: true,
+						expand: false
+					};
+				counter++;
+			}
+			
+		}
+
+		// create dyna tree and bind events 
 		 $("#treedataset").dynatree({
 		       checkbox: true,
 		       selectMode: 2,
@@ -101,28 +74,6 @@ TissueStack.DataSetNavigation.prototype = {
 		         node.toggleSelect();
 		       },
 		  });
-		//FUTURE USE USING JSON TO LOAD DATA SET TREE	  
-		//	  $("#treedataset").dynatree({
-		//	        title: "JSON LOADING FOR TISSUESTACK TREE EVENT",
-		//	        fx: { height: "toggle", duration: 200 },
-		//	        autoFocus: false, // Set focus to first child, when expanding or lazy-loading.
-		//            initAjax: {
-		//                url: "/TissueStack/minc/test",
-		//                data: { mode: "test" } // data from data set
-		//                },
-		//	        onActivate: function(node) {
-		//	        },
-		//	  
-		//	        onLazyRead: function(node){
-		//                node.appendAjax({
-		//                  url: "/TissueStack/minc/test",
-		//                  data: {key: node.data.key,
-		//                   mode: "test"
-		//                 }
-		//             });
-		//	        }
-		//	    });
-			//END
 	},
 	buildTabletMenu : function() {
 		// TODO: implement

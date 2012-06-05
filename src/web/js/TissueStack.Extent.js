@@ -126,7 +126,7 @@ TissueStack.Extent.prototype = {
 			this.slice = Math.ceil(slice / this.zoom_level_factor);
 		}
 
-		var canvasSlider = $("#canvas_" + (TissueStack.desktop ? "main" : this.plane) + "_slider");
+		var canvasSlider = $("#canvas_" + ((TissueStack.desktop || TissueStack.tablet) ? "main" : this.plane) + "_slider");
 		var mainCanvas = this.plane;
 		
 		var planeId = 

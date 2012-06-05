@@ -1,9 +1,6 @@
-TissueStack.DataSetStore = function() {
-	// initialize store
-	this.datasets = {};
-	
+TissueStack.DataSetStore = function(afterLoadingRoutine) {
 	// fetch all data for the local configuration
-	this.fetchDataSetsFromServer("localhost");
+	this.fetchDataSetsFromServer("localhost", null,  afterLoadingRoutine);
 };
 
 TissueStack.DataSetStore.prototype = {
@@ -12,7 +9,25 @@ TissueStack.DataSetStore.prototype = {
 	getSize : function() {
 		return this.datasetCount;
 	},
-	addDataSetToStore : function(dataSet, host) {
+	getDataSetById : function(id) {
+		if (typeof(id) != 'string' || this.getSize() == 0) {
+			return null;
+		}
+		return this.datasets[id];
+	},
+	// slow !! don't use unless really necessary. rather loop with for ... in 
+	getDataSetByIndex : function(index) {
+		if (typeof(index) != 'number' || index < 0 || index > this.getSize() || this.getSize() == 0) {
+			return null;
+		}
+		var counter = 0;
+		for (var key in this.datasets) {
+			if (counter == index) {
+				return this.datasets[key];
+			}
+		}
+	},
+	addDataSetToStore : function(dataSet, host, isImageService) {
 		if (!dataSet || !dataSet.planes) {
 			return;
 		}
@@ -30,15 +45,24 @@ TissueStack.DataSetStore.prototype = {
 			return;
 		}
 		
+		if (typeof(isImageService) != "boolean") {
+			isImageService = false;
+		}
+		
 		this.datasets[id] = {};
+		this.datasets[id].host = host;
+		this.datasets[id].imageService = isImageService;
 		this.datasets[id].id = id;
+		this.datasets[id].local_id = dataSet.id;
 		this.datasets[id].description = dataSet.description ? dataSet.description : "";
+		this.datasets[id].filename = dataSet.filename ? dataSet.filename : "";
 		// this is the data for initialization
 		this.datasets[id].data = dataSet.planes;
 		// this is the map node where we store the actual runtime canvases which won't be set until we decide to display the data set
 		this.datasets[id].planes = {};
 		// this is the map node where we store the real world extents for the actual runtime canvases once they have been created
 		this.datasets[id].realWorldCoords = {};
+		this.datasetCount += 1;
 	}, fetchDataSetsFromServer : function(host, id, customSuccessHandler) {
 		if (!host) {
 			host = "localhost";
@@ -52,19 +76,40 @@ TissueStack.DataSetStore.prototype = {
 			url += ("/" + id);
 		}
 		
+		_this = this;
+		
 		$.ajax({
 			url : url,
-			data : "json",
+			dataType : "json",
 			success: function(data, textStatus, jqXHR) {
-				// TODO: handle success
-				// loop through results and call addDataSetToStore()
+				if (!data.response && !data.error) {
+					alert("Did not receive anyting, neither success nor error ....");
+					return;
+				}
 				
+				if (data.error) {
+					var message = "Application Error: " + (data.error.message ? data.error.message : " no more info available. check logs.");
+					alert(message);
+					return;
+				}
+				
+				if (data.response.noResults) {
+					alert("No data sets found in configuration database");
+					return;
+				}
+				
+				var dataSets = data.response;
+				
+				for (var x=0;x<dataSets.length;x++) {
+					_this.addDataSetToStore(dataSets[x], "localhost");
+				}
+
 				if (customSuccessHandler) {
 					customSuccessHandler();
 				}
 			},
 			error: function(jqXHR, textStatus, errorThrown) {
-				// TODO: handle error
+				alert("Error connecting to backend: " + textStatus + " " + errorThrown);
 			}
 		});
 	}

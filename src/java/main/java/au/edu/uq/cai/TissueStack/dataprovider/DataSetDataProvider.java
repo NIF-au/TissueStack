@@ -21,9 +21,14 @@ public final class DataSetDataProvider {
 			Query query = em.createQuery("SELECT dataset FROM DataSet dataset LEFT JOIN FETCH dataset.planes WHERE dataset.id = :id");	
 			query.setParameter("id", id);
 			
-			DataSet result = (DataSet) query.getSingleResult();
+			@SuppressWarnings("unchecked")
+			List<DataSet> result = query.getResultList();
 
-			return result;
+			if (result == null || result.size() != 1) {
+				return null;
+			}
+			
+			return result.get(0);
 		} finally {
 			JPAUtils.instance().closeEntityManager(em);
 		}
