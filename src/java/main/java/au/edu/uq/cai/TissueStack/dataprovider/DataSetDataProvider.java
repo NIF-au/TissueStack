@@ -28,15 +28,18 @@ public final class DataSetDataProvider {
 			JPAUtils.instance().closeEntityManager(em);
 		}
 	}
-	
 
 	@SuppressWarnings("unchecked")
-	public static List<DataSet> getDataSets(int offset, int maxRows, String description){
+	public static List<DataSet> getDataSets(int offset, int maxRows, String description, boolean includePlaneData){
 		EntityManager em = null; 
 		try {
 			em = JPAUtils.instance().getEntityManager(); 
 			
 		    String sql = "SELECT dataset FROM DataSet AS dataset";
+		    if (includePlaneData) {
+		    	sql += " LEFT JOIN FETCH dataset.planes ";
+		    }
+		    
 		    if (description != null && !description.isEmpty()) {
 		    	sql += " WHERE LOWER(dataset.description) LIKE :description";
 		    }
@@ -47,9 +50,14 @@ public final class DataSetDataProvider {
 			}
 			query.setFirstResult(offset);
 			query.setMaxResults(maxRows);
+
+			final List<DataSet> result = query.getResultList();
+
+			if (includePlaneData) {
+				return result;
+			}
 			
 			// avoid lazy loading exceptions when marshaller does its dirty deed. NOTE: don't remove this code!!!
-			final List<DataSet> result = query.getResultList();
 			for (DataSet dataSet : result) {
 				dataSet.setPlanes(new ArrayList<DataSetPlanes>());
 			}

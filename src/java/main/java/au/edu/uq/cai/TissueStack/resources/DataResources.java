@@ -84,8 +84,10 @@ public final class DataResources extends AbstractRestfulMetaInformation {
 			@Description("Optional Paramter 'max_records': start record for pagination. Defaults to" + MAX_RECORDS + ".")
 			@QueryParam("max_records") String maxRecords,
 			@Description("Optional Paramter 'description': a filter expression which is searched for in the records' description column")
-			@QueryParam("description") String description) {
-		return this.getDataSetsAsJson(offset, maxRecords, description);
+			@QueryParam("description") String description,
+			@Description("Optional Paramter 'include_plane_data': queries and returns associated plane data as well. Defaults to false.")
+			@QueryParam("include_plane_data") String includePlaneData) {
+		return this.getDataSetsAsJson(offset, maxRecords, description, includePlaneData);
 	}
 
 	@Path("/list/json")
@@ -98,8 +100,10 @@ public final class DataResources extends AbstractRestfulMetaInformation {
 			@Description("Optional Paramter 'max_records': start record for pagination. Defaults to" + MAX_RECORDS + ".")
 			@QueryParam("max_records") String maxRecords,
 			@Description("Optional Paramter 'description': a filter expression which is searched for in the records' description column")
-			@QueryParam("description") String description) {
-		final List<DataSet> result = this.getAllDataSetsPaginated(offset, maxRecords, description);
+			@QueryParam("description") String description,
+			@Description("Optional Paramter 'include_plane_data': queries and returns associated plane data as well. Defaults to false.")
+			@QueryParam("include_plane_data") String includePlaneData) {
+		final List<DataSet> result = this.getAllDataSetsPaginated(offset, maxRecords, description, includePlaneData);
 		if (result.isEmpty()) {
 			return new Response(new NoResults());
 		}
@@ -116,11 +120,13 @@ public final class DataResources extends AbstractRestfulMetaInformation {
 			@Description("Optional Paramter 'max_records': start record for pagination. Defaults to" + MAX_RECORDS + ".")
 			@QueryParam("max_records") String maxRecords,
 			@Description("Optional Paramter 'description': a filter expression which is searched for in the records' description column")
-			@QueryParam("description") String description) {
-		return this.getAllDataSetsPaginated(offset, maxRecords, description);
+			@QueryParam("description") String description,
+			@Description("Optional Paramter 'include_plane_data': queries and returns associated plane data as well. Defaults to false.")
+			@QueryParam("include_plane_data") String includePlaneData) {
+		return this.getAllDataSetsPaginated(offset, maxRecords, description, includePlaneData);
 	}
 	
-	private List<DataSet> getAllDataSetsPaginated(String offset, String maxRecords, String description) {
+	private List<DataSet> getAllDataSetsPaginated(String offset, String maxRecords, String description, String includePlaneData) {
 		int offsetAsInt = 0;
 		if (offset != null) {
 			try {
@@ -151,7 +157,9 @@ public final class DataResources extends AbstractRestfulMetaInformation {
 			description = description.trim();
 		}
 		
-		return DataSetDataProvider.getDataSets(offsetAsInt, maxRecordsAsInt, description);
+		boolean includePlaneDataAsBoolean = Boolean.parseBoolean(includePlaneData);
+		
+		return DataSetDataProvider.getDataSets(offsetAsInt, maxRecordsAsInt, description, includePlaneDataAsBoolean);
 	}
 
 	
