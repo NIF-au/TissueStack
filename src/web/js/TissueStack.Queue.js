@@ -37,7 +37,7 @@ TissueStack.Queue.prototype = {
 			}
 			
 			// double check if we are obsolete already
-			if (_this.presentlyQueuedZoomLevelAndSlice !== ('' + latestRequest.zoom_level + '_' + latestRequest.slice)) {
+			if (_this.presentlyQueuedZoomLevelAndSlice !== (_this.canvas.data_extent.id + latestRequest.zoom_level + '_' + latestRequest.slice)) {
 				_this.clearRequestQueue();
 				_this.stopQueue();
 				return;
@@ -61,8 +61,8 @@ TissueStack.Queue.prototype = {
 	addToQueue : function(draw_request) {
 		// we have no existing queue for the zoom level and slice =>
 		// this means: A) we have to create it AND B) we have to empty the queue to get rid of old requests
-		if (this.presentlyQueuedZoomLevelAndSlice !== ('' + draw_request.zoom_level + '_' + draw_request.slice)) {
-			this.presentlyQueuedZoomLevelAndSlice = '' + draw_request.zoom_level + '_' + draw_request.slice;
+		if (this.presentlyQueuedZoomLevelAndSlice !== (this.canvas.data_extent.id + draw_request.zoom_level + '_' + draw_request.slice)) {
+			this.presentlyQueuedZoomLevelAndSlice = this.canvas.data_extent.id + draw_request.zoom_level + '_' + draw_request.slice;
 			this.requests = [];
 		}
 		

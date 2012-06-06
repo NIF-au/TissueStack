@@ -160,23 +160,25 @@ TissueStack.Utils = {
 			return;
 		}
 		
+		// get screen dimensions
 		var screenWidth = $(document).width();
 		var screenHeight = $(document).	height();
-
-		// mobile version dimension dynamic changes
 		TissueStack.canvasDimensions = {width: Math.floor(screenWidth * 0.70), height: Math.floor(screenHeight * 0.75)};
-		$('.coords_show_left').css({"width" : Math.floor(screenWidth * 0.20)});
-		$('.coords_show_right').css({"height": TissueStack.canvasDimensions.height});
-		$('.canvaslocate').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height});
-		$('#main_view_canvas').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height});
-		$('canvas').attr("width", TissueStack.canvasDimensions.width);
-		$('canvas').attr("height", TissueStack.canvasDimensions.height);
+		
+		
+		$('.left_panel').css({"width" : Math.floor(screenWidth * 0.20)});
+		$('.right_panel').css({"height": TissueStack.canvasDimensions.height});
+		
+		$('.dataset').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height});
+		$('#dataset_1 .main_view').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height});
+		$('#dataset_1 .main_view canvas').attr("width", TissueStack.canvasDimensions.width);
+		$('#dataset_1 .main_view canvas').attr("height", TissueStack.canvasDimensions.height);
 
 		// additional desktop version dimension changes
 		var sideCanvasDims = {width: Math.floor(TissueStack.canvasDimensions.width * 0.3), height: Math.floor(TissueStack.canvasDimensions.height * 0.2)};
-		$('#left_side_view_canvas').css({"width" : sideCanvasDims.width, "height" : sideCanvasDims.height});
-		$('#right_side_view_canvas').css({"width" : sideCanvasDims.width, "height" : sideCanvasDims.height});
-		$('.canvaslocate .side_canvas').attr("width", sideCanvasDims.width);
-		$('.canvaslocate .side_canvas').attr("height", sideCanvasDims.height);
+		$('.left_side_view').css({"width" : sideCanvasDims.width, "height" : sideCanvasDims.height});
+		$('.right_side_view').css({"width" : sideCanvasDims.width, "height" : sideCanvasDims.height});
+		$('.left_side_view canvas').attr("width", sideCanvasDims.width);
+		$('.right_side_view canvas').attr("height", sideCanvasDims.height);
 	}
 };

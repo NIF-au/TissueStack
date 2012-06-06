@@ -26,7 +26,6 @@ TissueStack.Canvas.prototype = {
 	cross_x : 0,
 	cross_y : 0,
 	queue : null,
-	sync_canvases : true,
 	color_map : "grey",
 	setDataExtent : function (data_extent) {
 		if (typeof(data_extent) != "object") {
@@ -202,6 +201,7 @@ TissueStack.Canvas.prototype = {
 		if (coords.z) {
 			this.data_extent.slice = coords.z;
 		}
+
 		this.queue.drawLowResolutionPreview(now);
 		this.queue.drawRequestAfterLowResolutionPreview(null,now);
 

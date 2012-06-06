@@ -117,14 +117,14 @@ TissueStack.BindUniqueEvents = function () {
 			var startPos = "canvas_".length;
 			var sideViewPlaneId = plane.substring(startPos, startPos + 1);
 			
-			plane = TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray($("#main_view_canvas").attr("class").split(" "), "^canvas_");
+			plane = TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray($("#dataset_1 .main_view").attr("class").split(" "), "^canvas_");
 			if (!plane) {
 				return;
 			}
 			var mainViewPlaneId = plane.substring(startPos, startPos + 1);
 			
 			// with the id we get the can get the main canvas and the side canvas and swap them, including their dimensions and zoom levels
-			var mainCanvas = $("#main_view_canvas");
+			var mainCanvas = $("#dataset_1 .main_view");
 			var mainCanvasChildren = mainCanvas.children("canvas");
 			if (!mainCanvasChildren || mainCanvasChildren.length == 0) {
 				return;
@@ -137,7 +137,7 @@ TissueStack.BindUniqueEvents = function () {
 			}
 			var sideCanvasId = event.target.id.substring(0, startPos);
 			
-			var sideCanvas = $("#" + sideCanvasId + "_canvas");
+			var sideCanvas = $("#dataset_1 ." + sideCanvasId);
 			var sideCanvasChildren = sideCanvas.children("canvas");
 			if (!sideCanvasChildren || sideCanvasChildren.length == 0) {
 				return;
@@ -175,8 +175,8 @@ TissueStack.BindUniqueEvents = function () {
 			// remember change in class
 			$("#" + event.target.id).addClass("canvas_" + mainViewPlaneId);
 			$("#" + event.target.id).removeClass("canvas_" + sideViewPlaneId);
-			$("#main_view_canvas").addClass("canvas_" + sideViewPlaneId);
-			$("#main_view_canvas").removeClass("canvas_" + mainViewPlaneId);
+			$("#dataset_1 .main_view").addClass("canvas_" + sideViewPlaneId);
+			$("#dataset_1 .main_view").removeClass("canvas_" + mainViewPlaneId);
 			$("#canvas_main_slider").addClass("canvas_" + sideViewPlaneId);
 			$("#canvas_main_slider").removeClass("canvas_" + mainViewPlaneId);
 			// swap slice dimension values
@@ -198,7 +198,7 @@ TissueStack.BindUniqueEvents = function () {
 		$('#center_point_in_canvas').bind("click", function() {
 			
 			var plane =
-				TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray($("#main_view_canvas").attr("class").split(" "), "^canvas_");
+				TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray($("#dataset_1 .main_view").attr("class").split(" "), "^canvas_");
 			if (!plane) {
 				return;
 			}
@@ -224,8 +224,9 @@ TissueStack.BindUniqueEvents = function () {
 			if (plane.getDataExtent().worldCoordinatesTransformationMatrix) {
 				givenCoords = plane.getDataExtent().getPixelForWorldCoordinates(givenCoords);
 			}
+
 			plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords);
-			plane.events.changeSliceForPlane(plane.getDataExtent().slice);
+			
 			var slider = $("#canvas_main_slider");
 			if (slider) {
 				slider.val(givenCoords.z);
