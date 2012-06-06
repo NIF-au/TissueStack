@@ -21,7 +21,7 @@ TissueStack.DataSetNavigation.prototype = {
 				treeData[counter] = 
 					{title: dataSet.local_id + '@' +dataSet.host,
 						key: dataSet.id,
-						tooltip: (dataSet.description ? "Description " + dataSet.description : "") 
+						tooltip: (dataSet.description ? "Description: " + dataSet.description : "") 
 							+ "\nFile: " + dataSet.filename,
 						select: true,
 						expand: false

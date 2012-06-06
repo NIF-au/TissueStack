@@ -24,6 +24,11 @@ TissueStack.InitUserInterface = function () {
 	// TODO: make it flexible
 	var firstDataSet = TissueStack.dataSetStore.getDataSetByIndex(0);
 	
+	if (!firstDataSet.data || firstDataSet.data.length == 0) {
+		alert("Data set '" + firstDataSet.id + "' does not have any planes associated with it!");
+		return; 
+	}
+	
 	// loop over all planes in the data, create canvas and extent objects, then display them
 	for (var i=0; i < firstDataSet.data.length; i++) {
 		var dataForPlane = firstDataSet.data[i];
