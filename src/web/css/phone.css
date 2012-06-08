@@ -91,10 +91,10 @@ body{
 								background-image: none !important;
 							}
 							a.menuBtn{
-								background: transparent url(../images/phone/menuBgT.png) top left no-repeat !important;
+								background: transparent url(../images/phone/menuBgNEW.png) top left no-repeat !important;
 								width:24px;
-								height:21px;
-								background-size: 24px 21px;
+								height:30px;
+								background-size: 24px 30px;
 								text-indent:-999em !important;
 								display:block !important;
 								-webkit-box-shadow: 0 0px 0 rgba(150,150,150,.3) !important;
@@ -185,4 +185,30 @@ body{
 	border:solid #eaeaea 1px;
 	padding:10px;
 	-webkit-box-shadow: 0px 1px 0px 0px rgba(150, 150, 150, 0.6);
+}
+
+/*Canvas View*/
+.canvasLevel{
+	text-align: center; 
+	font-size: 10px; 
+	width:310px;
+}
+.canvasBox{
+	position: relative; 
+	left: 0px; 
+	top: 0px; 
+	width: 300px; 
+	height:300px;	
+}
+.canvasView{
+	position: absolute; 
+	left: 0px; 
+	top: 0px; 
+	z-index: 749;
+}
+.canvasViewOverlay{
+	position: absolute; 
+	left: 0px; 
+	top: 0px; 
+	z-index: 1549;
 }

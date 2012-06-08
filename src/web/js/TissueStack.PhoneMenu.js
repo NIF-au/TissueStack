@@ -28,7 +28,8 @@ TissueStack.PhoneMenu = function() {
 				  }
 			});
 			
-			$('.pages').live("swiperight", function(){
+			//Slide on header to get menu
+			$('.headers').live("swiperight", function(){
 				if (!menuStatus){	
 				$(".ui-page-active").animate({
 					marginLeft: "165px",
