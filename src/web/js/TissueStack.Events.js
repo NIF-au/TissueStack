@@ -1,8 +1,12 @@
 TissueStack.Events = function(canvas) {
 	this.canvas = canvas;
 	this.registerCommonEvents();
-	this.registerDesktopEvents();
-	this.registerMobileEvents();
+	if (TissueStack.desktop || TissueStack.debug) {
+		this.registerDesktopEvents();
+	}
+	if (TissueStack.tablet || TissueStack.phone) {
+		this.registerMobileEvents();
+	}
 };
 
 TissueStack.Events.prototype = {
@@ -38,15 +42,15 @@ TissueStack.Events.prototype = {
 		});
 
 		// SYNC
-		$(document).bind("sync", function(e, timestamp, action, plane, zoom_level, slice, coords, max_coords_of_event_triggering_plane, upperLeftCorner, crossCoords, canvasDims) {
+		$(document).bind("sync", function(e, data_id, dataset_id, timestamp, action, plane, zoom_level, slice, coords, max_coords_of_event_triggering_plane, upperLeftCorner, crossCoords, canvasDims) {
 			// call sync
-			_this.sync(e, timestamp, action, plane, zoom_level, slice, coords, max_coords_of_event_triggering_plane, upperLeftCorner, crossCoords, canvasDims);
+			_this.sync(e,  data_id, dataset_id, timestamp, action, plane, zoom_level, slice, coords, max_coords_of_event_triggering_plane, upperLeftCorner, crossCoords, canvasDims);
 		});
 
 		// SYNC for ZOOM
-		$(document).bind("zoom", function(e, timestamp, action, plane, zoom_level, slice) {
+		$(document).bind("zoom", function(e,  data_id, dataset_id, timestamp, action, plane, zoom_level, slice) {
 			// call sync zoom
-			_this.sync_zoom(e, timestamp, action, plane, zoom_level, slice);
+			_this.sync_zoom(e,  data_id, dataset_id, timestamp, action, plane, zoom_level, slice);
 		});
 				
 	}, registerMobileEvents: function() {
@@ -141,7 +145,33 @@ TissueStack.Events.prototype = {
 			}
 		}, function() {
 			TissueStack.Utils.forceWindowScrollY = -1;
-		});		
+		});	
+	}, unbindAllEvents : function() {
+		// UNBIND COMMON EVENTS
+		$(document).unbind("touchend mouseup");
+		this.getCanvasElement().unbind("click");
+		$(document).unbind("sync");
+		$(document).unbind("zoom");
+		
+		// UNBIND DESKTOP VERSION EVENTS
+		if (TissueStack.desktop) {
+			this.getCanvasElement().unbind("mousedown");			
+			this.getCanvasElement().unbind("mousemove");
+			this.getCanvasElement().unbind('mousewheel');
+			
+			return;
+		}
+
+		// UNBIND MOBILE VERSION EVENTS
+		if (TissueStack.tablet || TissueStack.phone) {
+			this.getCanvasElement().unbind("touchstart");			
+			this.getCanvasElement().unbind("touchmove");
+			this.getCanvasElement().unbind('gesturestart');
+			this.getCanvasElement().unbind('gestureend');
+			this.getCanvasElement().unbind('doubletap');
+			
+			return;
+		}
 	},panStart : function(e) {
 		var coords = TissueStack.Utils.getRelativeMouseCoords(e);
 		
@@ -176,7 +206,10 @@ TissueStack.Events.prototype = {
 			
 			// queue events 
 			this.canvas.queue.addToQueue(
-					{	timestamp : now,
+					{	
+						data_id : this.canvas.data_extent.data_id,
+						dataset_id : this.canvas.dataset_id,	 
+						timestamp : now,
 						action: 'PAN',
 						plane: this.canvas.getDataExtent().plane,
 						zoom_level : this.canvas.getDataExtent().zoom_level,
@@ -190,7 +223,9 @@ TissueStack.Events.prototype = {
 			
 			// send message out to others that they need to redraw as well
 			this.canvas.getCanvasElement().trigger("sync", 
-						[	now,
+						[	this.canvas.data_extent.data_id,
+						 	this.canvas.dataset_id,	 
+						 	now,
 						 	'PAN',
 						 	this.canvas.getDataExtent().plane,
 						 	this.canvas.getDataExtent().zoom_level,
@@ -214,7 +249,9 @@ TissueStack.Events.prototype = {
 		
 		// queue events 
 		this.canvas.queue.addToQueue(
-				{	timestamp : now,
+				{	data_id : this.canvas.data_extent.data_id,
+					dataset_id : this.canvas.dataset_id,	 
+					timestamp : now,
 					action: 'PAN',
 					plane: this.canvas.getDataExtent().plane,
 					zoom_level : this.canvas.getDataExtent().zoom_level,
@@ -228,7 +265,9 @@ TissueStack.Events.prototype = {
 		
 		// send message out to others that they need to redraw as well
 		this.canvas.getCanvasElement().trigger("sync", 
-					[	now,
+					[	this.canvas.data_extent.data_id,
+					 	this.canvas.dataset_id,	 
+					 	now,
 					 	'SLICE',
 					 	this.canvas.getDataExtent().plane,
 					 	this.canvas.getDataExtent().zoom_level,
@@ -257,7 +296,10 @@ TissueStack.Events.prototype = {
 		this.updateCoordinateDisplay(coords);
 		
 		// send message out to others that they need to redraw as well
-		this.canvas.getCanvasElement().trigger("sync", [now,
+		this.canvas.getCanvasElement().trigger("sync",
+								[this.canvas.data_extent.data_id,
+								 this.canvas.dataset_id,	 
+								 now,
 								'CLICK',
 								this.canvas.getDataExtent().plane,
 								this.canvas.getDataExtent().zoom_level,
@@ -268,7 +310,7 @@ TissueStack.Events.prototype = {
 		                        cross_coords,
 		                        canvas_dims
 		                       ]);
-	}, sync : function(e, timestamp, action, plane, zoom_level, slice, coords, max_coords_of_event_triggering_plane, upperLeftCorner, crossCoords, canvasDims) {
+	}, sync : function(e, data_id, dataset_id, timestamp, action, plane, zoom_level, slice, coords, max_coords_of_event_triggering_plane, upperLeftCorner, crossCoords, canvasDims) {
 		// ignore one's own events
 		var thisHerePlane = this.canvas.getDataExtent().plane;
 		if (thisHerePlane === plane) {
@@ -277,7 +319,9 @@ TissueStack.Events.prototype = {
 		
 		// queue events 
 		this.canvas.queue.addToQueue(
-				{	timestamp : timestamp,
+				{	data_id : data_id,
+					dataset_id : dataset_id,	 
+					timestamp : timestamp,
 					action : action,
 					plane: plane,
 					zoom_level : zoom_level,
@@ -304,7 +348,9 @@ TissueStack.Events.prototype = {
 		var now = new Date().getTime();
 		
 		this.canvas.queue.addToQueue(
-				{	timestamp : now,
+				{	data_id : this.canvas.data_extent.data_id,
+					dataset_id : this.canvas.dataset_id,	 
+					timestamp : now,
 					action : "ZOOM",
 					plane: this.canvas.getDataExtent().plane,
 					zoom_level : newZoomLevel,
@@ -312,7 +358,7 @@ TissueStack.Events.prototype = {
 					
 				});
 		event.stopPropagation();
-	}, sync_zoom : function(e, timestamp, action, plane, zoom_level, slice) {
+	}, sync_zoom : function(e, data_id, dataset_id, timestamp, action, plane, zoom_level, slice) {
 		// ignore one's own events
 		var thisHerePlane = this.canvas.getDataExtent().plane;
 		if (thisHerePlane === plane) {
@@ -320,7 +366,9 @@ TissueStack.Events.prototype = {
 		}
 
 		this.canvas.queue.addToQueue(
-				{	timestamp : timestamp,
+				{	data_id : this.canvas.data_extent.data_id,
+					dataset_id : this.canvas.dataset_id,	 
+					timestamp : timestamp,
 					action : action,
 					plane: plane,
 					zoom_level : zoom_level,

@@ -91,7 +91,7 @@ TissueStack.Utils = {
 			return;
 		}
 
-		// use sylvester library since we also want to go the opposite way which requires the inverse which I don't want to code.
+		// use adjustScreenContentToActualScreenSizesylvester library since we also want to go the opposite way which requires the inverse which I don't want to code.
 		transformationMatrix = Matrix.create(transformationMatrix).inverse();
 		worldVector = Vector.create(worldVector);
 		
@@ -155,30 +155,41 @@ TissueStack.Utils = {
 			// no data: 255
 			TissueStack.indexed_color_maps[map][255] = [255, 255, 255];
 		}
-	},adjustScreenContentToActualScreenSize : function (){	
-		if (!TissueStack || TissueStack.phone) {
+	},adjustScreenContentToActualScreenSize : function (datasets){	
+		if (TissueStack.phone) {
 			return;
+		}
+		
+		if (typeof(datasets) != "number") {
+			datasets = 1;
+		}
+		if (datasets > 2) {
+			datasets = 2;
 		}
 		
 		// get screen dimensions
 		var screenWidth = $(document).width();
 		var screenHeight = $(document).	height();
-		TissueStack.canvasDimensions = {width: Math.floor(screenWidth * 0.70), height: Math.floor(screenHeight * 0.75)};
+		TissueStack.canvasDimensions = {width: Math.floor(screenWidth * 0.70), height: Math.floor(screenHeight * 0.90 / datasets)};
 		
 		
-		$('.left_panel').css({"width" : Math.floor(screenWidth * 0.20)});
+		$('.left_panel').css({"width" : Math.floor(screenWidth * 0.20), "height": screenHeight});
 		$('.right_panel').css({"height": TissueStack.canvasDimensions.height});
-		
+
 		$('.dataset').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height});
-		$('#dataset_1 .main_view').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height});
-		$('#dataset_1 .main_view canvas').attr("width", TissueStack.canvasDimensions.width);
-		$('#dataset_1 .main_view canvas').attr("height", TissueStack.canvasDimensions.height);
+		for (var x=1;x<=datasets;x++) {
+			$('#dataset_' + x + '_main_view_canvas').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height});
+			$('#dataset_' + x + '_main_view_canvas canvas').attr("width", TissueStack.canvasDimensions.width);
+			$('#dataset_' + x + '_main_view_canvas canvas').attr("height", TissueStack.canvasDimensions.height);
+		}
 
 		// additional desktop version dimension changes
 		var sideCanvasDims = {width: Math.floor(TissueStack.canvasDimensions.width * 0.3), height: Math.floor(TissueStack.canvasDimensions.height * 0.2)};
 		$('.left_side_view').css({"width" : sideCanvasDims.width, "height" : sideCanvasDims.height});
 		$('.right_side_view').css({"width" : sideCanvasDims.width, "height" : sideCanvasDims.height});
 		$('.left_side_view canvas').attr("width", sideCanvasDims.width);
+		$('.left_side_view canvas').attr("height", sideCanvasDims.height);
+		$('.right_side_view canvas').attr("width", sideCanvasDims.width);
 		$('.right_side_view canvas').attr("height", sideCanvasDims.height);
 	}
 };

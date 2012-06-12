@@ -1,7 +1,8 @@
-TissueStack.Canvas = function(data_extent, canvas_id) {
+TissueStack.Canvas = function(data_extent, canvas_id, dataset_id) {
 	
+	this.dataset_id = typeof(dataset_id) != "string" ? "" : dataset_id;
 	this.setDataExtent(data_extent);
-	this.setCanvasElement(canvas_id);
+	this.setCanvasElement(this.dataset_id == "" ? canvas_id : (this.dataset_id + "_" + canvas_id));
 	// set dimensions
 	var tmpCanvasElement = this.getCanvasElement()[0];
 	this.setDimensions(tmpCanvasElement.width, tmpCanvasElement.height);
@@ -13,7 +14,8 @@ TissueStack.Canvas = function(data_extent, canvas_id) {
 
 TissueStack.Canvas.prototype = {
 	data_extent: null,
-	canvas_id: "canvas_" + this.plane, 
+	dataset_id: "",
+	canvas_id: this.dataset_id + "canvas_" + this.plane, 
 	image_format: 'png',
 	mouse_down : false,
 	isDragging : false,
@@ -32,6 +34,8 @@ TissueStack.Canvas.prototype = {
 			throw new Error("we miss a data_extent");
 		}
 		this.data_extent = data_extent;
+		// store reference back
+		this.data_extent.canvas = this;
 	},
 	setCanvasElement : function(canvas_id) {
 		if (canvas_id && (typeof(canvas_id) != "string" || canvas_id.length == 0)) {
@@ -212,7 +216,9 @@ TissueStack.Canvas.prototype = {
 		}
 		
 		// send message out to others that they need to redraw as well
-		canvas.trigger("sync", [now,
+		canvas.trigger("sync", [this.data_extent.data_id,
+		                        this.dataset_id,
+		                        now,
 								'POINT',
 		                        this.getDataExtent().plane,
 		                        this.getDataExtent().zoom_level,

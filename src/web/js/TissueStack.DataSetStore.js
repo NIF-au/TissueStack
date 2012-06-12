@@ -25,6 +25,7 @@ TissueStack.DataSetStore.prototype = {
 			if (counter == index) {
 				return this.datasets[key];
 			}
+			counter++;
 		}
 	},
 	addDataSetToStore : function(dataSet, host, isImageService) {

@@ -1,4 +1,5 @@
 TissueStack = {
+		debug: true,
 		phone: false,
 		tile_directory : "tiles/",
 		color_maps : {

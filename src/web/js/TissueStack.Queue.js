@@ -37,7 +37,7 @@ TissueStack.Queue.prototype = {
 			}
 			
 			// double check if we are obsolete already
-			if (_this.presentlyQueuedZoomLevelAndSlice !== (_this.canvas.data_extent.id + latestRequest.zoom_level + '_' + latestRequest.slice)) {
+			if (_this.presentlyQueuedZoomLevelAndSlice !== (latestRequest.dataset_id + "_" + latestRequest.data_id + "_" + latestRequest.zoom_level + '_' + latestRequest.slice)) {
 				_this.clearRequestQueue();
 				_this.stopQueue();
 				return;
@@ -46,9 +46,10 @@ TissueStack.Queue.prototype = {
 			_this.latestDrawRequestTimestamp = latestRequest.timestamp;
 			_this.clearRequestQueue();
 			
-			_this.prepareDrawRequest(latestRequest);
-			_this.drawLowResolutionPreview(_this.latestDrawRequestTimestamp);
-			_this.drawRequestAfterLowResolutionPreview(latestRequest);
+			if (_this.prepareDrawRequest(latestRequest)) {
+				_this.drawLowResolutionPreview(_this.latestDrawRequestTimestamp);
+				_this.drawRequestAfterLowResolutionPreview(latestRequest);
+			}
 		}, this.drawingIntervalInMillis , this);
 	},
 	stopQueue : function() {
@@ -61,8 +62,8 @@ TissueStack.Queue.prototype = {
 	addToQueue : function(draw_request) {
 		// we have no existing queue for the zoom level and slice =>
 		// this means: A) we have to create it AND B) we have to empty the queue to get rid of old requests
-		if (this.presentlyQueuedZoomLevelAndSlice !== (this.canvas.data_extent.id + draw_request.zoom_level + '_' + draw_request.slice)) {
-			this.presentlyQueuedZoomLevelAndSlice = this.canvas.data_extent.id + draw_request.zoom_level + '_' + draw_request.slice;
+		if (this.presentlyQueuedZoomLevelAndSlice !== (draw_request.dataset_id + "_" + draw_request.data_id + "_" + draw_request.zoom_level + '_' + draw_request.slice)) {
+			this.presentlyQueuedZoomLevelAndSlice = draw_request.dataset_id + "_" + draw_request.data_id + "_" + draw_request.zoom_level + '_' + draw_request.slice;
 			this.requests = [];
 		}
 		
@@ -73,10 +74,10 @@ TissueStack.Queue.prototype = {
 			this.latestDrawRequestTimestamp = deepCopyOfRequest.timestamp;
 			
 			// work with a deep copy
-			this.prepareDrawRequest(deepCopyOfRequest);
-			
-			this.drawLowResolutionPreview(deepCopyOfRequest.timestamp);
-			this.drawRequestAfterLowResolutionPreview(deepCopyOfRequest);
+			if (this.prepareDrawRequest(deepCopyOfRequest)) {
+				this.drawLowResolutionPreview(deepCopyOfRequest.timestamp);
+				this.drawRequestAfterLowResolutionPreview(deepCopyOfRequest);
+			}
 
 			return;
 		}
@@ -190,17 +191,23 @@ TissueStack.Queue.prototype = {
 		})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height);
 	}, prepareDrawRequest : function(draw_request) {
 		var thisHerePlane = this.canvas.getDataExtent().plane;
+		var thisHereDataSet = this.canvas.dataset_id;
+		
+		// if more than 1 data set is displayed, we stop propagation to the other here !
+		if (thisHereDataSet != draw_request.dataset_id) {
+			return false;
+		}
 
 		// ZOOM CHANGE ACTION
 		if (draw_request.action == 'ZOOM') { // zoom request
 			this.canvas.changeToZoomLevel(draw_request.zoom_level);
-			return;
+			return true;
 		}
 
 		// for all the following actions do only the other planes,
 		// not the plane that triggered the event, otherwise it will get "served" twice !! 
 		if (draw_request.plane === thisHerePlane) { 
-			return;
+			return true;
 		}
 		
 		// SLICE CHANGE ACTION
@@ -236,7 +243,7 @@ TissueStack.Queue.prototype = {
 			} else if (thisHerePlane === 'z' && draw_request.plane === 'x') {
 				this.canvas.moveUpperLeftCorner(deltaX, 0);
 			}
-			return;
+			return true;
 		}
 		
 		// POINT FOCUS ACTION
@@ -364,6 +371,8 @@ TissueStack.Queue.prototype = {
 					this.canvas.upper_left_x ,
 					((draw_request.max_coords_of_event_triggering_plane.max_x - 1) + draw_request.upperLeftCorner.x + ((this.canvas.dim_y - this.canvas.cross_y) - draw_request.crossCoords.x)));
 		}
+		
+		return true;
 	}, drawRequest : function(draw_request) {
 		if (draw_request.action == 'ZOOM' || draw_request.action == 'SLICE') {
 			this.canvas.eraseCanvasContent();

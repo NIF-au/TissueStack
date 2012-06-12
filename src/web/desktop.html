@@ -63,7 +63,8 @@
      	    		<input size="8" maxlength="10" type="text" id="canvas_point_x" value="0"/>
      	    		<input size="8" maxlength="10" type="text" id="canvas_point_y" value="0"/>
      	    		<input size="8" maxlength="10" type="text" id="canvas_point_z" value="0"/>
-     	    		<button type="button" id="center_point_in_canvas">Center Coordinates</button>
+     	    		<button type="button" id="dataset_1_center_point_in_canvas">Center Coordinates For Data Set 1</button>
+     	    		<button type="button" id="dataset_2_center_point_in_canvas">Center Coordinates For Data Set 2</button>
      	    		<hr />
 
      	    		<!--ADD TREE DATA SET NAVI BAR-->
@@ -75,43 +76,52 @@
      	    	
      	    	</div>
      	    	
-     	    	<div id="dataset_1" class="dataset">
-     	    		<div class="main_view canvasview canvas_y" >
-     	    			<canvas id="canvas_y_plane" class="plane"></canvas>	
-     	    			<canvas id="canvas_y_plane_cross_overlay" class="cross_overlay"></canvas>
-					</div>
-						<div class="left_side_view ui-bar-a">     	    			
-							<img id="left_side_view_maximize" class="canvas_x maximize_view_icon" src="images/maximize.png" alt="Maximize View" />
-							<canvas id="canvas_x_plane" class="side_canvas"></canvas>
-							<canvas id="canvas_x_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>
+     	    	<div>
+	     	    	<div id="dataset_1" class="dataset">
+	     	    		<div id="dataset_1_main_view_canvas" class="canvasview canvas_y" >
+	     	    			<canvas id="dataset_1_canvas_y_plane" class="plane"></canvas>	
+	     	    			<canvas id="dataset_1_canvas_y_plane_cross_overlay" class="cross_overlay"></canvas>
 						</div>
-			     	  	<div class="right_side_view ui-bar-a">
-							<img id="right_side_view_maximize" class="maximize_view_icon canvas_z" src="images/maximize.png" alt="Maximize View" />
-							<canvas id="canvas_z_plane" class="side_canvas"></canvas>
-							<canvas id="canvas_z_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>
-						</div>					     	    			
-     	    	</div>
-
-                <div id="dataset_2" class="dataset" style="display:none; visibility: false;">
-                    <div class="main_view canvasview canvas_y" >
-                        <canvas id="canvas_y_plane" class="plane"></canvas> 
-                        <canvas id="canvas_y_plane_cross_overlay" class="cross_overlay"></canvas>
-                    </div>
-                        <div class="left_side_view ui-bar-a">                       
-                            <img id="left_side_view_maximize" class="canvas_x maximize_view_icon" src="images/maximize.png" alt="Maximize View" />
-                            <canvas id="canvas_x_plane" class="side_canvas"></canvas>
-                            <canvas id="canvas_x_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>
-                        </div>
-                        <div class="right_side_view ui-bar-a">
-                            <img id="right_side_view_maximize" class="maximize_view_icon canvas_z" src="images/maximize.png" alt="Maximize View" />
-                            <canvas id="canvas_z_plane" class="side_canvas"></canvas>
-                            <canvas id="canvas_z_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>
-                        </div>                                          
-                </div>
+							<div id="dataset_1_left_side_view_canvas" class="left_side_view ui-bar-a">     	    			
+								<img id="dataset_1_left_side_view_maximize" class="canvas_x maximize_view_icon" src="images/maximize.png" alt="Maximize View" />
+								<canvas id="dataset_1_canvas_x_plane" class="side_canvas"></canvas>
+								<canvas id="dataset_1_canvas_x_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>
+							</div>
+				     	  	<div id="dataset_1_right_side_view_canvas" class="right_side_view ui-bar-a">
+								<img id="dataset_1_right_side_view_maximize" class="canvas_z maximize_view_icon" src="images/maximize.png" alt="Maximize View" />
+								<canvas id="dataset_1_canvas_z_plane" class="side_canvas"></canvas>
+								<canvas id="dataset_1_canvas_z_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>
+							</div>
+												     	    			
+	     	    	</div>
      	    	
-		     	<div class="right_panel">
-		     		<input id="canvas_main_slider" class="canvasslider canvas_y" type="range" min="0" max="1000" value="500" step="1" orientation="vertical"  />
-		     	</div>										
+	     	    	<div id="dataset_1_right_panel" class="right_panel">
+	                    <input id="dataset_1_canvas_main_slider" class="canvasslider canvas_y" type="range" min="0" max="1000" value="500" step="1" orientation="vertical"  />
+	                </div>                                      
+     	    	
+                    
+	               <div id="dataset_2" class="dataset hidden">
+	                   <div id="dataset_2_main_view_canvas" class="canvasview canvas_y" >
+	                       <canvas id="dataset_2_canvas_y_plane" class="plane"></canvas> 
+	                       <canvas id="dataset_2_canvas_y_plane_cross_overlay" class="cross_overlay"></canvas>
+	                   </div>
+	                       <div  id="dataset_2_left_side_view_canvas" class="left_side_view ui-bar-a">                       
+	                           <img id="dataset_2_left_side_view_maximize" class="canvas_x maximize_view_icon" src="images/maximize.png" alt="Maximize View" />
+	                           <canvas id="dataset_2_canvas_x_plane" class="side_canvas"></canvas>
+	                           <canvas id="dataset_2_canvas_x_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>
+	                       </div>
+	                       <div id="dataset_2_right_side_view_canvas" class="right_side_view ui-bar-a">
+	                           <img id="dataset_2_right_side_view_maximize" class="canvas_z maximize_view_icon" src="images/maximize.png" alt="Maximize View" />
+	                           <canvas id="dataset_2_canvas_z_plane" class="side_canvas"></canvas>
+	                           <canvas id="dataset_2_canvas_z_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>
+	                       </div>                                          
+	               </div>
+	
+	               <div id="dataset_2_right_panel" class="right_panel hidden">
+	                   <input id="dataset_2_canvas_main_slider" class="canvasslider canvas_y" type="range" min="0" max="1000" value="500" step="1" orientation="vertical"  />
+	               </div>                                      
+
+                </div>     	    	
      	    </div>
      	    
      	    <!--FOOTER -->

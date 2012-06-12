@@ -11,6 +11,7 @@ TissueStack.Extent = function (data_id, zoom_level, plane, max_slices, x, y, zoo
 };
 
 TissueStack.Extent.prototype = {
+	canvas : null,
 	tile_size : 256,	
 	x : 0,
 	y : 0,
@@ -126,7 +127,7 @@ TissueStack.Extent.prototype = {
 			this.slice = Math.ceil(slice / this.zoom_level_factor);
 		}
 
-		var canvasSlider = $("#canvas_" + ((TissueStack.desktop || TissueStack.tablet) ? "main" : this.plane) + "_slider");
+		var canvasSlider = $("#" + (this.canvas.dataset_id == "" ? "canvas_" : this.canvas.dataset_id + "_canvas_") + ((TissueStack.desktop || TissueStack.tablet) ? "main" : this.plane) + "_slider");
 		var mainCanvas = this.plane;
 		
 		var planeId = 
