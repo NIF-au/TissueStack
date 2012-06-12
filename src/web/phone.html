@@ -56,21 +56,21 @@
 </div>
 
 	<div data-role="page" class="pages" id="home" data-theme="a">
-		<div data-role="header">
+		<div data-role="header" class="headers">
 			<a href="#" class="showMenu menuBtn">Menu</a>
 				<h1>Dashboard</h1>
 		</div><!-- /header -->
 		<div data-role="content">
 				<div style="text-align: center" data-role="fieldcontain">
 				    <fieldset data-role="controlgroup">		
-						<input type="radio" name="color_map" id="radio-choice-1" value="grey" checked="checked" />
-			         	<label for="radio-choice-1">Grey</label>
+						<input type="radio" name="color_map" id="radio-grey" value="grey" checked="checked" />
+			         	<label for="radio-grey">Grey</label>
 			
-			         	<input type="radio" name="color_map" id="radio-choice-2" value="hot"  />
-			         	<label for="radio-choice-2">Hot</label>
+			         	<input type="radio" name="color_map" id="radio-hot" value="hot"  />
+			         	<label for="radio-hot">Hot</label>
 			
-			         	<input type="radio" name="color_map" id="radio-choice-3" value="spectral"  />
-			         	<label for="radio-choice-3">Spectral</label>
+			         	<input type="radio" name="color_map" id="radio-spectral" value="spectral"  />
+			         	<label for="radio-spectral">Spectral</label>
 					</fieldset>
 				</div>
 			
@@ -85,17 +85,17 @@
 	<!--Tissue X Page-->
 	
 	<div data-role="page" class="pages" id="tissueX" data-theme="a">
-		<div data-role="header">
+		<div data-role="header" class="headers">
 		<a href="#" class="showMenu menuBtn">Menu</a>
-			<h1>X</h1>
+			<h1>X Plane</h1>
 		</div><!-- /header -->
 	
 		<div data-role="content">
-			<div id="canvas_x_extent" style="text-align: center; font-size: 10px; width:310px"></div><br />				
+			<div id="canvas_x_extent" class="canvasLevel"></div><br />				
 			<div class="boxgrid captionfull" style="text-align: center;margin: -5px;">
-					<div style="position: relative; left: 0px; top: 0px; width: 300px; height:300px;">
-						<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_x_plane"></canvas>
-						<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_x_plane_cross_overlay"></canvas>
+					<div class="canvasBox">
+						<canvas class="canvasView" width="300" height="300" id="canvas_x_plane"></canvas>
+						<canvas class="canvasViewOverlay" width="300" height="300" id="canvas_x_plane_cross_overlay"></canvas>
 					</div>
 					<div class="cover boxcaption"> 
 						<div class="coords">&nbsp;</div>
@@ -111,16 +111,16 @@
 	<!--Tissue Y Page-->
 	
 	<div data-role="page" class="pages" id="tissueY" data-theme="a">
-		<div data-role="header">
+		<div data-role="header" class="headers">
 		<a href="#" class="showMenu menuBtn">Menu</a>
-			<h1>Y</h1>
+			<h1>Y Plane</h1>
 		</div><!-- /header -->
 		<div data-role="content">	
-			<div id="canvas_y_extent" style="text-align: center; font-size: 10px; width:310px"></div><br />
+			<div id="canvas_y_extent" class="canvasLevel"></div><br />
 			<div class="boxgrid captionfull" style="text-align: center;margin: -5px;">
-				<div style="position: relative; left: 0px; top: 0px; width: 300px; height:300px;">
-					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_y_plane"></canvas>
-					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_y_plane_cross_overlay"></canvas>
+				<div class="canvasBox">
+					<canvas class="canvasView" width="300" height="300" id="canvas_y_plane"></canvas>
+					<canvas class="canvasViewOverlay" width="300" height="300" id="canvas_y_plane_cross_overlay"></canvas>
 				</div>
 				<div class="cover boxcaption"> 
 					<div class="coords">&nbsp;</div>
@@ -136,16 +136,16 @@
 	<!--Tissue Z Page-->
 
 	<div data-role="page" class="pages" id="tissueZ" data-theme="a">
-		<div data-role="header">
+		<div data-role="header" class="headers">
 		<a href="#" class="showMenu menuBtn">Menu</a>
-			<h1>Z</h1>
+			<h1>Z Plane</h1>
 		</div><!-- /header -->
 		<div data-role="content">
-			<div id="canvas_z_extent" style="text-align: center; font-size: 10px; width:310px"></div><br />
+			<div id="canvas_z_extent" class="canvasLevel"></div><br />
 			<div class="boxgrid captionfull" style="text-align: center; margin: -5px;">  
-				<div style="position: relative; left: 0px; top: 0px; width: 300px; height:300px;">
-					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_z_plane"></canvas>
-					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_z_plane_cross_overlay"></canvas>
+				<div class="canvasBox">
+					<canvas class="canvasView" width="300" height="300" id="canvas_z_plane"></canvas>
+					<canvas class="canvasViewOverlay" width="300" height="300" id="canvas_z_plane_cross_overlay"></canvas>
 				</div>
 				<div class="cover boxcaption"> 
 					<div class="coords">&nbsp;</div>
