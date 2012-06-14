@@ -14,23 +14,35 @@ TissueStack.Init = function (afterLoadingRoutine) {
 	
 	// create data store and load it with backend data
 	TissueStack.dataSetStore = new TissueStack.DataSetStore(afterLoadingRoutine);
+	
+	// handle window resizing
+	$(window).resize(function() {
+		var dataSetCount = TissueStack.dataSetNavigation ? TissueStack.dataSetNavigation.getSelectedDynaTreeNodes().length : 0;
+
+		TissueStack.Utils.adjustScreenContentToActualScreenSize(dataSetCount);
+		// set new canvas dimensions
+		for (var i=0;i<dataSetCount;i++) {
+			var dataSet = TissueStack.dataSetStore.getDataSetByIndex(i);
+			for (var plane in dataSet.planes) {
+				dataSet.planes[plane].resizeCanvas();
+			}
+		}
+	});
 };
 
-TissueStack.InitUserInterface = function (datasets) {
-	// if we received no data sets from the backend, our job is done for now
-	if (TissueStack.dataSetStore.getSize() == 0) {
+TissueStack.InitUserInterface = function () {
+	if (TissueStack.dataSetNavigation.selectedDataSets.count == 0) {
 		return;
 	}
-	
-	if (typeof(datasets) != "object" || typeof(datasets.length) == 'undefined') {
-		alert("Handed in data set is not an array of datasets!");
-		return;
+
+	// get all data sets that have been selected from the store and stuff them into the array for binding its events
+	var datasets = [];
+	for (var x=0;x<TissueStack.dataSetNavigation.selectedDataSets.count;x++) {
+		var selectedKey = TissueStack.dataSetNavigation.selectedDataSets["dataset_" + (x+1)]; 
+		datasets.push(TissueStack.dataSetStore.getDataSetById(selectedKey)); 
 	}
-	if (datasets.length == 0) {
-		alert("No dataset handed in!");
-		return;
-	}
-	
+
+	// determine the maximum number of data sets that are displayed. depends on the type of display
 	var maxDataSets = (TissueStack.phone || TissueStack.tablet) ? 1 : 2;
 	if (maxDataSets > datasets.length) {
 		maxDataSets = datasets.length;
@@ -93,29 +105,28 @@ TissueStack.InitUserInterface = function (datasets) {
 	
 };
 
-
-// TODO: the following lines needs to become more flexible to have new data sets displayed which includes dynamically un/binding events
-TissueStack.BindUniqueEvents = function (datasets) {
-	if (TissueStack.dataSetStore.getSize() ==0) {
+TissueStack.BindUniqueEvents = function () {
+	if (TissueStack.dataSetNavigation.selectedDataSets.count == 0) {
 		return;
 	}
 
-	if (typeof(datasets) != "object" || typeof(datasets.length) == 'undefined') {
-		alert("Handed in data set is not an array of datasets!");
-		return;
-	}
-	if (datasets.length == 0) {
-		alert("No dataset handed in!");
-		return;
+	// get all data sets that have been selected from the store and stuff them into the array for binding its events
+	var datasets = [];
+	for (var x=0;x<TissueStack.dataSetNavigation.selectedDataSets.count;x++) {
+		var selectedKey = TissueStack.dataSetNavigation.selectedDataSets["dataset_" + (x+1)]; 
+		datasets.push(TissueStack.dataSetStore.getDataSetById(selectedKey)); 
 	}
 
+	// determine the maximum number of data sets that are displayed. depends on the type of display
 	var maxDataSets = (TissueStack.phone || TissueStack.tablet) ? 1 : 2;
 	if (maxDataSets > datasets.length) {
 		maxDataSets = datasets.length;
 	}
 
-	// first handle events that are linked to potentially more than 1 data set
-	// DRAWING INTERVAL CHANGE HANDLER 
+	// DRAWING INTERVAL CHANGE HANDLER
+	// avoid potential double binding by un-binding at this stage
+	$('#drawing_interval_button').unbind("click");
+	//rebind
 	$('#drawing_interval_button').bind("click", function() {
 		var newValue = parseInt($('#drawing_interval').val());
 		
@@ -129,6 +140,9 @@ TissueStack.BindUniqueEvents = function (datasets) {
 	});
 	
 	// COLOR MAP CHANGE HANDLER
+	// avoid potential double binding by un-binding at this stage
+	$('input[name="color_map"]').unbind("click");
+	// rebind
 	$('input[name="color_map"]').bind("click", function(e) {
 		for (var x=0;x<maxDataSets;x++) {
 			var dataSet = datasets[x];
@@ -147,6 +161,9 @@ TissueStack.BindUniqueEvents = function (datasets) {
 	
 		// MAXIMIZING SIDE VIEWS
 		if ((TissueStack.desktop || TissueStack.tablet)) {
+			// avoid potential double binding by un-binding at this stage
+			$('#dataset_' + (y+1) + '_left_side_view_maximize, #dataset_' + (y+1) + '_right_side_view_maximize').unbind("click");
+			// rebind
 			$('#dataset_' + (y+1) + '_left_side_view_maximize, #dataset_' + (y+1) + '_right_side_view_maximize').bind("click", [{actualDataSet: dataSet,x: y}], function(event) {
 				// what side view and canvas called for maximization
 				if (!event.target.id || !$("#" + event.target.id).attr("class")) {
@@ -236,12 +253,12 @@ TissueStack.BindUniqueEvents = function (datasets) {
 				event.data[0].actualDataSet.planes[sideViewPlaneId].updateExtentInfo(
 				event.data[0].actualDataSet.planes[sideViewPlaneId].getDataExtent().getExtentCoordinates());
 			});
-		}
 
-		// COORDINATE CENTER FUNCTIONALITY FOR DESKTOP
-		if ((TissueStack.desktop || TissueStack.tablet)) {
+			// COORDINATE CENTER FUNCTIONALITY FOR DESKTOP
+			// avoid potential double binding by un-binding at this stage
+			$('#dataset_' + (y+1) + '_center_point_in_canvas').unbind("click");
+			// rebind
 			$('#dataset_' + (y+1) + '_center_point_in_canvas').bind("click", [{actualDataSet: dataSet,x: y}], function(event) {
-				
 				var plane =
 					TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray(
 							$("#" + (TissueStack.desktop || TissueStack.tablet ? "dataset_" + (event.data[0].x + 1) + "_": "") + "main_view_canvas").attr("class").split(" "), "^canvas_");
@@ -288,17 +305,18 @@ TissueStack.BindUniqueEvents = function (datasets) {
 			}
 			
 			var planeId = null;
-			if ((TissueStack.desktop || TissueStack.tablet)) {
-				var plane =
-					TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray($("#" + sliderId).attr("class").split(" "), "^canvas_");
-				if (!plane) {
-					return;
-				}
-				var startPos = "canvas_".length;
-				planeId = plane.substring(startPos, startPos + 1);
-			} else {
-				planeId = sliderId.substring("canvas_".length, "canvas_".length + 1);
+			if (TissueStack.phone) {
+				return sliderId.substring("canvas_".length, "canvas_".length + 1);
 			}
+			
+			var plane =
+				TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray($("#" + sliderId).attr("class").split(" "), "^canvas_");
+			if (!plane) {
+				return;
+			}
+
+			var startPos = "canvas_".length;
+			planeId = plane.substring(startPos, startPos + 1);
 
 			var dataset_prefixEnd = sliderId.lastIndexOf("_canvas_main_slider");
 			if (dataset_prefixEnd > 0 && sliderId.substring(0,dataset_prefixEnd) != actualDataSet.planes[planeId].dataset_id) {
@@ -320,14 +338,14 @@ TissueStack.BindUniqueEvents = function (datasets) {
 			actualDataSet.planes[id].events.changeSliceForPlane(slice);			
 		};
 		
-		(function(actualDataSet) {
+		(function(actualDataSet, x) {
 			// z dimension slider: set proper length and min/max for dimension
 			// sadly a separate routine is necessary for the active page slider.
 			// for reasons unknown the active page slider does not refresh until after a page change has been performed 
 			if ((TissueStack.desktop || TissueStack.tablet)) {
 				$('.ui-slider-vertical').css({"height": TissueStack.canvasDimensions.height - 50});
 			} 
-			$('.canvasslider').each(
+			$(TissueStack.phone ? ('.canvasslider') : ('#dataset_' + (x+1) + '_canvas_main_slider')).each(
 				function() {
 					var id = extractCanvasId(this.id, actualDataSet);
 					
@@ -340,7 +358,10 @@ TissueStack.BindUniqueEvents = function (datasets) {
 					$(this).attr("value", actualDataSet.planes[id].data_extent.slice);
 				}
 			);
-			$('.canvasslider').bind ("change", function (event, ui)  {
+			// avoid potential double binding by un-binding at this stage
+			$(TissueStack.phone ? ('.canvasslider') : ('#dataset_' + (x+1) + '_canvas_main_slider')).unbind("change");
+			// rebind
+			$(TissueStack.phone ? ('.canvasslider') : ('#dataset_' + (x+1) + '_canvas_main_slider')).bind ("change", function (event, ui)  {
 				var id = extractCanvasId(this.id, actualDataSet);
 				if (!id) {
 					return;
@@ -348,55 +369,40 @@ TissueStack.BindUniqueEvents = function (datasets) {
 
 				triggerQueuedRedraw(id, this.value, actualDataSet);
 			});
-			
-			$(".canvasslider").live ("slidercreate", function () {
-				var res = $('#' + this.id).data('events');
-				// unbind previous change
-				$('#' + this.id).unbind("change");
-				if (!res.change || res.change.length == 0) {
-					$('#' + this.id).bind("change", function (event, ui)  {
-						var id = extractCanvasId(this.id);
-						if (!id) {
-							return;
-						}
-						triggerQueuedRedraw(id, this.value, actualDataSet);
-					});
-				}
-			});
-		})(dataSet);
-	}
-};
 
-TissueStack.UnBindUniqueEvents = function () {
-	// Note: the 2 underneath are global and probably don't need to be unbound
-	// DRAWING INTERVAL CHANGE HANDLER 
-	$('#drawing_interval_button').unbind("click");
-	// COLOR MAP CHANGE HANDLER
-	$('input[name="color_map"]').unbind("click");
-	
-	// MAXIMIZING SIDE VIEWS
-	if ((TissueStack.desktop || TissueStack.tablet)) {
-		$('#left_side_view_maximize, #right_side_view_maximize').unbind("click");
-		//NOTE: we might have to restore the default plane names
+			// rebind
+			if (TissueStack.phone) {
+				$('.canvasslider').live ("slidercreate", function () {
+					var res = $('#' + this.id).data('events');
+					// unbind previous change
+					$('#' + this.id).unbind("change");
+					if (!res.change || res.change.length == 0) {
+						$('#' + this.id).bind("change", function (event, ui)  {
+							var id = extractCanvasId(this.id);
+							if (!id) {
+								return;
+							}
+							triggerQueuedRedraw(id, this.value, actualDataSet);
+						});
+					}
+				});
+			}
+		})(dataSet, y);
 	}
-	
-	// COORDINATE CENTER FUNCTIONALITY FOR DESKTOP
-	if ((TissueStack.desktop || TissueStack.tablet)) {
-		$('#center_point_in_canvas').unbind("click");
-	}	
-	
-	$('.canvasslider').unbind ("change");
 };
 
 $(document).ready(function() {
 	var afterLoadingRoutine = function() {
-		// on the first load we always display the first one only
-		var dataSets = [TissueStack.dataSetStore.getDataSetByIndex(0)];
+		// create an instance of the navigation
+		TissueStack.dataSetNavigation = new TissueStack.DataSetNavigation();
+		// on the first load we always display the first data set received from the backend list
+		TissueStack.dataSetNavigation.addToOrReplaceSelectedDataSets(
+				TissueStack.dataSetStore.getDataSetByIndex(0).id, 0);
 		
-		TissueStack.InitUserInterface(dataSets);
-		TissueStack.BindUniqueEvents(dataSets);
-		new TissueStack.DataSetNavigation();
+		// initialize ui and events
+		TissueStack.InitUserInterface();
+		TissueStack.BindUniqueEvents();
 	};
-	// call init
+	// call asynchronous init
 	TissueStack.Init(afterLoadingRoutine);
 });

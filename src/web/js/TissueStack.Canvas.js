@@ -103,6 +103,13 @@ TissueStack.Canvas.prototype = {
 		}
 		this.dim_y = y;
 	},
+	resizeCanvas : function() {
+		var tmpCanvasElement = this.getCanvasElement()[0];
+		this.setDimensions(tmpCanvasElement.width, tmpCanvasElement.height);
+		this.centerUpperLeftCorner();
+		this.drawCoordinateCross(this.getCenter());
+		this.drawMe(new Date().getTime());
+	},
 	getCenter : function () {
 		return TissueStack.Utils.getCenter(this.dim_x,this.dim_y);
 	},

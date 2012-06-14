@@ -91,7 +91,7 @@ TissueStack.Utils = {
 			return;
 		}
 
-		// use adjustScreenContentToActualScreenSizesylvester library since we also want to go the opposite way which requires the inverse which I don't want to code.
+		// use sylvester library since we also want to go the opposite way which requires the inverse which I don't want to code.
 		transformationMatrix = Matrix.create(transformationMatrix).inverse();
 		worldVector = Vector.create(worldVector);
 		
@@ -161,21 +161,42 @@ TissueStack.Utils = {
 		}
 		
 		if (typeof(datasets) != "number") {
-			datasets = 1;
+			datasets = 0;
 		}
+		
 		if (datasets > 2) {
 			datasets = 2;
 		}
+
+		// we hide everything
+		if (datasets == 0) {
+		   // clear input fields
+		   $("#canvas_point_x,#canvas_point_y,#canvas_point_z").attr("value", "");
+		   $("#canvas_point_x,#canvas_point_y,#canvas_point_z").attr("disabled", "disabled");
+		   // hide everything
+		   $('#dataset_1_center_point_in_canvas, #dataset_2_center_point_in_canvas').closest('.ui-btn').hide();
+		   $(".dataset, .right_panel").addClass("hidden");
+		   return;
+		}
 		
 		// get screen dimensions
-		var screenWidth = $(document).width();
-		var screenHeight = $(document).	height();
-		TissueStack.canvasDimensions = {width: Math.floor(screenWidth * 0.70), height: Math.floor(screenHeight * 0.90 / datasets)};
+		var screenWidth = $(window).width();
+		var screenHeight = $(window).height();
 		
+		// get the height of the menu header
+		var menuHeight = Math.floor(screenHeight * 0.10);
+		// get the width of the left panel 
+		var leftPanelWidth = Math.floor(screenWidth * 0.15);
+		var rightPanelWidth = Math.floor(screenWidth * 0.05);
+		var tolerance = Math.floor(screenWidth * 0.05);
 		
-		$('.left_panel').css({"width" : Math.floor(screenWidth * 0.20), "height": screenHeight});
-		$('.right_panel').css({"height": TissueStack.canvasDimensions.height});
-
+		TissueStack.canvasDimensions = {width: (screenWidth - leftPanelWidth - rightPanelWidth - tolerance), height: Math.floor((screenHeight - menuHeight - tolerance) / datasets)};
+		
+		$('.left_panel').css({"width" : leftPanelWidth, "height": screenHeight});
+		$('.right_panel').css({"width" : rightPanelWidth, "height": TissueStack.canvasDimensions.height - tolerance});
+		$(".ui-slider-vertical").height(TissueStack.canvasDimensions.height - tolerance);
+		$(".ui-slider-horizontal").height(TissueStack.canvasDimensions.height - tolerance);
+				
 		$('.dataset').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height});
 		for (var x=1;x<=datasets;x++) {
 			$('#dataset_' + x + '_main_view_canvas').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height});
