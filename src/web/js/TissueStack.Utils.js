@@ -212,5 +212,57 @@ TissueStack.Utils = {
 		$('.left_side_view canvas').attr("height", sideCanvasDims.height);
 		$('.right_side_view canvas').attr("width", sideCanvasDims.width);
 		$('.right_side_view canvas').attr("height", sideCanvasDims.height);
+	},
+	verifyUrlSyntax : function(url) {
+		if (typeof(url) != "string") {
+			return null;
+		}
+
+		// trim whitespace
+		url = $.trim(url);
+		if (url.length == 0) {
+			return null;
+		}
+		
+		if (url.indexOf("http://") != 0 && url.indexOf("https://") != 0 && url.indexOf("ftp://") != 0) {
+			url = "http://" + url;
+		}
+		
+		// check
+	    var validUrlRules = /^(http:\/\/|https:\/\/|ftp:\/\/|www.){1}([0-9A-Za-z]+\.)/;
+	    if (validUrlRules.test(url) && url.substring(url.length-1) != ".") {
+	        return url;
+	    }
+
+	    return null;
+	},
+	extractHostNameFromUrl : function(url) {
+		if (typeof(url) != "string") {
+			return null;
+		}
+
+		// trim whitespace
+		url = $.trim(url);
+
+		// take off protocol 
+		if (url.indexOf("http://") == 0 || url.indexOf("file://") == 0) {
+			url = url.substring(7, url.length);
+		} else if (url.indexOf("https://") == 0 || url.indexOf("file:///") == 0) {
+			url = url.substring(8, url.length);
+		} else if (url.indexOf("ftp://") == 0) {
+			url = url.substring(6, url.length);
+		}
+		// strip it off a potential www
+		if (url.indexOf("www.") == 0) {
+			url = url.substring(4, url.length);
+		}
+			
+		//now cut off anything after the initial '/' if exists to preserve the domain
+		var slashPosition = url.indexOf("/");
+		if (slashPosition > 0) {
+			url = url.substring(0, slashPosition);
+		}
+
+		return url;
 	}
 };

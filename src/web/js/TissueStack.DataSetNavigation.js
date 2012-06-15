@@ -230,7 +230,7 @@ TissueStack.DataSetNavigation.prototype = {
 	    		   
 	    			// re-initialize data set handed in
 	    			TissueStack.InitUserInterface();
-	    			TissueStack.BindUniqueEvents();
+	    			TissueStack.BindDataSetDependentEvents();
 	    			
 	    			// show everything again
 	    		   for (var n=0;n<selectedNodes.length;n++) {
@@ -304,7 +304,7 @@ TissueStack.DataSetNavigation.prototype = {
 			//this.addToOrReplaceSelectedDataSets(newkey, 0);
 			// 3. reinitialize ui and events 
 			//TissueStack.InitUserInterface();
-			//TissueStack.BindUniqueEvents();
+			//TissueStack.BindDataSetDependentEvents();
 			// show everything again
 		   //this.showDataSet(1);
 	},
