@@ -118,6 +118,11 @@ TissueStack.BindGlobalEvents = function () {
 			return;
 		}
 		
+		if (typeof(window.location.hostname) == "string" && val.indexOf(window.location.hostname) >=0) {
+			alert("Your local instance's configuration is already in the list!");
+			return;
+		}
+		
 		$('#server_search_input').val(url);
 		
 		// get the actual host/domain name
