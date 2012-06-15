@@ -185,18 +185,27 @@ TissueStack.Utils = {
 		
 		// get the height of the menu header
 		var menuHeight = Math.floor(screenHeight * 0.10);
+		var widthTolerance = Math.floor(screenWidth * 0.05);
+		var heightTolerance = Math.floor(screenWidth * 0.005);
 		// get the width of the left panel 
 		var leftPanelWidth = Math.floor(screenWidth * 0.15);
+		var leftPanelHeight = screenHeight - menuHeight;
 		var rightPanelWidth = Math.floor(screenWidth * 0.05);
-		var tolerance = Math.floor(screenWidth * 0.05);
 		
-		TissueStack.canvasDimensions = {width: (screenWidth - leftPanelWidth - rightPanelWidth - tolerance), height: Math.floor((screenHeight - menuHeight - tolerance) / datasets)};
+		TissueStack.canvasDimensions = {width: (screenWidth - leftPanelWidth - rightPanelWidth - widthTolerance), height: Math.floor(leftPanelHeight / datasets) -  heightTolerance};
 		
-		$('.left_panel').css({"width" : leftPanelWidth, "height": screenHeight});
-		$('.right_panel').css({"width" : rightPanelWidth, "height": TissueStack.canvasDimensions.height - tolerance});
-		$(".ui-slider-vertical").height(TissueStack.canvasDimensions.height - tolerance);
-		$(".ui-slider-horizontal").height(TissueStack.canvasDimensions.height - tolerance);
-				
+		$('.left_panel').css({"width" : leftPanelWidth, "height": leftPanelHeight});
+		$('.right_panel').css({"width" : rightPanelWidth, "height": TissueStack.canvasDimensions.height});
+		$(".ui-slider-vertical").height(TissueStack.canvasDimensions.height - heightTolerance);
+		$(".ui-slider-horizontal").height(TissueStack.canvasDimensions.height - heightTolerance);
+
+		if (TissueStack.desktop) {
+			var treeHeight = 
+				leftPanelHeight - 
+				$("#canvas_extent").height() - $("#canvas_point_x").height() * 8 - $("#dataset_1_center_point_in_canvas").height() * (datasets == 2 ? 5 : 4);
+			$("#treedataset").css({"height": treeHeight});
+		}
+
 		$('.dataset').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height});
 		for (var x=1;x<=datasets;x++) {
 			$('#dataset_' + x + '_main_view_canvas').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height});

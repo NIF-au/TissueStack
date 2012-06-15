@@ -215,6 +215,8 @@ TissueStack.DataSetNavigation.prototype = {
 	    		   if (selectedNodes.length > 2) {
 	    			   // we cannot display more than 2 data sets ... let the user know
 	    			   alert("Please deselect a data set before you select a different one");
+	    			   
+	    			   node.select(false);
 	    			   return;
 	    		   }
 
@@ -222,20 +224,21 @@ TissueStack.DataSetNavigation.prototype = {
 	    			   TissueStack.Utils.adjustScreenContentToActualScreenSize(0);
 	    			   return;
 	    		   }
-	    		   
+
+
 	    		   // display/hide data sets left / not left
 	    		   for (var n=0;n<selectedNodes.length;n++) {
 		    		   _this.addToOrReplaceSelectedDataSets(selectedNodes[n].data.key, n);
 	    		   }
-	    		   
-	    			// re-initialize data set handed in
-	    			TissueStack.InitUserInterface();
-	    			TissueStack.BindDataSetDependentEvents();
-	    			
+
 	    			// show everything again
 	    		   for (var n=0;n<selectedNodes.length;n++) {
 		    			_this.showDataSet(n + 1);
 	    		   }
+
+	    			// re-initialize data set handed in
+	    			TissueStack.InitUserInterface();
+	    			TissueStack.BindDataSetDependentEvents();
 		       }
 /*
 		       onActivate: function(node) {
