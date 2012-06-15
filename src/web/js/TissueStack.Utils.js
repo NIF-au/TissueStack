@@ -168,7 +168,7 @@ TissueStack.Utils = {
 			datasets = 2;
 		}
 
-		// we hide everything
+		// we hide everything if there are no data sets selected
 		if (datasets == 0) {
 		   // clear input fields
 		   $("#canvas_point_x,#canvas_point_y,#canvas_point_z").attr("value", "");
@@ -184,15 +184,18 @@ TissueStack.Utils = {
 		var screenHeight = $(window).height();
 		
 		// get the height of the menu header
-		var menuHeight = Math.floor(screenHeight * 0.10);
+		var menuHeight = $('#menu_header').height();
+		// define some tolerance span
 		var widthTolerance = Math.floor(screenWidth * 0.05);
-		var heightTolerance = Math.floor(screenWidth * 0.005);
+		var heightTolerance = Math.floor(screenWidth * 0.0175);
+		
 		// get the width of the left panel 
 		var leftPanelWidth = Math.floor(screenWidth * 0.15);
 		var leftPanelHeight = screenHeight - menuHeight;
 		var rightPanelWidth = Math.floor(screenWidth * 0.05);
 		
 		TissueStack.canvasDimensions = {width: (screenWidth - leftPanelWidth - rightPanelWidth - widthTolerance), height: Math.floor(leftPanelHeight / datasets) -  heightTolerance};
+		leftPanelHeight -=  heightTolerance;
 		
 		$('.left_panel').css({"width" : leftPanelWidth, "height": leftPanelHeight});
 		$('.right_panel').css({"width" : rightPanelWidth, "height": TissueStack.canvasDimensions.height});
@@ -213,7 +216,7 @@ TissueStack.Utils = {
 			$('#dataset_' + x + '_main_view_canvas canvas').attr("height", TissueStack.canvasDimensions.height);
 		}
 
-		// additional desktop version dimension changes
+		// apply screen and canvas size changes
 		var sideCanvasDims = {width: Math.floor(TissueStack.canvasDimensions.width * 0.3), height: Math.floor(TissueStack.canvasDimensions.height * 0.2)};
 		$('.left_side_view').css({"width" : sideCanvasDims.width, "height" : sideCanvasDims.height});
 		$('.right_side_view').css({"width" : sideCanvasDims.width, "height" : sideCanvasDims.height});
