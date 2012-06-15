@@ -158,14 +158,19 @@ TissueStack.Queue.prototype = {
 		}
 		
 		var imageTile = new Image();
-		var url = (dataSet.host == 'localhost' ? "" : "http://" + dataSet.host) + "/"
-		+ (dataSet.imageService ? "imageservice/" : "tiles/")
-		+ dataSet.local_id;
-	
-	imageTile.src = 
-		url + "/" + this.canvas.getDataExtent().zoom_level + "/" 
-			+ this.canvas.getDataExtent().plane
-			+ "/" + slice + ".low.res." + this.canvas.image_format;
+		imageTile.crossOrigin = '';
+		imageTile.src = 
+			TissueStack.Utils.assembleTissueStackImageRequest(
+					"http",
+					dataSet.host,
+					(dataSet.imageService ? "image_service" : "tiles"),
+					 dataSet.local_id,
+					 true,
+					 this.canvas.getDataExtent().zoom_level,
+					 this.canvas.getDataExtent().plane,
+					 slice,
+					 this.image_format
+		);
 
 		(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height) {
 			imageTile.onload = function() {

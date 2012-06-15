@@ -264,5 +264,56 @@ TissueStack.Utils = {
 		}
 
 		return url;
+	},
+	assembleTissueStackImageRequest : function(
+			protocol, host, path, dataset_id, is_preview,
+			zoom, plane, slice, image_extension,row, col) {
+		if (typeof(protocol) != "string") {
+			protocol = "http";
+		} 
+		protocol = $.trim(protocol);
+		if (typeof(host) != "string" || $.trim(host) == "localhost") {
+			host = "";
+		}
+		host = $.trim(host);
+		if (typeof(path) != "string") {
+			path = "tiles";
+		}
+		if (typeof(dataset_id) != "number" || dataset_id <= 0) {
+			return null;
+		}
+		if (typeof(is_preview) != "boolean") {
+			return null;
+		}
+		if (typeof(zoom) != "number" || zoom < 0) {
+			return null;
+		}
+		if (typeof(plane) != "string") {
+			return null;
+		}
+		if (typeof(slice) != "number" || slice < 0) {
+			return null;
+		}
+		if (typeof(image_extension) != "string") {
+			image_extension = "png";
+		}
+		
+		// assemble what we have so far
+		var url = (host != "" ? (protocol + "://" + host.replace(/[_]/g,".")) : "") +  "/" + path + "/" + dataset_id + "/" + zoom + "/" + plane + "/" + slice;
+		
+		// for preview we don't need all the params 
+		if (is_preview) {
+			return url + ".low.res." + image_extension;
+		}
+		
+		// for tiling we need the row/col pair in the grid
+		if (typeof(row) != "number" || row < 0) {
+			return null;
+		}
+		if (typeof(col) != "number" || col < 0) {
+			return null;
+		}
+		
+		return url + "/" + row + '_' + col + "." + image_extension;
 	}
 };

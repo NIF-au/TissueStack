@@ -30,7 +30,7 @@ TissueStack.DataSetStore.prototype = {
 	},
 	addDataSetToStore : function(dataSet, host, isImageService) {
 		if (!dataSet || !dataSet.planes) {
-			return;
+			return null;
 		}
 		
 		// coin id
@@ -43,7 +43,7 @@ TissueStack.DataSetStore.prototype = {
 		// check if we exist already in the tree, if so issue an alert
 		if (this.datasets[id]) {
 			alert("Data Set with Id " + id + " exists already!");
-			return;
+			return null;
 		}
 		
 		if (typeof(isImageService) != "boolean") {
@@ -64,6 +64,8 @@ TissueStack.DataSetStore.prototype = {
 		// this is the map node where we store the real world extents for the actual runtime canvases once they have been created
 		this.datasets[id].realWorldCoords = {};
 		this.datasetCount += 1;
+		
+		return this.datasets[id];
 	}, fetchDataSetsFromServer : function(host, id, customSuccessHandler) {
 		if (!host) {
 			host = "localhost";

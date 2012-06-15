@@ -159,7 +159,10 @@ TissueStack.BindGlobalEvents = function () {
 				var dataSets = data.response;
 				
 				for (var x=0;x<dataSets.length;x++) {
-					_this.addDataSetToStore(dataSets[x], domain);
+					var addedDataSet = TissueStack.dataSetStore.addDataSetToStore(dataSets[x], domain);
+					if (addedDataSet) {
+						TissueStack.dataSetNavigation.addDataSetToDynaTree(addedDataSet);
+					}
 				}
 			},
 			error: function(jqXHR, textStatus, errorThrown) {

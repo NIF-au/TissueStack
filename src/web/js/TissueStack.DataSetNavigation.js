@@ -324,5 +324,32 @@ TissueStack.DataSetNavigation.prototype = {
 		}
 		
 		return dynaTree.getSelectedNodes(stopAtParent);
+	},
+	addDataSetToDynaTree : function(dataSet) {
+		var tree = this.getDynaTreeObject();
+		if (!tree) {
+			return;
+		}
+		
+		var root = tree.getRoot();
+		var newNode = 
+			root.addChild({
+				title: dataSet.local_id + '@' +dataSet.host,
+				key: dataSet.id,
+				tooltip: (dataSet.description ? dataSet.description : ""),
+				select: false,
+				isFolder: true,
+				expand: false
+		});
+		// add children
+		// TODO: later we add the overlays, for now, the only children are the base layers
+		newNode.addChild({
+				title: dataSet.filename,
+				isBaseLayer : true,
+				key: dataSet.id + "_base_layer",
+				tooltip: (dataSet.description ? dataSet.description : ""),
+				select: false,
+				expand: false
+		});
 	}
 };		

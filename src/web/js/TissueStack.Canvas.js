@@ -397,13 +397,21 @@ TissueStack.Canvas.prototype = {
 				
 				// create the image object that loads the tile we need
 				var imageTile = new Image();
-				var url = (dataSet.host == 'localhost' ? "" : "http://" + dataSet.host) + "/"
-					+ (dataSet.imageService ? "imageservice/" : "tiles/")
-					+ dataSet.local_id;
-				
+				imageTile.crossOrigin = '';
 				imageTile.src = 
-					url + "/" + this.getDataExtent().zoom_level + "/" + this.getDataExtent().plane
-					+ "/" + slice + "/" + rowIndex + '_' + colIndex + "." + this.image_format;
+					TissueStack.Utils.assembleTissueStackImageRequest(
+							"http",
+							dataSet.host,
+							(dataSet.imageService ? "image_service" : "tiles"),
+							 dataSet.local_id,
+							 false,
+							 this.getDataExtent().zoom_level,
+							 this.getDataExtent().plane,
+							 slice,
+							 this.image_format,
+							 rowIndex,
+							 colIndex
+					);
 				counter++;
 				
 				(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, tile_size) {

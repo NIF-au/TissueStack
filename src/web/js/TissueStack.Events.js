@@ -241,6 +241,9 @@ TissueStack.Events.prototype = {
 		}
 	}, changeSliceForPlane : function(slice) {
 		var now =new Date().getTime(); 
+		if (typeof(slice) != "number") {
+			slice = parseInt(slice);
+		}
 		this.canvas.data_extent.slice = slice;
 		
 		var upper_left_corner = {x: this.canvas.upper_left_x, y: this.canvas.upper_left_y};
