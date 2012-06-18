@@ -337,6 +337,8 @@ TissueStack.Events.prototype = {
 				});
 	}, zoom : function(e, delta) {
 		// make sure zoom delta is whole number
+		delta = Math.ceil(delta);
+		
 		if (delta < 1) {
 			delta = -1;
 		} else if (delta > 1) {

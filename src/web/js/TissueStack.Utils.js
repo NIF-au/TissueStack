@@ -295,9 +295,6 @@ TissueStack.Utils = {
 			host = "";
 		}
 		host = $.trim(host);
-		if (typeof(path) != "string") {
-			path = "tiles";
-		}
 		if (typeof(dataset_id) != "number" || dataset_id <= 0) {
 			return null;
 		}
@@ -346,7 +343,7 @@ TissueStack.Utils = {
 			return url + "/" + row + '_' + col + "." + image_extension;
 		} else {
 			// TODO: image_service aka direct image querying
-			return url;
+			return url + "/" + row + '_' + col + "." + image_extension;
 		}
 	}
 };

@@ -169,7 +169,7 @@ TissueStack.Queue.prototype = {
 					 this.canvas.getDataExtent().zoom_level,
 					 this.canvas.getDataExtent().plane,
 					 slice,
-					 this.image_format
+					 this.canvas.image_format
 		);
 
 		(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height) {

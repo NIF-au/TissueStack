@@ -49,6 +49,8 @@ public final class DataSetDataProvider {
 		    	sql += " WHERE LOWER(dataset.description) LIKE :description";
 		    }
 		    
+		    sql += " ORDER BY dataset.id ASC";
+		    
 			Query query = em.createQuery(sql);
 			if (description != null && !description.isEmpty()) {
 				query.setParameter("description", "%" + description.toLowerCase() + "%");
