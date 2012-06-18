@@ -115,7 +115,7 @@ t_args_plug	*create_plug_args(char **commands, t_tissue_stack *general, void *bo
   t_args_plug	*args;
   char		**com;
   t_plugin	*tmp;
-  int		i;
+  //int		i;
 
   args = malloc(sizeof(*args));
   if (commands[1] == NULL)
@@ -149,7 +149,7 @@ t_args_plug	*create_plug_args(char **commands, t_tissue_stack *general, void *bo
   args->this = NULL;
   args->box = box;
   args->destroy = destroy_plug_args;
-  i = 0;
+  //i = 0;
   //  while (commands[i] != NULL)
   //  free(commands[i++]);
   // free(commands);
