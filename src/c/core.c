@@ -5,11 +5,50 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Tue May 29 14:47:05 2012 Oliver Nicolini
+** Last update Fri Jun 15 16:13:16 2012 Oliver Nicolini
 */
 
 
 #include "core.h"
+
+static t_tissue_stack	*t_global;
+
+void			signal_handler(int sig)
+{
+  t_plugin		*tmp;
+  pthread_t		id;
+
+  id = pthread_self();
+  tmp = t_global->first;
+  while (tmp != NULL)
+    {
+      if (tmp->thread_id == id)
+	{
+	  printf("The thread hosting the plugin: %s - received the signal %i\n", tmp->name, sig);
+	  break;
+	}
+      tmp = tmp->next;
+    }
+  printf(" -----  received signal: %i\n", sig);
+}
+
+void			signal_manager(t_tissue_stack *t)
+{
+  struct sigaction	act;
+  int			i;
+
+  i = 1;
+  t_global = t;
+  act.sa_handler = signal_handler;
+  act.sa_flags = 0;
+  sigemptyset(&act.sa_mask);
+  i = 1;
+  //  while (i < 32)
+  //   {
+      sigaction(13, &act, NULL);
+      i++;
+      // }
+}
 
 unsigned int            get_slices_max(t_vol *volume)
 {
@@ -65,6 +104,17 @@ void            init_prog(t_tissue_stack *t)
   init_func_ptr(t);
 }
 
+void		free_core_struct(t_tissue_stack *t)
+{
+  printf("\nFreeing\n");
+  free_all_volumes(t);
+  free_all_plugins(t);
+  free_all_history(t);
+  free_all_prompt(t);
+  free(t->functions);
+  free(t);
+}
+
 int		main(int argc, char **argv)
 {
   int			result;
@@ -82,6 +132,7 @@ int		main(int argc, char **argv)
     }
   else
     t->volume_first = NULL;
+
   // lunch thread_pool
   t->tp = malloc(sizeof(*t->tp));
   thread_pool_init(t->tp, 6);
@@ -89,14 +140,17 @@ int		main(int argc, char **argv)
   (t->plug_actions)(t, "load png ./plugins/png_extract/yop.so", NULL);
   sleep(1);
   (t->plug_actions)(t, "load serv ./plugins/communicator/serv.so", NULL);
-  sleep(1);
-  (t->plug_actions)(t, "start png /home/oliver/workspace/brain.mnc 80 81 -1 -1 -1 -1 1", NULL);
+  //  sleep(1);
+  // (t->plug_actions)(t, "start png /home/oliver/workspace/brain.mnc -1 -1 -1 -1 300 301 1 1 1", NULL);
   //  (t->plug_actions)(t, "start serv 4242", NULL);
   // lunch the prompt command
+  signal_manager(t);
   prompt_start(t);
 
   // free all the stuff mallocked
+  t->tp->loop = 0;
   thread_pool_destroy(t->tp);
+  free_core_struct(t);
 
   return (0);
 }

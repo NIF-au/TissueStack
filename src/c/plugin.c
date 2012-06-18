@@ -1,5 +1,22 @@
 #include "core.h"
 
+void		free_all_plugins(t_tissue_stack *t)
+{
+  t_plugin	*p;
+  t_plugin	*save;
+
+  p = t->first;
+  while (p != NULL)
+    {
+      save = p;
+      dlclose(p->handle);
+      free(p->name);
+      free(p->path);
+      p = p->next;
+      free(save);
+    }
+}
+
 void		list_plugins(t_tissue_stack *t, char *command)
 {
   t_plugin	*tmp;
@@ -70,11 +87,14 @@ void		*plugin_load(void *args)
       this->next->prev = this;
       this = this->next;
     }
-  this->name = a->name;
-  this->path = a->path;
+  this->name = malloc((strlen(a->name) + 1) * sizeof(*this->name));
+  this->path = malloc((strlen(a->path) + 1) * sizeof(*this->path));
+  this->name = strcpy(this->name, a->name);
+  this->path = strcpy(this->path, a->path);
   this->error = 0;
   this->next = NULL;
   this->busy = 0;
+  this->thread_id = pthread_self();
   a->this = this;
   // open the plugin
   this->handle = dlopen(this->path, RTLD_LAZY);
