@@ -137,9 +137,9 @@ int		main(int argc, char **argv)
   t->tp = malloc(sizeof(*t->tp));
   thread_pool_init(t->tp, 6);
 
-  (t->plug_actions)(t, "load png ./plugins/png_extract/yop.so", NULL);
+  (t->plug_actions)(t, "load png ./plugins/png_extract/TissueStackPngExtract.so", NULL);
   sleep(1);
-  (t->plug_actions)(t, "load serv ./plugins/communicator/serv.so", NULL);
+  (t->plug_actions)(t, "load serv ./plugins/communicator/TissueStackCommunicator.so", NULL);
   //  sleep(1);
   // (t->plug_actions)(t, "start png /home/oliver/workspace/brain.mnc -1 -1 -1 -1 300 301 1 1 1", NULL);
   //  (t->plug_actions)(t, "start serv 4242", NULL);

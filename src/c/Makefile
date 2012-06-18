@@ -6,9 +6,9 @@ SRCS		=	$(DIRSRC)core.c							\
 			$(DIRSRC)volume.c						\
 			$(DIRSRC)thread_pool.c
 
-INCLUDE		=	-I./headers #-I/home/oliver/workspace/minc-2.1.10/libsrc2 -I./headers
+INCLUDE		=	-I./headers 
 
-LIB_PATH	=	#-L/home/oliver/workspace/minc-2.1.10/.libs
+LIB_PATH	=	
 
 LIBS		=	-lhdf5								\
 			-lnetcdf 							\
@@ -17,13 +17,13 @@ LIBS		=	-lhdf5								\
 			-lpthread							\
 			-ldl
 
-NAME		=	yop
+NAME		=	TissueStackImageServer
 
 FLAGS		=	-Wall -Werror -DDEB -g3
 
 all:	
 	@echo "\n================== Compilation ===================="
-	@clang $(SRCS) -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS)
+	@gcc $(SRCS) -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS)
 
 clean:
 	@echo "\n==================== Cleaning ====================="
