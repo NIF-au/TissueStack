@@ -402,7 +402,7 @@ TissueStack.Canvas.prototype = {
 					TissueStack.Utils.assembleTissueStackImageRequest(
 							"http",
 							dataSet.host,
-							(dataSet.imageService ? "image_service" : "tiles"),
+							this.getDataExtent().getIsTiled(),
 							 dataSet.local_id,
 							 false,
 							 this.getDataExtent().zoom_level,

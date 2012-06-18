@@ -1,4 +1,6 @@
 TissueStack.Init = function (afterLoadingRoutine) {
+	TissueStack.LoadDataBaseConfiguration();
+	
 	// hide second jquery coordinate search button  
 	if (TissueStack.desktop) {
 		$('#dataset_2_center_point_in_canvas').closest('.ui-btn').hide();
@@ -70,6 +72,7 @@ TissueStack.InitUserInterface = function () {
 			var extent = 
 				new TissueStack.Extent(
 					dataSet.id,
+					dataForPlane.isTiled,
 					dataForPlane.oneToOneZoomLevel,
 					planeId,
 					dataForPlane.maxSclices,
@@ -144,6 +147,8 @@ TissueStack.BindGlobalEvents = function () {
 		$.ajax({
 			url : url,
 			dataType : "json",
+			cache : false,
+			timeout : 30000,
 			success: function(data, textStatus, jqXHR) {
 				if (!data.response && !data.error) {
 					alert("Did not receive anyting, neither success nor error ....");
@@ -178,6 +183,47 @@ TissueStack.BindGlobalEvents = function () {
 	});
 };
 
+TissueStack.LoadDataBaseConfiguration = function() {
+	// we do this one synchronously
+	$.ajax({
+		async: false,
+		url : "/backend/configuration/all/json",
+		dataType : "json",
+		cache : false,
+		timeout : 30000,
+		success: function(data, textStatus, jqXHR) {
+			if (!data.response && !data.error) {
+				alert("Did not receive anyting, neither success nor error ....");
+				return;
+			}
+			
+			if (data.error) {
+				var message = "Application Error: " + (data.error.message ? data.error.message : " no more info available. check logs.");
+				alert(message);
+				return;
+			}
+			
+			if (data.response.noResults) {
+				alert("No configuration info found in database");
+				return;
+			}
+			var configuration = data.response;
+			
+			for (var x=0;x<configuration.length;x++) {
+				if (!configuration[x] || !configuration[x].name || $.trim(!configuration[x].name.length) == 0) {
+					continue;
+				}
+				TissueStack.configuration[configuration[x].name] = {};
+				TissueStack.configuration[configuration[x].name].value = configuration[x].value;
+				TissueStack.configuration[configuration[x].name].description = configuration[x].description ? configuration[x].description : "";
+			};
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			alert("Error connecting to backend: " + textStatus + " " + errorThrown);
+		}
+	});
+};
+
 TissueStack.BindDataSetDependentEvents = function () {
 	if (TissueStack.dataSetNavigation.selectedDataSets.count == 0) {
 		return;
@@ -201,13 +247,13 @@ TissueStack.BindDataSetDependentEvents = function () {
 	$('#drawing_interval_button').unbind("click");
 	//rebind
 	$('#drawing_interval_button').bind("click", function() {
-		var newValue = parseInt($('#drawing_interval').val());
+		TissueStack.configuration['default_drawing_interval'].value = parseInt($('#drawing_interval').val());
 		
 		for (var x=0;x<maxDataSets;x++) {
 			var dataSet = datasets[x];
 			
 			for (var id in dataSet.planes) {	
-				dataSet.planes[id].queue.setDrawingInterval(newValue);
+				dataSet.planes[id].queue.setDrawingInterval(TissueStack.configuration['default_drawing_interval'].value);
 			}
 		}
 	});

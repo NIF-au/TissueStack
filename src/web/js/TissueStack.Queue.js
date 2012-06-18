@@ -12,7 +12,7 @@ TissueStack.Queue.prototype = {
 	latestDrawRequestTimestamp : 0,
 	setDrawingInterval : function(value) {
 		if (typeof(value) !== 'number' || value < 0) {
-			throw new Error("Interval has to be greater or equal to 0");
+			value = 150; // set to default
 		}
 		this.stopQueue();
 		this.drawingIntervalInMillis = value;
@@ -163,7 +163,7 @@ TissueStack.Queue.prototype = {
 			TissueStack.Utils.assembleTissueStackImageRequest(
 					"http",
 					dataSet.host,
-					(dataSet.imageService ? "image_service" : "tiles"),
+					this.canvas.getDataExtent().getIsTiled(),
 					 dataSet.local_id,
 					 true,
 					 this.canvas.getDataExtent().zoom_level,

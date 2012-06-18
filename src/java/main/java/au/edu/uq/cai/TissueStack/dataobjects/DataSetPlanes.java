@@ -4,6 +4,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -14,6 +15,7 @@ import javax.xml.bind.annotation.XmlTransient;
 public class DataSetPlanes{
 	  private long id;
 	  private int datasetId;
+	  String internalIsTiled;
 	  private String name;
 	  private int maxX; 
 	  private int maxY; 
@@ -40,6 +42,26 @@ public class DataSetPlanes{
 	
 	public void setDatasetId(int datasetId) {
 		this.datasetId = datasetId;
+	}
+	
+	@XmlTransient
+	@Column(name="is_tiled")
+	public String getInternalIsTiled() {
+	return this.internalIsTiled;
+	}
+
+	public void setInternalIsTiled(String internalIsTiled) {
+		this.internalIsTiled = internalIsTiled;
+	}
+		   
+	@XmlElement(name="IsTiled", namespace=IGlobalConstants.XML_NAMESPACE)
+	@Transient
+	public boolean getIsTiled() {
+		if (this.internalIsTiled == null || this.internalIsTiled.trim().isEmpty()) {
+			return false;
+		}
+		
+		return this.internalIsTiled.trim().equalsIgnoreCase("T") || this.internalIsTiled.trim().equalsIgnoreCase("Y");
 	}
 	
 	@Column(name="name")

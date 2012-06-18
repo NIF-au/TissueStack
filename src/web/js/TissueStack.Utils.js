@@ -105,9 +105,16 @@ TissueStack.Utils = {
 		
 		return results;
 	},indexColorMaps : function() {
-		if (!TissueStack.color_maps) {
+		var db_color_map = TissueStack.configuration['color_maps'];
+		if (!db_color_map || !db_color_map.value) {
 			return;
 		}
+		
+		if (typeof(db_color_map.value) != 'string') {
+			return;
+		}
+		
+		TissueStack.color_maps = $.parseJSON( db_color_map.value);
 		
 		for (var map in TissueStack.color_maps) {
 			if (!map || map === 'grey') {
@@ -278,7 +285,7 @@ TissueStack.Utils = {
 		return url;
 	},
 	assembleTissueStackImageRequest : function(
-			protocol, host, path, dataset_id, is_preview,
+			protocol, host, isTiled, dataset_id, is_preview,
 			zoom, plane, slice, image_extension,row, col) {
 		if (typeof(protocol) != "string") {
 			protocol = "http";
@@ -311,21 +318,35 @@ TissueStack.Utils = {
 		}
 		
 		// assemble what we have so far
-		var url = (host != "" ? (protocol + "://" + host.replace(/[_]/g,".")) : "") +  "/" + path + "/" + dataset_id + "/" + zoom + "/" + plane + "/" + slice;
+		var url = (host != "" ? (protocol + "://" + host.replace(/[_]/g,".")) : "");
 		
-		// for preview we don't need all the params 
-		if (is_preview) {
-			return url + ".low.res." + image_extension;
+		//are we tiled or not
+		if (typeof(isTiled) != "boolean") {
+			isTiled = false; // if in doubt => false
 		}
 		
-		// for tiling we need the row/col pair in the grid
-		if (typeof(row) != "number" || row < 0) {
-			return null;
-		}
-		if (typeof(col) != "number" || col < 0) {
-			return null;
-		}
+		var path = isTiled ? TissueStack.configuration['tile_directory'].value : TissueStack.configuration['image_service_directory'].value;
 		
-		return url + "/" + row + '_' + col + "." + image_extension;
+		if (isTiled) {
+			url += ("/" + path + "/" + dataset_id + "/" + zoom + "/" + plane + "/" + slice);
+
+			// for preview we don't need all the params 
+			if (is_preview) {
+				return url + ".low.res." + image_extension;
+			}
+			
+			// for tiling we need the row/col pair in the grid
+			if (typeof(row) != "number" || row < 0) {
+				return null;
+			}
+			if (typeof(col) != "number" || col < 0) {
+				return null;
+			}
+			
+			return url + "/" + row + '_' + col + "." + image_extension;
+		} else {
+			// TODO: image_service aka direct image querying
+			return url;
+		}
 	}
 };

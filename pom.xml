@@ -68,7 +68,7 @@
 					<source>1.6</source>
 					<target>1.6</target>
 					<debug>true</debug>
-      					<debuglevel>none</debuglevel>
+      					<!--debuglevel>none</debuglevel-->
 				</configuration>
 			</plugin>
 			<plugin>
