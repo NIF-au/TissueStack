@@ -22,7 +22,9 @@ TissueStack.Queue.prototype = {
 			return;
 		}
 		
-		this.queue_handle = setInterval(function(_this) {
+		var _this = this;
+		
+		this.queue_handle = setInterval(function() {
 			// sanity check, if we still have some requests queued
 			if (_this.requests.length == 0) {
 				_this.stopQueue();
@@ -50,7 +52,7 @@ TissueStack.Queue.prototype = {
 				_this.drawLowResolutionPreview(_this.latestDrawRequestTimestamp);
 				_this.drawRequestAfterLowResolutionPreview(latestRequest);
 			}
-		}, this.drawingIntervalInMillis , this);
+		}, this.drawingIntervalInMillis);
 	},
 	stopQueue : function() {
 		if (!this.queue_handle) {
