@@ -9,7 +9,8 @@ int		init_volume(t_vol *volume, char *path)
   volume->dim_nb = 3;
   volume->dimensions = malloc(volume->dim_nb * sizeof(*volume->dimensions));
   volume->size = malloc(volume->dim_nb * sizeof(*volume->size));
-	      volume->path = malloc((path_len + 1) * sizeof(*volume->path));
+  volume->path = malloc((path_len + 1) * sizeof(*volume->path));
+  volume->path[path_len] = '\0';
   memcpy(volume->path, path, path_len);
   volume->dim_name = malloc(volume->dim_nb * sizeof(*volume->dim_name));
   if (volume->path == NULL)
@@ -135,20 +136,33 @@ void		remove_volume(char *path, t_tissue_stack *t)
 
 void		free_volume(t_vol *v)
 {
+  int		i;
+
+  i = 0;
+  while (i < v->dim_nb)
+    {
+      mifree_dimension_handle(v->dimensions[i]);
+      free(v->dim_name[i]);
+      i++;
+    }
+  free(v->dim_name);
   free(v->dimensions);
   free(v->size);
   free(v->path);
   free(v);
 }
 
+void		free_all_volumes(t_tissue_stack *t)
+{
+  t_vol		*tmp;
+  t_vol		*save;
 
-
-
-
-
-
-
-
-
-
-
+  tmp = t->volume_first;
+  while (tmp != NULL)
+    {
+      miclose_volume(tmp->minc_volume);
+      save = tmp;
+      tmp = tmp->next;
+      free_volume(save);
+    }
+}

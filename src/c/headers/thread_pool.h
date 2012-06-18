@@ -25,6 +25,7 @@ struct			s_thread_pool
   t_queue		*last;
   int			nb_workers;
   int			tasks_to_do;
+  int			loop;
   void			(*add)(void *(*function)(void *), void *args, t_thread_pool *p);
 };
 

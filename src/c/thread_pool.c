@@ -6,7 +6,7 @@ void		*worker_start(void *pool)
   t_thread_pool	*p;
 
   p = (t_thread_pool*)pool;
-  while (1)
+  while (p->loop)
     {
       task = NULL;
       // lock mutex to avoid concurrent access
@@ -75,6 +75,7 @@ void		thread_pool_init(t_thread_pool *p, unsigned int nb_threads)
   i = 0;
   p->first = NULL;
   p->last = NULL;
+  p->loop = 1;
   p->tasks_to_do = 0;
   p->nb_workers = nb_threads;
   p->add = thread_pool_add_task;
@@ -123,11 +124,14 @@ void		thread_pool_destroy(t_thread_pool *p)
 	}
       i++;
     }
+  usleep(1000);
   // destroy condvar and mutex
   pthread_mutex_destroy(&(p->lock));
   pthread_cond_destroy(&(p->condvar));
   // free the rest
+  //free(p->threads);
   thread_pool_free(p);
+  free(p);
 }
 
 void		thread_pool_free(t_thread_pool *p)

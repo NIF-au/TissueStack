@@ -60,6 +60,22 @@ int		str_n_cmp_from_position(char *s1, char *s2, int position, int len)
   return (0);
 }
 
+int		is_not_num(char *str)
+{
+  int		i;
+
+  i = 0;
+  while (str[i] != '\0')
+    {
+      if (str[i] >= '0' || str[i] <= '9' || (str[i] == '.' && (str[i + 1] >= '0' || str[i + 1] <= '9')))
+	i++;
+      else
+	return (1);
+      i++;
+    }
+  return (0);
+}
+
 void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
 {
   int		i;
@@ -68,6 +84,14 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
   char		*volume;
   char		*dimension;
   char		*slice;
+  char		*scale;
+  char		*quality;
+  char		*service;
+  char		*square;
+  char		*x;
+  char		*y;
+  char		*x_end;
+  char		*y_end;
   char		test[400];
 
   if (strncmp(buff, "GET /?volume=", 13) == 0)
@@ -90,16 +114,126 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
       if (str_n_cmp_from_position(buff, "slice", pos, tmp) != 0)
 	return;
       pos += tmp;
-      i = count_len_word_header(buff, pos, ' ');
+      i = count_len_word_header(buff, pos, '&');
       slice = str_n_copy_from_position(buff, pos + 1, i - 1);
-      sprintf(test, "start png %s %i %i %i %i %i %i 1", volume,
-	      (dimension[0] == '0' ? atoi(slice) : -1),
-	      (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
-	      (dimension[0] == '1' ? atoi(slice) : -1),
-	      (dimension[0] == '1' ? (atoi(slice) + 1) : -1),
-	      (dimension[0] == '2' ? atoi(slice) : -1),
-	      (dimension[0] == '2' ? (atoi(slice) + 1) : -1)
-	      );
+      pos += i + 1;
+      tmp = count_len_word_header(buff, pos, '=');
+      if (str_n_cmp_from_position(buff, "scale", pos, tmp) != 0)
+	return;
+      pos += tmp;
+      i = count_len_word_header(buff, pos, '&');
+      scale = str_n_copy_from_position(buff, pos + 1, i - 1);
+      pos += i + 1;
+      tmp = count_len_word_header(buff, pos, '=');
+      if (str_n_cmp_from_position(buff, "quality", pos, tmp) != 0)
+	return;
+      pos += tmp;
+      i = count_len_word_header(buff, pos, '&');
+      quality = str_n_copy_from_position(buff, pos + 1, i - 1);
+
+      pos += i + 1;
+      tmp = count_len_word_header(buff, pos, '=');
+      if (str_n_cmp_from_position(buff, "service", pos, tmp) != 0)
+	return;
+      pos += tmp;
+      i = count_len_word_header(buff, pos, '&');
+      service = str_n_copy_from_position(buff, pos + 1, i - 1);
+
+      if (strcmp(service, "tiles") == 0)
+	{
+	  pos += i + 1;
+	  tmp = count_len_word_header(buff, pos, '=');
+	  if (str_n_cmp_from_position(buff, "square", pos, tmp) != 0)
+	    return;
+	  pos += tmp;
+	  i = count_len_word_header(buff, pos, '&');
+	  square = str_n_copy_from_position(buff, pos + 1, i - 1);
+	  pos += i + 1;
+	  tmp = count_len_word_header(buff, pos, '=');
+	  if (str_n_cmp_from_position(buff, "y", pos, tmp) != 0)
+	    return;
+	  pos += tmp;
+	  i = count_len_word_header(buff, pos, '&');
+	  y = str_n_copy_from_position(buff, pos + 1, i - 1);
+	  pos += i + 1;
+	  tmp = count_len_word_header(buff, pos, '=');
+	  if (str_n_cmp_from_position(buff, "x", pos, tmp) != 0)
+	    return;
+	  pos += tmp;
+	  i = count_len_word_header(buff, pos, ' ');
+	  x = str_n_copy_from_position(buff, pos + 1, i - 1);
+	  if (is_not_num(square))
+	    {
+	      fprintf(stderr, "Invalid argumen: non interger\n");
+	      return;
+	    }
+	}
+      else if (strcmp(service, "images") == 0)
+	{
+
+	  pos += i + 1;
+	  tmp = count_len_word_header(buff, pos, '=');
+	  if (str_n_cmp_from_position(buff, "y", pos, tmp) != 0)
+	    return;
+	  pos += tmp;
+	  i = count_len_word_header(buff, pos, '&');
+	  y = str_n_copy_from_position(buff, pos + 1, i - 1);
+	  pos += i + 1;
+	  tmp = count_len_word_header(buff, pos, '=');
+	  if (str_n_cmp_from_position(buff, "x", pos, tmp) != 0)
+	    return;
+	  pos += tmp;
+	  i = count_len_word_header(buff, pos, '&');
+	  x = str_n_copy_from_position(buff, pos + 1, i - 1);
+	  pos += i + 1;
+	  tmp = count_len_word_header(buff, pos, '=');
+	  if (str_n_cmp_from_position(buff, "y_end", pos, tmp) != 0)
+	    return;
+	  pos += tmp;
+	  i = count_len_word_header(buff, pos, '&');
+	  y_end = str_n_copy_from_position(buff, pos + 1, i - 1);
+	  pos += i + 1;
+	  tmp = count_len_word_header(buff, pos, '=');
+	  if (str_n_cmp_from_position(buff, "x_end", pos, tmp) != 0)
+	    return;
+	  pos += tmp;
+	  i = count_len_word_header(buff, pos, ' ');
+	  x_end = str_n_copy_from_position(buff, pos + 1, i - 1);
+	  if (is_not_num(x_end) || is_not_num(y_end))
+	    {
+	      fprintf(stderr, "Invalid argumen: non interger\n");
+	      return;
+	    }
+	}
+
+      if (is_not_num(slice) || is_not_num(dimension) || is_not_num(scale) ||
+	  is_not_num(quality) || is_not_num(x) || is_not_num(y))
+	{
+	  fprintf(stderr, "Invalid argumen: non interger\n");
+	  return;
+	}
+      if (strcmp(service, "tiles") == 0)
+	{
+	  sprintf(test, "start png %s %i %i %i %i %i %i %s %s %s %s %s %s 1", volume,
+		  (dimension[0] == '0' ? atoi(slice) : -1),
+		  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
+		  (dimension[0] == '1' ? atoi(slice) : -1),
+		  (dimension[0] == '1' ? (atoi(slice) + 1) : -1),
+		  (dimension[0] == '2' ? atoi(slice) : -1),
+		  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
+		  scale, quality, service, square, y, x);
+	}
+      else if (strcmp(service, "images") == 0)
+	{
+	  sprintf(test, "start png %s %i %i %i %i %i %i %s %s %s %s %s %s %s 1", volume,
+		  (dimension[0] == '0' ? atoi(slice) : -1),
+		  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
+		  (dimension[0] == '1' ? atoi(slice) : -1),
+		  (dimension[0] == '1' ? (atoi(slice) + 1) : -1),
+		  (dimension[0] == '2' ? atoi(slice) : -1),
+		  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
+		  scale, quality, service, y, x, y_end, x_end);
+	}
       (*s->general->plug_actions)(s->general, test, file);
     }
 }
@@ -157,6 +291,9 @@ void		serv_working_loop(t_serv_comm *s)
 
 int		serv_init_connect(t_serv_comm *s)
 {
+  int		yes;
+
+  yes = 1;
   if ((s->sock_serv = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
       fprintf(stderr, "Socket creation Error\n");
@@ -166,6 +303,12 @@ int		serv_init_connect(t_serv_comm *s)
   s->serv_addr.sin_family = AF_INET;
   s->serv_addr.sin_addr.s_addr = INADDR_ANY;
   s->serv_addr.sin_port = htons(s->port);
+
+  if (setsockopt(s->sock_serv, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
+    perror("setsockopt");
+    exit(1);
+  }
+
   if (bind(s->sock_serv, (struct sockaddr*)&(s->serv_addr),
 	   sizeof(s->serv_addr)) < 0)
     {

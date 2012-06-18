@@ -23,7 +23,7 @@ FLAGS		=	-Wall -Werror -DDEB -g3
 
 all:	
 	@echo "\n================== Compilation ===================="
-	@gcc $(SRCS) -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS)
+	@clang $(SRCS) -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS)
 
 clean:
 	@echo "\n==================== Cleaning ====================="
