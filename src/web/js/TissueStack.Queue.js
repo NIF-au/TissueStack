@@ -89,7 +89,8 @@ TissueStack.Queue.prototype = {
 		this.startQueue();
 	},
 	drawRequestAfterLowResolutionPreview : function(draw_request, timestamp) {
-		var lowResBackdrop = setInterval(function(_this, draw_request, timestamp) {
+		var _this = this;
+		var lowResBackdrop = setInterval(function() {
 			if (_this.lowResolutionPreviewDrawn) {
 				if (draw_request) {
 					_this.drawRequest(draw_request);
@@ -98,7 +99,7 @@ TissueStack.Queue.prototype = {
 				}
 				clearInterval(lowResBackdrop);
 			}
-		}, 10, this, draw_request, timestamp);		
+		}, 10);		
 	},
 	clearRequestQueue : function() {
 		this.requests = [];
