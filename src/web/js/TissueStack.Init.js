@@ -181,8 +181,8 @@ TissueStack.BindGlobalEvents = function () {
 						if(TissueStack.desktop){
 							TissueStack.dataSetNavigation.addDataSetToDynaTree(addedDataSet);
 						}
-						if (TissueStack.tablet){
-							TissueStack.dataSetNavigation.addDataSetToTabletTree();
+						if (TissueStack.tablet || TissueStack.phone){
+							TissueStack.dataSetNavigation.addDataSetToTabletTree(addedDataSet);
 						}
 					}
 				}

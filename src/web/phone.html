@@ -49,14 +49,15 @@
 	<ul>
 		<li class="active"><a href="#home" class="contentLink" data-transition="slide">Dashboard <span class="icon"></span></a></li>
 		<li><a href="#tissueX" class="contentLink" data-transition="slide">Tissue X<span class="icon"></span></a></li>
-		<li><a href="#tissueY" class="contentLink" data-transition="slide">Tissue Y <span class="icon"></span></a></li>
-		<li><a href="#tissueZ" class="contentLink" data-transition="slide">Tissue Z <span class="icon"></span></a></li>
+		<li><a href="#tissueY" class="contentLink" data-transition="slide">Tissue Y<span class="icon"></span></a></li>
+		<li><a href="#tissueZ" class="contentLink" data-transition="slide">Tissue Z<span class="icon"></span></a></li>
+		<li><a href="#dataset" class="contentLink" data-transition="slide">Data Set<span class="icon"></span></a></li>
 	</ul>
 </div>
 
 	<div data-role="page" class="pages" id="home" data-theme="a">
 		<div data-role="header" class="headers">
-			<a href="#" class="showMenu menuBtn">Menu</a>
+			<a href="#" class="showMenu menuBtn" style="top: -5px;">Menu</a>
 				<h1>Dashboard</h1>
 		</div><!-- /header -->
 		<div data-role="content">
@@ -85,7 +86,7 @@
 	
 	<div data-role="page" class="pages" id="tissueX" data-theme="a">
 		<div data-role="header" class="headers">
-		<a href="#" class="showMenu menuBtn">Menu</a>
+		<a href="#" class="showMenu menuBtn" style="top: -5px;">Menu</a>
 			<h1>X Plane</h1>
 		</div><!-- /header -->
 	
@@ -111,7 +112,7 @@
 	
 	<div data-role="page" class="pages" id="tissueY" data-theme="a">
 		<div data-role="header" class="headers">
-		<a href="#" class="showMenu menuBtn">Menu</a>
+		<a href="#" class="showMenu menuBtn" style="top: -5px;">Menu</a>
 			<h1>Y Plane</h1>
 		</div><!-- /header -->
 		<div data-role="content">	
@@ -136,7 +137,7 @@
 
 	<div data-role="page" class="pages" id="tissueZ" data-theme="a">
 		<div data-role="header" class="headers">
-		<a href="#" class="showMenu menuBtn">Menu</a>
+		<a href="#" class="showMenu menuBtn" style="top: -5px;">Menu</a>
 			<h1>Z Plane</h1>
 		</div><!-- /header -->
 		<div data-role="content">
@@ -156,5 +157,24 @@
 			<input id="canvas_z_slider" orientation="horizontal" class="canvasslider" type="range" min="0" max="1000" value="500" step="5" />
 		</div><!-- /content -->
 	</div><!-- /page -->
+	
+	<!-- Calling Data Set -->
+	
+	<div data-role="page" class="pages" id="dataset" data-theme="a">
+		<div data-role="header" class="headers">
+			<a href="#" class="showMenu menuBtn" style="top: -5px;">Menu</a>
+				<h1>Data Set</h1>
+		</div><!-- /header -->
+		<div data-role="content">
+				<input size="8" maxlength="50" type="text" id="server_search_input" value="http://"/>
+				<button type="button" id="server_search_button">Connect to TissueStack Server</button>
+				<div id="mobile_style_tree_dataset">
+					<div data-role="collapsible-set" data-theme="a" data-content-theme="d">
+						<div id="tablet_tree"></div>
+					</div>
+				</div>
+		</div><!-- /content -->
+	</div><!-- /page -->
+	
 </body>
 </html>
