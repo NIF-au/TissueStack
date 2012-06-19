@@ -22,44 +22,38 @@ NAME		=	TissueStackImageServer
 FLAGS		=	-Wall -Werror -DDEB -g3
 
 
-all:	
-	@echo "\n================== Compilation ===================="
-	@gcc $(SRCS) -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS)
+all: compile install
 
-general: all plug install
-
-plug:
-	@echo "\n======== Compilation Communicator Plugin =========="
-	@make -C ./plugins/communicator/ re
-	@echo "\n======== Compilation PNGExtractor Plugin =========="
-	@make -C ./plugins/png_extract/ re
-	@echo "\n===== Compilation ProcessCommunicator Plugin ======"
-	@make -C ./plugins/comm_inter_process/ re
+compile:	
+	@clear
+	@echo "\n================== Compile $(NAME) ===================="
+	gcc $(SRCS) -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS)
+	make -C ./plugins/communicator/ compile
+	make -C ./plugins/png_extract/ compile
+	make -C ./plugins/comm_inter_process/ compile
 
 install:
 	@echo "\n============= Installing Binaries ================="
-	@mkdir -p /usr/local/bin/
-	@mkdir -p /usr/local/plugins/
-	@mv ./TissueStackImageServer /usr/local/bin/
-	@mv ./plugins/communicator/TissueStackCommunicator.so /usr/local/plugins/	
-	@mv ./plugins/png_extract/TissueStackPNGExtract.so /usr/local/plugins/
-	@mv ./plugins/comm_inter_process/TissueStackProcessCommunicator.so /usr/local/plugins/
+	mkdir -p /usr/local/bin/
+	cp $(NAME) /usr/local/bin/
+	make -C ./plugins/communicator/ install
+	make -C ./plugins/png_extract/ install
+	make -C ./plugins/comm_inter_process/ install
 
 clean:
-	@echo "\n==================== Cleaning ====================="
-	@rm -rf *~ \#*\# $(NAME) ./png/*
+	@echo "\n==================== Cleaning $(NAME) ====================="
+	rm -rf *~ \#*\# $(NAME) ./png/*
+	rm -rf *.o
+	make -C ./plugins/communicator/ clean
+	make -C ./plugins/png_extract/ clean
+	make -C ./plugins/comm_inter_process/ clean
 
-fclean:	clean
-	@rm -rf *.o
-
-re:	fclean all
-
-e:	re
+e:	clean
 	@echo "\n==================== Execution ====================\n\n"
 	@./yop ../00-normal-model-nonsym.mnc
 	@echo "\n\n================== Exec finished ==================\n\n"
 
-time:	re
+time:	clean
 	@echo "\n==================== Execution ====================\n\n"
 	@time ./yop ../00-normal-model-nonsym.mnc
 	@echo "\n\n================== Exec finished ==================\n\n"
