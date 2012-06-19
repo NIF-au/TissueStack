@@ -219,7 +219,10 @@ void		*start(void *args)
     {
       sprintf(volume_load, "file load %s", a->commands[0]);
       a->general_info->plug_actions(a->general_info, volume_load, NULL);
-				    //write(2, "MINC Volume not found\n", strlen("MINC Volume not found\n"));
+      usleep(10000);
+      volume = a->general_info->get_volume(a->commands[0], a->general_info);
+      printf("%p\n\n", volume);
+      //write(2, "MINC Volume not found\n", strlen("MINC Volume not found\n"));
       //a->this->busy = 0;
       //return (NULL);
     }
