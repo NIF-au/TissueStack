@@ -19,8 +19,11 @@ TissueStack.Init = function (afterLoadingRoutine) {
 	
 	// handle window resizing
 	$(window).resize(function() {
-		var dataSetCount = TissueStack.dataSetNavigation ? TissueStack.dataSetNavigation.getSelectedDynaTreeNodes().length : 0;
-
+		var dataSetCount = 1;
+		if (TissueStack.desktop) {
+			dataSetCount = TissueStack.dataSetNavigation ? TissueStack.dataSetNavigation.getSelectedDynaTreeNodes().length : 0;
+		}
+		
 		TissueStack.Utils.adjustScreenContentToActualScreenSize(dataSetCount);
 		// set new canvas dimensions
 		for (var i=0;i<dataSetCount;i++) {

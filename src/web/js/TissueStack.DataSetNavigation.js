@@ -30,7 +30,7 @@ TissueStack.DataSetNavigation.prototype = {
 			return;
 		}
 		if (TissueStack.tablet) {
-			index = 0;
+			index = 1;
 		}
 
 		var oldEntry = this.selectedDataSets["dataset_" + index];
@@ -143,7 +143,7 @@ TissueStack.DataSetNavigation.prototype = {
 			return;
 		}
 		if (TissueStack.tablet || TissueStack.phone) {
-			index = 0;
+			index = 1;
 		}
 
 		$("#canvas_point_x,#canvas_point_y,#canvas_point_z").removeAttr("disabled");
@@ -363,12 +363,14 @@ TissueStack.DataSetNavigation.prototype = {
 	getSelectedTabletTree : function (dataSet) {
 		for (var dataSetKey in TissueStack.dataSetStore.datasets) {
 			var dataSet = TissueStack.dataSetStore.datasets[dataSetKey];
-			$("#tabletTreeDiv-" + dataSet.local_id + dataSet.host + "").click(function() {
-				_this.addToOrReplaceSelectedDataSets(dataSet.local_id, 0);
-				_this.showDataSet(1);
-				TissueStack.InitUserInterface();
-				TissueStack.BindDataSetDependentEvents();
-			});
+			(function(dataSet) {
+				$("#tabletTreeDiv-" + dataSet.local_id + dataSet.host + "").click(function() {
+					_this.addToOrReplaceSelectedDataSets(dataSet.id, 0);
+					_this.showDataSet(1);
+					TissueStack.InitUserInterface();
+					TissueStack.BindDataSetDependentEvents();
+				});
+			})(dataSet);
 		}
 	}
 };		

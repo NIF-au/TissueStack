@@ -153,25 +153,15 @@ TissueStack.Events.prototype = {
 		$(document).unbind("sync");
 		$(document).unbind("zoom");
 		
-		// UNBIND DESKTOP VERSION EVENTS
-		if (TissueStack.desktop) {
-			this.getCanvasElement().unbind("mousedown");			
-			this.getCanvasElement().unbind("mousemove");
-			this.getCanvasElement().unbind('mousewheel');
-			
-			return;
-		}
+		this.getCanvasElement().unbind("mousedown");			
+		this.getCanvasElement().unbind("mousemove");
+		this.getCanvasElement().unbind('mousewheel');
 
-		// UNBIND MOBILE VERSION EVENTS
-		if (TissueStack.tablet || TissueStack.phone) {
-			this.getCanvasElement().unbind("touchstart");			
-			this.getCanvasElement().unbind("touchmove");
-			this.getCanvasElement().unbind('gesturestart');
-			this.getCanvasElement().unbind('gestureend');
-			this.getCanvasElement().unbind('doubletap');
-			
-			return;
-		}
+		this.getCanvasElement().unbind("touchstart");			
+		this.getCanvasElement().unbind("touchmove");
+		this.getCanvasElement().unbind('gesturestart');
+		this.getCanvasElement().unbind('gestureend');
+		this.getCanvasElement().unbind('doubletap');
 	},panStart : function(e) {
 		var coords = TissueStack.Utils.getRelativeMouseCoords(e);
 		
