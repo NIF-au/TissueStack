@@ -4,9 +4,9 @@ void		*worker_start(void *pool)
 {
   t_queue	*task;
   t_thread_pool	*p;
-  
+
   p = (t_thread_pool*)pool;
-  while (1)
+  while (p->loop)
     {
       task = NULL;
       // lock mutex to avoid concurrent access
@@ -21,12 +21,17 @@ void		*worker_start(void *pool)
 	    p->last = NULL;
 	  p->first = p->first->next;
 	  p->tasks_to_do--;
+	  if (p->tasks_to_do == 0)
+	    {
+	      p->last = NULL;
+	      p->first = NULL;
+	    }
 	}
       // unlock the mutex locked before
       pthread_mutex_unlock(&(p->lock));
       if (task != NULL)
 	{
-	  (*(task->function))(task->argument);
+	  task->function(task->argument);
 	  free(task);
 	}
     }
@@ -36,7 +41,7 @@ void		*worker_start(void *pool)
 void		thread_pool_add_task(void *(*function)(void *), void *args, t_thread_pool *p)
 {
   t_queue	*tmp;
-  
+
   pthread_mutex_lock(&(p->lock));
   if (p->last != NULL)
     {
@@ -70,6 +75,7 @@ void		thread_pool_init(t_thread_pool *p, unsigned int nb_threads)
   i = 0;
   p->first = NULL;
   p->last = NULL;
+  p->loop = 1;
   p->tasks_to_do = 0;
   p->nb_workers = nb_threads;
   p->add = thread_pool_add_task;
@@ -91,7 +97,7 @@ void		thread_pool_init(t_thread_pool *p, unsigned int nb_threads)
 	{
 	  write(2, "Error on init Thread workers\n", strlen("Error on init Thread workers\n"));
 	  exit(-1);
-	}      
+	}
       i++;
     }
 }
@@ -118,17 +124,20 @@ void		thread_pool_destroy(t_thread_pool *p)
 	}
       i++;
     }
+  usleep(1000);
   // destroy condvar and mutex
   pthread_mutex_destroy(&(p->lock));
   pthread_cond_destroy(&(p->condvar));
   // free the rest
+  //free(p->threads);
   thread_pool_free(p);
+  free(p);
 }
 
 void		thread_pool_free(t_thread_pool *p)
 {
   t_queue	*tmp;
-  
+
   tmp = p->first;
   // free queue
   while (p->first != NULL)

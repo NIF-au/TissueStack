@@ -1,0 +1,8 @@
+Note: The 2 scripts most likely need modification before "installing" them in the /etc/init directory
+
+On an Ubuntu system, here are the recommended steps to integrate the scripts into the init mechanics:
+(1) Modify paths to daemons in the script
+(2) Remove old versions if necessary: rm /etc/rc*/*myscript
+(3) Adding the service script to default runlevels: update-rc.d myscript defaults
+
+Help can also be found here: https://help.ubuntu.com/community/UbuntuBootupHowto

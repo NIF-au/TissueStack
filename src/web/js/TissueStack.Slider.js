@@ -333,7 +333,7 @@ $( document ).bind( "pagecreate create", function( e ){
 	$( $.mobile.slider.prototype.options.initSelector, e.target )
 		.not( ":jqmData(role='none'), :jqmData(role='nojs')" )
 		.slider();
-
 });
+
 
 })( jQuery );

@@ -59,7 +59,7 @@ overflow: scroll;
     
 /* detect screen size and locate the area of width and height and overlay vanvas  */
 
-.canvaslocate {  
+.dataset {  
 	margin: 5px;
  	float: left; 
 	border: 1px solid #fff;	
@@ -95,7 +95,7 @@ overflow: scroll;
 	z-index: 1490;
 }
 
-.coords_show_left{
+.left_panel{
 	margin: 5px;
 	width: 20%;
 	float: left; 
@@ -105,7 +105,7 @@ overflow: scroll;
 	font-size: 12px;
 }
 
-.coords_show_right{
+.right_panel{
 	position: relative;
 	width: 5%;
 	float: left;
@@ -220,7 +220,9 @@ a.ui-slider-handle-horizontal{
 	top: 0px;
 }
 
-#left_side_view_canvas {
+/*CANVAS VIEW*/
+
+.left_side_view {
 	z-index: 2390;
 	border: 1px solid #fff;
 	position: absolute; left: 10px; bottom: 10px;
@@ -228,7 +230,7 @@ a.ui-slider-handle-horizontal{
 	height: 200px;	
 }
 
-#right_side_view_canvas {
+.right_side_view {
   	filter:alpha(opacity=0); /* For IE8 and earlier */
 	z-index: 2390;
 	border: 1px solid #fff;
@@ -244,4 +246,9 @@ a.ui-slider-handle-horizontal{
 
 .side_canvas input {
 	width: 65px;
+}
+
+.hidden {
+    display:none; 
+    visibility: false;
 }

@@ -3,11 +3,12 @@ DIRSRC		=	./
 SRCS		=	$(DIRSRC)core.c							\
 			$(DIRSRC)prompt.c						\
 			$(DIRSRC)plugin.c						\
+			$(DIRSRC)volume.c						\
 			$(DIRSRC)thread_pool.c
 
-INCLUDE		=	-I/home/oliver/workspace/minc-2.1.10/libsrc2 -I./headers
+INCLUDE		=	-I./headers 
 
-LIB_PATH	=	-L/home/oliver/workspace/minc-2.1.10/.libs
+LIB_PATH	=	
 
 LIBS		=	-lhdf5								\
 			-lnetcdf 							\
@@ -16,29 +17,43 @@ LIBS		=	-lhdf5								\
 			-lpthread							\
 			-ldl
 
-NAME		=	yop
+NAME		=	TissueStackImageServer
 
 FLAGS		=	-Wall -Werror -DDEB -g3
 
-all:	
-	@echo "\n================== Compilation ===================="
-	@gcc $(SRCS) -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS)
+
+all: compile install
+
+compile:	
+	@clear
+	@echo "\n================== Compile $(NAME) ===================="
+	gcc $(SRCS) -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS)
+	make -C ./plugins/communicator/ compile
+	make -C ./plugins/png_extract/ compile
+	make -C ./plugins/comm_inter_process/ compile
+
+install:
+	@echo "\n============= Installing Binaries ================="
+	mkdir -p /usr/local/bin/
+	cp $(NAME) /usr/local/bin/
+	make -C ./plugins/communicator/ install
+	make -C ./plugins/png_extract/ install
+	make -C ./plugins/comm_inter_process/ install
 
 clean:
-	@echo "\n==================== Cleaning ====================="
-	@rm -rf *~ \#*\# $(NAME) ./png/*
+	@echo "\n==================== Cleaning $(NAME) ====================="
+	rm -rf *~ \#*\# $(NAME) ./png/*
+	rm -rf *.o
+	make -C ./plugins/communicator/ clean
+	make -C ./plugins/png_extract/ clean
+	make -C ./plugins/comm_inter_process/ clean
 
-fclean:	clean
-	@rm -rf *.o
-
-re:	fclean all
-
-e:	re
+e:	clean
 	@echo "\n==================== Execution ====================\n\n"
 	@./yop ../00-normal-model-nonsym.mnc
 	@echo "\n\n================== Exec finished ==================\n\n"
 
-time:	re
+time:	clean
 	@echo "\n==================== Execution ====================\n\n"
 	@time ./yop ../00-normal-model-nonsym.mnc
 	@echo "\n\n================== Exec finished ==================\n\n"

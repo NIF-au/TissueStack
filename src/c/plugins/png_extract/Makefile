@@ -4,9 +4,9 @@ SRCS		=	$(DIRSRC)minc_extract_png.c					\
 			$(DIRSRC)png_creator.c						\
 			$(DIRSRC)slice.c
 
-INCLUDE		=	-I/home/oliver/workspace/minc-2.1.10/libsrc2 -I./headers -I../../../headers
+INCLUDE		=	-I./headers -I../../../headers
 
-LIB_PATH	=	-L/home/oliver/workspace/minc-2.1.10/.libs
+LIB_PATH	=	
 
 LIBS		=	-lhdf5								\
 			-lnetcdf 							\
@@ -15,30 +15,35 @@ LIBS		=	-lhdf5								\
 			-lpthread							\
 			-ldl
 
-NAME		=	yop.so
+NAME		=	TissueStackPNGExtract.so
 
 FLAGS		=	-g3 -Wall -Werror -DDEB
 
-all:	
-	@echo "\n================== Compilation ===================="
-	@gcc $(SRCS) -c $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -fPIC
-	@gcc *.o -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -shared
+PLUGIN_INSTALL_DIR = /usr/local/plugins
+
+all: compile install	
+
+compile:
+	@echo "\n================== Compile $(NAME) ===================="
+	gcc $(SRCS) -c $(INCLUDE) $(FLAGS) -fPIC
+	gcc *.o -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -shared
 
 clean:
-	@echo "\n==================== Cleaning ====================="
-	@rm -rf *~ \#*\# $(NAME) ./png/*
+	@echo "\n==================== Cleaning $(NAME) ====================="
+	rm -rf *~ \#*\# $(NAME) ./png/*
+	rm -rf *.o
+	rm -rf *.so
 
-fclean:	clean
-	@rm -rf *.o
+install:
+	mkdir -p $(PLUGIN_INSTALL_DIR)
+	cp $(NAME) $(PLUGIN_INSTALL_DIR)/$(NAME)
 
-re:	fclean all
-
-e:	re
+e:	clean
 	@echo "\n==================== Execution ====================\n\n"
 	@./yop ../00-normal-model-nonsym.mnc
 	@echo "\n\n================== Exec finished ==================\n\n"
 
-time:	re
+time:	clean
 	@echo "\n==================== Execution ====================\n\n"
 	@time ./yop ../00-normal-model-nonsym.mnc
 	@echo "\n\n================== Exec finished ==================\n\n"

@@ -105,9 +105,16 @@ TissueStack.Utils = {
 		
 		return results;
 	},indexColorMaps : function() {
-		if (!TissueStack.color_maps) {
+		var db_color_map = TissueStack.configuration['color_maps'];
+		if (!db_color_map || !db_color_map.value) {
 			return;
 		}
+		
+		if (typeof(db_color_map.value) != 'string') {
+			return;
+		}
+		
+		TissueStack.color_maps = $.parseJSON( db_color_map.value);
 		
 		for (var map in TissueStack.color_maps) {
 			if (!map || map === 'grey') {
@@ -155,28 +162,200 @@ TissueStack.Utils = {
 			// no data: 255
 			TissueStack.indexed_color_maps[map][255] = [255, 255, 255];
 		}
-	},adjustScreenContentToActualScreenSize : function (){	
-		if (!TissueStack || TissueStack.phone) {
+	},adjustScreenContentToActualScreenSize : function (datasets){	
+		if (TissueStack.phone) {
 			return;
 		}
 		
-		var screenWidth = $(document).width();
-		var screenHeight = $(document).	height();
+		if (typeof(datasets) != "number") {
+			datasets = 0;
+		}
+		
+		if (datasets > 2) {
+			datasets = 2;
+		}
 
-		// mobile version dimension dynamic changes
-		TissueStack.canvasDimensions = {width: Math.floor(screenWidth * 0.70), height: Math.floor(screenHeight * 0.75)};
-		$('.coords_show_left').css({"width" : Math.floor(screenWidth * 0.20)});
-		$('.coords_show_right').css({"height": TissueStack.canvasDimensions.height});
-		$('.canvaslocate').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height});
-		$('#main_view_canvas').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height});
-		$('canvas').attr("width", TissueStack.canvasDimensions.width);
-		$('canvas').attr("height", TissueStack.canvasDimensions.height);
+		// we hide everything if there are no data sets selected
+		if (datasets == 0) {
+		   // clear input fields
+		   $("#canvas_point_x,#canvas_point_y,#canvas_point_z").attr("value", "");
+		   $("#canvas_point_x,#canvas_point_y,#canvas_point_z").attr("disabled", "disabled");
+		   // hide everything
+		   $('#dataset_1_center_point_in_canvas, #dataset_2_center_point_in_canvas').closest('.ui-btn').hide();
+		   $(".dataset, .right_panel").addClass("hidden");
+		   return;
+		}
+		
+		// get screen dimensions
+		var screenWidth = $(window).width();
+		var screenHeight = $(window).height();
+		
+		// get the height of the menu header
+		var menuHeight = $('#menu_header').height();
+		// define some tolerance span
+		var widthTolerance = Math.floor(screenWidth * 0.05);
+		var heightTolerance = Math.floor(screenWidth * 0.0175);
+		
+		// get the width of the left panel 
+		var leftPanelWidth = Math.floor(screenWidth * 0.15);
+		var leftPanelHeight = screenHeight - menuHeight;
+		var rightPanelWidth = Math.floor(screenWidth * 0.05);
+		
+		TissueStack.canvasDimensions = {width: (screenWidth - leftPanelWidth - rightPanelWidth - widthTolerance), height: Math.floor(leftPanelHeight / datasets) -  heightTolerance};
+		leftPanelHeight -=  heightTolerance;
+		
+		$('.left_panel').css({"width" : leftPanelWidth, "height": leftPanelHeight});
+		$('.right_panel').css({"width" : rightPanelWidth, "height": TissueStack.canvasDimensions.height});
+		$(".ui-slider-vertical").height(TissueStack.canvasDimensions.height - heightTolerance);
+		$(".ui-slider-horizontal").height(TissueStack.canvasDimensions.height - heightTolerance);
 
-		// additional desktop version dimension changes
+		if (TissueStack.desktop) {
+			var treeHeight = 
+				leftPanelHeight - 
+				$("#canvas_extent").height() - $("#canvas_point_x").height() * 8 - $("#dataset_1_center_point_in_canvas").height() * (datasets == 2 ? 5 : 4);
+			$("#treedataset").css({"height": treeHeight});
+		}
+
+		$('.dataset').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height});
+		for (var x=1;x<=datasets;x++) {
+			$('#dataset_' + x + '_main_view_canvas').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height});
+			$('#dataset_' + x + '_main_view_canvas canvas').attr("width", TissueStack.canvasDimensions.width);
+			$('#dataset_' + x + '_main_view_canvas canvas').attr("height", TissueStack.canvasDimensions.height);
+		}
+
+		// apply screen and canvas size changes
 		var sideCanvasDims = {width: Math.floor(TissueStack.canvasDimensions.width * 0.3), height: Math.floor(TissueStack.canvasDimensions.height * 0.2)};
-		$('#left_side_view_canvas').css({"width" : sideCanvasDims.width, "height" : sideCanvasDims.height});
-		$('#right_side_view_canvas').css({"width" : sideCanvasDims.width, "height" : sideCanvasDims.height});
-		$('.canvaslocate .side_canvas').attr("width", sideCanvasDims.width);
-		$('.canvaslocate .side_canvas').attr("height", sideCanvasDims.height);
+		$('.left_side_view').css({"width" : sideCanvasDims.width, "height" : sideCanvasDims.height});
+		$('.right_side_view').css({"width" : sideCanvasDims.width, "height" : sideCanvasDims.height});
+		$('.left_side_view canvas').attr("width", sideCanvasDims.width);
+		$('.left_side_view canvas').attr("height", sideCanvasDims.height);
+		$('.right_side_view canvas').attr("width", sideCanvasDims.width);
+		$('.right_side_view canvas').attr("height", sideCanvasDims.height);
+	},
+	verifyUrlSyntax : function(url) {
+		if (typeof(url) != "string") {
+			return null;
+		}
+
+		// trim whitespace
+		url = $.trim(url);
+		if (url.length == 0) {
+			return null;
+		}
+		
+		if (url.indexOf("http://") != 0 && url.indexOf("https://") != 0 && url.indexOf("ftp://") != 0) {
+			url = "http://" + url;
+		}
+		
+		// check
+	    var validUrlRules = /^(http:\/\/|https:\/\/|ftp:\/\/|www.){1}([0-9A-Za-z]+\.)/;
+	    if (validUrlRules.test(url) && url.substring(url.length-1) != ".") {
+	        return url;
+	    }
+
+	    return null;
+	},
+	extractHostNameFromUrl : function(url) {
+		if (typeof(url) != "string") {
+			return null;
+		}
+
+		// trim whitespace
+		url = $.trim(url);
+
+		// take off protocol 
+		if (url.indexOf("http://") == 0 || url.indexOf("file://") == 0) {
+			url = url.substring(7, url.length);
+		} else if (url.indexOf("https://") == 0 || url.indexOf("file:///") == 0) {
+			url = url.substring(8, url.length);
+		} else if (url.indexOf("ftp://") == 0) {
+			url = url.substring(6, url.length);
+		}
+		// strip it off a potential www
+		if (url.indexOf("www.") == 0) {
+			url = url.substring(4, url.length);
+		}
+			
+		//now cut off anything after the initial '/' if exists to preserve the domain
+		var slashPosition = url.indexOf("/");
+		if (slashPosition > 0) {
+			url = url.substring(0, slashPosition);
+		}
+
+		return url;
+	},
+	assembleTissueStackImageRequest : function(
+			protocol, host, isTiled, dataset_id, is_preview,
+			zoom, plane, slice, image_extension,row, col) {
+		if (typeof(protocol) != "string") {
+			protocol = "http";
+		} 
+		protocol = $.trim(protocol);
+		if (typeof(host) != "string" || $.trim(host) == "localhost") {
+			host = "";
+		}
+		host = $.trim(host);
+		if (typeof(dataset_id) != "number" || dataset_id <= 0) {
+			return null;
+		}
+		if (typeof(is_preview) != "boolean") {
+			return null;
+		}
+		if (typeof(zoom) != "number" || zoom < 0) {
+			return null;
+		}
+		if (typeof(plane) != "string") {
+			return null;
+		}
+		if (typeof(slice) != "number" || slice < 0) {
+			return null;
+		}
+		if (typeof(image_extension) != "string") {
+			image_extension = "png";
+		}
+
+		// assemble what we have so far
+		var url = (host != "" ? (protocol + "://" + host.replace(/[_]/g,".")) : "");
+
+		//are we tiled or not
+		if (typeof(isTiled) != "boolean") {
+			isTiled = false; // if in doubt => false
+		}
+
+		var path = isTiled ? TissueStack.configuration['tile_directory'].value : TissueStack.configuration['image_service_directory'].value;
+
+		if (isTiled) {
+			url += ("/" + path + "/" + dataset_id + "/" + zoom + "/" + plane + "/" + slice);
+
+			// for preview we don't need all the params 
+			if (is_preview) {
+				return url + ".low.res." + image_extension;
+			}
+
+			// for tiling we need the row/col pair in the grid
+			if (typeof(row) != "number" || row < 0) {
+				return null;
+			}
+			if (typeof(col) != "number" || col < 0) {
+				return null;
+			}
+
+			return url + "/" + row + '_' + col + "." + image_extension;
+		} else {
+			// TODO: image_service aka direct image querying
+			return url + "/" + row + '_' + col + "." + image_extension;
+		}
+	}, adjustBorderColorWhenMouseOver : function () {
+			if (TissueStack.phone || TissueStack.tablet) {
+				return;
+			}
+	
+			$('.dataset').mouseover(function(){
+			    $(this).css("border-color","#efff0b").css("border-width",1);
+			    $('.left_panel').css("color","#efff0b").css("font-color","#efff0b");
+			}).mouseout(function(){
+			   	$(this).css("border-color","white").css("border-width",1);
+			   	$('.left_panel').css("color","white");
+			});
 	}
 };

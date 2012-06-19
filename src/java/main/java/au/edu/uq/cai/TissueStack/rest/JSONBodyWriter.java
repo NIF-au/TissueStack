@@ -63,6 +63,8 @@ public class JSONBodyWriter implements MessageBodyWriter<Object> {
 			OutputStream arg6) throws IOException, WebApplicationException {
         final BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(arg6, "UTF-8"));
         
+        arg5.add("Access-Control-Allow-Origin", "*");
+        
         if (arg0 == null) {
         	throw new IOException("Response object is null");
         }

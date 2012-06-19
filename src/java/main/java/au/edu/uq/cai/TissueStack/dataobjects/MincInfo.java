@@ -4,13 +4,13 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(namespace=IGlobalConstants.XML_NAMESPACE)
-public final class MincTest {
+public final class MincInfo {
 	private String filename;
 	private String dimensions[];
 	private long sizes[];
 	
-	public MincTest() {	}
-	public MincTest(String filename) {
+	public MincInfo() {	}
+	public MincInfo(String filename) {
 		this.setFilename(filename);
 	}
 	

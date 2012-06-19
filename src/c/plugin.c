@@ -1,5 +1,53 @@
 #include "core.h"
 
+void		free_all_plugins(t_tissue_stack *t)
+{
+  t_plugin	*p;
+  t_plugin	*save;
+
+  p = t->first;
+  while (p != NULL)
+    {
+      save = p;
+      dlclose(p->handle);
+      free(p->name);
+      free(p->path);
+      p = p->next;
+      free(save);
+    }
+}
+
+void		list_plugins(t_tissue_stack *t, char *command)
+{
+  t_plugin	*tmp;
+
+  tmp = t->first;
+  if (tmp != NULL)
+    {
+      while (tmp)
+	{
+	  printf("\nPlugin = %s\n", tmp->name);
+	  if (command != NULL && strcmp(command, "--verbose") == 0)
+	    {
+	      printf("\tPath = %s\n", tmp->path);
+	      printf("\tError = %i\n", tmp->error);
+	      printf("\tBusy = %s\n", tmp->busy == 0 ? "No" : "Yes");
+	    }
+	  tmp = tmp->next;
+	}
+    }
+  else
+    printf("No plugins loaded\n");
+}
+
+void		plug_actions_from_external_plugin(t_tissue_stack *general, char *commands, void *box)
+{
+  char		**splitted;
+
+  splitted = str_to_wordtab(commands);
+  prompt_exec(splitted, general, box);
+}
+
 t_plugin	*get_plugin_by_name(char *name, t_plugin *first)
 {
   t_plugin	*this;
@@ -39,16 +87,19 @@ void		*plugin_load(void *args)
       this->next->prev = this;
       this = this->next;
     }
-  this->name = a->name;
-  this->path = a->path;
+  this->name = malloc((strlen(a->name) + 1) * sizeof(*this->name));
+  this->path = malloc((strlen(a->path) + 1) * sizeof(*this->path));
+  this->name = strcpy(this->name, a->name);
+  this->path = strcpy(this->path, a->path);
   this->error = 0;
   this->next = NULL;
   this->busy = 0;
+  this->thread_id = pthread_self();
   a->this = this;
   // open the plugin
   this->handle = dlopen(this->path, RTLD_LAZY);
   if (!this->handle)
-    {  
+    {
       fprintf(stderr, "%s\n", dlerror());
       this->error = 1;
       return (NULL);
@@ -77,7 +128,7 @@ void		*plugin_start(void *args)
   void		*(*start)(void *a);
   char		*error;
   t_plugin	*this;
-  
+
   a = (t_args_plug *)args;
   if ((this = get_plugin_by_name(a->name, a->general_info->first)) == NULL)
     {

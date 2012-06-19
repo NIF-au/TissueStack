@@ -9,12 +9,22 @@
        	<link rel="icon" type="image/png" href="images/favicon.png" />
        	
         <link rel="stylesheet" href="css/jquery.mobile-1.1.0.min.css" />
-        <link rel="stylesheet" href="css/mobile.css" />
+        <link rel="stylesheet" href="css/default.css" />
         
+        <!--Apple Device Start Up Splash Screen and ICON-->
+		<link rel="apple-touch-startup-image" href="images/mobile/ipadscreen.png" /> <!--For iPad-->
+		<link rel="apple-touch-icon" href="images/favicon_icon.png" />
+		
         <script src="js/libs/jquery/jquery-1.7.1.js"></script>
         <script src="js/libs/jquery/jquery.mobile-1.1.0.min.js"></script>
         <script src="js/TissueStack.Slider.js"></script>
 		<script src="js/libs/sylvester/sylvester.js"></script>
+		
+		<!--TREE DATA SETS-->
+		<script src="js/libs/jquery/jquery-ui.custom.js"></script>
+	    <script src="js/libs/jquery/jquery.cookie.js"></script>
+	    <script src="js/libs/jquery/jquery.dynatree.js"></script>
+	    <link rel="stylesheet" href="css/ui.dynatree.css">
 		
 		<script src="js/TissueStack.MouseWheel.js"></script>
 		<script src="js/TissueStack.js"></script>
@@ -23,6 +33,8 @@
 		<script src="js/TissueStack.Queue.js"></script>
 		<script src="js/TissueStack.Canvas.js"></script>
 		<script src="js/TissueStack.Events.js"></script>
+		<script src="js/TissueStack.DataSetStore.js"></script>
+		<script src="js/TissueStack.DataSetNavigation.js"></script>
 		<script src="js/TissueStack.Init.js"></script>
 		
 		<script type="text/javascript">
@@ -33,10 +45,10 @@
 		</script>
   </head>
 <body>
-		    
+	<!--	TILE PAGE	    -->
       <div data-role="page" data-theme="a" id="data" >
-            <div data-role="content">
-   				<div data-theme="a" data-role="header" data-position="fixed" >
+            <div data-role="content" style="padding: 5px;">
+   				<div id="menu_header" data-theme="a" data-role="header" data-position="fixed" data-id="Head1">
          	  	     <div data-role="navbar">
 						<ul>
 							<li><a href="#data" data-icon="plus" class="ui-btn-active">Data</a></li>
@@ -45,46 +57,77 @@
 			  		 </div>
                 </div>
      	    </div>
-     	    <div style="min-width: 1400px;">
-     	    	<div class="coords_show_left"> 
-     	    		<div id="canvas_extent" class="text-align-center"></div>
+     	    <div>
+     	    	<div class="left_panel"> 
+     	    		<div id="canvas_extent" class="text-align-center" style="height: 100px;"></div>
      	    		<input size="8" maxlength="10" type="text" id="canvas_point_x" value="0"/>
      	    		<input size="8" maxlength="10" type="text" id="canvas_point_y" value="0"/>
-     	    		<button type="button" id="center_point_in_canvas">Center Coordinates</button>
+     	    		<input size="8" maxlength="10" type="text" id="canvas_point_z" value="0"/>
+     	    		<button type="button" id="dataset_1_center_point_in_canvas">Center Data Set 1</button>
+     	    		<button type="button" id="dataset_2_center_point_in_canvas">Center Data Set 2</button>
+     	    		
      	    		<hr />
-     	    		<div> 
-     	    			<div class="coords">&nbsp;</div>
-     	    			<div class="pixel_coords">&nbsp;</div>
-     	    			<div class="world_coords">&nbsp;</div>
-     	    		</div> 
+     	    		
+                    <input size="8" maxlength="50" type="text" id="server_search_input" value="http://"/>
+                    <button type="button" id="server_search_button">Connect to TissueStack Server</button>
+
+     	    		<!--ADD TREE DATA SET NAVI BAR-->
+					<div id="treedataset" style="height:500px;"></div>
+					<!--END -->
+     	    	
      	    	</div>
      	    	
-     	    	<div class="canvaslocate">
-     	    		<div id="main_view_canvas" class="canvasview canvas_y" >
-     	    			<canvas id="canvas_y_plane" class="plane"></canvas>	
-     	    			<canvas id="canvas_y_plane_cross_overlay" class="cross_overlay"></canvas>
-					</div>
-						<div id="left_side_view_canvas" class="ui-bar-a">     	    			
-							<img id="left_side_view_maximize" class="canvas_x maximize_view_icon" src="images/maximize.png" alt="Maximize View" />
-							<canvas id="canvas_x_plane" class="side_canvas"></canvas>
-							<canvas id="canvas_x_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>
+     	    	<div>
+	     	    	<div id="dataset_1" class="dataset">
+	     	    		<div id="dataset_1_main_view_canvas" class="canvasview canvas_y" >
+	     	    			<canvas id="dataset_1_canvas_y_plane" class="plane"></canvas>	
+	     	    			<canvas id="dataset_1_canvas_y_plane_cross_overlay" class="cross_overlay"></canvas>
 						</div>
-			     	  	<div id="right_side_view_canvas" class="ui-bar-a">
-							<img id="right_side_view_maximize" class="maximize_view_icon canvas_z" src="images/maximize.png" alt="Maximize View" />
-							<canvas id="canvas_z_plane" class="side_canvas"></canvas>
-							<canvas id="canvas_z_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>
-						</div>					     	    			
-     	    	</div>
+							<div id="dataset_1_left_side_view_canvas" class="left_side_view ui-bar-a hidden">     	    			
+								<img id="dataset_1_left_side_view_maximize" class="canvas_x maximize_view_icon" src="images/maximize.png" alt="Maximize View" />
+								<canvas id="dataset_1_canvas_x_plane" class="side_canvas"></canvas>
+								<canvas id="dataset_1_canvas_x_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>
+							</div>
+				     	  	<div id="dataset_1_right_side_view_canvas" class="right_side_view ui-bar-a hidden">
+								<img id="dataset_1_right_side_view_maximize" class="canvas_z maximize_view_icon" src="images/maximize.png" alt="Maximize View" />
+								<canvas id="dataset_1_canvas_z_plane" class="side_canvas"></canvas>
+								<canvas id="dataset_1_canvas_z_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>
+							</div>
+												     	    			
+	     	    	</div>
      	    	
-		     	<div class="coords_show_right">
-		     		<input id="canvas_main_slider" class="canvasslider canvas_y" type="range" min="0" max="1000" value="500" step="1" orientation="vertical"  />
-		     	</div>										
+	     	    	<div id="dataset_1_right_panel" class="right_panel">
+	                    <input id="dataset_1_canvas_main_slider" class="canvasslider canvas_y" type="range" min="0" max="1000" value="500" step="1" orientation="vertical"  />
+	                </div>                                      
      	    	
+                    
+	               <div id="dataset_2" class="dataset hidden">
+	                   <div id="dataset_2_main_view_canvas" class="canvasview canvas_y" >
+	                       <canvas id="dataset_2_canvas_y_plane" class="plane"></canvas> 
+	                       <canvas id="dataset_2_canvas_y_plane_cross_overlay" class="cross_overlay"></canvas>
+	                   </div>
+	                       <div  id="dataset_2_left_side_view_canvas" class="left_side_view ui-bar-a hidden">                       
+	                           <img id="dataset_2_left_side_view_maximize" class="canvas_x maximize_view_icon" src="images/maximize.png" alt="Maximize View" />
+	                           <canvas id="dataset_2_canvas_x_plane" class="side_canvas"></canvas>
+	                           <canvas id="dataset_2_canvas_x_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>
+	                       </div>
+	                       <div id="dataset_2_right_side_view_canvas" class="right_side_view ui-bar-a hidden">
+	                           <img id="dataset_2_right_side_view_maximize" class="canvas_z maximize_view_icon" src="images/maximize.png" alt="Maximize View" />
+	                           <canvas id="dataset_2_canvas_z_plane" class="side_canvas"></canvas>
+	                           <canvas id="dataset_2_canvas_z_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>
+	                       </div>                                          
+	               </div>
+	
+	               <div id="dataset_2_right_panel" class="right_panel hidden">
+	                   <input id="dataset_2_canvas_main_slider" class="canvasslider canvas_y" type="range" min="0" max="1000" value="500" step="1" orientation="vertical"  />
+	               </div>                                      
+
+                </div>     	    	
      	    </div>
-       </div>  
-         
-	<!-- Setting page    --> 
-      <div data-role="page" data-theme="a" id="setting" >
+     </div>  
+    <!-- END OF TILE PAGE -->     
+	<!-- SETTING PAGE --> 
+      <div data-role="page" data-theme="a" id="setting" data-id="Head1"  >
             <div data-role="content">
    				<div data-theme="a" data-role="header" data-position="fixed">
         	  	     <div data-role="navbar">
@@ -113,15 +156,9 @@
 	     	<div class="settings-right-column">
 				<label for="drawing_interval">Drawing Interval (in millis): </label>
 				<input id="drawing_interval" type="text" value="150" >
-				<fieldset data-role="controlgroup">
-				<input type="checkbox" id="sync_canvases" checked="checked" />
-				<label for="sync_canvases">Sync Canvases</label>
-				</fieldset>
 				<a href="desktop.html" data-role="button" id="drawing_interval_button">Apply</a>
 			</div>
-			
-			
       </div>
-           
+	<!--    END SETTING PAGE       -->
     </body>
 </html>

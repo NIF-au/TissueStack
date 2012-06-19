@@ -12,7 +12,7 @@ TissueStack.Queue.prototype = {
 	latestDrawRequestTimestamp : 0,
 	setDrawingInterval : function(value) {
 		if (typeof(value) !== 'number' || value < 0) {
-			throw new Error("Interval has to be greater or equal to 0");
+			value = 150; // set to default
 		}
 		this.stopQueue();
 		this.drawingIntervalInMillis = value;
@@ -22,7 +22,9 @@ TissueStack.Queue.prototype = {
 			return;
 		}
 		
-		this.queue_handle = setInterval(function(_this) {
+		var _this = this;
+		
+		this.queue_handle = setInterval(function() {
 			// sanity check, if we still have some requests queued
 			if (_this.requests.length == 0) {
 				_this.stopQueue();
@@ -37,7 +39,7 @@ TissueStack.Queue.prototype = {
 			}
 			
 			// double check if we are obsolete already
-			if (_this.presentlyQueuedZoomLevelAndSlice !== ('' + latestRequest.zoom_level + '_' + latestRequest.slice)) {
+			if (_this.presentlyQueuedZoomLevelAndSlice !== (latestRequest.dataset_id + "_" + latestRequest.data_id + "_" + latestRequest.zoom_level + '_' + latestRequest.slice)) {
 				_this.clearRequestQueue();
 				_this.stopQueue();
 				return;
@@ -46,10 +48,11 @@ TissueStack.Queue.prototype = {
 			_this.latestDrawRequestTimestamp = latestRequest.timestamp;
 			_this.clearRequestQueue();
 			
-			_this.prepareDrawRequest(latestRequest);
-			_this.drawLowResolutionPreview(_this.latestDrawRequestTimestamp);
-			_this.drawRequestAfterLowResolutionPreview(latestRequest);
-		}, this.drawingIntervalInMillis , this);
+			if (_this.prepareDrawRequest(latestRequest)) {
+				_this.drawLowResolutionPreview(_this.latestDrawRequestTimestamp);
+				_this.drawRequestAfterLowResolutionPreview(latestRequest);
+			}
+		}, this.drawingIntervalInMillis);
 	},
 	stopQueue : function() {
 		if (!this.queue_handle) {
@@ -61,8 +64,8 @@ TissueStack.Queue.prototype = {
 	addToQueue : function(draw_request) {
 		// we have no existing queue for the zoom level and slice =>
 		// this means: A) we have to create it AND B) we have to empty the queue to get rid of old requests
-		if (this.presentlyQueuedZoomLevelAndSlice !== ('' + draw_request.zoom_level + '_' + draw_request.slice)) {
-			this.presentlyQueuedZoomLevelAndSlice = '' + draw_request.zoom_level + '_' + draw_request.slice;
+		if (this.presentlyQueuedZoomLevelAndSlice !== (draw_request.dataset_id + "_" + draw_request.data_id + "_" + draw_request.zoom_level + '_' + draw_request.slice)) {
+			this.presentlyQueuedZoomLevelAndSlice = draw_request.dataset_id + "_" + draw_request.data_id + "_" + draw_request.zoom_level + '_' + draw_request.slice;
 			this.requests = [];
 		}
 		
@@ -73,10 +76,10 @@ TissueStack.Queue.prototype = {
 			this.latestDrawRequestTimestamp = deepCopyOfRequest.timestamp;
 			
 			// work with a deep copy
-			this.prepareDrawRequest(deepCopyOfRequest);
-			
-			this.drawLowResolutionPreview(deepCopyOfRequest.timestamp);
-			this.drawRequestAfterLowResolutionPreview(deepCopyOfRequest);
+			if (this.prepareDrawRequest(deepCopyOfRequest)) {
+				this.drawLowResolutionPreview(deepCopyOfRequest.timestamp);
+				this.drawRequestAfterLowResolutionPreview(deepCopyOfRequest);
+			}
 
 			return;
 		}
@@ -88,7 +91,8 @@ TissueStack.Queue.prototype = {
 		this.startQueue();
 	},
 	drawRequestAfterLowResolutionPreview : function(draw_request, timestamp) {
-		var lowResBackdrop = setInterval(function(_this, draw_request, timestamp) {
+		var _this = this;
+		var lowResBackdrop = setInterval(function() {
 			if (_this.lowResolutionPreviewDrawn) {
 				if (draw_request) {
 					_this.drawRequest(draw_request);
@@ -97,7 +101,7 @@ TissueStack.Queue.prototype = {
 				}
 				clearInterval(lowResBackdrop);
 			}
-		}, 10, this, draw_request, timestamp);		
+		}, 200);		
 	},
 	clearRequestQueue : function() {
 		this.requests = [];
@@ -121,6 +125,12 @@ TissueStack.Queue.prototype = {
 			this.lowResolutionPreviewDrawn = true;
 			return;
 		} 
+		
+		var dataSet = TissueStack.dataSetStore.getDataSetById(this.canvas.data_extent.data_id);
+		if (!dataSet) {
+			alert("Couldn't find data set with id: " + this.canvas.data_extent.data_id);
+			return;
+		}
 		
 		var canvasX = 0;
 		var imageOffsetX = 0;
@@ -151,10 +161,19 @@ TissueStack.Queue.prototype = {
 		}
 		
 		var imageTile = new Image();
+		imageTile.crossOrigin = '';
 		imageTile.src = 
-			TissueStack.tile_directory + this.canvas.getDataExtent().data_id + "/" + this.canvas.getDataExtent().zoom_level + "/" 
-			+ this.canvas.getDataExtent().plane
-			+ "/" + slice + ".low.res." + this.canvas.image_format;
+			TissueStack.Utils.assembleTissueStackImageRequest(
+					"http",
+					dataSet.host,
+					this.canvas.getDataExtent().getIsTiled(),
+					 dataSet.local_id,
+					 true,
+					 this.canvas.getDataExtent().zoom_level,
+					 this.canvas.getDataExtent().plane,
+					 slice,
+					 this.canvas.image_format
+		);
 
 		(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height) {
 			imageTile.onload = function() {
@@ -175,22 +194,28 @@ TissueStack.Queue.prototype = {
 				ctx.drawImage(this, imageOffsetX, imageOffsetY, width, height, canvasX, canvasY, width, height);
 				_this.lowResolutionPreviewDrawn = true;
 				
-				_this.canvas.applyColorMapToCanvasContent();
+				_this.canvas.applyColorMapToCanvasContent()	;
 			};
 		})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height);
 	}, prepareDrawRequest : function(draw_request) {
 		var thisHerePlane = this.canvas.getDataExtent().plane;
+		var thisHereDataSet = this.canvas.dataset_id;
+		
+		// if more than 1 data set is displayed, we stop propagation to the other here !
+		if (thisHereDataSet != draw_request.dataset_id) {
+			return false;
+		}
 
 		// ZOOM CHANGE ACTION
 		if (draw_request.action == 'ZOOM') { // zoom request
 			this.canvas.changeToZoomLevel(draw_request.zoom_level);
-			return;
+			return true;
 		}
 
 		// for all the following actions do only the other planes,
 		// not the plane that triggered the event, otherwise it will get "served" twice !! 
 		if (draw_request.plane === thisHerePlane) { 
-			return;
+			return true;
 		}
 		
 		// SLICE CHANGE ACTION
@@ -226,7 +251,7 @@ TissueStack.Queue.prototype = {
 			} else if (thisHerePlane === 'z' && draw_request.plane === 'x') {
 				this.canvas.moveUpperLeftCorner(deltaX, 0);
 			}
-			return;
+			return true;
 		}
 		
 		// POINT FOCUS ACTION
@@ -354,6 +379,8 @@ TissueStack.Queue.prototype = {
 					this.canvas.upper_left_x ,
 					((draw_request.max_coords_of_event_triggering_plane.max_x - 1) + draw_request.upperLeftCorner.x + ((this.canvas.dim_y - this.canvas.cross_y) - draw_request.crossCoords.x)));
 		}
+		
+		return true;
 	}, drawRequest : function(draw_request) {
 		if (draw_request.action == 'ZOOM' || draw_request.action == 'SLICE') {
 			this.canvas.eraseCanvasContent();
@@ -362,7 +389,9 @@ TissueStack.Queue.prototype = {
 		// redraw 
 		this.canvas.drawMe(draw_request.timestamp);
 
-		if (this.canvas.getDataExtent().slice < 0 || this.canvas.getDataExtent().slice > this.canvas.getDataExtent().max_slices) {
+		if (this.canvas.getDataExtent().slice < 0 || this.canvas.getDataExtent().slice > this.canvas.getDataExtent().max_slices 
+				|| this.canvas.upper_left_x > this.canvas.dim_x || this.canvas.upper_left_x + this.canvas.data_extent.x < 0
+				|| this.canvas.upper_left_y < 0 || this.canvas.upper_left_y - this.canvas.data_extent.y > this.canvas.dim_y) {
 			this.canvas.eraseCanvasContent(); // in these cases we erase the entire content
 			return;
 		}

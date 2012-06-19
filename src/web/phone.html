@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html> 
 	<head> 
-	<title>Tissue Stack Phone</title> 
+	<title>Tissue Stack - Phone</title> 
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
 	<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
@@ -9,12 +9,10 @@
 	<!--Apple Smart Phone Devices Start Up Splash Screen and ICON-->
 	<link rel="apple-touch-startup-image" href="images/phone/iphone4screen.png" /> <!--For iPhone4 and 4S-->
 	<link rel="apple-touch-icon" href="images/favicon_icon.png" />	
-	<!--END-->
 	
-	<link rel="stylesheet" href="css/jquery.mobile-1.0rc2.min.css" />
 	<link rel="stylesheet" href="css/phone.css" />
 	<link rel="stylesheet" href="css/jquery.mobile-1.1.0.min.css" />
-	<link rel="stylesheet" href="css/mobile.css" />
+	<link rel="stylesheet" href="css/default.css" />
 	
 	<script src="js/libs/jquery/jquery-1.7.1.js"></script>
 	<script src="js/libs/jquery/jquery.mobile-1.1.0.min.js"></script>
@@ -29,6 +27,8 @@
 	<script src="js/TissueStack.Canvas.js"></script>
 	<script src="js/TissueStack.Events.js"></script>
 	<script src="js/TissueStack.PhoneMenu.js"></script>
+    <script src="js/TissueStack.DataSetStore.js"></script>
+    <script src="js/TissueStack.DataSetNavigation.js"></script>
 	<script src="js/TissueStack.Init.js"></script>
 
 	<script type="text/javascript">
@@ -43,33 +43,34 @@
 <body> 
 <div id="menu" >
 	<div id="memberDetails" style="text-align: center;">
-		<h3><span>CAI</span><br /> <em>Tissue Stack</em></h3>
+		<h3><em>Tissue Stack</em></h3>
 	</div>
 
 	<ul>
 		<li class="active"><a href="#home" class="contentLink" data-transition="slide">Dashboard <span class="icon"></span></a></li>
 		<li><a href="#tissueX" class="contentLink" data-transition="slide">Tissue X<span class="icon"></span></a></li>
-		<li><a href="#tissueY" class="contentLink" data-transition="slide">Tissue Y <span class="icon"></span></a></li>
-		<li><a href="#tissueZ" class="contentLink" data-transition="slide">Tissue Z <span class="icon"></span></a></li>
+		<li><a href="#tissueY" class="contentLink" data-transition="slide">Tissue Y<span class="icon"></span></a></li>
+		<li><a href="#tissueZ" class="contentLink" data-transition="slide">Tissue Z<span class="icon"></span></a></li>
+		<li><a href="#dataset" class="contentLink" data-transition="slide">Data Set<span class="icon"></span></a></li>
 	</ul>
 </div>
 
 	<div data-role="page" class="pages" id="home" data-theme="a">
-		<div data-role="header">
-			<a href="#" class="showMenu menuBtn">Menu</a>
+		<div data-role="header" class="headers">
+			<a href="#" class="showMenu menuBtn" style="top: -5px;">Menu</a>
 				<h1>Dashboard</h1>
 		</div><!-- /header -->
 		<div data-role="content">
 				<div style="text-align: center" data-role="fieldcontain">
 				    <fieldset data-role="controlgroup">		
-						<input type="radio" name="color_map" id="radio-choice-1" value="grey" checked="checked" />
-			         	<label for="radio-choice-1">Grey</label>
+						<input type="radio" name="color_map" id="radio-grey" value="grey" checked="checked" />
+			         	<label for="radio-grey">Grey</label>
 			
-			         	<input type="radio" name="color_map" id="radio-choice-2" value="hot"  />
-			         	<label for="radio-choice-2">Hot</label>
+			         	<input type="radio" name="color_map" id="radio-hot" value="hot"  />
+			         	<label for="radio-hot">Hot</label>
 			
-			         	<input type="radio" name="color_map" id="radio-choice-3" value="spectral"  />
-			         	<label for="radio-choice-3">Spectral</label>
+			         	<input type="radio" name="color_map" id="radio-spectral" value="spectral"  />
+			         	<label for="radio-spectral">Spectral</label>
 					</fieldset>
 				</div>
 			
@@ -84,17 +85,17 @@
 	<!--Tissue X Page-->
 	
 	<div data-role="page" class="pages" id="tissueX" data-theme="a">
-		<div data-role="header">
-		<a href="#" class="showMenu menuBtn">Menu</a>
-			<h1>X</h1>
+		<div data-role="header" class="headers">
+		<a href="#" class="showMenu menuBtn" style="top: -5px;">Menu</a>
+			<h1>X Plane</h1>
 		</div><!-- /header -->
 	
 		<div data-role="content">
-			<div id="canvas_x_extent" style="text-align: center; font-size: 10px; width:310px"></div><br />				
+			<div id="canvas_x_extent" class="canvasLevel"></div><br />				
 			<div class="boxgrid captionfull" style="text-align: center;margin: -5px;">
-					<div style="position: relative; left: 0px; top: 0px; width: 300px; height:300px;">
-						<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_x_plane"></canvas>
-						<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_x_plane_cross_overlay"></canvas>
+					<div class="canvasBox">
+						<canvas class="canvasView" width="300" height="300" id="canvas_x_plane"></canvas>
+						<canvas class="canvasViewOverlay" width="300" height="300" id="canvas_x_plane_cross_overlay"></canvas>
 					</div>
 					<div class="cover boxcaption"> 
 						<div class="coords">&nbsp;</div>
@@ -110,16 +111,16 @@
 	<!--Tissue Y Page-->
 	
 	<div data-role="page" class="pages" id="tissueY" data-theme="a">
-		<div data-role="header">
-		<a href="#" class="showMenu menuBtn">Menu</a>
-			<h1>Y</h1>
+		<div data-role="header" class="headers">
+		<a href="#" class="showMenu menuBtn" style="top: -5px;">Menu</a>
+			<h1>Y Plane</h1>
 		</div><!-- /header -->
 		<div data-role="content">	
-			<div id="canvas_y_extent" style="text-align: center; font-size: 10px; width:310px"></div><br />
+			<div id="canvas_y_extent" class="canvasLevel"></div><br />
 			<div class="boxgrid captionfull" style="text-align: center;margin: -5px;">
-				<div style="position: relative; left: 0px; top: 0px; width: 300px; height:300px;">
-					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_y_plane"></canvas>
-					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_y_plane_cross_overlay"></canvas>
+				<div class="canvasBox">
+					<canvas class="canvasView" width="300" height="300" id="canvas_y_plane"></canvas>
+					<canvas class="canvasViewOverlay" width="300" height="300" id="canvas_y_plane_cross_overlay"></canvas>
 				</div>
 				<div class="cover boxcaption"> 
 					<div class="coords">&nbsp;</div>
@@ -135,16 +136,16 @@
 	<!--Tissue Z Page-->
 
 	<div data-role="page" class="pages" id="tissueZ" data-theme="a">
-		<div data-role="header">
-		<a href="#" class="showMenu menuBtn">Menu</a>
-			<h1>Z</h1>
+		<div data-role="header" class="headers">
+		<a href="#" class="showMenu menuBtn" style="top: -5px;">Menu</a>
+			<h1>Z Plane</h1>
 		</div><!-- /header -->
 		<div data-role="content">
-			<div id="canvas_z_extent" style="text-align: center; font-size: 10px; width:310px"></div><br />
+			<div id="canvas_z_extent" class="canvasLevel"></div><br />
 			<div class="boxgrid captionfull" style="text-align: center; margin: -5px;">  
-				<div style="position: relative; left: 0px; top: 0px; width: 300px; height:300px;">
-					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 749;" width="300" height="300" id="canvas_z_plane"></canvas>
-					<canvas style="position: absolute; left: 0px; top: 0px; z-index: 1549;" width="300" height="300" id="canvas_z_plane_cross_overlay"></canvas>
+				<div class="canvasBox">
+					<canvas class="canvasView" width="300" height="300" id="canvas_z_plane"></canvas>
+					<canvas class="canvasViewOverlay" width="300" height="300" id="canvas_z_plane_cross_overlay"></canvas>
 				</div>
 				<div class="cover boxcaption"> 
 					<div class="coords">&nbsp;</div>
@@ -156,5 +157,24 @@
 			<input id="canvas_z_slider" orientation="horizontal" class="canvasslider" type="range" min="0" max="1000" value="500" step="5" />
 		</div><!-- /content -->
 	</div><!-- /page -->
+	
+	<!-- Calling Data Set -->
+	
+	<div data-role="page" class="pages" id="dataset" data-theme="a">
+		<div data-role="header" class="headers">
+			<a href="#" class="showMenu menuBtn" style="top: -5px;">Menu</a>
+				<h1>Data Set</h1>
+		</div><!-- /header -->
+		<div data-role="content">
+				<input size="8" maxlength="50" type="text" id="server_search_input" value="http://"/>
+				<button type="button" id="server_search_button">Connect to TissueStack Server</button>
+				<div id="mobile_style_tree_dataset">
+					<div data-role="collapsible-set" data-theme="a" data-content-theme="d">
+						<div id="tablet_tree"></div>
+					</div>
+				</div>
+		</div><!-- /content -->
+	</div><!-- /page -->
+	
 </body>
 </html>

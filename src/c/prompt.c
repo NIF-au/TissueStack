@@ -89,11 +89,33 @@ char		**copy_args(int start, char **commands)
   return (dest);
 }
 
-t_args_plug	*create_plug_args(char **commands, t_tissue_stack *general)
+void		destroy_plug_args(t_args_plug *a)
+{
+  int		i;
+
+  i = 0;
+  if (a->commands != NULL)
+    {
+      while (a->commands[i] != NULL)
+	{
+	  free(a->commands[i]);
+	  i++;
+	}
+      free(a->commands);
+    }
+  if (a->name != NULL)
+    free(a->name);
+  if (a->path != NULL)
+    free(a->path);
+  free(a);
+}
+
+t_args_plug	*create_plug_args(char **commands, t_tissue_stack *general, void *box)
 {
   t_args_plug	*args;
   char		**com;
   t_plugin	*tmp;
+  //int		i;
 
   args = malloc(sizeof(*args));
   if (commands[1] == NULL)
@@ -125,10 +147,16 @@ t_args_plug	*create_plug_args(char **commands, t_tissue_stack *general)
   args->commands = com;
   args->general_info = general;
   args->this = NULL;
+  args->box = box;
+  args->destroy = destroy_plug_args;
+  //i = 0;
+  //  while (commands[i] != NULL)
+  //  free(commands[i++]);
+  // free(commands);
   return (args);
 }
 
-void		prompt_exec(char **commands, t_tissue_stack *general)
+void		prompt_exec(char **commands, t_tissue_stack *general, void *box)
 {
   int		i;
   t_args_plug	*args;
@@ -137,24 +165,20 @@ void		prompt_exec(char **commands, t_tissue_stack *general)
 
 
   prog = commands[0];
-  args = create_plug_args(commands, general);
+  args = create_plug_args(commands, general, box);
   i = 0;
   while (i < general->nb_func)
     {
-      if (!strcmp(general->functions[i].name, prog))
+      if (strcmp(general->functions[i].name, prog) == 0)
 	{
-	  if (strcmp(prog, "load"))
-	    {
-	      p = get_plugin_by_name(args->name, general->first);
-	      if (p && p->busy != 0)
-		printf("%s: Plugin Busy. Try again later\n", args->name);
-	      else if (!p)
-	      	printf("%s: Unknown Plugin\n", args->name);
-	      else
-		thread_pool_add_task(general->functions[i].ptr, args, general->tp);
-	    }
+	  p = get_plugin_by_name(args->name, general->first);
+	  if (p && p->busy != 0)
+	    printf("%s: Plugin Busy. Try again later\n", args->name);
+	  else if (!p && strcmp(prog, "load") != 0 &&
+		   (strcmp(prog, "start") == 0 || strcmp(prog, "unload") == 0))
+	    printf("%s: Unknown Plugin\n", args->name);
 	  else
-	    thread_pool_add_task(general->functions[i].ptr, args, general->tp);
+	      thread_pool_add_task(general->functions[i].ptr, args, general->tp);
 	  break;
 	}
       i++;
@@ -442,10 +466,11 @@ void		prompt_enter(t_tissue_stack *general)
       while (commands[i] != NULL)
 	free(commands[i++]);
       free(commands);
+      free(dest);
     }
   else
     {
-      prompt_exec(commands, general);
+      prompt_exec(commands, general, NULL);
       clear_prompt_list(general);
       write(1, "TisseStack > ", 13);
       free(dest);
@@ -614,6 +639,54 @@ void		stringify_char(char buff, t_tissue_stack *general)
       while (c->next != general->prompt_first)
 	c = c->next;
       general->prompt_first->prev = c;
+    }
+}
+
+void		free_all_prompt(t_tissue_stack *t)
+{
+  t_char_prompt	*c;
+  t_char_prompt	*save;
+
+  c = t->prompt_first;
+  if (c != NULL && c->next == t->prompt_first)
+    {
+      free(t->prompt_first);
+    }
+  else if (c != NULL)
+    {
+      c = c->next;
+      while (c != t->prompt_first)
+	{
+	  save = c;
+	  c = c->next;
+	  free(save);
+	}
+      free(t->prompt_first);
+    }
+}
+
+void		free_all_history(t_tissue_stack *t)
+{
+  t_hist_prompt	*c;
+  t_hist_prompt	*save;
+
+  c = t->hist_first;
+  if (c != NULL && c->next == t->hist_first)
+    {
+      free(t->hist_first->commands);
+      free(t->hist_first);
+    }
+  else if (c != NULL)
+    {
+      c = c->next;
+      while (c != t->hist_first)
+	{
+	  save = c;
+	  c = c->next;
+	  free(c->commands);
+	  free(save);
+	}
+      free(t->hist_first);
     }
 }
 

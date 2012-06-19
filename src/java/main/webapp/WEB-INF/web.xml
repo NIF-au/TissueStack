@@ -29,11 +29,11 @@
 		<url-pattern>/*</url-pattern>
 	</servlet-mapping>
 
-	<!-- resource-ref>
-		<description>Default Datasource</description>
+	<resource-ref>
+		<description>Configuration Datasource</description>
 		<res-ref-name>jdbc/defaultDatasource</res-ref-name>
 		<res-type>javax.sql.DataSource</res-type>
 		<res-auth>Container</res-auth>
-	</resource-ref-->
+	</resource-ref>
 	
 </web-app>

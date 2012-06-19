@@ -1,5 +1,5 @@
 <Context crossContext="true" reloadable="true">
-	<!-- Resource name="jdbc/defaultDatasource" auth="Container" type="javax.sql.DataSource"
-		driverClassName="org.postgresql.Driver" url="jdbc:postgresql://localhost:5432/tissue_stack"
-		username="tissue" password="stack" maxActive="75" maxIdle="50" maxWait="10000" /-->
+	<Resource name="jdbc/defaultDatasource" auth="Container" type="javax.sql.DataSource"
+		driverClassName="org.postgresql.Driver" url="jdbc:postgresql://localhost:5432/tissuestack"
+		username="tissuestack" password="tissuestack" maxActive="25" maxIdle="10" maxWait="10000" />
 </Context>

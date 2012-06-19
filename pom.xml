@@ -2,8 +2,6 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<properties>
 		<deployment.directory>${env.CATALINA_HOME}/webapps</deployment.directory>
-		<!-- hibernate.version>3.5.6-Final</hibernate.version>
-		<hibernate.libs.version>3.2.0.Final</hibernate.libs.version-->
 	</properties>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>au.edu.cai</groupId>
@@ -15,12 +13,15 @@
 	   	<repository>
       			<id>jboss</id>
       			<name>jboss repo</name>
-      			<url>https://repository.jboss.org/nexus/content/groups/public/</url>
+      			<url>https://repository.jboss.org/nexus/content/groups/public-jboss</url>
+      			 <layout>default</layout>
+	          <releases>
+	            <enabled>true</enabled>
+	          </releases>
       			<snapshots>
         			<enabled>false</enabled>
       			</snapshots>
     		</repository>
-
 		<repository>
 			<id>maven repo</id>
 			<name>maven repo</name>
@@ -28,7 +29,17 @@
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>
-    		</repository>
+    	</repository>
+
+        <repository>
+            <id>apache maven repo</id>
+            <name>apache maven repo</name>
+            <url>https://repository.apache.org/content/repositories/releases/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    	
 	</repositories>
 
 	<build>
@@ -56,6 +67,8 @@
 				<configuration>
 					<source>1.6</source>
 					<target>1.6</target>
+					<debug>true</debug>
+      					<!--debuglevel>none</debuglevel-->
 				</configuration>
 			</plugin>
 			<plugin>
@@ -166,18 +179,25 @@
              <artifactId>log4j</artifactId>
              <version>1.2.16</version>
          </dependency>
-		<!-- Hibernate Persistence >
+		<!-- Hibernate Persistence -->
 		<dependency>
 			<groupId>org.hibernate</groupId>
 		      	<artifactId>hibernate-entitymanager</artifactId>
-			<version>${hibernate.version}</version>
+			<version>4.1.4.Final</version>
 		</dependency>
-		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-commons-annotations</artifactId>
-			<version>${hibernate.libs.version}</version>
-		</dependency-->
-		</dependencies>
+        <!-- Batik Persistence -->
+        <dependency>
+            <groupId>org.apache.xmlgraphics</groupId>
+                <artifactId>batik-dom</artifactId>
+            <version>1.7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.xmlgraphics</groupId>
+                <artifactId>batik-svg-dom</artifactId>
+            <version>1.7</version>
+        </dependency>
+		
+	</dependencies>
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
