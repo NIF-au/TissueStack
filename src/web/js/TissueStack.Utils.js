@@ -327,5 +327,18 @@ TissueStack.Utils = {
 		}
 		
 		return url + "/" + row + '_' + col + "." + image_extension;
+	},
+	adjustBorderColorWhenMouseOver : function () {
+		if (TissueStack.phone || TissueStack.tablet) {
+			return;
+		}
+
+		$('.dataset').mouseover(function(){
+		    $(this).css("border-color","#efff0b").css("border-width",1);
+		    $('.left_panel').css("color","#efff0b").css("font-color","#efff0b");
+		}).mouseout(function(){
+		   	$(this).css("border-color","white").css("border-width",1);
+		   	$('.left_panel').css("color","white");
+		});
 	}
 };

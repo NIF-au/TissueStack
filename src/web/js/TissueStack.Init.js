@@ -11,7 +11,7 @@ TissueStack.Init = function (afterLoadingRoutine) {
 	if (TissueStack.phone) {
 		new TissueStack.PhoneMenu();
 	}
-	
+
 	// create data store and load it with backend data
 	TissueStack.dataSetStore = new TissueStack.DataSetStore(afterLoadingRoutine);
 	
@@ -49,7 +49,11 @@ TissueStack.InitUserInterface = function () {
 	}
 
 	TissueStack.Utils.adjustScreenContentToActualScreenSize(maxDataSets);
-
+	
+	if(TissueStack.desktop){
+		TissueStack.Utils.adjustBorderColorWhenMouseOver();
+	}
+	
 	for (var x=0;x<maxDataSets;x++) {
 		var dataSet = datasets[x];
 		
@@ -166,7 +170,12 @@ TissueStack.BindGlobalEvents = function () {
 				for (var x=0;x<dataSets.length;x++) {
 					var addedDataSet = TissueStack.dataSetStore.addDataSetToStore(dataSets[x], domain);
 					if (addedDataSet) {
-						TissueStack.dataSetNavigation.addDataSetToDynaTree(addedDataSet);
+						if(TissueStack.desktop){
+							TissueStack.dataSetNavigation.addDataSetToDynaTree(addedDataSet);
+						}
+						if (TissueStack.tablet){
+							TissueStack.dataSetNavigation.addDataSetToTabletTree();
+						}
 					}
 				}
 			},
@@ -479,4 +488,5 @@ $(document).ready(function() {
 	};
 	// call asynchronous init
 	TissueStack.Init(afterLoadingRoutine);
+
 });
