@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Tue Jun 19 11:57:26 2012 Oliver Nicolini
+** Last update Tue Jun 19 14:09:54 2012 Oliver Nicolini
 */
 
 
@@ -120,6 +120,8 @@ int		main(int argc, char **argv)
   int			result;
   t_tissue_stack	*t;
   char			serv_command[20];
+  pthread_cond_t	infinite_main_loop = PTHREAD_COND_INITIALIZER;
+  pthread_mutex_t	mut = PTHREAD_MUTEX_INITIALIZER;
 
   // initialisation of some variable
   t = malloc(sizeof(*t));
@@ -127,9 +129,18 @@ int		main(int argc, char **argv)
   // intitialisation the volume
   if (argc > 2)
     {
-      t->volume_first = malloc(sizeof(*t->volume_first));
-      if ((result = init_volume(t->volume_first, argv[2])) != 0)
-	return (result);
+      if (argv[2] != NULL && strcmp(argv[2], "--prompt") != 0)
+	{
+	  t->volume_first = malloc(sizeof(*t->volume_first));
+	  if ((result = init_volume(t->volume_first, argv[2])) != 0)
+	    return (result);
+	}
+      else if (argv[3] != NULL && strcmp(argv[3], "--prompt") != 0)
+	{
+	  t->volume_first = malloc(sizeof(*t->volume_first));
+	  if ((result = init_volume(t->volume_first, argv[3])) != 0)
+	    return (result);
+	}
     }
   else
     t->volume_first = NULL;
@@ -138,7 +149,7 @@ int		main(int argc, char **argv)
   t->tp = malloc(sizeof(*t->tp));
   thread_pool_init(t->tp, 6);
 
-  (t->plug_actions)(t, "load png ./plugins/png_extract/TissueStackPngExtract.so", NULL);
+  (t->plug_actions)(t, "load png ./plugins/png_extract/TissueStackPNGExtract.so", NULL);
   sleep(1);
   (t->plug_actions)(t, "load serv ./plugins/communicator/TissueStackCommunicator.so", NULL);
   sleep(2);
@@ -146,8 +157,16 @@ int		main(int argc, char **argv)
   (t->plug_actions)(t, serv_command, NULL);
   // lunch the prompt command
   signal_manager(t);
-  prompt_start(t);
-
+  if ((argv[2] != NULL && strcmp(argv[2], "--prompt") == 0) ||
+      (argv[3] != NULL && strcmp(argv[3], "--prompt") == 0))
+    prompt_start(t);
+  else
+    {
+      printf("TissueStackImageServer Running\n");
+      pthread_mutex_lock(&mut);
+      pthread_cond_wait(&infinite_main_loop, &mut);
+      pthread_mutex_unlock(&mut);
+    }
   // free all the stuff mallocked
   t->tp->loop = 0;
   thread_pool_destroy(t->tp);
