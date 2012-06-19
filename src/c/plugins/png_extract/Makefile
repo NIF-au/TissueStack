@@ -15,7 +15,7 @@ LIBS		=	-lhdf5								\
 			-lpthread							\
 			-ldl
 
-NAME		=	TissueStackPngExtract.so
+NAME		=	TissueStackPNGExtract.so
 
 FLAGS		=	-g3 -Wall -Werror -DDEB
 
