@@ -143,7 +143,7 @@ int		check_input(char **in)
   while (in[i] != NULL)
     {
       if (strcmp(in[i], "-1") != 0 && strcmp(in[i], "tiles") != 0 &&
-	  strcmp(in[i], "images") != 0)
+	  strcmp(in[i], "images") != 0 && strcmp(in[i], "full") != 0)
 	{
 	  j = 0;
 	  while (in[i][j] != '\0')
@@ -209,6 +209,7 @@ void		*start(void *args)
   t_png_extract	*png_args;
   t_args_plug	*a;
   t_vol		*volume;
+  int		step;
 
   a = (t_args_plug *)args;
   a->this->busy = 1;
@@ -256,12 +257,16 @@ void		*start(void *args)
     }
   else
     {
-      fprintf(stderr, "Undefined kind. Please choose 'tiles' or 'images'\n");
-      a->this->busy = 0;
-      return (NULL);
+      if (strcmp(png_args->service, "full") != 0)
+	{
+	  fprintf(stderr, "Undefined kind. Please choose 'tiles' or 'images'\n");
+	  a->this->busy = 0;
+	  return (NULL);
+	}
     }
   png_args->total_slices_to_do = get_total_slices_to_do(volume, png_args->dim_start_end);
-  png_creation_lunch(volume, (strcmp(png_args->service, "tiles") == 0 ? atoi(a->commands[13]) : atoi(a->commands[14])), a->general_info->tp, png_args, a->this, (FILE*)a->box);
+  step = (strcmp(png_args->service, "tiles") == 0 ? atoi(a->commands[13]) : (strcmp(png_args->service, "full") == 0 ? atoi(a->commands[10]) : atoi(a->commands[14])));
+  png_creation_lunch(volume, step, a->general_info->tp, png_args, a->this, (FILE*)a->box);
   return (NULL);
 }
 
