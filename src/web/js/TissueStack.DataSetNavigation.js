@@ -116,13 +116,6 @@ TissueStack.DataSetNavigation.prototype = {
 			});
 		}
 
-		/*
-		$("#" + dataset + "_canvas_main_slider").slider("destroy");
-		$("#" + dataset + "_canvas_main_slider").children().remove();
-		$("#" + dataset + "_right_panel").html('<input id="' + dataset + '_canvas_main_slider" class="canvasslider canvas_y" type="range" min="0" max="1000" value="500" step="1" orientation="vertical"  />');
-		$("#" + dataset + "_canvas_main_slider").slider();
-		*/
-		
 		var old_classes = $("#" + dataset + "_canvas_main_slider").attr("class");
 		old_classes = old_classes.replace(/canvas_[?]/, "canvas_y");
 		coll = $("#" + dataset + "_canvas_main_slider");
@@ -134,6 +127,8 @@ TissueStack.DataSetNavigation.prototype = {
 		// finally hide everything
 	   $('#' + dataset + '_center_point_in_canvas').closest('.ui-btn').hide();
 	   $("#" + dataset + ", #" + dataset + "_right_panel").addClass("hidden");
+	   $("#" + dataset + "_left_side_view_canvas").addClass("hidden");
+	   $("#" + dataset + "_right_side_view_canvas").addClass("hidden");
 	},
 	showDataSet : function(index) {
 		if (typeof(index) != "number") {
