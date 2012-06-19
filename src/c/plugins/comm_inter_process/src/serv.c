@@ -36,7 +36,6 @@ void		serv_accept_new_connections(t_serv_comm *s)
   int		socket;
   struct sockaddr_un	client_addr;
   socklen_t	len;
-  FILE		*file;
 
   len = sizeof(client_addr);
   if ((socket = accept(s->sock_serv, (struct sockaddr*)&client_addr,
@@ -49,7 +48,6 @@ void		serv_accept_new_connections(t_serv_comm *s)
 
   add_client_to_list(s, socket, client_addr);
   add_client_to_sock_monitor(s, socket);
-  file = fdopen(socket, "wr");
   //  (*s->general->plug_actions)(s->general, "load png ./plugins/png_extract/yop.so", NULL);
   //  sleep(1);
   //  (*s->general->plug_actions)(s->general, "start png 80 81 -1 -1 -1 -1 3", file);

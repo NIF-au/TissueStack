@@ -4,9 +4,9 @@ SRCS		=	$(DIRSRC)minc_extract_png.c					\
 			$(DIRSRC)png_creator.c						\
 			$(DIRSRC)slice.c
 
-INCLUDE		=	-I/home/oliver/workspace/minc-2.1.10/libsrc2 -I./headers -I../../../headers
+INCLUDE		=	-I./headers -I../../../headers
 
-LIB_PATH	=	-L/home/oliver/workspace/minc-2.1.10/.libs
+LIB_PATH	=	
 
 LIBS		=	-lhdf5								\
 			-lnetcdf 							\
@@ -15,14 +15,14 @@ LIBS		=	-lhdf5								\
 			-lpthread							\
 			-ldl
 
-NAME		=	yop.so
+NAME		=	TissueStackPngExtract.so
 
 FLAGS		=	-g3 -Wall -Werror -DDEB
 
 all:	
 	@echo "\n================== Compilation ===================="
-	@clang $(SRCS) -c $(INCLUDE) $(FLAGS) -fPIC
-	@clang *.o -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -shared
+	@gcc $(SRCS) -c $(INCLUDE) $(FLAGS) -fPIC
+	@gcc *.o -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -shared
 
 clean:
 	@echo "\n==================== Cleaning ====================="

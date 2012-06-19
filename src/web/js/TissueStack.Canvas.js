@@ -276,8 +276,8 @@ TissueStack.Canvas.prototype = {
     		width = this.dim_x - xStart;
     	}
     	
-    	//var myImageData = ctx.getImageData(0, 0, this.dim_x, this.dim_y);
     	var myImageData = ctx.getImageData(xStart, yStart, width, height);
+    	
     	for ( var x = 0; x < myImageData.data.length; x += 4) {
     		var val = myImageData.data[x];
 
@@ -402,7 +402,7 @@ TissueStack.Canvas.prototype = {
 					TissueStack.Utils.assembleTissueStackImageRequest(
 							"http",
 							dataSet.host,
-							(dataSet.imageService ? "image_service" : "tiles"),
+							this.getDataExtent().getIsTiled(),
 							 dataSet.local_id,
 							 false,
 							 this.getDataExtent().zoom_level,
@@ -445,7 +445,7 @@ TissueStack.Canvas.prototype = {
 						
 						if (counter == 0) {
 							_this.applyColorMapToCanvasContent();
-						}						
+						}
 					};
 				})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, this.getDataExtent().tile_size);
 				

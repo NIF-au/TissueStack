@@ -28,7 +28,7 @@ TissueStack.DataSetStore.prototype = {
 			counter++;
 		}
 	},
-	addDataSetToStore : function(dataSet, host, isImageService) {
+	addDataSetToStore : function(dataSet, host) {
 		if (!dataSet || !dataSet.planes) {
 			return null;
 		}
@@ -46,13 +46,8 @@ TissueStack.DataSetStore.prototype = {
 			return null;
 		}
 		
-		if (typeof(isImageService) != "boolean") {
-			isImageService = false;
-		}
-		
 		this.datasets[id] = {};
 		this.datasets[id].host = host;
-		this.datasets[id].imageService = isImageService;
 		this.datasets[id].id = id;
 		this.datasets[id].local_id = dataSet.id;
 		this.datasets[id].description = dataSet.description ? dataSet.description : "";
@@ -83,6 +78,8 @@ TissueStack.DataSetStore.prototype = {
 		
 		$.ajax({
 			url : url,
+			cache : false,
+			timeout : 30000,
 			dataType : "json",
 			success: function(data, textStatus, jqXHR) {
 				if (!data.response && !data.error) {

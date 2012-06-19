@@ -1,5 +1,6 @@
-TissueStack.Extent = function (data_id, zoom_level, plane, max_slices, x, y, zoom_levels, worldCoordinatesTransformationMatrix) {
+TissueStack.Extent = function (data_id, is_tiled, zoom_level, plane, max_slices, x, y, zoom_levels, worldCoordinatesTransformationMatrix) {
 	this.setDataId(data_id);
+	this.setIsTiled(is_tiled);
 	this.setZoomLevel(zoom_level);
 	this.setPlane(plane);
 	this.max_slices = max_slices;
@@ -12,6 +13,7 @@ TissueStack.Extent = function (data_id, zoom_level, plane, max_slices, x, y, zoo
 
 TissueStack.Extent.prototype = {
 	canvas : null,
+	is_tiled : false,
 	tile_size : 256,	
 	x : 0,
 	y : 0,
@@ -35,6 +37,13 @@ TissueStack.Extent.prototype = {
 			throw new Error("zoom_level has to be a non-negative integer");
 		}
 		this.zoom_level = Math.floor(zoom_level);
+	}, setIsTiled : function(is_tiled) {
+			if (typeof(is_tiled) != "boolean") {
+				this.is_tiled = false;
+			}
+			this.is_tiled = is_tiled;
+	}, getIsTiled : function() {
+		return this.is_tiled;
 	}, setZoomLevels : function(zoom_levels) {
 		if (typeof(zoom_levels) != "object" || zoom_levels.length == 0) {
 			throw new Error("zoom_levels are missing");

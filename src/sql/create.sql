@@ -19,9 +19,8 @@ ALTER TABLE configuration OWNER TO tissuestack;
 
 -- GENERAL INSTANCE CONFIGURATION - some default values
 INSERT INTO configuration VALUES('version', '0.4', 'version');
-INSERT INTO configuration VALUES('tiles', 'TRUE', 'supports tiled datasets (TRUE/FALSE)');
-INSERT INTO configuration VALUES('images', 'FALSE', 'supports querying image files directly (TRUE/FALSE)');
-INSERT INTO configuration VALUES('tile_directory', 'tiles/', 'tile directory (relative to the application''s apache web server)');
+INSERT INTO configuration VALUES('image_service_directory', 'image_service', 'image service directory (relative to the application''s apache web server');
+INSERT INTO configuration VALUES('tile_directory', 'tiles', 'tile directory (relative to the application''s apache web server)');
 INSERT INTO configuration VALUES('default_drawing_interval', '150', 'default drawing interval');
 INSERT INTO configuration VALUES('default_zoom_levels', '[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75]', 'default zoom levels');
 INSERT INTO configuration VALUES('color_maps', 
@@ -75,6 +74,7 @@ CREATE TABLE dataset_planes
 (
   id bigserial NOT NULL,
   dataset_id bigint NOT NULL,
+  is_tiled CHAR(1) NOT NULL DEFAULT 'T',
   name CHAR(1) NOT NULL,
   max_x INTEGER NOT NULL,
   max_y INTEGER NOT NULL,
@@ -90,9 +90,13 @@ CREATE TABLE dataset_planes
 ALTER TABLE dataset_planes OWNER TO tissuestack;
 
 -- INSERT SOME TEST DATA
-INSERT INTO dataset VALUES (1, '/opt/data/00-normal-model-nonsym.mnc', 'This is our prototype mouse for development');
-INSERT INTO dataset_planes VALUES (1, 1, 'x', 1311, 499, 678, '[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75 ]', 3, '[[0.5, 0   , 0   , -327.15 ],[0   , 0.5, 0   , -124.2   ],[0   , 0   , 0.5, -169.2   ],[0   , 0   , 0   ,  1 ]]');
-INSERT INTO dataset_planes VALUES (2, 1, 'y', 679, 499, 1310, '[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75 ]', 3, '[[0.5, 0   , 0   , -169.2   ],[0   , 0.5, 0   , -124.2   ],[0   , 0   , 0.5, -327.15 ],[0   , 0   , 0   ,  1  ]]');
-INSERT INTO dataset_planes VALUES (3, 1, 'z', 679, 1311, 498, '[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75 ]', 3, '[[0.5, 0   , 0   , -169.2   ],[0   , 0.5, 0   , -327.15 ],[0   , 0   , 0.5, -124.2  ],[0   , 0   , 0   ,  1 ]]');
+INSERT INTO dataset VALUES (1, '/opt/data/00-normal-model-nonsym-tiled.mnc', 'Tiled Version');
+INSERT INTO dataset_planes VALUES (1, 1, 'Y', 'x', 1311, 499, 678, '[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75 ]', 3, '[[0.5, 0   , 0   , -327.15 ],[0   , 0.5, 0   , -124.2   ],[0   , 0   , 0.5, -169.2   ],[0   , 0   , 0   ,  1 ]]');
+INSERT INTO dataset_planes VALUES (2, 1, 'Y', 'y', 679, 499, 1310, '[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75 ]', 3, '[[0.5, 0   , 0   , -169.2   ],[0   , 0.5, 0   , -124.2   ],[0   , 0   , 0.5, -327.15 ],[0   , 0   , 0   ,  1  ]]');
+INSERT INTO dataset_planes VALUES (3, 1, 'Y', 'z', 679, 1311, 498, '[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75 ]', 3, '[[0.5, 0   , 0   , -169.2   ],[0   , 0.5, 0   , -327.15 ],[0   , 0   , 0.5, -124.2  ],[0   , 0   , 0   ,  1 ]]');
+INSERT INTO dataset VALUES (2, '/opt/data/00-normal-model-nonsym.mnc', 'Image Service Version');
+INSERT INTO dataset_planes VALUES (4, 2, 'N', 'x', 1311, 499, 678, '[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75 ]', 3, '[[0.5, 0   , 0   , -327.15 ],[0   , 0.5, 0   , -124.2   ],[0   , 0   , 0.5, -169.2   ],[0   , 0   , 0   ,  1 ]]');
+INSERT INTO dataset_planes VALUES (5, 2, 'N', 'y', 679, 499, 1310, '[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75 ]', 3, '[[0.5, 0   , 0   , -169.2   ],[0   , 0.5, 0   , -124.2   ],[0   , 0   , 0.5, -327.15 ],[0   , 0   , 0   ,  1  ]]');
+INSERT INTO dataset_planes VALUES (6, 2, 'N', 'z', 679, 1311, 498, '[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75 ]', 3, '[[0.5, 0   , 0   , -169.2   ],[0   , 0.5, 0   , -327.15 ],[0   , 0   , 0.5, -124.2  ],[0   , 0   , 0   ,  1 ]]');
 
 

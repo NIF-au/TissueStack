@@ -12,7 +12,7 @@ TissueStack.Queue.prototype = {
 	latestDrawRequestTimestamp : 0,
 	setDrawingInterval : function(value) {
 		if (typeof(value) !== 'number' || value < 0) {
-			throw new Error("Interval has to be greater or equal to 0");
+			value = 150; // set to default
 		}
 		this.stopQueue();
 		this.drawingIntervalInMillis = value;
@@ -22,7 +22,9 @@ TissueStack.Queue.prototype = {
 			return;
 		}
 		
-		this.queue_handle = setInterval(function(_this) {
+		var _this = this;
+		
+		this.queue_handle = setInterval(function() {
 			// sanity check, if we still have some requests queued
 			if (_this.requests.length == 0) {
 				_this.stopQueue();
@@ -50,7 +52,7 @@ TissueStack.Queue.prototype = {
 				_this.drawLowResolutionPreview(_this.latestDrawRequestTimestamp);
 				_this.drawRequestAfterLowResolutionPreview(latestRequest);
 			}
-		}, this.drawingIntervalInMillis , this);
+		}, this.drawingIntervalInMillis);
 	},
 	stopQueue : function() {
 		if (!this.queue_handle) {
@@ -89,7 +91,8 @@ TissueStack.Queue.prototype = {
 		this.startQueue();
 	},
 	drawRequestAfterLowResolutionPreview : function(draw_request, timestamp) {
-		var lowResBackdrop = setInterval(function(_this, draw_request, timestamp) {
+		var _this = this;
+		var lowResBackdrop = setInterval(function() {
 			if (_this.lowResolutionPreviewDrawn) {
 				if (draw_request) {
 					_this.drawRequest(draw_request);
@@ -98,7 +101,7 @@ TissueStack.Queue.prototype = {
 				}
 				clearInterval(lowResBackdrop);
 			}
-		}, 10, this, draw_request, timestamp);		
+		}, 200);		
 	},
 	clearRequestQueue : function() {
 		this.requests = [];
@@ -163,13 +166,13 @@ TissueStack.Queue.prototype = {
 			TissueStack.Utils.assembleTissueStackImageRequest(
 					"http",
 					dataSet.host,
-					(dataSet.imageService ? "image_service" : "tiles"),
+					this.canvas.getDataExtent().getIsTiled(),
 					 dataSet.local_id,
 					 true,
 					 this.canvas.getDataExtent().zoom_level,
 					 this.canvas.getDataExtent().plane,
 					 slice,
-					 this.image_format
+					 this.canvas.image_format
 		);
 
 		(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height) {
@@ -191,7 +194,7 @@ TissueStack.Queue.prototype = {
 				ctx.drawImage(this, imageOffsetX, imageOffsetY, width, height, canvasX, canvasY, width, height);
 				_this.lowResolutionPreviewDrawn = true;
 				
-				_this.canvas.applyColorMapToCanvasContent();
+				_this.canvas.applyColorMapToCanvasContent()	;
 			};
 		})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height);
 	}, prepareDrawRequest : function(draw_request) {

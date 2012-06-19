@@ -10,10 +10,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dlfcn.h>
-#include <minc2.h>
-
+#include <signal.h>
 #include <termios.h>
 #include <sys/ioctl.h>
+#include <minc2.h>
 
 #include "thread_pool.h"
 
@@ -29,6 +29,7 @@ struct			s_plugin
 {
   int			error;
   unsigned int	       	busy;
+  pthread_t		thread_id;
   char			*name;
   char			*path;
   void			*handle;
@@ -45,6 +46,7 @@ struct			s_args_plug
   char			*path;
   t_plugin		*this;
   t_tissue_stack	*general_info;
+  void			(*destroy)(t_args_plug *a);
 };
 
 struct			s_function
@@ -123,6 +125,9 @@ void            prompt_start(t_tissue_stack *general);
 t_args_plug     *create_plug_args(char **commands, t_tissue_stack *general, void *box);
 void            prompt_exec(char **commands, t_tissue_stack *general, void *box);
 
+void            free_all_history(t_tissue_stack *t);
+void            free_all_prompt(t_tissue_stack *t);
+
 /*		plugin.c		*/
 
 void		list_plugins(t_tissue_stack *t, char *command);
@@ -131,6 +136,7 @@ t_plugin        *get_plugin_by_name(char *name, t_plugin *first);
 void            *plugin_load(void *a);
 void            *plugin_start(void *a);
 void            *plugin_unload(void *a);
+void            free_all_plugins(t_tissue_stack *t);
 
 /*		volume.c		*/
 
@@ -141,6 +147,7 @@ void		add_volume(char *path, t_tissue_stack *t);
 t_vol		*get_volume(char *path, t_tissue_stack *t);
 void		remove_volume(char *path, t_tissue_stack *t);
 void		free_volume(t_vol *v);
+void		free_all_volumes(t_tissue_stack *t);
 
 /*		core.c			*/
 
