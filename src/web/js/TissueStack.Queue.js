@@ -167,12 +167,15 @@ TissueStack.Queue.prototype = {
 					"http",
 					dataSet.host,
 					this.canvas.getDataExtent().getIsTiled(),
-					 dataSet.local_id,
-					 true,
-					 this.canvas.getDataExtent().zoom_level,
-					 this.canvas.getDataExtent().plane,
-					 slice,
-					 this.canvas.image_format
+					dataSet.filename,
+					dataSet.local_id,
+					true,
+					this.canvas.getDataExtent().getIsTiled() ?
+							this.canvas.getDataExtent().zoom_level : 
+								this.canvas.getDataExtent().getZoomLevelFactorForZoomLevel(this.canvas.getDataExtent().zoom_level),
+					this.canvas.getDataExtent().plane,
+					slice,
+					this.canvas.image_format
 		);
 
 		(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height) {

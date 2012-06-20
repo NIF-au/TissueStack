@@ -285,8 +285,8 @@ TissueStack.Utils = {
 		return url;
 	},
 	assembleTissueStackImageRequest : function(
-			protocol, host, isTiled, dataset_id, is_preview,
-			zoom, plane, slice, image_extension,row, col) {
+			protocol, host, isTiled, filename, dataset_id, is_preview,
+			zoom, plane, slice, tile_size, image_extension,row, col) {
 		if (typeof(protocol) != "string") {
 			protocol = "http";
 		} 
@@ -298,8 +298,18 @@ TissueStack.Utils = {
 		if (typeof(dataset_id) != "number" || dataset_id <= 0) {
 			return null;
 		}
+		//are we tiled or not
+		if (typeof(isTiled) != "boolean") {
+			isTiled = false; // if in doubt => false
+		}
+		if (!isTiled && typeof(filename) != "string") {
+			return null;
+		}
 		if (typeof(is_preview) != "boolean") {
 			return null;
+		}
+		if (!is_preview && (typeof(tile_size) != "number" || zoom < 0)) {
+			tile_size = 256;
 		}
 		if (typeof(zoom) != "number" || zoom < 0) {
 			return null;
@@ -316,12 +326,6 @@ TissueStack.Utils = {
 
 		// assemble what we have so far
 		var url = (host != "" ? (protocol + "://" + host.replace(/[_]/g,".")) : "");
-
-		//are we tiled or not
-		if (typeof(isTiled) != "boolean") {
-			isTiled = false; // if in doubt => false
-		}
-
 		var path = isTiled ? TissueStack.configuration['tile_directory'].value : TissueStack.configuration['image_service_directory'].value;
 
 		if (isTiled) {
@@ -342,8 +346,13 @@ TissueStack.Utils = {
 
 			return url + "/" + row + '_' + col + "." + image_extension;
 		} else {
-			// TODO: image_service aka direct image querying
-			return url + "/" + row + '_' + col + "." + image_extension;
+			url += ("/" + path + "?volume=" + filename + "&scale=" + zoom + "&dimension=" + plane + "space" + "&slice=" + slice);
+			
+			if (is_preview) {
+				return url + "&quality=10";
+			}
+			
+			return url  + "&quality=1&service=tiles&square=" + tile_size + '&y=' + col + "&x=" + row;
 		}
 	}, adjustBorderColorWhenMouseOver : function () {
 			if (TissueStack.phone || TissueStack.tablet) {
