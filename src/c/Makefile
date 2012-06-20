@@ -4,6 +4,7 @@ SRCS		=	$(DIRSRC)core.c							\
 			$(DIRSRC)prompt.c						\
 			$(DIRSRC)plugin.c						\
 			$(DIRSRC)volume.c						\
+			$(DIRSRC)error.c						\
 			$(DIRSRC)thread_pool.c
 
 INCLUDE		=	-I./headers 

@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Tue Jun 19 14:17:15 2012 Oliver Nicolini
+** Last update Tue Jun 19 17:06:57 2012 Oliver Nicolini
 */
 
 
@@ -13,10 +13,47 @@
 
 static t_tissue_stack	*t_global;
 
+char			*from_array_to_string(char **array)
+{
+  int			i;
+  int			j;
+  int			k;
+  char			*dest;
+
+  i = 0;
+  k = 0;
+  while (array[i] != NULL)
+    {
+      j = 0;
+      while (array[i][j] != '\0')
+	{
+	  k++;
+	  j++;
+	}
+      k++;
+      i++;
+    }
+  dest = malloc((k + 1) * sizeof(*dest));
+  i = 0;
+  while (array[i] != NULL)
+    {
+      if (i != 0)
+	strcat(dest, " ");
+      strcat(dest, array[i]);
+      i++;
+    }
+  return (dest);
+}
+
 void			signal_handler(int sig)
 {
   t_plugin		*tmp;
   pthread_t		id;
+  int			errors;
+  char			command[200];
+  char			*name;
+  char			*start_command;
+  char			*path;
 
   id = pthread_self();
   tmp = t_global->first;
@@ -24,12 +61,36 @@ void			signal_handler(int sig)
     {
       if (tmp->thread_id == id)
 	{
-	  printf("The thread hosting the plugin: %s - received the signal %i\n", tmp->name, sig);
+	  add_error(t_global, sig, tmp);
+	  fprintf(stderr, "The thread hosting the plugin: %s - received the signal %i\n", tmp->name, sig);
 	  break;
 	}
       tmp = tmp->next;
     }
-  printf(" -----  received signal: %i\n", sig);
+  errors = get_errors_nb_by_plugin(t_global, tmp);
+  if (errors >= ERROR_MAX)
+    {
+      fprintf(stderr, "The plugin %s locate at %s haz crashed several times. This plugin is now disabled\n", tmp->name, tmp->path);
+      sprintf(command, "unload %s", tmp->name);
+      t_global->plug_actions(t_global, command, NULL);
+    }
+  else
+    {
+      path = strdup(tmp->path);
+      name = strdup(tmp->name);
+      start_command = from_array_to_string(tmp->start_command);
+      sprintf(command, "unload %s", tmp->name);
+      t_global->plug_actions(t_global, command, NULL);
+      usleep(1000);
+      memset(command, 0, 200);
+      sprintf(command, "load %s %s", name, path);
+      t_global->plug_actions(t_global, command, NULL);
+      usleep(1000);
+      memset(command, 0, 200);
+      sprintf(command, "start %s %s ", name, start_command);
+      t_global->plug_actions(t_global, command, NULL);
+    }
+  clean_error_list(t_global, CLEANING_ERROR_TIME);
 }
 
 void			signal_manager(t_tissue_stack *t)
@@ -37,17 +98,17 @@ void			signal_manager(t_tissue_stack *t)
   struct sigaction	act;
   int			i;
 
-  i = 1;
+
   t_global = t;
   act.sa_handler = signal_handler;
   act.sa_flags = 0;
   sigemptyset(&act.sa_mask);
-  i = 1;
-  //  while (i < 32)
-  //   {
-  sigaction(13, &act, NULL);
-  i++;
-      // }
+  i = 4;
+  while (i < 32)
+    {
+      sigaction(i, &act, NULL);
+      i++;
+    }
 }
 
 unsigned int            get_slices_max(t_vol *volume)
