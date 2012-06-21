@@ -116,11 +116,14 @@ TissueStack.DataSetNavigation.prototype = {
 			});
 		}
 
+		// restore slider states
 		var old_classes = $("#" + dataset + "_canvas_main_slider").attr("class");
-		old_classes = old_classes.replace(/canvas_[?]/, "canvas_y");
+		old_classes = old_classes.replace(/canvas_[x|y|z]/, "canvas_y");
 		coll = $("#" + dataset + "_canvas_main_slider");
 		coll.removeAttr("class");
 		coll.addClass(old_classes);
+
+		// restore maximizing states
 		$("#" + dataset + "_left_side_view_maximize").attr("class", "maximize_view_icon canvas_x");
 		$("#" + dataset + "_right_side_view_maximize").attr("class", "maximize_view_icon canvas_z");
 		

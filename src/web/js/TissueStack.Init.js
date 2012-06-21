@@ -484,6 +484,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 					$(this).attr("min", 0);
 					$(this).attr("max", actualDataSet.planes[id].data_extent.max_slices);
 					$(this).attr("value", actualDataSet.planes[id].data_extent.slice);
+					$(this).blur();
 				}
 			);
 			// avoid potential double binding by un-binding at this stage
@@ -494,10 +495,10 @@ TissueStack.BindDataSetDependentEvents = function () {
 				if (!id) {
 					return;
 				}
-
+	
 				triggerQueuedRedraw(id, this.value, actualDataSet);
 			});
-
+	
 			// rebind
 			if (TissueStack.phone) {
 				$('.canvasslider').live ("slidercreate", function () {
@@ -515,6 +516,8 @@ TissueStack.BindDataSetDependentEvents = function () {
 					}
 				});
 			}
+			
+			TissueStack.slider = true;
 		})(dataSet, y);
 	}
 };
