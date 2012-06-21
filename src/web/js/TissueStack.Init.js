@@ -292,7 +292,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 		var dataSet = datasets[y];
 	
 		// MAXIMIZING SIDE VIEWS
-		if ((TissueStack.desktop || TissueStack.tablet || TissueStack.phone)) {
+		if (TissueStack.desktop || TissueStack.tablet) {
 			// avoid potential double binding by un-binding at this stage
 			$('#dataset_' + (y+1) + '_left_side_view_maximize, #dataset_' + (y+1) + '_right_side_view_maximize').unbind("click");
 			// rebind
