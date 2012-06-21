@@ -113,6 +113,7 @@ TissueStack.DataSetNavigation.prototype = {
 				    $(this).attr("id", id.replace(/canvas_[x|y|z]_plane/, selectors[i][1]));
 				});
 		}
+
 		if(TissueStack.desktop || TissueStack.tablet){
 				// restore slider states
 				var old_classes = $("#" + dataset + "_canvas_main_slider").attr("class");
@@ -120,7 +121,7 @@ TissueStack.DataSetNavigation.prototype = {
 				coll = $("#" + dataset + "_canvas_main_slider");
 				coll.removeAttr("class");
 				coll.addClass(old_classes);
-		
+
 				// restore maximizing states
 				$("#" + dataset + "_left_side_view_maximize").attr("class", "maximize_view_icon canvas_x");
 				$("#" + dataset + "_right_side_view_maximize").attr("class", "maximize_view_icon canvas_z");

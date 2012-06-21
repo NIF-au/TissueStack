@@ -393,7 +393,7 @@ TissueStack.Canvas.prototype = {
 					break;
 				}
 
-				// brief check whether we are not yet obsolete 
+				// brief check as to whether there exists a newer drawing request
 				if (timestamp && timestamp < this.queue.latestDrawRequestTimestamp) {
 					return;
 				}
@@ -406,14 +406,18 @@ TissueStack.Canvas.prototype = {
 							"http",
 							dataSet.host,
 							this.getDataExtent().getIsTiled(),
-							 dataSet.local_id,
-							 false,
-							 this.getDataExtent().zoom_level,
-							 this.getDataExtent().plane,
-							 slice,
-							 this.image_format,
-							 rowIndex,
-							 colIndex
+							dataSet.filename,
+							dataSet.local_id,
+							false,
+							this.getDataExtent().getIsTiled() ?
+									this.getDataExtent().zoom_level : 
+										this.getDataExtent().getZoomLevelFactorForZoomLevel(this.getDataExtent().zoom_level),
+							this.getDataExtent().plane,
+							slice,
+							this.image_format,
+							this.getDataExtent().tile_size,
+							rowIndex,
+							colIndex
 					);
 				counter++;
 				

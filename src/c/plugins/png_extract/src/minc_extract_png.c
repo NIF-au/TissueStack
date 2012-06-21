@@ -210,15 +210,21 @@ void		*start(void *args)
   t_args_plug	*a;
   t_vol		*volume;
   int		step;
+  char		volume_load[200];
 
   a = (t_args_plug *)args;
   a->this->busy = 1;
   printf("path - %s\n", a->commands[0]);
   if ((volume = a->general_info->get_volume(a->commands[0], a->general_info)) == NULL)
     {
-      write(2, "MINC Volume not found\n", strlen("MINC Volume not found\n"));
-      a->this->busy = 0;
-      return (NULL);
+      sprintf(volume_load, "file load %s", a->commands[0]);
+      a->general_info->plug_actions(a->general_info, volume_load, NULL);
+      usleep(10000);
+      volume = a->general_info->get_volume(a->commands[0], a->general_info);
+      printf("%p\n\n", volume);
+      //write(2, "MINC Volume not found\n", strlen("MINC Volume not found\n"));
+      //a->this->busy = 0;
+      //return (NULL);
     }
   png_args = (t_png_extract *)a->this->stock;
   if (check_input(a->commands))

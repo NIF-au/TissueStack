@@ -36,19 +36,21 @@ overflow: scroll;
     background: #000;  
     height: 100px;  
     width: 100%;  
-    opacity: .6;  
+    opacity: .7;  
     /* For IE 5-7 */  
-    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=60);  
+    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=70);  
     /* For IE 8 */  
-    -MS-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=60)";  
+    -MS-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=70)";  
     }  
 .captionfull .boxcaption {  
 		text-align: left;
+		color: green;
         top: 260px;  
         left: 0px;
         font-size: 10px;
-        z-index: 2000;  
-    }  
+        z-index: 2000;
+		text-shadow: 0 0 1px green;
+	}  
 .caption .boxcaption {
         top: 220;  
         left: 0px;  

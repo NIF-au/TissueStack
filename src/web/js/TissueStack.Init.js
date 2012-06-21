@@ -500,10 +500,10 @@ TissueStack.BindDataSetDependentEvents = function () {
 				if (!id) {
 					return;
 				}
-
+	
 				triggerQueuedRedraw(id, this.value, actualDataSet);
 			});
-
+	
 			// rebind
 			if (TissueStack.phone) {
 				$('.canvasslider').live ("slidercreate", function () {
@@ -521,7 +521,6 @@ TissueStack.BindDataSetDependentEvents = function () {
 					}
 				});
 			}
-			TissueStack.slider = true;
 		})(dataSet, y);
 	}
 };

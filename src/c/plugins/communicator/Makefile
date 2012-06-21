@@ -17,26 +17,31 @@ NAME		=	TissueStackCommunicator.so
 
 FLAGS		=	-g3 -Wall -Werror
 
-all:	
-	@echo "\n================== Compilation ===================="
-	@gcc $(SRCS) -c $(INCLUDE) $(FLAGS) -fPIC
-	@gcc *.o -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -shared
+PLUGIN_INSTALL_DIR = /usr/local/plugins
 
+all: compile install
+
+compile:	
+	@echo "\n================== Compile $(NAME) ===================="
+	gcc $(SRCS) -c $(INCLUDE) $(FLAGS) -fPIC
+	gcc *.o -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -shared
+
+install:
+	mkdir -p $(PLUGIN_INSTALL_DIR)
+	cp $(NAME) $(PLUGIN_INSTALL_DIR)/$(NAME)
+	
 clean:
-	@echo "\n==================== Cleaning ====================="
-	@rm -rf *~ \#*\# $(NAME) ./png/*
+	@echo "\n==================== Cleaning $(NAME) ====================="
+	rm -rf *~ \#*\# $(NAME) ./png/*
+	rm -rf *.o
+	rm -rf *.so
 
-fclean:	clean
-	@rm -rf *.o
-
-re:	fclean all
-
-e:	re
+e:	clean
 	@echo "\n==================== Execution ====================\n\n"
 	@./yop ../00-normal-model-nonsym.mnc
 	@echo "\n\n================== Exec finished ==================\n\n"
 
-time:	re
+time:	clean
 	@echo "\n==================== Execution ====================\n\n"
 	@time ./yop ../00-normal-model-nonsym.mnc
 	@echo "\n\n================== Exec finished ==================\n\n"
