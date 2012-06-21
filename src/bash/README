@@ -1,4 +1,16 @@
-Note: The 2 scripts most likely need modification before "installing" them in the /etc/init directory
+This directory contains the "service" (/etc/init.d) scripts for starting and stopping the Tissue Stack Image Server as well as tomcat.
+
+                                                          ******
+
+Note:
+-----
+If you are not using tomcat and/or you installed it as part of your linux system's package manager,
+you'll already have a (better) init script installed !
+
+
+Important:
+-----------
+The 2 scripts will most likely need modification before "installing" them in the /etc/init directory
 
 On an Ubuntu system, here are the recommended steps to integrate the scripts into the init mechanics:
 (1) Modify paths to daemons in the script

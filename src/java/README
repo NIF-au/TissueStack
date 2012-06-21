@@ -1,0 +1,42 @@
+The Tissue Stack Configuration Services are a set of restful services (based on HTTP) to call backend functionality and query or write to 
+the configuration database. They are written in Java and make use of Hibernate (for persistence), RestEasy (for restfulness) and JNI to
+talk to the MINC Toolkit and our C ImageServer.
+
+                                                               *******
+
+Requirements:
+
+    1) A Java SDK 1.6 or higher
+    2) Apache Maven for Building
+    3) Apache Tomcat (recommended) or any other Java Application Server 
+
+ 
+                                                               *******
+
+How to build and deploy the back-end web services? 
+    
+    Change into the git project root and run "mvn clean install" from the command line
+    
+Note:
+-----
+    If you have tomcat installed and the environment variable CATALINA_HOME set, then the maven build script deploys automatically to
+    your tomcat's webapps folder, otherwise you have to manually copy the file!
+
+Important:
+----------
+    In order for JNI to find our shared C libraries, make sure that the tomcat starts with the command line option:
+        
+            -Djava.library.path=/usr/local/lib (see also: src/c/README)
+            
+    e.g. with tomcat, add the following line to catalina.sh: 
+    
+            CATALINA_OPTS="$CATALINA_OPTS -Djava.library.path=/usr/local/lib"
+    
+    or alternatively use /etc/default/tomcat on Ubuntu (if tomcat was installed with apt-get)
+    
+    
+ 
+ATTENTION:
+----------
+This is a work in progress!    
+                                                       

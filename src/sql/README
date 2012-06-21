@@ -1,0 +1,43 @@
+The Tissue Stack Configuration Database stores the data sets that are "registered" with the server. 
+
+The information is uses by the web front-end to populate the java script objects accordingly,
+including the data set selection tree in the desktop version / data set selection menu in the tablet and phone version.
+(see src/web/README)
+
+The information is queried and served by the TissueStack Configuration Services: see src/java/README
+
+                                                               *******
+                                                                  
+Technically any relational database can be used, the sql and query code should be generic enough.
+
+The recommended choice however is Postgres 8.4  and above for 3 reasons:
+    
+    -) It is an open source solution
+    -) It is the best performing and most stable open source solution out there
+    -) It is the open source solution with a good spatial extension which will very likely be used at a later stage in the project 
+
+Should you despite the reasons mentioned above opt for a different database, here are the 2 factors that need to be taken into account:
+
+    -) The Java Configuration Services (see src/java/README) need to be modified, in particular the hibernate configuration.
+       Hint: Look for file persistence.xml (we use JPA)
+    -) The JDBC drivers for your database of choice need to be included in the build or one of the library paths of your 
+       Java Application Server of choice, e.g. CATALINA_HOME/libs 
+ 
+                                                               *******
+
+How to create the database: 
+    
+    1) Install the software
+    2) Run the create.sql script in this folder
+    
+    => this creates a database named 'tissuestack' with a user 'tissuestack' with password 'tissuestack'
+
+Note:
+------
+    If you use linux and postgres, switch to user postgres and run psql -f create.sql or copy and paste the sql into the psql console.
+    
+ 
+ATTENTION:
+----------
+This is a work in progress!    
+                                                       
