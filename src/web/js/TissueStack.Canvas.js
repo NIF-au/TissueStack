@@ -487,7 +487,7 @@ TissueStack.Canvas.prototype = {
 		}
 			
 		// for desktop and tablet
-		if(TissueStack.desktop || TissueStack.tablet){
+		if(TissueStack.desktop || TissueStack.tablet ){
 			var x = worldCoords ? worldCoords.x : pixelCoords.x;
 			var y = worldCoords ? worldCoords.y : pixelCoords.y;
 			var z = worldCoords ? worldCoords.z : pixelCoords.z;
@@ -506,13 +506,13 @@ TissueStack.Canvas.prototype = {
 		// for everything else...
 		if (mouseCoords) {
 			log = $('.coords');
-			log.html("Canvas => X: " + mouseCoords.x + ", Y: " + mouseCoords.y);
+			log.html("Canvas > X: " + mouseCoords.x + ", Y: " + mouseCoords.y);
 		}
 		log = $('.pixel_coords');
-		log.html("Pixels => X: " + pixelCoords.x + ", Y: " + pixelCoords.y);
+		log.html("Pixels > X: " + pixelCoords.x + ", Y: " + pixelCoords.y);
 		if (worldCoords) {
 			log = $('.world_coords');
-			log.html("World => X: " +  Math.round(worldCoords.x * 1000) / 1000 + ", Y: " +  Math.round(worldCoords.y * 1000) / 1000);
+			log.html("World > X: " +  Math.round(worldCoords.x * 1000) / 1000 + ", Y: " +  Math.round(worldCoords.y * 1000) / 1000);
 		}
 	}, getXYCoordinatesWithRespectToZoomLevel : function(coords) {
 		if (this.upper_left_y < this.dim_y - this.cross_y || this.upper_left_y - (this.data_extent.y - 1) > this.dim_y - this.cross_y) {
