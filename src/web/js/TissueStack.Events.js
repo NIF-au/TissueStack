@@ -23,7 +23,7 @@ TissueStack.Events.prototype = {
 		var _this = this;
 
 		// TOUCH END and MOUSE UP
-		$(document).bind("touchend mouseup", function(e) {
+		this.getCanvasElement().bind("touchend mouseup", function(e) {
 			// call pan move
 			_this.panEnd();
 		});
@@ -148,7 +148,7 @@ TissueStack.Events.prototype = {
 		});	
 	}, unbindAllEvents : function() {
 		// UNBIND COMMON EVENTS
-		$(document).unbind("touchend mouseup");
+		this.getCanvasElement().unbind("touchend mouseup");
 		this.getCanvasElement().unbind("click");
 		$(document).unbind("sync");
 		$(document).unbind("zoom");
