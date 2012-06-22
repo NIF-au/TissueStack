@@ -437,11 +437,9 @@ TissueStack.BindDataSetDependentEvents = function () {
 			}
 			
 			var planeId = null;
-			/*
 			if (TissueStack.phone) {
 				return sliderId.substring("canvas_".length, "canvas_".length + 1);
 			}
-			*/
 			var plane =
 				TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray($("#" + sliderId).attr("class").split(" "), "^canvas_");
 			if (!plane) {
