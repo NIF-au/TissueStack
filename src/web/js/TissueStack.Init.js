@@ -86,7 +86,7 @@ TissueStack.InitUserInterface = function () {
 					transformationMatrix);
 			
 			// create canvas
-			var canvasElementSelector = (TissueStack.desktop || TissueStack.tablet) ? ("dataset_" + (x+1)) : ""; 
+			var canvasElementSelector = "dataset_" + (x+1); 
 			var plane = new TissueStack.Canvas(extent, "canvas_" + planeId + "_plane", canvasElementSelector);
 
 			// store plane  
@@ -104,6 +104,10 @@ TissueStack.InitUserInterface = function () {
 				
 			}
 			
+			if (TissueStack.phone ) {
+				plane.changeToZoomLevel(0);
+				
+			}
 			// fill canvases
 			plane.queue.drawLowResolutionPreview();
 			plane.queue.drawRequestAfterLowResolutionPreview();
@@ -288,7 +292,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 		var dataSet = datasets[y];
 	
 		// MAXIMIZING SIDE VIEWS
-		if ((TissueStack.desktop || TissueStack.tablet)) {
+		if (TissueStack.desktop || TissueStack.tablet || TissueStack.phone) {
 			// avoid potential double binding by un-binding at this stage
 			$('#dataset_' + (y+1) + '_left_side_view_maximize, #dataset_' + (y+1) + '_right_side_view_maximize').unbind("click");
 			// rebind
@@ -389,7 +393,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 			$('#dataset_' + (y+1) + '_center_point_in_canvas').bind("click", [{actualDataSet: dataSet,x: y}], function(event) {
 				var plane =
 					TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray(
-							$("#" + (TissueStack.desktop || TissueStack.tablet ? "dataset_" + (event.data[0].x + 1) + "_": "") + "main_view_canvas").attr("class").split(" "), "^canvas_");
+							$("#" + (TissueStack.desktop || TissueStack.tablet || TissueStack.phone? "dataset_" + (event.data[0].x + 1) + "_": "") + "main_view_canvas").attr("class").split(" "), "^canvas_");
 				if (!plane) {
 					return;
 				}
@@ -433,10 +437,11 @@ TissueStack.BindDataSetDependentEvents = function () {
 			}
 			
 			var planeId = null;
+			/*
 			if (TissueStack.phone) {
 				return sliderId.substring("canvas_".length, "canvas_".length + 1);
 			}
-			
+			*/
 			var plane =
 				TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray($("#" + sliderId).attr("class").split(" "), "^canvas_");
 			if (!plane) {
@@ -484,6 +489,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 					$(this).attr("min", 0);
 					$(this).attr("max", actualDataSet.planes[id].data_extent.max_slices);
 					$(this).attr("value", actualDataSet.planes[id].data_extent.slice);
+					$(this).blur();
 				}
 			);
 			// avoid potential double binding by un-binding at this stage
@@ -494,17 +500,20 @@ TissueStack.BindDataSetDependentEvents = function () {
 				if (!id) {
 					return;
 				}
-
+	
 				triggerQueuedRedraw(id, this.value, actualDataSet);
 			});
-
+	
 			// rebind
 			if (TissueStack.phone) {
+				// avoid potential double binding by un-binding at this stage
+                $('.canvasslider').die("slidercreate");			
+				// rebind
 				$('.canvasslider').live ("slidercreate", function () {
 					var res = $('#' + this.id).data('events');
 					// unbind previous change
 					$('#' + this.id).unbind("change");
-					if (!res.change || res.change.length == 0) {
+					//if (!res.change || res.change.length == 0) {
 						$('#' + this.id).bind("change", function (event, ui)  {
 							var id = extractCanvasId(this.id);
 							if (!id) {
@@ -512,7 +521,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 							}
 							triggerQueuedRedraw(id, this.value, actualDataSet);
 						});
-					}
+					//}
 				});
 			}
 		})(dataSet, y);

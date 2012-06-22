@@ -72,7 +72,7 @@ body{
 							font-size:14px;
 							font-family:arial;
 							padding:0 15px 5px 10px;
-							color:#fff;
+							color:yellow;
 							text-shadow: 0px 1px 1px #000000;
 							width:110px;
 							}
@@ -98,8 +98,7 @@ body{
 								text-indent:-999em !important;
 								display:block !important;
 								-webkit-box-shadow: 0 0px 0 rgba(150,150,150,.3) !important;
-								box-shadow: 0 0px 0 rgba(150,150,150,.3) !important;
-	
+								box-shadow: 0 0px 0 rgba(150,150,150,.3) !important;	
 							}
 							a.menuBtn .ui-btn-inner{
 								border:none;
@@ -110,10 +109,7 @@ body{
 							.ui-btn-corner-all {
 								-webkit-border-radius: 0 !important;
 								border-radius: 0 !important;
-								}
-								
-								
-							
+							}					
 								
 /*
 	Tab Styles

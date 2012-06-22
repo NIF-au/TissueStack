@@ -19,7 +19,7 @@ TissueStack.PhoneMenu = function() {
 				  }
 			});
 			
-			
+			//Slide on page after menu has been actived (swipe to left from anywhere)
 			$('#menu, .pages').live("swipeleft", function(){
 				if (menuStatus){	
 				$(".ui-page-active").animate({
@@ -59,7 +59,5 @@ TissueStack.PhoneMenu = function() {
 				$('div.content_div').hide();
 				$('div#' + $(this).attr('data-href')).show();
 			});
-
-
-});	
+	});	
 };

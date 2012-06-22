@@ -1,15 +1,59 @@
-TissueStack:
-------------
-
-The source for the various components can be found in the following directories:
-
-1) Frontend (html, images, css and js) => src/web
-2) Java Web Services and Toolkit => src/java
-3) C/C++ Services and JNI Wrappers for MINC => src/c and sub directories
-
-For deployment use the following for each component:
-1) Anything under src/web just needs to be taken and copied wherever the webserver's document root lives
-2) Use Apache Maven to build the .war file ('mvn clean install' in the project's root directory) which can then be deployed in any java application server 
-3) Use the Makefiles to build the c code. There will be a Makefile in the project's root directory for the default functionality and Makefiles in the sub directories of the optional plugins
-
-!!!!!! NOTE: This is a work in progress !!!!!! 
+##################################################################################
+################################   TISSUE STACK   ################################
+##################################################################################
+#                                                                                #
+# Tissue Stack is an open source web based image viewer which allows the user to #
+# view 3D data as 2D cross sections.                                             #
+#                       							 #
+# While at its core it's modelled after GIS web mapping applications,            #
+# it's intended use is for neuro-imaging.                                        # 
+#										 #
+# Tissue Stack aims at serving its data as image tiles which can be both pre-    #
+# tiled in advance or created on the fly by extracting from the original source  #
+# file. 									 #
+#										 #
+# The used file formats will be anything that is supported by the MINC Tool Kit: # 
+#    http://www.bic.mni.mcgill.ca/ServicesSoftware/ServicesSoftwareMincToolKit   #
+#										 #
+# Of course any data that is pre-tiled as png and adheres to Tissue Stack's      #
+# directory structure for tiled data sets can be consumed and viewed via the web #
+# front-end.									 # 
+#										 #
+#                                   *******                                      #
+#                                                                  		 #
+# A Tissue Stack Server Instance consists of the following 5 components:         # 
+#										 #
+#   1) The WEB Front End => see src/web/README for installation instructions     #
+#        									 #
+#   2) A Configuration Back End => see src/java/README for further explanations  #
+#										 #        
+#   3) A Configuration Data Base => see src/sql/README for how to create the     #
+#      data base          							 #
+#										 #        
+#   4) The Image Server for pre and on-the-fly tiling  => see src/c/README for   #
+#      how to build and install							 #
+#										 #        
+#   5) Some optional bash scripts for service starting and stopping 		 #
+#      (/etc/init.d/) => see src/bash						 #
+#										 #         
+#										 #
+#   Notes:									 #
+#   ------									 #
+#   -) Number 1, 2 and 3 are by default rather tightly coupled. 		 #
+#      That is not to say that one cannot use the web front-end only but it      #
+#      requires	some modification to bypass the configuration loading and 	 #
+#      construct the necessary java script objects manually.			 #
+#   -) Number 4 is technically optional if all datasets have been pre-tiled 	 #
+#      manually beforehand. Needless to say that the Image Server can take this  #
+#      task off your hands and prepare the tiles just as the application expects #
+#       it.									 #
+#   -) Number 5 is certainly optional and facilitates the startup and shutdown   #
+#      of the Image Server and Java Application Server    			 #
+# 										 #
+# 										 #
+#   ATTENTION:  								 #
+#   ----------									 #
+#   This is a work in progress! The 'develop' branch contains the most 		 #
+#   up-to-date code and newest features.					 #
+#   On the downside, things can be buggy...    					 #
+##################################################################################
