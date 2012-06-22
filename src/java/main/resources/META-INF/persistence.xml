@@ -5,6 +5,7 @@
    <persistence-unit name="defaultEntityManager" transaction-type="RESOURCE_LOCAL">
       <jta-data-source>java:/comp/env/jdbc/defaultDatasource</jta-data-source>
       
+      <class>au.edu.uq.cai.TissueStack.dataobjects.Session</class>
       <class>au.edu.uq.cai.TissueStack.dataobjects.Configuration</class>
       <class>au.edu.uq.cai.TissueStack.dataobjects.DataSet</class>
       <class>au.edu.uq.cai.TissueStack.dataobjects.DataSetPlanes</class>

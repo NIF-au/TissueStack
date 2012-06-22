@@ -19,7 +19,7 @@ import au.edu.uq.cai.TissueStack.rest.Description;
 @Description("Tissue Stack Configuration Resources")
 public final class ConfigurationResources extends AbstractRestfulMetaInformation {
 
-	@GET
+	@Path("/")
 	public RestfulResource getDefault() {
 		return this.getConfigurationResourcesMetaInfo();
 	}
