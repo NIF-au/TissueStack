@@ -325,6 +325,7 @@ TissueStack.DataSetNavigation.prototype = {
 			var dataSet = TissueStack.dataSetStore.datasets[dataSetKey];
 			(function(dataSet) {
 				$("#tabletTreeDiv-" + dataSet.local_id + dataSet.host + "").click(function() {
+					TissueStack.Utils.adjustScreenContentToActualScreenSize(0);
 					_this.addToOrReplaceSelectedDataSets(dataSet.id, 0);
 					_this.showDataSet(1);
 					TissueStack.InitUserInterface();

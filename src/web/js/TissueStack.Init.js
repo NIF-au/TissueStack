@@ -292,7 +292,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 		var dataSet = datasets[y];
 	
 		// MAXIMIZING SIDE VIEWS
-		if (TissueStack.desktop || TissueStack.tablet) {
+		if (TissueStack.desktop || TissueStack.tablet || TissueStack.phone) {
 			// avoid potential double binding by un-binding at this stage
 			$('#dataset_' + (y+1) + '_left_side_view_maximize, #dataset_' + (y+1) + '_right_side_view_maximize').unbind("click");
 			// rebind
@@ -437,9 +437,11 @@ TissueStack.BindDataSetDependentEvents = function () {
 			}
 			
 			var planeId = null;
+			/*
 			if (TissueStack.phone) {
 				return sliderId.substring("canvas_".length, "canvas_".length + 1);
 			}
+			*/
 			var plane =
 				TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray($("#" + sliderId).attr("class").split(" "), "^canvas_");
 			if (!plane) {
@@ -491,9 +493,9 @@ TissueStack.BindDataSetDependentEvents = function () {
 				}
 			);
 			// avoid potential double binding by un-binding at this stage
-			$('#dataset_' + (x+1) + '_canvas_main_slider').unbind("change");
+			$(TissueStack.phone ? ('.canvasslider') : ('#dataset_' + (x+1) + '_canvas_main_slider')).unbind("change");
 			// rebind
-			$('#dataset_' + (x+1) + '_canvas_main_slider').bind ("change", function (event, ui)  {
+			$(TissueStack.phone ? ('.canvasslider') : ('#dataset_' + (x+1) + '_canvas_main_slider')).bind ("change", function (event, ui)  {
 				var id = extractCanvasId(this.id, actualDataSet);
 				if (!id) {
 					return;
@@ -504,11 +506,14 @@ TissueStack.BindDataSetDependentEvents = function () {
 	
 			// rebind
 			if (TissueStack.phone) {
+				// avoid potential double binding by un-binding at this stage
+                $('.canvasslider').die("slidercreate");			
+				// rebind
 				$('.canvasslider').live ("slidercreate", function () {
 					var res = $('#' + this.id).data('events');
 					// unbind previous change
 					$('#' + this.id).unbind("change");
-					if (!res.change || res.change.length == 0) {
+					//if (!res.change || res.change.length == 0) {
 						$('#' + this.id).bind("change", function (event, ui)  {
 							var id = extractCanvasId(this.id);
 							if (!id) {
@@ -516,7 +521,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 							}
 							triggerQueuedRedraw(id, this.value, actualDataSet);
 						});
-					}
+					//}
 				});
 			}
 		})(dataSet, y);

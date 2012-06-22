@@ -164,6 +164,9 @@ TissueStack.Utils = {
 		}
 	},adjustScreenContentToActualScreenSize : function (datasets){	
 		if (TissueStack.phone) {
+			$('#canvasBox').css({"width" : 300, "height" : 300});
+			$('.plane').attr("width", "300");
+			$('.plane').attr("height", "300");
 			return;
 		}
 		
