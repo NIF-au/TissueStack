@@ -10,6 +10,7 @@
        	
         <link rel="stylesheet" href="css/jquery.mobile-1.1.0.min.css" />
         <link rel="stylesheet" href="css/default.css" />
+        <link rel="stylesheet" href="css/login.css" />
         
         <!--Apple Device Start Up Splash Screen and ICON-->
 		<link rel="apple-touch-startup-image" href="images/mobile/ipadscreen.png" /> <!--For iPad-->
@@ -36,6 +37,7 @@
 		<script src="js/TissueStack.DataSetStore.js"></script>
 		<script src="js/TissueStack.DataSetNavigation.js"></script>
 		<script src="js/TissueStack.Init.js"></script>
+		<script src="js/TissueStack.Session.js"></script>
 		
 		<script type="text/javascript">
 		    TissueStack.desktop = true;
@@ -175,7 +177,28 @@
 			  		 </div>
 	            </div>
 	 	    </div>
-	 	
+	 		<div class="admin-login">
+	 		  <div id="page_container">
+		 		  <div id="toppanel">
+		 		    <div id="panel">
+		 		      <div id="panel_contents"> </div>
+		 		      <div class="border" id="login">
+		 		        <p>Username:<input type="text" size="15" name="username" id="username" />
+		 		          Password:<input type="password" size="15" name="password" id="password" /><br/>
+		 		          <input type="button" accesskey="l" id="login_btn" name="login" value="Login" />
+		 		        </p>
+		 		      </div>
+		 		     </div>
+			 		    <div class="panel_button" style="display: visible;">
+			 		    	<img src="images/expand.png"  alt="expand"/> <a href="#">Login Here</a> 
+			 		   	</div>
+			 		    <div class="panel_button" id="hide_button" style="display: none;">
+			 		    	<img src="images/collapse.png" alt="collapse" /> <a href="#">Hide</a> 
+			 		    </div>
+	 		 		</div>
+	 			</div>
+	 		</div>
+	 		
 	     	<div class="settings-left-column">
 				<h1>File Upload Form</h1>
 				<hr/>		 
