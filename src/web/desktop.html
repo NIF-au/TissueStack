@@ -53,6 +53,7 @@
 						<ul>
 							<li><a href="#data" data-icon="plus" class="ui-btn-active">Data</a></li>
 							<li><a href="#setting" data-icon="gear">Setting</a></li>
+							<li><a href="#admin" data-icon="gear">Admin</a></li>							
 						</ul>
 			  		 </div>
                 </div>
@@ -134,6 +135,7 @@
 						<ul>
 							<li><a href="#data" data-icon="minus">Data</a></li>
 							<li><a href="#setting" data-icon="gear" class="ui-btn-active">Setting</a></li>
+							<li><a href="#admin" data-icon="gear">Admin</a></li>
 						</ul>
 			  		 </div>
                 </div>
@@ -160,5 +162,40 @@
 			</div>
       </div>
 	<!--    END SETTING PAGE       -->
+	<!-- ADMIN PAGE --> 
+	  <div data-role="page" data-theme="a" id="admin" data-id="Head1"  >
+	        <div data-role="content">
+					<div data-theme="a" data-role="header" data-position="fixed">
+	    	  	     <div data-role="navbar">
+						<ul>
+							<li><a href="#data" data-icon="minus">Data</a></li>
+							<li><a href="#setting" data-icon="gear">Setting</a></li>
+							<li><a href="#admin" data-icon="gear" class="ui-btn-active">Admin</a></li>
+						</ul>
+			  		 </div>
+	            </div>
+	 	    </div>
+	 	
+	     	<div class="settings-left-column">
+				<h1>File Upload Form</h1>
+				<hr/>		 
+			    <fieldset>
+			        <legend>Upload File</legend>
+			        <form action="/uploadservlet" method="post" enctype="multipart/form-data">
+			            <label for="filename_1">File: </label>
+			            <input id="filename_1" type="file" name="filename_1" size="50"/><br/>
+			            <label for="filename_2">File: </label>
+			            <input id="filename_2" type="file" name="filename_2" size="50"/><br/>
+			            <br/>
+			            <input type="submit" value="Upload File"/>
+			        </form>
+			    </fieldset>
+	     	</div>
+	     	
+	     	<div class="settings-right-column">
+			</div>
+	  </div>
+	<!--    END SETTING PAGE       -->
+	
     </body>
 </html>
