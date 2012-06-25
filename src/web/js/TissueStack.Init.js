@@ -513,7 +513,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 					var res = $('#' + this.id).data('events');
 					// unbind previous change
 					$('#' + this.id).unbind("change");
-					//if (!res.change || res.change.length == 0) {
+					if (!res.change || res.change.length == 0) {
 						$('#' + this.id).bind("change", function (event, ui)  {
 							var id = extractCanvasId(this.id);
 							if (!id) {
@@ -521,7 +521,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 							}
 							triggerQueuedRedraw(id, this.value, actualDataSet);
 						});
-					//}
+					}
 				});
 			}
 		})(dataSet, y);
@@ -529,6 +529,17 @@ TissueStack.BindDataSetDependentEvents = function () {
 };
 
 $(document).ready(function() {
+	  // override cross domain behavior
+	  var options = {
+			  allowCrossDomainPages : true
+	  };
+	  // override form submission behavior for desktop version
+	  if (TissueStack.desktop) {
+		  options.ajaxEnabled = false;
+	  }
+	  
+	  $.extend(  $.mobile , options);
+
 	var afterLoadingRoutine = function() {
 		// create an instance of the navigation
 		TissueStack.dataSetNavigation = new TissueStack.DataSetNavigation();

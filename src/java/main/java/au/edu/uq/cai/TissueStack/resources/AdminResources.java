@@ -118,6 +118,10 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 			while (files.hasNext()) {
 			    FileItemStream file = files.next();
 			    
+			    if (file == null || file.getName().isEmpty()) {
+			    	throw new IllegalArgumentException("No File was selected!");
+			    }
+			    
 			    if (!file.isFormField()) {
 			    	OutputStream out = null;
 			    	
