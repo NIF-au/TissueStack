@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html>
   <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable = no" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
         
         <title> Tissue Stack - Desktop </title>
        	<link rel="icon" type="image/png" href="images/favicon.png" />
@@ -181,7 +178,7 @@
 				<hr/>		 
 			    <fieldset>
 			        <legend>Upload File</legend>
-			        <form action="/backend/admin/upload/json" method="post" enctype="multipart/form-data">
+			        <form action="/backend/admin/upload/json" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
 			            <label for="filename_1">File: </label>
 			            <input id="filename_1" type="file" name="filename_1" size="50"/><br/>
 			            <br/>
