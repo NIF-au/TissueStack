@@ -17,6 +17,7 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.log4j.Logger;
 
 import au.edu.uq.cai.TissueStack.dataobjects.Configuration;
+import au.edu.uq.cai.TissueStack.dataobjects.NoResults;
 import au.edu.uq.cai.TissueStack.dataobjects.Response;
 import au.edu.uq.cai.TissueStack.dataprovider.ConfigurationDataProvider;
 import au.edu.uq.cai.TissueStack.rest.AbstractRestfulMetaInformation;
@@ -41,9 +42,25 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 		return this.getAdminResourcesMetaInfo();
 	}
 	
+	@Path("/upload_directory")
+	@Description("Shows contents of upload directory")
+	public RestfulResource showContentOfUploadDirectory(@QueryParam("session") String session) {
+		// check permissions
+		if (!SecurityResources.checkSession(session)) {
+			throw new RuntimeException("Your session is not valid. Log in with the admin password first!");
+		}
+		
+		return new RestfulResource(new Response(new NoResults()));
+	}
+	
 	@Path("/upload")
 	@Description("Uploads a file ")
 	public RestfulResource uploadFile(@Context HttpServletRequest request, @QueryParam("session") String session) {
+		// check permissions
+		if (!SecurityResources.checkSession(session)) {
+			throw new RuntimeException("Your session is not valid. Log in with the admin password first!");
+		}
+
 		boolean isMultipart = ServletFileUpload.isMultipartContent(request);
 		
 		// preliminary check
@@ -184,13 +201,6 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
     		}
 		}
 			
-		
-		// check permissions
-		//if (!SecurityResources.checkSession(session)) {
-		//	throw new RuntimeException("Your session is not valid. Log in with the admin password first!");
-		//}
-		
-		//TODO: implement me
 		return new RestfulResource(new Response("Upload finished successfully."));
 	}
 
