@@ -24,15 +24,6 @@
 		<servlet-class>org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher</servlet-class>
 	</servlet>
 
-	<servlet>
-        <servlet-name>FileUploadServlet</servlet-name>
-        <servlet-class>au.edu.uq.cai.TissueStack.resources.FileUploadServlet</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>FileUploadServlet</servlet-name>
-        <url-pattern>/uploadservlet</url-pattern>
-    </servlet-mapping>
-    
 	<servlet-mapping>
 		<servlet-name>Resteasy</servlet-name>
 		<url-pattern>/*</url-pattern>
