@@ -1,6 +1,7 @@
 package au.edu.uq.cai.TissueStack.resources;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -53,19 +54,29 @@ public class RestfulResource extends AbstractRestfulMetaInformation {
     public Response getJSON() {
 		return this.response;
 	}
-	
-	@GET
-	@Path("/geoJson")
-	@Produces(MediaType.APPLICATION_JSON)
-    public String getGeoJSON() {
-		return (String) this.response.getResponse();
+
+	@POST
+	@Path("/")
+	@Produces(MediaType.APPLICATION_XML)
+    public Object postDefault() {
+		return this.getXML();
 	}
 
-	@GET
-	@Path("/geojson")
+	@POST
+	@Path("/xml")
+	@Produces(MediaType.APPLICATION_XML)
+    public Object postXML() {
+		if (this.response.hasErrorOccured()) { 
+			return this.response.getError();
+		}
+		return this.response.getResponse();
+	}
+
+	@POST
+	@Path("/json")
 	@Produces(MediaType.APPLICATION_JSON)
-    public String getGeoJSONIgnoreCase() {
-		return (String) this.response.getResponse();
+    public Response postJSON() {
+		return this.response;
 	}
 	
 	@GET
