@@ -551,6 +551,10 @@ $(document).ready(function() {
 		TissueStack.InitUserInterface();
 		TissueStack.BindDataSetDependentEvents();
 		TissueStack.BindGlobalEvents();
+		if (TissueStack.desktop) {
+			TissueStack.AdminInterface();
+			TissueStack.FileManagement();
+		}
 	};
 	// call asynchronous init
 	TissueStack.Init(afterLoadingRoutine);

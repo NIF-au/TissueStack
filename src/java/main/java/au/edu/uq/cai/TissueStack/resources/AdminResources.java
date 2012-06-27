@@ -2,6 +2,7 @@ package au.edu.uq.cai.TissueStack.resources;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -48,20 +49,23 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 	@Description("Shows contents of upload directory")
 	public RestfulResource showContentOfUploadDirectory(@QueryParam("session") String session) {
 		// check permissions
+		/*
 		if (!SecurityResources.checkSession(session)) {
 			throw new RuntimeException("Your session is not valid. Log in with the admin password first!");
 		}
-		
+		*/
 		return new RestfulResource(new Response(new NoResults()));
 	}
 	
 	@Path("/upload")
 	@Description("Uploads a file ")
 	public RestfulResource uploadFile(@Context HttpServletRequest request, @QueryParam("session") String session) {
-//		// check permissions
-//		if (!SecurityResources.checkSession(session)) {
-//			throw new RuntimeException("Your session is not valid. Log in with the admin password first!");
-//		}
+		// check permissions
+		/*
+		if (!SecurityResources.checkSession(session)) {
+			throw new RuntimeException("Your session is not valid. Log in with the admin password first!");
+		}
+		*/
 
 		boolean isMultipart = ServletFileUpload.isMultipartContent(request);
 		
@@ -71,8 +75,7 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 		}
 
 		// query file upload directory
-		final Configuration upDir = ConfigurationDataProvider.queryConfigurationById("upload_directory");
-		final File uploadDirectory = new File(upDir == null || upDir.getValue() == null ? DEFAULT_UPLOAD_DIRECTORY : upDir.getValue());
+		final File uploadDirectory = this.getUploadDirectory();
 		if (!uploadDirectory.exists()) {
 			uploadDirectory.mkdir();
 		}
@@ -209,7 +212,36 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 			
 		return new RestfulResource(new Response("Upload finished successfully."));
 	}
+	
+	@Path("/filename_list")
+	@Description("List all file names ")
+	public RestfulResource readFile(@Context HttpServletRequest request, @QueryParam("session") String session) {
+		final File fileDirectory = this.getUploadDirectory();
+		
+		File[] listOfFiles = fileDirectory.listFiles(new FilenameFilter() {
+			public boolean accept(File path, String fileOrDir) {
+				final File full = new File(path, fileOrDir);
+				if (full.isDirectory()) {
+					return false;
+				}
+				return true;
+			}
+		});
+		String fileNames[] = new String[listOfFiles.length];
+		int i = 0;
+		while (i<fileNames.length) {
+			fileNames[i] = listOfFiles[i].getName();
+			i++;
+		}
 
+ 		return new RestfulResource(new Response(fileNames));
+	}
+	
+	private File getUploadDirectory() {
+		final Configuration upDir = ConfigurationDataProvider.queryConfigurationById("upload_directory");
+		return new File(upDir == null || upDir.getValue() == null ? DEFAULT_UPLOAD_DIRECTORY : upDir.getValue());
+	}
+	
 	@Path("/meta-info")
 	@Description("Shows the Tissue Stack Admin's Meta Info.")
 	public RestfulResource getAdminResourcesMetaInfo() {
