@@ -33,6 +33,7 @@ clean:
 	rm -rf *~ \#*\# $(NAME) ./png/*
 	rm -rf *.o
 	rm -rf *.so
+	rm -rf core
 
 install:
 	mkdir -p $(PLUGIN_INSTALL_DIR)
