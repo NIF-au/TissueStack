@@ -46,13 +46,24 @@ int		serv_letter_count(char *buff, int position, char c)
 
 char		**serv_str_to_wordtab(char *buff, char c)
 {
-  int		i;
-  int		j;
-  char		**dest;
+  int		i = 0;
+  int		j = 0;
+  int wordCount = 0;
+  char		**dest = NULL;
 
-  dest = malloc((serv_word_count(buff, c) + 1) * sizeof(*dest));
-  i = 0;
-  j = 0;
+  // preliminary checks
+  if (buff == NULL) {
+	  return NULL;
+  }
+
+  // if word count is 0 => good bye
+  wordCount = serv_word_count(buff, c);
+  if (wordCount == 0) {
+	  return NULL;
+  }
+
+  dest = malloc((wordCount + 1) * sizeof(*dest));
+
   while (buff[i] != '\0')
     {
       if (buff[i] != c && buff[i] != '\0')
@@ -64,7 +75,10 @@ char		**serv_str_to_wordtab(char *buff, char c)
       if (buff[i] != '\0')
 	i++;
     }
+
+  // terminate 2D array with NULL
   dest[j] = NULL;
+
   return (dest);
 }
 
