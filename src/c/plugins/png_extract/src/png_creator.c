@@ -373,17 +373,45 @@ void		print_png(char *hyperslab, t_vol *volume, int current_dimension,
 
   InitializeMagick("./");
   GetExceptionInfo(&exception);
-  image_info = CloneImageInfo(NULL);
-  img = ConstituteImage(width, height, "I", CharPixel, hyperslab, &exception);
-  img = FlipImage(img, &exception);
+  if ((image_info = CloneImageInfo(NULL)) == NULL)
+    {
+      CatchException(&exception);
+      fclose(a->file);
+      return;
+    }
+  if ((img = ConstituteImage(width, height, "I", CharPixel, hyperslab, &exception)) == NULL)
+    {
+      CatchException(&exception);
+      fclose(a->file);
+      return;
+    }
+  if ((img = FlipImage(img, &exception)) == NULL)
+    {
+      CatchException(&exception);
+      fclose(a->file);
+      return;
+    }
   strcpy(img->filename, "/home/oliver/hello.png");
   //img = SampleImage(img, 170, 328, &exception);
 
   if (a->info->scale != 1)
-    img = ScaleImage(img, (width * a->info->scale), (height * a->info->scale), &exception);
-
+    {
+      if ((img = ScaleImage(img, (width * a->info->scale), (height * a->info->scale), &exception)) == NULL)
+	{
+	  CatchException(&exception);
+	  fclose(a->file);
+	  return;
+	}
+    }
   if (kind == 1 || kind == 3)
-    img = CropImage(img, portion, &exception);
+    {
+      if ((img = CropImage(img, portion, &exception)) == NULL)
+	{
+	  CatchException(&exception);
+	  fclose(a->file);
+	  return;
+	}
+    }
 
   if (a->file)
     {

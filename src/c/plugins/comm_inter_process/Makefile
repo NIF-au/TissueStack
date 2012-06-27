@@ -36,6 +36,7 @@ clean:
 	rm -rf *~ \#*\# $(NAME) ./png/*
 	rm -rf *.o
 	rm -rf *.so
+	rm -rf core
 
 e:	clean
 	@echo "\n==================== Execution ====================\n\n"
