@@ -21,8 +21,8 @@ import au.edu.uq.cai.TissueStack.rest.Description;
 public final class DataResources extends AbstractRestfulMetaInformation {
 
 	private static final int MAX_RECORDS = 100;
-	
-	@GET
+
+	@Path("/")
 	public RestfulResource getDefault() {
 		return this.getDataResourcesMetaInfo();
 	}

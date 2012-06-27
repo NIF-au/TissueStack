@@ -5,15 +5,16 @@
    <persistence-unit name="defaultEntityManager" transaction-type="RESOURCE_LOCAL">
       <jta-data-source>java:/comp/env/jdbc/defaultDatasource</jta-data-source>
       
+      <class>au.edu.uq.cai.TissueStack.dataobjects.Session</class>
       <class>au.edu.uq.cai.TissueStack.dataobjects.Configuration</class>
       <class>au.edu.uq.cai.TissueStack.dataobjects.DataSet</class>
       <class>au.edu.uq.cai.TissueStack.dataobjects.DataSetPlanes</class>
       
       <properties>
          <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
-         <property name="hibernate.show_sql" value="true"/>
-         <property name="hibernate.format_sql" value="true"/>
-         <property name="hibernate.use_sql_comments" value="true"/>
+         <property name="hibernate.show_sql" value="false"/>
+         <property name="hibernate.format_sql" value="false"/>
+         <property name="hibernate.use_sql_comments" value="false"/>
          <property name="hibernate.archive.autodetection" value="class"/>
          <!-- property name="hibernate.hbm2ddl.auto" value="validate"/-->
       </properties>

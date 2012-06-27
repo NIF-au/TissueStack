@@ -21,6 +21,8 @@ ALTER TABLE configuration OWNER TO tissuestack;
 INSERT INTO configuration VALUES('version', '0.4', 'version');
 INSERT INTO configuration VALUES('image_service_directory', 'image_service', 'image service directory (relative to the application''s apache web server');
 INSERT INTO configuration VALUES('tile_directory', 'tiles', 'tile directory (relative to the application''s apache web server)');
+INSERT INTO configuration VALUES('upload_directory', '/opt/upload', 'upload directory (absolute system path on server)');
+INSERT INTO configuration VALUES('max_upload_size', '1073741824', 'the maximum number of bytes allowed to upload in one go. A gig by default');
 INSERT INTO configuration VALUES('default_drawing_interval', '150', 'default drawing interval');
 INSERT INTO configuration VALUES('default_zoom_levels', '[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75]', 'default zoom levels');
 INSERT INTO configuration VALUES('color_maps', 
@@ -99,4 +101,11 @@ INSERT INTO dataset_planes VALUES (4, 2, 'N', 'x', 1311, 499, 678, '[0.25, 0.5, 
 INSERT INTO dataset_planes VALUES (5, 2, 'N', 'y', 679, 499, 1310, '[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75 ]', 3, '[[0.5, 0   , 0   , -169.2   ],[0   , 0.5, 0   , -124.2   ],[0   , 0   , 0.5, -327.15 ],[0   , 0   , 0   ,  1  ]]');
 INSERT INTO dataset_planes VALUES (6, 2, 'N', 'z', 679, 1311, 498, '[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75 ]', 3, '[[0.5, 0   , 0   , -169.2   ],[0   , 0.5, 0   , -327.15 ],[0   , 0   , 0.5, -124.2  ],[0   , 0   , 0   ,  1 ]]');
 
-
+-- SESSION 
+CREATE TABLE session
+(
+  id VARCHAR(100) NOT NULL,
+  expiry bigint NOT NULL,
+  CONSTRAINT session_pk PRIMARY KEY (id)
+);
+ALTER TABLE session OWNER TO tissuestack;

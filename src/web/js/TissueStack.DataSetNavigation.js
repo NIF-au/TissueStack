@@ -315,15 +315,13 @@ TissueStack.DataSetNavigation.prototype = {
 			}
 			$('#tablet_tree').append(htmlString);
 			$("#tablet_tree").trigger("create");
-			if(TissueStack.tablet){
-				$("#tabletTreeDiv-1localhost").trigger('expand'); //EXPAND FIRST LOACLHOST  DATASET
-			}
 			_this.getSelectedTabletTree(dataSet);
 	},
 	getSelectedTabletTree : function (dataSet) {
 		for (var dataSetKey in TissueStack.dataSetStore.datasets) {
 			var dataSet = TissueStack.dataSetStore.datasets[dataSetKey];
 			(function(dataSet) {
+				$("#tabletTreeDiv-" + dataSet.local_id + dataSet.host + "").trigger("collapse");
 				$("#tabletTreeDiv-" + dataSet.local_id + dataSet.host + "").click(function() {
 					if(TissueStack.phone){
 						TissueStack.Utils.adjustScreenContentToActualScreenSize(0);
@@ -332,12 +330,7 @@ TissueStack.DataSetNavigation.prototype = {
 					_this.showDataSet(1);
 					TissueStack.InitUserInterface();
 					TissueStack.BindDataSetDependentEvents();
-					//redirect to plane X for phone version
-					if(TissueStack.phone){
-						var urlSplit = document.location.href.split("#");
-						var page = urlSplit[0];
-						window.location = page + '#tissueX';
-					}
+					$("#tabletTreeDiv-" + dataSet.local_id + dataSet.host + "").trigger("expand");
 				});
 			})(dataSet);
 		}
