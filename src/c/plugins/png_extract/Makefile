@@ -26,7 +26,7 @@ all: compile install
 compile:
 	@echo "\n================== Compile $(NAME) ===================="
 	gcc $(SRCS) -c $(INCLUDE) $(FLAGS) -fPIC
-	gcc *.o -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -shared
+	gcc *.o -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -shared `GraphicsMagick-config --cppflags --ldflags --libs`
 
 clean:
 	@echo "\n==================== Cleaning $(NAME) ====================="

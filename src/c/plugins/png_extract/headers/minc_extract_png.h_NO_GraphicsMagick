@@ -6,9 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <png.h>
-
-#include <magick/api.h>
-
 #include "../../../headers/core.h"
 
 typedef	struct	s_png_extract
@@ -57,7 +54,7 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
 
 void            set_grayscale(png_byte *ptr, float val);
 void            get_width_height(int *height, int *width, int current_dimension, t_vol *volume);
-void            print_png(char *hyperslab, t_vol *volume, int current_dimension,
+void            print_png(double *hyperslab, t_vol *volume, int current_dimension,
                           unsigned int current_slice, int width, int height, t_png_args *a);
 
 void		image_calculus_scaled_entire(int width, int height, double *hyperslab,

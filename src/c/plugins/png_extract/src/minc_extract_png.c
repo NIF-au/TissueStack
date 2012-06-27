@@ -213,13 +213,12 @@ void		*start(void *args)
   char		volume_load[200];
 
   a = (t_args_plug *)args;
-  a->this->busy = 1;
-  printf("path - %s\n", a->commands[0]);
+  //  a->this->busy = 1;
   if ((volume = a->general_info->get_volume(a->commands[0], a->general_info)) == NULL)
     {
       sprintf(volume_load, "file load %s", a->commands[0]);
       a->general_info->plug_actions(a->general_info, volume_load, NULL);
-      usleep(10000);
+      usleep(100000);
       volume = a->general_info->get_volume(a->commands[0], a->general_info);
       printf("%p\n\n", volume);
       //write(2, "MINC Volume not found\n", strlen("MINC Volume not found\n"));
@@ -243,6 +242,8 @@ void		*start(void *args)
       return (NULL);
     }
   png_args->square_size = -1;
+  png_args->w_position = 0;
+  png_args->h_position = 0;
   png_args->w_position_end = -1;
   png_args->h_position_end = -1;
   png_args->scale = (float)atof(a->commands[7]);

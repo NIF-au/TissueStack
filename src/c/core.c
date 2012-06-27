@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Tue Jun 19 17:06:57 2012 Oliver Nicolini
+** Last update Tue Jun 26 15:59:15 2012 Oliver Nicolini
 */
 
 
@@ -47,6 +47,7 @@ char			*from_array_to_string(char **array)
 
 void			signal_handler(int sig)
 {
+  /*
   t_plugin		*tmp;
   pthread_t		id;
   int			errors;
@@ -54,7 +55,9 @@ void			signal_handler(int sig)
   char			*name;
   char			*start_command;
   char			*path;
-
+  */
+  printf("Signal : %i\n", sig);
+  /*
   id = pthread_self();
   tmp = t_global->first;
   while (tmp != NULL)
@@ -90,7 +93,7 @@ void			signal_handler(int sig)
       sprintf(command, "start %s %s ", name, start_command);
       t_global->plug_actions(t_global, command, NULL);
     }
-  clean_error_list(t_global, CLEANING_ERROR_TIME);
+    clean_error_list(t_global, CLEANING_ERROR_TIME);*/
 }
 
 void			signal_manager(t_tissue_stack *t)
@@ -106,7 +109,8 @@ void			signal_manager(t_tissue_stack *t)
   i = 4;
   while (i < 32)
     {
-      sigaction(i, &act, NULL);
+      if (i != 11)
+	sigaction(i, &act, NULL);
       i++;
     }
 }
@@ -216,6 +220,8 @@ int		main(int argc, char **argv)
   sleep(2);
   sprintf(serv_command, "start serv %s", argv[1]);
   (t->plug_actions)(t, serv_command, NULL);
+  /*  sleep(1);
+      (t->plug_actions)(t, "start png /opt/data/00-normal-model-nonsym.mnc 150 151 -1 -1 -1 -1 1 1 full 1", NULL);*/
   // lunch the prompt command
   signal_manager(t);
   if ((argv[2] != NULL && strcmp(argv[2], "--prompt") == 0) ||
