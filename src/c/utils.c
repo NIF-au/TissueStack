@@ -142,10 +142,11 @@ char ** tokenizeString(char *buffer, char delimiter, char escape)
 	  if (!appendCharacterToTempTokenBuffer(&tempTokenBuffer, &tempTokenBufferSize, &tempTokenBufferCapacity, '\0')) return NULL;
 	  // copy temp token buffer contents over into destination
 	  dest[j] = strdup(tempTokenBuffer);
+	  ++j;
   }
 
   // terminate 2D array with NULL
-   dest[++j] = NULL;
+   dest[j] = NULL;
 
    // free temp buffer
    if (tempTokenBuffer != NULL) free(tempTokenBuffer);
@@ -153,30 +154,47 @@ char ** tokenizeString(char *buffer, char delimiter, char escape)
   return (dest);
 }
 
+short testTokenizer() {
+	  printf("\t*) Tokenizer => ");
+
+	  char * test_string ="\\\\|| | x|\\|kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 484375435 || > < | < O >";
+	  char	**results = tokenizeString(test_string, '|', '\\');
+
+	  if (results == NULL) {
+		  printf("FAILED !\n");
+		  return 0;
+	  }
+
+	  // loop over results
+	  char * result = NULL;
+	  int i = 0;
+	  while ((result = results[i]) != NULL) {
+		  if (strlen(result) == 0) {
+			  printf("FAILED !\n");
+			  return 0;
+		  }
+		  if (result != NULL) free(result);
+		  i++;
+	  }
+	  if (results != NULL) free(results);
+
+	  printf("PASSED.\n");
+
+	  return 1;
+}
+
+/** TESTS **/
 int		main(int argc, char ** args)
 {
-  if (argc < 2) {
-	  printf("Please hand in the string!!!!\n");
-	  exit(1);
-  }
-  printf("Handed in string: *%s*\n", args[1]);
-  char		**results = tokenizeString(args[1], '|', '\\');
+	printf("Running tests ....\n\n");
+   // TOKENIZER TEST
+   if (!testTokenizer()) {
+	   printf("Tests aborted because of errors!\n");
+	   exit(0);
+   }
 
-  if (results == NULL) {
-	  printf("Empty\n");
-	  exit(1);
-  }
+	printf("\nAll tests finished without error.\n");
 
-  // loop over results
-  char * result = NULL;
-  int i = 0;
-  while ((result = results[i]) != NULL) {
-	  printf("Token %i => *%s*\n", i+1, result);
-	  if (result != NULL) free(result);
-	  i++;
-  }
-
-  if (results != NULL) free(results);
-
-  return 1;
+	return 1;
 }
+

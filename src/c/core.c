@@ -54,7 +54,7 @@ void			signal_handler(int sig)
 		case SIGQUIT:
 		case SIGTERM:
 		case SIGINT:
-			t_global->quit = 0;
+			t_global->clean_quit(t_global);
 			break;
 	}
 
