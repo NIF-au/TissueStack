@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Thu Jun 28 16:53:07 2012 Oliver Nicolini
+** Last update Thu Jun 28 16:58:43 2012 Oliver Nicolini
 */
 
 
@@ -47,6 +47,17 @@ char			*from_array_to_string(char **array)
 
 void			signal_handler(int sig)
 {
+    printf("Signal : %i\n", sig);
+
+    switch (sig) {
+		case SIGHUP:
+		case SIGQUIT:
+		case SIGTERM:
+		case SIGINT:
+			t_global->quit = 0;
+			break;
+	}
+
   /*
   t_plugin		*tmp;
   pthread_t		id;
@@ -55,11 +66,7 @@ void			signal_handler(int sig)
   char			*name;
   char			*start_command;
   char			*path;
-  */
-  printf("Signal : %i\n", sig);
-  if (sig == 2)
-    t_global->clean_quit(t_global);
-  /*
+
   id = pthread_self();
   tmp = t_global->first;
   while (tmp != NULL)
@@ -106,8 +113,8 @@ void			signal_manager(t_tissue_stack *t)
 
   t_global = t;
   act.sa_handler = signal_handler;
-  act.sa_flags = 0;
   sigemptyset(&act.sa_mask);
+  act.sa_flags = 0;
   i = 1;
   while (i < 32)
     {
@@ -243,10 +250,15 @@ int		main(int argc, char **argv)
       pthread_cond_wait(&t->main_cond, &t->main_mutex);
       pthread_mutex_unlock(&t->main_mutex);
     }
+
   // free all the stuff mallocked
+  printf("Shutting down ...\n");
+
   t->tp->loop = 0;
   thread_pool_destroy(t->tp);
   free_core_struct(t);
+
+  printf("Good Bye\n");
 
   return (0);
 }

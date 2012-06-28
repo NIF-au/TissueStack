@@ -1,6 +1,4 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include "utils.h"
 
 inline short appendCharacterToTempTokenBuffer(
 		char ** tempTokenBuffer,
@@ -21,8 +19,6 @@ inline short appendCharacterToTempTokenBuffer(
 		}
 		*tempTokenBuffer = tmp;
 		(*tempTokenBufferCapacity) += 25;
-
-		printf("Extended temporary buffer. New Capacity: %i\n", *tempTokenBufferCapacity);
 	}
 
 	// add the character
@@ -80,7 +76,7 @@ int countTokens(char *buffer, char delimiter, char escape)
   return (count);
 }
 
-char		**tokenizeString(char *buffer, char delimiter, char escape)
+char ** tokenizeString(char *buffer, char delimiter, char escape)
 {
   // preliminary checks
   if (buffer == NULL) {
@@ -92,7 +88,6 @@ char		**tokenizeString(char *buffer, char delimiter, char escape)
   char	**dest = NULL;
 
   int 	tokenCount = countTokens(buffer, delimiter, escape);
-  printf("Number of tokens: %i\n", tokenCount);
 
   // allocate result array
   dest = (char **) malloc((tokenCount + 1) * sizeof(*dest));

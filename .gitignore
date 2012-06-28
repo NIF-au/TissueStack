@@ -19,7 +19,6 @@ autom4te.cache
 *.tar.gz
 bin
 aclocal.m4
-Makefile*
 configure
 Build (GNU)
 .autotools
