@@ -3,11 +3,9 @@ package au.edu.uq.cai.TissueStack.resources;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
@@ -20,7 +18,6 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.log4j.Logger;
 
 import au.edu.uq.cai.TissueStack.dataobjects.Configuration;
-import au.edu.uq.cai.TissueStack.dataobjects.NoResults;
 import au.edu.uq.cai.TissueStack.dataobjects.Response;
 import au.edu.uq.cai.TissueStack.dataprovider.ConfigurationDataProvider;
 import au.edu.uq.cai.TissueStack.rest.AbstractRestfulMetaInformation;
@@ -44,19 +41,7 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 	public RestfulResource getDefault() {
 		return this.getAdminResourcesMetaInfo();
 	}
-	
-	@Path("/upload_directory")
-	@Description("Shows contents of upload directory")
-	public RestfulResource showContentOfUploadDirectory(@QueryParam("session") String session) {
-		// check permissions
-		/*
-		if (!SecurityResources.checkSession(session)) {
-			throw new RuntimeException("Your session is not valid. Log in with the admin password first!");
-		}
-		*/
-		return new RestfulResource(new Response(new NoResults()));
-	}
-	
+		
 	@Path("/upload")
 	@Description("Uploads a file ")
 	public RestfulResource uploadFile(@Context HttpServletRequest request, @QueryParam("session") String session) {
@@ -213,8 +198,8 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 		return new RestfulResource(new Response("Upload finished successfully."));
 	}
 	
-	@Path("/filename_list")
-	@Description("List all file names ")
+	@Path("/upload_directory")
+	@Description("Shows contents of upload directory")
 	public RestfulResource readFile(@Context HttpServletRequest request, @QueryParam("session") String session) {
 		final File fileDirectory = this.getUploadDirectory();
 		
@@ -247,5 +232,4 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 	public RestfulResource getAdminResourcesMetaInfo() {
 		return new RestfulResource(new Response(this.getMetaInfo()));
 	}
-
 }
