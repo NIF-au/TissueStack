@@ -47,6 +47,17 @@ char			*from_array_to_string(char **array)
 
 void			signal_handler(int sig)
 {
+    printf("Signal : %i\n", sig);
+
+    switch (sig) {
+		case SIGHUP:
+		case SIGQUIT:
+		case SIGTERM:
+		case SIGINT:
+			t_global->quit = 0;
+			break;
+	}
+
   /*
   t_plugin		*tmp;
   pthread_t		id;
@@ -55,9 +66,7 @@ void			signal_handler(int sig)
   char			*name;
   char			*start_command;
   char			*path;
-  */
-  printf("Signal : %i\n", sig);
-  /*
+
   id = pthread_self();
   tmp = t_global->first;
   while (tmp != NULL)
@@ -104,9 +113,10 @@ void			signal_manager(t_tissue_stack *t)
 
   t_global = t;
   act.sa_handler = signal_handler;
-  act.sa_flags = 0;
   sigemptyset(&act.sa_mask);
-  i = 4;
+  act.sa_flags = 0;
+
+  i = 1;
   while (i < 32)
     {
       if (i != 11)
@@ -234,10 +244,15 @@ int		main(int argc, char **argv)
       pthread_cond_wait(&infinite_main_loop, &mut);
       pthread_mutex_unlock(&mut);
     }
+
   // free all the stuff mallocked
+  printf("Shutting down ...\n");
+
   t->tp->loop = 0;
   thread_pool_destroy(t->tp);
   free_core_struct(t);
+
+  printf("Good Bye\n");
 
   return (0);
 }
