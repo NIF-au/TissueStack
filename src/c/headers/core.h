@@ -70,6 +70,8 @@ struct			s_tissue_stack
 {
   int			nb_func;
   int			quit;
+  pthread_cond_t	main_cond;
+  pthread_mutex_t	main_mutex;
   pthread_t		main_id;
   t_error		*first_error;
   t_function		*functions;
@@ -80,6 +82,7 @@ struct			s_tissue_stack
   t_hist_prompt		*hist_first;
   t_vol			*(*get_volume)(char *path, t_tissue_stack *general);
   void			(*plug_actions)(t_tissue_stack *general, char *commands, void *box);
+  void			(*clean_quit)(t_tissue_stack *t);
 };
 
 struct			s_vol

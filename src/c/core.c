@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Tue Jun 26 15:59:15 2012 Oliver Nicolini
+** Last update Thu Jun 28 16:53:07 2012 Oliver Nicolini
 */
 
 
@@ -57,6 +57,8 @@ void			signal_handler(int sig)
   char			*path;
   */
   printf("Signal : %i\n", sig);
+  if (sig == 2)
+    t_global->clean_quit(t_global);
   /*
   id = pthread_self();
   tmp = t_global->first;
@@ -106,7 +108,7 @@ void			signal_manager(t_tissue_stack *t)
   act.sa_handler = signal_handler;
   act.sa_flags = 0;
   sigemptyset(&act.sa_mask);
-  i = 4;
+  i = 1;
   while (i < 32)
     {
       if (i != 11)
@@ -161,11 +163,19 @@ void		init_func_ptr(t_tissue_stack *t)
   t->nb_func = 5;
 }
 
+void		clean_quit(t_tissue_stack *t)
+{
+  pthread_cond_signal(&t->main_cond);
+}
+
 void            init_prog(t_tissue_stack *t)
 {
   t->plug_actions = plug_actions_from_external_plugin;
   t->get_volume = get_volume;
+  t->clean_quit = clean_quit;
   t->first = NULL;
+  pthread_cond_init(&t->main_cond, NULL);
+  pthread_mutex_init(&t->main_mutex, NULL);
   init_func_ptr(t);
 }
 
@@ -184,9 +194,7 @@ int		main(int argc, char **argv)
 {
   int			result;
   t_tissue_stack	*t;
-  char			serv_command[20];
-  pthread_cond_t	infinite_main_loop = PTHREAD_COND_INITIALIZER;
-  pthread_mutex_t	mut = PTHREAD_MUTEX_INITIALIZER;
+  //  char			serv_command[20];
 
   // initialisation of some variable
   t = malloc(sizeof(*t));
@@ -216,12 +224,13 @@ int		main(int argc, char **argv)
 
   (t->plug_actions)(t, "load png /usr/local/plugins/TissueStackPNGExtract.so", NULL);
   sleep(1);
+  /*
   (t->plug_actions)(t, "load serv /usr/local/plugins/TissueStackCommunicator.so", NULL);
   sleep(2);
   sprintf(serv_command, "start serv %s", argv[1]);
-  (t->plug_actions)(t, serv_command, NULL);
-  /*  sleep(1);
-      (t->plug_actions)(t, "start png /opt/data/00-normal-model-nonsym.mnc 150 151 -1 -1 -1 -1 1 1 full 1", NULL);*/
+  (t->plug_actions)(t, serv_command, NULL);*/
+  //sleep(1);
+  //(t->plug_actions)(t, "start png /opt/data/00-normal-model-nonsym.mnc 150 151 -1 -1 -1 -1 1 1 full 1", NULL);
   // lunch the prompt command
   signal_manager(t);
   if ((argv[2] != NULL && strcmp(argv[2], "--prompt") == 0) ||
@@ -230,9 +239,9 @@ int		main(int argc, char **argv)
   else
     {
       printf("TissueStackImageServer Running\n");
-      pthread_mutex_lock(&mut);
-      pthread_cond_wait(&infinite_main_loop, &mut);
-      pthread_mutex_unlock(&mut);
+      pthread_mutex_lock(&t->main_mutex);
+      pthread_cond_wait(&t->main_cond, &t->main_mutex);
+      pthread_mutex_unlock(&t->main_mutex);
     }
   // free all the stuff mallocked
   t->tp->loop = 0;
