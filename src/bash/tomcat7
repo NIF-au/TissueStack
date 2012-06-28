@@ -56,8 +56,8 @@ do_start()
 #
 do_stop()
 {
-	echo "Waiting 10 seconds for $NAME to shut down"
-	sleep 10
+	echo "Waiting 5 seconds for $NAME to shut down"
+	sleep 5
 	$SHUTDOWN_TOMCAT
 	rm $PIDFILE
 	echo "Shutdown completed"
