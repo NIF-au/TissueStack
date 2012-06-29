@@ -54,6 +54,7 @@ TissueStack.InitUserInterface = function () {
 	
 	if(TissueStack.desktop){
 		TissueStack.Utils.adjustBorderColorWhenMouseOver();
+		TissueStack.Admin();
 	}
 	
 	for (var x=0;x<maxDataSets;x++) {
@@ -531,7 +532,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 $(document).ready(function() {
 	  // override cross domain behavior
 	  var options = {
-			  allowCrossDomainPages : true
+		  allowCrossDomainPages : true
 	  };
 	  // override form submission behavior for desktop version
 	  if (TissueStack.desktop) {
@@ -551,10 +552,6 @@ $(document).ready(function() {
 		TissueStack.InitUserInterface();
 		TissueStack.BindDataSetDependentEvents();
 		TissueStack.BindGlobalEvents();
-		if (TissueStack.desktop) {
-			TissueStack.AdminInterface();
-			TissueStack.FileManagement();
-		}
 	};
 	// call asynchronous init
 	TissueStack.Init(afterLoadingRoutine);

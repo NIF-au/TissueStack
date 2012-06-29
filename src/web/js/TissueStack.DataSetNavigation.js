@@ -313,8 +313,8 @@ TissueStack.DataSetNavigation.prototype = {
 								'</fieldset></div>';
 																											
 			}
-			$('#tablet_tree').append(htmlString);
-			$("#tablet_tree").trigger("create");
+			$('#tablet_tree').append(htmlString)
+			.trigger("create");
 			_this.getSelectedTabletTree(dataSet);
 	},
 	getSelectedTabletTree : function (dataSet) {

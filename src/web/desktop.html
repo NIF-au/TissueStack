@@ -15,6 +15,7 @@
 		
         <script src="js/libs/jquery/jquery-1.7.1.js"></script>
         <script src="js/libs/jquery/jquery.mobile-1.1.0.min.js"></script>
+        <script src="js/libs/jquery/jquery.form.js"></script>
         <script src="js/TissueStack.Slider.js"></script>
 		<script src="js/libs/sylvester/sylvester.js"></script>
 		
@@ -182,9 +183,9 @@
 		 		      <div id="panel_contents"> </div>
 		 		      <div class="border" id="login">
 		 		        <p>
-		 		          Username:<input type="text" size="15" name="username" id="username" />
-		 		          Password:<input type="password" size="15" name="password" id="password" /><br/>
-		 		          <input type="button" accesskey="l" id="login_btn" name="login" value="Login" />
+		 		          Your Name:<input type="text" size="15" name="username" id="username" />
+		 		          Admin Password:<input type="password" size="15" name="password" id="password" /><br/>
+		 		          <input type="button" accesskey="l" class="login_btn_check" id="login_btn" name="login" value="Login" />
 		 		        </p>
 		 		      </div>
 		 		     </div>
@@ -197,16 +198,15 @@
 	 		 		</div>
 	 			</div>
  			<!--END OF ADMIN LOGIN-->
-	     	<div class="settings-left-column">
+	     	<div id="div_file_upload" class="settings-left-column">
 				<h1>File Upload Form</h1>
 				<hr/>		 
 			    <fieldset>
-			        <legend>Upload File</legend>
-			        <form action="/backend/admin/upload/json" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
+			        <form id="uploadForm" action="/backend/admin/upload/json?" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
 			            <label for="filename_1">File: </label>
-			            <input id="filename_1" type="file" name="filename_1" size="50"/><br/>
+			            <input id="filename_1" type="file" name="myfile" multiple />
 			            <br/>
-			            <input class="submit_new_file" type="submit" value="Upload File" data-inline="true" data-theme="e" data-icon="check"/>
+			            <input class="submit_new_file" type="submit" value="Upload File" data-inline="true" data-theme="e" data-icon="check" />
 			        </form>
 			    </fieldset>
 	     	</div>
@@ -214,9 +214,8 @@
 	     	<div class="settings-right-column">
 				<h1>List of File Name</h1>
 				<hr/>
-				<div data-role="fieldcontain">
+				<div id="file_group" data-role="fieldcontain">
 					<fieldset class="file_radio_list" data-role="controlgroup">
-					<legend>Choose a File:</legend>
 					</fieldset>
 				</div>
 				<a href="" data-role="button" data-inline="true" data-theme="e" data-icon="check">Change DataSet</a>
