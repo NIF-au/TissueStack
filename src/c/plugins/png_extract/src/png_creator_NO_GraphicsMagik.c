@@ -1,5 +1,4 @@
 #include "minc_extract_png.h"
-#include "math.h"
 
 pthread_mutex_t	mut = PTHREAD_MUTEX_INITIALIZER;
 
@@ -300,130 +299,6 @@ int		check_pixels_range(int width, int height,
   return (0);
 }
 
-int		check_and_set_position(int kind, int width, int height, t_png_args *a)
-{
-  if (kind == 2)
-    return (0);
-  if (kind == 1)
-    {
-      printf("yop\n");
-      a->info->w_position_end = a->info->w_position + a->info->square_size;
-      a->info->h_position_end = a->info->h_position + a->info->square_size;
-    }
-  if (a->info->w_position_end > width)
-    a->info->w_position_end = width;
-  if (a->info->h_position_end > height)
-    a->info->h_position_end = height;
-  if (check_pixels_range(width, height,
-			 a->info->h_position, a->info->w_position,
-			 a->info->h_position_end, a->info->w_position_end))
-    return (1);
-  return (0);
-}
-
-int		set_service_type(t_png_args * a)
-{
-  if (strcmp(a->info->service, "tiles") == 0)
-    return (1);
-  if (strcmp(a->info->service, "full") == 0)
-    return (2);
-  if (strcmp(a->info->service, "images") == 0)
-    return (3);
-  return (0);
-}
-
-RectangleInfo	*create_rectangle_crop(int kind, t_png_args *a)
-{
-  RectangleInfo *portion;
-
-  if (kind == 1 || kind == 3)
-    {
-      portion = malloc(sizeof(*portion));
-      portion->width = (kind == 1 ? a->info->square_size : a->info->w_position_end - a->info->w_position);
-      portion->height = (kind == 1 ? a->info->square_size : a->info->h_position_end - a->info->h_position);
-      portion->x = a->info->w_position;
-      portion->y = a->info->h_position;
-      return (portion);
-    }
-  return (NULL);
-}
-
-void		convert_tiles_to_pixel_coord(t_png_args *a)
-{
-  printf("avant = h %i - w %i\n", a->info->h_position, a->info->w_position);
-  a->info->h_position *= a->info->square_size;
-  a->info->w_position *= a->info->square_size;
-  printf("apres = h %i - w %i\n", a->info->h_position, a->info->w_position);
-}
-
-void		print_png(char *hyperslab, t_vol *volume, int current_dimension,
-                          unsigned int current_slice, int width, int height, t_png_args *a)
-{
-  ExceptionInfo	exception;
-  Image		*img;
-  RectangleInfo *portion;
-  ImageInfo	*image_info;
-  int		kind;
-
-  kind = set_service_type(a);
-  convert_tiles_to_pixel_coord(a);
-  if (check_and_set_position(kind, width, height, a))
-    return;
-  portion = create_rectangle_crop(kind, a);
-
-  InitializeMagick("./");
-  GetExceptionInfo(&exception);
-  if ((image_info = CloneImageInfo(NULL)) == NULL)
-    {
-      CatchException(&exception);
-      fclose(a->file);
-      return;
-    }
-  if ((img = ConstituteImage(width, height, "I", CharPixel, hyperslab, &exception)) == NULL)
-    {
-      CatchException(&exception);
-      fclose(a->file);
-      return;
-    }
-  if ((img = FlipImage(img, &exception)) == NULL)
-    {
-      CatchException(&exception);
-      fclose(a->file);
-      return;
-    }
-  strcpy(img->filename, "/home/oliver/hello.png");
-  //img = SampleImage(img, 170, 328, &exception);
-
-  if (a->info->scale != 1)
-    {
-      if ((img = ScaleImage(img, (width * a->info->scale), (height * a->info->scale), &exception)) == NULL)
-	{
-	  CatchException(&exception);
-	  fclose(a->file);
-	  return;
-	}
-    }
-  if (kind == 1 || kind == 3)
-    {
-      if ((img = CropImage(img, portion, &exception)) == NULL)
-	{
-	  CatchException(&exception);
-	  fclose(a->file);
-	  return;
-	}
-    }
-
-  if (a->file)
-    {
-      image_info->file = a->file;
-      WriteImage(image_info, img);
-    }
-  else
-    WriteImage(image_info, img);
-  fclose(a->file);
-}
-
-/*
 void            print_png(double *hyperslab, t_vol *volume, int current_dimension,
                           unsigned int current_slice, int width, int height, t_png_args *a)//float scale, int quality, FILE *file)
 {
@@ -520,4 +395,4 @@ void            print_png(double *hyperslab, t_vol *volume, int current_dimensio
   png_free_data(png_ptr, info_ptr, PNG_FREE_ALL, -1);
   png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
   //  free(name);
-}*/
+}

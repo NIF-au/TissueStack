@@ -24,12 +24,23 @@ typedef struct		s_tissue_stack	t_tissue_stack;
 typedef struct		s_vol		t_vol;
 typedef struct		s_char_prompt	t_char_prompt;
 typedef struct		s_hist_prompt	t_hist_prompt;
+typedef struct		s_error		t_error;
+
+struct			s_error
+{
+  int			signal;
+  t_plugin		*plugin;
+  struct tm		*time;
+  int			id;
+  t_error		*next;
+};
 
 struct			s_plugin
 {
   int			error;
   unsigned int	       	busy;
   pthread_t		thread_id;
+  char			**start_command;
   char			*name;
   char			*path;
   void			*handle;
@@ -59,6 +70,10 @@ struct			s_tissue_stack
 {
   int			nb_func;
   int			quit;
+  pthread_cond_t	main_cond;
+  pthread_mutex_t	main_mutex;
+  pthread_t		main_id;
+  t_error		*first_error;
   t_function		*functions;
   t_vol			*volume_first;
   t_plugin		*first;
@@ -67,6 +82,7 @@ struct			s_tissue_stack
   t_hist_prompt		*hist_first;
   t_vol			*(*get_volume)(char *path, t_tissue_stack *general);
   void			(*plug_actions)(t_tissue_stack *general, char *commands, void *box);
+  void			(*clean_quit)(t_tissue_stack *t);
 };
 
 struct			s_vol
@@ -155,14 +171,20 @@ unsigned int    get_slices_max(t_vol *volume);
 void            init_func_ptr(t_tissue_stack *t);
 void            init_prog(t_tissue_stack *t);
 
-#define print(mutex, format, ...) {					\
-  pthread_mutex_lock(&mutex);						\
-  printf(format, __VA_ARGS__);						\
-  pthread_mutex_unlock(&mutex);						\
-}
+/*		error.c			*/
+
+void		add_error(t_tissue_stack  *general, int signal, t_plugin *plug);
+void		remove_error_by_id(t_tissue_stack *general, int id);
+int		get_errors_nb_by_plugin(t_tissue_stack *general, t_plugin * plug);
+int		*get_error_by_plugin(t_tissue_stack *general, t_plugin *plug);
+void		clean_error_list(t_tissue_stack *general, int min);
+
 
 #define X 0
 #define Y 1
 #define Z 2
+
+#define ERROR_MAX 5
+#define CLEANING_ERROR_TIME 30
 
 #endif /* __MINC_TOOL_CORE__ */

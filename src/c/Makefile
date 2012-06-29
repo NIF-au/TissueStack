@@ -4,6 +4,7 @@ SRCS		=	$(DIRSRC)core.c							\
 			$(DIRSRC)prompt.c						\
 			$(DIRSRC)plugin.c						\
 			$(DIRSRC)volume.c						\
+			$(DIRSRC)error.c						\
 			$(DIRSRC)thread_pool.c
 
 INCLUDE		=	-I./headers 
@@ -42,7 +43,7 @@ install:
 
 clean:
 	@echo "\n==================== Cleaning $(NAME) ====================="
-	rm -rf *~ \#*\# $(NAME) ./png/*
+	rm -rf *~ \#*\# $(NAME) ./png/* core
 	rm -rf *.o
 	make -C ./plugins/communicator/ clean
 	make -C ./plugins/png_extract/ clean

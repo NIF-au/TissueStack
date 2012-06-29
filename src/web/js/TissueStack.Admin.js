@@ -1,13 +1,15 @@
 //Temporary function for admin interface and filelistname
 TissueStack.Admin = function () {
-	TissueStack.Admin.prototype.adminInterface();
-	TissueStack.Admin.prototype.showAllList();
-	TissueStack.Admin.prototype.submitNewFile();
-	TissueStack.Admin.prototype.createSession();
-	TissueStack.Admin.prototype.checkCookie();
+	this.adminInterface();
+	this.showAllList();
+	this.submitNewFile();
+	this.createSession();
+	this.checkCookie();
 };
 
 TissueStack.Admin.prototype = {
+	//TODO: create session and cookie listener	
+	session : null,
 	createSession : function () {
 		$('#login_btn').click(function(){
 		 	var password = $('#password').val();
@@ -138,6 +140,3 @@ TissueStack.Admin.prototype = {
 		});
 	},  
 };
-
-
-//TODO: create session and cookie listener	

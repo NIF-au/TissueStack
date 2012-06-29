@@ -54,7 +54,6 @@ TissueStack.InitUserInterface = function () {
 	
 	if(TissueStack.desktop){
 		TissueStack.Utils.adjustBorderColorWhenMouseOver();
-		TissueStack.Admin();
 	}
 	
 	for (var x=0;x<maxDataSets;x++) {
@@ -552,6 +551,11 @@ $(document).ready(function() {
 		TissueStack.InitUserInterface();
 		TissueStack.BindDataSetDependentEvents();
 		TissueStack.BindGlobalEvents();
+
+		// add admin functionality to desktop
+		if (TissueStack.desktop) {
+			TissueStack.admin = new TissueStack.Admin();
+		}
 	};
 	// call asynchronous init
 	TissueStack.Init(afterLoadingRoutine);

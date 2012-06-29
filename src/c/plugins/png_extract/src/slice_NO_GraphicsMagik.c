@@ -64,7 +64,7 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
   unsigned int	max;
   int		width;
   int		height;
-  char	        *hyperslab;
+  double        *hyperslab;
 
   // allocation of a hyperslab (portion of the file, can be 1 slice or 1 demension...)
   hyperslab =  malloc(volume->slices_max * sizeof(*hyperslab));
@@ -82,7 +82,7 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
       start[current_dimension] = current_slice;
       // get the data of 1 slice
       pthread_mutex_lock(&(a->p->lock));
-      miget_real_value_hyperslab(volume->minc_volume, MI_TYPE_UBYTE, start, count, hyperslab);
+      miget_real_value_hyperslab(volume->minc_volume, MI_TYPE_DOUBLE, start, count, hyperslab);
       pthread_mutex_unlock(&(a->p->lock));
       // print png
       print_png(hyperslab, volume, current_dimension, current_slice, width, height, a);

@@ -91,6 +91,7 @@ void		*plugin_load(void *args)
   this->path = malloc((strlen(a->path) + 1) * sizeof(*this->path));
   this->name = strcpy(this->name, a->name);
   this->path = strcpy(this->path, a->path);
+  this->start_command = NULL;
   this->error = 0;
   this->next = NULL;
   this->busy = 0;
@@ -136,6 +137,7 @@ void		*plugin_start(void *args)
 	this->error = 1;
       return (NULL);
     }
+  this->start_command = a->commands;
   a->this = this;
   *(void **) (&start) = dlsym(this->handle, "start");
   if ((error = dlerror()) != NULL)

@@ -29,12 +29,13 @@ compile:
 install:
 	mkdir -p $(PLUGIN_INSTALL_DIR)
 	cp $(NAME) $(PLUGIN_INSTALL_DIR)/$(NAME)
-	
+
 clean:
 	@echo "\n==================== Cleaning $(NAME) ====================="
 	rm -rf *~ \#*\# $(NAME) ./png/*
 	rm -rf *.o
 	rm -rf *.so
+	rm -rf core
 
 e:	clean
 	@echo "\n==================== Execution ====================\n\n"

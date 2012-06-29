@@ -71,11 +71,15 @@ void		add_volume(char *path, t_tissue_stack *t)
       tmp = tmp->next;
     }
   tmp = malloc(sizeof(*tmp));
-  init_volume(tmp, path);
-  if (t->volume_first == NULL)
-    t->volume_first = tmp;
+  if (init_volume(tmp, path) == 0)
+    {
+      if (t->volume_first == NULL)
+	t->volume_first = tmp;
+      else
+	save->next = tmp;
+    }
   else
-    save->next = tmp;
+    free(tmp);
 }
 
 void		list_volumes(t_tissue_stack *t, char *options)
