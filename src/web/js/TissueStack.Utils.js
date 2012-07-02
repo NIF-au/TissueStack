@@ -289,7 +289,7 @@ TissueStack.Utils = {
 	},
 	assembleTissueStackImageRequest : function(
 			protocol, host, isTiled, filename, dataset_id, is_preview,
-			zoom, plane, slice, tile_size, image_extension,row, col) {
+			zoom, plane, slice, image_extension, tile_size, row, col) {
 		if (typeof(protocol) != "string") {
 			protocol = "http";
 		} 

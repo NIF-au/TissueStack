@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+        <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+        
+        <title> Tissue Stack - Embedded Example </title>
+        
+        <script src="js/libs/jquery/jquery-1.7.1.js"></script>
+        <script src="js/TissueStack.Embedded.js"></script>
+
+        <script type="text/javascript">
+        $(document).ready(function() {
+          new TissueStack.Embedded("test", "localhost", 1, false, false);
+        });
+        </script>
+  </head>
+  <body>
+        <!-- NOTE: setting width and height is vital and determines the canvas dimensions !!! -->
+        <div style="float: top;text-align: center; ">
+            <div>Header</div>
+            <div>Some header</div>
+            <div>Some header</div>
+            <hr />            
+        </div>
+
+        <div style="width: 1700px;">
+	        <div style="float: left;width: 500px;text-align: center">
+		        <div>Left Panel</div>
+		        <hr />
+		        <div>Some text</div>
+		        <div>Some text</div>
+		        <div>Some text</div>
+		        <div>Some text</div>
+		        <div>Some text</div>
+		        <div>Some text</div>
+		        <div>Some text</div>
+		        <div>Some text</div>
+		        <div>Some text</div>
+		        <div>Some text</div>
+	        </div>
+	        <div id="test" style="margin: 10px; float:left;  width: 500px; height: 500px;"></div>
+	        <div style="float:left; width: 500px;text-align: center;">
+	            <div>Right Panel</div>
+	            <hr />
+	            <div>Some text</div>
+	            <div>Some text</div>
+	            <div>Some text</div>
+	            <div>Some text</div>
+	            <div>Some text</div>
+	            <div>Some text</div>
+	            <div>Some text</div>
+	            <div>Some text</div>
+	            <div>Some text</div>
+	        </div>
+        </div>
+
+        <div style="clear: both;top;text-align: center; ">
+            <hr />
+            <div>Footer</div>
+            <div>Some footer</div>
+            <div>Some footer</div>
+        </div>
+        
+  </body>
+</html>

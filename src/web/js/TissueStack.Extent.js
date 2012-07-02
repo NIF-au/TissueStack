@@ -137,6 +137,10 @@ TissueStack.Extent.prototype = {
 		}
 
 		var canvasSlider = $("#" + (this.canvas.dataset_id == "" ? "canvas_" : this.canvas.dataset_id + "_canvas_") + "main_slider");
+		if (canvasSlider.length == 0) {
+			return;
+		}
+		
 		var mainCanvas = this.plane;
 		
 		if(!TissueStack.phone){

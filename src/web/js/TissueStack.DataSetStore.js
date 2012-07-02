@@ -1,6 +1,8 @@
-TissueStack.DataSetStore = function(afterLoadingRoutine) {
-	// fetch all data for the local configuration
-	this.fetchDataSetsFromServer("localhost", null,  afterLoadingRoutine);
+TissueStack.DataSetStore = function(afterLoadingRoutine, omitLocalDataFetch) {
+	if (!omitLocalDataFetch) {
+		// fetch all data for the local configuration
+		this.fetchDataSetsFromServer("localhost", null,  afterLoadingRoutine);
+	}
 };
 
 TissueStack.DataSetStore.prototype = {
