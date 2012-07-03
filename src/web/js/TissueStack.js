@@ -1,5 +1,5 @@
-if (!TissueStack) {
-	TissueStack = {};
+if (typeof(TissueStack) == 'undefined') {
+        TissueStack = {};
 };
 
 TissueStack.configuration = {};
