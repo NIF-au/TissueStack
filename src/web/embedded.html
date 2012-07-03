@@ -5,17 +5,22 @@
         
         <title> Tissue Stack - Embedded Example </title>
         
+        <!-- ATTENTION: A jquery include and the TissueStack.Embedded.js are mandatory. The rest is fetched dynamically -->
         <script src="js/libs/jquery/jquery-1.7.1.js"></script>
         <script src="js/TissueStack.Embedded.js"></script>
 
         <script type="text/javascript">
         $(document).ready(function() {
-          new TissueStack.Embedded("test", "localhost", 1, false, false);
+          new TissueStack.Embedded(
+        		  "test", // id of parent div that will hold the TissueStack Canvas elements 
+        		  "localhost", // server name of the TissueStack instance that houses the data as well as the js and css
+        		  1, // id of data set that is requested
+        		  true, // display cross hair canvas on top (defaults to: true)
+        		  false); // use direct querying as opposed to pre tiles (defaults to: false)
         });
         </script>
   </head>
   <body>
-        <!-- NOTE: setting width and height is vital and determines the canvas dimensions !!! -->
         <div style="float: top;text-align: center; ">
             <div>Header</div>
             <div>Some header</div>
@@ -38,7 +43,10 @@
 		        <div>Some text</div>
 		        <div>Some text</div>
 	        </div>
+            
+            <!-- ATTENTION: setting width and height is vital and determines the canvas dimensions !!! -->
 	        <div id="test" style="margin: 10px; float:left;  width: 500px; height: 500px;"></div>
+	        
 	        <div style="float:left; width: 500px;text-align: center;">
 	            <div>Right Panel</div>
 	            <hr />

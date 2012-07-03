@@ -25,13 +25,13 @@ TissueStack.Embedded = function (div, server, data_set_id, include_cross_hair, u
 	}
 	this.data_set_id = data_set_id;
 
-	if (typeof(include_cross_hair) == 'string' && $.trim(include_cross_hair) != '' && $.trim(include_cross_hair) != 'false') {
+	if (typeof(include_cross_hair) != 'boolean' || include_cross_hair == true) {
 		this.include_cross_hair = true;
 	} else {
 		this.include_cross_hair = false;
 	}
 
-	if (typeof(use_image_service) == 'string' && $.trim(use_image_service) != '' && $.trim(use_image_service) == 'true') {
+	if (typeof(use_image_service) == 'boolean' && use_image_service == true) {
 		this.use_image_service = true;
 	} else {
 		this.use_image_service = false;
@@ -208,7 +208,11 @@ TissueStack.Embedded.prototype = {
 			
 			// create canvas
 			var canvasElementSelector = "dataset_1"; 
-			var plane = new TissueStack.Canvas(extent, "canvas_" + planeId + "_plane", canvasElementSelector);
+			var plane = new TissueStack.Canvas(
+					extent,
+					"canvas_" + planeId + "_plane",
+					canvasElementSelector,
+					this.include_cross_hair);
 
 			// store plane  
 			dataSet.planes[planeId] = plane;
@@ -257,12 +261,9 @@ TissueStack.Embedded.prototype = {
 		// create a new data store
 		TissueStack.dataSetStore = new TissueStack.DataSetStore(null, true);
 		
-		$.ajax({
-			url : url,
-			dataType : "json",
-			cache : false,
-			timeout : 30000,
-			success: function(data, textStatus, jqXHR) {
+		TissueStack.Utils.sendAjaxRequest(
+			url, 'GET',	true,	
+			function(data, textStatus, jqXHR) {
 				if (!data.response && !data.error) {
 					_this.writeErrorMessageIntoDiv("Did not receive anyting from backend, neither success nor error ....");
 					return;
@@ -289,7 +290,7 @@ TissueStack.Embedded.prototype = {
 				}
 
 				// create the HTML necessary for display and initialize the canvas objects
-				_this.createHTMLForDataSet(dataSet, dataSet.data.length > 1 ? true : false);
+				_this.createHTMLForDataSet(dataSet, _this.include_cross_hair);
 				_this.adjustCanvasSizes();
 				_this.initCanvasView(dataSet, _this.use_image_service);
 				// if we have more than 1 plane => register the maximize events
@@ -297,20 +298,16 @@ TissueStack.Embedded.prototype = {
 					_this.registerMaximizeEvents();
 				}
 			},
-			error: function(jqXHR, textStatus, errorThrown) {
+			function(jqXHR, textStatus, errorThrown) {
 				_this.writeErrorMessageIntoDiv("Error connecting to backend: " + textStatus + " " + errorThrown);
 			}
-		});
+		);
 	},
 	loadDataBaseConfiguration : function() {
 		// we do this one synchronously
-		$.ajax({
-			async: false,
-			url : "http://" + this.domain + "/backend/configuration/all/json",
-			dataType : "json",
-			cache : false,
-			timeout : 30000,
-			success: function(data, textStatus, jqXHR) {
+		TissueStack.Utils.sendAjaxRequest(
+			"http://" + this.domain + "/backend/configuration/all/json", 'GET', false,		
+			function(data, textStatus, jqXHR) {
 				if (!data.response && !data.error) {
 					alert("Did not receive anyting, neither success nor error ....");
 					return;
@@ -337,10 +334,10 @@ TissueStack.Embedded.prototype = {
 					TissueStack.configuration[configuration[x].name].description = configuration[x].description ? configuration[x].description : "";
 				};
 			},
-			error: function(jqXHR, textStatus, errorThrown) {
+			function(jqXHR, textStatus, errorThrown) {
 				alert("Error connecting to backend: " + textStatus + " " + errorThrown);
 			}
-		});
+		);
 	},
 	registerWindowResizeEvent : function() {
 		var _this = this;
