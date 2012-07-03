@@ -1,7 +1,7 @@
 TissueStack.PhoneMenu = function() {
 
 		$(function(){
-			var menuStatus;
+			var menuStatus = false;
 			
 			
 			// Show menu

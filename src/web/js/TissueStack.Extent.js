@@ -54,6 +54,12 @@ TissueStack.Extent.prototype = {
 			throw new Error("plane has to be one of the following: 'z', 'y' or 'z'");
 		}
 		this.plane = plane;
+		this.originalPlane = plane;
+	}, getOriginalPlane : function() {
+		if (typeof(this.originalPlane) != "string") {
+			return this.plane;
+		}
+		return this.originalPlane;
 	}, setSlice : function(slice) {
 		if (typeof(slice) != "number" || Math.floor(slice) < 0) {
 			throw new Error("slice has to be a non-negative integer");
@@ -238,7 +244,7 @@ TissueStack.Extent.prototype = {
 		if (pixelCoords.z < 0) {
 			pixelCoords.z = 0;
 		} else if (pixelCoords.z >= this.max_slices) {
-			pixelCoords.z = this.max_slices;
+			pixelCoords.z = this.max_slices - 1;
 		}
 		
 		// return pixel coordinates

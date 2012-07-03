@@ -145,8 +145,15 @@ TissueStack.DataSetNavigation.prototype = {
 		}
 
 		$("#canvas_point_x,#canvas_point_y,#canvas_point_z").removeAttr("disabled");
-		$("#dataset_" + index + ", #dataset_" + index + "_right_panel").removeClass("hidden");
+		$("#dataset_" + index).removeClass("hidden");
 		$('#dataset_' + index + '_center_point_in_canvas').closest('.ui-btn').show();
+		
+		var dataSet = 
+			TissueStack.dataSetStore.getDataSetById(
+					TissueStack.dataSetNavigation.selectedDataSets["dataset_" + index]);
+		if (dataSet && dataSet.data.length > 1) {
+			$("#dataset_" + index  + "_right_panel").removeClass("hidden");
+		}
 	},
 	buildDynaTree : function() {
 		var treeData = [];
@@ -242,12 +249,11 @@ TissueStack.DataSetNavigation.prototype = {
 	},
 	buildTabletMenu : function() {
 		//BUILD FISRT TABLET TREE WHEN BROWSER LOAD
-		_this = this;
 		var treeData = [];
 			if (TissueStack.dataSetStore.getSize() == 0) {
 				treeData[0] = {title: "No Data Sets Found", tooltip: "No Data Sets Found"};
 			} 
-		_this.addDataSetToTabletTree();
+		this.addDataSetToTabletTree();
 	},
 	getDynaTreeObject :function() {
 		if (!$("#treedataset") || !$("#treedataset").dynatree) {
@@ -298,29 +304,31 @@ TissueStack.DataSetNavigation.prototype = {
 	addDataSetToTabletTree : function (dataSet) {
 		
 		$('#tablet_tree').empty();
-		_this = this;	
-			var htmlString ="";
-			for (var dataSetKey in TissueStack.dataSetStore.datasets) {
-				var dataSet = TissueStack.dataSetStore.datasets[dataSetKey];
-				  htmlString += '<div data-role="collapsible"'+' id="tabletTreeDiv-'+ dataSet.local_id + dataSet.host +'">' + '<h3>'+ dataSet.local_id + 
-				  				' in ' + dataSet.host +'</h3>'+
-								'<p>'+ dataSet.description +'<br>'+ 'Location: '+ dataSet.filename +'</p>'+
-								'<fieldset data-role="controlgroup" data-mini="true">'+
-								'<input type="radio" name="radio-' + dataSet.local_id + '"'+' id="radio-'+ dataSet.local_id +'"'+' value="on" />'+
-								'<label for="radio-'+ dataSet.local_id +'"'+'>Overlay ON</label>'+
-								'<input type="radio" name="radio-' + dataSet.local_id + '"'+' id="radio-off-'+ dataSet.local_id +'"'+' value="off" />'+
-								'<label for="radio-off-'+ dataSet.local_id + '"'+'>Overlay OFF</label>'+
-								'</fieldset></div>';
-																											
-			}
-			$('#tablet_tree').append(htmlString);
-			$("#tablet_tree").trigger("create");
-			_this.getSelectedTabletTree(dataSet);
+		var htmlString ="";
+
+		for (var dataSetKey in TissueStack.dataSetStore.datasets) {
+			var dataSet = TissueStack.dataSetStore.datasets[dataSetKey];
+			  htmlString += '<div data-role="collapsible"'+' id="tabletTreeDiv-'+ dataSet.local_id + dataSet.host +'">' + '<h3>'+ dataSet.local_id + 
+			  				' in ' + dataSet.host +'</h3>'+
+							'<p>'+ dataSet.description +'<br>'+ 'Location: '+ dataSet.filename +'</p>'+
+							'<fieldset data-role="controlgroup" data-mini="true">'+
+							'<input type="radio" name="radio-' + dataSet.local_id + '"'+' id="radio-'+ dataSet.local_id +'"'+' value="on" />'+
+							'<label for="radio-'+ dataSet.local_id +'"'+'>Overlay ON</label>'+
+							'<input type="radio" name="radio-' + dataSet.local_id + '"'+' id="radio-off-'+ dataSet.local_id +'"'+' value="off" />'+
+							'<label for="radio-off-'+ dataSet.local_id + '"'+'>Overlay OFF</label>'+
+							'</fieldset></div>';
+																										
+		}
+		
+		$('#tablet_tree').append(htmlString);
+		$("#tablet_tree").trigger("create");
+		
+		this.getSelectedTabletTree(dataSet);
 	},
 	getSelectedTabletTree : function (dataSet) {
 		for (var dataSetKey in TissueStack.dataSetStore.datasets) {
 			var dataSet = TissueStack.dataSetStore.datasets[dataSetKey];
-			(function(dataSet) {
+			(function(dataSet,_this) {
 				$("#tabletTreeDiv-" + dataSet.local_id + dataSet.host + "").trigger("collapse");
 				$("#tabletTreeDiv-" + dataSet.local_id + dataSet.host + "").click(function() {
 					if(TissueStack.phone){
@@ -332,7 +340,7 @@ TissueStack.DataSetNavigation.prototype = {
 					TissueStack.BindDataSetDependentEvents();
 					$("#tabletTreeDiv-" + dataSet.local_id + dataSet.host + "").trigger("expand");
 				});
-			})(dataSet);
+			})(dataSet, this);
 		}
 	}
 };		

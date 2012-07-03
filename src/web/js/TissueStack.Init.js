@@ -84,7 +84,14 @@ TissueStack.InitUserInterface = function () {
 					dataForPlane.maxY,
 					zoomLevels,
 					transformationMatrix);
-			
+
+			// this is a bit of a hack to not have to change the fixed html layout if we have only 1 plane (classic 2D data):
+			// in order to use the main view which is hard-coded to plane with id 'y', we'll make the only plane that we have 'y' 
+			if (dataSet.data.length == 1) {
+				planeId = 'y';
+				extent.plane = planeId;
+			}
+
 			// create canvas
 			var canvasElementSelector = "dataset_" + (x+1); 
 			var plane = new TissueStack.Canvas(extent, "canvas_" + planeId + "_plane", canvasElementSelector);
@@ -278,13 +285,70 @@ TissueStack.BindDataSetDependentEvents = function () {
 			}
 		}
 	});
-
+	
 	// now let's bind events that are intimately linked to their own data set
 	for (var y=0;y<maxDataSets;y++) {
 		var dataSet = datasets[y];
-	
-		// MAXIMIZING SIDE VIEWS
-		if (TissueStack.desktop || TissueStack.tablet || TissueStack.phone) {
+
+		if (TissueStack.desktop || TissueStack.tablet) {
+			// COORDINATE CENTER FUNCTIONALITY FOR DESKTOP
+			// avoid potential double binding by un-binding at this stage
+			$('#dataset_' + (y+1) + '_center_point_in_canvas').unbind("click");
+			// rebind
+			$('#dataset_' + (y+1) + '_center_point_in_canvas').bind("click", [{actualDataSet: dataSet,x: y}], function(event) {
+				var plane =
+					TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray(
+							$("#" + (TissueStack.desktop || TissueStack.tablet || TissueStack.phone? "dataset_" + (event.data[0].x + 1) + "_": "") + "main_view_canvas").attr("class").split(" "), "^canvas_");
+				if (!plane) {
+					return;
+				}
+				var startPos = "canvas_".length;
+				var planeId = plane.substring(startPos, startPos + 1);
+				
+				var xCoord = parseFloat($('#canvas_point_x').val());
+				var yCoord = parseFloat($('#canvas_point_y').val());
+				var zCoord = parseFloat($('#canvas_point_z').val());
+				
+				// this is a hack for 1 plane (simple 2D) data
+				// we set z min/max to +/- infinity to pass the test
+				if (event.data[0].actualDataSet.data.length == 1) {
+					zCoord = 0;
+					event.data[0].actualDataSet.realWorldCoords[planeId].min_z = Number.NEGATIVE_INFINITY;
+					event.data[0].actualDataSet.realWorldCoords[planeId].max_z = Number.POSITIVE_INFINITY;
+				}
+				
+				if (isNaN(xCoord) || isNaN(yCoord) || isNaN(zCoord)
+						|| xCoord < event.data[0].actualDataSet.realWorldCoords[planeId].min_x || xCoord > event.data[0].actualDataSet.realWorldCoords[planeId].max_x 
+						|| yCoord < event.data[0].actualDataSet.realWorldCoords[planeId].min_y || yCoord > event.data[0].actualDataSet.realWorldCoords[planeId].max_y
+						|| zCoord < event.data[0].actualDataSet.realWorldCoords[planeId].min_z || zCoord > event.data[0].actualDataSet.realWorldCoords[planeId].max_z) {
+					alert("Illegal coords");
+					return;
+				}
+				
+				// if we had a transformation matrix, we know we have been handed in real word coords and therefore need to convert back to pixel
+				var givenCoords = {x: xCoord, y: yCoord, z: zCoord};
+				plane = event.data[0].actualDataSet.planes[planeId];
+				if (plane.getDataExtent().worldCoordinatesTransformationMatrix) {
+					givenCoords = plane.getDataExtent().getPixelForWorldCoordinates(givenCoords);
+				}
+
+				plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords);
+
+				if (event.data[0].actualDataSet.data.length > 1) {
+					var slider = $("#" + (plane.dataset_id == "" ? "" : plane.dataset_id + "_") + "canvas_main_slider");
+					if (slider) {
+						slider.val(givenCoords.z);
+						slider.blur();
+					}
+				}
+			});
+
+			// if we have only one plane, we don't need to register maximize or slider 
+			if (dataSet.data.length == 1) {
+				continue;
+			}
+
+			// MAXIMIZING SIDE VIEWS
 			// avoid potential double binding by un-binding at this stage
 			$('#dataset_' + (y+1) + '_left_side_view_maximize, #dataset_' + (y+1) + '_right_side_view_maximize').unbind("click");
 			// rebind
@@ -376,49 +440,6 @@ TissueStack.BindDataSetDependentEvents = function () {
 				event.data[0].actualDataSet.planes[mainViewPlaneId].changeToZoomLevel(zoomLevelSideView);
 				event.data[0].actualDataSet.planes[sideViewPlaneId].updateExtentInfo(
 				event.data[0].actualDataSet.planes[sideViewPlaneId].getDataExtent().getExtentCoordinates());
-			});
-
-			// COORDINATE CENTER FUNCTIONALITY FOR DESKTOP
-			// avoid potential double binding by un-binding at this stage
-			$('#dataset_' + (y+1) + '_center_point_in_canvas').unbind("click");
-			// rebind
-			$('#dataset_' + (y+1) + '_center_point_in_canvas').bind("click", [{actualDataSet: dataSet,x: y}], function(event) {
-				var plane =
-					TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray(
-							$("#" + (TissueStack.desktop || TissueStack.tablet || TissueStack.phone? "dataset_" + (event.data[0].x + 1) + "_": "") + "main_view_canvas").attr("class").split(" "), "^canvas_");
-				if (!plane) {
-					return;
-				}
-				var startPos = "canvas_".length;
-				var planeId = plane.substring(startPos, startPos + 1);
-				
-				var xCoord = parseFloat($('#canvas_point_x').val());
-				var yCoord = parseFloat($('#canvas_point_y').val());
-				var zCoord = parseFloat($('#canvas_point_z').val());
-				
-				if (isNaN(xCoord) || isNaN(yCoord) || isNaN(zCoord)
-						|| xCoord.length == 0 || yCoord.length == 0 || zCoord.length == 0
-						|| xCoord < event.data[0].actualDataSet.realWorldCoords[planeId].min_x || xCoord > event.data[0].actualDataSet.realWorldCoords[planeId].max_x 
-						|| yCoord < event.data[0].actualDataSet.realWorldCoords[planeId].min_y || yCoord > event.data[0].actualDataSet.realWorldCoords[planeId].max_y
-						|| zCoord < event.data[0].actualDataSet.realWorldCoords[planeId].min_z || zCoord > event.data[0].actualDataSet.realWorldCoords[planeId].max_z) {
-					alert("Illegal coords");
-					return;
-				}
-				
-				// if we had a transformation matrix, we know we have been handed in real word coords and therefore need to convert back to pixel
-				var givenCoords = {x: xCoord, y: yCoord, z: zCoord};
-				plane = event.data[0].actualDataSet.planes[planeId];
-				if (plane.getDataExtent().worldCoordinatesTransformationMatrix) {
-					givenCoords = plane.getDataExtent().getPixelForWorldCoordinates(givenCoords);
-				}
-	
-				plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords);
-				
-				var slider = $("#" + (plane.dataset_id == "" ? "" : plane.dataset_id + "_") + "canvas_main_slider");
-				if (slider) {
-					slider.val(givenCoords.z);
-					slider.blur();
-				}
 			});
 		}	
 	
@@ -538,6 +559,9 @@ $(document).ready(function() {
 		// on the first load we always display the first data set received from the backend list
 		TissueStack.dataSetNavigation.addToOrReplaceSelectedDataSets(
 				TissueStack.dataSetStore.getDataSetByIndex(0).id, 0);
+		 // show first one by default
+		TissueStack.dataSetNavigation.showDataSet(1);
+
 		
 		// initialize ui and events
 		TissueStack.InitUserInterface();

@@ -173,7 +173,7 @@ TissueStack.Queue.prototype = {
 					this.canvas.getDataExtent().getIsTiled() ?
 							this.canvas.getDataExtent().zoom_level : 
 								this.canvas.getDataExtent().getZoomLevelFactorForZoomLevel(this.canvas.getDataExtent().zoom_level),
-					this.canvas.getDataExtent().plane,
+					this.canvas.getDataExtent().getOriginalPlane(),
 					slice,
 					this.canvas.image_format
 		);

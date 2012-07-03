@@ -422,7 +422,7 @@ TissueStack.Canvas.prototype = {
 							this.getDataExtent().getIsTiled() ?
 									this.getDataExtent().zoom_level : 
 										this.getDataExtent().getZoomLevelFactorForZoomLevel(this.getDataExtent().zoom_level),
-							this.getDataExtent().plane,
+							this.getDataExtent().getOriginalPlane(),
 							slice,
 							this.image_format,
 							this.getDataExtent().tile_size,
@@ -480,11 +480,13 @@ TissueStack.Canvas.prototype = {
 			log.html("Zoom Level: " + this.getDataExtent().zoom_level);
 
 		} else {
-			log.html(
-					"Zoom Level: " + this.getDataExtent().zoom_level +
-					"<br/><hr />X: " + realWorldCoords.min_x + " to " + realWorldCoords.max_x + "<br/>Y: "
-					+ realWorldCoords.min_y + " to " + realWorldCoords.max_y + "<br/>Z: "
-					+ realWorldCoords.min_z + " to " + realWorldCoords.max_z + "<br /><hr />");
+			var text = "Zoom Level: " + this.getDataExtent().zoom_level
+					+ "<br/><hr />X: " + realWorldCoords.min_x + " to " + realWorldCoords.max_x + "<br/>Y: "
+					+ realWorldCoords.min_y + " to " + realWorldCoords.max_y + "<br/>";
+			if (this.data_extent.max_slices > 1) {
+				text += ("Z: "+ realWorldCoords.min_z + " to " + realWorldCoords.max_z + "<br />");
+			}
+			log.html(text + "<hr />");
 		}
 	},
 	updateCoordinateInfo : function(mouseCoords, pixelCoords, worldCoords) {
@@ -508,7 +510,11 @@ TissueStack.Canvas.prototype = {
 
 			log = $("#canvas_point_x").val(Math.round(x *1000) / 1000);
 			log = $("#canvas_point_y").val(Math.round(y *1000) / 1000);
-			log = $("#canvas_point_z").val(Math.round(z *1000) / 1000);
+			if (this.data_extent.max_slices > 1) {
+				log = $("#canvas_point_z").val(Math.round(z *1000) / 1000);
+			} else {
+				log = $("#canvas_point_z").val("");
+			}
 			
 			var dataSet = TissueStack.dataSetStore.getDataSetById(this.getDataExtent().data_id);
 			
