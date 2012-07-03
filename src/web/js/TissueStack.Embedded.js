@@ -1,4 +1,17 @@
-TissueStack = {};
+TissueStack = {
+	requiredLibs : [
+	                	"/js/libs/sylvester/sylvester.js",
+	                	"/js/TissueStack.js",
+	                	"/js/TissueStack.MouseWheel.js",
+	                	"/js/TissueStack.Utils.js",
+	                	"/js/TissueStack.Extent.js",
+	                	"/js/TissueStack.Queue.js",
+	                	"/js/TissueStack.Canvas.js",
+	                	"/js/TissueStack.Events.js",
+	                	"/js/TissueStack.DataSetStore.js"
+	                ]
+};
+
 TissueStack.Embedded = function (div, server, data_set_id, include_cross_hair, use_image_service) {
 	// evaluate input and conduct peliminary checks
 	
@@ -43,19 +56,21 @@ TissueStack.Embedded = function (div, server, data_set_id, include_cross_hair, u
 		return;
 	}
 	
+	var afterLoadActions = function(_this) {
+        // load server configuration values needed
+        _this.loadDataBaseConfiguration();
+        // load given data set configuration
+        _this.loadDataSetConfigurationFromServer();
+        // this is for when the window dimensions & the div dimensions may change dynamically
+        _this.registerWindowResizeEvent();
+	};
+	
 	// include the java script and css that is needed for the rest of the functionality
-	this.includeJavaScriptAndCssNeeded();
-	
-	// load server configuration values needed
-	this.loadDataBaseConfiguration();
-	// load given data set configuration
-	this.loadDataSetConfigurationFromServer();
-	
-	// this is for when the window dimensions & the div dimensions may change dynamically
-	this.registerWindowResizeEvent();
+	this.includeJavaScriptAndCssNeeded(afterLoadActions);
 };
 
 TissueStack.Embedded.prototype = {
+	librariesLoaded : 0,
 	getDiv : function() {
 		return this.div;
 	},
@@ -95,7 +110,7 @@ TissueStack.Embedded.prototype = {
 
 		return url;
 	},	
-	includeJavaScriptAndCssNeeded : function() {
+	includeJavaScriptAndCssNeeded : function(afterLoadActions) {
 		// if header does not exist => create it
 		var head = $("head");
 		if (head.length == 0) {
@@ -104,17 +119,33 @@ TissueStack.Embedded.prototype = {
 
 		// add all the css that's necessary
 		head.append(this.createElement("link", "http://" + this.domain + "/css/default.css"));
+
+		_this = this;
 		
-		// add all the java script that's necessary
-		head.append(this.createElement("script", "http://" + this.domain + "/js/libs/sylvester/sylvester.js"));
-		head.append(this.createElement("script", "http://" + this.domain + "/js/TissueStack.js"));
-		head.append(this.createElement("script", "http://" + this.domain + "/js/TissueStack.MouseWheel.js"));
-		head.append(this.createElement("script", "http://" + this.domain + "/js/TissueStack.Utils.js"));
-		head.append(this.createElement("script", "http://" + this.domain + "/js/TissueStack.Extent.js"));
-		head.append(this.createElement("script", "http://" + this.domain + "/js/TissueStack.Queue.js"));
-		head.append(this.createElement("script", "http://" + this.domain + "/js/TissueStack.Canvas.js"));
-		head.append(this.createElement("script", "http://" + this.domain + "/js/TissueStack.Events.js"));
-		head.append(this.createElement("script", "http://" + this.domain + "/js/TissueStack.DataSetStore.js"));
+		var checkLoadOfLibraries = function() {
+			_this.librariesLoaded++;
+			if (_this.librariesLoaded == TissueStack.requiredLibs.length) {
+				afterLoadActions(_this);
+			}
+		};
+		
+		var error = function() {
+			alert("Failed to load required library!");
+		};
+		
+		for (var i=0;i<TissueStack.requiredLibs.length;i++) {
+			(function () {
+				$.ajax({
+					url : "http://" + _this.domain + TissueStack.requiredLibs[i],
+					async: false,
+					dataType : "script",
+					cache : false,
+					timeout : 30000,
+					success : checkLoadOfLibraries,
+					error: error
+				});
+			})();
+		}
 	},
 	createElement : function(tag, value) {
 		if (typeof(tag) != "string" || typeof(value) != "string" || tag.length == 0 || value.length == 0) {
@@ -281,6 +312,9 @@ TissueStack.Embedded.prototype = {
 				}
 				
 				var dataSet = data.response;
+				
+				// create a new data store
+				TissueStack.dataSetStore = new TissueStack.DataSetStore(null, true);
 				// add to data store
 				dataSet = TissueStack.dataSetStore.addDataSetToStore(dataSet, _this.domain);
 				
@@ -306,7 +340,7 @@ TissueStack.Embedded.prototype = {
 	loadDataBaseConfiguration : function() {
 		// we do this one synchronously
 		TissueStack.Utils.sendAjaxRequest(
-			"http://" + this.domain + "/backend/configuration/all/json", 'GET', false,		
+			"http://" + this.domain + "/backend/configuration/all/json", 'GET', false,
 			function(data, textStatus, jqXHR) {
 				if (!data.response && !data.error) {
 					alert("Did not receive anyting, neither success nor error ....");
