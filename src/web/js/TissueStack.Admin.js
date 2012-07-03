@@ -1,56 +1,53 @@
 //Temporary function for admin interface and filelistname
-TissueStack.Admin = function () {
+TissueStack.Admin = function (session) {
+	this.createSession(session);
+	this.checkCookie(session);
 	this.adminInterface();
 	this.showAllList();
 	this.submitNewFile();
-	this.createSession();
-	this.checkCookie();
 };
 
 TissueStack.Admin.prototype = {
-	//TODO: create session and cookie listener	
-	session : null,
-	createSession : function () {
+	session: null,
+	createSession : function (session) {
 		$('#login_btn').click(function(){
 		 	var password = $('#password').val();
-		 	if(password =="@minTischYu"){
-				var xmlhttp = new XMLHttpRequest();
-				xmlhttp.open("GET", "/backend/admin/new_session?" + password, true);
-				
-				xmlhttp.onreadystatechange = function(){
-				    if(xmlhttp.readyState == 4 && xmlhttp.status == 200){
-				        alert("Done! Session created.");
-				    }
-				};
+		 	if(!password ==""){		
+				$.ajax({
+					async: false,
+					url :"backend/security/new_session/json?password="+ password,
+					dataType : "json",
+					cache : false,
+					timeout : 30000,
+					success: function(data, textStatus, jqXHR) {
+						if (!data.response && !data.error) {
+							alert("Did not receive any session, neither lose session ....");
+							return;
+						}
+						
+						if (data.error) {
+							var message = "Session Error: " + (data.error.message ? data.error.message : " no more session available. Please login again.");
+							alert(message);
+							return;
+						}
+						
+						if (data.response.noResults) {
+							alert("Please login with right password!");
+							return;
+						}
+						session= data.response;
+						TissueStack.Admin.prototype.session = session.id;
+						TissueStack.Admin.prototype.checkCookie(session);
+					},
+					error: function(jqXHR, textStatus, errorThrown) {
+						alert("Error connecting to backend: " + textStatus + " " + errorThrown);
+					}
+				});
 			}
-			/*
-			$.ajax({
-	            type : "POST",	
-	            url : "/backend/admin/new_session",
-	            data : "Username=" + username + "&Password=" + password,
-	            dataType : 'json',
-	            cache : false,
-	            success : function(data) {
-	                if(data.error) {
-	                    $('.login div.error').show().html(data.error);
-	
-	                } else {
-	                    $('.login div.success').show().html(data.success);
-	                }	
-	            },
-	            error : function(jqXHR, textStatus, errorThrown) {
-	                alert("error " + textStatus + ": " + errorThrown);
-	            },
-	            beforeSend : function() {
-	                $(".load").html("Loading...");
-	            }
-	        });
-	        */
-	        username= $('#username').val();
-	    	TissueStack.Admin.prototype.checkCookie(username);
-	    	$("div#panel").animate({
-	    		height: "0px"
-	    	}, "fast");
+			TissueStack.Admin.prototype.clearText();
+			$("div#panel").animate({
+				height: "0px"
+			}, "fast");
 		});
 	},
 	getCookie: function(c_name)	{
@@ -72,18 +69,20 @@ TissueStack.Admin.prototype = {
 		var c_value=escape(value) + ((exdays==null) ? "" : "; expires="+exdate.toUTCString());
 		document.cookie=c_name + "=" + c_value;
 	},
-	checkCookie: function (f_name){
-		var f_name=TissueStack.Admin.prototype.getCookie("username");
-		if (f_name!=null && f_name!="")
+	checkCookie: function (session){
+		var session_name=TissueStack.Admin.prototype.getCookie("session");
+		if (session_name!=null && session_name!="")
 		  {
-		 	 alert("Welcome Back: " + f_name);
+		  	TissueStack.Admin.prototype.session = session_name;
+		  	$('#uploadForm').attr('action', '/backend/admin/upload/json?session='+ session_name);
 		  }
 		else 
 		  {
-		  f_name= $('#username').val();
-		  if (f_name!=null && f_name!="")
+		  session_name = session;
+		  if (session_name!=null && session_name!="")
 		    {
-		    	TissueStack.Admin.prototype.setCookie("username",username,365);
+		    TissueStack.Admin.prototype.setCookie("session",session_name.id,1);
+		    $('#uploadForm').attr('action', '/backend/admin/upload/json?session='+ session_name.id);
 		    }
 		  }
 	},
@@ -106,7 +105,7 @@ TissueStack.Admin.prototype = {
 	},
 	showAllList : function (){  
 	     $(".file_radio_list").show(function(){
-	      $.getJSON("/backend/admin/filename_list/json",function(result){
+	      $.getJSON("/backend/admin/upload_directory/json",function(result){
 	        $.each(result, function(i, field){
 	        	var listOfFileName = "";
 	        	for (i in field){
@@ -124,19 +123,92 @@ TissueStack.Admin.prototype = {
 	    });
 	},
 	submitNewFile : function () {	
-	    $(".submit_new_file").click(function(){	    	
-			$('#uploadForm').ajaxForm(function() { 
-			    $('#uploadForm').html("<div id='message'></div>");  
-			    $('#message').html("<h2>File Uploaded!</h2>")  
-			    .append("<p>I love eating mnc files. Please give me more ^^</p>")  
-			    .hide()  
-			    .fadeIn(1500, function() {  
-			      $('#message').append("");  
-			    }); 
-			});			
-			$('.file_radio_list').hide()
-			.html("");
-			TissueStack.Admin.prototype.showAllList();
+	    $(".submit_new_file").click(function(){
+			//TODO: fix it later for the exists file validation
+			$.getJSON("/backend/admin/upload_directory/json",function(result){
+			  $.each(result, function(i, field){
+			  	for (i in field){
+					if(field[i] == $('#filename_1').val()){
+						var first_msg = "<p>Already in the upload destination!</p>";
+						var second_msg = "<h2>File " + $('#filename_1').val() + " exists</h2>";
+						TissueStack.Admin.prototype.fileUploadMessage(first_msg, second_msg);
+						return;
+					}
+			      }
+			  });
+			});
+			
+			if(TissueStack.Admin.prototype.session == null || $('#filename_1').val()=="" || (TissueStack.Admin.prototype.session == null && $('#filename_1').val()!="")){
+				var first_msg = (TissueStack.Admin.prototype.session == null? "Please login again first":"Please select file to upload");
+				var second_msg = (TissueStack.Admin.prototype.session == null?"<h2>No more session available</h2>":"<h2>No file was selected</h2>");
+				TissueStack.Admin.prototype.fileUploadMessage(first_msg, second_msg);
+				return;
+			}
+			
+			if (!TissueStack.Admin.prototype.session == "" && $('#filename_1').val()!=""){    	
+				var first_msg = "<p>I love eating mnc files. Please give me more ^^</p>";
+				var second_msg = "<h2>File Uploaded!</h2>";
+				TissueStack.Admin.prototype.fileUploadMessage(first_msg, second_msg);
+				return;
+			 }
 		});
-	},  
+	},
+	fileUploadMessage : function (first_msg, second_msg) {
+		$('#uploadForm').ajaxForm(function() { 
+		    $('#uploadForm').html("<div id='message'></div>");  
+		    $('#message').html(second_msg)  
+		    .append(first_msg)  
+		    .hide()  
+		    .fadeIn(1500, function() {  
+		      $('#message').append("");  
+		    }); 
+		});
+		$('.file_radio_list').fadeOut(500, function() { 
+			$('.file_radio_list').html("");
+		 	TissueStack.Admin.prototype.showAllList();
+		});
+	},
+	clearText : function () {
+		$('#username').val("");
+		$('#password').val("");
+	},
+	
+	//TODO: using ajax to get server message instead of checking by session and filename <-temp not working in this way but will fix later
+	submitNewFileTemp : function () {
+		$('#uploadForm').live('submit',function(){
+			$.ajax({
+				async: false,
+				url :"/backend/admin/upload/json?session="+ TissueStack.Admin.prototype.session,
+				dataType : "json",
+				contentType: 'multipart/form-data',
+				processData: false,
+				cache : false,
+				timeout : 30000,
+				success: function(data, textStatus, jqXHR) {
+					if (!data.response && !data.error) {
+						alert("message1");
+						return;
+					}
+					
+					if (data.error) {
+						var message = "Error: " + (data.error.message ? data.error.message : " message2.");
+						alert(message);
+						return;
+					}
+					
+					if (data.response.noResults) {
+						alert("message3!");
+						return;
+					}
+				},
+				error: function(jqXHR, textStatus, errorThrown) {
+					alert("Error connecting to backend: " + textStatus + " " + errorThrown);
+				}
+			});
+			TissueStack.Admin.prototype.clearText();
+			$("div#panel").animate({
+				height: "0px"
+			}, "fast");
+		});
+	}  
 };

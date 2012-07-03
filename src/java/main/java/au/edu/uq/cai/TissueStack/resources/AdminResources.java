@@ -48,10 +48,9 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 		// check permissions
 		/*
 		if (!SecurityResources.checkSession(session)) {
-			throw new RuntimeException("Your session is not valid. Log in with the admin password first!");
+			throw new RuntimeException("Invalid Session");
 		}
 		*/
-
 		boolean isMultipart = ServletFileUpload.isMultipartContent(request);
 		
 		// preliminary check
@@ -201,6 +200,8 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 	@Path("/upload_directory")
 	@Description("Shows contents of upload directory")
 	public RestfulResource readFile(@Context HttpServletRequest request, @QueryParam("session") String session) {
+		// check permissions
+
 		final File fileDirectory = this.getUploadDirectory();
 		
 		File[] listOfFiles = fileDirectory.listFiles(new FilenameFilter() {

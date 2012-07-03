@@ -197,15 +197,15 @@
 			 		    </div>
 	 		 		</div>
 	 			</div>
- 			<!--END OF ADMIN LOGIN-->
+	 		<!--END OF ADMIN LOGIN-->
 	     	<div id="div_file_upload" class="settings-left-column">
 				<h1>File Upload Form</h1>
-				<hr/>		 
+				<hr/>
+				<div id="file_status_message" class="hidden"></div>		 
 			    <fieldset>
-			        <form id="uploadForm" action="/backend/admin/upload/json?" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
+			        <form id="uploadForm" action="/" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
 			            <label for="filename_1">File: </label>
-			            <input id="filename_1" type="file" name="myfile" multiple />
-			            <br/>
+			            <input id="filename_1" type="file" name="filename_1" size="50"/><br/>
 			            <input class="submit_new_file" type="submit" value="Upload File" data-inline="true" data-theme="e" data-icon="check" />
 			        </form>
 			    </fieldset>
@@ -221,7 +221,6 @@
 				<a href="" data-role="button" data-inline="true" data-theme="e" data-icon="check">Change DataSet</a>
 			</div>
 	  </div>
-	<!--    END SETTING PAGE       -->
-	
+	  <!--END OF ADMIN PAGE-->
     </body>
 </html>
