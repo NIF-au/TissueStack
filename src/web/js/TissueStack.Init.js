@@ -544,7 +544,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 $(document).ready(function() {
 	  // override cross domain behavior
 	  var options = {
-			  allowCrossDomainPages : true
+		  allowCrossDomainPages : true
 	  };
 	  // override form submission behavior for desktop version
 	  if (TissueStack.desktop) {

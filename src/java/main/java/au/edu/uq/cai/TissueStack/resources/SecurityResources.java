@@ -118,7 +118,7 @@ public final class SecurityResources extends AbstractRestfulMetaInformation {
 		// let's hope somebody defined their own password in the properties file so that it deviates from the default
 		final Object value = TissueStackProperties.instance().getProperty(ADMIN_PASSWORD_PROPERTIES_KEY);
 		if (value != null && !((String) value).trim().isEmpty()) {
-			actualPassword = (String) value;
+			actualPassword = ((String) value).trim();
 		}
 		
 		// do we have a match ?
