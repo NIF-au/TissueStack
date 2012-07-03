@@ -289,7 +289,7 @@ TissueStack.Utils = {
 	},
 	assembleTissueStackImageRequest : function(
 			protocol, host, isTiled, filename, dataset_id, is_preview,
-			zoom, plane, slice, tile_size, image_extension,row, col) {
+			zoom, plane, slice, image_extension, tile_size, row, col) {
 		if (typeof(protocol) != "string") {
 			protocol = "http";
 		} 
@@ -369,5 +369,37 @@ TissueStack.Utils = {
 			   	$(this).css("border-color","white").css("border-width",1);
 			   	$('.left_panel').css("color","white");
 			});
+	},sendAjaxRequest : function(url, method, async, success, error) {
+		if (typeof(url) != "string" || $.trim(url) == '') {
+			return;
+		}
+		if (typeof(method) != "string" || $.trim(method) == '') {
+			method = 'GET';
+		}
+
+		if (typeof(async) != "boolean" || async == true) {
+			async = true;
+		} else {
+			async = false;
+		}
+
+		if (typeof(success) != 'function') {
+			success = null;
+		}
+
+		if (typeof(error) != 'function') {
+			error = null;
+		}
+		
+		$.ajax({
+			async : async,
+			url : url,
+			type : method,
+			cache : false,
+			timeout : 30000,
+			dataType : "json",
+			success: success,
+			error: error
+		});
 	}
 };

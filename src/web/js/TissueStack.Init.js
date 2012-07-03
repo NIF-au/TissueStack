@@ -152,12 +152,9 @@ TissueStack.BindGlobalEvents = function () {
 		url += "backend/data/list?include_plane_data=true";
 		
 		// contact server
-		$.ajax({
-			url : url,
-			dataType : "json",
-			cache : false,
-			timeout : 30000,
-			success: function(data, textStatus, jqXHR) {
+		TissueStack.Utils.sendAjaxRequest(
+			url, 'GET', true,
+			function(data, textStatus, jqXHR) {
 				if (!data.response && !data.error) {
 					alert("Did not receive anyting, neither success nor error ....");
 					return;
@@ -188,23 +185,18 @@ TissueStack.BindGlobalEvents = function () {
 					}
 				}
 			},
-			error: function(jqXHR, textStatus, errorThrown) {
+			function(jqXHR, textStatus, errorThrown) {
 				alert("Error connecting to backend: " + textStatus + " " + errorThrown);
 			}
-		});
-		
+		);
 	});
 };
 
 TissueStack.LoadDataBaseConfiguration = function() {
 	// we do this one synchronously
-	$.ajax({
-		async: false,
-		url : "/backend/configuration/all/json",
-		dataType : "json",
-		cache : false,
-		timeout : 30000,
-		success: function(data, textStatus, jqXHR) {
+	TissueStack.Utils.sendAjaxRequest(
+		"/backend/configuration/all/json", 'GET', false,
+		function(data, textStatus, jqXHR) {
 			if (!data.response && !data.error) {
 				alert("Did not receive anyting, neither success nor error ....");
 				return;
@@ -231,10 +223,10 @@ TissueStack.LoadDataBaseConfiguration = function() {
 				TissueStack.configuration[configuration[x].name].description = configuration[x].description ? configuration[x].description : "";
 			};
 		},
-		error: function(jqXHR, textStatus, errorThrown) {
+		function(jqXHR, textStatus, errorThrown) {
 			alert("Error connecting to backend: " + textStatus + " " + errorThrown);
 		}
-	});
+	);
 };
 
 TissueStack.BindDataSetDependentEvents = function () {

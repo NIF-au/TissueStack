@@ -1,4 +1,4 @@
-TissueStack.Canvas = function(data_extent, canvas_id, dataset_id) {
+TissueStack.Canvas = function(data_extent, canvas_id, dataset_id, include_cross_hair) {
 	// assemble data set id
 	this.dataset_id = typeof(dataset_id) != "string" ? "" : dataset_id;
 	this.setDataExtent(data_extent);
@@ -8,7 +8,8 @@ TissueStack.Canvas = function(data_extent, canvas_id, dataset_id) {
 	this.setDimensions(tmpCanvasElement.width, tmpCanvasElement.height);
 	this.centerUpperLeftCorner();
 	this.drawCoordinateCross(this.getCenter());
-	this.events = new TissueStack.Events(this); 
+	this.setIncludeCrossHair(include_cross_hair);
+	this.events = new TissueStack.Events(this, this.include_cross_hair); 
 	this.queue = new TissueStack.Queue(this);
 	// make parent and ourselves visible
 	this.getCanvasElement().parent().removeClass("hidden");
@@ -18,7 +19,8 @@ TissueStack.Canvas = function(data_extent, canvas_id, dataset_id) {
 TissueStack.Canvas.prototype = {
 	data_extent: null,
 	dataset_id: "",
-	canvas_id: this.dataset_id + "canvas_" + this.plane, 
+	canvas_id: this.dataset_id + "canvas_" + this.plane,
+	include_cross_hair: true,
 	image_format: 'png',
 	mouse_down : false,
 	isDragging : false,
@@ -32,6 +34,14 @@ TissueStack.Canvas.prototype = {
 	cross_y : 0,
 	queue : null,
 	color_map : "grey",
+	setIncludeCrossHair : function(include_cross_hair) {
+		// include cross hair canvas or not
+		if (typeof(include_cross_hair) != 'boolean' || include_cross_hair == true) {
+			this.include_cross_hair = true;
+		} else {
+			this.include_cross_hair = false;
+		}
+	},
 	setDataExtent : function (data_extent) {
 		if (typeof(data_extent) != "object") {
 			throw new Error("we miss a data_extent");
@@ -133,14 +143,14 @@ TissueStack.Canvas.prototype = {
 		
 		return {x: relCrossX, y: relCrossY};
 	},drawCoordinateCross : function(coords) {
+		// store cross coords
+		this.cross_x = coords.x;
+		this.cross_y = coords.y;
+
 		var coordinateCrossCanvas = this.getCoordinateCrossCanvas();
 		if (!coordinateCrossCanvas || !coordinateCrossCanvas[0]) {
 			return;
 		}
-		
-		// store cross coords
-		this.cross_x = coords.x;
-		this.cross_y = coords.y;
 		
 		var ctx = coordinateCrossCanvas[0].getContext("2d");
 		// clear overlay

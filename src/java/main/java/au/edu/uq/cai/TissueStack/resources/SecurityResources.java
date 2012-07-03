@@ -8,6 +8,7 @@ import javax.ws.rs.QueryParam;
 
 import org.apache.log4j.Logger;
 
+import au.edu.uq.cai.TissueStack.TissueStackProperties;
 import au.edu.uq.cai.TissueStack.dataobjects.NoResults;
 import au.edu.uq.cai.TissueStack.dataobjects.Response;
 import au.edu.uq.cai.TissueStack.dataobjects.Session;
@@ -35,8 +36,10 @@ public final class SecurityResources extends AbstractRestfulMetaInformation {
 	
 	final static Logger logger = Logger.getLogger(SecurityResources.class);
 	
-	// the global admin password
-	private static final String GLOBAL_ADMIN_PASSWORD_AS_SHA_2_HEX_STRING = 
+	private static final String ADMIN_PASSWORD_PROPERTIES_KEY = "TissueStack.admin.password";
+			
+	// the default global admin password
+	private static final String DEFAULT_GLOBAL_ADMIN_PASSWORD_AS_SHA_2_HEX_STRING = 
 			"101ee9fe7aceaa8bea949e75a529d796da02e08bced78c6c4dde60768183fa14";
 	// the global timeout for a session in millis
 	private static final long SESSION_TIMEOUT = 1000 * 60 * 5; // 5 minutes of inactivity
@@ -44,6 +47,18 @@ public final class SecurityResources extends AbstractRestfulMetaInformation {
 	@Path("/")
 	public RestfulResource getDefault() {
 		return this.getSecurityResourcesMetaInfo();
+	}
+
+	@Path("/sha2_hash")
+	@Description("Creates a string that is a hex representation of a sha 2 hash for a given expression")
+	public RestfulResource getSHA2HashForGivenExpression(@QueryParam("expression") String expression) throws NoSuchAlgorithmException {
+		if (expression == null || expression.trim().isEmpty()) {
+			throw new IllegalArgumentException("The given string has to be non-empty!");
+		}
+		
+		final byte sha2hashedExpression[] = SHA2encoder.encode(expression);
+		
+		return new RestfulResource(new Response(SHA2encoder.convertByteArrayToHexString(sha2hashedExpression)));
 	}
 
 	@Path("/new_session")
@@ -98,7 +113,16 @@ public final class SecurityResources extends AbstractRestfulMetaInformation {
 		if (hashedPasswordAsHex == null) {
 			throw new IllegalArgumentException("Could not convert sha2 bytes to hex string");
 		}
-		if (hashedPasswordAsHex.equals(GLOBAL_ADMIN_PASSWORD_AS_SHA_2_HEX_STRING)) {
+		
+		String actualPassword = DEFAULT_GLOBAL_ADMIN_PASSWORD_AS_SHA_2_HEX_STRING;
+		// let's hope somebody defined their own password in the properties file so that it deviates from the default
+		final Object value = TissueStackProperties.instance().getProperty(ADMIN_PASSWORD_PROPERTIES_KEY);
+		if (value != null && !((String) value).trim().isEmpty()) {
+			actualPassword = (String) value;
+		}
+		
+		// do we have a match ?
+		if (hashedPasswordAsHex.equals(actualPassword)) {
 			return true;
 		}
 		

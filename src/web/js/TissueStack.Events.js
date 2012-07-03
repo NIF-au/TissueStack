@@ -1,5 +1,6 @@
-TissueStack.Events = function(canvas) {
+TissueStack.Events = function(canvas, include_cross_hair) {
 	this.canvas = canvas;
+	this.setIncludeCrossHair(include_cross_hair);
 	this.registerCommonEvents();
 	if (TissueStack.desktop || TissueStack.debug) {
 		this.registerDesktopEvents();
@@ -10,6 +11,15 @@ TissueStack.Events = function(canvas) {
 };
 
 TissueStack.Events.prototype = {
+	include_cross_hair : true,	
+	setIncludeCrossHair : function(include_cross_hair) {
+		// include cross hair canvas or not
+		if (typeof(include_cross_hair) != 'boolean' || include_cross_hair == true) {
+			this.include_cross_hair = true;
+		} else {
+			this.include_cross_hair = false;
+		}
+	},
 	getCanvasElement : function() {
 		// get coordinate cross or canvas element
 		var canvasElement = this.canvas.getCoordinateCrossCanvas();
@@ -29,18 +39,20 @@ TissueStack.Events.prototype = {
 		});
 		
 		// CLICK
-		this.getCanvasElement().bind("click", function(e) {
+		if (this.include_cross_hair) {
+			this.getCanvasElement().bind("click", function(e) {
+			
+				if (e.originalEvent.touches) {
+					var touches = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
+					e.pageX = touches.pageX;
+					e.pageY = touches.pageY;
+				}
+			
+				// call click
+				_this.click(e );
+			});
+		}
 		
-			if (e.originalEvent.touches) {
-				var touches = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
-				e.pageX = touches.pageX;
-				e.pageY = touches.pageY;
-			}
-		
-			// call click
-			_this.click(e );
-		});
-
 		// SYNC
 		$(document).bind("sync", function(e, data_id, dataset_id, timestamp, action, plane, zoom_level, slice, coords, max_coords_of_event_triggering_plane, upperLeftCorner, crossCoords, canvasDims) {
 			// call sync
