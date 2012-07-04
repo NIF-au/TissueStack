@@ -547,7 +547,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 };
 
 $(document).ready(function() {
-	if (!TissueStack.Utils.supportsCanvas) {
+	if (!TissueStack.Utils.supportsCanvas()) {
 		alert("Your browser does not support the HTML5 feature 'Canvas'!\n\n" +
 				"This means that this site will be of very limited use for you.\n\n" +
 				"We recommend upgrading your browser: Latest versions of Chrome, Firefox, Safari and Opera support the canvas element," +
