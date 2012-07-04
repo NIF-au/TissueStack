@@ -1,4 +1,8 @@
 TissueStack.Utils = {
+		supportsCanvas : function() {
+			var elem = document.createElement('canvas');
+			return !!(elem.getContext && elem.getContext('2d'));
+		},		
 		forceWindowScrollY : -1,
 		preventBrowserWindowScrollingWhenInCanvas : function() {
 			$(window).scroll(function(event) {

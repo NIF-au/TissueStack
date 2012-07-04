@@ -19,6 +19,11 @@ TissueStack.Init = function (afterLoadingRoutine) {
 	
 	// handle window resizing
 	$(window).resize(function() {
+		// this needs to be checked in cases where the resize fires before the creation of the dataSetNavigation
+		if (typeof(TissueStack.dataSetNavigation) == "undefined" || typeof(TissueStack.dataSetNavigation.selectedDataSets) == 'undefined') {
+			return;
+		} 
+		
 		var dataSetCount = TissueStack.dataSetNavigation.selectedDataSets.count;
 		
 		TissueStack.Utils.adjustScreenContentToActualScreenSize(dataSetCount);
@@ -542,6 +547,12 @@ TissueStack.BindDataSetDependentEvents = function () {
 };
 
 $(document).ready(function() {
+	if (!supportsCanvas) {
+		alert("Your browser does not support the HTML5 feature 'Canvas'!\n\n" +
+				"This means that this site will be of very limited use for you.\n\n" +
+				"We recommend upgrading your browser: Latest versions of Chrome, Firefox, Safari and Opera support the canvas element," +
+				" so does IE from version 9 on.");
+	}
 	  // override cross domain behavior
 	  var options = {
 		  allowCrossDomainPages : true
