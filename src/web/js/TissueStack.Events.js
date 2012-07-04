@@ -364,7 +364,7 @@ TissueStack.Events.prototype = {
 					slice : this.canvas.getDataExtent().slice
 					
 				});
-		event.stopPropagation();
+		e.stopPropagation();
 	}, sync_zoom : function(e, data_id, dataset_id, timestamp, action, plane, zoom_level, slice) {
 		// ignore one's own events
 		var thisHerePlane = this.canvas.getDataExtent().plane;
