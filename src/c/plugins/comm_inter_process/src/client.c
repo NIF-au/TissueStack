@@ -3,6 +3,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <unistd.h>
 
 int		init_sock_comm_client(char *path)
 {
@@ -33,16 +34,20 @@ int main(int argc, char **argv) {
 	char * test = "load minc_info /usr/local/plugins/TissueStackMincInfo.so";
 	write(fd, test, strlen(test));
 	sleep(2);
-	test = "start minc_info";
+	test = "start minc_info /opt/dat/00-normal-model-nonsym.mnc";
 	write(fd, test, strlen(test));
+
 	char * buffer = malloc(1024 * sizeof(buffer));
 	size_t size = 0;
-	while ((size = read(fd, buffer, 1024))) {
-		printf("%s\n", buffer);
-		printf("%i\n", (int) size);
-		if (size == 0) {
-			break;
+	while ((size = read(fd, buffer, 1024)) > 0) {
+		if (buffer[size] != '\0') {
+			buffer[size] = '\0';
 		}
+		printf("%s\n", buffer);
 	}
 	close(fd);
+
+	free(buffer);
+
+	return 1;
 }

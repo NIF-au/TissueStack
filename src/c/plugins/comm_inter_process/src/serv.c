@@ -48,11 +48,6 @@ void		serv_accept_new_connections(t_serv_comm *s)
 
   add_client_to_list(s, socket, client_addr);
   add_client_to_sock_monitor(s, socket);
-  //  (*s->general->plug_actions)(s->general, "load png ./plugins/png_extract/yop.so", NULL);
-  //  sleep(1);
-  //  (*s->general->plug_actions)(s->general, "start png 80 81 -1 -1 -1 -1 3", file);
-  char * WELCOME = "Welcome :)\n";
-  write(socket, WELCOME, strlen(WELCOME));
 }
 
 void		client_diconnected(t_serv_comm *s, int sock)
