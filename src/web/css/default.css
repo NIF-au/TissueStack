@@ -233,7 +233,6 @@ a.ui-slider-handle-horizontal{
 }
 
 .right_side_view {
-  	filter:alpha(opacity=0); /* For IE8 and earlier */
 	z-index: 2390;
 	border: 1px solid #fff;
 	position: absolute; right: 10px; bottom: 10px;

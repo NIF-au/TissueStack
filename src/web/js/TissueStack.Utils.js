@@ -1,4 +1,8 @@
 TissueStack.Utils = {
+		supportsCanvas : function() {
+			var elem = document.createElement('canvas');
+			return !!(elem.getContext && elem.getContext('2d'));
+		},		
 		forceWindowScrollY : -1,
 		preventBrowserWindowScrollingWhenInCanvas : function() {
 			$(window).scroll(function(event) {
@@ -401,5 +405,10 @@ TissueStack.Utils = {
 			success: success,
 			error: error
 		});
+	}, generateSessionId : function() {
+		var timestampPart = "" + new Date().getTime();
+		var randomPart = Math.floor((Math.random()*100000));
+		
+		return timestampPart + randomPart;
 	}
 };

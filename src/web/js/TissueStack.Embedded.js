@@ -216,6 +216,10 @@ TissueStack.Embedded.prototype = {
 		this.getDiv().append(html + '</div>');
 	},
 	initCanvasView : function(dataSet, use_image_service) {
+		// we use that for the image service to be able to abort pending requests
+		var sessionId = TissueStack.Utils.generateSessionId();
+
+		
 		// loop over all planes in the data, create canvas and extent objects, then display them
 		for (var i=0; i < dataSet.data.length; i++) {
 			var dataForPlane = dataSet.data[i];
@@ -244,7 +248,8 @@ TissueStack.Embedded.prototype = {
 					"canvas_" + planeId + "_plane",
 					canvasElementSelector,
 					this.include_cross_hair);
-
+			plane.sessionId = sessionId;
+			
 			// store plane  
 			dataSet.planes[planeId] = plane;
 

@@ -19,6 +19,11 @@ TissueStack.Init = function (afterLoadingRoutine) {
 	
 	// handle window resizing
 	$(window).resize(function() {
+		// this needs to be checked in cases where the resize fires before the creation of the dataSetNavigation
+		if (typeof(TissueStack.dataSetNavigation) == "undefined" || typeof(TissueStack.dataSetNavigation.selectedDataSets) == 'undefined') {
+			return;
+		} 
+		
 		var dataSetCount = TissueStack.dataSetNavigation.selectedDataSets.count;
 		
 		TissueStack.Utils.adjustScreenContentToActualScreenSize(dataSetCount);
@@ -64,6 +69,9 @@ TissueStack.InitUserInterface = function () {
 			continue; 
 		}
 		
+		// we use that for the image service to be able to abort pending requests
+		var sessionId = TissueStack.Utils.generateSessionId();
+		
 		// loop over all planes in the data, create canvas and extent objects, then display them
 		for (var i=0; i < dataSet.data.length; i++) {
 			var dataForPlane = dataSet.data[i];
@@ -95,6 +103,7 @@ TissueStack.InitUserInterface = function () {
 			// create canvas
 			var canvasElementSelector = "dataset_" + (x+1); 
 			var plane = new TissueStack.Canvas(extent, "canvas_" + planeId + "_plane", canvasElementSelector);
+			plane.sessionId = sessionId;
 
 			// store plane  
 			dataSet.planes[planeId] = plane;
@@ -542,6 +551,12 @@ TissueStack.BindDataSetDependentEvents = function () {
 };
 
 $(document).ready(function() {
+	if (!TissueStack.Utils.supportsCanvas()) {
+		alert("Your browser does not support the HTML5 feature 'Canvas'!\n\n" +
+				"This means that this site will be of very limited use for you.\n\n" +
+				"We recommend upgrading your browser: Latest versions of Chrome, Firefox, Safari and Opera support the canvas element," +
+				" so does IE from version 9 on.");
+	}
 	  // override cross domain behavior
 	  var options = {
 		  allowCrossDomainPages : true

@@ -411,7 +411,8 @@ TissueStack.Canvas.prototype = {
 				// create the image object that loads the tile we need
 				var imageTile = new Image();
 				imageTile.crossOrigin = '';
-				imageTile.src = 
+				
+				var src = 
 					TissueStack.Utils.assembleTissueStackImageRequest(
 							"http",
 							dataSet.host,
@@ -429,6 +430,13 @@ TissueStack.Canvas.prototype = {
 							rowIndex,
 							colIndex
 					);
+				// append session id & timestamp for image service
+				if (!this.getDataExtent().getIsTiled()) {
+					src += ("&id=" + this.sessionId);
+					src += ("&timestamp=" + this.queue.latestDrawRequestTimestamp);
+				}
+				imageTile.src = src; 
+
 				counter++;
 				
 				(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, tile_size) {
