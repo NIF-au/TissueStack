@@ -9,7 +9,7 @@
 
 #include <magick/api.h>
 
-#include "../../../headers/core.h"
+#include "core.h"
 
 typedef	struct	s_png_extract
 {

@@ -28,9 +28,9 @@ void *start(void *args) {
 	int buffer_size = 0;
 
 	// 'amateurish' serialization of data as a CSV string
-	appendToBuffer(&buffer, &buffer_size, &buffer_capacity, volume == NULL ? "NULL" : volume->path);
-	printf("%s/n", volume->path);
-	write(*unix_socket, volume->path, strlen(volume->path));
+	appendToBuffer(&buffer, &buffer_size, &buffer_capacity, volume == NULL || volume->path == NULL ? "NULL" : volume->path);
+	printf("%s [len: %i]\n", buffer, (int)strlen(buffer));
+	write(*unix_socket, buffer, buffer_size);
 	shutdown(*unix_socket, 2);
 
 	return NULL;
