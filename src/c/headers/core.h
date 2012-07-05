@@ -81,6 +81,7 @@ struct			s_tissue_stack
   t_char_prompt		*prompt_first;
   t_hist_prompt		*hist_first;
   t_vol			*(*get_volume)(char *path, t_tissue_stack *general);
+  t_vol			*(*check_volume)(char *path, t_tissue_stack *general);
   void			(*plug_actions)(t_tissue_stack *general, char *commands, void *box);
   void			(*clean_quit)(t_tissue_stack *t);
 };
@@ -161,6 +162,7 @@ void		*file_actions(void *args);
 void		list_volumes(t_tissue_stack *t, char *options);
 void		add_volume(char *path, t_tissue_stack *t);
 t_vol		*get_volume(char *path, t_tissue_stack *t);
+t_vol		*check_volume(char *path, t_tissue_stack *t);
 void		remove_volume(char *path, t_tissue_stack *t);
 void		free_volume(t_vol *v);
 void		free_all_volumes(t_tissue_stack *t);

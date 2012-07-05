@@ -1,6 +1,6 @@
 DIRSRC		=	./src/
 
-SRCS		=	$(DIRSRC)minc_info.c
+SRCS		=	$(DIRSRC)minc_info.c ../../utils.c 
 
 INCLUDE		=	-I./headers -I../../headers
 

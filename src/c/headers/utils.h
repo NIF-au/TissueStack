@@ -8,6 +8,8 @@
 /** for string tokenization **/
 int countTokens(char *buffer, char delimiter, char escape);
 char ** tokenizeString(char *buffer, char delimiter, char escape);
+/** for string appending **/
+void appendToBuffer(char ** buffer,	int * bufferSize, int * bufferCapacity, char * someString);
 
 #endif /* !__UTILS_H__ */
 

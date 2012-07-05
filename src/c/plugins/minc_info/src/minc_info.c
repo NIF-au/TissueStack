@@ -17,7 +17,7 @@ void *start(void *args) {
 	}
 
 	// get volume info
-	t_vol *volume = a->general_info->get_volume(a->commands[0]);
+	t_vol *volume = a->general_info->get_volume(a->commands[0], a->general_info);
 
 	// get our unix socket
 	int * unix_socket = (int *)a->box;
@@ -28,8 +28,9 @@ void *start(void *args) {
 	int buffer_size = 0;
 
 	// 'amateurish' serialization of data as a CSV string
-	appendToBuffer(&buffer, &buffer_size, &buffer_capacity, volume->dim_name);
-	write(*unix_socket, buffer, buffer_size);
+	appendToBuffer(&buffer, &buffer_size, &buffer_capacity, volume == NULL ? "NULL" : volume->path);
+	printf("%s/n", volume->path);
+	write(*unix_socket, volume->path, strlen(volume->path));
 	shutdown(*unix_socket, 2);
 
 	return NULL;
