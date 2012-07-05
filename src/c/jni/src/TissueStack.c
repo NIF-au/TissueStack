@@ -1,20 +1,10 @@
 #include "TissueStack.h"
 
 int main(int argc, char **argv) {
-	init(argv[1]);
 
-	volume_input_struct *volume = start(NULL);
-	if (volume == NULL) {
-		return -1;
-	}
-
-	printf("%s\n", volume->minc_file->dim_names[0]);
-
-	unload(NULL);
-
-	return 0;
 }
 
+/*
 JNIEXPORT jobject JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_getMincInfo(
 		JNIEnv * env, jobject obj, jstring filename) {
 	if (filename == NULL) {
@@ -81,4 +71,4 @@ JNIEXPORT jobject JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_getMinc
 
 	return mincInfo;
 }
-
+*/

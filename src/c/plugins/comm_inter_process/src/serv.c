@@ -51,7 +51,8 @@ void		serv_accept_new_connections(t_serv_comm *s)
   //  (*s->general->plug_actions)(s->general, "load png ./plugins/png_extract/yop.so", NULL);
   //  sleep(1);
   //  (*s->general->plug_actions)(s->general, "start png 80 81 -1 -1 -1 -1 3", file);
-  write(socket, "Welcome :)\n", 6);
+  char * WELCOME = "Welcome :)\n";
+  write(socket, WELCOME, strlen(WELCOME));
 }
 
 void		client_diconnected(t_serv_comm *s, int sock)
@@ -106,7 +107,7 @@ void		check_modified_fd(t_serv_comm *s)
 		  break;
 		}
 	      buff[len] = '\0';
-	      (*s->general->plug_actions)(s->general, buff, NULL);
+	      (*s->general->plug_actions)(s->general, buff, &c->sock);
 	      //	      write(c->sock, "Received\n", strlen("Received\n"));
 	      break;
 	    }
@@ -159,10 +160,10 @@ int		serv_init_connect(t_serv_comm *s)
       fprintf(stderr, "Socket creation Error\n");
       return (-1);
     }
-  unlink("/home/oliver/workspace/sock_unix");
+  unlink("/tmp/tissue_stack_communication");
   memset(&(s->serv_addr), 0, sizeof(s->serv_addr));
   s->serv_addr.sun_family = AF_UNIX; //AF_INET;
-  snprintf(s->serv_addr.sun_path, 108, "/home/oliver/workspace/sock_unix");
+  snprintf(s->serv_addr.sun_path, 108, "/tmp/tissue_stack_communication");
   //  s->serv_addr.sin_addr.s_addr = INADDR_ANY;
   //  s->serv_addr.sin_port = htons(s->port);
   if (bind(s->sock_serv, (struct sockaddr*)&(s->serv_addr),

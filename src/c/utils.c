@@ -154,6 +154,62 @@ char ** tokenizeString(char *buffer, char delimiter, char escape)
   return (dest);
 }
 
+void appendToBuffer(
+		char ** buffer,
+		int * bufferSize,
+		int * bufferCapacity,
+		char * someString) {
+	if (buffer == NULL || someString == NULL) {
+		return;
+	}
+
+	int lengthOfSomeString = strlen(someString);
+	int potentialBufferExcess = *bufferCapacity - ((*bufferSize) + lengthOfSomeString);
+
+	// do we exceed the buffer size ?
+	if (potentialBufferExcess < 0) {
+		// get some more buffer capacity => old size + lengthOfSomeString + 100 chars)
+		char *tmp = (char *) realloc(*buffer, (*bufferSize + lengthOfSomeString + 100) * sizeof(char *));
+
+		if (tmp == NULL) {
+			free(buffer);
+			return;
+		}
+		*buffer = tmp;
+		*bufferCapacity = (*bufferSize + lengthOfSomeString + 100);
+	}
+
+	// add some string to buffer
+	int i=0;
+	for (i=0;i<lengthOfSomeString;i++) {
+		(*buffer)[*bufferSize] = someString[i];
+		(*bufferSize)++;
+	}
+	// terminal '\0'
+	(*buffer)[(*bufferSize)] = '\0';
+}
+
+short testBufferAppend() {
+	printf("\t*) String Append => ");
+
+	int buffer_capacity = 20;
+	int buffer_size = 0;
+	char * someBuffer = malloc(sizeof(someBuffer) * buffer_capacity);
+
+	appendToBuffer(&someBuffer, &buffer_size, &buffer_capacity, "hello");
+	appendToBuffer(&someBuffer, &buffer_size, &buffer_capacity, " world ");
+	appendToBuffer(&someBuffer, &buffer_size, &buffer_capacity, " : here I come again and again ");
+
+	if (buffer_size != 43 || buffer_capacity != 143 || strlen(someBuffer) != 43) {
+		printf("FAILED !\n");
+	} else {
+		printf("PASSED.\n");
+	}
+    if (someBuffer != NULL) free(someBuffer);
+
+	return 1;
+}
+
 short testTokenizer() {
 	  printf("\t*) Tokenizer => ");
 
@@ -189,6 +245,11 @@ int		main(int argc, char ** args)
 	printf("Running tests ....\n\n");
    // TOKENIZER TEST
    if (!testTokenizer()) {
+	   printf("Tests aborted because of errors!\n");
+	   exit(0);
+   }
+   // BUFFER APPEND TEST
+   if (!testBufferAppend()) {
 	   printf("Tests aborted because of errors!\n");
 	   exit(0);
    }

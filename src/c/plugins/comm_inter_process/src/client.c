@@ -1,3 +1,9 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+
 int		init_sock_comm_client(char *path)
 {
   struct sockaddr_un address;
@@ -20,4 +26,23 @@ int		init_sock_comm_client(char *path)
       return 1;
     }
   return (socket_fd);
+}
+
+int main(int argc, char **argv) {
+	int fd = init_sock_comm_client("/tmp/tissue_stack_communication");
+	char * test = "load minc_info /usr/local/plugins/TissueStackMincInfo.so";
+	write(fd, test, strlen(test));
+	sleep(2);
+	test = "start minc_info";
+	write(fd, test, strlen(test));
+	char * buffer = malloc(1024 * sizeof(buffer));
+	size_t size = 0;
+	while ((size = read(fd, buffer, 1024))) {
+		printf("%s\n", buffer);
+		printf("%i\n", (int) size);
+		if (size == 0) {
+			break;
+		}
+	}
+	close(fd);
 }
