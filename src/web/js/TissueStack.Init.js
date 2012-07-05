@@ -69,6 +69,9 @@ TissueStack.InitUserInterface = function () {
 			continue; 
 		}
 		
+		// we use that for the image service to be able to abort pending requests
+		var sessionId = TissueStack.Utils.generateSessionId();
+		
 		// loop over all planes in the data, create canvas and extent objects, then display them
 		for (var i=0; i < dataSet.data.length; i++) {
 			var dataForPlane = dataSet.data[i];
@@ -100,6 +103,7 @@ TissueStack.InitUserInterface = function () {
 			// create canvas
 			var canvasElementSelector = "dataset_" + (x+1); 
 			var plane = new TissueStack.Canvas(extent, "canvas_" + planeId + "_plane", canvasElementSelector);
+			plane.sessionId = sessionId;
 
 			// store plane  
 			dataSet.planes[planeId] = plane;

@@ -405,5 +405,10 @@ TissueStack.Utils = {
 			success: success,
 			error: error
 		});
+	}, generateSessionId : function() {
+		var timestampPart = "" + new Date().getTime();
+		var randomPart = Math.floor((Math.random()*100000));
+		
+		return timestampPart + randomPart;
 	}
 };
