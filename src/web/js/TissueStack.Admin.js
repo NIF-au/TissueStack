@@ -121,7 +121,6 @@ TissueStack.Admin.prototype = {
 	    });
 	},
 	clearText : function () {
-		$('#username').val("");
 		$('#password').val("");
 	},
 	submitNewFile : function () {
@@ -131,21 +130,22 @@ TissueStack.Admin.prototype = {
 				dataType : "json",
 				success: function(data, textStatus, jqXHR) {
 					if (!data.response && !data.error) {
-						alert("no file submission!");
+						TissueStack.Admin.prototype.replaceErrorMessage("No File Submission!");
 						return false;
 					}
 					
 					if (data.error) {
-						var message = "Error: " + (data.error.message ? data.error.message : " no file submission!");
-						alert(message);
+						var message = "Error: " + (data.error.message ? data.error.message : " No File Submission!");
+						TissueStack.Admin.prototype.replaceErrorMessage(message);				
 						return false;
 					}
 					
 					if (data.response.noResults) {
-						alert("No results!");
+						TissueStack.Admin.prototype.replaceErrorMessage("No Results!");
 						return false;
 					}
-					alert("File has been successfully uploaded");
+					TissueStack.Admin.prototype.replaceErrorMessage("File Has Been Successfully Uploaded!");
+					$('.error_message').css("background", "#4ea8ea"); 
 					$('.file_radio_list').fadeOut(500, function() { 
 						$('.file_radio_list').html("");
 					 	TissueStack.Admin.prototype.showAllList();
@@ -158,5 +158,34 @@ TissueStack.Admin.prototype = {
 			});
 			return false;
 		});
-	}  
+	},
+	formMessage : function (message) { 
+			$('#file_uploaded_message').html("<div class='error_message'></div>");  		
+		    $('.error_message').html(message + "<br/>")  
+		    .append()  
+		    .hide()  
+		    .fadeIn(1500, function() {  
+		      $('.error_message').append("");  
+		    })
+		    .fadeOut(5000); 
+	},
+	replaceErrorMessage : function (message) {
+		var excludes = message;
+		if(excludes.search("IllegalArgumentException") != -1){
+			message = excludes.replace("java.lang.IllegalArgumentException:", "");
+		}		
+		if(excludes.search("RuntimeException") != -1){
+			message = excludes.replace("java.lang.RuntimeException:", "");
+		}	
+
+		$('#file_uploaded_message').html("<div class='error_message'></div>");  		
+		$('.error_message').html(message + "<br/>")  
+		.append()  
+		.hide()  
+		.fadeIn(1500, function() {  
+		  $('.error_message').append("");  
+		})
+		.fadeOut(5000); 
+		
+	}
 };

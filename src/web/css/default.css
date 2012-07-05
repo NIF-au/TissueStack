@@ -345,3 +345,22 @@ div#login p {
 	font-family: Century Gothic, Georgia, "Times New Roman", Times, serif;
 	line-height: 30px;
 }
+
+/*ERROR MESSAGE STYLE*/
+.error_message{
+	font-size: 22px;
+	background: #e87676;
+	height:50px;
+	width:100%;
+	background-color: #e97575;
+	position:fixed;
+	filter:progid:DXImageTransform.Microsoft.Alpha(opacity=95); 
+	opacity: 0.95;
+	-moz-opacity: 0.95;
+	text-align:center;
+	left:0px;
+	z-index:9999999;
+	margin:0px;
+	padding:0px;
+	bottom:0px;
+}

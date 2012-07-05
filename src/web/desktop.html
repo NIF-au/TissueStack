@@ -8,7 +8,7 @@
        	
         <link rel="stylesheet" href="css/jquery.mobile-1.1.0.min.css" />
         <link rel="stylesheet" href="css/default.css" />
-        
+
         <!--Apple Device Start Up Splash Screen and ICON-->
 		<link rel="apple-touch-startup-image" href="images/mobile/ipadscreen.png" /> <!--For iPad-->
 		<link rel="apple-touch-icon" href="images/favicon_icon.png" />
@@ -36,7 +36,6 @@
 		<script src="js/TissueStack.DataSetNavigation.js"></script>
 		<script src="js/TissueStack.Admin.js"></script>
 		<script src="js/TissueStack.Init.js"></script>
-
 		
 		<script type="text/javascript">
 		    TissueStack.desktop = true;
@@ -183,8 +182,8 @@
 		 		      <div id="panel_contents"> </div>
 		 		      <div class="border" id="login">
 		 		        <p>
-		 		          Your Name:<input type="text" size="15" name="username" id="username" />
-		 		          Admin Password:<input type="password" size="15" name="password" id="password" /><br/>
+		 		          User:<input type="text" size="15" name="username" id="username" disabled="disabled" value="Admin"/>
+		 		          Password:<input type="password" size="15" name="password" id="password" /><br/>
 		 		          <input type="button" accesskey="l" class="login_btn_check" id="login_btn" name="login" value="Login" />
 		 		        </p>
 		 		      </div>
@@ -199,26 +198,27 @@
 	 			</div>
 	 		<!--END OF ADMIN LOGIN-->
 	     	<div id="div_file_upload" class="settings-left-column">
-				<h1>File Upload Form</h1>
+				<h1>File Upload</h1>
 				<hr/>
+				<div id="file_uploaded_message" ></div>
 				<div id="file_status_message" class="hidden"></div>		 
 			    <fieldset>
 			        <form id="uploadForm" action="#" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
 			            <label for="filename_1">File: </label>
 			            <input id="filename_1" type="file" name="filename_1" size="50"/><br/>
-			            <input class="submit_new_file" type="submit" value="Upload File" data-inline="true" data-theme="e" data-icon="check" />
+			            <input class="submit_new_file" type="submit" value="Upload" data-inline="true" data-theme="e" data-icon="check" />
 			        </form>
 			    </fieldset>
 	     	</div>
 	     	
 	     	<div class="settings-right-column">
-				<h1>List of File Name</h1>
+				<h1>Upload Directory</h1>
 				<hr/>
 				<div id="file_group" data-role="fieldcontain">
 					<fieldset class="file_radio_list" data-role="controlgroup">
 					</fieldset>
 				</div>
-				<a href="" data-role="button" data-inline="true" data-theme="e" data-icon="check">Change DataSet</a>
+				<a href="" data-role="button" data-inline="true" data-theme="e" data-icon="check">Add Data Set</a>
 			</div>
 	  </div>
 	  <!--END OF ADMIN PAGE-->
