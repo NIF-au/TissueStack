@@ -107,7 +107,7 @@ int		is_not_num(char *str)
   if (str == NULL)
     return (0);
   i = 0;
-  while (str[i] != '\0')
+  while (str[i] != '\0' && i < strlen(str))
     {
       if (str[i] >= '0' || str[i] <= '9' || (str[i] == '.' && (str[i + 1] >= '0' || str[i + 1] <= '9')))
 	i++;
@@ -139,6 +139,16 @@ char		get_by_name_dimension_id(char *volume, char *dimension, t_serv_comm *s)
       tmp = tmp->next;
     }
   return (48);
+}
+
+char		*serv_copy_check_clean_string_from_tab(char **tab)
+{
+  char		*str;
+
+  str = strdup(tab[1]);
+  str[strlen(str)] = '\0';
+  str = serv_str_to_wordtab(str, ' ')[0];
+  return (str);
 }
 
 void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
@@ -178,17 +188,17 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
       while (tmp[i] != NULL)
 	{
 	  tmp2 = serv_str_to_wordtab(tmp[i], '=');
-	  if (strcmp(tmp2[0], "volume") == 0)               volume = strdup(tmp2[1]);
-	  else if (strcmp(tmp2[0], "dimension") == 0)	    dimension = strdup(tmp2[1]);
-	  else if (strcmp(tmp2[0], "slice") == 0)	    slice = strdup(tmp2[1]);
-	  else if (strcmp(tmp2[0], "scale") == 0)	    scale = strdup(tmp2[1]);
-	  else if (strcmp(tmp2[0], "quality") == 0)	    quality = strdup(tmp2[1]);
-	  else if (strcmp(tmp2[0], "service") == 0)	    service = strdup(tmp2[1]);
-	  else if (strcmp(tmp2[0], "square") == 0)	    square = strdup(tmp2[1]);
-	  else if (strcmp(tmp2[0], "y") == 0)	            y = strdup(tmp2[1]);
-	  else if (strcmp(tmp2[0], "x") == 0)	            x = strdup(tmp2[1]);
-	  else if (strcmp(tmp2[0], "y_end") == 0)	    y_end = strdup(tmp2[1]);
-	  else if (strcmp(tmp2[0], "x_end") == 0)	    x_end = strdup(tmp2[1]);
+	  if (strcmp(tmp2[0], "volume") == 0)		volume = serv_copy_check_clean_string_from_tab(tmp2);
+	  else if (strcmp(tmp2[0], "dimension") == 0)	dimension = serv_copy_check_clean_string_from_tab(tmp2);
+	  else if (strcmp(tmp2[0], "slice") == 0)	slice = serv_copy_check_clean_string_from_tab(tmp2);
+	  else if (strcmp(tmp2[0], "scale") == 0)	scale = serv_copy_check_clean_string_from_tab(tmp2);
+	  else if (strcmp(tmp2[0], "quality") == 0)	quality = serv_copy_check_clean_string_from_tab(tmp2);
+	  else if (strcmp(tmp2[0], "service") == 0)	service = serv_copy_check_clean_string_from_tab(tmp2);
+	  else if (strcmp(tmp2[0], "square") == 0)	square = serv_copy_check_clean_string_from_tab(tmp2);
+	  else if (strcmp(tmp2[0], "y") == 0)		y = serv_copy_check_clean_string_from_tab(tmp2);
+	  else if (strcmp(tmp2[0], "x") == 0)		x = serv_copy_check_clean_string_from_tab(tmp2);
+	  else if (strcmp(tmp2[0], "y_end") == 0)	y_end = serv_copy_check_clean_string_from_tab(tmp2);
+	  else if (strcmp(tmp2[0], "x_end") == 0)	x_end = serv_copy_check_clean_string_from_tab(tmp2);
 	  j = 0;
 	  while (tmp2[j] != NULL)
 	    free(tmp2[j++]);
@@ -200,17 +210,6 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
 	  fprintf(stderr, "Invalid argumen: non interger\n");
 	  return;
 	}
-      if (volume)	volume = serv_str_to_wordtab(volume, ' ')[0];
-      if (dimension)	dimension = serv_str_to_wordtab(dimension, ' ')[0];
-      if (slice)	slice = serv_str_to_wordtab(slice, ' ')[0];
-      if (scale)	scale = serv_str_to_wordtab(scale, ' ')[0];
-      if (quality)	quality = serv_str_to_wordtab(quality, ' ')[0];
-      if (service)	service = serv_str_to_wordtab(service, ' ')[0];
-      if (square)	square = serv_str_to_wordtab(square, ' ')[0];
-      if (y)	y = serv_str_to_wordtab(y, ' ')[0];
-      if (x)	x = serv_str_to_wordtab(x, ' ')[0];
-      if (y_end)	y_end = serv_str_to_wordtab(y_end, ' ')[0];
-      if (x_end)	x_end = serv_str_to_wordtab(x_end, ' ')[0];
       dimension[0] = get_by_name_dimension_id(volume, dimension, s);
       if (service == NULL)
 	{
@@ -272,6 +271,7 @@ void		serv_accept_new_connections(t_serv_comm *s)
   buff[l] = '\0';
   file = fdopen(socket, "wr");
   write_header(socket);
+  printf("************ Socket Number = %i****************\n", socket);
   interpret_header(buff, file, s);
 }
 
@@ -327,7 +327,7 @@ int		serv_init_connect(t_serv_comm *s)
       fprintf(stderr, "Bind Error\n");
       return (-1);
     }
-  listen(s->sock_serv, s->queue_size);
+  listen(s->sock_serv, 5);
   return (0);
 }
 

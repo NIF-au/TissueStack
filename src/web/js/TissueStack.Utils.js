@@ -353,7 +353,7 @@ TissueStack.Utils = {
 
 			return url + "/" + row + '_' + col + "." + image_extension;
 		} else {
-			url += ("/" + path + "?volume=" + filename + "&scale=" + zoom + "&dimension=" + plane + "space" + "&slice=" + slice);
+		    url = ("http://localhost:4242/?volume=" + filename + "&scale=" + zoom + "&dimension=" + plane + "space" + "&slice=" + slice);
 			
 			if (is_preview) {
 				return url + "&quality=10";

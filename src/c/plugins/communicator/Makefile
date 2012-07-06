@@ -2,7 +2,7 @@ DIRSRC		=	./src/
 
 SRCS		=	$(DIRSRC)serv.c
 
-INCLUDE		=	-I./headers -I../../../headers
+INCLUDE		=	-I./headers -I../../headers
 
 LIB_PATH	=	
 

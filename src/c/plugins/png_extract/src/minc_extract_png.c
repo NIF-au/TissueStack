@@ -192,7 +192,9 @@ void		*init(void *args)
   png_args->slices_done = 0;
   png_args->step = 0;
   png_args->dim_start_end = NULL;
+  pthread_mutex_init(&png_args->mut, NULL);
   a->this->stock = (void*)png_args;
+  InitializeMagick("./");
   /*
   free(a->name);
   int i =0;
@@ -271,6 +273,7 @@ void		*start(void *args)
 	  return (NULL);
 	}
     }
+  png_args->done = 0;
   png_args->total_slices_to_do = get_total_slices_to_do(volume, png_args->dim_start_end);
   step = (strcmp(png_args->service, "tiles") == 0 ? atoi(a->commands[13]) : (strcmp(png_args->service, "full") == 0 ? atoi(a->commands[10]) : atoi(a->commands[14])));
   png_creation_lunch(volume, step, a->general_info->tp, png_args, a->this, (FILE*)a->box);

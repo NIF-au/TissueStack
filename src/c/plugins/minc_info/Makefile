@@ -1,31 +1,39 @@
 DIRSRC		=	./src/
 
-SRCS		=	$(DIRSRC)minc_info.c
+SRCS		=	$(DIRSRC)minc_info.c ../../utils.c 
 
-INCLUDE		=	-I./headers -I./../../headers -I/usr/local/include
+INCLUDE		=	-I./headers -I../../headers
 
-LIB_PATH	=	-L/usr/local/lib
+LIB_PATH	=	
 
-LIBS		=	-lhdf5								\
-			-lnetcdf 							\
-			-lminc2								\
-			-lvolume_io2
-			
-NAME		=	libTissueStackMincInfo.so
+#LIBS		=	-lhdf5								\
+#			-lnetcdf 							\
+#			-lminc2								\
+#			-lpng								\
+#			-lpthread							\
+#			-ldl
+
+NAME		=	TissueStackMincInfo.so
 
 FLAGS		=	-g3 -Wall -Werror
 
-all: lib copyToUsrLocalLib
+PLUGIN_INSTALL_DIR = /usr/local/plugins
 
-lib:
-	@echo "\n================== Shared Library Compilation ===================="
-	@gcc $(SRCS) -c $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -fPIC
-	@gcc *.o -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -shared
+all: compile install
 
-copyToUsrLocalLib:
-	@echo "\n=========== Copy shared library to: /usr/local/lib ==============="
-	@cp $(NAME) /usr/local/lib
-	
+compile:	
+	@echo "\n================== Compile $(NAME) ===================="
+	gcc $(SRCS) -c $(INCLUDE) $(FLAGS) -fPIC
+	gcc *.o -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -shared
+
+install:
+	mkdir -p $(PLUGIN_INSTALL_DIR)
+	cp $(NAME) $(PLUGIN_INSTALL_DIR)/$(NAME)
+
+
 clean:
-	@echo "\n==================== Cleaning ====================="
-	@rm -rf *~ \#*\# $(NAME) *.o
+	@echo "\n==================== Cleaning $(NAME) ====================="
+	rm -rf *~ \#*\# $(NAME) ./png/*
+	rm -rf *.o
+	rm -rf *.so
+	rm -rf core

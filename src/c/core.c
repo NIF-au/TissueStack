@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Thu Jun 28 16:58:43 2012 Oliver Nicolini
+** Last update Thu Jul  5 16:40:38 2012 Oliver Nicolini
 */
 
 
@@ -179,6 +179,7 @@ void            init_prog(t_tissue_stack *t)
 {
   t->plug_actions = plug_actions_from_external_plugin;
   t->get_volume = get_volume;
+  t->check_volume = check_volume;
   t->clean_quit = clean_quit;
   t->first = NULL;
   pthread_cond_init(&t->main_cond, NULL);
@@ -201,7 +202,7 @@ int		main(int argc, char **argv)
 {
   int			result;
   t_tissue_stack	*t;
-  //  char			serv_command[20];
+  char			serv_command[20];
 
   // initialisation of some variable
   t = malloc(sizeof(*t));
@@ -227,18 +228,18 @@ int		main(int argc, char **argv)
 
   // lunch thread_pool
   t->tp = malloc(sizeof(*t->tp));
-  thread_pool_init(t->tp, 6);
+  thread_pool_init(t->tp, 10);
 
   (t->plug_actions)(t, "load png /usr/local/plugins/TissueStackPNGExtract.so", NULL);
   sleep(1);
-  /*
   (t->plug_actions)(t, "load serv /usr/local/plugins/TissueStackCommunicator.so", NULL);
   sleep(2);
   sprintf(serv_command, "start serv %s", argv[1]);
-  (t->plug_actions)(t, serv_command, NULL);*/
-  //sleep(1);
-  //(t->plug_actions)(t, "start png /opt/data/00-normal-model-nonsym.mnc 150 151 -1 -1 -1 -1 1 1 full 1", NULL);
-  // lunch the prompt command
+  (t->plug_actions)(t, serv_command, NULL);
+  (t->plug_actions)(t, "load comm /usr/local/plugins/TissueStackProcessCommunicator.so", NULL);
+  sleep(2);
+  (t->plug_actions)(t, "start comm", NULL);
+
   signal_manager(t);
   if ((argv[2] != NULL && strcmp(argv[2], "--prompt") == 0) ||
       (argv[3] != NULL && strcmp(argv[3], "--prompt") == 0))

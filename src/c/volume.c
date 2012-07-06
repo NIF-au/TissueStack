@@ -105,6 +105,18 @@ void		list_volumes(t_tissue_stack *t, char *options)
     }
 }
 
+t_vol		*check_volume(char *path, t_tissue_stack *t)
+{
+  t_vol		*v;
+
+  if ((v = get_volume(path, t)) == NULL)
+    {
+      add_volume(path, t);
+      v = get_volume(path, t);
+    }
+  return (v);
+}
+
 t_vol		*get_volume(char *path, t_tissue_stack *t)
 {
   t_vol		*tmp;
