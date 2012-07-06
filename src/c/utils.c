@@ -154,6 +154,72 @@ char ** tokenizeString(char *buffer, char delimiter, char escape)
   return (dest);
 }
 
+t_string_buffer *  appendToBuffer(t_string_buffer * buffer, char * someString) {
+	if (someString == NULL) {
+		return NULL;
+	}
+
+	// create new buffer if null
+	if (buffer == NULL) {
+		buffer = (t_string_buffer *) malloc(sizeof(*buffer));
+		buffer->size = 0;
+		buffer->capacity = 100;
+		buffer->buffer = (char *) malloc(sizeof(buffer->buffer) * buffer->capacity);
+	}
+
+	// now let's look at the string we are meant to append
+	int lengthOfSomeString = strlen(someString);
+	int potentialBufferExcess = buffer->capacity - buffer->size - lengthOfSomeString;
+
+	// do we exceed the buffer size ?
+	if (potentialBufferExcess < 0) {
+		// get some more buffer capacity => old size + lengthOfSomeString + 100 chars)
+		char *tmp = (char *) realloc(buffer->buffer, (buffer->size + lengthOfSomeString + 100) * sizeof(tmp));
+
+		if (tmp == NULL) {
+			free(buffer->buffer);
+			return NULL;
+		}
+		buffer->buffer = tmp;
+		buffer->capacity = buffer->size + lengthOfSomeString + 100;
+	}
+
+	// copy string into buffer
+	int i=0;
+	for (i=0;i<lengthOfSomeString;i++) {
+		buffer->buffer[buffer->size] = someString[i];
+		buffer->size++;
+	}
+	// terminal '\0'
+	buffer->buffer[buffer->size] = '\0';
+
+	return buffer;
+}
+
+short testBufferAppend() {
+	printf("\t*) String Append => ");
+
+    t_string_buffer * a_buffer = (t_string_buffer *) malloc(sizeof(*a_buffer));
+	a_buffer->size = 0;
+	a_buffer->capacity = 20;
+	a_buffer->buffer = (char *) malloc(sizeof(a_buffer->buffer) * a_buffer->capacity);
+
+    a_buffer = appendToBuffer(a_buffer, "hello");
+	// for our test to test dynamic realloc, lower default capacity to100
+	a_buffer = appendToBuffer(a_buffer, " world ");
+	a_buffer = appendToBuffer(a_buffer, " : here I come again and again ");
+
+	if (a_buffer->size != 43 || a_buffer->capacity != 143 || strlen(a_buffer->buffer) != 43) {
+		printf("FAILED !\n");
+	} else {
+		printf("PASSED.\n");
+	}
+    if (a_buffer->buffer != NULL) free(a_buffer->buffer);
+    free(a_buffer);
+
+	return 1;
+}
+
 short testTokenizer() {
 	  printf("\t*) Tokenizer => ");
 
@@ -189,6 +255,11 @@ int		main(int argc, char ** args)
 	printf("Running tests ....\n\n");
    // TOKENIZER TEST
    if (!testTokenizer()) {
+	   printf("Tests aborted because of errors!\n");
+	   exit(0);
+   }
+   // BUFFER APPEND TEST
+   if (!testBufferAppend()) {
 	   printf("Tests aborted because of errors!\n");
 	   exit(0);
    }

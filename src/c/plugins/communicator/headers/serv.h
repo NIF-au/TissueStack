@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-#include "../../../headers/core.h"
+#include "core.h"
 
 typedef	struct	s_serv_comm	t_serv_comm;
 typedef	struct	s_serv_clients	t_serv_clients;
