@@ -223,6 +223,13 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
  		return new RestfulResource(new Response(fileNames));
 	}
 	
+	@Path("/update_dataset")
+	@Description("update dataset to plan")
+	public RestfulResource updateDataSet(@Context HttpServletRequest request, @QueryParam("session") String session) {
+		final File uploadDirectory = this.getUploadDirectory();
+ 		return new RestfulResource(new Response("DataSet update successfully. Please go back to main canvias"));
+	}
+	
 	private File getUploadDirectory() {
 		final Configuration upDir = ConfigurationDataProvider.queryConfigurationById("upload_directory");
 		return new File(upDir == null || upDir.getValue() == null ? DEFAULT_UPLOAD_DIRECTORY : upDir.getValue());
