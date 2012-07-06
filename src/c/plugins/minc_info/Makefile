@@ -1,17 +1,10 @@
 DIRSRC		=	./src/
 
-SRCS		=	$(DIRSRC)minc_info.c ../../utils.c 
+SRCS		=	$(DIRSRC)minc_info.c ./../../utils/utils.c
 
-INCLUDE		=	-I./headers -I../../headers
+INCLUDE		=	-I./headers -I./../../headers -I./../../utils
 
 LIB_PATH	=	
-
-#LIBS		=	-lhdf5								\
-#			-lnetcdf 							\
-#			-lminc2								\
-#			-lpng								\
-#			-lpthread							\
-#			-ldl
 
 NAME		=	TissueStackMincInfo.so
 
@@ -33,7 +26,7 @@ install:
 
 clean:
 	@echo "\n==================== Cleaning $(NAME) ====================="
-	rm -rf *~ \#*\# $(NAME) ./png/*
+	rm -rf *~ \#*\# $(NAME)
 	rm -rf *.o
 	rm -rf *.so
 	rm -rf core

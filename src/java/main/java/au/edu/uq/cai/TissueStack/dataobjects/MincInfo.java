@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 public final class MincInfo {
 	private String filename;
 	private String dimensions[];
-	private long sizes[];
+	private int sizes[];
 	
 	public MincInfo() {	}
 	public MincInfo(String filename) {
@@ -28,12 +28,12 @@ public final class MincInfo {
 		return this.dimensions;
 	}
 	
-	public void setSizes(long sizes[]) {
+	public void setSizes(int sizes[]) {
 		this.sizes = sizes;
 	}
 
 	@XmlElement(namespace=IGlobalConstants.XML_NAMESPACE)
-	public long[] getSizes() {
+	public int[] getSizes() {
 		return this.sizes;
 	}
 	

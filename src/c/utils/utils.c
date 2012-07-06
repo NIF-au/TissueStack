@@ -205,7 +205,6 @@ short testBufferAppend() {
 	a_buffer->buffer = (char *) malloc(sizeof(a_buffer->buffer) * a_buffer->capacity);
 
     a_buffer = appendToBuffer(a_buffer, "hello");
-	// for our test to test dynamic realloc, lower default capacity to100
 	a_buffer = appendToBuffer(a_buffer, " world ");
 	a_buffer = appendToBuffer(a_buffer, " : here I come again and again ");
 

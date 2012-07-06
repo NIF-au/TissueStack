@@ -16,22 +16,66 @@ void *start(void *args) {
 		return NULL;
 	}
 
-	// get volume info
-	printf("%s\n", a->commands[0]);
-	t_vol *volume = a->general_info->get_volume(a->commands[0], a->general_info);
-	if (volume == NULL) printf("Volume is NULL\n");
-
 	// get our unix socket
 	int * unix_socket = (int *)a->box;
 
-	// string buffer
-	char * buffer = malloc(100 * sizeof(buffer));
-	int buffer_capacity = 100;
-	int buffer_size = 0;
+	// get volume info
+	t_vol *volume = a->general_info->check_volume(a->commands[0], a->general_info);
 
-	// 'amateurish' serialization of data as a CSV string
-	appendToBuffer(&buffer, &buffer_size, &buffer_capacity, volume == NULL ? "NULL" : volume->path);
-	write(*unix_socket, buffer, buffer_size);
+	// string buffer
+	t_string_buffer * buffer = NULL;
+
+	// start 'amateurish' serialization of data as a CSV string
+
+	// if volume is null send a simple "NULL"
+	if (volume == NULL) {
+		buffer = appendToBuffer(buffer, "NULL");
+	} else {
+		// start perusing contents and turning them into strings or nulls
+		// first filename
+		buffer = appendToBuffer(buffer, volume->path == NULL ? "NULL" : volume->path);
+		buffer = appendToBuffer(buffer, "|");
+
+		// append number of dimensions
+		char * convertedInt = malloc(sizeof(convertedInt) * 25);
+		sprintf(convertedInt, "%i", volume->dim_nb);
+		buffer = appendToBuffer(buffer, convertedInt);
+		buffer = appendToBuffer(buffer, "|");
+		free(convertedInt);
+
+		if (volume->dim_name == NULL) {
+			buffer = appendToBuffer(buffer, "NULL");
+		}
+		// dimension names
+		int i = 0;
+		while (i < volume->dim_nb) {
+			buffer = appendToBuffer(buffer, volume->dim_name[i]);
+			if (i != (volume->dim_nb -1)) buffer = appendToBuffer(buffer, ":");
+			i++;
+		}
+		buffer = appendToBuffer(buffer, "|");
+		//actual dimensions
+		if (volume->size == NULL) {
+			buffer = appendToBuffer(buffer, "NULL");
+		}
+		i = 0;
+		while (i < volume->dim_nb) {
+			char * convertedInt = malloc(sizeof(convertedInt) * 25);
+			sprintf(convertedInt, "%u", volume->size[i]);
+
+			buffer = appendToBuffer(buffer, convertedInt);
+			if (i != (volume->dim_nb -1)) buffer = appendToBuffer(buffer, ":");
+
+			free(convertedInt);
+			i++;
+		}
+	}
+
+	printf("Sending: %s\n", buffer->buffer);
+
+	// write out response
+	write(*unix_socket, buffer->buffer, buffer->size);
+	// close socket
 	shutdown(*unix_socket, 2);
 
 	return NULL;
