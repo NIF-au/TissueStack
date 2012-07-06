@@ -5,6 +5,7 @@ TissueStack.Admin = function (session) {
 	this.adminInterface();
 	this.showAllList();
 	this.submitNewFile();
+	this.addToDataSet();
 };
 
 TissueStack.Admin.prototype = {
@@ -23,14 +24,12 @@ TissueStack.Admin.prototype = {
 						if (!data.response && !data.error) {
 							alert("Did not receive any session, neither lose session ....");
 							return;
-						}
-						
+						}	
 						if (data.error) {
 							var message = "Session Error: " + (data.error.message ? data.error.message : " no more session available. Please login again.");
 							alert(message);
 							return;
-						}
-						
+						}	
 						if (data.response.noResults) {
 							alert("Please login with right password!");
 							return;
@@ -44,7 +43,7 @@ TissueStack.Admin.prototype = {
 					}
 				});
 			}
-			TissueStack.Admin.prototype.clearText();
+			$('#password').val("");
 			$("div#panel").animate({
 				height: "0px"
 			}, "fast");
@@ -71,16 +70,19 @@ TissueStack.Admin.prototype = {
 	},
 	checkCookie: function (session){
 		var session_name=TissueStack.Admin.prototype.getCookie("session");
+		
 		if (session_name!=null && session_name!="")
 		  {
 		  	TissueStack.Admin.prototype.session = session_name;
+		  	return;
 		  }
 		else 
 		  {
 		  session_name = session;
 		  if (session_name!=null && session_name!="")
 		    {
-		    TissueStack.Admin.prototype.setCookie("session",session_name.id,1);
+		   		TissueStack.Admin.prototype.setCookie("session",session_name.id,1);
+		   		return;
 		    }
 		  }
 	},
@@ -107,21 +109,18 @@ TissueStack.Admin.prototype = {
 	        $.each(result, function(i, field){
 	        	var listOfFileName = "";
 	        	for (i in field){
-		        	content = '<input type="checkbox" name='+'"radio_'+[i]+'" id="'+ 'radio_choice_'+ [i] + '" value="choice-'+[i]+'" />'+
-		        			  '<label for="'+'radio_choice_'+ [i] +'">'+ field[i] + '</label>';
+		        	content = '<input type="checkbox" name='+'"check_'+[i]+'" id="'+ 'check_'+ [i] + '" value="check_'+[i]+'" />'+
+		        			  '<label for="'+'check_'+ [i] +'">'+ field[i] + '</label>';
 		        	listOfFileName += content; 
 	           	 }
               $('.file_radio_list').fadeIn(1500, function() {  
               	 $('.file_radio_list').append(listOfFileName)
-              	    .trigger( "create" ); 
+              	 	.trigger( "create" ); 
               	 $('.file_radio_list').controlgroup();
               });
 	        });
 	      });
 	    });
-	},
-	clearText : function () {
-		$('#password').val("");
 	},
 	submitNewFile : function () {
 		 $("#uploadForm").submit(function(){
@@ -159,18 +158,9 @@ TissueStack.Admin.prototype = {
 			return false;
 		});
 	},
-	formMessage : function (message) { 
-			$('#file_uploaded_message').html("<div class='error_message'></div>");  		
-		    $('.error_message').html(message + "<br/>")  
-		    .append()  
-		    .hide()  
-		    .fadeIn(1500, function() {  
-		      $('.error_message').append("");  
-		    })
-		    .fadeOut(5000); 
-	},
 	replaceErrorMessage : function (message) {
 		var excludes = message;
+		
 		if(excludes.search("IllegalArgumentException") != -1){
 			message = excludes.replace("java.lang.IllegalArgumentException:", "");
 		}		
@@ -180,12 +170,23 @@ TissueStack.Admin.prototype = {
 
 		$('#file_uploaded_message').html("<div class='error_message'></div>");  		
 		$('.error_message').html(message + "<br/>")  
-		.append()  
-		.hide()  
-		.fadeIn(1500, function() {  
+		.append().hide().fadeIn(1500, function() {  
 		  $('.error_message').append("");  
 		})
-		.fadeOut(5000); 
-		
+		.fadeOut(5000); 	
+	},
+	addToDataSet : function () {
+		//USED FOR ADD DATASET TO DATA TREE IN MAIN VIEW
+		$("#bt_add_dataset").click(function(){
+			TissueStack.Utils.sendAjaxRequest("/backend/admin/upload_directory/json", "GET", true,function(result) {
+			  	$.each(result, function(i, field){
+				  	for (i in field){
+	 					if ($('#check_'+[i]).is(':checked')) {
+	 					console.info(field[i]);
+				    }
+			    };
+			  });
+			});
+		});
 	}
 };
