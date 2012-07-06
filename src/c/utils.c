@@ -154,58 +154,68 @@ char ** tokenizeString(char *buffer, char delimiter, char escape)
   return (dest);
 }
 
-void appendToBuffer(
-		char ** buffer,
-		int * bufferSize,
-		int * bufferCapacity,
-		char * someString) {
-	if (buffer == NULL || someString == NULL) {
-		return;
+t_string_buffer *  appendToBuffer(t_string_buffer * buffer, char * someString) {
+	if (someString == NULL) {
+		return NULL;
 	}
 
+	// create new buffer if null
+	if (buffer == NULL) {
+		buffer = (t_string_buffer *) malloc(sizeof(*buffer));
+		buffer->size = 0;
+		buffer->capacity = 100;
+		buffer->buffer = (char *) malloc(sizeof(buffer->buffer) * buffer->capacity);
+	}
+
+	// now let's look at the string we are meant to append
 	int lengthOfSomeString = strlen(someString);
-	int potentialBufferExcess = *bufferCapacity - ((*bufferSize) + lengthOfSomeString);
+	int potentialBufferExcess = buffer->capacity - buffer->size - lengthOfSomeString;
 
 	// do we exceed the buffer size ?
 	if (potentialBufferExcess < 0) {
 		// get some more buffer capacity => old size + lengthOfSomeString + 100 chars)
-		char *tmp = (char *) realloc(*buffer, (*bufferSize + lengthOfSomeString + 100) * sizeof(char *));
+		char *tmp = (char *) realloc(buffer->buffer, (buffer->size + lengthOfSomeString + 100) * sizeof(tmp));
 
 		if (tmp == NULL) {
-			free(buffer);
-			return;
+			free(buffer->buffer);
+			return NULL;
 		}
-		*buffer = tmp;
-		*bufferCapacity = (*bufferSize + lengthOfSomeString + 100);
+		buffer->buffer = tmp;
+		buffer->capacity = buffer->size + lengthOfSomeString + 100;
 	}
 
-	// add some string to buffer
+	// copy string into buffer
 	int i=0;
 	for (i=0;i<lengthOfSomeString;i++) {
-		(*buffer)[*bufferSize] = someString[i];
-		(*bufferSize)++;
+		buffer->buffer[buffer->size] = someString[i];
+		buffer->size++;
 	}
 	// terminal '\0'
-	(*buffer)[(*bufferSize)] = '\0';
+	buffer->buffer[buffer->size] = '\0';
+
+	return buffer;
 }
 
 short testBufferAppend() {
 	printf("\t*) String Append => ");
 
-	int buffer_capacity = 20;
-	int buffer_size = 0;
-	char * someBuffer = malloc(sizeof(someBuffer) * buffer_capacity);
+    t_string_buffer * a_buffer = (t_string_buffer *) malloc(sizeof(*a_buffer));
+	a_buffer->size = 0;
+	a_buffer->capacity = 20;
+	a_buffer->buffer = (char *) malloc(sizeof(a_buffer->buffer) * a_buffer->capacity);
 
-	appendToBuffer(&someBuffer, &buffer_size, &buffer_capacity, "hello");
-	appendToBuffer(&someBuffer, &buffer_size, &buffer_capacity, " world ");
-	appendToBuffer(&someBuffer, &buffer_size, &buffer_capacity, " : here I come again and again ");
+    a_buffer = appendToBuffer(a_buffer, "hello");
+	// for our test to test dynamic realloc, lower default capacity to100
+	a_buffer = appendToBuffer(a_buffer, " world ");
+	a_buffer = appendToBuffer(a_buffer, " : here I come again and again ");
 
-	if (buffer_size != 43 || buffer_capacity != 143 || strlen(someBuffer) != 43) {
+	if (a_buffer->size != 43 || a_buffer->capacity != 143 || strlen(a_buffer->buffer) != 43) {
 		printf("FAILED !\n");
 	} else {
 		printf("PASSED.\n");
 	}
-    if (someBuffer != NULL) free(someBuffer);
+    if (a_buffer->buffer != NULL) free(a_buffer->buffer);
+    free(a_buffer);
 
 	return 1;
 }
