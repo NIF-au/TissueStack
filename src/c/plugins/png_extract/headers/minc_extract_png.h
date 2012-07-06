@@ -25,6 +25,8 @@ typedef	struct	s_png_extract
   int		w_position_end;
   char		*service;
   int		square_size;
+  int		done;
+  pthread_mutex_t	mut;
 }		t_png_extract;
 
 typedef struct  s_png_args
