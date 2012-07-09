@@ -36,7 +36,8 @@ TissueStack.Admin.prototype = {
 						}
 						session= data.response;
 						TissueStack.Admin.prototype.session = session.id;
-						TissueStack.Admin.prototype.checkCookie(session);
+						var value = $('#login_btn').val(100);
+						TissueStack.Admin.prototype.checkCookie(session, value);
 					},
 					error: function(jqXHR, textStatus, errorThrown) {
 						alert("Error connecting to backend: " + textStatus + " " + errorThrown);
@@ -68,8 +69,12 @@ TissueStack.Admin.prototype = {
 		var c_value=escape(value) + ((exdays==null) ? "" : "; expires="+exdate.toUTCString());
 		document.cookie=c_name + "=" + c_value;
 	},
-	checkCookie: function (session){
+	checkCookie: function (session, value){
 		var session_name=TissueStack.Admin.prototype.getCookie("session");
+		
+		if ($(value).val() != null){
+			session_name = null;
+		}
 		
 		if (session_name!=null && session_name!="")
 		  {
