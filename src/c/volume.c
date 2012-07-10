@@ -8,6 +8,8 @@ int		init_volume(t_vol *volume, char *path)
   path_len = strlen(path);
   volume->dim_nb = 3;
   volume->dimensions = malloc(volume->dim_nb * sizeof(*volume->dimensions));
+  volume->starts = malloc(volume->dim_nb * sizeof(*volume->starts));
+  volume->steps = malloc(volume->dim_nb * sizeof(*volume->steps));
   volume->size = malloc(volume->dim_nb * sizeof(*volume->size));
   volume->path = malloc((path_len + 1) * sizeof(*volume->path));
   volume->path[path_len] = '\0';
@@ -31,7 +33,17 @@ int		init_volume(t_vol *volume, char *path)
   // get the size of each dimensions
   if ((result = miget_dimension_sizes(volume->dimensions, volume->dim_nb, volume->size)) != MI_NOERROR)
     {
-      fprintf(stderr, "Error getting dimensiosn size: %d.\n", result);
+      fprintf(stderr, "Error getting dimensions size: %d.\n", result);
+      return (-1);
+    }
+  if ((result = miget_dimension_starts(volume->dimensions, 0, volume->dim_nb, volume->starts)) != MI_NOERROR)
+    {
+      fprintf(stderr, "Error getting dimensions start: %d.\n", result);
+      return (-1);
+    }
+  if ((result = miget_dimension_separations(volume->dimensions, 0, volume->dim_nb, volume->steps)) != MI_NOERROR)
+    {
+      fprintf(stderr, "Error getting dimensions steps: %d.\n", result);
       return (-1);
     }
   if (miget_dimension_name (volume->dimensions[0], &volume->dim_name[0]) != MI_NOERROR ||

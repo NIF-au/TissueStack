@@ -92,6 +92,8 @@ struct			s_vol
   int			dim_nb;
   midimhandle_t		*dimensions;
   unsigned int		*size;
+  double		*starts;
+  double		*steps;
   char			*path;
   unsigned int		slices_max;
   char			**dim_name;

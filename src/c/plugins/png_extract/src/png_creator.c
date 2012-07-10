@@ -58,6 +58,8 @@ int		check_and_set_position(int kind, int width, int height, t_png_args *a)
 {
   int		i;
 
+  width *= a->info->scale;
+  height *= a->info->scale;
   i = 2;
   while (i == 2)
     {
@@ -147,12 +149,12 @@ void		print_png(char *hyperslab, t_vol *volume, int current_dimension,
   //  pthread_mutex_lock(&a->info->mut);
   if (a->info->done == 1)
     return;
+  a->info->done = 1;
   if (check_and_set_position(kind, width, height, a))
     {
       fclose_check(a->file);
       return;
     }
-  a->info->done = 1;
   portion = create_rectangle_crop(kind, a);
   //pthread_mutex_unlock(&a->info->mut);
   //  InitializeMagick("./");
