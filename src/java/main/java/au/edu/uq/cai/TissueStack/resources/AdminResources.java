@@ -18,13 +18,14 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.log4j.Logger;
 
 import au.edu.uq.cai.TissueStack.dataobjects.Configuration;
+import au.edu.uq.cai.TissueStack.dataobjects.MincInfo;
 import au.edu.uq.cai.TissueStack.dataobjects.Response;
 import au.edu.uq.cai.TissueStack.dataprovider.ConfigurationDataProvider;
+import au.edu.uq.cai.TissueStack.jni.TissueStack;
 import au.edu.uq.cai.TissueStack.rest.AbstractRestfulMetaInformation;
 import au.edu.uq.cai.TissueStack.rest.Description;
 
 /*
- * TODO: create some admin functionality
  * !!!!!!! IMPORTANT : always call SecurityResources.checkSession(session) to check for session validity !!!!!!
  * 
  */
@@ -200,8 +201,6 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 	@Path("/upload_directory")
 	@Description("Shows contents of upload directory")
 	public RestfulResource readFile(@Context HttpServletRequest request, @QueryParam("session") String session) {
-		// check permissions
-
 		final File fileDirectory = this.getUploadDirectory();
 		
 		File[] listOfFiles = fileDirectory.listFiles(new FilenameFilter() {
@@ -225,8 +224,22 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 	
 	@Path("/update_dataset")
 	@Description("update dataset to plan")
-	public RestfulResource updateDataSet(@Context HttpServletRequest request, @QueryParam("session") String session) {
+	public RestfulResource updateDataSet(
+			@Context HttpServletRequest request,
+			@QueryParam("session") String session,
+			@QueryParam("session") String file) {
+		if (file == null || file.trim().isEmpty()) {
+			throw new IllegalArgumentException("File parameter is empty");
+		}
 		final File uploadDirectory = this.getUploadDirectory();
+		final File uploadedFile = new File(uploadDirectory, file); 
+		if (!uploadedFile.exists()) {
+			throw new IllegalArgumentException("File '" + file + "' does not exist");
+		}
+		
+		// check me out adam, I work now !
+		final MincInfo results = new TissueStack().getMincInfo(uploadedFile.getAbsolutePath());
+		
  		return new RestfulResource(new Response("DataSet update successfully. Please go back to main canvias"));
 	}
 	
