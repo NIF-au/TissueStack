@@ -110,12 +110,27 @@ void		destroy_plug_args(t_args_plug *a)
   free(a);
 }
 
+t_args_plug	*create_copy_args(t_args_plug *args)
+{
+  t_args_plug	*a;
+
+  if (args != NULL)
+  a = malloc(sizeof(*a));
+  a->name = strdup(args->name);
+  a->path = strdup(args->path);
+  a->commands = copy_args(0, args->commands);
+  a->general_info = args->general_info;
+  a->this = (args->this != NULL ? args->this : NULL);
+  a->box = args->box;
+  a->destroy = destroy_plug_args;
+  return (a);
+}
+
 t_args_plug	*create_plug_args(char **commands, t_tissue_stack *general, void *box)
 {
   t_args_plug	*args;
   char		**com;
   t_plugin	*tmp;
-  //int		i;
 
   args = malloc(sizeof(*args));
   if (commands[1] == NULL)
@@ -149,10 +164,6 @@ t_args_plug	*create_plug_args(char **commands, t_tissue_stack *general, void *bo
   args->this = NULL;
   args->box = box;
   args->destroy = destroy_plug_args;
-  //i = 0;
-  //  while (commands[i] != NULL)
-  //  free(commands[i++]);
-  // free(commands);
   return (args);
 }
 
@@ -174,7 +185,7 @@ void		prompt_exec(char **commands, t_tissue_stack *general, void *box)
 	  p = get_plugin_by_name(args->name, general->first);
 	  if (p && p->busy != 0)
 	    printf("%s: Plugin Busy. Try again later\n", args->name);
-	  else if (!p && strcmp(prog, "load") != 0 &&
+	  else if (!p && (strcmp(prog, "load") != 0 || strcmp(prog, "try_start") != 0) &&
 		   (strcmp(prog, "start") == 0 || strcmp(prog, "unload") == 0))
 	    printf("%s: Unknown Plugin\n", args->name);
 	  else

@@ -63,6 +63,22 @@ t_plugin	*get_plugin_by_name(char *name, t_plugin *first)
   return (this);
 }
 
+void		*plugin_try_start(void *args)
+{
+  t_args_plug	*a;
+  t_args_plug	*a_cpy;
+
+  a = (t_args_plug *)args;
+  a->path = strdup(a->commands[0]);
+  a_cpy = create_copy_args(a);
+  if (!a->general_info->first || get_plugin_by_name(a->name, a->general_info->first) == NULL)
+    plugin_load(a);
+  a_cpy->this = get_plugin_by_name(a_cpy->name, a->general_info->first);
+  a_cpy->commands = &a_cpy->commands[1];
+  plugin_start(a_cpy);
+  return (NULL);
+}
+
 void		*plugin_load(void *args)
 {
   t_args_plug	*a;

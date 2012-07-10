@@ -75,6 +75,7 @@ int		check_and_set_position(int kind, int width, int height, t_png_args *a)
       i = check_pixels_range(width, height,
 			     a->info->h_position, a->info->w_position,
 			     a->info->h_position_end, a->info->w_position_end);
+      printf("***** i = %i  - h = %i - w = %i - he = %i - we = %i - height = %i - width = %i\n\n\n", i, a->info->h_position, a->info->w_position, a->info->h_position_end, a->info->w_position_end, height, width);
     }
   if (i != 0)
     return (1);
@@ -143,14 +144,17 @@ void		print_png(char *hyperslab, t_vol *volume, int current_dimension,
 
   kind = set_service_type(a);
   convert_tiles_to_pixel_coord(a);
-  pthread_mutex_lock(&a->info->mut);
+  //  pthread_mutex_lock(&a->info->mut);
   if (a->info->done == 1)
     return;
   if (check_and_set_position(kind, width, height, a))
-    return;
+    {
+      fclose_check(a->file);
+      return;
+    }
   a->info->done = 1;
   portion = create_rectangle_crop(kind, a);
-  pthread_mutex_unlock(&a->info->mut);
+  //pthread_mutex_unlock(&a->info->mut);
   //  InitializeMagick("./");
   GetExceptionInfo(&exception);
   if ((image_info = CloneImageInfo(NULL)) == NULL)

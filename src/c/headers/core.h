@@ -140,6 +140,7 @@ int             action_keys(char *buff, t_tissue_stack *general);
 void            stringify_char(char buff, t_tissue_stack *general);
 void            prompt_start(t_tissue_stack *general);
 t_args_plug     *create_plug_args(char **commands, t_tissue_stack *general, void *box);
+t_args_plug	*create_copy_args(t_args_plug *args);
 void            prompt_exec(char **commands, t_tissue_stack *general, void *box);
 
 void            free_all_history(t_tissue_stack *t);
@@ -153,6 +154,7 @@ t_plugin        *get_plugin_by_name(char *name, t_plugin *first);
 void            *plugin_load(void *a);
 void            *plugin_start(void *a);
 void            *plugin_unload(void *a);
+void		*plugin_try_start(void *a);
 void            free_all_plugins(t_tissue_stack *t);
 
 /*		volume.c		*/
