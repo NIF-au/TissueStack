@@ -237,11 +237,9 @@ int		main(int argc, char **argv)
   sleep(2);
   sprintf(serv_command, "start serv %s", argv[1]);
   (t->plug_actions)(t, serv_command, NULL);
-  /*
   (t->plug_actions)(t, "load comm /usr/local/plugins/TissueStackProcessCommunicator.so", NULL);
   sleep(2);
   (t->plug_actions)(t, "start comm", NULL);
-  */
   signal_manager(t);
   if ((argv[2] != NULL && strcmp(argv[2], "--prompt") == 0) ||
       (argv[3] != NULL && strcmp(argv[3], "--prompt") == 0))
