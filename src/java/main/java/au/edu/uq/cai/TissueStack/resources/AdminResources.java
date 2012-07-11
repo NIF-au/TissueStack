@@ -234,11 +234,11 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 			@QueryParam("description") String description,
 			@QueryParam("session") String session,
 			@QueryParam("session") String file) {
-		/*
-		if (file == null || file.trim().isEmpty()) {
+		
+		if (filename == null || filename.trim().isEmpty()) {
 			throw new IllegalArgumentException("File Parameter Is Empty");
 		}
-		*/
+		
 		final File uploadDirectory = this.getUploadDirectory();
 		
 		final File uploadedFile = new File(uploadDirectory, filename); 

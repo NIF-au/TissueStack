@@ -50,7 +50,7 @@ public final class DataSetDataProvider {
 		} catch(Exception any) {
 			JPAUtils.instance().rollbackTransaction(write);
 			logger.error("Failed to add new Data Set: " + dataset, any);
-			throw new RuntimeException("Already Exist in Data Set",any);
+			throw new RuntimeException("Already Exist In Data Set",any);
 		} finally {
 			JPAUtils.instance().closeEntityManager(em);
 		}
