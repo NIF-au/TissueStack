@@ -18,8 +18,10 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.log4j.Logger;
 
 import au.edu.uq.cai.TissueStack.dataobjects.Configuration;
+import au.edu.uq.cai.TissueStack.dataobjects.DataSet;
 import au.edu.uq.cai.TissueStack.dataobjects.Response;
 import au.edu.uq.cai.TissueStack.dataprovider.ConfigurationDataProvider;
+import au.edu.uq.cai.TissueStack.dataprovider.DataSetDataProvider;
 import au.edu.uq.cai.TissueStack.rest.AbstractRestfulMetaInformation;
 import au.edu.uq.cai.TissueStack.rest.Description;
 
@@ -224,11 +226,26 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 	}
 	
 	@Path("/update_dataset")
-	@Description("update dataset to plan")
-	public RestfulResource updateDataSet(@Context HttpServletRequest request, @QueryParam("session") String session) {
-		final File uploadDirectory = this.getUploadDirectory();
- 		return new RestfulResource(new Response("DataSet update successfully. Please go back to main canvias"));
+	@Description("update dataset to plan for canva views")
+	public RestfulResource updateDataSet(@QueryParam("filename") String filename, 
+			@QueryParam("description") String description,
+			@QueryParam("session") String session) {
+		/*
+		if (!SecurityResources.checkSession(session)) {
+			throw new RuntimeException("No Session Exist ! Please Log In Before Add a New Data Set");
+		}
+		*/
+		final DataSet newDataSet = new DataSet();
+		newDataSet.setFilename(filename);
+		newDataSet.setDescription(description);
+		
+		// store newDataSet in the database
+		DataSetDataProvider.insertNewDataSets(newDataSet);
+		
+		// return the DataSet token
+		return new RestfulResource(new Response(newDataSet));
 	}
+		
 	
 	private File getUploadDirectory() {
 		final Configuration upDir = ConfigurationDataProvider.queryConfigurationById("upload_directory");
