@@ -193,7 +193,7 @@ TissueStack.Admin.prototype = {
 	 							return;
 	 						}
 	 						$("#bt_add_dataset").ajaxSubmit({ 	
-	 							url :"/backend/admin/update_dataset/json?filename=" + "/opt/upload/" + field[i] + "&description=" + msgDescription,
+	 							url :"/backend/admin/update_dataset/json?filename=" + field[i] + "&description=" + msgDescription,
 	 							dataType : "json",
 	 							success: function(data, textStatus, jqXHR) {
 	 								if (!data.response && !data.error) {
@@ -209,7 +209,7 @@ TissueStack.Admin.prototype = {
 	 									TissueStack.Admin.prototype.replaceErrorMessage("No Results!");
 	 									return false;
 	 								}
-	 								TissueStack.Admin.prototype.replaceErrorMessage("Data Set Has Been Successfully Updated!");
+	 								TissueStack.Admin.prototype.replaceErrorMessage("DataSet update successfully. Please go back to main canvas!");
 	 								$('.error_message').css("background", "#32CD32");
 	 							},
 	 							error: function(jqXHR, textStatus, errorThrown) {
