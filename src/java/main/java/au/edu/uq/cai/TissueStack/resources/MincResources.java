@@ -2,11 +2,9 @@ package au.edu.uq.cai.TissueStack.resources;
 
 import java.io.File;
 
-import javax.persistence.EntityTransaction;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 
-import au.edu.uq.cai.TissueStack.JPAUtils;
 import au.edu.uq.cai.TissueStack.dataobjects.DataSet;
 import au.edu.uq.cai.TissueStack.dataobjects.MincInfo;
 import au.edu.uq.cai.TissueStack.dataobjects.NoResults;
@@ -46,16 +44,7 @@ public final class MincResources extends AbstractRestfulMetaInformation {
 			throw new IllegalArgumentException("File " + mincFile + " could not be found");
 		}
 		MincInfo results = new TissueStack().getMincInfo(mincFile);
-		
-		DataSet dataSet = DataSet.fromMincInfo(results);
-		dataSet.setFilename("test.mnc");
-		
-		EntityTransaction trans = JPAUtils.instance().getEntityManager().getTransaction();
-		trans.begin();
-		JPAUtils.instance().getEntityManager().persist(dataSet);
-		trans.commit();
-		
-		return new RestfulResource(new Response(dataSet));
+		return new RestfulResource(new Response(DataSet.fromMincInfo(results)));
 	}
 
 	@Path("/meta-info")

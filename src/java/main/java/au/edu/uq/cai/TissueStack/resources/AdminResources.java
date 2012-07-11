@@ -13,7 +13,6 @@ import javax.ws.rs.core.Context;
 
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
-import org.apache.commons.fileupload.ProgressListener;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.log4j.Logger;
 
@@ -23,15 +22,12 @@ import au.edu.uq.cai.TissueStack.dataobjects.Response;
 import au.edu.uq.cai.TissueStack.dataprovider.ConfigurationDataProvider;
 import au.edu.uq.cai.TissueStack.dataprovider.DataSetDataProvider;
 import au.edu.uq.cai.TissueStack.dataobjects.MincInfo;
-import au.edu.uq.cai.TissueStack.dataobjects.Response;
-import au.edu.uq.cai.TissueStack.dataprovider.ConfigurationDataProvider;
 import au.edu.uq.cai.TissueStack.jni.TissueStack;
 import au.edu.uq.cai.TissueStack.rest.AbstractRestfulMetaInformation;
 import au.edu.uq.cai.TissueStack.rest.Description;
 
 /*
  * !!!!!!! IMPORTANT : always call SecurityResources.checkSession(session) to check for session validity !!!!!!
- * 
  */
 @Path("/admin")
 @Description("Tissue Stack Admin Resources")
@@ -40,6 +36,7 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 	final static Logger logger = Logger.getLogger(AdminResources.class);
 	
 	private final static String DEFAULT_UPLOAD_DIRECTORY = "/opt/upload";
+	private final static String DEFAULT_DATA_DIRECTORY = "/opt/data";
 	private final static long DEFAULT_MAX_UPLOAD_SIZE = 1024 * 1024 * 1024;
 			
 	@Path("/")
@@ -48,10 +45,13 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 	}
 		
 	@Path("/upload")
-	@Description("Uploads a file ")
-	public RestfulResource uploadFile(@Context HttpServletRequest request, @QueryParam("session") String session) {
+	@Description("Uploads a file to the upload directory")
+	public RestfulResource uploadFile(
+			@Description("Internal parameter")
+			@Context HttpServletRequest request,
+			@Description("Mandatory: The session token")
+			@QueryParam("session") String session) {
 		// check permissions
-		
 		if (!SecurityResources.checkSession(session)) {
 			throw new RuntimeException("Invalid Session! Please Log In.");
 		}
@@ -82,7 +82,7 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 			// use default
 		}
 		
-		// a custom progress listener
+		/* a custom progress listener
 		ProgressListener progressListener = new ProgressListener(){
 		   // TODO: this has to become more outside accessible for front-end progress updates
 		   public void update(long pBytesRead, long pContentLength, int pItems) {
@@ -93,11 +93,11 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 		                              + " bytes have been read.");
 		       }
 		   }
-		};
+		};*/
 		
 		// Create a new file upload handler
 		ServletFileUpload upload = new ServletFileUpload();
-		upload.setProgressListener(progressListener);
+		//upload.setProgressListener(progressListener);
 		
 		FileItemIterator files;
 		InputStream in = null;
@@ -203,8 +203,8 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 	}
 	
 	@Path("/upload_directory")
-	@Description("Shows contents of upload directory")
-	public RestfulResource readFile(@Context HttpServletRequest request, @QueryParam("session") String session) {
+	@Description("Displays contents of upload directory")
+	public RestfulResource readFile() {
 		final File fileDirectory = this.getUploadDirectory();
 		
 		File[] listOfFiles = fileDirectory.listFiles(new FilenameFilter() {
@@ -226,47 +226,82 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
  		return new RestfulResource(new Response(fileNames));
 	}
 	
-	@Path("/update_dataset")
-	@Description("update dataset to plan for canva views")
+	@Path("/add_dataset")
+	@Description("add uploaded dataset to the configuration database")
 	public RestfulResource updateDataSet(
-			@Context HttpServletRequest request,
-			@QueryParam("filename") String filename, 
-			@QueryParam("description") String description,
+			@Description("Mandatory: a user session token")
 			@QueryParam("session") String session,
-			@QueryParam("session") String file) {
+			@Description("Mandatory: the file name of the already uploaded file")
+			@QueryParam("filename") String filename,
+			@Description("Optional: A description for the data set that is about to be added")
+			@QueryParam("description") String description) {
+		// check user session
+		if (!SecurityResources.checkSession(session)) {
+			throw new RuntimeException("Invalid Session! Please Log In.");
+		}
 		
+		// check for empty filename
 		if (filename == null || filename.trim().isEmpty()) {
 			throw new IllegalArgumentException("File Parameter Is Empty");
 		}
-		
-		final File uploadDirectory = this.getUploadDirectory();
-		
-		final File uploadedFile = new File(uploadDirectory, filename); 
+		// check for existence of file
+		final File uploadedFile = new File(this.getUploadDirectory(), filename); 
 		if (!uploadedFile.exists()) {
-			throw new IllegalArgumentException("File '" + file + "' Does Not Exist");
+			throw new IllegalArgumentException("File '" + uploadedFile.getAbsolutePath() + "' does Not Exist");
+		}
+		
+		// call native code to read meta info from minc file
+		final MincInfo newDataSet = new TissueStack().getMincInfo(uploadedFile.getAbsolutePath());
+		if (newDataSet == null) {
+			throw new RuntimeException("File '" + uploadedFile.getAbsolutePath() + "' could not be processed by native minc info libs. Check whether it is a minc file...");
+		}
+		// convert minc file info into data set to be stored in the db later on
+		final DataSet dataSetToBeAdded = DataSet.fromMincInfo(newDataSet);
+		if (dataSetToBeAdded == null) {
+			throw new RuntimeException("Failed to convert minc file '" + uploadedFile.getAbsolutePath() + "' into a data set...");
+		}
+		// set custom description if it exists
+		if (description != null && !description.trim().isEmpty()) {
+			dataSetToBeAdded.setDescription(description);
 		}
 
-		final DataSet newDataSet = new DataSet();
-		newDataSet.setFilename(uploadedFile.getPath());
-		newDataSet.setDescription(description);
+		// relocate file from upload directory to data directory
+		final File dataDir = this.getDataDirectory();
+		if (!dataDir.exists()) { // try to create it if it doesn't exist
+			dataDir.mkdirs();
+		}
+		final File destination = new File(dataDir, uploadedFile.getName());
+		if (!uploadedFile.renameTo(destination)) {
+			throw new RuntimeException(
+					"Failed to move uploaded file (" + uploadedFile.getAbsolutePath()
+					+ ") to destination: " + destination.getAbsolutePath());
+		}
+		dataSetToBeAdded.setFilename(destination.getAbsolutePath());
 		
-		// store newDataSet in the database
-		DataSetDataProvider.insertNewDataSets(newDataSet);
-						
-		// return the DataSet token
-		return new RestfulResource(new Response(newDataSet));
+		// store dataSetToBeAdded in the database
+		try {
+			DataSetDataProvider.insertNewDataSets(dataSetToBeAdded);
+		} catch(RuntimeException any) {
+			// move file back to upload directory
+			destination.renameTo(uploadedFile);
+			// propagate error
+			throw any;
+		}
 
-		/*
-		final MincInfo results = new TissueStack().getMincInfo(uploadedFile.getAbsolutePath());
- 		return new RestfulResource(new Response("DataSet update successfully. Please go back to main canvias"));
- 		*/
+		// return the new data set
+		return new RestfulResource(new Response(dataSetToBeAdded));
 	}
 		
 	private File getUploadDirectory() {
 		final Configuration upDir = ConfigurationDataProvider.queryConfigurationById("upload_directory");
 		return new File(upDir == null || upDir.getValue() == null ? DEFAULT_UPLOAD_DIRECTORY : upDir.getValue());
 	}
-	
+
+	private File getDataDirectory() {
+		final Configuration dataDir = ConfigurationDataProvider.queryConfigurationById("data_directory");
+		return new File(dataDir == null || dataDir.getValue() == null ? DEFAULT_DATA_DIRECTORY : dataDir.getValue());
+	}
+
 	@Path("/meta-info")
 	@Description("Shows the Tissue Stack Admin's Meta Info.")
 	public RestfulResource getAdminResourcesMetaInfo() {

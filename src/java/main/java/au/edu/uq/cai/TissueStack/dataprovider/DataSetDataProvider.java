@@ -1,6 +1,7 @@
 package au.edu.uq.cai.TissueStack.dataprovider;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -38,15 +39,44 @@ public final class DataSetDataProvider {
 	}
 	
 	public static void insertNewDataSets(DataSet dataset) {
+		if (dataset == null) {
+			return;
+		}
+		
 		EntityManager em = null; 
 		EntityTransaction write = null;
+
 		try {			
 			em = JPAUtils.instance().getEntityManager();
+
+			DataSetPlanes copy[] = null;
+			// do we have planes attached?
+			if (dataset.getPlanes() != null) {
+				// copy planes
+				copy = dataset.getPlanes().toArray(new DataSetPlanes[dataset.getPlanes().size()]);
+				dataset.setPlanes(null);
+			}
+				
 			write = em.getTransaction();
 			write.begin();
+			// persist dataset
 			em.persist(dataset);
 			write.commit();
-			em.close();
+
+			// persist associated planes now
+			if (copy != null) {
+				write = em.getTransaction();
+				write.begin();
+
+				for (DataSetPlanes p : copy) {
+					p.setDatasetId(dataset.getId()); // set parent id as fk reference
+					em.persist(p);
+				}
+				write.commit();
+			}
+			
+			// append the newly persisted planes again to its parent
+			dataset.setPlanes(Arrays.asList(copy));
 		} catch(Exception any) {
 			JPAUtils.instance().rollbackTransaction(write);
 			logger.error("Failed to add new Data Set: " + dataset, any);

@@ -16,7 +16,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement(name="DataSetPlanes", namespace=IGlobalConstants.XML_NAMESPACE)
 public class DataSetPlanes{
 	  private long id;
-	  private int datasetId;
+	  private long datasetId;
 	  String internalIsTiled;
 	  private String name;
 	  private int maxX; 
@@ -26,9 +26,8 @@ public class DataSetPlanes{
 	  private int oneToOneZoomLevel; 
 	  private String transformationMatrix;
 
-	@Id 
-	@Column(name="id")
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Id	@GeneratedValue(strategy = GenerationType.IDENTITY)
+ 	@Column(name="id")
 	@XmlTransient
 	public long getId() {
 		return id;
@@ -39,11 +38,11 @@ public class DataSetPlanes{
 	
 	@Column(name="dataset_id")
 	@XmlTransient
-	public int getDatasetId() {
+	public long getDatasetId() {
 		return datasetId;
 	}
 	
-	public void setDatasetId(int datasetId) {
+	public void setDatasetId(long datasetId) {
 		this.datasetId = datasetId;
 	}
 	

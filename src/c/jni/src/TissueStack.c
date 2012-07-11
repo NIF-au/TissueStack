@@ -147,7 +147,8 @@ JNIEXPORT jobject JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_getMinc
 		return NULL;
 	}
 
-	if (tokens[0] == NULL) {
+	// we have 1 token but it is 'NULL'
+	if (numberOfTokens == 1 && strcmp(tokens[0], "NULL") == 0) {
 		// we received nothing, this is legitimate, we return null
 		return NULL;
 	}
