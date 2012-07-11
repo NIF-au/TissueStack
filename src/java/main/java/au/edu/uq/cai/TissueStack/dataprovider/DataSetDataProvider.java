@@ -78,9 +78,19 @@ public final class DataSetDataProvider {
 			// append the newly persisted planes again to its parent
 			dataset.setPlanes(Arrays.asList(copy));
 		} catch(Exception any) {
-			JPAUtils.instance().rollbackTransaction(write);
+			// undo if we were able to add the data set master
+			try {
+				if (dataset.getId() != 0) {
+					write = em.getTransaction();
+					write.begin();
+					em.remove(dataset);
+					write.commit();
+				}
+			} catch(Exception ignored) {
+				// ignored
+			}
 			logger.error("Failed to add new Data Set: " + dataset, any);
-			throw new RuntimeException("Already Exist In Data Set",any);
+			throw new RuntimeException("Failed to add new Data Set", any);
 		} finally {
 			JPAUtils.instance().closeEntityManager(em);
 		}

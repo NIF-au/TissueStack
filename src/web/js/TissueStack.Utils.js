@@ -353,8 +353,8 @@ TissueStack.Utils = {
 
 			return url + "/" + row + '_' + col + "." + image_extension;
 		} else {
-			// TODO: change back to apache rewrite when working
-		    url = ("http://localhost:4242/?volume=" + filename + "&scale=" + zoom + "&dimension=" + plane + "space" + "&slice=" + slice);
+			// seems to work for server so why not use it
+		    url = url + "/" + path + "/?volume=" + filename + "&scale=" + zoom + "&dimension=" + plane + "space" + "&slice=" + slice;
 			
 			if (is_preview) {
 				return url + "&quality=10";
