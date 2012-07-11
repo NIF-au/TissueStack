@@ -4,14 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 import javax.persistence.Query;
+
+import org.apache.log4j.Logger;
 
 import au.edu.uq.cai.TissueStack.JPAUtils;
 import au.edu.uq.cai.TissueStack.dataobjects.DataSet;
 import au.edu.uq.cai.TissueStack.dataobjects.DataSetPlanes;
 
 public final class DataSetDataProvider {
-	
+	final static Logger logger = Logger.getLogger(DataSetDataProvider.class); 
 	public static DataSet queryDataSetById (long id){
 		EntityManager em = null; 
 		try {
@@ -33,7 +36,26 @@ public final class DataSetDataProvider {
 			JPAUtils.instance().closeEntityManager(em);
 		}
 	}
-
+	
+	public static void insertNewDataSets(DataSet dataset) {
+		EntityManager em = null; 
+		EntityTransaction write = null;
+		try {			
+			em = JPAUtils.instance().getEntityManager();
+			write = em.getTransaction();
+			write.begin();
+			em.persist(dataset);
+			write.commit();
+			em.close();
+		} catch(Exception any) {
+			JPAUtils.instance().rollbackTransaction(write);
+			logger.error("Failed to add new Data Set: " + dataset, any);
+			throw new RuntimeException("Already Exist In Data Set",any);
+		} finally {
+			JPAUtils.instance().closeEntityManager(em);
+		}
+	}
+	
 	@SuppressWarnings("unchecked")
 	public static List<DataSet> getDataSets(int offset, int maxRows, String description, boolean includePlaneData){
 		EntityManager em = null; 

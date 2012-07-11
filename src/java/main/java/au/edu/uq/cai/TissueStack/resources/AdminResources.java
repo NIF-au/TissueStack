@@ -18,6 +18,10 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.log4j.Logger;
 
 import au.edu.uq.cai.TissueStack.dataobjects.Configuration;
+import au.edu.uq.cai.TissueStack.dataobjects.DataSet;
+import au.edu.uq.cai.TissueStack.dataobjects.Response;
+import au.edu.uq.cai.TissueStack.dataprovider.ConfigurationDataProvider;
+import au.edu.uq.cai.TissueStack.dataprovider.DataSetDataProvider;
 import au.edu.uq.cai.TissueStack.dataobjects.MincInfo;
 import au.edu.uq.cai.TissueStack.dataobjects.Response;
 import au.edu.uq.cai.TissueStack.dataprovider.ConfigurationDataProvider;
@@ -49,14 +53,14 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 		// check permissions
 		
 		if (!SecurityResources.checkSession(session)) {
-			throw new RuntimeException("Invalid Session");
+			throw new RuntimeException("Invalid Session! Please Log In.");
 		}
 		
 		boolean isMultipart = ServletFileUpload.isMultipartContent(request);
 		
 		// preliminary check
 		if (!isMultipart) {
-			throw new RuntimeException("Not a file upload");
+			throw new RuntimeException("Not a File Upload");
 		}
 
 		// query file upload directory
@@ -66,7 +70,7 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 		}
 		// check if we have write permission
 		if (!uploadDirectory.canWrite()) {
-			throw new RuntimeException("Cannot write to upload directory");
+			throw new RuntimeException("Cannot Write to Upload Directory");
 		}
 
 		// query maximum upload size
@@ -107,7 +111,7 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 			    FileItemStream file = files.next();
 			    
 			    if (file == null || file.getName() == null || file.getName().isEmpty()) {
-			    	throw new IllegalArgumentException("No File was selected!");
+			    	throw new IllegalArgumentException("No File was Selected!");
 			    }
 			    
 			    if (!file.isFormField()) {
@@ -124,7 +128,7 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 				       if (fileToBeUploaded.exists()) {
 				    	   erroneousUpload = false; // otherwise we delete the existing file
 		    			   throw new RuntimeException(
-		    					   "File " + file.getName() + " exists already in the upload destination!");
+		    					   "File " + file.getName() + " Exists Already In The Upload Destination!");
 				       }
 				       
 				       // open streams
@@ -157,7 +161,7 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 						// propagate
 						throw internallyThrown;
 			    	} catch(Exception writeToDiskException) {
-			    	  throw new RuntimeException("Failed to save uploaded file", writeToDiskException);
+			    	  throw new RuntimeException("Failed to Save Uploaded File", writeToDiskException);
 			    	} finally {
 			    		// partial uploads are deleted
 			    		if (erroneousUpload) {
@@ -223,26 +227,41 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 	}
 	
 	@Path("/update_dataset")
-	@Description("update dataset to plan")
+	@Description("update dataset to plan for canva views")
 	public RestfulResource updateDataSet(
 			@Context HttpServletRequest request,
+			@QueryParam("filename") String filename, 
+			@QueryParam("description") String description,
 			@QueryParam("session") String session,
 			@QueryParam("session") String file) {
-		if (file == null || file.trim().isEmpty()) {
-			throw new IllegalArgumentException("File parameter is empty");
+		
+		if (filename == null || filename.trim().isEmpty()) {
+			throw new IllegalArgumentException("File Parameter Is Empty");
 		}
+		
 		final File uploadDirectory = this.getUploadDirectory();
-		final File uploadedFile = new File(uploadDirectory, file); 
+		
+		final File uploadedFile = new File(uploadDirectory, filename); 
 		if (!uploadedFile.exists()) {
-			throw new IllegalArgumentException("File '" + file + "' does not exist");
+			throw new IllegalArgumentException("File '" + file + "' Does Not Exist");
 		}
+
+		final DataSet newDataSet = new DataSet();
+		newDataSet.setFilename(uploadedFile.getPath());
+		newDataSet.setDescription(description);
 		
-		// check me out adam, I work now !
+		// store newDataSet in the database
+		DataSetDataProvider.insertNewDataSets(newDataSet);
+						
+		// return the DataSet token
+		return new RestfulResource(new Response(newDataSet));
+
+		/*
 		final MincInfo results = new TissueStack().getMincInfo(uploadedFile.getAbsolutePath());
-		
  		return new RestfulResource(new Response("DataSet update successfully. Please go back to main canvias"));
+ 		*/
 	}
-	
+		
 	private File getUploadDirectory() {
 		final Configuration upDir = ConfigurationDataProvider.queryConfigurationById("upload_directory");
 		return new File(upDir == null || upDir.getValue() == null ? DEFAULT_UPLOAD_DIRECTORY : upDir.getValue());
