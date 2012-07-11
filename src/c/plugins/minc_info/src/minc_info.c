@@ -69,6 +69,38 @@ void *start(void *args) {
 			free(convertedInt);
 			i++;
 		}
+		buffer = appendToBuffer(buffer, "|");
+		// steps
+		if (volume->steps == NULL) {
+			buffer = appendToBuffer(buffer, "NULL");
+		}
+		i = 0;
+		while (i < volume->dim_nb) {
+			char * convertedDouble = malloc(sizeof(convertedDouble) * 25);
+			sprintf(convertedDouble, "%f", volume->steps[i]);
+
+			buffer = appendToBuffer(buffer, convertedDouble);
+			if (i != (volume->dim_nb -1)) buffer = appendToBuffer(buffer, ":");
+
+			free(convertedDouble);
+			i++;
+		}
+		buffer = appendToBuffer(buffer, "|");
+		// starts
+		if (volume->starts == NULL) {
+			buffer = appendToBuffer(buffer, "NULL");
+		}
+		i = 0;
+		while (i < volume->dim_nb) {
+			char * convertedDouble = malloc(sizeof(convertedDouble) * 25);
+			sprintf(convertedDouble, "%f", volume->starts[i]);
+
+			buffer = appendToBuffer(buffer, convertedDouble);
+			if (i != (volume->dim_nb -1)) buffer = appendToBuffer(buffer, ":");
+
+			free(convertedDouble);
+			i++;
+		}
 	}
 
 	printf("Sending: %s\n", buffer->buffer);

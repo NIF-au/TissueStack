@@ -2,10 +2,8 @@ package au.edu.uq.cai.TissueStack.resources;
 
 import java.io.File;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 
 import au.edu.uq.cai.TissueStack.dataobjects.MincInfo;
 import au.edu.uq.cai.TissueStack.dataobjects.NoResults;
@@ -18,14 +16,12 @@ import au.edu.uq.cai.TissueStack.rest.Description;
 @Description("MINC Resources")
 public final class MincResources extends AbstractRestfulMetaInformation {
 
-	@Path("/test")
+	@Path("/info")
 	@Description("Test Case")
-	public RestfulResource test(
-			@Description("Paramter 'minc-file': specify the file to query")
-			@QueryParam("minc-file")
-			String mincFile,
-			@Description("Not handed over. Internal param.")					
-			@Context HttpServletResponse response){
+	public RestfulResource getInfo(
+			@Description("Paramter 'file': specify the file to query")
+			@QueryParam("file")
+			String mincFile){
 		if (mincFile == null) {
 			return new RestfulResource(new Response(new NoResults()));
 		} else if (!new File(mincFile).exists()) {

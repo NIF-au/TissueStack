@@ -32,6 +32,8 @@ compile:
 	make -C ./plugins/communicator/ compile
 	make -C ./plugins/png_extract/ compile
 	make -C ./plugins/comm_inter_process/ compile
+	make -C ./plugins/minc_info/ compile
+	make -C ./jni/ compile
 
 install:
 	@echo "\n============= Installing Binaries ================="
@@ -40,6 +42,8 @@ install:
 	make -C ./plugins/communicator/ install
 	make -C ./plugins/png_extract/ install
 	make -C ./plugins/comm_inter_process/ install
+	make -C ./plugins/minc_info/ install
+	make -C ./jni/ install
 
 clean:
 	@echo "\n==================== Cleaning $(NAME) ====================="
@@ -48,6 +52,8 @@ clean:
 	make -C ./plugins/communicator/ clean
 	make -C ./plugins/png_extract/ clean
 	make -C ./plugins/comm_inter_process/ clean
+	make -C ./plugins/minc_info/ clean
+	make -C ./jni/ clean
 
 e:	clean
 	@echo "\n==================== Execution ====================\n\n"

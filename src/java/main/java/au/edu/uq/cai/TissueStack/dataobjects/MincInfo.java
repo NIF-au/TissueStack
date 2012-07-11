@@ -8,6 +8,8 @@ public final class MincInfo {
 	private String filename;
 	private String dimensions[];
 	private int sizes[];
+	private double steps[];
+	private double starts[];
 	
 	public MincInfo() {	}
 	public MincInfo(String filename) {
@@ -39,5 +41,23 @@ public final class MincInfo {
 	
 	public void setDimensions(String[] dimensions) {
 		this.dimensions = dimensions;
+	}
+	
+	@XmlElement(namespace=IGlobalConstants.XML_NAMESPACE)
+	public double[] getSteps() {
+		return this.steps;
+	}
+	
+	public void setSteps(double[] steps) {
+		this.steps = steps;
+	}
+
+	@XmlElement(namespace=IGlobalConstants.XML_NAMESPACE)
+	public double[] getStarts() {
+		return this.starts;
+	}
+	
+	public void setStarts(double[] starts) {
+		this.starts = starts;
 	}
 }

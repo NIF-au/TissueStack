@@ -272,6 +272,7 @@ void		serv_accept_new_connections(t_serv_comm *s)
   file = fdopen(socket, "wr");
   write_header(socket);
   printf("************ Socket Number = %i****************\n", socket);
+  //s->general->plug_actions(s->general, buff, file);
   interpret_header(buff, file, s);
 }
 
