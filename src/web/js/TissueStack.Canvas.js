@@ -489,10 +489,10 @@ TissueStack.Canvas.prototype = {
 
 		} else {
 			var text = "Zoom Level: " + this.getDataExtent().zoom_level
-					+ "<br/><hr />X: " + realWorldCoords.min_x + " to " + realWorldCoords.max_x + "<br/>Y: "
-					+ realWorldCoords.min_y + " to " + realWorldCoords.max_y + "<br/>";
+					+ "<br/><hr />X: " + Math.round(realWorldCoords.min_x *1000) / 1000 + " to " + Math.round(realWorldCoords.max_x *1000) / 1000 + "<br/>Y: "
+					+ Math.round(realWorldCoords.min_y *1000) / 1000 + " to " + Math.round(realWorldCoords.max_y *1000) / 1000 + "<br/>";
 			if (this.data_extent.max_slices > 1) {
-				text += ("Z: "+ realWorldCoords.min_z + " to " + realWorldCoords.max_z + "<br />");
+				text += ("Z: "+ Math.round(realWorldCoords.min_z *1000) / 1000 + " to " + Math.round(realWorldCoords.max_z *1000) / 1000 + "<br />");
 			}
 			log.html(text + "<hr />");
 		}
