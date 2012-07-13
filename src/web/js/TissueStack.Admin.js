@@ -128,7 +128,7 @@ TissueStack.Admin.prototype = {
 	},
 	registerFileUpload : function () {
 		var _this = this;
-		
+		 this.uploadProgress();
 		 $("#uploadForm").submit(function(){
 			$(this).ajaxSubmit({ 	
 				url :"/backend/admin/upload/json?session=" + _this.session,
@@ -151,6 +151,7 @@ TissueStack.Admin.prototype = {
 					}
 					_this.displayUploadDirectory();
 					_this.replaceErrorMessage("File Has Been Successfully Uploaded!");
+					$('.error_message').css("background", "#32CD32");
 				},
 				error: function(jqXHR, textStatus, errorThrown) {
 					_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
@@ -159,6 +160,27 @@ TissueStack.Admin.prototype = {
 			});
 			return false;
 		});
+	},
+	uploadProgress : function () {
+		var _this = this;
+		var bar = $('.bar');
+		var percent = $('.percent');
+		   
+		$('#uploadForm').ajaxForm({
+		    beforeSend: function() {
+		        var percentVal = '0%';
+		        bar.width(percentVal)
+		        percent.html(percentVal);
+		    },
+		    uploadProgress: function(event, position, total, percentComplete) {
+		        var percentVal = percentComplete + '%';
+		        bar.width(percentVal)
+		        percent.html(percentVal);
+		    },
+		    complete: function (xhr) {
+		    	//_this.replaceErrorMessage(xhr.responseText);
+		    }
+		}); 
 	},
 	replaceErrorMessage : function (message) {
 		var excludes = message;
@@ -174,7 +196,7 @@ TissueStack.Admin.prototype = {
 		$('.error_message').html(message + "<br/>")  
 			.append().hide().fadeIn(1500, function() {  
 				$('.error_message').append("");  
-		}).fadeOut(5000); 	
+		}).fadeOut(5000);	
 	},
 	registerAddToDataSetHandler : function () {
 		var _this = this;
@@ -213,6 +235,7 @@ TissueStack.Admin.prototype = {
 	 								if (TissueStack.tablet) TissueStack.dataSetNavigation.addDataSetToTabletTree(addedDataSet);
 	 								_this.displayUploadDirectory();
 	 								_this.replaceErrorMessage("Data Set Has Been Added Successfully!");
+	 								$('.error_message').css("background", "#32CD32");
 	 								return false;
  								}
  							},
