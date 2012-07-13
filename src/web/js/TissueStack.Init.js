@@ -124,6 +124,9 @@ TissueStack.InitUserInterface = function () {
 				plane.changeToZoomLevel(0);
 				
 			}
+			// pre-emptive erasal
+			plane.eraseCanvasContent();
+			
 			// fill canvases
 			plane.queue.drawLowResolutionPreview();
 			plane.queue.drawRequestAfterLowResolutionPreview();
