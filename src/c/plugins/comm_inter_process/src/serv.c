@@ -113,7 +113,7 @@ void		check_modified_fd(t_serv_comm *s)
 
 void		reset_set_fd_to_monitor(t_serv_comm *s)
 {
-  t_serv_clients *c;
+  t_serv_clients *c = NULL;
 
   s->bigger_fd = 0;
   FD_ZERO(&(s->rd_fds));
@@ -155,6 +155,7 @@ int		serv_init_connect(t_serv_comm *s)
       fprintf(stderr, "Socket creation Error\n");
       return (-1);
     }
+  s->queue_size = 50;
   unlink("/tmp/tissue_stack_communication");
   memset(&(s->serv_addr), 0, sizeof(s->serv_addr));
   s->serv_addr.sun_family = AF_UNIX; //AF_INET;

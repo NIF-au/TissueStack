@@ -183,9 +183,15 @@ void		prompt_exec(char **commands, t_tissue_stack *general, void *box)
       if (strcmp(general->functions[i].name, prog) == 0)
 	{
 	  p = get_plugin_by_name(args->name, general->first);
-	  if (p && p->busy != 0)
-	    printf("%s: Plugin Busy. Try again later\n", args->name);
-	  else if (!p && (strcmp(prog, "load") != 0 || strcmp(prog, "try_start") != 0) &&
+	  if (p && p->busy != 0) {
+		  printf("%s: Plugin busy. We wait for a bit...\n", args->name);
+		  int waitLoops = 0;
+		  while (p && p->busy != 0 && waitLoops < 5) {
+	    	  usleep(100000);
+	    	  waitLoops++;
+	      }
+		  if (p && p->busy != 0) printf("%s: Plugin TOO Busy. Try again later\n", args->name);
+	  } else if (!p && (strcmp(prog, "load") != 0 || strcmp(prog, "try_start") != 0) &&
 		   (strcmp(prog, "start") == 0 || strcmp(prog, "unload") == 0))
 	    printf("%s: Unknown Plugin\n", args->name);
 	  else

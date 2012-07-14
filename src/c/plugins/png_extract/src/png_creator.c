@@ -129,7 +129,6 @@ void		fclose_check(FILE *file)
       printf("Closing 2\n");
       //close(fileno(file));
       //fclose(file);
-      //shutdown(fileno(file), 2);
       fclose(file);
     }
 }

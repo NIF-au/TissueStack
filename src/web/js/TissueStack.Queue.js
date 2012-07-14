@@ -180,7 +180,7 @@ TissueStack.Queue.prototype = {
 		// append session id & timestamp for image service
 		if (!this.canvas.getDataExtent().getIsTiled()) {
 			src += ("&id=" + this.canvas.sessionId);
-			src += ("&timestamp=" + this.latestDrawRequestTimestamp);
+			src += ("&timestamp=" + (this.latestDrawRequestTimestamp == 0 ? new Date().getTime() : this.latestDrawRequestTimestamp));
 		}
 		imageTile.src = src; 
 		
