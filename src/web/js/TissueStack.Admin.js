@@ -179,7 +179,7 @@ TissueStack.Admin.prototype = {
 		    		if(filePath.match(/fakepath/)){
 		    			filePath = filePath.replace(/C:\\fakepath\\/i, '');	    		
 		    		}
-		    		if (filePath == uploaded_file.value || filePath == '') {
+		    		if (_this.session == null || filePath == uploaded_file.value || filePath == '') {
 		    			check_Success = null;
 		    		}	
 		    	});
