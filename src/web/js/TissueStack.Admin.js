@@ -128,7 +128,7 @@ TissueStack.Admin.prototype = {
 	},
 	registerFileUpload : function () {
 		var _this = this;
-		 this.uploadProgress();
+		_this.uploadProgress();
 		 $("#uploadForm").submit(function(){
 			$(this).ajaxSubmit({ 	
 				url :"/backend/admin/upload/json?session=" + _this.session,
@@ -141,7 +141,7 @@ TissueStack.Admin.prototype = {
 					
 					if (data.error) {
 						var message = "Error: " + (data.error.message ? data.error.message : " No File Submission!");
-						_this.replaceErrorMessage(message);				
+						_this.replaceErrorMessage(message);
 						return false;
 					}
 					
@@ -173,12 +173,23 @@ TissueStack.Admin.prototype = {
 		        percent.html(percentVal);
 		    },
 		    uploadProgress: function(event, position, total, percentComplete) {
-		        var percentVal = percentComplete + '%';
-		        bar.width(percentVal)
-		        percent.html(percentVal);
+		    	var check_Success = 1;
+		    	$.each($('.uploaded_file'), function(i, uploaded_file) {
+		    		var filePath = $('#filename_1').val();
+		    		if(filePath.match(/fakepath/)){
+		    			filePath = filePath.replace(/C:\\fakepath\\/i, '');	    		
+		    		}
+		    		if (filePath == uploaded_file.value || filePath == '') {
+		    			check_Success = null;
+		    		}	
+		    	});
+		    	if(check_Success !=null){
+			    	var percentVal = percentComplete + '%';
+			    	bar.width(percentVal)
+			    	percent.html(percentVal);
+		    	}
 		    },
 		    complete: function (xhr) {
-		    	//_this.replaceErrorMessage(xhr.responseText);
 		    }
 		}); 
 	},
