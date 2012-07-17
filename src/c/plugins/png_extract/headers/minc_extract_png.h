@@ -30,6 +30,7 @@ typedef	struct	s_png_extract
   char		*service;
   int		square_size;
   int		done;
+  char		*root_path;
   pthread_cond_t	cond;
   pthread_mutex_t	mut;
 }		t_png_extract;

@@ -289,6 +289,8 @@ void		*start(void *args)
       png_args->w_position = atoi(a->commands[12]);
       png_args->start_h = atoi(a->commands[11]);
       png_args->start_w = atoi(a->commands[12]);
+      if (a->commands[14] != NULL)
+	png_args->root_path = strdup(a->commands[14]);
     }
   else if (strcmp(png_args->service, "images") == 0)
     {
@@ -298,6 +300,8 @@ void		*start(void *args)
       png_args->start_w = atoi(a->commands[11]);
       png_args->h_position_end = atoi(a->commands[12]);
       png_args->w_position_end = atoi(a->commands[13]);
+      if (a->commands[15] != NULL)
+	png_args->root_path = strdup(a->commands[15]);
     }
   else
     {
@@ -306,6 +310,11 @@ void		*start(void *args)
 	  fprintf(stderr, "Undefined kind. Please choose 'tiles' or 'images'\n");
 	  a->this->busy = 0;
 	  return (NULL);
+	}
+      else
+	{
+	  if (a->commands[11] != NULL)
+	    png_args->root_path = strdup(a->commands[11]);
 	}
     }
   png_args->done = 0;
