@@ -248,7 +248,8 @@ void		*start(void *args)
       a->this->busy = 0;
       if (volume == NULL) {
     	  printf("Failed to load volume: %s\n", a->commands[0] == NULL ? "no file given" : a->commands[0]);
-    	  fclose(socketDescriptor);
+    	  if (socketDescriptor != NULL)
+	    fclose(socketDescriptor);
     	  return NULL;
       }
     }

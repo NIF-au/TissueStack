@@ -183,16 +183,18 @@ void		print_png(char *hyperslab, t_vol *volume, int current_dimension,
     }
   DestroyImage(tmp);
 
+  /*
   char dir [200];
   sprintf(dir, "/mnt/sata/png/%s/%i",volume->dim_name[current_dimension], current_slice);
   int ret = mkdir(dir, 0777);
   printf("ret: %s %i\n", dir, ret);
   perror("mkdir\n");
+  */
 
   char		_yop_[200];
-  sprintf(_yop_, "/mnt/sata/png/%s/%i/%i_%i.png", volume->dim_name[current_dimension], current_slice,  a->info->start_h, a->info->start_w);
+  sprintf(_yop_, "/home/oliver/png/%s_%i.png", volume->dim_name[current_dimension], current_slice);
   strcpy(img->filename, _yop_);
-  
+
   if (a->info->quality != 1)
     {
       tmp = img;
@@ -235,17 +237,18 @@ void		print_png(char *hyperslab, t_vol *volume, int current_dimension,
 	}
       DestroyImage(tmp);
     }
-
-  if (fcntl(fileno(a->file), F_GETFL) != -1)
-  {
-	  image_info->file = a->file;
+    printf("%p\n", a->file);
+    if (a->file && fcntl(fileno(a->file), F_GETFL) != -1)
+    {
+      printf("hello c'est normal que je seg\n");
+      image_info->file = a->file;
       WriteImage(image_info, img);
       fclose_check(a->file);
-  }
+    }
   else {
-	  WriteImage(image_info, img);
+    WriteImage(image_info, img);
   }
-
   DestroyImage(img);
   DestroyImageInfo(image_info);
+  a->info->done = 0;
 }
