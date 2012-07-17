@@ -16,9 +16,13 @@ typedef	struct	s_png_extract
   int		**dim_start_end;
   unsigned int	total_slices_to_do;
   unsigned int	slices_done;
+  float		percent;
   unsigned int	step;
   float		scale;
   int		quality;
+  int		start_h;
+  int		start_w;
+  char		*dim_name;
   int		h_position;
   int		w_position;
   int		h_position_end;
@@ -26,6 +30,8 @@ typedef	struct	s_png_extract
   char		*service;
   int		square_size;
   int		done;
+  char		*root_path;
+  pthread_cond_t	cond;
   pthread_mutex_t	mut;
 }		t_png_extract;
 

@@ -10,9 +10,10 @@ public class TissueStack {
             throw new RuntimeException("Failed to load native library!", failedToLoadNativeLibrary);
         }
     }
-	
-    public native MincInfo getMincInfo(String fileName);
 
+    public native MincInfo getMincInfo(String fileName);
+    public native void tileMincVolume(String fileName, String dimension, int start, int end, boolean preview);
+    
     // main method was for testing only
     public static void main(String[] args) {
     	

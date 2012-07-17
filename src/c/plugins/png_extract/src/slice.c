@@ -3,7 +3,6 @@
 unsigned int		get_slices_max(t_vol *volume)
 {
   // get the larger number of slices possible
-  printf("volume_size =\nX = %i\nY = %i\nZ = %i\n", volume->size[X], volume->size[Y], volume->size[Z]);
   if ((volume->size[X] * volume->size[Y]) > (volume->size[Z] * volume->size[X]))
     {
       if ((volume->size[X] * volume->size[Y]) > (volume->size[Z] * volume->size[Y]))
@@ -65,6 +64,8 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
   int		width;
   int		height;
   char	        *hyperslab;
+  int		w_max_iteration;
+  int		h_max_iteration;
 
   // allocation of a hyperslab (portion of the file, can be 1 slice or 1 demension...)
   hyperslab =  malloc(volume->slices_max * sizeof(*hyperslab));
@@ -85,10 +86,39 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
       miget_real_value_hyperslab(volume->minc_volume, MI_TYPE_UBYTE, start, count, hyperslab);
       pthread_mutex_unlock(&(a->p->lock));
       // print png
-      print_png(hyperslab, volume, current_dimension, current_slice, width, height, a);
+      if (a->info->h_position == -1 && a->info->w_position == -1)
+	{
+	  a->info->h_position = 0;
+	  a->info->start_h = 0;
+	  a->info->w_position = 0;
+	  a->info->start_w = 0;
+
+	  h_max_iteration = height / a->info->square_size;
+	  w_max_iteration = width / a->info->square_size;
+	  while (a->info->start_h <= h_max_iteration)
+	    {
+	      printf("h_position = %i\n", a->info->h_position);
+	      a->info->start_w = 0;
+	      while (a->info->start_w <= w_max_iteration)
+		{
+	      a->info->h_position = a->info->start_h;
+	      a->info->w_position = a->info->start_w;
+
+		  a->info->done = 0;
+		  printf("w_position = %i\n", a->info->w_position);
+		  print_png(hyperslab, volume, current_dimension, current_slice, width, height, a);
+		  a->info->start_w++;
+		}
+	      a->info->start_h++;
+	    }
+	}
+      else
+	print_png(hyperslab, volume, current_dimension, current_slice, width, height, a);
+
       pthread_mutex_lock(&(a->p->lock));
       a->info->slices_done++;
       pthread_mutex_unlock(&(a->p->lock));
+      pthread_cond_signal(&(a->info->cond));
       current_slice++;
     }
   start[current_dimension] = 0;
