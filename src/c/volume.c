@@ -7,14 +7,9 @@ int		init_volume(t_vol *volume, char *path)
 
   path_len = strlen(path);
   volume->dim_nb = 3;
-  volume->dimensions = malloc(volume->dim_nb * sizeof(*volume->dimensions));
-  volume->starts = malloc(volume->dim_nb * sizeof(*volume->starts));
-  volume->steps = malloc(volume->dim_nb * sizeof(*volume->steps));
-  volume->size = malloc(volume->dim_nb * sizeof(*volume->size));
   volume->path = malloc((path_len + 1) * sizeof(*volume->path));
   volume->path[path_len] = '\0';
   memcpy(volume->path, path, path_len);
-  volume->dim_name = malloc(volume->dim_nb * sizeof(*volume->dim_name));
   if (volume->path == NULL)
     return (-1);
   // open the minc file
@@ -23,6 +18,19 @@ int		init_volume(t_vol *volume, char *path)
       fprintf(stderr, "Error opening input file: %d.\n", result);
       return (-1);
     }
+
+  if ((result = miget_volume_dimension_count(volume->minc_volume, 0, 0, &volume->dim_nb)) != MI_NOERROR)
+    {
+      fprintf(stderr, "Error getting number of dimensions: %d.\n", result);
+      return (-1);
+    }
+
+  volume->dimensions = malloc(volume->dim_nb * sizeof(*volume->dimensions));
+  volume->starts = malloc(volume->dim_nb * sizeof(*volume->starts));
+  volume->steps = malloc(volume->dim_nb * sizeof(*volume->steps));
+  volume->size = malloc(volume->dim_nb * sizeof(*volume->size));
+  volume->dim_name = malloc(volume->dim_nb * sizeof(*volume->dim_name));
+
   // get the volume dimensions
   if ((result = miget_volume_dimensions(volume->minc_volume, MI_DIMCLASS_SPATIAL, MI_DIMATTR_ALL,
 					MI_DIMORDER_FILE, volume->dim_nb, volume->dimensions)) == MI_ERROR)
@@ -50,7 +58,7 @@ int		init_volume(t_vol *volume, char *path)
       miget_dimension_name (volume->dimensions[1], &volume->dim_name[1]) != MI_NOERROR ||
       miget_dimension_name (volume->dimensions[2], &volume->dim_name[2]))
     {
-      fprintf(stderr, "Error getting dimensiosn name.\n");
+      fprintf(stderr, "Error getting dimensions name.\n");
       return (-1);
     }
   // get slices_max

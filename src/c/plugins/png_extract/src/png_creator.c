@@ -144,6 +144,8 @@ void		print_png(char *hyperslab, t_vol *volume, int current_dimension,
   ImageInfo	*image_info;
   int		kind;
 
+
+  printf("Print_png: h = %i - w = %i\n", a->info->h_position, a->info->w_position);
   kind = set_service_type(a);
   convert_tiles_to_pixel_coord(a);
   //  pthread_mutex_lock(&a->info->mut);
@@ -181,7 +183,10 @@ void		print_png(char *hyperslab, t_vol *volume, int current_dimension,
     }
   DestroyImage(tmp);
 
-  strcpy(img->filename, "/home/oliver/hello.png");
+  char		_yop_[200];
+
+  sprintf(_yop_, "/home/oliver/png/%s-%i_%i_%i.png", volume->dim_name[current_dimension], current_slice, a->info->h_position, a->info->w_position);
+  strcpy(img->filename, _yop_);
   //img = SampleImage(img, 170, 328, &exception);
 
   if (a->info->quality != 1)
