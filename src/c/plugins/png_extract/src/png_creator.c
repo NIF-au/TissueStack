@@ -144,6 +144,8 @@ void		print_png(char *hyperslab, t_vol *volume, int current_dimension,
   ImageInfo	*image_info;
   int		kind;
 
+
+  printf("Print_png: h = %i - w = %i\n", a->info->h_position, a->info->w_position);
   kind = set_service_type(a);
   convert_tiles_to_pixel_coord(a);
   //  pthread_mutex_lock(&a->info->mut);
@@ -181,10 +183,6 @@ void		print_png(char *hyperslab, t_vol *volume, int current_dimension,
     }
   DestroyImage(tmp);
 
-  printf("Dimension: %s, Slice: %i, h_pos: %i, w_pos: %i\n",
-		  volume->dim_name[current_dimension], current_slice, a->info->start_h, a->info->start_w);
-
-
   char dir [200];
   sprintf(dir, "/mnt/sata/png/%s/%i",volume->dim_name[current_dimension], current_slice);
   int ret = mkdir(dir, 0777);
@@ -192,9 +190,9 @@ void		print_png(char *hyperslab, t_vol *volume, int current_dimension,
   perror("mkdir\n");
 
   char		_yop_[200];
-  sprintf(_yop_, "/mnt/sata/png/%s/%i/%i_%i.png", volume->dim_name[current_dimension], current_slice, a->info->start_h, a->info->start_w);
+  sprintf(_yop_, "/mnt/sata/png/%s/%i/%i_%i.png", volume->dim_name[current_dimension], current_slice,  a->info->start_h, a->info->start_w);
   strcpy(img->filename, _yop_);
-
+  
   if (a->info->quality != 1)
     {
       tmp = img;
@@ -245,7 +243,6 @@ void		print_png(char *hyperslab, t_vol *volume, int current_dimension,
       fclose_check(a->file);
   }
   else {
-	  printf("TILE REQUEST \n");
 	  WriteImage(image_info, img);
   }
 

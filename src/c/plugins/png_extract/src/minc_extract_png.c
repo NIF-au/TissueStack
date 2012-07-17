@@ -1,21 +1,35 @@
 #include "minc_extract_png.h"
 
+void		get_percent(FILE *file, t_png_extract *a)
+{
+  char		buff[20];
+
+  if (a->percent > 100)
+    a->percent = 100;
+  sprintf(buff, "%.2f", a->percent);
+  if (file != NULL)
+    {
+      fwrite(buff, 1, strlen(buff), file);
+      return;
+    }
+  printf("%.2f%%\n", a->percent);
+}
+
 void		*percentage(void *args)
 {
   t_png_args	*a;
-  float       	percent;
 
   a = (t_png_args *)args;
-  percent = 0;
-  while (percent < 100)
+  a->info->percent = 0;
+  while (a->info->percent < 100)
     {
-      pthread_mutex_lock(&(a->p->lock));
-      percent = (100 / (float)a->info->total_slices_to_do) * a->info->slices_done;
-      //  printf("\r%.2f - %u Slices done on %u", percent, a->info->slices_done, a->info->total_slices_to_do);
-      pthread_mutex_unlock(&(a->p->lock));
-      usleep(1000);
+      pthread_mutex_lock(&(a->info->mut));
+      if (a->info->percent < 100)
+	pthread_cond_wait(&(a->info->cond), &(a->info->mut));
+      a->info->percent = (100 / (float)a->info->total_slices_to_do) * a->info->slices_done;
+      pthread_mutex_unlock(&(a->info->mut));
+      //usleep(1000);
     }
-  //  printf("\r%.2f - %u Slices done on %u\n", (float)100, a->info->slices_done, a->info->total_slices_to_do);
   a->this->busy = 0;
   free(a);
   return (NULL);
@@ -195,6 +209,7 @@ void		*init(void *args)
   png_args->step = 0;
   png_args->dim_start_end = NULL;
   pthread_mutex_init(&png_args->mut, NULL);
+  pthread_cond_init(&png_args->cond, NULL);
   a->this->stock = (void*)png_args;
   InitializeMagick("./");
   /*
@@ -215,14 +230,13 @@ void		*start(void *args)
   t_vol		*volume;
   int		step;
   char		volume_load[200];
+  FILE		*socketDescriptor;
 
   a = (t_args_plug *)args;
-
-  FILE * socketDescriptor = (FILE*)a->box;
-
+  socketDescriptor = (FILE*)a->box;
   if ((volume = a->general_info->get_volume(a->commands[0], a->general_info)) == NULL)
     {
-	  a->this->busy = 1;
+      a->this->busy = 1;
       sprintf(volume_load, "file load %s", a->commands[0]);
       a->general_info->plug_actions(a->general_info, volume_load, NULL);
       int waitLoops = 0;
@@ -239,6 +253,12 @@ void		*start(void *args)
       }
     }
   png_args = (t_png_extract *)a->this->stock;
+  if (strcmp(a->commands[1], "percent") == 0)
+    {
+      get_percent((FILE*)a->box, png_args);
+      a->this->busy = 0;
+      return (NULL);
+    }
   if (check_input(a->commands))
     {
       a->this->busy = 0;
