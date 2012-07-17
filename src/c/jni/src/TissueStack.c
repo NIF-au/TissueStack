@@ -405,6 +405,7 @@ JNIEXPORT void JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMincVo
 	startMincInfoCommand = appendToBuffer(startMincInfoCommand, (char *) file);
 	startMincInfoCommand = appendToBuffer(startMincInfoCommand, " -1 -1 655 656 -1 -1 1 1 tiles 256 -1 -1 1 /mnt/sata/png/");
 	//TODO: hand in tiling options
+	// we need the base path from java, hand in the dimension params as arrays !
 	write(fileDescriptor, startMincInfoCommand->buffer, startMincInfoCommand->size);
 	shutdown(fileDescriptor, 2);
 	close(fileDescriptor);

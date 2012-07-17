@@ -97,7 +97,6 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
 	  w_max_iteration = width / a->info->square_size;
 	  while (a->info->start_h <= h_max_iteration)
 	    {
-	      printf("h_position = %i\n", a->info->h_position);
 	      a->info->start_w = 0;
 	      while (a->info->start_w <= w_max_iteration)
 		{
@@ -105,7 +104,6 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
 	      a->info->w_position = a->info->start_w;
 
 		  a->info->done = 0;
-		  printf("w_position = %i\n", a->info->w_position);
 		  print_png(hyperslab, volume, current_dimension, current_slice, width, height, a);
 		  a->info->start_w++;
 		}

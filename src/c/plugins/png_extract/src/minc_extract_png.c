@@ -154,7 +154,7 @@ int		check_input(char **in)
   int		j;
 
   i = 1;
-  while (in[i] != NULL)
+  while (in[i + 1] != NULL)
     {
       if (strcmp(in[i], "-1") != 0 && strcmp(in[i], "tiles") != 0 &&
 	  strcmp(in[i], "images") != 0 && strcmp(in[i], "full") != 0)
@@ -248,7 +248,8 @@ void		*start(void *args)
       a->this->busy = 0;
       if (volume == NULL) {
     	  printf("Failed to load volume: %s\n", a->commands[0] == NULL ? "no file given" : a->commands[0]);
-    	  fclose(socketDescriptor);
+    	  if (socketDescriptor != NULL)
+	    fclose(socketDescriptor);
     	  return NULL;
       }
     }

@@ -10,6 +10,7 @@
 #include <magick/api.h>
 
 #include "core.h"
+#include "utils.h"
 
 typedef	struct	s_png_extract
 {
