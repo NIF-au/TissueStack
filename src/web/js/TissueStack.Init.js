@@ -586,10 +586,8 @@ $(document).ready(function() {
 		TissueStack.BindDataSetDependentEvents();
 		TissueStack.BindGlobalEvents();
 
-		// add admin functionality to desktop
-		if (TissueStack.desktop) {
-			TissueStack.admin = new TissueStack.Admin();
-		}
+		// add admin functionality to all versions
+		TissueStack.admin = new TissueStack.Admin();
 	};
 	// call asynchronous init
 	TissueStack.Init(afterLoadingRoutine);
