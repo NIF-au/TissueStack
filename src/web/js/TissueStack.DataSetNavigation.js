@@ -324,12 +324,12 @@ TissueStack.DataSetNavigation.prototype = {
 							'<label for="radio-'+ dataSet.local_id +'"'+'>Overlay ON</label>'+
 							'<input type="radio" name="radio-' + dataSet.local_id + '"'+' id="radio-off-'+ dataSet.local_id +'"'+' value="off" />'+
 							'<label for="radio-off-'+ dataSet.local_id + '"'+'>Overlay OFF</label>'+
-							'</fieldset></div>';
-																										
+							'</fieldset></div>';																							
 		}
 		
-		$('#tablet_tree').append(htmlString);
-		$("#tablet_tree").trigger("create");
+		$('#tablet_tree').append(htmlString)
+		.trigger("create").controlgroup('refresh', true);
+		
 		
 		this.getSelectedTabletTree(dataSet);
 	},
