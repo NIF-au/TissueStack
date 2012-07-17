@@ -180,6 +180,8 @@ int		check_input(char **in)
 
 int		check_range(int **d, t_vol *v)
 {
+  if (v == NULL) printf("Volume is NULL\n");
+
   int		i;
 
   i = 0;
@@ -228,19 +230,27 @@ void		*start(void *args)
   t_vol		*volume;
   int		step;
   char		volume_load[200];
+  FILE		*socketDescriptor;
 
   a = (t_args_plug *)args;
-  a->this->busy = 0;
+  socketDescriptor = (FILE*)a->box;
   if ((volume = a->general_info->get_volume(a->commands[0], a->general_info)) == NULL)
     {
+      a->this->busy = 1;
       sprintf(volume_load, "file load %s", a->commands[0]);
       a->general_info->plug_actions(a->general_info, volume_load, NULL);
-      usleep(100000);
-      volume = a->general_info->get_volume(a->commands[0], a->general_info);
-      printf("%p\n\n", volume);
-      //write(2, "MINC Volume not found\n", strlen("MINC Volume not found\n"));
-      //a->this->busy = 0;
-      //return (NULL);
+      int waitLoops = 0;
+      while (volume == NULL && waitLoops < 5) {
+    	  usleep(100000);
+    	  volume = a->general_info->get_volume(a->commands[0], a->general_info);
+    	  waitLoops++;
+      }
+      a->this->busy = 0;
+      if (volume == NULL) {
+    	  printf("Failed to load volume: %s\n", a->commands[0] == NULL ? "no file given" : a->commands[0]);
+    	  fclose(socketDescriptor);
+    	  return NULL;
+      }
     }
   png_args = (t_png_extract *)a->this->stock;
   if (strcmp(a->commands[1], "percent") == 0)
@@ -301,7 +311,7 @@ void		*start(void *args)
   png_args->done = 0;
   png_args->total_slices_to_do = get_total_slices_to_do(volume, png_args->dim_start_end);
   step = (strcmp(png_args->service, "tiles") == 0 ? atoi(a->commands[13]) : (strcmp(png_args->service, "full") == 0 ? atoi(a->commands[10]) : atoi(a->commands[14])));
-  png_creation_lunch(volume, step, a->general_info->tp, png_args, a->this, (FILE*)a->box);
+  png_creation_lunch(volume, step, a->general_info->tp, png_args, a->this, socketDescriptor);
   return (NULL);
 }
 

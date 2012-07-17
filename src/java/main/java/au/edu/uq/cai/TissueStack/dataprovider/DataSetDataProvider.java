@@ -81,6 +81,12 @@ public final class DataSetDataProvider {
 			// undo if we were able to add the data set master
 			try {
 				if (dataset.getId() != 0) {
+					try {
+						write.rollback();
+					} catch (Exception e) {
+						// we can safely ignore that
+					}
+					dataset = em.find(DataSet.class, dataset.getId());
 					write = em.getTransaction();
 					write.begin();
 					em.remove(dataset);

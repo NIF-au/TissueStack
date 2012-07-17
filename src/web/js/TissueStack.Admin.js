@@ -128,7 +128,7 @@ TissueStack.Admin.prototype = {
 	},
 	registerFileUpload : function () {
 		var _this = this;
-		
+		_this.uploadProgress();
 		 $("#uploadForm").submit(function(){
 			$(this).ajaxSubmit({ 	
 				url :"/backend/admin/upload/json?session=" + _this.session,
@@ -141,7 +141,7 @@ TissueStack.Admin.prototype = {
 					
 					if (data.error) {
 						var message = "Error: " + (data.error.message ? data.error.message : " No File Submission!");
-						_this.replaceErrorMessage(message);				
+						_this.replaceErrorMessage(message);
 						return false;
 					}
 					
@@ -151,6 +151,7 @@ TissueStack.Admin.prototype = {
 					}
 					_this.displayUploadDirectory();
 					_this.replaceErrorMessage("File Has Been Successfully Uploaded!");
+					$('.error_message').css("background", "#32CD32");
 				},
 				error: function(jqXHR, textStatus, errorThrown) {
 					_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
@@ -159,6 +160,38 @@ TissueStack.Admin.prototype = {
 			});
 			return false;
 		});
+	},
+	uploadProgress : function () {
+		var _this = this;
+		var bar = $('.bar');
+		var percent = $('.percent');
+		   
+		$('#uploadForm').ajaxForm({
+		    beforeSend: function() {
+		        var percentVal = '0%';
+		        bar.width(percentVal)
+		        percent.html(percentVal);
+		    },
+		    uploadProgress: function(event, position, total, percentComplete) {
+		    	var check_Success = 1;
+		    	$.each($('.uploaded_file'), function(i, uploaded_file) {
+		    		var filePath = $('#filename_1').val();
+		    		if(filePath.match(/fakepath/)){
+		    			filePath = filePath.replace(/C:\\fakepath\\/i, '');	    		
+		    		}
+		    		if (_this.session == null || filePath == uploaded_file.value || filePath == '') {
+		    			check_Success = null;
+		    		}	
+		    	});
+		    	if(check_Success !=null){
+			    	var percentVal = percentComplete + '%';
+			    	bar.width(percentVal)
+			    	percent.html(percentVal);
+		    	}
+		    },
+		    complete: function (xhr) {
+		    }
+		}); 
 	},
 	replaceErrorMessage : function (message) {
 		var excludes = message;
@@ -174,7 +207,7 @@ TissueStack.Admin.prototype = {
 		$('.error_message').html(message + "<br/>")  
 			.append().hide().fadeIn(1500, function() {  
 				$('.error_message').append("");  
-		}).fadeOut(5000); 	
+		}).fadeOut(5000);	
 	},
 	registerAddToDataSetHandler : function () {
 		var _this = this;
@@ -213,6 +246,7 @@ TissueStack.Admin.prototype = {
 	 								if (TissueStack.tablet) TissueStack.dataSetNavigation.addDataSetToTabletTree(addedDataSet);
 	 								_this.displayUploadDirectory();
 	 								_this.replaceErrorMessage("Data Set Has Been Added Successfully!");
+	 								$('.error_message').css("background", "#32CD32");
 	 								return false;
  								}
  							},

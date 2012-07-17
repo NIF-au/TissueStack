@@ -109,7 +109,7 @@ int		is_not_num(char *str)
   i = 0;
   while (str[i] != '\0' && i < strlen(str))
     {
-      if (str[i] >= '0' || str[i] <= '9' || (str[i] == '.' && (str[i +1] && (str[i + 1] >= '0' || str[i + 1] <= '9'))))
+      if (str[i] >= '0' || str[i] <= '9' || (str[i] == '.' && (str[i + 1] && (str[i + 1] >= '0' || str[i + 1] <= '9'))))
 	i++;
       else
 	return (1);
@@ -327,7 +327,7 @@ int		serv_init_connect(t_serv_comm *s)
       fprintf(stderr, "Bind Error\n");
       return (-1);
     }
-  listen(s->sock_serv, 5);
+  listen(s->sock_serv, 75);
   return (0);
 }
 

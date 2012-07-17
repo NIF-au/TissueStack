@@ -345,6 +345,10 @@ div#login p {
 	line-height: 30px;
 }
 
+.progress { position:relative; width:400px; border: 1px solid #ddd; padding: 1px; border-radius: 3px; }
+.bar { background-color: #70e0b4; width:0%; height:20px; border-radius: 3px;}
+.percent { position:absolute; display:inline-block; top:3px; left:48%; }
+
 /*ERROR MESSAGE STYLE*/
 .error_message{
 	font-size: 22px;
