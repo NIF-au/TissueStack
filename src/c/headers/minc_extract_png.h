@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <png.h>
-#include "./thread_pool.h"
+#include "thread_pool.h"
 
 typedef	struct	s_options
 {

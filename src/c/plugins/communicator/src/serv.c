@@ -242,6 +242,7 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
 		  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
 		  scale, quality, service, y, x, y_end, x_end);
 	}
+      printf("%s\n", comm);
       s->general->plug_actions(s->general, comm, file);
     }
 }

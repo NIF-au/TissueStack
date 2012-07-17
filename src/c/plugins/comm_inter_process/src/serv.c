@@ -77,6 +77,7 @@ void		client_diconnected(t_serv_comm *s, int sock)
       tmp = c;
       c = c->next;
     }
+  printf("JUST DISCONNECTED\n");
 }
 
 void		check_modified_fd(t_serv_comm *s)

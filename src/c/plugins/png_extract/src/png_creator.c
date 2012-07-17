@@ -1,4 +1,5 @@
 #include "minc_extract_png.h"
+#include <sys/stat.h>
 #include "math.h"
 
 void		set_grayscale(png_byte *ptr, float val)
@@ -180,8 +181,19 @@ void		print_png(char *hyperslab, t_vol *volume, int current_dimension,
     }
   DestroyImage(tmp);
 
-  strcpy(img->filename, "/home/oliver/hello.png");
-  //img = SampleImage(img, 170, 328, &exception);
+  printf("Dimension: %s, Slice: %i, h_pos: %i, w_pos: %i\n",
+		  volume->dim_name[current_dimension], current_slice, a->info->start_h, a->info->start_w);
+
+
+  char dir [200];
+  sprintf(dir, "/mnt/sata/png/%s/%i",volume->dim_name[current_dimension], current_slice);
+  int ret = mkdir(dir, 0777);
+  printf("ret: %s %i\n", dir, ret);
+  perror("mkdir\n");
+
+  char		_yop_[200];
+  sprintf(_yop_, "/mnt/sata/png/%s/%i/%i_%i.png", volume->dim_name[current_dimension], current_slice, a->info->start_h, a->info->start_w);
+  strcpy(img->filename, _yop_);
 
   if (a->info->quality != 1)
     {
@@ -202,6 +214,7 @@ void		print_png(char *hyperslab, t_vol *volume, int current_dimension,
 	}
       DestroyImage(tmp);
     }
+
   if (a->info->scale != 1)
     {
       tmp = img;
@@ -225,26 +238,17 @@ void		print_png(char *hyperslab, t_vol *volume, int current_dimension,
       DestroyImage(tmp);
     }
 
-
-  ///////////////////////////////////// TEST
-
-
-
-  /////////////////////////////////////
-
-
-  if (a->file)
-    {
-      image_info->file = a->file;
+  if (fcntl(fileno(a->file), F_GETFL) != -1)
+  {
+	  image_info->file = a->file;
       WriteImage(image_info, img);
-    }
-  else
-    WriteImage(image_info, img);
-  //fclose(a->file);
-  //  if (ftell(a->file) != -1)
-  fclose_check(a->file);
+      fclose_check(a->file);
+  }
+  else {
+	  printf("TILE REQUEST \n");
+	  WriteImage(image_info, img);
+  }
 
   DestroyImage(img);
   DestroyImageInfo(image_info);
-  //  DestroyMagick();
 }

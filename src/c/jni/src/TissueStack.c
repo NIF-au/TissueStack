@@ -107,17 +107,29 @@ JNIEXPORT jobject JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_getMinc
 	char * buffer = malloc(sizeof(buffer) * 1024);
 	size_t size = 0;
 
-	while ((size = read(fileDescriptor, buffer, 1024)) > 0) {
-		if (buffer[size] != '\0') {
-			buffer[size] = '\0';
+	while (1) {
+		size = recv(fileDescriptor, buffer, 1024, 0);
+		if (size <= 0 || buffer[size] == '\0') {
+			if (buffer[size] != '\0') { // for EOF scenario
+				buffer[size] = '\0';
+			}
+			response = appendToBuffer(response, buffer);
+			break;
 		}
+
 		// append to response
 		response = appendToBuffer(response, buffer);
 	}
-	shutdown(fileDescriptor, 2);
+	// close filedescriptor which should be closed aready actually
+	close(fileDescriptor);
 	// free temp buffer
 	free(buffer);
 
+	if (response == NULL) {
+		(*env)->ReleaseStringUTFChars(env, filename, file);
+		throwJavaException(env, "java/lang/RuntimeException", "0 byte content!");
+		return NULL;
+	}
 
 	// get token count
 	int numberOfTokens = countTokens(response->buffer, '|', '\\');
@@ -370,4 +382,34 @@ JNIEXPORT jobject JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_getMinc
 	(*env)->ReleaseStringUTFChars(env, filename, file);
 
 	return mincInfo;
+}
+
+JNIEXPORT void JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMincVolume
+		  (JNIEnv * env, jobject obj, jstring filename, jstring dimension, jint start, jint stop, jboolean preview) {
+	const char * file = (*env)->GetStringUTFChars(env, filename, NULL);
+	if (file == NULL) {
+		throwJavaException(env, "java/lang/RuntimeException", "Could not convert java to c string");
+		return;
+	}
+
+	int fileDescriptor = init_sock_comm_client("/tmp/tissue_stack_communication");
+	if (!fileDescriptor) {
+		(*env)->ReleaseStringUTFChars(env, filename, file);
+		throwJavaException(env, "java/lang/RuntimeException", "Could not establish unix socket to image server!");
+		return;
+	}
+
+	// load and start png extract plugin
+	t_string_buffer * startMincInfoCommand = NULL;
+	startMincInfoCommand = appendToBuffer(startMincInfoCommand, "start png ");
+	startMincInfoCommand = appendToBuffer(startMincInfoCommand, (char *) file);
+	startMincInfoCommand = appendToBuffer(startMincInfoCommand, " -1 -1 655 656 -1 -1 1 1 tiles 256 0 0 1");
+	//TODO: hand in tiling options
+	write(fileDescriptor, startMincInfoCommand->buffer, startMincInfoCommand->size);
+	shutdown(fileDescriptor, 2);
+	close(fileDescriptor);
+
+	free(startMincInfoCommand->buffer);
+	free(startMincInfoCommand);
+	(*env)->ReleaseStringUTFChars(env, filename, file);
 }

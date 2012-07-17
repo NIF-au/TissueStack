@@ -19,6 +19,8 @@ typedef	struct	s_png_extract
   unsigned int	step;
   float		scale;
   int		quality;
+  int		start_h;
+  int		start_w;
   int		h_position;
   int		w_position;
   int		h_position_end;

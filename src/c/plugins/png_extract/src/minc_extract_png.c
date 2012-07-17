@@ -267,11 +267,15 @@ void		*start(void *args)
       png_args->square_size = atoi(a->commands[10]);
       png_args->h_position = atoi(a->commands[11]);
       png_args->w_position = atoi(a->commands[12]);
+      png_args->start_h = atoi(a->commands[11]);
+      png_args->start_w = atoi(a->commands[12]);
     }
   else if (strcmp(png_args->service, "images") == 0)
     {
       png_args->h_position = atoi(a->commands[10]);
       png_args->w_position = atoi(a->commands[11]);
+      png_args->start_h = atoi(a->commands[10]);
+      png_args->start_w = atoi(a->commands[11]);
       png_args->h_position_end = atoi(a->commands[12]);
       png_args->w_position_end = atoi(a->commands[13]);
     }
