@@ -403,7 +403,7 @@ JNIEXPORT void JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMincVo
 	t_string_buffer * startMincInfoCommand = NULL;
 	startMincInfoCommand = appendToBuffer(startMincInfoCommand, "start png ");
 	startMincInfoCommand = appendToBuffer(startMincInfoCommand, (char *) file);
-	startMincInfoCommand = appendToBuffer(startMincInfoCommand, " -1 -1 655 656 -1 -1 1 1 tiles 256 -1 -1 1");
+	startMincInfoCommand = appendToBuffer(startMincInfoCommand, " -1 -1 655 656 -1 -1 1 1 tiles 256 -1 -1 1 /mnt/sata/png/");
 	//TODO: hand in tiling options
 	write(fileDescriptor, startMincInfoCommand->buffer, startMincInfoCommand->size);
 	shutdown(fileDescriptor, 2);

@@ -143,7 +143,9 @@ void		print_png(char *hyperslab, t_vol *volume, int current_dimension,
   RectangleInfo *portion;
   ImageInfo	*image_info;
   int		kind;
+  short 	streamToSocket;
 
+  streamToSocket = !a->file && fcntl(fileno(a->file), F_GETFL) != -1;
 
   printf("Print_png: h = %i - w = %i\n", a->info->h_position, a->info->w_position);
   kind = set_service_type(a);
@@ -236,7 +238,7 @@ void		print_png(char *hyperslab, t_vol *volume, int current_dimension,
       DestroyImage(tmp);
     }
 
-  if (fcntl(fileno(a->file), F_GETFL) != -1)
+  if (streamToSocket)
   {
 	  image_info->file = a->file;
       WriteImage(image_info, img);
