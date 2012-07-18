@@ -120,10 +120,16 @@ void		png_creation_lunch(t_vol *vol, int step, t_thread_pool *p, t_png_extract *
   t_png_args	*args;
   unsigned int	i;
   unsigned int	j;
-  unsigned int	nb_slices;
+  unsigned int	nb_slices = 0;
   int		**dim_start_end;
 
   i = 0;
+
+  // infinite loop paranoia
+  if (step <= 0) {
+	  step = 1;
+  }
+
   dim_start_end = png_general->dim_start_end;
   lunch_percent_display(p, vol, png_general, this);
   while (i < 3)
@@ -233,7 +239,7 @@ void		*start(void *args)
   FILE		*socketDescriptor;
 
   a = (t_args_plug *)args;
-  socketDescriptor = (FILE*)a->box;
+
   if ((volume = a->general_info->get_volume(a->commands[0], a->general_info)) == NULL)
     {
       a->this->busy = 1;
@@ -248,11 +254,13 @@ void		*start(void *args)
       a->this->busy = 0;
       if (volume == NULL) {
     	  printf("Failed to load volume: %s\n", a->commands[0] == NULL ? "no file given" : a->commands[0]);
-    	  if (socketDescriptor != NULL)
-	    fclose(socketDescriptor);
-    	  return NULL;
+   		  return NULL;
       }
     }
+
+  // please don't move this line up above the loading of the volume
+  socketDescriptor = (FILE*)a->box;
+
   png_args = (t_png_extract *)a->this->stock;
   if (strcmp(a->commands[1], "percent") == 0)
     {
@@ -283,6 +291,7 @@ void		*start(void *args)
   png_args->scale = (float)atof(a->commands[7]);
   png_args->quality = atoi(a->commands[8]);
   png_args->service = a->commands[9];
+
   if (strcmp(png_args->service, "tiles") == 0)
     {
       png_args->square_size = atoi(a->commands[10]);
@@ -320,6 +329,7 @@ void		*start(void *args)
     }
   png_args->done = 0;
   png_args->total_slices_to_do = get_total_slices_to_do(volume, png_args->dim_start_end);
+
   step = (strcmp(png_args->service, "tiles") == 0 ? atoi(a->commands[13]) : (strcmp(png_args->service, "full") == 0 ? atoi(a->commands[10]) : atoi(a->commands[14])));
   png_creation_lunch(volume, step, a->general_info->tp, png_args, a->this, socketDescriptor);
   return (NULL);
