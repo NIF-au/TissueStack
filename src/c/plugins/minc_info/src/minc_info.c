@@ -103,7 +103,7 @@ void *start(void *args) {
 		}
 	}
 
-	printf("Sending: %s\n", buffer->buffer);
+	printf("Sending: #%s#\n", buffer->buffer);
 
 	// write out response
 	send(*unix_socket, buffer->buffer, buffer->size, 0);
