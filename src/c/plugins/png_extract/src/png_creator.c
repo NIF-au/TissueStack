@@ -259,7 +259,7 @@ void print_png(char *hyperslab, t_vol *volume, int current_dimension,
         if (strcmp(a->info->service, "full") == 0 && a->info->quality != 1) {
         	sprintf(dir, "/%i.low.res.png", current_slice);
         } else {
-        	sprintf(dir, "/%i_%i.png", a->info->start_h, a->info->start_w);
+        	sprintf(dir, "/%i_%i.png", a->info->start_w, a->info->start_h);
         }
         finalPath = appendToBuffer(finalPath, dir);
         strcpy(img->filename, finalPath->buffer);
