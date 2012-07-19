@@ -78,7 +78,6 @@ int		check_and_set_position(int kind, int width, int height, t_png_args *a)
       i = check_pixels_range(width, height,
 			     a->info->h_position, a->info->w_position,
 			     a->info->h_position_end, a->info->w_position_end);
-      printf("***** i = %i  - h = %i - w = %i - he = %i - we = %i - height = %i - width = %i\n\n\n", i, a->info->h_position, a->info->w_position, a->info->h_position_end, a->info->w_position_end, height, width);
     }
   if (i != 0)
     return (1);
@@ -124,10 +123,8 @@ void		convert_tiles_to_pixel_coord(t_png_args *a)
 
 void		fclose_check(FILE *file)
 {
-  printf("Closing 1\n");
   if (file != NULL)
     {
-      printf("Closing 2\n");
       //close(fileno(file));
       //fclose(file);
       fclose(file);
@@ -145,7 +142,6 @@ void		print_png(char *hyperslab, t_vol *volume, int current_dimension,
   int		kind;
 
 
-  printf("Print_png: h = %i - w = %i\n", a->info->h_position, a->info->w_position);
   kind = set_service_type(a);
   convert_tiles_to_pixel_coord(a);
   //  pthread_mutex_lock(&a->info->mut);
@@ -184,15 +180,15 @@ void		print_png(char *hyperslab, t_vol *volume, int current_dimension,
   DestroyImage(tmp);
 
   /*
-  char dir [200];
-  sprintf(dir, "/mnt/sata/png/%s/%i",volume->dim_name[current_dimension], current_slice);
-  int ret = mkdir(dir, 0777);
-  printf("ret: %s %i\n", dir, ret);
-  perror("mkdir\n");
+    char dir [200];
+    sprintf(dir, "/mnt/sata/png/%s/%i",volume->dim_name[current_dimension], current_slice);
+    int ret = mkdir(dir, 0777);
+    printf("ret: %s %i\n", dir, ret);
+    perror("mkdir\n");
   */
 
   char		_yop_[200];
-  sprintf(_yop_, "/home/oliver/png/%s_%i.png", volume->dim_name[current_dimension], current_slice);
+  sprintf(_yop_, "/home/oliver/png/%s_%i_%i_%i.jpeg", volume->dim_name[current_dimension], current_slice, a->info->h_position, a->info->w_position);
   strcpy(img->filename, _yop_);
 
   if (a->info->quality != 1)
@@ -237,17 +233,18 @@ void		print_png(char *hyperslab, t_vol *volume, int current_dimension,
 	}
       DestroyImage(tmp);
     }
-    printf("%p\n", a->file);
-    if (a->file && fcntl(fileno(a->file), F_GETFL) != -1)
+
+  strcpy(image_info->magick, "JPEG");
+  if (a->file && fcntl(fileno(a->file), F_GETFL) != -1)
     {
-      printf("hello c'est normal que je seg\n");
       image_info->file = a->file;
       WriteImage(image_info, img);
       fclose_check(a->file);
     }
-  else {
-    WriteImage(image_info, img);
-  }
+  else
+    {
+      WriteImage(image_info, img);
+    }
   DestroyImage(img);
   DestroyImageInfo(image_info);
   a->info->done = 0;
