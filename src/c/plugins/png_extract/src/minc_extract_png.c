@@ -145,7 +145,7 @@ void		png_creation_lunch(t_vol *vol, int step, t_thread_pool *p, t_png_extract *
 		args->dim_start_end = generate_dims_start_end_thread(vol, i, dim_start_end[i][0], dim_start_end[i][0] + step);
 	      else
 		args->dim_start_end = generate_dims_start_end_thread(vol, i, dim_start_end[i][0], dim_start_end[i][1]);
-	      (*p->add)(get_all_slices_of_all_dimensions, (void *)args, p);
+	      /*(*p->add) */get_all_slices_of_all_dimensions((void *)args);//, p);
 	      j += step;
 	      dim_start_end[i][0] += step;
 	    }

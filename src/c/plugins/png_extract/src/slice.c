@@ -66,6 +66,8 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
   char	        *hyperslab;
   int		w_max_iteration;
   int		h_max_iteration;
+  int		save_h_position = a->info->h_position;
+  int		save_w_position = a->info->w_position;
 
   // allocation of a hyperslab (portion of the file, can be 1 slice or 1 demension...)
   hyperslab =  malloc(volume->slices_max * sizeof(*hyperslab));
@@ -86,6 +88,7 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
       miget_real_value_hyperslab(volume->minc_volume, MI_TYPE_UBYTE, start, count, hyperslab);
       pthread_mutex_unlock(&(a->p->lock));
       // print png
+      printf("%i - %i\n", a->info->h_position, a->info->w_position);
       if (a->info->h_position == -1 && a->info->w_position == -1)
 	{
 	  a->info->h_position = 0;
@@ -95,7 +98,9 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
 
 	  h_max_iteration = height / a->info->square_size;
 	  w_max_iteration = width / a->info->square_size;
-	  while (a->info->start_h <= h_max_iteration)
+      printf("MAX ITER %i - %i\n", h_max_iteration, w_max_iteration);
+
+      while (a->info->start_h <= h_max_iteration)
 	    {
 	      a->info->start_w = 0;
 	      while (a->info->start_w <= w_max_iteration)
@@ -103,21 +108,31 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
 	      a->info->h_position = a->info->start_h;
 	      a->info->w_position = a->info->start_w;
 
-		  a->info->done = 0;
+		  //a->info->done = 0;
+	      printf("%i - %i\n", a->info->start_h, a->info->start_w);
+
 		  print_png(hyperslab, volume, current_dimension, current_slice, width, height, a);
 		  a->info->start_w++;
 		}
 	      a->info->start_h++;
 	    }
 	}
-      else
-	print_png(hyperslab, volume, current_dimension, current_slice, width, height, a);
+      else {
+    	  printf("SURPRISE\n");
+    	  print_png(hyperslab, volume, current_dimension, current_slice, width, height, a);
+      }
+
 
       pthread_mutex_lock(&(a->p->lock));
       a->info->slices_done++;
       pthread_mutex_unlock(&(a->p->lock));
       pthread_cond_signal(&(a->info->cond));
       current_slice++;
+      printf("------------------------------------\n");
+
+      // restore original positions
+      a->info->h_position = save_h_position;
+      a->info->w_position = save_w_position;
     }
   start[current_dimension] = 0;
   free(hyperslab);
