@@ -2,9 +2,10 @@ DIRSRC		=	./src/
 
 SRCS		=	$(DIRSRC)minc_extract_png.c					\
 			$(DIRSRC)png_creator.c						\
-			$(DIRSRC)slice.c
+			$(DIRSRC)slice.c							\
+			$(DIRSRC)../../../utils/utils.c
 
-INCLUDE		=	-I./headers -I../../headers
+INCLUDE		=	-I./headers -I./../../utils -I../../headers
 
 LIB_PATH	=	
 

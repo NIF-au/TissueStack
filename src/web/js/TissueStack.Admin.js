@@ -35,6 +35,11 @@ TissueStack.Admin.prototype = {
 						_this.session = session.id;
 						var value = $('#login_btn').val(100);
 						_this.checkCookie(session, value);
+						
+						if(TissueStack.phone){
+							$('#phone_login').append("").fadeOut(500);		
+							$('#phone_addDataSet').show().fadeIn(500);  
+						}
 					},
 					function(jqXHR, textStatus, errorThrown) {
 						_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
@@ -203,11 +208,14 @@ TissueStack.Admin.prototype = {
 			message = excludes.replace("java.lang.RuntimeException:", "");
 		}	
 
-		$('#file_uploaded_message').html("<div class='error_message'></div>");  		
-		$('.error_message').html(message + "<br/>")  
-			.append().hide().fadeIn(1500, function() {  
-				$('.error_message').append("");  
-		}).fadeOut(5000);	
+		if(TissueStack.desktop || TissueStack.tablet){
+			$('#file_uploaded_message').html("<div class='error_message'></div>");  		
+			$('.error_message').html(message + "<br/>")  
+				.append().hide().fadeIn(1500, function() {  
+					$('.error_message').append("");  
+			}).fadeOut(5000);
+		}
+		if(TissueStack.phone) alert(message);	
 	},
 	registerAddToDataSetHandler : function () {
 		var _this = this;

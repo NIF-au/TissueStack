@@ -16,6 +16,7 @@
 	
 	<script src="js/libs/jquery/jquery-1.7.1.js"></script>
 	<script src="js/libs/jquery/jquery.mobile-1.1.0.min.js"></script>
+	<script src="js/libs/jquery/jquery.form.js"></script>
 	<script src="js/TissueStack.Slider.js"></script>
 	<script src="js/libs/sylvester/sylvester.js"></script>
 	
@@ -29,6 +30,7 @@
 	<script src="js/TissueStack.PhoneMenu.js"></script>
     <script src="js/TissueStack.DataSetStore.js"></script>
     <script src="js/TissueStack.DataSetNavigation.js"></script>
+    <script src="js/TissueStack.Admin.js"></script>
 	<script src="js/TissueStack.Init.js"></script>
 
 	<script type="text/javascript">
@@ -56,6 +58,7 @@
 	<ul>
 		<li class="active"><a href="#home" class="contentLink" data-transition="slide">Setting<span class="icon"></span></a></li>
 		<li><a href="#dataset" class="contentLink" data-transition="slide">Data Server<span class="icon"></span></a></li>
+		<li><a href="#admin" class="contentLink" data-transition="slide">Administrator<span class="icon"></span></a></li>
 	</ul>
 </div>
 	<!--HOME Page (SETTING PAGE)-->
@@ -84,8 +87,7 @@
 						<a href="phone.html#tissueX" data-role="button" id="drawing_interval_button" data-transition="flip">Apply</a>
 				</div>
 		</div><!-- /content -->
-	</div>
-	<!-- /page -->
+	</div><!-- /page -->
 	
 	<!--Tissue X Page-->
 	<div data-role="page" class="pages" id="tissueX" data-theme="a"  data-content-theme="b">
@@ -110,8 +112,7 @@
 			<br />
 			<input id="canvas_x_slider" class="canvasslider canvas_x" type="range" min="0" max="1000" value="500" step="5" orientation="horizontal"  />
 		</div><!-- /content -->
-	</div>
-	<!-- /page -->
+	</div><!-- /page -->
 	
 	<!--Tissue Y Page-->
 	<div data-role="page" class="pages" id="tissueY" data-theme="a"  data-content-theme="b">
@@ -135,8 +136,7 @@
 			<br />
 			<input id="canvas_y_slider" class="canvasslider canvas_y" type="range" min="0" max="1000" value="500" step="5" orientation="horizontal"  />
 		</div><!-- /content -->
-	</div>
-	<!-- /page -->
+	</div><!-- /page -->
 
 	<!--Tissue Z Page-->
 	<div data-role="page" class="pages" id="tissueZ" data-theme="a"  data-content-theme="b">
@@ -160,10 +160,9 @@
 			<br />
 			<input id="canvas_z_slider" class="canvasslider canvas_z" type="range" min="0" max="1000" value="500" step="5" orientation="horizontal"  />
 		</div><!-- /content -->
-	</div>
-	<!-- /page -->
+	</div><!-- /page -->
 	
-	<!-- Calling Data Set -->
+	<!-- Calling Data Server -->
 	<div data-role="page" class="pages" id="dataset" data-theme="a"  data-content-theme="b">
 		<div data-role="header" class="headers" style="overflow: hidden;">
 			<a href="#" class="showMenu menuBtn">Menu</a>
@@ -178,5 +177,30 @@
 		</div><!-- /content -->
 	</div><!-- /page -->
 	
+	<!-- Adding New Data Set -->
+	<div data-role="page" class="pages" id="admin" data-theme="a"  data-content-theme="b">
+		<div data-role="header" class="headers" style="overflow: hidden;">
+			<a href="#" class="showMenu menuBtn">Menu</a>
+			<h1>Add New Data Set</h1>
+		</div><!-- /header -->
+		<div data-role="content">
+	        <div id="phone_login">
+	          User:<input type="text" size="15" name="username" id="username" disabled="disabled" value="Admin"/>
+	          Password:<input type="password" size="15" name="password" id="password" /><br/>
+	          <input type="button" accesskey="l" class="login_btn_check" id="login_btn" name="login" value="Login" />
+	        </div>
+			<div id="phone_addDataSet" class="hidden">
+				<div id="file_group" data-role="fieldcontain">
+					<fieldset class="file_radio_list">
+					</fieldset>
+				</div>
+				<label for="txtDesc" style="text-align: left;">&nbsp;&nbsp;Description:</label>
+				<input type="text" name="name" id="txtDesc" data-mini="true" />
+				<a href="" id="bt_add_dataset" data-role="button" data-inline="true" data-theme="e" data-icon="check">Add Data Set</a>
+				<br/><br/>
+				<div style="text-align: center;">UPLOAD FUNCTION HAS BEEN DISABLE!</div>
+			</div>
+		</div><!-- /content -->
+	</div><!-- /page -->
 </body>
 </html>

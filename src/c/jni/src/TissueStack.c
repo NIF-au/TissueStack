@@ -107,14 +107,9 @@ JNIEXPORT jobject JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_getMinc
 	char * buffer = malloc(sizeof(buffer) * 1024);
 	size_t size = 0;
 
-	while (1) {
-		size = recv(fileDescriptor, buffer, 1024, 0);
-		if (size <= 0 || buffer[size] == '\0') {
-			if (buffer[size] != '\0') { // for EOF scenario
-				buffer[size] = '\0';
-			}
-			response = appendToBuffer(response, buffer);
-			break;
+	while ((size = read(fileDescriptor, buffer, 1024)) > 0) {
+		if (buffer[size] != '\0') { // for EOF scenario
+			buffer[size] = '\0';
 		}
 
 		// append to response
@@ -385,31 +380,95 @@ JNIEXPORT jobject JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_getMinc
 }
 
 JNIEXPORT void JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMincVolume
-		  (JNIEnv * env, jobject obj, jstring filename, jstring dimension, jint start, jint stop, jboolean preview) {
+		  (JNIEnv * env, jobject obj, jstring filename, jstring base_dir, jintArray arr_dimensions, jint size, jdouble zoom_factor, jboolean preview) {
+	// tedious parameter checking
+	if (filename == NULL) { // MINC FILE NAME
+		throwJavaException(env, "java/lang/RuntimeException", "File Name is null!");
+		return;
+	}
 	const char * file = (*env)->GetStringUTFChars(env, filename, NULL);
 	if (file == NULL) {
 		throwJavaException(env, "java/lang/RuntimeException", "Could not convert java to c string");
 		return;
 	}
+	if (base_dir == NULL) { // TILING BASE DIRECTORY
+		(*env)->ReleaseStringUTFChars(env, filename, file);
+		throwJavaException(env, "java/lang/RuntimeException", "Base Directory is null!");
+		return;
+	}
+	const char * dir = (*env)->GetStringUTFChars(env, base_dir, NULL);
+	if (dir == NULL) {
+		(*env)->ReleaseStringUTFChars(env, filename, file);
+		throwJavaException(env, "java/lang/RuntimeException", "Could not convert java to c string");
+		return;
+	}
+	if (arr_dimensions == NULL) { // 6 element DIMENSION array
+		(*env)->ReleaseStringUTFChars(env, filename, file);
+		(*env)->ReleaseStringUTFChars(env, base_dir, dir);
+		throwJavaException(env, "java/lang/RuntimeException", "Dimensions Argument is null!");
+		return;
+	}
+	int arraySize = (int) (*env)->GetArrayLength(env, arr_dimensions);
+	if (arraySize != 6) {
+		(*env)->ReleaseStringUTFChars(env, filename, file);
+		(*env)->ReleaseStringUTFChars(env, base_dir, dir);
+		throwJavaException(env, "java/lang/RuntimeException", "Dimensions Array has to have 6 elements!");
+		return;
+	}
+	if (zoom_factor <= 0) { // ZOOM FACTOR
+		(*env)->ReleaseStringUTFChars(env, filename, file);
+		(*env)->ReleaseStringUTFChars(env, base_dir, dir);
+		throwJavaException(env, "java/lang/RuntimeException", "Zoom Factor has to be greater than 0.0!");
+		return;
+	}
+
+	if (size <= 0) {
+		size = 256;
+	}
 
 	int fileDescriptor = init_sock_comm_client("/tmp/tissue_stack_communication");
 	if (!fileDescriptor) {
 		(*env)->ReleaseStringUTFChars(env, filename, file);
+		(*env)->ReleaseStringUTFChars(env, base_dir, dir);
+		//(*env)->ReleaseIntArrayElements(env, arr_dimensions, dimensions, 0);
 		throwJavaException(env, "java/lang/RuntimeException", "Could not establish unix socket to image server!");
 		return;
 	}
 
 	// load and start png extract plugin
-	t_string_buffer * startMincInfoCommand = NULL;
-	startMincInfoCommand = appendToBuffer(startMincInfoCommand, "start png ");
-	startMincInfoCommand = appendToBuffer(startMincInfoCommand, (char *) file);
-	startMincInfoCommand = appendToBuffer(startMincInfoCommand, " -1 -1 655 656 -1 -1 1 1 tiles 256 -1 -1 1");
-	//TODO: hand in tiling options
-	write(fileDescriptor, startMincInfoCommand->buffer, startMincInfoCommand->size);
+	t_string_buffer * startTilingCommand = NULL;
+	startTilingCommand = appendToBuffer(startTilingCommand, "start png ");
+	startTilingCommand = appendToBuffer(startTilingCommand, (char *) file);
+
+	jint * dimensions = (*env)->GetIntArrayElements(env, arr_dimensions, NULL);
+	int x;
+	char conversionBuffer[50];
+	for (x=0;x<arraySize;x++)
+	{
+		sprintf(conversionBuffer, " %i", (int)dimensions[x]);
+		startTilingCommand = appendToBuffer(startTilingCommand, conversionBuffer);
+	}
+	startTilingCommand = appendToBuffer(startTilingCommand, " ");
+	if (preview == JNI_TRUE) {
+		startTilingCommand = appendToBuffer(startTilingCommand, "1 10 full 1 ");
+	} else {
+		sprintf(conversionBuffer, "%.4g 1 tiles %i", (double)zoom_factor, (int) size);
+		startTilingCommand = appendToBuffer(startTilingCommand, conversionBuffer);
+		startTilingCommand = appendToBuffer(startTilingCommand, " -1 -1 1 ");
+	}
+
+	startTilingCommand = appendToBuffer(startTilingCommand, (char *) dir);
+
+	write(fileDescriptor, startTilingCommand->buffer, startTilingCommand->size);
 	shutdown(fileDescriptor, 2);
 	close(fileDescriptor);
 
-	free(startMincInfoCommand->buffer);
-	free(startMincInfoCommand);
+	throwJavaException(env, "java/lang/RuntimeException", startTilingCommand->buffer);
+	return;
+
+	free(startTilingCommand->buffer);
+	free(startTilingCommand);
 	(*env)->ReleaseStringUTFChars(env, filename, file);
+	(*env)->ReleaseStringUTFChars(env, base_dir, dir);
+	(*env)->ReleaseIntArrayElements(env, arr_dimensions, dimensions, 0);
 }

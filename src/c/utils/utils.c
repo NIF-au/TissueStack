@@ -196,6 +196,52 @@ t_string_buffer *  appendToBuffer(t_string_buffer * buffer, char * someString) {
 	return buffer;
 }
 
+// Returns path for success, omitting last "/" OR NULL in case of failure
+t_string_buffer * createDirectory(char * path, mode_t mode) {
+	if (path == NULL || strlen(path) == 0) {
+		return NULL;
+	}
+
+	// first tokenize path
+	const int numberOfDirectories = countTokens(path, '/', '\\');
+	if (numberOfDirectories == 0) {
+		return NULL;
+	}
+	char	**directories = tokenizeString(path, '/', '\\');
+	if (directories == NULL) {
+		return NULL;
+	}
+
+	int i=0;
+	t_string_buffer * pathWithoutSlashAtEnd = NULL;
+
+	// loop through list and create them all
+	while (directories[i] != NULL) {
+		char * dir = directories[i];
+		pathWithoutSlashAtEnd = appendToBuffer(pathWithoutSlashAtEnd, "/");
+		pathWithoutSlashAtEnd = appendToBuffer(pathWithoutSlashAtEnd, dir);
+
+		if (mkdir(pathWithoutSlashAtEnd->buffer, mode) < 0 && errno != EEXIST) {
+			// if we we didn't fail because we exist already => abort
+			printf("Failed to create directory: %s\n", strerror(errno));
+			if (pathWithoutSlashAtEnd != NULL) { // free
+				if (pathWithoutSlashAtEnd->buffer != NULL) {
+					free(pathWithoutSlashAtEnd->buffer);
+				}
+				free(pathWithoutSlashAtEnd);
+			}
+			pathWithoutSlashAtEnd = NULL;
+		}
+
+		free(dir);
+		i++;
+	}
+
+	free(directories);
+
+	return pathWithoutSlashAtEnd;
+}
+
 short testBufferAppend() {
 	printf("\t*) String Append => ");
 
@@ -248,6 +294,51 @@ short testTokenizer() {
 	  return 1;
 }
 
+short testDirectoryCreation() {
+	  printf("\t*) Directory Creation => ");
+
+	  t_string_buffer * result = NULL;
+
+	  result = createDirectory(NULL, 0775);
+	  if (result != NULL) {
+		  free(result->buffer);
+		  free(result);
+		  printf("FAILED !\n");
+		  return 0;
+	  }
+
+	  result = createDirectory("/boot", 0775);
+	  if (result == NULL) {
+		  printf("FAILED !\n");
+		  return 0;
+	  }
+	  free(result->buffer);
+	  free(result);
+
+	  struct timeval  tv;
+	  gettimeofday(&tv, NULL);
+	  char buffer[75];
+	  sprintf(buffer, "/tmp/%ld", tv.tv_sec);
+	  result = createDirectory(buffer, 0775);
+	  if (result == NULL) {
+		  printf("*%s*%s*\n", result->buffer, buffer);
+		  printf("FAILED !\n");
+		  return 0;
+	  } else if (strcmp(buffer, result->buffer) == 0) {
+		  free(result->buffer);
+		  free(result);
+		  printf("PASSED.\n");
+	  } else {
+		  printf("FAILED !\n");
+		  printf("*%s*%s*\n", result->buffer, buffer);
+		  free(result->buffer);
+		  free(result);
+		  return 0;
+	  }
+
+	  return 1;
+}
+
 /** TESTS **/
 int		main(int argc, char ** args)
 {
@@ -262,6 +353,12 @@ int		main(int argc, char ** args)
 	   printf("Tests aborted because of errors!\n");
 	   exit(0);
    }
+   // DIRECTORY CREATION TEST
+   if (!testDirectoryCreation()) {
+	   printf("Tests aborted because of errors!\n");
+	   exit(0);
+   }
+
 
 	printf("\nAll tests finished without error.\n");
 
