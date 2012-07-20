@@ -45,50 +45,50 @@ int check_pixels_range(int width, int height, int h_position, int w_position,
     return (0);
 }
 
-int		check_and_set_position(int kind, int width, int height, t_png_args *a)
+int check_and_set_position(int kind, int width, int height, t_png_args *a)
 {
-  int		i;
+    int i;
 
-  width *= a->info->scale;
-  height *= a->info->scale;
-  i = 2;
-  while (i == 2)
-    {
-      printf("I LOOP: %i == %i\n",
-	     a->info->w_position,
-	     a->info->h_position);
-      if (a->info->w_position > width) {
-	printf("I'm in\n");
-	a->info->w_position = a->info->start_w;
-      }
-      if (a->info->h_position > height) {
-	printf("I'm in\n");
-	a->info->h_position = a->info->start_h;
-      }
-      if (kind == 2)
-	return (0);
-      if (kind == 1) {
-	a->info->w_position_end = a->info->w_position
-	  + a->info->square_size;
-	a->info->h_position_end = a->info->h_position
-	  + a->info->square_size;
-      }
-      if (a->info->w_position_end > width)
-	a->info->w_position_end = width;
-      if (a->info->h_position_end > height)
-	a->info->h_position_end = height;
-      i = check_pixels_range(width, height, a->info->h_position,
-			     a->info->w_position, a->info->h_position_end,
-			     a->info->w_position_end);
-      printf(
-	     "***** i = %i  - h = %i - w = %i - he = %i - we = %i - height = %i - width = %i\n\n\n",
-	     i, a->info->h_position, a->info->w_position,
-	     a->info->h_position_end, a->info->w_position_end, height,
-	     width);
+    width *= a->info->scale;
+    height *= a->info->scale;
+    i = 2;
+    while (i == 2) {
+    	printf("I LOOP: %i == %i\n",
+    			a->info->w_position,
+    			a->info->h_position
+    	);
+    	if (a->info->w_position > width) {
+    		printf("I'm in\n");
+    		a->info->w_position = a->info->start_w;
+    	}
+    	if (a->info->h_position > height) {
+    		printf("I'm in\n");
+    		a->info->h_position = a->info->start_h;
+    	}
+        if (kind == 2)
+            return (0);
+        if (kind == 1) {
+            a->info->w_position_end = a->info->w_position
+                    + a->info->square_size;
+            a->info->h_position_end = a->info->h_position
+                    + a->info->square_size;
+        }
+        if (a->info->w_position_end > width)
+            a->info->w_position_end = width;
+        if (a->info->h_position_end > height)
+            a->info->h_position_end = height;
+        i = check_pixels_range(width, height, a->info->h_position,
+                a->info->w_position, a->info->h_position_end,
+                a->info->w_position_end);
+        printf(
+                "***** i = %i  - h = %i - w = %i - he = %i - we = %i - height = %i - width = %i\n\n\n",
+                i, a->info->h_position, a->info->w_position,
+                a->info->h_position_end, a->info->w_position_end, height,
+                width);
     }
-  if (i != 0)
-    return (1);
-  return (0);
+    if (i != 0)
+        return (1);
+    return (0);
 }
 
 int set_service_type(t_png_args * a)
@@ -129,152 +129,151 @@ void convert_tiles_to_pixel_coord(t_png_args *a)
     a->info->w_position *= a->info->square_size;
 }
 
-
 void fclose_check(FILE *file, int * done) {
-  done = 0;
-  if (file && fcntl(fileno(file), F_GETFL) != -1) {
-    printf("Closing\n");
-    fclose(file);
-  }
+	done = 0;
+	if (file && fcntl(fileno(file), F_GETFL) != -1) {
+        printf("Closing\n");
+        fclose(file);
+    }
 }
 
 void print_png(char *hyperslab, t_vol *volume, int current_dimension,
         unsigned int current_slice, int width, int height, t_png_args *a)
 {
-  ExceptionInfo exception;
-  Image *img;
-  Image *tmp;
-  RectangleInfo *portion;
-  ImageInfo *image_info;
-  int kind;
-  short streamToSocket;
+    ExceptionInfo exception;
+    Image *img;
+    Image *tmp;
+    RectangleInfo *portion;
+    ImageInfo *image_info;
+    int kind;
+    short streamToSocket;
 
-  streamToSocket = a->file && fcntl(fileno(a->file), F_GETFL) != -1;
+    streamToSocket = a->file && fcntl(fileno(a->file), F_GETFL) != -1;
 
-  kind = set_service_type(a);
+    kind = set_service_type(a);
 
-  a->info->h_position *= a->info->square_size;
-  a->info->w_position *= a->info->square_size;
+    a->info->h_position *= a->info->square_size;
+    a->info->w_position *= a->info->square_size;
 
-  //convert_tiles_to_pixel_coord(a);
-  //  pthread_mutex_lock(&a->info->mut);
+    //convert_tiles_to_pixel_coord(a);
+    //  pthread_mutex_lock(&a->info->mut);
 
-  /*
+    /*
     if (a->info->done == 1) {
-    printf("DONE\n");
-    return;
+    	printf("DONE\n");
+    	return;
     }
     a->info->done = 1;
-  */
+	*/
 
-  if (check_and_set_position(kind, width, height, a)) {
-    fclose_check(a->file, &a->info->done);
-    return;
-  }
+    if (check_and_set_position(kind, width, height, a)) {
+    	fclose_check(a->file, &a->info->done);
+        return;
+    }
 
-  portion = create_rectangle_crop(kind, a);
+    portion = create_rectangle_crop(kind, a);
 
-  GetExceptionInfo(&exception);
-  if ((image_info = CloneImageInfo(NULL)) == NULL) {
-    CatchException(&exception);
-    fclose_check(a->file, &a->info->done);
-    return;
-  }
+    GetExceptionInfo(&exception);
+    if ((image_info = CloneImageInfo(NULL)) == NULL) {
+        CatchException(&exception);
+        fclose_check(a->file, &a->info->done);
+        return;
+    }
 
-  if ((img = ConstituteImage(width, height, "I", CharPixel, hyperslab,
-			     &exception)) == NULL) {
-    CatchException(&exception);
-    fclose_check(a->file, &a->info->done);
-    return;
-  }
+    if ((img = ConstituteImage(width, height, "I", CharPixel, hyperslab,
+            &exception)) == NULL) {
+        CatchException(&exception);
+        fclose_check(a->file, &a->info->done);
+        return;
+    }
 
-  tmp = img;
-  if ((img = FlipImage(img, &exception)) == NULL) {
-    CatchException(&exception);
-    fclose_check(a->file, &a->info->done);
-    return;
-  }
-  DestroyImage(tmp);
-
-  if (a->info->quality != 1) {
     tmp = img;
-    if ((img = SampleImage(img, width / a->info->quality,
-			   height / a->info->quality, &exception)) == NULL) {
-      CatchException(&exception);
-      fclose_check(a->file, &a->info->done);
-      return;
+    if ((img = FlipImage(img, &exception)) == NULL) {
+        CatchException(&exception);
+        fclose_check(a->file, &a->info->done);
+        return;
     }
     DestroyImage(tmp);
-    tmp = img;
-    if ((img = SampleImage(img, width, height, &exception)) == NULL) {
-      CatchException(&exception);
-      fclose_check(a->file, &a->info->done);
-      return;
-    }
-    DestroyImage(tmp);
-  }
 
-  if (a->info->scale != 1) {
-    tmp = img;
-    if ((img = ScaleImage(img, (width * a->info->scale),
-			  (height * a->info->scale), &exception)) == NULL) {
-      CatchException(&exception);
-      fclose_check(a->file, &a->info->done);
-      return;
-    }
-    DestroyImage(tmp);
-  }
-
-  if (kind == 1 || kind == 3) {
-    tmp = img;
-    if ((img = CropImage(img, portion, &exception)) == NULL) {
-      CatchException(&exception);
-      DestroyImage(tmp);
-      fclose_check(a->file, &a->info->done);
-      return;
-    }
-    DestroyImage(tmp);
-  }
-
-  // write image
-  if (streamToSocket) { // SOCKET STREAM
-    strcpy(img->filename, "*.png"); // necessary for graphics magick to determing image format
-    image_info->file = a->file;
-    WriteImage(image_info, img);
-    fclose_check(a->file, &a->info->done);
-  } else { // WRITE FILE
-    if (!a->info->root_path) {
-      printf("Error: root path is NULL\n");
-      return;
+    if (a->info->quality != 1) {
+        tmp = img;
+        if ((img = SampleImage(img, width / a->info->quality,
+                height / a->info->quality, &exception)) == NULL) {
+            CatchException(&exception);
+            fclose_check(a->file, &a->info->done);
+            return;
+        }
+        DestroyImage(tmp);
+        tmp = img;
+        if ((img = SampleImage(img, width, height, &exception)) == NULL) {
+            CatchException(&exception);
+            fclose_check(a->file, &a->info->done);
+            return;
+        }
+        DestroyImage(tmp);
     }
 
-    char dir[200]; // first path
-    sprintf(dir, "%s/%c/%i", a->info->root_path, volume->dim_name[current_dimension][0], current_slice);
-    t_string_buffer * finalPath = createDirectory(dir, 0777);
-    if (finalPath == NULL) {
-      a->info->done = 0;
-      return;
+    if (a->info->scale != 1) {
+        tmp = img;
+        if ((img = ScaleImage(img, (width * a->info->scale),
+                (height * a->info->scale), &exception)) == NULL) {
+            CatchException(&exception);
+            fclose_check(a->file, &a->info->done);
+            return;
+        }
+        DestroyImage(tmp);
     }
 
-    // complete filename
-    if (strcmp(a->info->service, "full") == 0 && a->info->quality != 1) {
-      sprintf(dir, "/%i.low.res.png", current_slice);
-    } else {
-      sprintf(dir, "/%i_%i.png", a->info->start_h, a->info->start_w);
+    if (kind == 1 || kind == 3) {
+        tmp = img;
+        if ((img = CropImage(img, portion, &exception)) == NULL) {
+            CatchException(&exception);
+            DestroyImage(tmp);
+            fclose_check(a->file, &a->info->done);
+            return;
+        }
+        DestroyImage(tmp);
     }
-    finalPath = appendToBuffer(finalPath, dir);
-    strcpy(img->filename, finalPath->buffer);
 
-    printf("%s\n", img->filename);
+    // write image
+    if (streamToSocket) { // SOCKET STREAM
+    	strcpy(img->filename, "*.png"); // necessary for graphics magick to determing image format
+    	image_info->file = a->file;
+        WriteImage(image_info, img);
+        fclose_check(a->file, &a->info->done);
+    } else { // WRITE FILE
+    	if (!a->info->root_path) {
+    		printf("Error: root path is NULL\n");
+            return;
+    	}
 
-    WriteImage(image_info, img);
+        char dir[200]; // first path
+        sprintf(dir, "%s/%c/%i", a->info->root_path, volume->dim_name[current_dimension][0], current_slice);
+        t_string_buffer * finalPath = createDirectory(dir, 0777);
+        if (finalPath == NULL) {
+        	a->info->done = 0;
+        	return;
+        }
 
-    free(finalPath->buffer);
-    free(finalPath);
-    a->info->done = 0;
-  }
+        // complete filename
+        if (strcmp(a->info->service, "full") == 0 && a->info->quality != 1) {
+        	sprintf(dir, "/%i.low.res.png", current_slice);
+        } else {
+        	sprintf(dir, "/%i_%i.png", a->info->start_w, a->info->start_h);
+        }
+        finalPath = appendToBuffer(finalPath, dir);
+        strcpy(img->filename, finalPath->buffer);
 
-  // clean up
-  DestroyImage(img);
-  DestroyImageInfo(image_info);
+        printf("%s\n", img->filename);
+
+        WriteImage(image_info, img);
+
+        free(finalPath->buffer);
+        free(finalPath);
+        a->info->done = 0;
+    }
+
+    // clean up
+    DestroyImage(img);
+    DestroyImageInfo(image_info);
 }
