@@ -124,8 +124,8 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
 	  a->info->w_position = 0;
 	  a->info->start_w = 0;
 
-	  h_max_iteration = height / a->info->square_size;
-	  w_max_iteration = width / a->info->square_size;
+	  h_max_iteration = (height * a->info->scale) / a->info->square_size;
+	  w_max_iteration = (width * a->info->scale) / a->info->square_size;
 	  printf("MAX ITER %i - %i\n", h_max_iteration, w_max_iteration);
 
 	  while (a->info->start_h <= h_max_iteration)
