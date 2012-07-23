@@ -448,11 +448,11 @@ JNIEXPORT void JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMincVo
 		sprintf(conversionBuffer, " %i", (int)dimensions[x]);
 		startTilingCommand = appendToBuffer(startTilingCommand, conversionBuffer);
 	}
-	startTilingCommand = appendToBuffer(startTilingCommand, " ");
 	if (preview == JNI_TRUE) {
-		startTilingCommand = appendToBuffer(startTilingCommand, "1 10 full 1 ");
+		sprintf(conversionBuffer, " %.4g 10 full 1 ", (double)zoom_factor);
+		startTilingCommand = appendToBuffer(startTilingCommand, conversionBuffer);
 	} else {
-		sprintf(conversionBuffer, "%.4g 1 tiles %i", (double)zoom_factor, (int) size);
+		sprintf(conversionBuffer, " %.4g 1 tiles %i", (double)zoom_factor, (int) size);
 		startTilingCommand = appendToBuffer(startTilingCommand, conversionBuffer);
 		startTilingCommand = appendToBuffer(startTilingCommand, " -1 -1 1 ");
 	}

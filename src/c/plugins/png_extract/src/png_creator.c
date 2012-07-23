@@ -53,10 +53,6 @@ int check_and_set_position(int kind, int width, int height, t_png_args *a)
     height *= a->info->scale;
     i = 2;
     while (i == 2) {
-    	printf("I LOOP: %i == %i\n",
-    			a->info->w_position,
-    			a->info->h_position
-    	);
     	if (a->info->w_position > width) {
     		printf("I'm in\n");
     		a->info->w_position = a->info->start_w;
@@ -129,11 +125,11 @@ void convert_tiles_to_pixel_coord(t_png_args *a)
     a->info->w_position *= a->info->square_size;
 }
 
-void fclose_check(FILE *file, int * done) {
-	done = 0;
+void fclose_check(FILE *file) {
 	if (file && fcntl(fileno(file), F_GETFL) != -1) {
         printf("Closing\n");
         fclose(file);
+        close(fileno(file));
     }
 }
 
@@ -152,22 +148,10 @@ void print_png(char *hyperslab, t_vol *volume, int current_dimension,
 
     kind = set_service_type(a);
 
-    a->info->h_position *= a->info->square_size;
-    a->info->w_position *= a->info->square_size;
-
-    //convert_tiles_to_pixel_coord(a);
-    //  pthread_mutex_lock(&a->info->mut);
-
-    /*
-    if (a->info->done == 1) {
-    	printf("DONE\n");
-    	return;
-    }
-    a->info->done = 1;
-	*/
+    convert_tiles_to_pixel_coord(a);
 
     if (check_and_set_position(kind, width, height, a)) {
-    	fclose_check(a->file, &a->info->done);
+    	fclose_check(a->file);
         return;
     }
 
@@ -176,21 +160,21 @@ void print_png(char *hyperslab, t_vol *volume, int current_dimension,
     GetExceptionInfo(&exception);
     if ((image_info = CloneImageInfo(NULL)) == NULL) {
         CatchException(&exception);
-        fclose_check(a->file, &a->info->done);
+        fclose_check(a->file);
         return;
     }
 
     if ((img = ConstituteImage(width, height, "I", CharPixel, hyperslab,
             &exception)) == NULL) {
         CatchException(&exception);
-        fclose_check(a->file, &a->info->done);
+        fclose_check(a->file);
         return;
     }
 
     tmp = img;
     if ((img = FlipImage(img, &exception)) == NULL) {
         CatchException(&exception);
-        fclose_check(a->file, &a->info->done);
+        fclose_check(a->file);
         return;
     }
     DestroyImage(tmp);
@@ -200,14 +184,14 @@ void print_png(char *hyperslab, t_vol *volume, int current_dimension,
         if ((img = SampleImage(img, width / a->info->quality,
                 height / a->info->quality, &exception)) == NULL) {
             CatchException(&exception);
-            fclose_check(a->file, &a->info->done);
+            fclose_check(a->file);
             return;
         }
         DestroyImage(tmp);
         tmp = img;
         if ((img = SampleImage(img, width, height, &exception)) == NULL) {
             CatchException(&exception);
-            fclose_check(a->file, &a->info->done);
+            fclose_check(a->file);
             return;
         }
         DestroyImage(tmp);
@@ -218,7 +202,7 @@ void print_png(char *hyperslab, t_vol *volume, int current_dimension,
         if ((img = ScaleImage(img, (width * a->info->scale),
                 (height * a->info->scale), &exception)) == NULL) {
             CatchException(&exception);
-            fclose_check(a->file, &a->info->done);
+            fclose_check(a->file);
             return;
         }
         DestroyImage(tmp);
@@ -229,7 +213,7 @@ void print_png(char *hyperslab, t_vol *volume, int current_dimension,
         if ((img = CropImage(img, portion, &exception)) == NULL) {
             CatchException(&exception);
             DestroyImage(tmp);
-            fclose_check(a->file, &a->info->done);
+            fclose_check(a->file);
             return;
         }
         DestroyImage(tmp);
@@ -240,7 +224,7 @@ void print_png(char *hyperslab, t_vol *volume, int current_dimension,
     	strcpy(img->filename, "*.png"); // necessary for graphics magick to determing image format
     	image_info->file = a->file;
         WriteImage(image_info, img);
-        fclose_check(a->file, &a->info->done);
+        fclose_check(a->file);
     } else { // WRITE FILE
     	if (!a->info->root_path) {
     		printf("Error: root path is NULL\n");
@@ -251,7 +235,6 @@ void print_png(char *hyperslab, t_vol *volume, int current_dimension,
         sprintf(dir, "%s/%c/%i", a->info->root_path, volume->dim_name[current_dimension][0], current_slice);
         t_string_buffer * finalPath = createDirectory(dir, 0777);
         if (finalPath == NULL) {
-        	a->info->done = 0;
         	return;
         }
 
@@ -270,7 +253,6 @@ void print_png(char *hyperslab, t_vol *volume, int current_dimension,
 
         free(finalPath->buffer);
         free(finalPath);
-        a->info->done = 0;
     }
 
     // clean up

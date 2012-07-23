@@ -76,7 +76,6 @@ void		print_all_tiles_of_one_slice(t_png_args *a, t_vol *volume, int current_sli
 	{
 	  a->info->h_position = a->info->start_h;
 	  a->info->w_position = a->info->start_w;
-	  a->info->done = 0;
 	  print_png(hyperslab, volume, current_dimension, current_slice, width, height, a);
 	  a->info->start_w++;
 	}
@@ -116,7 +115,6 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
       miget_real_value_hyperslab(volume->minc_volume, MI_TYPE_UBYTE, start, count, hyperslab);
       pthread_mutex_unlock(&(a->p->lock));
       // print png
-      printf("%i - %i\n", a->info->h_position, a->info->w_position);
       if (a->info->h_position == -1 && a->info->w_position == -1)
 	{
 	  a->info->h_position = 0;
@@ -126,7 +124,6 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
 
 	  h_max_iteration = (height * a->info->scale) / a->info->square_size;
 	  w_max_iteration = (width * a->info->scale) / a->info->square_size;
-	  printf("MAX ITER %i - %i\n", h_max_iteration, w_max_iteration);
 
 	  while (a->info->start_h <= h_max_iteration)
 	    {
@@ -136,9 +133,6 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
 		  a->info->h_position = a->info->start_h;
 		  a->info->w_position = a->info->start_w;
 
-		  //a->info->done = 0;
-		  printf("%i - %i\n", a->info->start_h, a->info->start_w);
-
 		  print_png(hyperslab, volume, current_dimension, current_slice, width, height, a);
 		  a->info->start_w++;
 		}
@@ -146,7 +140,6 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
 	    }
 	}
       else {
-    	  printf("SURPRISE\n");
     	  print_png(hyperslab, volume, current_dimension, current_slice, width, height, a);
       }
 
@@ -156,7 +149,6 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
       pthread_mutex_unlock(&(a->p->lock));
       pthread_cond_signal(&(a->info->cond));
       current_slice++;
-      printf("------------------------------------\n");
 
       // restore original positions
       a->info->h_position = save_h_position;
