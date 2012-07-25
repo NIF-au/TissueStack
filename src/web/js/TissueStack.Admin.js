@@ -38,8 +38,13 @@ TissueStack.Admin.prototype = {
 						
 						if(TissueStack.phone){
 							$('#phone_login').append("").fadeOut(500);		
-							$('#phone_addDataSet').show().fadeIn(500);  
+							$('#phone_addDataSet').show().fadeIn(500);
+							return;  
 						}
+						$("div#panel").slideUp("slow");
+						$('#name_tap').html("Hello " + $('#username').val());
+						_this.replaceErrorMessage("Login successfully!");
+						$('.error_message').css("background", "#32CD32");
 					},
 					function(jqXHR, textStatus, errorThrown) {
 						_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
@@ -47,9 +52,6 @@ TissueStack.Admin.prototype = {
 				);
 			}
 			$('#password').val("");
-			$("div#panel").animate({
-				height: "0px"
-			}, "fast");
 		});
 	},
 	getCookie: function(c_name)	{
@@ -94,21 +96,15 @@ TissueStack.Admin.prototype = {
 		  }
 	},
 	registerLoginHandler : function () {
-		$("div.panel_button").click(function(){
-			$("div#panel").animate({
-				height: "500px"
-			})
-			.animate({
-				height: "400px"
-			}, "fast");
-			$("div.panel_button").toggle();
-		});	
-		
-	  	$("div#hide_button").click(function(){
-			$("div#panel").animate({
-				height: "0px"
-			}, "fast");
-	   	});	
+	   	$("#open").click(function(){
+	   		$("div#panel").slideDown("slow");	
+	   	});		
+   		$("#close").click(function(){
+   			$("div#panel").slideUp("slow");	
+   		});		
+   		$("#toggle a").click(function () {
+   			$("#toggle a").toggle();
+   		});	
 	},
 	displayUploadDirectory : function (){  
 	     $(".file_radio_list").show(function(){

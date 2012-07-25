@@ -3,11 +3,13 @@
   <head>
         <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
         
-        <title> Tissue Stack - Desktop </title>
+        <title> Tissue Stack - Test2 </title>
        	<link rel="icon" type="image/png" href="images/favicon.png" />
        	
         <link rel="stylesheet" href="css/jquery.mobile-1.1.0.min.css" />
         <link rel="stylesheet" href="css/default.css" />
+        <link rel="stylesheet" href="css/admin_login.css" />
+        
 
         <!--Apple Device Start Up Splash Screen and ICON-->
 		<link rel="apple-touch-startup-image" href="images/mobile/ipadscreen.png" /> <!--For iPad-->
@@ -35,6 +37,7 @@
 		<script src="js/TissueStack.DataSetStore.js"></script>
 		<script src="js/TissueStack.DataSetNavigation.js"></script>
 		<script src="js/TissueStack.Admin.js"></script>
+		<script src="js/TissueStack.SVG.js"></script>
 		<script src="js/TissueStack.Init.js"></script>
 		
 		<script type="text/javascript">
@@ -80,21 +83,20 @@
      	    	
      	    	<div>
 	     	    	<div id="dataset_1" class="dataset">
-	     	    		<div id="dataset_1_main_view_canvas" class="canvasview canvas_y" >
-	     	    			<canvas id="dataset_1_canvas_y_plane" class="plane"></canvas>	
+	     	    		<div id="dataset_1_main_view_canvas" class="canvasview canvas_y" >		     	    		
+	     	    			<canvas id="dataset_1_canvas_y_plane" class="plane"></canvas>
 	     	    			<canvas id="dataset_1_canvas_y_plane_cross_overlay" class="cross_overlay"></canvas>
 						</div>
-							<div id="dataset_1_left_side_view_canvas" class="left_side_view ui-bar-a hidden">     	    			
-								<img id="dataset_1_left_side_view_maximize" class="canvas_x maximize_view_icon" src="images/maximize.png" alt="Maximize View" />
-								<canvas id="dataset_1_canvas_x_plane" class="side_canvas"></canvas>
-								<canvas id="dataset_1_canvas_x_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>
-							</div>
-				     	  	<div id="dataset_1_right_side_view_canvas" class="right_side_view ui-bar-a hidden">
-								<img id="dataset_1_right_side_view_maximize" class="canvas_z maximize_view_icon" src="images/maximize.png" alt="Maximize View" />
-								<canvas id="dataset_1_canvas_z_plane" class="side_canvas"></canvas>
-								<canvas id="dataset_1_canvas_z_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>
-							</div>
-												     	    			
+						<div id="dataset_1_left_side_view_canvas" class="left_side_view ui-bar-a hidden">     	    			
+							<img id="dataset_1_left_side_view_maximize" class="canvas_x maximize_view_icon" src="images/maximize.png" alt="Maximize View" />
+							<canvas id="dataset_1_canvas_x_plane" class="side_canvas"></canvas>
+							<canvas id="dataset_1_canvas_x_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>
+						</div>
+			     	  	<div id="dataset_1_right_side_view_canvas" class="right_side_view ui-bar-a hidden">
+							<img id="dataset_1_right_side_view_maximize" class="canvas_z maximize_view_icon" src="images/maximize.png" alt="Maximize View" />
+							<canvas id="dataset_1_canvas_z_plane" class="side_canvas"></canvas>
+							<canvas id="dataset_1_canvas_z_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>
+						</div>							     	    			
 	     	    	</div>
      	    	
 	     	    	<div id="dataset_1_right_panel" class="right_panel hidden">
@@ -176,27 +178,56 @@
 	            </div>
 	 	    </div>
 	 		<!--ADMIN LOGIN-->
-	 		  <div id="page_container">
-		 		  <div id="toppanel">
-		 		    <div id="panel">
-		 		      <div id="panel_contents"> </div>
-		 		      <div class="border" id="login">
-		 		        <p>
-		 		          User:<input type="text" size="15" name="username" id="username" disabled="disabled" value="Admin"/>
-		 		          Password:<input type="password" size="15" name="password" id="password" /><br/>
-		 		          <input type="button" accesskey="l" class="login_btn_check" id="login_btn" name="login" value="Login" />
-		 		        </p>
-		 		      </div>
-		 		     </div>
-			 		    <div class="panel_button" style="display: visible;">
-			 		    	<img src="images/expand.png"  alt="expand"/> <a href="#">Login Here</a> 
-			 		   	</div>
-			 		    <div class="panel_button" id="hide_button" style="display: none;">
-			 		    	<img src="images/collapse.png" alt="collapse" /> <a href="#">Hide</a> 
-			 		    </div>
-	 		 		</div>
-	 			</div>
+	 		  <div id="toppanel">
+	 		  	<div id="panel">
+	 		  		<div class="content clearfix">
+	 		  			<div class="left">
+	 		  				<h1>Welcome to Tissue Stack</h1>
+	 		  				<h2>Login to upload or add dataset</h2>		
+	 		  				<p class="grey">
+	 		  				Its purpose is to allow researchers to view multi-TB imaging datasets online through an interface on machines local to the network segment of the TissueStack server.
+	 		  				</p>
+	 		  				<h2>Project</h2>
+	 		  				<p class="grey">Details can be found in  <a href="http://cai.uq.edu.au" title="CAI" target="_blank">CAI &raquo;</a></p>
+	 		  			</div>
+	 		  			<div class="left">
+	 		  				<!-- Login Form -->
+	 		  				<form class="clearfix" action="#" method="post">
+	 		  					<h1>Member Login</h1>
+	 		  					<label class="grey" for="log">Username:</label>
+	 		  					<input type="text" size="15" name="username" id="username" disabled="disabled" value="Admin"/>
+	 		  					<label class="grey" for="pwd">Password:</label>
+	 		  					<input type="password" size="15" name="password" id="password" /><br/>
+	 		  					<input type="button" accesskey="l" class="login_btn_check" id="login_btn" name="login" value="Login" />
+	 		  				</form>
+	 		  			</div>
+	 		  			<div class="left right">			
+	 		  				<!-- Contact Form -->
+	 		  				<form action="#" method="post">
+	 		  					<h1>Contact CAI</h1>				
+	 		  					<label class="grey" for="email">Email:</label>
+	 		  					<input type="text" name="email" id="email" size="15" disabled="disabled" value="disabled"/>
+	 		  					<input type="button" accesskey="l" class="register_btn_check" id="register_btn" name="register" value="Register"/>
+	 		  				</form>
+	 		  			</div>
+	 		  		</div>
+	 		  	</div>
+	 		  	<!-- The tab on top -->	
+	 		  	<div class="tab">
+	 		  		<ul class="login">
+	 		  			<li class="left"></li>
+	 		  			<li id="name_tap">Hello Guest!</li>
+	 		  			<li class="sep">|</li>
+	 		  			<li id="toggle">
+	 		  				<a id="open" class="open" href="#">Log In </a>
+	 		  				<a id="close" style="display: none;" class="close" href="#">Close Panel</a>			
+	 		  			</li>
+	 		  			<li class="right"></li>
+	 		  		</ul> 
+	 		   	</div> <!-- / top -->
+	 		 </div> <!-- /login -->	
 	 		<!--END OF ADMIN LOGIN-->
+	     	
 	     	<div id="div_file_upload" class="settings-left-column">
 				<h1>File Upload</h1>
 				<hr/>
