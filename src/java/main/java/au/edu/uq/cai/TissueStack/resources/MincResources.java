@@ -52,7 +52,7 @@ public final class MincResources extends AbstractRestfulMetaInformation {
 			@Description("Parameter 'file': file name of the data to be tiled (Either 'file' or 'dataset_id' have to be given!!!)")
 			@QueryParam("file")
 			String mincFile,
-			@Description("Optional: dimensions to be tiled (comma separated) default: 0")
+			@Description("Optional: dimensions to be tiled (comma separated) default: -1")
 			@QueryParam("dimensions")
 			String dimensions,
 			@Description("Optional: zoom level. default: 0")
@@ -63,8 +63,10 @@ public final class MincResources extends AbstractRestfulMetaInformation {
 			String tileSize,
 			@Description("Optional: tile as low res preview ('true' or 'false'), default: false")
 			@QueryParam("preview")
-			String preview
-			){
+			String preview,
+			@Description("Optional: store a non-existant data set ('true' or 'false'), default: false")
+			@QueryParam("store_data_set")
+			String storeDataSet){
 		// check tile directory
 		if (baseDirectory == null || baseDirectory.trim().isEmpty()) {
 			baseDirectory = "/tmp/tiles";
@@ -94,7 +96,11 @@ public final class MincResources extends AbstractRestfulMetaInformation {
 		// look for file
 		if (dataSet == null && mincFile != null && new File(mincFile).exists()) {
 			missingSource = false;
-			dataSet = DataSetDataProvider.queryDataSetByFileName(mincFile);
+			try {
+				dataSet = DataSetDataProvider.queryDataSetByFileName(mincFile);
+			} catch (Exception e) {
+				// we can ignore that, we have to rely on the file solely
+			}
 		}
 
 		// check whether we have either a file or valid id as input
@@ -103,12 +109,19 @@ public final class MincResources extends AbstractRestfulMetaInformation {
 					"Not a valid source. You have to hand in either an existing data set id or a valid minc file location!");
 		}
 
+		boolean storeDataSetAsBoolean = false; 
+		try {
+			storeDataSetAsBoolean = Boolean.parseBoolean(storeDataSet);
+		} catch (Exception e) {
+			// fall back onto default
+		}
+		
 		final TissueStack jniTissueStack = new TissueStack();
 		associatedMincInfo = jniTissueStack.getMincInfo(mincFile);
 		// if we didn't find a data set in the db, query the minc file and populate a data set
 		if (dataSet == null) {
 			dataSet = DataSet.fromMincInfo(associatedMincInfo);
-			DataSetDataProvider.insertNewDataSets(dataSet);
+			if (storeDataSetAsBoolean) DataSetDataProvider.insertNewDataSets(dataSet);
 		}
 		// throw an error if we could not create a data set out of the given minc file
 		if (dataSet == null || associatedMincInfo == null) {
@@ -146,7 +159,7 @@ public final class MincResources extends AbstractRestfulMetaInformation {
 					throw new RuntimeException("A given dimension value is outside the min/max range");
 				}
 				// check if start is not exceeding end
-				if ((i % 2) == 0 && arrayValue > dimensionsArray[i+1]) {
+				if ((i % 2) == 0 && dimensionsArray[i+1] != 0 && arrayValue > dimensionsArray[i+1]) {
 					throw new RuntimeException("The start for a given dimension value is larger than the end value for that dimension");
 				}
 			}
