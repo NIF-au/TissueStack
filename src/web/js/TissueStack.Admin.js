@@ -170,7 +170,7 @@ TissueStack.Admin.prototype = {
 		$('#uploadForm').ajaxForm({
 		    beforeSend: function() {
 		        var percentVal = '0%';
-		        bar.width(percentVal)
+		        bar.width(percentVal);
 		        percent.html(percentVal);
 		    },
 		    uploadProgress: function(event, position, total, percentComplete) {
@@ -186,7 +186,7 @@ TissueStack.Admin.prototype = {
 		    	});
 		    	if(check_Success !=null){
 			    	var percentVal = percentComplete + '%';
-			    	bar.width(percentVal)
+			    	bar.width(percentVal);
 			    	percent.html(percentVal);
 		    	}
 		    },

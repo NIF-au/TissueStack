@@ -336,11 +336,11 @@ TissueStack.Utils = {
 		var path = isTiled ? TissueStack.configuration['tile_directory'].value : TissueStack.configuration['image_service_directory'].value;
 
 		if (isTiled) {
-			url += ("/" + path + "/" + dataset_id + "/" + zoom + "/" + plane + "/" + slice);
+			url += ("/" + path + "/" + dataset_id + "/" + zoom + "/" + plane + "/" + slice + "/");
 
 			// for preview we don't need all the params 
 			if (is_preview) {
-				return url + ".low.res." + image_extension;
+				return url + slice + ".low.res." + image_extension;
 			}
 
 			// for tiling we need the row/col pair in the grid
@@ -351,7 +351,7 @@ TissueStack.Utils = {
 				return null;
 			}
 
-			return url + "/" + row + '_' + col + "." + image_extension;
+			return url + row + '_' + col + "." + image_extension;
 		} else {
 			// seems to work for server so why not use it
 		    url = url + "/" + path + "/?volume=" + filename + "&scale=" + zoom + "&dimension=" + plane + "space" + "&slice=" + slice;

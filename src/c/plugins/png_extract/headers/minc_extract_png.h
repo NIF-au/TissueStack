@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <png.h>
+#include <sys/socket.h>
 
 #include <magick/api.h>
 

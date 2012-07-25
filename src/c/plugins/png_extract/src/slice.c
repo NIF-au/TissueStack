@@ -56,6 +56,33 @@ void            *get_all_slices_of_all_dimensions(void *args)
   return (NULL);
 }
 
+void		print_all_tiles_of_one_slice(t_png_args *a, t_vol *volume, int current_slice,
+					     int current_dimension, char *hyperslab,
+					     int height, int width)
+{
+  int		w_max_iteration;
+  int		h_max_iteration;
+
+  a->info->h_position = 0;
+  a->info->start_h = 0;
+  a->info->w_position = 0;
+  a->info->start_w = 0;
+  h_max_iteration = height / a->info->square_size;
+  w_max_iteration = width / a->info->square_size;
+  while (a->info->start_h <= h_max_iteration)
+    {
+      a->info->start_w = 0;
+      while (a->info->start_w <= w_max_iteration)
+	{
+	  a->info->h_position = a->info->start_h;
+	  a->info->w_position = a->info->start_w;
+	  print_png(hyperslab, volume, current_dimension, current_slice, width, height, a);
+	  a->info->start_w++;
+	}
+      a->info->start_h++;
+    }
+}
+
 void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *start, int current_dimension,
 						long unsigned int *count, t_png_args *a)
 {
@@ -66,6 +93,8 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
   char	        *hyperslab;
   int		w_max_iteration;
   int		h_max_iteration;
+  int		save_h_position = a->info->h_position;
+  int		save_w_position = a->info->w_position;
 
   // allocation of a hyperslab (portion of the file, can be 1 slice or 1 demension...)
   hyperslab =  malloc(volume->slices_max * sizeof(*hyperslab));
@@ -93,31 +122,37 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
 	  a->info->w_position = 0;
 	  a->info->start_w = 0;
 
-	  h_max_iteration = height / a->info->square_size;
-	  w_max_iteration = width / a->info->square_size;
+	  h_max_iteration = (height * a->info->scale) / a->info->square_size;
+	  w_max_iteration = (width * a->info->scale) / a->info->square_size;
+
 	  while (a->info->start_h <= h_max_iteration)
 	    {
 	      a->info->start_w = 0;
 	      while (a->info->start_w <= w_max_iteration)
 		{
-	      a->info->h_position = a->info->start_h;
-	      a->info->w_position = a->info->start_w;
+		  a->info->h_position = a->info->start_h;
+		  a->info->w_position = a->info->start_w;
 
-		  a->info->done = 0;
 		  print_png(hyperslab, volume, current_dimension, current_slice, width, height, a);
 		  a->info->start_w++;
 		}
 	      a->info->start_h++;
 	    }
 	}
-      else
-	print_png(hyperslab, volume, current_dimension, current_slice, width, height, a);
+      else {
+    	  print_png(hyperslab, volume, current_dimension, current_slice, width, height, a);
+      }
+
 
       pthread_mutex_lock(&(a->p->lock));
       a->info->slices_done++;
       pthread_mutex_unlock(&(a->p->lock));
       pthread_cond_signal(&(a->info->cond));
       current_slice++;
+
+      // restore original positions
+      a->info->h_position = save_h_position;
+      a->info->w_position = save_w_position;
     }
   start[current_dimension] = 0;
   free(hyperslab);

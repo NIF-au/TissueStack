@@ -101,7 +101,8 @@ t_png_args	*create_args_thread(t_thread_pool *p, t_vol *vol, t_png_extract *png_
   args = malloc(sizeof(*args));
   args->volume = vol;
   args->p = p;
-  args->info = png_general;
+  args->info = malloc(sizeof(*args->info));
+  memcpy(args->info, png_general, sizeof(*png_general));
   args->this = this;
   args->file = sock;
   return (args);
@@ -327,7 +328,6 @@ void		*start(void *args)
 	    png_args->root_path = strdup(a->commands[11]);
 	}
     }
-  png_args->done = 0;
   png_args->total_slices_to_do = get_total_slices_to_do(volume, png_args->dim_start_end);
 
   step = (strcmp(png_args->service, "tiles") == 0 ? atoi(a->commands[13]) : (strcmp(png_args->service, "full") == 0 ? atoi(a->commands[10]) : atoi(a->commands[14])));
