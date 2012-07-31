@@ -17,14 +17,9 @@
 		
         <script src="js/libs/jquery/jquery-1.7.1.js"></script>
         <script src="js/libs/jquery/jquery.mobile-1.1.0.min.js"></script>
+        <script src="js/libs/jquery/jquery.form.js"></script>
         <script src="js/TissueStack.Slider.js"></script>
 		<script src="js/libs/sylvester/sylvester.js"></script>
-		
-		<!--TREE DATA SETS-->
-		<script src="js/libs/jquery/jquery-ui.custom.js"></script>
-	    <script src="js/libs/jquery/jquery.cookie.js"></script>
-	    <script src="js/libs/jquery/jquery.dynatree.js"></script>
-	    <link rel="stylesheet" href="css/ui.dynatree.css">
 		
 		<script src="js/TissueStack.MouseWheel.js"></script>
 		<script src="js/TissueStack.js"></script>
@@ -35,6 +30,7 @@
 		<script src="js/TissueStack.Events.js"></script>
         <script src="js/TissueStack.DataSetStore.js"></script>
         <script src="js/TissueStack.DataSetNavigation.js"></script>
+        <script src="js/TissueStack.Admin.js"></script>
 		<script src="js/TissueStack.Init.js"></script>
 		
 		<script type="text/javascript">
@@ -73,7 +69,7 @@
                     <button type="button" id="server_search_button">Connect to TissueStack Server</button>
 
      	    		<!--ADD TREE DATA SET NAVI BAR-->					
-					<div id="mobile_style_tree_dataset">
+					<div id="mobile_style_tree_dataset" style="height: 250px; width: 155px; overflow: auto;">
 						<div data-role="collapsible-set" data-theme="a" data-content-theme="d" data-mini="true">
 						<div id="tablet_tree"></div>
 						</div>
@@ -141,7 +137,7 @@
 	<!-- ADMIN PAGE --> 
 	  <div data-role="page" data-theme="a" id="admin" data-id="Head1"  >
 	        <div data-role="content">
-					<div data-theme="a" data-role="header" data-position="fixed">
+				<div data-theme="a" data-role="header" data-position="fixed">
 	    	  	     <div data-role="navbar">
 						<ul>
 							<li><a href="#data" data-icon="minus">Data</a></li>
@@ -151,12 +147,57 @@
 			  		 </div>
 	            </div>
 	 	    </div>
-	 	    
-	 	    <div>
-	 	    
-	 	    
-	 	    </div>
+ 	    <!--ADMIN LOGIN-->
+		   <div id="page_container">
+	 		  <div id="toppanel">
+	 		    <div id="panel">
+	 		      <div id="panel_contents"> </div>
+	 		      <div class="border" id="login">
+	 		        <p>
+	 		          User:<input type="text" size="15" name="username" id="username" disabled="disabled" value="Admin"/>
+	 		          Password:<input type="password" size="15" name="password" id="password" /><br/>
+	 		          <input type="button" accesskey="l" class="login_btn_check" id="login_btn" name="login" value="Login" />
+	 		        </p>
+	 		      </div>
+	 		     </div>
+		 		    <div class="panel_button" style="display: visible;">
+		 		    	<img src="images/expand.png"  alt="expand"/> <a href="#">Login Here</a> 
+		 		   	</div>
+		 		    <div class="panel_button" id="hide_button" style="display: none;">
+		 		    	<img src="images/collapse.png" alt="collapse" /> <a href="#">Hide</a> 
+		 		    </div>
+		 		</div>
+			</div>
+		<!--END OF ADMIN LOGIN-->
+ 	       	<div id="div_file_upload" class="settings-left-column">
+	    			<h1>File Upload</h1>
+	    			<hr/>
+	    			<div id="file_uploaded_message" ></div>
+	    			<div id="file_status_message" class="hidden"></div>		 
+	    		    <fieldset>
+	    		        <form id="uploadForm" action="#" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
+	    		            <label for="filename_1">File: </label>
+	    		            <input id="filename_1" type="file" name="filename_1" size="50"/><br/>
+	    		            <input class="submit_new_file" type="submit" value="Upload" data-inline="true" data-theme="e" data-icon="check" />
+	    		        </form>
+	    		        <div class="progress" style="left: 20px ;">
+	    	                <div class="bar"></div >
+	    	                <div class="percent">0%</div >
+	    		        </div>
+	    		    </fieldset>
+ 	       	</div>
+ 	       	<div class="settings-right-column">
+	    			<h1>Upload Directory</h1>
+	    			<hr/>
+	    			<div id="file_group" data-role="fieldcontain">
+	    				<fieldset class="file_radio_list" data-role="controlgroup">
+	    				</fieldset>
+	    			</div>
+	    			<label for="txtDesc" style="text-align: left;">&nbsp;&nbsp;Description:</label>
+	    			<input type="text" name="name" id="txtDesc" data-mini="true" />
+	    			<a href="" id="bt_add_dataset" data-role="button" data-inline="true" data-theme="e" data-icon="check">Add Data Set</a>
+ 	    	</div>
 	 	</div>
-	<!--    END SETTING PAGE       -->
-</body>
+ 	    <!--END OF ADMIN PAGE-->
+	</body>
 </html>

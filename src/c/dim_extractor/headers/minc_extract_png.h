@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <png.h>
-#include "./thread_pool.h"
+#include "thread_pool.h"
 
 typedef	struct	s_options
 {
@@ -51,7 +51,7 @@ unsigned int            get_slices_max(t_vol *volume);
 // png_creator.c
 void            print_png(double *hyperslab, t_vol *volume, int current_dimension,
 			  unsigned int current_slice, int width, int height);
-void            set_grayscale(png_byte *ptr, float val);
+void            set_grayscale(unsigned char *ptr, float val);
 void		get_width_height(int *height, int *width, int current_dimension, t_vol *volume);
 
 

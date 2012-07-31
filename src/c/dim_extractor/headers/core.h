@@ -1,5 +1,5 @@
-#ifndef __TISSUE_STACK_CORE__
-#define __TISSUE_STACK_CORE__
+#ifndef __MINC_TOOL_CORE__
+#define __MINC_TOOL_CORE__
 
 #include <sys/select.h>
 #include <sys/time.h>
@@ -97,10 +97,6 @@ struct			s_vol
   char			*path;
   unsigned int		slices_max;
   char			**dim_name;
-  int			raw_data;
-  int			*dim_offset;
-  int			*slice_size;
-  int			raw_fd;
   t_vol			*next;
 };
 
@@ -197,4 +193,4 @@ void		clean_error_list(t_tissue_stack *general, int min);
 #define ERROR_MAX 5
 #define CLEANING_ERROR_TIME 30
 
-#endif /* __TISSUE_STACK_CORE__ */
+#endif /* __MINC_TOOL_CORE__ */

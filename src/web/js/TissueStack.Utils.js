@@ -223,11 +223,11 @@ TissueStack.Utils = {
 			$("#treedataset").css({"height": treeHeight});
 		}
 
-		$('.dataset').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height});
+		$('.dataset').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height * 0.99});
 		for (var x=1;x<=datasets;x++) {
-			$('#dataset_' + x + '_main_view_canvas').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height});
-			$('#dataset_' + x + '_main_view_canvas canvas').attr("width", TissueStack.canvasDimensions.width);
-			$('#dataset_' + x + '_main_view_canvas canvas').attr("height", TissueStack.canvasDimensions.height);
+			$('#dataset_' + x + '_main_view_canvas').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height * 0.99});
+			$('#dataset_' + x + '_main_view_canvas canvas').attr("width", TissueStack.canvasDimensions.width * 0.99);
+			$('#dataset_' + x + '_main_view_canvas canvas').attr("height", TissueStack.canvasDimensions.height * 0.99);
 		}
 
 		// apply screen and canvas size changes
@@ -336,11 +336,11 @@ TissueStack.Utils = {
 		var path = isTiled ? TissueStack.configuration['tile_directory'].value : TissueStack.configuration['image_service_directory'].value;
 
 		if (isTiled) {
-			url += ("/" + path + "/" + dataset_id + "/" + zoom + "/" + plane + "/" + slice);
+			url += ("/" + path + "/" + dataset_id + "/" + zoom + "/" + plane + "/" + slice + "/");
 
 			// for preview we don't need all the params 
 			if (is_preview) {
-				return url + ".low.res." + image_extension;
+				return url + slice + ".low.res." + image_extension;
 			}
 
 			// for tiling we need the row/col pair in the grid
@@ -351,10 +351,10 @@ TissueStack.Utils = {
 				return null;
 			}
 
-			return url + "/" + row + '_' + col + "." + image_extension;
+			return url + row + '_' + col + "." + image_extension;
 		} else {
-			// TODO: change back to apache rewrite when working
-		    url = ("http://localhost:4242/?volume=" + filename + "&scale=" + zoom + "&dimension=" + plane + "space" + "&slice=" + slice);
+			// seems to work for server so why not use it
+		    url = url + "/" + path + "/?volume=" + filename + "&scale=" + zoom + "&dimension=" + plane + "space" + "&slice=" + slice;
 			
 			if (is_preview) {
 				return url + "&quality=10";

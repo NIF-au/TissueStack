@@ -1,6 +1,6 @@
 DIRSRC		=	./
 
-SRCS		=	$(DIRSRC)core.c							\
+SRCS		=	$(DIRSRC)main.c							\
 			$(DIRSRC)prompt.c						\
 			$(DIRSRC)plugin.c						\
 			$(DIRSRC)volume.c						\
@@ -23,24 +23,20 @@ NAME		=	TissueStackImageServer
 FLAGS		=	-Wall -Werror -DDEB -g3
 
 
-all: compile install
+all: compile
 
 compile:	
 	@clear
 	@echo "\n================== Compile $(NAME) ===================="
 	gcc $(SRCS) -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS)
-	make -C ./plugins/communicator/ compile
-	make -C ./plugins/image_extract/ compile
-	make -C ./plugins/comm_inter_process/ compile
-	make -C ./plugins/minc_info/ compile
-	make -C ./jni/ compile
+	gcc extractor.c -o extract $(INCLUDE) $(LIBS) $(FLAGS) `GraphicsMagick-config --cppflags --ldflags --libs`
 
 install:
 	@echo "\n============= Installing Binaries ================="
 	mkdir -p /usr/local/bin/
 	cp $(NAME) /usr/local/bin/
 	make -C ./plugins/communicator/ install
-	make -C ./plugins/image_extract/ install
+	make -C ./plugins/png_extract/ install
 	make -C ./plugins/comm_inter_process/ install
 	make -C ./plugins/minc_info/ install
 	make -C ./jni/ install
@@ -50,7 +46,7 @@ clean:
 	rm -rf *~ \#*\# $(NAME) ./png/* core
 	rm -rf *.o
 	make -C ./plugins/communicator/ clean
-	make -C ./plugins/image_extract/ clean
+	make -C ./plugins/png_extract/ clean
 	make -C ./plugins/comm_inter_process/ clean
 	make -C ./plugins/minc_info/ clean
 	make -C ./jni/ clean

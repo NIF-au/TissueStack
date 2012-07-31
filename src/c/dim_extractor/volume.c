@@ -12,25 +12,6 @@ int		init_volume(t_vol *volume, char *path)
   memcpy(volume->path, path, path_len);
   if (volume->path == NULL)
     return (-1);
-
-  //if (strcmp(&path[path_len - 5], ".mnc") == 0)
-  //  {
-  volume->raw_data = 1;
-      volume->raw_fd = open("/mnt/sata/data/brain.raw", O_RDWR);
-      volume->dim_offset = malloc(volume->dim_nb * sizeof(*volume->dim_offset));
-      volume->slice_size = malloc(volume->dim_nb * sizeof(*volume->slice_size));
-      volume->dim_offset[0] = 0;
-
-      volume->slice_size[0] = 1311 * 679;
-      volume->slice_size[1] = 499 * 679;
-      volume->slice_size[2] = 499 * 1311;
-
-      volume->dim_offset[1] = volume->slice_size[0] * 499;
-      volume->dim_offset[2] = volume->dim_offset[1] + volume->slice_size[1] * 1311;
-      //  }
-
-
-
   // open the minc file
   if ((result = miopen_volume(volume->path, MI2_OPEN_READ, &volume->minc_volume)) != MI_NOERROR)
     {

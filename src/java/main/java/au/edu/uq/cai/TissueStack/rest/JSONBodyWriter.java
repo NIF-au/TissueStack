@@ -23,7 +23,7 @@ import net.sf.json.util.PropertyFilter;
 @Produces(MediaType.APPLICATION_JSON)
 public class JSONBodyWriter implements MessageBodyWriter<Object> {
 
-	private static JsonConfig jsonConfig;
+	public static JsonConfig jsonConfig;
 
 	static {
 		jsonConfig = new JsonConfig();
@@ -46,7 +46,6 @@ public class JSONBodyWriter implements MessageBodyWriter<Object> {
 		if (arg0 == null) {
 			return 0;
 		}
-
 	
 		this.json = JSONObject.fromObject(arg0, jsonConfig).toString();
 		

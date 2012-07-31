@@ -254,96 +254,11 @@ a.ui-slider-handle-horizontal{
     visibility: false;
 }
 
-/*ADMIN PAGE LOGIN INTERFACE*/
-#page_container {
-	position: relative;
-	margin-left: auto;
-	margin-right: auto;
-	width: 904px;
-	top: -32px;
-}
-.panel_button {
-	margin-left: auto;
-	margin-right: auto;
-	position: relative;
-	top: 1px;
-	width: 173px;
-	height: 54px;
-	background: url(../images/panel_button.png);
-	z-index: 20;
-	filter:alpha(opacity=70);
-	-moz-opacity:0.70;
-	-khtml-opacity: 0.70;
-	opacity: 0.70;
-	cursor: pointer;
-}
-.panel_button img {
-	position: relative;
-	top: 10px;
-	border: none;
-}
-.panel_button a {
-	text-decoration: none;
-	color: #545454;
-	font-size: 20px;
-	font-weight: bold;
-	position: relative;
-	top: 5px;
-	left: 10px;
-	font-family: Arial, Helvetica, sans-serif;
-}
-.panel_button a:hover {
-	color: #999999;
-}
+/*PROGRESS BAR FOR UPLOAD FILES*/
 
-#toppanel {
-	position: absolute;
-	width: 900px;
-	left: 0px;
-	z-index: 25;
-	text-align: center;
-
-}
-#panel {
-	width: 900px;
-	position: relative;
-	top: 1px;
-	height: 0px;
-	margin-left: auto;
-	margin-right: auto;
-	z-index: 10;
-	overflow: hidden;
-	text-align: left;
-}
-#panel_contents {
-	background: black;
-	filter:alpha(opacity=70);
-	-moz-opacity:0.70;
-	-khtml-opacity: 0.70;
-	opacity: 0.70;
-	height: 100%;
-	width: 904px;
-	position: absolute;
-	z-index: -1;
-}
-
-.border {
-	border: 15px #1d1d1d solid;
-}
-
-div#login {
-	width: 250px;
-	height: 150px;
-	position: absolute;
-	left: 300px;
-	top: 110px;
-	text-align: center;
-}
-div#login p {
-	color: #CCCCCC;
-	font-family: Century Gothic, Georgia, "Times New Roman", Times, serif;
-	line-height: 30px;
-}
+.progress { position:relative; width:400px; border: 1px solid #ddd; padding: 1px; border-radius: 3px; }
+.bar { background-color: #70e0b4; width:0%; height:20px; border-radius: 3px;}
+.percent { position:absolute; display:inline-block; top:3px; left:48%; }
 
 /*ERROR MESSAGE STYLE*/
 .error_message{

@@ -109,11 +109,10 @@ int		is_not_num(char *str)
   i = 0;
   while (str[i] != '\0' && i < strlen(str))
     {
-      if (str[i] >= '0' || str[i] <= '9' || (str[i] == '.' && (str[i + 1] >= '0' || str[i + 1] <= '9')))
+      if (str[i] >= '0' || str[i] <= '9' || (str[i] == '.' && (str[i + 1] && (str[i + 1] >= '0' || str[i + 1] <= '9'))))
 	i++;
       else
 	return (1);
-      i++;
     }
   return (0);
 }
@@ -123,10 +122,12 @@ char		get_by_name_dimension_id(char *volume, char *dimension, t_serv_comm *s)
   t_vol		*tmp;
   int		i;
 
+  if (!dimension || !volume || !s)
+    return (0);
   tmp = s->general->volume_first;
   while (tmp != NULL)
     {
-      if (strcmp(tmp->path, volume) == 0)
+      if (tmp->path && strcmp(tmp->path, volume) == 0)
 	{
 	  i = 0;
 	  while (tmp->dim_name[i] != NULL)
@@ -210,10 +211,11 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
 	  fprintf(stderr, "Invalid argumen: non interger\n");
 	  return;
 	}
-      dimension[0] = get_by_name_dimension_id(volume, dimension, s);
+      if ((dimension[0] = get_by_name_dimension_id(volume, dimension, s)) == 0)
+	return;
       if (service == NULL)
 	{
-	  sprintf(comm, "start png %s %i %i %i %i %i %i %s %s %s 1", volume,
+	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s 1", volume,
 		  (dimension[0] == '0' ? atoi(slice) : -1),
 		  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
 		  (dimension[0] == '1' ? atoi(slice) : -1),
@@ -225,7 +227,7 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
 	}
       else if (strcmp(service, "tiles") == 0)
 	{
-	  sprintf(comm, "start png %s %i %i %i %i %i %i %s %s %s %s %s %s 1", volume,
+	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s 1", volume,
 		  (dimension[0] == '0' ? atoi(slice) : -1),
 		  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
 		  (dimension[0] == '1' ? atoi(slice) : -1),
@@ -236,7 +238,7 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
 	}
       else if (strcmp(service, "images") == 0)
 	{
-	  sprintf(comm, "start png %s %i %i %i %i %i %i %s %s %s %s %s %s %s 1", volume,
+	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s %s 1", volume,
 		  (dimension[0] == '0' ? atoi(slice) : -1),
 		  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
 		  (dimension[0] == '1' ? atoi(slice) : -1),
@@ -328,7 +330,7 @@ int		serv_init_connect(t_serv_comm *s)
       fprintf(stderr, "Bind Error\n");
       return (-1);
     }
-  listen(s->sock_serv, 5);
+  listen(s->sock_serv, 75);
   return (0);
 }
 

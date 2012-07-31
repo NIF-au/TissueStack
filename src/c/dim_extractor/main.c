@@ -5,10 +5,10 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Tue Jul 17 15:28:23 2012 Oliver Nicolini
+** Last update Mon Jul 30 18:12:49 2012 Oliver Nicolini
 */
 
-
+#include <sys/stat.h>
 #include "core.h"
 
 static t_tissue_stack	*t_global;
@@ -200,6 +200,114 @@ void		free_core_struct(t_tissue_stack *t)
   free(t);
 }
 
+int miflush_volume ( mihandle_t    volume);
+
+
+int		main(int argc, char **argv)
+{
+  t_tissue_stack	*t;
+  int			result;
+
+  t = malloc(sizeof(*t));
+  init_prog(t);
+  t->volume_first = malloc(sizeof(*t->volume_first));
+  if ((result = init_volume(t->volume_first, argv[1])) != 0)
+    return (result);
+
+  /*
+  char		yop[] = "./test.mnc";
+  mihandle_t        volume;
+  miclass_t        volume_class;
+  mivolumeprops_t          props;*/
+  unsigned long 			   *start;
+  long unsigned int			   *count;
+  char			   *hyperslab;
+
+  start = malloc(3 * sizeof(*start));
+  count = malloc(3 * sizeof(*count));
+
+  /*
+  hyperslab = malloc((t->volume_first->size[2] * t->volume_first->size[1]) * sizeof(*hyperslab));
+  memset(hyperslab, '\0', t->volume_first->size[2] * t->volume_first->size[1]);
+  printf("hello 1\n");
+  miget_volume_props(t->volume_first->minc_volume, &props);
+  printf("hello 2\n");
+  miget_data_class(t->volume_first->minc_volume, &volume_class);
+  printf("hello 3\n");
+  micreate_volume(yop, t->volume_first->dim_nb, t->volume_first->dimensions, MI_TYPE_UBYTE, MI_CLASS_REAL, NULL, &volume);
+  int min, max;
+  min = 0;
+  max = 255;
+  //printf("pixels = %i - min = %i - max = %i\n", i, min, max);
+  printf("hello 5\n");
+
+  // create the data for the new volume
+  if (micreate_volume_image(volume) != MI_NOERROR) {
+    fprintf(stderr, "Error creating volume data\n");
+    return(1);
+  }
+
+  //set valid and real range
+  miset_volume_valid_range(volume, 255, 0);
+  miset_volume_range(volume, max, min);
+
+  miset_slice_range(volume, start, 3, max, min);
+*/
+
+  printf("hello 4\n");
+  //  int i = 0;
+  int dim = 0;
+  int slice = 0;
+  int this_slice = 0;
+
+  start[0] = start[1] = start[2] = 0;
+  count[0] = t->volume_first->size[0];
+  count[1] = t->volume_first->size[1];
+  count[2] = t->volume_first->size[2];
+
+  int fd = open("/mnt/sata/data/brain.raw", O_CREAT | O_TRUNC | O_RDWR);
+  int size;
+
+  while (dim < 3)
+    {
+      size = (dim == 0 ? (t->volume_first->size[2] * t->volume_first->size[1]) : (dim == 1 ? (t->volume_first->size[0] * t->volume_first->size[2]) : (t->volume_first->size[0] * t->volume_first->size[1])));
+      hyperslab = malloc(size * sizeof(*hyperslab));
+      slice = t->volume_first->size[dim];
+      this_slice = 0;
+      count[dim] = 1;
+      while (this_slice < slice)
+	{
+	  start[dim] = this_slice;
+	  memset(hyperslab, '\0', size);
+	  miget_real_value_hyperslab(t->volume_first->minc_volume, MI_TYPE_UBYTE, start, count, hyperslab);
+	  write(fd, hyperslab, size);
+	  //    miset_real_value_hyperslab(volume, MI_TYPE_BYTE, start, count, hyperslab);
+	  printf("Slice = %i - dim = %i\n", this_slice, dim);
+	  this_slice++;
+	}
+      start[dim] = 0;
+      count[dim] = t->volume_first->size[dim];
+      dim++;
+    }
+  close(fd);
+  /*while (hyperslab[i] != '\0')
+    {
+      if (hyperslab[i] > max)
+	max = hyperslab[i] + 127;
+      if (hyperslab[i] < min)
+	min = hyperslab[i] + 127;
+      i++;
+    }*/
+
+  printf("hello 6\n");
+  //  miflush_volume(volume);
+  //printf("hello 7\n");
+  // miclose_volume(volume);
+  printf("hello 8\n");
+  chmod("./raw_data_file", 0755);
+  return (0);
+}
+/*
 int		main(int argc, char **argv)
 {
   int			result;
@@ -231,7 +339,7 @@ int		main(int argc, char **argv)
   // lunch thread_pool
   t->tp = malloc(sizeof(*t->tp));
  thread_pool_init(t->tp, 10);
-  (t->plug_actions)(t, "load image /usr/local/plugins/TissueStackImageExtract.so", NULL);
+  (t->plug_actions)(t, "load png /usr/local/plugins/TissueStackPNGExtract.so", NULL);
   sleep(1);
   (t->plug_actions)(t, "load serv /usr/local/plugins/TissueStackCommunicator.so", NULL);
   sleep(2);
@@ -263,3 +371,4 @@ int		main(int argc, char **argv)
 
   return (0);
 }
+*/

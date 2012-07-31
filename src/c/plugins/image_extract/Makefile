@@ -1,10 +1,11 @@
 DIRSRC		=	./src/
 
-SRCS		=	$(DIRSRC)minc_extract_png.c					\
-			$(DIRSRC)png_creator.c						\
-			$(DIRSRC)slice.c
+SRCS		=	$(DIRSRC)image_extract.c					\
+			$(DIRSRC)tile_creator.c						\
+			$(DIRSRC)slice.c							\
+			$(DIRSRC)../../../utils/utils.c
 
-INCLUDE		=	-I./headers -I../../headers
+INCLUDE		=	-I./headers -I./../../utils -I../../headers
 
 LIB_PATH	=	
 
@@ -15,7 +16,7 @@ LIBS		=	-lhdf5								\
 			-lpthread							\
 			-ldl
 
-NAME		=	TissueStackPNGExtract.so
+NAME		=	TissueStackImageExtract.so
 
 FLAGS		=	-g3 -Wall -Werror -DDEB
 

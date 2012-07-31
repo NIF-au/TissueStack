@@ -103,12 +103,14 @@ void *start(void *args) {
 		}
 	}
 
-	printf("Sending: %s\n", buffer->buffer);
+	printf("Sending: #%s#\n", buffer->buffer);
 
 	// write out response
-	write(*unix_socket, buffer->buffer, buffer->size);
+	send(*unix_socket, buffer->buffer, buffer->size, 0);
+
 	// close socket
 	shutdown(*unix_socket, 2);
+	close(*unix_socket);
 
 	return NULL;
 }

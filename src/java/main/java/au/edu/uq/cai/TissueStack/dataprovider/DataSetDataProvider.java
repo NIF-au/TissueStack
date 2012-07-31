@@ -16,6 +16,32 @@ import au.edu.uq.cai.TissueStack.dataobjects.DataSetPlanes;
 
 public final class DataSetDataProvider {
 	final static Logger logger = Logger.getLogger(DataSetDataProvider.class); 
+	public static DataSet queryDataSetByFileName (String fileName){
+		if (fileName == null || fileName.trim().isEmpty()) {
+			return null;
+		}
+		
+		EntityManager em = null; 
+		try {
+			
+			em = JPAUtils.instance().getEntityManager();
+			
+			Query query = em.createQuery("SELECT DISTINCT dataset FROM DataSet dataset LEFT JOIN FETCH dataset.planes WHERE dataset.filename = :filename");	
+			query.setParameter("filename", fileName.trim());
+			
+			@SuppressWarnings("unchecked")
+			List<DataSet> result = query.getResultList();
+
+			if (result == null || result.size() != 1) {
+				return null;
+			}
+			
+			return result.get(0);
+		} finally {
+			JPAUtils.instance().closeEntityManager(em);
+		}
+	}
+	
 	public static DataSet queryDataSetById (long id){
 		EntityManager em = null; 
 		try {
@@ -78,9 +104,25 @@ public final class DataSetDataProvider {
 			// append the newly persisted planes again to its parent
 			dataset.setPlanes(Arrays.asList(copy));
 		} catch(Exception any) {
-			JPAUtils.instance().rollbackTransaction(write);
+			// undo if we were able to add the data set master
+			try {
+				if (dataset.getId() != 0) {
+					try {
+						write.rollback();
+					} catch (Exception e) {
+						// we can safely ignore that
+					}
+					dataset = em.find(DataSet.class, dataset.getId());
+					write = em.getTransaction();
+					write.begin();
+					em.remove(dataset);
+					write.commit();
+				}
+			} catch(Exception ignored) {
+				// ignored
+			}
 			logger.error("Failed to add new Data Set: " + dataset, any);
-			throw new RuntimeException("Already Exist In Data Set",any);
+			throw new RuntimeException("Failed to add new Data Set", any);
 		} finally {
 			JPAUtils.instance().closeEntityManager(em);
 		}
