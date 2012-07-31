@@ -211,13 +211,11 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
 	  fprintf(stderr, "Invalid argumen: non interger\n");
 	  return;
 	}
-      printf("sim_name ====== %s\n", dimension);
       if ((dimension[0] = get_by_name_dimension_id(volume, dimension, s)) == 0)
 	return;
-      printf("dimension id = %c\n", dimension[0]);
       if (service == NULL)
 	{
-	  sprintf(comm, "start png %s %i %i %i %i %i %i %s %s %s 1", volume,
+	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s 1", volume,
 		  (dimension[0] == '0' ? atoi(slice) : -1),
 		  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
 		  (dimension[0] == '1' ? atoi(slice) : -1),
@@ -229,7 +227,7 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
 	}
       else if (strcmp(service, "tiles") == 0)
 	{
-	  sprintf(comm, "start png %s %i %i %i %i %i %i %s %s %s %s %s %s 1", volume,
+	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s 1", volume,
 		  (dimension[0] == '0' ? atoi(slice) : -1),
 		  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
 		  (dimension[0] == '1' ? atoi(slice) : -1),
@@ -240,7 +238,7 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
 	}
       else if (strcmp(service, "images") == 0)
 	{
-	  sprintf(comm, "start png %s %i %i %i %i %i %i %s %s %s %s %s %s %s 1", volume,
+	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s %s 1", volume,
 		  (dimension[0] == '0' ? atoi(slice) : -1),
 		  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
 		  (dimension[0] == '1' ? atoi(slice) : -1),
@@ -249,7 +247,6 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
 		  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
 		  scale, quality, service, y, x, y_end, x_end);
 	}
-      printf("________________ %s\n", comm);
       s->general->plug_actions(s->general, comm, file);
     }
 }

@@ -435,9 +435,9 @@ JNIEXPORT void JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMincVo
 		return;
 	}
 
-	// load and start png extract plugin
+	// load and start image extract plugin
 	t_string_buffer * startTilingCommand = NULL;
-	startTilingCommand = appendToBuffer(startTilingCommand, "start png ");
+	startTilingCommand = appendToBuffer(startTilingCommand, "start image ");
 	startTilingCommand = appendToBuffer(startTilingCommand, (char *) file);
 
 	jint * dimensions = (*env)->GetIntArrayElements(env, arr_dimensions, NULL);

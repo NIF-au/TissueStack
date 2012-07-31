@@ -1,6 +1,6 @@
-#include "minc_extract_png.h"
+#include "image_extract.h"
 
-void		get_percent(FILE *file, t_png_extract *a)
+void		get_percent(FILE *file, t_image_extract *a)
 {
   char		buff[20];
 
@@ -17,9 +17,9 @@ void		get_percent(FILE *file, t_png_extract *a)
 
 void		*percentage(void *args)
 {
-  t_png_args	*a;
+  t_image_args	*a;
 
-  a = (t_png_args *)args;
+  a = (t_image_args *)args;
   a->info->percent = 0;
   while (a->info->percent < 100)
     {
@@ -94,31 +94,31 @@ int		**generate_dims_start_end_thread(t_vol *v, int dim, int start, int end)
   return (dim_start_end);
 }
 
-t_png_args	*create_args_thread(t_thread_pool *p, t_vol *vol, t_png_extract *png_general, t_plugin *this, FILE *sock)
+t_image_args	*create_args_thread(t_thread_pool *p, t_vol *vol, t_image_extract *image_general, t_plugin *this, FILE *sock)
 {
-  t_png_args   *args;
+  t_image_args   *args;
 
   args = malloc(sizeof(*args));
   args->volume = vol;
   args->p = p;
   args->info = malloc(sizeof(*args->info));
-  memcpy(args->info, png_general, sizeof(*png_general));
+  memcpy(args->info, image_general, sizeof(*image_general));
   args->this = this;
   args->file = sock;
   return (args);
 }
 
-void		lunch_percent_display(t_thread_pool *p, t_vol *vol, t_png_extract *png_general, t_plugin *this)
+void		lunch_percent_display(t_thread_pool *p, t_vol *vol, t_image_extract *image_general, t_plugin *this)
 {
-  t_png_args   *args;
+  t_image_args   *args;
 
-  args = create_args_thread(p, vol, png_general, this, NULL);
+  args = create_args_thread(p, vol, image_general, this, NULL);
   (*p->add)(percentage, (void *)args, p);
 }
 
-void		png_creation_lunch(t_vol *vol, int step, t_thread_pool *p, t_png_extract *png_general, t_plugin *this, FILE *sock)
+void		image_creation_lunch(t_vol *vol, int step, t_thread_pool *p, t_image_extract *image_general, t_plugin *this, FILE *sock)
 {
-  t_png_args	*args;
+  t_image_args	*args;
   unsigned int	i;
   unsigned int	j;
   unsigned int	nb_slices = 0;
@@ -131,18 +131,17 @@ void		png_creation_lunch(t_vol *vol, int step, t_thread_pool *p, t_png_extract *
 	  step = 1;
   }
 
-  dim_start_end = png_general->dim_start_end;
-  //  lunch_percent_display(p, vol, png_general, this);
+  dim_start_end = image_general->dim_start_end;
+  //  lunch_percent_display(p, vol, image_general, this);
   while (i < 3)
     {
       if (dim_start_end[i][0] != -1 && dim_start_end[i][1] != -1)
 	{
-	  printf("QWERTYUIOPQWRTUIOQWETYUQWERTQWERWEERTY\n");
 	  j = 0;
 	  nb_slices = ((dim_start_end[i][1] == 0 ? vol->size[i] : dim_start_end[i][1]) - dim_start_end[i][0]);
 	  while (j < nb_slices)
 	    {
-	      args = create_args_thread(p, vol, png_general, this, sock);
+	      args = create_args_thread(p, vol, image_general, this, sock);
 	      if ((dim_start_end[i][0] + step) <= dim_start_end[i][1])
 		args->dim_start_end = generate_dims_start_end_thread(vol, i, dim_start_end[i][0], dim_start_end[i][0] + step);
 	      else
@@ -206,34 +205,34 @@ int		check_range(int **d, t_vol *v)
   return (0);
 }
 
-t_png_extract	*create_png_struct()
+t_image_extract	*create_image_struct()
 {
-  t_png_extract	*png_args;
+	t_image_extract	*image_args;
 
-  png_args = malloc(sizeof(*png_args));
-  png_args->total_slices_to_do = 0;
-  png_args->slices_done = 0;
-  png_args->step = 0;
-  png_args->dim_start_end = NULL;
-  pthread_mutex_init(&png_args->mut, NULL);
-  pthread_cond_init(&png_args->cond, NULL);
-  return (png_args);
+  image_args = malloc(sizeof(*image_args));
+  image_args->total_slices_to_do = 0;
+  image_args->slices_done = 0;
+  image_args->step = 0;
+  image_args->dim_start_end = NULL;
+  pthread_mutex_init(&image_args->mut, NULL);
+  pthread_cond_init(&image_args->cond, NULL);
+  return (image_args);
 }
 
 void		*init(void *args)
 {
-  t_png_extract	*png_args;
+  t_image_extract	*image_args;
   t_args_plug	*a;
 
   a = (t_args_plug *)args;
-  png_args = malloc(sizeof(*png_args));
-  png_args->total_slices_to_do = 0;
-  png_args->slices_done = 0;
-  png_args->step = 0;
-  png_args->dim_start_end = NULL;
-  pthread_mutex_init(&png_args->mut, NULL);
-  pthread_cond_init(&png_args->cond, NULL);
-  a->this->stock = (void*)png_args;
+  image_args = malloc(sizeof(*image_args));
+  image_args->total_slices_to_do = 0;
+  image_args->slices_done = 0;
+  image_args->step = 0;
+  image_args->dim_start_end = NULL;
+  pthread_mutex_init(&image_args->mut, NULL);
+  pthread_cond_init(&image_args->cond, NULL);
+  a->this->stock = (void*)image_args;
   InitializeMagick("./");
   /*
   free(a->name);
@@ -248,7 +247,7 @@ void		*init(void *args)
 
 void		*start(void *args)
 {
-  t_png_extract	*png_args;
+  t_image_extract	*image_args;
   t_args_plug	*a;
   t_vol		*volume;
   int		step;
@@ -277,12 +276,11 @@ void		*start(void *args)
   // please don't move this line up above the loading of the volume
   socketDescriptor = (FILE*)a->box;
 
-  //  png_args = (t_png_extract *)a->this->stock;
-  png_args = create_png_struct();
+  image_args = create_image_struct();
 
   if (strcmp(a->commands[1], "percent") == 0)
     {
-      get_percent((FILE*)a->box, png_args);
+      get_percent((FILE*)a->box, image_args);
       a->this->busy = 0;
       return (NULL);
     }
@@ -291,53 +289,49 @@ void		*start(void *args)
       a->this->busy = 0;
       return (NULL);
     }
-  printf("====> %i - %i | %i - %i | %i - %i\n", atoi(a->commands[1]), atoi(a->commands[2]),
-						    atoi(a->commands[3]), atoi(a->commands[4]),
-						    atoi(a->commands[5]), atoi(a->commands[6]));
-
-  png_args->dim_start_end = generate_dims_start_end(volume,
+  image_args->dim_start_end = generate_dims_start_end(volume,
   						    atoi(a->commands[1]), atoi(a->commands[2]),
 						    atoi(a->commands[3]), atoi(a->commands[4]),
 						    atoi(a->commands[5]), atoi(a->commands[6]));
-  if (check_range(png_args->dim_start_end, volume))
+  if (check_range(image_args->dim_start_end, volume))
     {
       fprintf(stderr, "Slice out of volume range\n");
       a->this->busy = 0;
       return (NULL);
     }
-  png_args->square_size = -1;
-  png_args->w_position = 0;
-  png_args->h_position = 0;
-  png_args->w_position_end = -1;
-  png_args->h_position_end = -1;
-  png_args->scale = (float)atof(a->commands[7]);
-  png_args->quality = atoi(a->commands[8]);
-  png_args->service = a->commands[9];
+  image_args->square_size = -1;
+  image_args->w_position = 0;
+  image_args->h_position = 0;
+  image_args->w_position_end = -1;
+  image_args->h_position_end = -1;
+  image_args->scale = (float)atof(a->commands[7]);
+  image_args->quality = atoi(a->commands[8]);
+  image_args->service = a->commands[9];
 
-  if (strcmp(png_args->service, "tiles") == 0)
+  if (strcmp(image_args->service, "tiles") == 0)
     {
-      png_args->square_size = atoi(a->commands[10]);
-      png_args->h_position = atoi(a->commands[11]);
-      png_args->w_position = atoi(a->commands[12]);
-      png_args->start_h = atoi(a->commands[11]);
-      png_args->start_w = atoi(a->commands[12]);
+      image_args->square_size = atoi(a->commands[10]);
+      image_args->h_position = atoi(a->commands[11]);
+      image_args->w_position = atoi(a->commands[12]);
+      image_args->start_h = atoi(a->commands[11]);
+      image_args->start_w = atoi(a->commands[12]);
       if (a->commands[14] != NULL)
-	png_args->root_path = strdup(a->commands[14]);
+	image_args->root_path = strdup(a->commands[14]);
     }
-  else if (strcmp(png_args->service, "images") == 0)
+  else if (strcmp(image_args->service, "images") == 0)
     {
-      png_args->h_position = atoi(a->commands[10]);
-      png_args->w_position = atoi(a->commands[11]);
-      png_args->start_h = atoi(a->commands[10]);
-      png_args->start_w = atoi(a->commands[11]);
-      png_args->h_position_end = atoi(a->commands[12]);
-      png_args->w_position_end = atoi(a->commands[13]);
+      image_args->h_position = atoi(a->commands[10]);
+      image_args->w_position = atoi(a->commands[11]);
+      image_args->start_h = atoi(a->commands[10]);
+      image_args->start_w = atoi(a->commands[11]);
+      image_args->h_position_end = atoi(a->commands[12]);
+      image_args->w_position_end = atoi(a->commands[13]);
       if (a->commands[15] != NULL)
-	png_args->root_path = strdup(a->commands[15]);
+	image_args->root_path = strdup(a->commands[15]);
     }
   else
     {
-      if (strcmp(png_args->service, "full") != 0)
+      if (strcmp(image_args->service, "full") != 0)
 	{
 	  fprintf(stderr, "Undefined kind. Please choose 'tiles' or 'images'\n");
 	  a->this->busy = 0;
@@ -346,28 +340,28 @@ void		*start(void *args)
       else
 	{
 	  if (a->commands[11] != NULL)
-	    png_args->root_path = strdup(a->commands[11]);
+	    image_args->root_path = strdup(a->commands[11]);
 	}
     }
-  png_args->total_slices_to_do = get_total_slices_to_do(volume, png_args->dim_start_end);
-  step = (strcmp(png_args->service, "tiles") == 0 ? atoi(a->commands[13]) : (strcmp(png_args->service, "full") == 0 ? atoi(a->commands[10]) : atoi(a->commands[14])));
-  png_creation_lunch(volume, step, a->general_info->tp, png_args, a->this, socketDescriptor);
+  image_args->total_slices_to_do = get_total_slices_to_do(volume, image_args->dim_start_end);
+  step = (strcmp(image_args->service, "tiles") == 0 ? atoi(a->commands[13]) : (strcmp(image_args->service, "full") == 0 ? atoi(a->commands[10]) : atoi(a->commands[14])));
+  image_creation_lunch(volume, step, a->general_info->tp, image_args, a->this, socketDescriptor);
   return (NULL);
 }
 
 void		*unload(void *args)
 {
-  t_png_extract	*png_args;
+  t_image_extract	*image_args;
   t_args_plug	*a;
 
   a = (t_args_plug *)args;
   a->this->busy = 1;
-  png_args = (t_png_extract *)a->this->stock;
-  free(png_args->dim_start_end[0]);
-  free(png_args->dim_start_end[1]);
-  free(png_args->dim_start_end[2]);
-  free(png_args->dim_start_end);
-  free(png_args);
+  image_args = (t_image_extract *)a->this->stock;
+  free(image_args->dim_start_end[0]);
+  free(image_args->dim_start_end[1]);
+  free(image_args->dim_start_end[2]);
+  free(image_args->dim_start_end);
+  free(image_args);
   free(a->name);
   free(a->path);
   a->this->busy = 0;

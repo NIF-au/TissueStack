@@ -1,35 +1,9 @@
-#include "minc_extract_png.h"
-#include "math.h"
+#include "image_extract.h"
 
-typedef enum
-  {
-    UndefinedStream,
-    FileStream,
-    StandardStream,
-    PipeStream,
-    ZipStream,
-    BZipStream,
-    FifoStream,
-    BlobStream
-  } StreamType;
-
-
-struct FileInfo
+void set_grayscale(unsigned char *ptr, float val)
 {
-  FILE *file;
-};
-
-struct _BlobInfo
-{
-  StreamType type;
-  FileInfo   file_info;
-};
-
-
-void set_grayscale(png_byte *ptr, float val)
-{
-    ptr[0] = (png_byte) ((int) val & 0xFF);
-    ptr[1] = (png_byte) ((int) val >> 8);
+    ptr[0] = (unsigned char) ((int) val & 0xFF);
+    ptr[1] = (unsigned char) ((int) val >> 8);
 }
 
 void get_width_height(int *height, int *width, int current_dimension,
@@ -70,7 +44,7 @@ int check_pixels_range(int width, int height, int h_position, int w_position,
     return (0);
 }
 
-int check_and_set_position(int kind, int width, int height, t_png_args *a)
+int check_and_set_position(int kind, int width, int height, t_image_args *a)
 {
     int i;
 
@@ -112,7 +86,7 @@ int check_and_set_position(int kind, int width, int height, t_png_args *a)
     return (0);
 }
 
-int set_service_type(t_png_args * a)
+int set_service_type(t_image_args * a)
 {
     if (strcmp(a->info->service, "tiles") == 0)
         return (1);
@@ -123,7 +97,7 @@ int set_service_type(t_png_args * a)
     return (0);
 }
 
-RectangleInfo *create_rectangle_crop(int kind, t_png_args *a)
+RectangleInfo *create_rectangle_crop(int kind, t_image_args *a)
 {
     RectangleInfo *portion;
 
@@ -144,7 +118,7 @@ RectangleInfo *create_rectangle_crop(int kind, t_png_args *a)
     return (NULL);
 }
 
-void convert_tiles_to_pixel_coord(t_png_args *a)
+void convert_tiles_to_pixel_coord(t_image_args *a)
 {
     a->info->h_position *= a->info->square_size;
     a->info->w_position *= a->info->square_size;
@@ -152,14 +126,13 @@ void convert_tiles_to_pixel_coord(t_png_args *a)
 
 void fclose_check(FILE *file) {
 	if (file && fcntl(fileno(file), F_GETFL) != -1) {
-        printf("Closing\n");
         fclose(file);
         close(fileno(file));
     }
 }
 
-void print_png(char *hyperslab, t_vol *volume, int current_dimension,
-        unsigned int current_slice, int width, int height, t_png_args *a)
+void print_image(char *hyperslab, t_vol *volume, int current_dimension,
+        unsigned int current_slice, int width, int height, t_image_args *a)
 {
     ExceptionInfo exception;
     Image *img;
@@ -255,7 +228,13 @@ void print_png(char *hyperslab, t_vol *volume, int current_dimension,
       strcpy(img->magick, "PNG");
       strcpy(img->filename, "/tmp/e287e87o2he87o2hjkebn2li8eyh92.png"); // necessary for graphics magick to determing image format
     	image_info->file = a->file;
-        WriteImage(image_info, img);
+
+    	WriteImage(image_info, img);
+
+        // clean up
+        DestroyImage(img);
+        DestroyImageInfo(image_info);
+
         fclose_check(a->file);
     } else { // WRITE FILE
     	if (!a->info->root_path) {
@@ -283,18 +262,10 @@ void print_png(char *hyperslab, t_vol *volume, int current_dimension,
 
         WriteImage(image_info, img);
 
+        DestroyImage(img);
+        DestroyImageInfo(image_info);
+
         free(finalPath->buffer);
         free(finalPath);
     }
-
-    FILE *toto = img->blob->file_info.file;
-
-    printf("%p\n", toto);
-    img->blob->type = 0;
-
-    // clean up
-    if (img)
-      DestroyImage(img);
-    if (image_info)
-      DestroyImageInfo(image_info);
 }

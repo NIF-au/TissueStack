@@ -231,7 +231,7 @@ int		main(int argc, char **argv)
   // lunch thread_pool
   t->tp = malloc(sizeof(*t->tp));
  thread_pool_init(t->tp, 10);
-  (t->plug_actions)(t, "load png /usr/local/plugins/TissueStackPNGExtract.so", NULL);
+  (t->plug_actions)(t, "load image /usr/local/plugins/TissueStackImageExtract.so", NULL);
   sleep(1);
   (t->plug_actions)(t, "load serv /usr/local/plugins/TissueStackCommunicator.so", NULL);
   sleep(2);
