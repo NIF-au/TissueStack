@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <sys/socket.h>
 #include <math.h>
 
@@ -31,6 +32,7 @@ typedef	struct	s_image_extract
   int		w_position_end;
   char		*service;
   int		square_size;
+  char 		*image_type;
   int		done;
   char		*root_path;
   pthread_cond_t	cond;

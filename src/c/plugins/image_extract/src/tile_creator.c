@@ -223,10 +223,8 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
 
 
     // write image
-
     if (streamToSocket) { // SOCKET STREAM
-      strcpy(img->magick, "PNG");
-      strcpy(img->filename, "/tmp/e287e87o2he87o2hjkebn2li8eyh92.png"); // necessary for graphics magick to determing image format
+        strcpy(img->magick, a->info->image_type);
     	image_info->file = a->file;
 
     	WriteImage(image_info, img);
@@ -237,6 +235,8 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
 
         fclose_check(a->file);
     } else { // WRITE FILE
+    	a->info->image_type = strlower(a->info->image_type);
+
     	if (!a->info->root_path) {
     		printf("Error: root path is NULL\n");
             return;
@@ -251,9 +251,9 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
 
         // complete filename
         if (strcmp(a->info->service, "full") == 0 && a->info->quality != 1) {
-        	sprintf(dir, "/%i.low.res.png", current_slice);
+        	sprintf(dir, "/%i.low.res.%s", current_slice, a->info->image_type);
         } else {
-        	sprintf(dir, "/%i_%i.png", a->info->start_w, a->info->start_h);
+        	sprintf(dir, "/%i_%i.%s", a->info->start_w, a->info->start_h, a->info->image_type);
         }
         finalPath = appendToBuffer(finalPath, dir);
         strcpy(img->filename, finalPath->buffer);

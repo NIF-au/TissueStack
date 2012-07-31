@@ -12,8 +12,8 @@ public class TissueStack {
     }
 
     public native MincInfo getMincInfo(String fileName);
-    public native void tileMincVolume(
-    		String fileName, String baseDirectory, int dimensions[], int tileSize, double zoomFactor, boolean preview);
+    public native String tileMincVolume(
+    		String fileName, String baseDirectory, int dimensions[], int tileSize, double zoomFactor, String imageType, boolean preview);
     
     // main method was for testing only
     public static void main(String[] args) {
