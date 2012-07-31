@@ -21,7 +21,7 @@ void            *get_all_slices_of_all_dimensions(void *args)
   unsigned long *start;
   long unsigned int *count;
 
-  printf("||||||QWERTYUIOP||||\n");
+
   a = (t_png_args *)args;
   volume = a->volume;
   i = 0;
@@ -56,16 +56,30 @@ void            *get_all_slices_of_all_dimensions(void *args)
   return (NULL);
 }
 
-void		get_raw_data_hyperslab(t_vol *volume, int dim, int slice, char *hyperslab)
+void		print_all_tiles_of_one_slice(t_png_args *a, t_vol *volume, int current_slice,
+					     int current_dimension, char *hyperslab,
+					     int height, int width)
 {
-  int		offset;
+  int		w_max_iteration;
+  int		h_max_iteration;
 
-  if (volume->raw_data == 1)
+  a->info->h_position = 0;
+  a->info->start_h = 0;
+  a->info->w_position = 0;
+  a->info->start_w = 0;
+  h_max_iteration = height / a->info->square_size;
+  w_max_iteration = width / a->info->square_size;
+  while (a->info->start_h <= h_max_iteration)
     {
-      printf("RAW DATA ----------------\n");
-      offset = (volume->dim_offset[dim] + (volume->slice_size[dim] * slice));
-      lseek(volume->raw_fd, offset, SEEK_SET);
-      read(volume->raw_fd, hyperslab, volume->slice_size[dim]);
+      a->info->start_w = 0;
+      while (a->info->start_w <= w_max_iteration)
+	{
+	  a->info->h_position = a->info->start_h;
+	  a->info->w_position = a->info->start_w;
+	  print_png(hyperslab, volume, current_dimension, current_slice, width, height, a);
+	  a->info->start_w++;
+	}
+      a->info->start_h++;
     }
 }
 
@@ -97,14 +111,9 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
       memset(hyperslab, 0, (volume->slices_max * sizeof(*hyperslab)));
       start[current_dimension] = current_slice;
       // get the data of 1 slice
-      if (volume->raw_data != 1)
-	{
-	  pthread_mutex_lock(&(a->p->lock));
-	  miget_real_value_hyperslab(volume->minc_volume, MI_TYPE_UBYTE, start, count, hyperslab);
-	  pthread_mutex_unlock(&(a->p->lock));
-	}
-      else
-	get_raw_data_hyperslab(volume, current_dimension, current_slice, hyperslab);
+      pthread_mutex_lock(&(a->p->lock));
+      miget_real_value_hyperslab(volume->minc_volume, MI_TYPE_UBYTE, start, count, hyperslab);
+      pthread_mutex_unlock(&(a->p->lock));
       // print png
       if (a->info->h_position == -1 && a->info->w_position == -1)
 	{
@@ -131,8 +140,9 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
 	    }
 	}
       else {
-	print_png(hyperslab, volume, current_dimension, current_slice, width, height, a);
+    	  print_png(hyperslab, volume, current_dimension, current_slice, width, height, a);
       }
+
 
       pthread_mutex_lock(&(a->p->lock));
       a->info->slices_done++;

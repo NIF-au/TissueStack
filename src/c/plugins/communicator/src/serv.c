@@ -127,7 +127,7 @@ char		get_by_name_dimension_id(char *volume, char *dimension, t_serv_comm *s)
   tmp = s->general->volume_first;
   while (tmp != NULL)
     {
-      if (strcmp(tmp->path, volume) == 0)
+      if (tmp->path && strcmp(tmp->path, volume) == 0)
 	{
 	  i = 0;
 	  while (tmp->dim_name[i] != NULL)
@@ -211,8 +211,10 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
 	  fprintf(stderr, "Invalid argumen: non interger\n");
 	  return;
 	}
+      printf("sim_name ====== %s\n", dimension);
       if ((dimension[0] = get_by_name_dimension_id(volume, dimension, s)) == 0)
 	return;
+      printf("dimension id = %c\n", dimension[0]);
       if (service == NULL)
 	{
 	  sprintf(comm, "start png %s %i %i %i %i %i %i %s %s %s 1", volume,
@@ -247,7 +249,7 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
 		  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
 		  scale, quality, service, y, x, y_end, x_end);
 	}
-      printf("%s\n", comm);
+      printf("________________ %s\n", comm);
       s->general->plug_actions(s->general, comm, file);
     }
 }

@@ -1,6 +1,31 @@
 #include "minc_extract_png.h"
 #include "math.h"
 
+typedef enum
+  {
+    UndefinedStream,
+    FileStream,
+    StandardStream,
+    PipeStream,
+    ZipStream,
+    BZipStream,
+    FifoStream,
+    BlobStream
+  } StreamType;
+
+
+struct FileInfo
+{
+  FILE *file;
+};
+
+struct _BlobInfo
+{
+  StreamType type;
+  FileInfo   file_info;
+};
+
+
 void set_grayscale(png_byte *ptr, float val)
 {
     ptr[0] = (png_byte) ((int) val & 0xFF);
@@ -175,6 +200,7 @@ void print_png(char *hyperslab, t_vol *volume, int current_dimension,
     if ((img = FlipImage(img, &exception)) == NULL) {
         CatchException(&exception);
         fclose_check(a->file);
+	DestroyImage(tmp);
         return;
     }
     DestroyImage(tmp);
@@ -185,6 +211,7 @@ void print_png(char *hyperslab, t_vol *volume, int current_dimension,
                 height / a->info->quality, &exception)) == NULL) {
             CatchException(&exception);
             fclose_check(a->file);
+	    DestroyImage(tmp);
             return;
         }
         DestroyImage(tmp);
@@ -192,6 +219,7 @@ void print_png(char *hyperslab, t_vol *volume, int current_dimension,
         if ((img = SampleImage(img, width, height, &exception)) == NULL) {
             CatchException(&exception);
             fclose_check(a->file);
+	    DestroyImage(tmp);
             return;
         }
         DestroyImage(tmp);
@@ -203,6 +231,7 @@ void print_png(char *hyperslab, t_vol *volume, int current_dimension,
                 (height * a->info->scale), &exception)) == NULL) {
             CatchException(&exception);
             fclose_check(a->file);
+	    DestroyImage(tmp);
             return;
         }
         DestroyImage(tmp);
@@ -219,9 +248,12 @@ void print_png(char *hyperslab, t_vol *volume, int current_dimension,
         DestroyImage(tmp);
     }
 
+
     // write image
+
     if (streamToSocket) { // SOCKET STREAM
-    	strcpy(img->filename, "*.png"); // necessary for graphics magick to determing image format
+      strcpy(img->magick, "PNG");
+      strcpy(img->filename, "/tmp/e287e87o2he87o2hjkebn2li8eyh92.png"); // necessary for graphics magick to determing image format
     	image_info->file = a->file;
         WriteImage(image_info, img);
         fclose_check(a->file);
@@ -255,7 +287,14 @@ void print_png(char *hyperslab, t_vol *volume, int current_dimension,
         free(finalPath);
     }
 
+    FILE *toto = img->blob->file_info.file;
+
+    printf("%p\n", toto);
+    img->blob->type = 0;
+
     // clean up
-    DestroyImage(img);
-    DestroyImageInfo(image_info);
+    if (img)
+      DestroyImage(img);
+    if (image_info)
+      DestroyImageInfo(image_info);
 }

@@ -97,10 +97,6 @@ struct			s_vol
   char			*path;
   unsigned int		slices_max;
   char			**dim_name;
-  int			raw_data;
-  int			*dim_offset;
-  int			*slice_size;
-  int			raw_fd;
   t_vol			*next;
 };
 
