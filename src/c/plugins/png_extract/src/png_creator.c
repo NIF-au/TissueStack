@@ -13,16 +13,9 @@ typedef enum
     BlobStream
   } StreamType;
 
-
-struct FileInfo
-{
-  FILE *file;
-};
-
 struct _BlobInfo
 {
   StreamType type;
-  FileInfo   file_info;
 };
 
 
@@ -254,9 +247,9 @@ void print_png(char *hyperslab, t_vol *volume, int current_dimension,
     if (streamToSocket) { // SOCKET STREAM
       strcpy(img->magick, "PNG");
       strcpy(img->filename, "/tmp/e287e87o2he87o2hjkebn2li8eyh92.png"); // necessary for graphics magick to determing image format
-    	image_info->file = a->file;
-        WriteImage(image_info, img);
-        fclose_check(a->file);
+      image_info->file = a->file;
+      WriteImage(image_info, img);
+      fclose_check(a->file);
     } else { // WRITE FILE
     	if (!a->info->root_path) {
     		printf("Error: root path is NULL\n");
@@ -287,10 +280,11 @@ void print_png(char *hyperslab, t_vol *volume, int current_dimension,
         free(finalPath);
     }
 
-    FILE *toto = img->blob->file_info.file;
+    //FILE *toto = img->blob->file_info.file;
 
-    printf("%p\n", toto);
+    printf("blob 1 -> %i\n", img->blob->type);
     img->blob->type = 0;
+    printf("blob 2 -> %i\n", img->blob->type);
 
     // clean up
     if (img)
