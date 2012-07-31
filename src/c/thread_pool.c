@@ -1,4 +1,4 @@
-#include "minc_extract_png.h"
+#include "thread_pool.h"
 
 void		*worker_start(void *pool)
 {

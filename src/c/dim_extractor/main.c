@@ -265,7 +265,7 @@ int		main(int argc, char **argv)
   count[1] = t->volume_first->size[1];
   count[2] = t->volume_first->size[2];
 
-  int fd = open("/media/Back/raw_fish", O_CREAT | O_TRUNC | O_RDWR);
+  int fd = open("/mnt/sata/data/brain.raw", O_CREAT | O_TRUNC | O_RDWR);
   int size;
 
   while (dim < 3)

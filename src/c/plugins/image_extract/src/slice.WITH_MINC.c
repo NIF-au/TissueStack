@@ -1,4 +1,4 @@
-#include "minc_extract_png.h"
+#include "image_extract.h"
 
 unsigned int		get_slices_max(t_vol *volume)
 {
@@ -16,13 +16,13 @@ unsigned int		get_slices_max(t_vol *volume)
 void            *get_all_slices_of_all_dimensions(void *args)
 {
   t_vol		*volume;
-  t_png_args	*a;
+  t_image_args	*a;
   int           i;
   unsigned long *start;
   long unsigned int *count;
 
 
-  a = (t_png_args *)args;
+  a = (t_image_args *)args;
   volume = a->volume;
   i = 0;
   // init start and count variable
@@ -56,7 +56,7 @@ void            *get_all_slices_of_all_dimensions(void *args)
   return (NULL);
 }
 
-void		print_all_tiles_of_one_slice(t_png_args *a, t_vol *volume, int current_slice,
+void		print_all_tiles_of_one_slice(t_image_args *a, t_vol *volume, int current_slice,
 					     int current_dimension, char *hyperslab,
 					     int height, int width)
 {
@@ -76,7 +76,7 @@ void		print_all_tiles_of_one_slice(t_png_args *a, t_vol *volume, int current_sli
 	{
 	  a->info->h_position = a->info->start_h;
 	  a->info->w_position = a->info->start_w;
-	  print_png(hyperslab, volume, current_dimension, current_slice, width, height, a);
+	  print_image(hyperslab, volume, current_dimension, current_slice, width, height, a);
 	  a->info->start_w++;
 	}
       a->info->start_h++;
@@ -84,7 +84,7 @@ void		print_all_tiles_of_one_slice(t_png_args *a, t_vol *volume, int current_sli
 }
 
 void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *start, int current_dimension,
-						long unsigned int *count, t_png_args *a)
+						long unsigned int *count, t_image_args *a)
 {
   unsigned int	current_slice;
   unsigned int	max;
@@ -114,7 +114,7 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
       pthread_mutex_lock(&(a->p->lock));
       miget_real_value_hyperslab(volume->minc_volume, MI_TYPE_UBYTE, start, count, hyperslab);
       pthread_mutex_unlock(&(a->p->lock));
-      // print png
+      // print image
       if (a->info->h_position == -1 && a->info->w_position == -1)
 	{
 	  a->info->h_position = 0;
@@ -133,14 +133,14 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
 		  a->info->h_position = a->info->start_h;
 		  a->info->w_position = a->info->start_w;
 
-		  print_png(hyperslab, volume, current_dimension, current_slice, width, height, a);
+		  print_image(hyperslab, volume, current_dimension, current_slice, width, height, a);
 		  a->info->start_w++;
 		}
 	      a->info->start_h++;
 	    }
 	}
       else {
-    	  print_png(hyperslab, volume, current_dimension, current_slice, width, height, a);
+    	  print_image(hyperslab, volume, current_dimension, current_slice, width, height, a);
       }
 
 
