@@ -26,6 +26,8 @@ void		dim_loop(int		fd,
   unsigned long		*start;
   long unsigned int	*count;
 
+  printf("dim_loop\n");
+
   start = malloc(volume->dim_nb * sizeof(*start));
   count = malloc(volume->dim_nb * sizeof(*count));
   start[0] = start[1] = start[2] = 0;
@@ -154,10 +156,9 @@ t_header	*create_header_from_minc_struct(t_vol *minc_volume)
       while (j < h->dim_nb)
 	{
 	  if (j != i)
-	    h->slice_size[i] *= h->sizes[j];
+	    h->slice_size[i] *= minc_volume->size[j];
 	  j++;
 	}
-
       i++;
     }
 
@@ -180,17 +181,18 @@ void		write_header_into_file(int fd, t_header *h)
   int		len;
 
   memset(head, '\0', 4096);
-  sprintf(head, "%i|%i:%i:%i|%g:%g:%g|%g:%g;%g|%s|%s|%s|%i:%i:%i|%i|%ui:%ui:%ui|",
+  sprintf(head, "%i|%i:%i:%i|%g:%g:%g|%g:%g:%g|%s|%s|%s|%c|%c|%c|%i:%i:%i|%i|%u:%u:%u|",
 	  h->dim_nb,
 	  h->sizes[0], h->sizes[1], h->sizes[2],
 	  h->start[0], h->start[1], h->start[2],
 	  h->steps[0], h->steps[1], h->steps[2],
 	  h->dim_name[0], h->dim_name[1], h->dim_name[2],
+	  h->dim_name[0][0], h->dim_name[1][0], h->dim_name[2][0],
 	  h->slice_size[0], h->slice_size[1], h->slice_size[2],
 	  h->slice_max,
 	  h->dim_offset[0], h->dim_offset[1], h->dim_offset[2]);
   len = strlen(head);
-  memset(lenhead, '\0', 4096);
+  memset(lenhead, '\0', 200);
   sprintf(lenhead, "@IaMraW@|%i|", len);
   write(fd, lenhead, strlen(lenhead));
   write(fd, head, len);
@@ -210,18 +212,22 @@ void  		*start(void *args)
 
   a = (t_args_plug *)args;
 
-  fd = open(a->commands[1], (O_CREAT | O_TRUNC | O_RDWR));
-
+  if ((fd = open(a->commands[1], (O_CREAT | O_TRUNC | O_RDWR))) == -1)
+    {
+      perror("Open ");
+      return (NULL);
+    }
   minc_volume = init_get_volume_from_minc_file(a->commands[0]);
-
   header = create_header_from_minc_struct(minc_volume);
-
   write_header_into_file(fd, header);
-
-  dim_loop(fd, minc_volume->dim_nb, minc_volume);
-
-  close(fd);
-  chmod(a->commands[1], 0755);
+  //  dim_loop(fd, minc_volume->dim_nb, minc_volume);
+  if (close(fd) == -1)
+    {
+      perror("Close ");
+      return (NULL);
+    }
+  if (chmod(a->commands[1], 0644) == -1)
+    perror("Chmod ");
 
   return (NULL);
 }

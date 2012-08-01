@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Tue Jul 17 15:28:23 2012 Oliver Nicolini
+** Last update Wed Aug  1 12:03:47 2012 Oliver Nicolini
 */
 
 
@@ -204,7 +204,7 @@ int		main(int argc, char **argv)
 {
   int			result;
   t_tissue_stack	*t;
-  char			serv_command[20];
+  //char			serv_command[20];
 
   // initialisation of some variable
   t = malloc(sizeof(*t));
@@ -231,6 +231,7 @@ int		main(int argc, char **argv)
   // lunch thread_pool
   t->tp = malloc(sizeof(*t->tp));
  thread_pool_init(t->tp, 10);
+
   (t->plug_actions)(t, "load image /usr/local/plugins/TissueStackImageExtract.so", NULL);
   sleep(1);
   (t->plug_actions)(t, "load serv /usr/local/plugins/TissueStackCommunicator.so", NULL);

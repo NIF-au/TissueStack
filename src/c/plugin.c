@@ -147,7 +147,6 @@ void		*plugin_start(void *args)
   t_plugin	*this;
 
   a = (t_args_plug *)args;
-  printf("Hello nig\n");
   if ((this = get_plugin_by_name(a->name, a->general_info->first)) == NULL)
     {
       if (this)
