@@ -172,26 +172,34 @@ void		remove_volume(char *path, t_tissue_stack *t)
 
 void		free_volume(t_vol *v)
 {
-  int		i;
+	if (v == NULL) {
+		return;
+	}
+
+	int		i;
 
   i = 0;
   while (i < v->dim_nb)
     {
       mifree_dimension_handle(v->dimensions[i]);
-      free(v->dim_name[i]);
+      if (v->dim_name[i] != NULL) free(v->dim_name[i]);
       i++;
     }
-  free(v->dim_name);
-  free(v->dimensions);
-  free(v->size);
-  free(v->path);
+  if (v->dim_name != NULL) free(v->dim_name);
+  if (v->dim_offset != NULL) free(v->dim_offset);
+  if (v->dimensions != NULL) free(v->dimensions);
+  if (v->slice_size != NULL) free(v->slice_size);
+  if (v->starts != NULL) free(v->starts);
+  if (v->steps != NULL) free(v->steps);
+  if (v->size != NULL) free(v->size);
+  if (v->path != NULL) free(v->path);
   free(v);
 }
 
 void		free_all_volumes(t_tissue_stack *t)
 {
-  t_vol		*tmp;
-  t_vol		*save;
+  t_vol		*tmp = NULL;
+  t_vol		*save = NULL;
 
   tmp = t->volume_first;
   while (tmp != NULL)

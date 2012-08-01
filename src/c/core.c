@@ -191,6 +191,10 @@ void            init_prog(t_tissue_stack *t)
 
 void		free_core_struct(t_tissue_stack *t)
 {
+  if (t == NULL) {
+	  return;
+  }
+
   printf("\nFreeing\n");
   free_all_volumes(t);
   free_all_plugins(t);

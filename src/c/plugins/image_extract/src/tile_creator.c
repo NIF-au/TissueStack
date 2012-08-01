@@ -127,7 +127,7 @@ void convert_tiles_to_pixel_coord(t_image_args *a)
 void fclose_check(FILE *file) {
 	if (file && fcntl(fileno(file), F_GETFL) != -1) {
         fclose(file);
-        close(fileno(file));
+        //close(fileno(file));
     }
 }
 
@@ -156,8 +156,9 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
     portion = create_rectangle_crop(kind, a);
 
     GetExceptionInfo(&exception);
-    if ((image_info = CloneImageInfo(NULL)) == NULL) {
+    if ((image_info = CloneImageInfo((ImageInfo *)NULL)) == NULL) {
         CatchException(&exception);
+        DestroyImageInfo(image_info);
         fclose_check(a->file);
         return;
     }
@@ -165,6 +166,7 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
     if ((img = ConstituteImage(width, height, "I", CharPixel, hyperslab,
             &exception)) == NULL) {
         CatchException(&exception);
+        DestroyImageInfo(image_info);
         fclose_check(a->file);
         return;
     }
@@ -172,8 +174,9 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
     tmp = img;
     if ((img = FlipImage(img, &exception)) == NULL) {
         CatchException(&exception);
+        DestroyImage(tmp);
+        DestroyImageInfo(image_info);
         fclose_check(a->file);
-	DestroyImage(tmp);
         return;
     }
     DestroyImage(tmp);
@@ -183,16 +186,18 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
         if ((img = SampleImage(img, width / a->info->quality,
                 height / a->info->quality, &exception)) == NULL) {
             CatchException(&exception);
+            DestroyImage(tmp);
+            DestroyImageInfo(image_info);
             fclose_check(a->file);
-	    DestroyImage(tmp);
             return;
         }
         DestroyImage(tmp);
         tmp = img;
         if ((img = SampleImage(img, width, height, &exception)) == NULL) {
             CatchException(&exception);
+            DestroyImage(tmp);
+            DestroyImageInfo(image_info);
             fclose_check(a->file);
-	    DestroyImage(tmp);
             return;
         }
         DestroyImage(tmp);
@@ -203,8 +208,9 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
         if ((img = ScaleImage(img, (width * a->info->scale),
                 (height * a->info->scale), &exception)) == NULL) {
             CatchException(&exception);
+            DestroyImage(tmp);
+            DestroyImageInfo(image_info);
             fclose_check(a->file);
-	    DestroyImage(tmp);
             return;
         }
         DestroyImage(tmp);
@@ -215,6 +221,7 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
         if ((img = CropImage(img, portion, &exception)) == NULL) {
             CatchException(&exception);
             DestroyImage(tmp);
+            DestroyImageInfo(image_info);
             fclose_check(a->file);
             return;
         }

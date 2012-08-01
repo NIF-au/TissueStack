@@ -33,6 +33,7 @@ compile:
 	make -C ./plugins/image_extract/ compile
 	make -C ./plugins/comm_inter_process/ compile
 	make -C ./plugins/minc_info/ compile
+	make -C ./plugins/minc_convert/ compile
 	make -C ./jni/ compile
 
 install:
@@ -42,6 +43,7 @@ install:
 	make -C ./plugins/communicator/ install
 	make -C ./plugins/image_extract/ install
 	make -C ./plugins/comm_inter_process/ install
+	make -C ./plugins/minc_convert/ install
 	make -C ./plugins/minc_info/ install
 	make -C ./jni/ install
 
@@ -53,6 +55,7 @@ clean:
 	make -C ./plugins/image_extract/ clean
 	make -C ./plugins/comm_inter_process/ clean
 	make -C ./plugins/minc_info/ clean
+	make -C ./plugins/minc_convert/ clean
 	make -C ./jni/ clean
 
 e:	clean

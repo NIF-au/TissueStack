@@ -95,7 +95,7 @@ int		**generate_dims_start_end_thread(t_vol *v, int dim, int start, int end)
 
 t_image_args	*create_args_thread(t_thread_pool *p, t_vol *vol, t_image_extract *image_general, t_plugin *this, FILE *sock)
 {
-  t_image_args   *args;
+  t_image_args   *args = NULL;
 
   args = malloc(sizeof(*args));
   args->volume = vol;
@@ -104,6 +104,7 @@ t_image_args	*create_args_thread(t_thread_pool *p, t_vol *vol, t_image_extract *
   memcpy(args->info, image_general, sizeof(*image_general));
   args->this = this;
   args->file = sock;
+
   return (args);
 }
 
@@ -235,7 +236,10 @@ void		*init(void *args)
   pthread_cond_init(&image_args->cond, NULL);
   a->this->stock = (void*)image_args;
   InitializeMagick("./");
+
+  // free command line args
   a->destroy(a);
+
   return (NULL);
 }
 
@@ -342,24 +346,33 @@ void		*start(void *args)
   image_args->total_slices_to_do = get_total_slices_to_do(volume, image_args->dim_start_end);
   step = (strcmp(image_args->service, "tiles") == 0 ? atoi(a->commands[14]) : (strcmp(image_args->service, "full") == 0 ? atoi(a->commands[11]) : atoi(a->commands[15])));
   image_creation_lunch(volume, step, a->general_info->tp, image_args, a->this, socketDescriptor);
+
   return (NULL);
 }
 
 void		*unload(void *args)
 {
-  t_image_extract	*image_args;
-  t_args_plug	*a;
+  t_image_extract	*image_args = NULL;
+  t_args_plug	*a = NULL;
 
   a = (t_args_plug *)args;
   a->this->busy = 1;
+
   image_args = (t_image_extract *)a->this->stock;
-  free(image_args->dim_start_end[0]);
-  free(image_args->dim_start_end[1]);
-  free(image_args->dim_start_end[2]);
-  free(image_args->dim_start_end);
-  free(image_args);
-  free(a->name);
-  free(a->path);
-  a->this->busy = 0;
+
+  if (image_args != NULL) {
+	  free(image_args->dim_start_end[0]);
+	  free(image_args->dim_start_end[1]);
+	  free(image_args->dim_start_end[2]);
+	  free(image_args->dim_start_end);
+	  free(image_args);
+  }
+
+  if (a != NULL) {
+	  free(a->name);
+	  free(a->path);
+	  a->this->busy = 0;
+  }
+
   return (NULL);
 }

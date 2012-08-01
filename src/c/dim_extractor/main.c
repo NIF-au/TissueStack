@@ -265,7 +265,7 @@ int		main(int argc, char **argv)
   count[1] = t->volume_first->size[1];
   count[2] = t->volume_first->size[2];
 
-  int fd = open("/mnt/sata/data/brain.raw", O_CREAT | O_TRUNC | O_RDWR);
+  int fd = open("/opt/data/anglerfish.low.raw", O_CREAT | O_TRUNC | O_RDWR);
   int size;
 
   while (dim < 3)
@@ -304,7 +304,7 @@ int		main(int argc, char **argv)
   //printf("hello 7\n");
   // miclose_volume(volume);
   printf("hello 8\n");
-  chmod("./raw_data_file", 0755);
+  chmod("/mnt/sata/data/anglerfish.low.raw", 0755);
   return (0);
 }
 /*

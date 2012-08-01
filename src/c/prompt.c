@@ -94,6 +94,11 @@ void		destroy_plug_args(t_args_plug *a)
   int		i;
 
   i = 0;
+
+  if (a == NULL) {
+	  return;
+  }
+
   if (a->commands != NULL)
     {
       while (a->commands[i] != NULL)
@@ -662,8 +667,8 @@ void		stringify_char(char buff, t_tissue_stack *general)
 
 void		free_all_prompt(t_tissue_stack *t)
 {
-  t_char_prompt	*c;
-  t_char_prompt	*save;
+  t_char_prompt	*c = NULL;
+  t_char_prompt	*save = NULL;
 
   c = t->prompt_first;
   if (c != NULL && c->next == t->prompt_first)
