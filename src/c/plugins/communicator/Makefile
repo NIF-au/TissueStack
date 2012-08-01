@@ -1,8 +1,8 @@
 DIRSRC		=	./src/
 
-SRCS		=	$(DIRSRC)serv.c
+SRCS		=	$(DIRSRC)serv.c	$(DIRSRC)../../../utils/utils.c
 
-INCLUDE		=	-I./headers -I../../headers
+INCLUDE		=	-I./headers -I../../headers -I./../../utils
 
 LIB_PATH	=	
 

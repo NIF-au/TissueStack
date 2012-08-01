@@ -127,7 +127,7 @@ void convert_tiles_to_pixel_coord(t_image_args *a)
 void fclose_check(FILE *file) {
 	if (file && fcntl(fileno(file), F_GETFL) != -1) {
         fclose(file);
-        close(fileno(file));
+        //close(fileno(file));
     }
 }
 
@@ -156,8 +156,9 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
     portion = create_rectangle_crop(kind, a);
 
     GetExceptionInfo(&exception);
-    if ((image_info = CloneImageInfo(NULL)) == NULL) {
+    if ((image_info = CloneImageInfo((ImageInfo *)NULL)) == NULL) {
         CatchException(&exception);
+        DestroyImageInfo(image_info);
         fclose_check(a->file);
         return;
     }
@@ -165,6 +166,7 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
     if ((img = ConstituteImage(width, height, "I", CharPixel, hyperslab,
             &exception)) == NULL) {
         CatchException(&exception);
+        DestroyImageInfo(image_info);
         fclose_check(a->file);
         return;
     }
@@ -172,8 +174,9 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
     tmp = img;
     if ((img = FlipImage(img, &exception)) == NULL) {
         CatchException(&exception);
+        DestroyImage(tmp);
+        DestroyImageInfo(image_info);
         fclose_check(a->file);
-	DestroyImage(tmp);
         return;
     }
     DestroyImage(tmp);
@@ -183,16 +186,18 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
         if ((img = SampleImage(img, width / a->info->quality,
                 height / a->info->quality, &exception)) == NULL) {
             CatchException(&exception);
+            DestroyImage(tmp);
+            DestroyImageInfo(image_info);
             fclose_check(a->file);
-	    DestroyImage(tmp);
             return;
         }
         DestroyImage(tmp);
         tmp = img;
         if ((img = SampleImage(img, width, height, &exception)) == NULL) {
             CatchException(&exception);
+            DestroyImage(tmp);
+            DestroyImageInfo(image_info);
             fclose_check(a->file);
-	    DestroyImage(tmp);
             return;
         }
         DestroyImage(tmp);
@@ -203,8 +208,9 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
         if ((img = ScaleImage(img, (width * a->info->scale),
                 (height * a->info->scale), &exception)) == NULL) {
             CatchException(&exception);
+            DestroyImage(tmp);
+            DestroyImageInfo(image_info);
             fclose_check(a->file);
-	    DestroyImage(tmp);
             return;
         }
         DestroyImage(tmp);
@@ -215,6 +221,7 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
         if ((img = CropImage(img, portion, &exception)) == NULL) {
             CatchException(&exception);
             DestroyImage(tmp);
+            DestroyImageInfo(image_info);
             fclose_check(a->file);
             return;
         }
@@ -223,10 +230,8 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
 
 
     // write image
-
     if (streamToSocket) { // SOCKET STREAM
-      strcpy(img->magick, "PNG");
-      strcpy(img->filename, "/tmp/e287e87o2he87o2hjkebn2li8eyh92.png"); // necessary for graphics magick to determing image format
+        strcpy(img->magick, a->info->image_type);
     	image_info->file = a->file;
 
     	WriteImage(image_info, img);
@@ -237,6 +242,8 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
 
         fclose_check(a->file);
     } else { // WRITE FILE
+    	a->info->image_type = strlower(a->info->image_type);
+
     	if (!a->info->root_path) {
     		printf("Error: root path is NULL\n");
             return;
@@ -251,9 +258,9 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
 
         // complete filename
         if (strcmp(a->info->service, "full") == 0 && a->info->quality != 1) {
-        	sprintf(dir, "/%i.low.res.png", current_slice);
+        	sprintf(dir, "/%i.low.res.%s", current_slice, a->info->image_type);
         } else {
-        	sprintf(dir, "/%i_%i.png", a->info->start_w, a->info->start_h);
+        	sprintf(dir, "/%i_%i.%s", a->info->start_w, a->info->start_h, a->info->image_type);
         }
         finalPath = appendToBuffer(finalPath, dir);
         strcpy(img->filename, finalPath->buffer);

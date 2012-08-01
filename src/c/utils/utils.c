@@ -242,6 +242,30 @@ t_string_buffer * createDirectory(char * path, mode_t mode) {
 	return pathWithoutSlashAtEnd;
 }
 
+char* strupper( char* s )
+{
+  if (s == NULL) return NULL;
+
+  int i = 0;
+  while (s[i] != '\0') {
+	  s[i] = toupper(s[i]);
+    i++;
+  }
+  return s;
+}
+
+char* strlower( char* s )
+{
+  if (s == NULL) return NULL;
+
+  int i = 0;
+  while (s[i] != '\0') {
+    s[i] = tolower(s[i]);
+    i++;
+  }
+  return s;
+}
+
 short testBufferAppend() {
 	printf("\t*) String Append => ");
 
@@ -339,6 +363,29 @@ short testDirectoryCreation() {
 	  return 1;
 }
 
+short testToUpAndLow() {
+	  printf("\t*) To Upper And Lower => ");
+
+	  char * t = strdup("test1");
+
+	  if (strcmp(strupper(t), "TEST1") != 0) {
+		  printf("FAILED !\n");
+	  }
+
+	  free(t);
+
+	  t = strdup("TEST2");
+	  if (strcmp(strlower(t), "test2") != 0) {
+		  printf("FAILED !\n");
+	  }
+
+	  free(t);
+
+	  printf("PASSED.\n");
+
+	  return 1;
+}
+
 /** TESTS **/
 int		main(int argc, char ** args)
 {
@@ -359,6 +406,11 @@ int		main(int argc, char ** args)
 	   exit(0);
    }
 
+   // UPPER AND LOWER TEST
+   if (!testToUpAndLow()) {
+	   printf("Tests aborted because of errors!\n");
+	   exit(0);
+   }
 
 	printf("\nAll tests finished without error.\n");
 

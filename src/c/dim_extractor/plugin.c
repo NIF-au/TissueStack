@@ -2,16 +2,16 @@
 
 void		free_all_plugins(t_tissue_stack *t)
 {
-  t_plugin	*p;
-  t_plugin	*save;
+  t_plugin	*p = NULL;
+  t_plugin	*save = NULL;
 
   p = t->first;
   while (p != NULL)
     {
       save = p;
       dlclose(p->handle);
-      free(p->name);
-      free(p->path);
+      if (p->name != NULL) free(p->name);
+      if (p->path != NULL) free(p->path);
       p = p->next;
       free(save);
     }
@@ -147,7 +147,6 @@ void		*plugin_start(void *args)
   t_plugin	*this;
 
   a = (t_args_plug *)args;
-  printf("Hello nig\n");
   if ((this = get_plugin_by_name(a->name, a->general_info->first)) == NULL)
     {
       if (this)

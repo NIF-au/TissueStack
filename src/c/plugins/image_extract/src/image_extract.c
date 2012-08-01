@@ -28,7 +28,6 @@ void		*percentage(void *args)
 	pthread_cond_wait(&(a->info->cond), &(a->info->mut));
       a->info->percent = (100 / (float)a->info->total_slices_to_do) * a->info->slices_done;
       pthread_mutex_unlock(&(a->info->mut));
-      //usleep(1000);
     }
   a->this->busy = 0;
   free(a);
@@ -96,7 +95,7 @@ int		**generate_dims_start_end_thread(t_vol *v, int dim, int start, int end)
 
 t_image_args	*create_args_thread(t_thread_pool *p, t_vol *vol, t_image_extract *image_general, t_plugin *this, FILE *sock)
 {
-  t_image_args   *args;
+  t_image_args   *args = NULL;
 
   args = malloc(sizeof(*args));
   args->volume = vol;
@@ -105,6 +104,7 @@ t_image_args	*create_args_thread(t_thread_pool *p, t_vol *vol, t_image_extract *
   memcpy(args->info, image_general, sizeof(*image_general));
   args->this = this;
   args->file = sock;
+
   return (args);
 }
 
@@ -164,8 +164,10 @@ int		check_input(char **in)
   i = 1;
   while (in[i + 1] != NULL)
     {
+	  in[i] = strlower(in[i]);
       if (strcmp(in[i], "-1") != 0 && strcmp(in[i], "tiles") != 0 &&
-	  strcmp(in[i], "images") != 0 && strcmp(in[i], "full") != 0)
+	  strcmp(in[i], "images") != 0 && strcmp(in[i], "full") != 0
+	  && strcmp(in[i], "jpeg") != 0 && strcmp(in[i], "png") != 0)
 	{
 	  j = 0;
 	  while (in[i][j] != '\0')
@@ -234,14 +236,10 @@ void		*init(void *args)
   pthread_cond_init(&image_args->cond, NULL);
   a->this->stock = (void*)image_args;
   InitializeMagick("./");
-  /*
-  free(a->name);
-  int i =0;
-  while (a->commands[i] != NULL)
-    free(a->commands[i++]);
-  free(a->commands);
-  free(a->path);*/
+
+  // free command line args
   a->destroy(a);
+
   return (NULL);
 }
 
@@ -307,27 +305,29 @@ void		*start(void *args)
   image_args->scale = (float)atof(a->commands[7]);
   image_args->quality = atoi(a->commands[8]);
   image_args->service = a->commands[9];
+  a->commands[10] = strupper(a->commands[10]);
+  image_args->image_type = a->commands[10];
 
   if (strcmp(image_args->service, "tiles") == 0)
     {
-      image_args->square_size = atoi(a->commands[10]);
+      image_args->square_size = atoi(a->commands[11]);
+      image_args->h_position = atoi(a->commands[12]);
+      image_args->w_position = atoi(a->commands[13]);
+      image_args->start_h = atoi(a->commands[12]);
+      image_args->start_w = atoi(a->commands[13]);
+      if (a->commands[15] != NULL)
+	image_args->root_path = strdup(a->commands[15]);
+    }
+  else if (strcmp(image_args->service, "images") == 0)
+    {
       image_args->h_position = atoi(a->commands[11]);
       image_args->w_position = atoi(a->commands[12]);
       image_args->start_h = atoi(a->commands[11]);
       image_args->start_w = atoi(a->commands[12]);
-      if (a->commands[14] != NULL)
-	image_args->root_path = strdup(a->commands[14]);
-    }
-  else if (strcmp(image_args->service, "images") == 0)
-    {
-      image_args->h_position = atoi(a->commands[10]);
-      image_args->w_position = atoi(a->commands[11]);
-      image_args->start_h = atoi(a->commands[10]);
-      image_args->start_w = atoi(a->commands[11]);
-      image_args->h_position_end = atoi(a->commands[12]);
-      image_args->w_position_end = atoi(a->commands[13]);
-      if (a->commands[15] != NULL)
-	image_args->root_path = strdup(a->commands[15]);
+      image_args->h_position_end = atoi(a->commands[13]);
+      image_args->w_position_end = atoi(a->commands[14]);
+      if (a->commands[16] != NULL)
+	image_args->root_path = strdup(a->commands[16]);
     }
   else
     {
@@ -339,31 +339,40 @@ void		*start(void *args)
 	}
       else
 	{
-	  if (a->commands[11] != NULL)
-	    image_args->root_path = strdup(a->commands[11]);
+	  if (a->commands[12] != NULL)
+	    image_args->root_path = strdup(a->commands[12]);
 	}
     }
   image_args->total_slices_to_do = get_total_slices_to_do(volume, image_args->dim_start_end);
-  step = (strcmp(image_args->service, "tiles") == 0 ? atoi(a->commands[13]) : (strcmp(image_args->service, "full") == 0 ? atoi(a->commands[10]) : atoi(a->commands[14])));
+  step = (strcmp(image_args->service, "tiles") == 0 ? atoi(a->commands[14]) : (strcmp(image_args->service, "full") == 0 ? atoi(a->commands[11]) : atoi(a->commands[15])));
   image_creation_lunch(volume, step, a->general_info->tp, image_args, a->this, socketDescriptor);
+
   return (NULL);
 }
 
 void		*unload(void *args)
 {
-  t_image_extract	*image_args;
-  t_args_plug	*a;
+  t_image_extract	*image_args = NULL;
+  t_args_plug	*a = NULL;
 
   a = (t_args_plug *)args;
   a->this->busy = 1;
+
   image_args = (t_image_extract *)a->this->stock;
-  free(image_args->dim_start_end[0]);
-  free(image_args->dim_start_end[1]);
-  free(image_args->dim_start_end[2]);
-  free(image_args->dim_start_end);
-  free(image_args);
-  free(a->name);
-  free(a->path);
-  a->this->busy = 0;
+
+  if (image_args != NULL) {
+	  free(image_args->dim_start_end[0]);
+	  free(image_args->dim_start_end[1]);
+	  free(image_args->dim_start_end[2]);
+	  free(image_args->dim_start_end);
+	  free(image_args);
+  }
+
+  if (a != NULL) {
+	  free(a->name);
+	  free(a->path);
+	  a->this->busy = 0;
+  }
+
   return (NULL);
 }

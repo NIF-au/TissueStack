@@ -661,8 +661,8 @@ void		stringify_char(char buff, t_tissue_stack *general)
 
 void		free_all_prompt(t_tissue_stack *t)
 {
-  t_char_prompt	*c;
-  t_char_prompt	*save;
+  t_char_prompt	*c = NULL;
+  t_char_prompt	*save = NULL;
 
   c = t->prompt_first;
   if (c != NULL && c->next == t->prompt_first)
@@ -684,8 +684,8 @@ void		free_all_prompt(t_tissue_stack *t)
 
 void		free_all_history(t_tissue_stack *t)
 {
-  t_hist_prompt	*c;
-  t_hist_prompt	*save;
+  t_hist_prompt	*c = NULL;
+  t_hist_prompt	*save = NULL;
 
   c = t->hist_first;
   if (c != NULL && c->next == t->hist_first)
