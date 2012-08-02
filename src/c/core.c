@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Tue Jul 17 15:28:23 2012 Oliver Nicolini
+** Last update Thu Aug  2 16:13:43 2012 Oliver Nicolini
 */
 
 
@@ -232,9 +232,21 @@ int		main(int argc, char **argv)
   else
     t->volume_first = NULL;
 
+  t_vol *v = t->volume_first;
+
+  /*
+  printf("dim nb = %i\nsize = %i - %i - %i\nstarts = %f - %f - %f\nsteps = %f - %f - %f\npath = %s\nslice_max = %i\ndim_name = %s - %s - %s\ndim_name_char = %c - %c - %c\nraw_data = %i\ndim_offset = %lld - %lld - %lld\nslices_size = %i - %i - %i\n raw_fd = %i\n", v->dim_nb, v->size[0], v->size[1], v->size[2], v->starts[0], v->starts[1], v->starts[2], v->steps[0], v->steps[1], v->steps[2], v->path, v->slices_max, v->dim_name[0], v->dim_name[1], v->dim_name[2], v->dim_name_char[0], v->dim_name_char[1], v->dim_name_char[2], v->raw_data, v->dim_offset[0], v->dim_offset[1], v->dim_offset[2], v->slice_size[0], v->slice_size[1], v->slice_size[2], v->raw_fd);
+  */
   // lunch thread_pool
   t->tp = malloc(sizeof(*t->tp));
- thread_pool_init(t->tp, 10);
+  thread_pool_init(t->tp, 10);
+
+  /*
+  (t->plug_actions)(t, "load converter /usr/local/plugins/TissueStackMincConverter.so", NULL);
+  sleep(1);
+  (t->plug_actions)(t, "start converter /media/Back/anglerfish/anglerfish.new.range.mnc /opt/data/fish_head.raw", NULL);
+  */
+
   (t->plug_actions)(t, "load image /usr/local/plugins/TissueStackImageExtract.so", NULL);
   sleep(1);
   (t->plug_actions)(t, "load serv /usr/local/plugins/TissueStackCommunicator.so", NULL);

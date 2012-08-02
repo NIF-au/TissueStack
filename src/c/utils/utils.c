@@ -387,6 +387,7 @@ short testToUpAndLow() {
 }
 
 /** TESTS **/
+/*
 int		main(int argc, char ** args)
 {
 	printf("Running tests ....\n\n");
@@ -416,4 +417,4 @@ int		main(int argc, char ** args)
 
 	return 1;
 }
-
+*/

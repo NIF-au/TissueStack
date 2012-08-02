@@ -13,7 +13,7 @@ struct			s_header
   double		*start;
   double		*steps;
   char			**dim_name;
-  unsigned int		*dim_offset;
+  unsigned long long int	*dim_offset;
   unsigned int		*slice_size;
   unsigned int		slice_max;
 };

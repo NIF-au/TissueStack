@@ -26,6 +26,8 @@ void		dim_loop(int		fd,
   unsigned long		*start;
   long unsigned int	*count;
 
+  printf("dim_loop\n");
+
   start = malloc(volume->dim_nb * sizeof(*start));
   count = malloc(volume->dim_nb * sizeof(*count));
   start[0] = start[1] = start[2] = 0;
@@ -131,12 +133,12 @@ t_header	*create_header_from_minc_struct(t_vol *minc_volume)
   int		j;
 
   h = malloc(sizeof(*h));
-  h->sizes = malloc(h->dim_nb * sizeof(h->sizes));
-  h->start = malloc(h->dim_nb * sizeof(h->start));
-  h->steps = malloc(h->dim_nb * sizeof(h->steps));
-  h->dim_name = malloc(h->dim_nb * sizeof(h->dim_name));
-  h->dim_offset = malloc(h->dim_nb * sizeof(h->dim_offset));
-  h->slice_size = malloc(h->dim_nb * sizeof(h->slice_size));
+  h->sizes = malloc(h->dim_nb * sizeof(*h->sizes));
+  h->start = malloc(h->dim_nb * sizeof(*h->start));
+  h->steps = malloc(h->dim_nb * sizeof(*h->steps));
+  h->dim_name = malloc(h->dim_nb * sizeof(*h->dim_name));
+  h->dim_offset = malloc(h->dim_nb * sizeof(*h->dim_offset));
+  h->slice_size = malloc(h->dim_nb * sizeof(*h->slice_size));
 
   h->dim_nb = minc_volume->dim_nb;
   h->slice_max = minc_volume->slices_max;
@@ -154,20 +156,18 @@ t_header	*create_header_from_minc_struct(t_vol *minc_volume)
       while (j < h->dim_nb)
 	{
 	  if (j != i)
-	    h->slice_size[i] *= h->sizes[j];
+	    h->slice_size[i] *= minc_volume->size[j];
 	  j++;
 	}
-
       i++;
     }
 
-  i = 0;
+  h->dim_offset[0] = 0;
+  i = 1;
   while (i < h->dim_nb)
     {
-      if (i == 0)
-	h->dim_offset[i] = 0;
-      else
-	h->dim_offset[i] = h->dim_offset[i - 1] + (h->slice_size[i - 1] * h->sizes[i - 1]);
+      h->dim_offset[i] = (unsigned long long)(h->dim_offset[i - 1] + (unsigned long long)((unsigned long long)h->slice_size[i - 1] * (unsigned long long)h->sizes[i - 1]));
+      printf("----- %llu\n", (unsigned long long)h->dim_offset[i]);
       i++;
     }
   return (h);
@@ -180,18 +180,20 @@ void		write_header_into_file(int fd, t_header *h)
   int		len;
 
   memset(head, '\0', 4096);
-  sprintf(head, "%i|%i:%i:%i|%g:%g:%g|%g:%g;%g|%s|%s|%s|%i:%i:%i|%i|%ui:%ui:%ui|",
+  sprintf(head, "%i|%i:%i:%i|%g:%g:%g|%g:%g:%g|%s|%s|%s|%c|%c|%c|%i:%i:%i|%i|%llu:%llu:%llu|",
 	  h->dim_nb,
 	  h->sizes[0], h->sizes[1], h->sizes[2],
 	  h->start[0], h->start[1], h->start[2],
 	  h->steps[0], h->steps[1], h->steps[2],
 	  h->dim_name[0], h->dim_name[1], h->dim_name[2],
+	  h->dim_name[0][0], h->dim_name[1][0], h->dim_name[2][0],
 	  h->slice_size[0], h->slice_size[1], h->slice_size[2],
 	  h->slice_max,
-	  h->dim_offset[0], h->dim_offset[1], h->dim_offset[2]);
+	  (unsigned long long)h->dim_offset[0], (unsigned long long)h->dim_offset[1], (unsigned long long)h->dim_offset[2]);
   len = strlen(head);
-  memset(lenhead, '\0', 4096);
+  memset(lenhead, '\0', 200);
   sprintf(lenhead, "@IaMraW@|%i|", len);
+  printf("\n\nheader =\n%s%s\n\n", lenhead, head);
   write(fd, lenhead, strlen(lenhead));
   write(fd, head, len);
 }
@@ -210,18 +212,22 @@ void  		*start(void *args)
 
   a = (t_args_plug *)args;
 
-  fd = open(a->commands[1], (O_CREAT | O_TRUNC | O_RDWR));
-
+  if ((fd = open(a->commands[1], (O_CREAT | O_TRUNC | O_RDWR))) == -1)
+    {
+      perror("Open ");
+      return (NULL);
+    }
   minc_volume = init_get_volume_from_minc_file(a->commands[0]);
-
   header = create_header_from_minc_struct(minc_volume);
-
   write_header_into_file(fd, header);
-
-  dim_loop(fd, minc_volume->dim_nb, minc_volume);
-
-  close(fd);
-  chmod(a->commands[1], 0755);
+  //  dim_loop(fd, minc_volume->dim_nb, minc_volume);
+  if (close(fd) == -1)
+    {
+      perror("Close ");
+      return (NULL);
+    }
+  if (chmod(a->commands[1], 0644) == -1)
+    perror("Chmod ");
 
   return (NULL);
 }

@@ -5,9 +5,10 @@ SRCS		=	$(DIRSRC)core.c							\
 			$(DIRSRC)plugin.c						\
 			$(DIRSRC)volume.c						\
 			$(DIRSRC)error.c						\
-			$(DIRSRC)thread_pool.c
+			$(DIRSRC)thread_pool.c						\
+			$(DIRSRC)utils/utils.c
 
-INCLUDE		=	-I./headers 
+INCLUDE		=	-I./headers -I./utils
 
 LIB_PATH	=	
 
