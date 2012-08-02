@@ -127,7 +127,6 @@ void convert_tiles_to_pixel_coord(t_image_args *a)
 void fclose_check(FILE *file) {
 	if (file && fcntl(fileno(file), F_GETFL) != -1) {
         fclose(file);
-        //close(fileno(file));
     }
 }
 

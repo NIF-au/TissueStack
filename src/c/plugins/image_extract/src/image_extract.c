@@ -124,14 +124,6 @@ t_image_args	*create_args_thread(t_thread_pool *p, t_vol *vol, t_image_extract *
   if (vol->dim_name_char != NULL) {
 	  args->volume->dim_name_char = strdup(vol->dim_name_char);
   }
-  if (vol->dim_offset != NULL) {
-	  args->volume->dim_offset = malloc(sizeof(*args->volume->dim_offset) * args->volume->dim_nb);
-	  memcpy(args->volume->dim_offset, vol->dim_offset, sizeof(*vol->dim_offset) * args->volume->dim_nb);
-  }
-  if (vol->slice_size != NULL) {
-	  args->volume->slice_size = malloc(sizeof(*args->volume->slice_size) * args->volume->dim_nb);
-	  memcpy(args->volume->slice_size, vol->slice_size, sizeof(*vol->slice_size) * args->volume->dim_nb);
-  }
 
   args->volume->path = NULL;
   args->volume->dimensions = NULL;
@@ -422,7 +414,6 @@ void		*unload(void *args)
   t_args_plug	*a = NULL;
 
   a = (t_args_plug *)args;
-  a->this->busy = 1;
 
   image_args = (t_image_extract *)a->this->stock;
 
@@ -431,7 +422,6 @@ void		*unload(void *args)
   if (a != NULL) {
 	  free(a->name);
 	  free(a->path);
-	  a->this->busy = 0;
 	  free(a);
   }
 
