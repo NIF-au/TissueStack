@@ -82,22 +82,25 @@ char		**serv_str_to_wordtab(char *buff, char c)
   return (dest);
 }
 
-void		write_header(int socket)
+void		write_header(FILE * socket, char * image_type)
 {
   char		header[4096];
   int		len;
 
   len = sprintf(header,
-		"HTTP/1.1 200 OK\r\n"
-		"Dat: Thu, 20 May 2004 21:12:11 GMT\r\n"
-		"Connection: close\r\n"
-		"Server: TissueStack Server\r\n"
-		"Accept-Ranges: bytes\r\n"
-		"Content-Type: image/png\r\n"
-		"Access-Control-Allow-Origin: *\r\n"
-		"Last-Modified: Thu, 20 May 2004 21:12:11 GMT\r\n"
-		"\r\n");
-  write(socket, header, len);
+		 "%s %s %s %s %s %s %s %s %s %s",
+		"HTTP/1.1 200 OK\r\n",
+		"Dat: Thu, 20 May 2004 21:12:11 GMT\r\n",
+		"Connection: close\r\n",
+		"Server: TissueStack Server\r\n",
+		"Accept-Ranges: bytes\r\n",
+		"Content-Type: image/",
+		strlower(image_type),
+		"\r\n",
+		"Access-Control-Allow-Origin: *\r\n",
+		"Last-Modified: Thu, 20 May 2004 21:12:11 GMT\r\n\r\n"
+		);
+  write(fileno(socket), header, len);
 }
 
 int		is_not_num(char *str)
@@ -170,6 +173,7 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
   char		**tmp;
   char		**tmp2;
   char		*line;
+  char		*image_type;
   char		comm[400];
 
   if (strncmp(buff, "GET /?volume=", 13) == 0)
@@ -200,6 +204,7 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
 	  else if (strcmp(tmp2[0], "x") == 0)		x = serv_copy_check_clean_string_from_tab(tmp2);
 	  else if (strcmp(tmp2[0], "y_end") == 0)	y_end = serv_copy_check_clean_string_from_tab(tmp2);
 	  else if (strcmp(tmp2[0], "x_end") == 0)	x_end = serv_copy_check_clean_string_from_tab(tmp2);
+	  else if (strcmp(tmp2[0], "image_type") == 0)	image_type = serv_copy_check_clean_string_from_tab(tmp2);
 	  j = 0;
 	  while (tmp2[j] != NULL)
 	    free(tmp2[j++]);
@@ -215,28 +220,17 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
 	return;
       if (service == NULL)
 	{
-	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s 1", volume,
+	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s 1", volume,
 		  (dimension[0] == '0' ? atoi(slice) : -1),
 		  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
 		  (dimension[0] == '1' ? atoi(slice) : -1),
 		  (dimension[0] == '1' ? (atoi(slice) + 1) : -1),
 		  (dimension[0] == '2' ? atoi(slice) : -1),
 		  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
-		  scale, quality, "full");
+		  scale, quality, "full", image_type);
 
 	}
       else if (strcmp(service, "tiles") == 0)
-	{
-	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s 1", volume,
-		  (dimension[0] == '0' ? atoi(slice) : -1),
-		  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
-		  (dimension[0] == '1' ? atoi(slice) : -1),
-		  (dimension[0] == '1' ? (atoi(slice) + 1) : -1),
-		  (dimension[0] == '2' ? atoi(slice) : -1),
-		  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
-		  scale, quality, service, square, y, x);
-	}
-      else if (strcmp(service, "images") == 0)
 	{
 	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s %s 1", volume,
 		  (dimension[0] == '0' ? atoi(slice) : -1),
@@ -245,8 +239,20 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
 		  (dimension[0] == '1' ? (atoi(slice) + 1) : -1),
 		  (dimension[0] == '2' ? atoi(slice) : -1),
 		  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
-		  scale, quality, service, y, x, y_end, x_end);
+		  scale, quality, service, image_type, square, y, x);
 	}
+      else if (strcmp(service, "images") == 0)
+	{
+	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s %s %s 1", volume,
+		  (dimension[0] == '0' ? atoi(slice) : -1),
+		  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
+		  (dimension[0] == '1' ? atoi(slice) : -1),
+		  (dimension[0] == '1' ? (atoi(slice) + 1) : -1),
+		  (dimension[0] == '2' ? atoi(slice) : -1),
+		  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
+		  scale, quality, service, image_type, y, x, y_end, x_end);
+	}
+      write_header(file, image_type);
       s->general->plug_actions(s->general, comm, file);
     }
 }
@@ -272,9 +278,7 @@ void		serv_accept_new_connections(t_serv_comm *s)
   l = read(socket, buff, 4096);
   buff[l] = '\0';
   file = fdopen(socket, "wr");
-  write_header(socket);
   printf("************ Socket Number = %i****************\n", socket);
-  //s->general->plug_actions(s->general, buff, file);
   interpret_header(buff, file, s);
 }
 

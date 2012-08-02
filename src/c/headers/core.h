@@ -15,6 +15,7 @@
 #include <sys/ioctl.h>
 #include <minc2.h>
 
+#include "utils.h"
 #include "thread_pool.h"
 
 typedef struct		s_args_plug	t_args_plug;
@@ -97,8 +98,9 @@ struct			s_vol
   char			*path;
   unsigned int		slices_max;
   char			**dim_name;
+  char			*dim_name_char;
   int			raw_data;
-  int			*dim_offset;
+  unsigned long long int	*dim_offset;
   int			*slice_size;
   int			raw_fd;
   t_vol			*next;
@@ -151,6 +153,9 @@ void            prompt_exec(char **commands, t_tissue_stack *general, void *box)
 
 void            free_all_history(t_tissue_stack *t);
 void            free_all_prompt(t_tissue_stack *t);
+
+void		destroy_plug_args(t_args_plug *a);
+void		destroy_command_args(char ** args);
 
 /*		plugin.c		*/
 

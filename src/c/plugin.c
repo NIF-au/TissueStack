@@ -147,7 +147,6 @@ void		*plugin_start(void *args)
   t_plugin	*this;
 
   a = (t_args_plug *)args;
-  printf("Hello nig\n");
   if ((this = get_plugin_by_name(a->name, a->general_info->first)) == NULL)
     {
       if (this)
@@ -199,6 +198,7 @@ void		*plugin_unload(void *args)
     this->error = 2;
   while (this->busy != 0)
     usleep(1000);
+
   free(this->name);
   free(this->path);
   if (this->prev != NULL)
@@ -210,5 +210,8 @@ void		*plugin_unload(void *args)
 	general->first->prev = NULL;
     }
   free(this);
+
+  destroy_plug_args(a);
+
   return (NULL);
 }

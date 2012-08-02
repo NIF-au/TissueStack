@@ -7,6 +7,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include "utils.h"
 
 #include "core.h"
 

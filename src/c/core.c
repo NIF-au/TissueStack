@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Tue Jul 17 15:28:23 2012 Oliver Nicolini
+** Last update Thu Aug  2 17:08:43 2012 Oliver Nicolini
 */
 
 
@@ -57,52 +57,6 @@ void			signal_handler(int sig)
 			t_global->clean_quit(t_global);
 			break;
 	}
-
-  /*
-  t_plugin		*tmp;
-  pthread_t		id;
-  int			errors;
-  char			command[200];
-  char			*name;
-  char			*start_command;
-  char			*path;
-
-  id = pthread_self();
-  tmp = t_global->first;
-  while (tmp != NULL)
-    {
-      if (tmp->thread_id == id)
-	{
-	  add_error(t_global, sig, tmp);
-	  fprintf(stderr, "The thread hosting the plugin: %s - received the signal %i\n", tmp->name, sig);
-	  break;
-	}
-      tmp = tmp->next;
-    }
-  errors = get_errors_nb_by_plugin(t_global, tmp);
-  if (errors >= ERROR_MAX)
-    {
-      fprintf(stderr, "The plugin %s locate at %s haz crashed several times. This plugin is now disabled\n", tmp->name, tmp->path);
-      sprintf(command, "unload %s", tmp->name);
-      t_global->plug_actions(t_global, command, NULL);
-    }
-  else
-    {
-      path = strdup(tmp->path);
-      name = strdup(tmp->name);
-      start_command = from_array_to_string(tmp->start_command);
-      sprintf(command, "unload %s", tmp->name);
-      t_global->plug_actions(t_global, command, NULL);
-      usleep(1000);
-      memset(command, 0, 200);
-      sprintf(command, "load %s %s", name, path);
-      t_global->plug_actions(t_global, command, NULL);
-      usleep(1000);
-      memset(command, 0, 200);
-      sprintf(command, "start %s %s ", name, start_command);
-      t_global->plug_actions(t_global, command, NULL);
-    }
-    clean_error_list(t_global, CLEANING_ERROR_TIME);*/
 }
 
 void			signal_manager(t_tissue_stack *t)
@@ -191,6 +145,10 @@ void            init_prog(t_tissue_stack *t)
 
 void		free_core_struct(t_tissue_stack *t)
 {
+  if (t == NULL) {
+	  return;
+  }
+
   printf("\nFreeing\n");
   free_all_volumes(t);
   free_all_plugins(t);
@@ -230,7 +188,14 @@ int		main(int argc, char **argv)
 
   // lunch thread_pool
   t->tp = malloc(sizeof(*t->tp));
- thread_pool_init(t->tp, 10);
+  thread_pool_init(t->tp, 10);
+
+  /*
+  (t->plug_actions)(t, "load converter /usr/local/plugins/TissueStackMincConverter.so", NULL);
+  sleep(1);
+  (t->plug_actions)(t, "start converter /media/Back/anglerfish/anglerfish.new.range.mnc /opt/data/fish_head.raw", NULL);
+  */
+
   (t->plug_actions)(t, "load image /usr/local/plugins/TissueStackImageExtract.so", NULL);
   sleep(1);
   (t->plug_actions)(t, "load serv /usr/local/plugins/TissueStackCommunicator.so", NULL);

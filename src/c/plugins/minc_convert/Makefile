@@ -1,8 +1,8 @@
 DIRSRC		=	./src/
 
-SRCS		=	$(DIRSRC)serv.c
+SRCS		=	$(DIRSRC)converter.c
 
-INCLUDE		=	-I./headers -I../../headers -I./../../utils
+INCLUDE		=	-I./headers -I./../../headers -I./../../utils
 
 LIB_PATH	=	
 
@@ -13,9 +13,9 @@ LIBS		=	-lhdf5								\
 			-lpthread							\
 			-ldl
 
-NAME		=	TissueStackProcessCommunicator.so
+NAME		=	TissueStackMincConverter.so
 
-FLAGS		=	-g3 -Wall -Werror
+FLAGS		=	-Wall -Werror -g3
 
 PLUGIN_INSTALL_DIR = /usr/local/plugins
 
@@ -33,17 +33,7 @@ install:
 
 clean:
 	@echo "\n==================== Cleaning $(NAME) ====================="
-	rm -rf *~ \#*\# $(NAME) ./png/*
+	rm -rf *~ \#*\# $(NAME)
 	rm -rf *.o
 	rm -rf *.so
 	rm -rf core
-
-e:	clean
-	@echo "\n==================== Execution ====================\n\n"
-	@./yop ../00-normal-model-nonsym.mnc
-	@echo "\n\n================== Exec finished ==================\n\n"
-
-time:	clean
-	@echo "\n==================== Execution ====================\n\n"
-	@time ./yop ../00-normal-model-nonsym.mnc
-	@echo "\n\n================== Exec finished ==================\n\n"

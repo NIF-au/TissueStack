@@ -66,7 +66,10 @@ public final class MincResources extends AbstractRestfulMetaInformation {
 			String preview,
 			@Description("Optional: store a non-existant data set ('true' or 'false'), default: false")
 			@QueryParam("store_data_set")
-			String storeDataSet){
+			String storeDataSet,
+			@Description("Optional: the image type, default: PNG")
+			@QueryParam("image_type")
+			String imageType){			
 		// check tile directory
 		if (baseDirectory == null || baseDirectory.trim().isEmpty()) {
 			baseDirectory = "/tmp/tiles";
@@ -114,6 +117,11 @@ public final class MincResources extends AbstractRestfulMetaInformation {
 			storeDataSetAsBoolean = Boolean.parseBoolean(storeDataSet);
 		} catch (Exception e) {
 			// fall back onto default
+		}
+		
+		// evaluate image type
+		if (imageType == null || imageType.trim().isEmpty()) {
+			imageType = "PNG";
 		}
 		
 		final TissueStack jniTissueStack = new TissueStack();
@@ -211,11 +219,17 @@ public final class MincResources extends AbstractRestfulMetaInformation {
 			// fall back onto default
 		}
 		
-		// now call the native tilling method
-		jniTissueStack.tileMincVolume(
-				dataSet.getFilename(), tileDir.getAbsolutePath() ,dimensionsArray, tileSizeAsInt, zoomFactor, previewAsBoolean);
-		
-		return new RestfulResource(new Response(dataSet));
+		// now call the native tilling method and return
+		return new RestfulResource(
+				new Response(
+						jniTissueStack.tileMincVolume(
+								dataSet.getFilename(),
+								tileDir.getAbsolutePath(),
+								dimensionsArray,
+								tileSizeAsInt,
+								zoomFactor,
+								imageType.trim(),
+								previewAsBoolean)));
 	}
 
 	@Path("/meta-info")

@@ -31,8 +31,8 @@
 		 * Method:    tileMincVolume
 		 * Signature: (Ljava/lang/String;Ljava/lang/String;[IDZ)V
 		 */
-		JNIEXPORT void JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMincVolume
-		  (JNIEnv *, jobject, jstring, jstring, jintArray, jint, jdouble, jboolean);
+		JNIEXPORT jstring JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMincVolume
+		  (JNIEnv *, jobject, jstring, jstring, jintArray, jint, jdouble, jstring, jboolean);
 	#ifdef __cplusplus
 	}
 	#endif
