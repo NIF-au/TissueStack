@@ -217,7 +217,7 @@ void		prompt_exec(char **commands, t_tissue_stack *general, void *box)
       i++;
     }
 
-  //destroy_command_args(commands);
+  destroy_command_args(commands);
 
   if (i == general->nb_func)
     {

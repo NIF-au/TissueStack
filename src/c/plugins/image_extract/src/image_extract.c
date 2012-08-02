@@ -108,10 +108,6 @@ t_image_args	*create_args_thread(t_thread_pool *p, t_vol *vol, t_image_extract *
   args->volume = malloc(sizeof(*args->volume));
   memcpy(args->volume, vol, sizeof(*vol));
 
-  if (vol->minc_volume != NULL) {
-	  args->volume->minc_volume = malloc(sizeof(args->volume->minc_volume));
-	  memcpy(args->volume->minc_volume, vol->minc_volume, sizeof(vol->minc_volume));
-  }
   if (vol->size != NULL) {
 	  args->volume->size = malloc(sizeof(*args->volume->size) * args->volume->dim_nb);
 	  memcpy(args->volume->size, vol->size, sizeof(*vol->size) * args->volume->dim_nb);
@@ -124,6 +120,19 @@ t_image_args	*create_args_thread(t_thread_pool *p, t_vol *vol, t_image_extract *
 	  args->volume->dim_offset = malloc(sizeof(*args->volume->dim_offset) * args->volume->dim_nb);
 	  memcpy(args->volume->dim_offset, vol->dim_offset, sizeof(*vol->dim_offset) * args->volume->dim_nb);
   }
+
+  if (vol->dim_name_char != NULL) {
+	  args->volume->dim_name_char = strdup(vol->dim_name_char);
+  }
+  if (vol->dim_offset != NULL) {
+	  args->volume->dim_offset = malloc(sizeof(*args->volume->dim_offset) * args->volume->dim_nb);
+	  memcpy(args->volume->dim_offset, vol->dim_offset, sizeof(*vol->dim_offset) * args->volume->dim_nb);
+  }
+  if (vol->slice_size != NULL) {
+	  args->volume->slice_size = malloc(sizeof(*args->volume->slice_size) * args->volume->dim_nb);
+	  memcpy(args->volume->slice_size, vol->slice_size, sizeof(*vol->slice_size) * args->volume->dim_nb);
+  }
+
   args->volume->path = NULL;
   args->volume->dimensions = NULL;
   args->volume->dim_name = NULL;
@@ -469,14 +478,24 @@ void			free_image_args(t_image_args * args) {
 	}
 
 	if (args->volume != NULL) {
-		  if (args->volume->size != NULL) free(args->volume->size);
-		  if (args->volume->slice_size != NULL) free(args->volume->slice_size);
-		  if (args->volume->dim_offset != NULL) free(args->volume->dim_offset);
-		  if (args->volume->path != NULL) free(args->volume->path);
-		  if (args->volume->dim_name != NULL) free(args->volume->dim_name);
-		  if (args->volume->starts != NULL) free(args->volume->starts);
-		  if (args->volume->steps != NULL) free(args->volume->steps);
-		  free(args->volume);
+		if (args->volume->size != NULL) free(args->volume->size);
+		if (args->volume->path != NULL) free(args->volume->path);
+
+		if (args->volume->dim_name != NULL) {
+			int i=0;
+			while (i<args->volume->dim_nb) {
+				if (args->volume->dim_name[i] != NULL) free(args->volume->dim_name[i]);
+				i++;
+			}
+			free(args->volume->dim_name);
+		}
+		if (args->volume->starts != NULL) free(args->volume->starts);
+		if (args->volume->steps != NULL) free(args->volume->steps);
+		if (args->volume->dim_name_char != NULL) free(args->volume->dim_name_char);
+		if (args->volume->dim_offset != NULL) free(args->volume->dim_offset);
+		if (args->volume->slice_size != NULL) free(args->volume->slice_size);
+
+		free(args->volume);
 	}
 
 	free(args);

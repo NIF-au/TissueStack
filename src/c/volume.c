@@ -29,7 +29,7 @@ void		alloc_info_volume(t_vol *volume)
   volume->steps = malloc(volume->dim_nb * sizeof(*volume->steps));
   volume->size = malloc(volume->dim_nb * sizeof(*volume->size));
   volume->dim_name = malloc(volume->dim_nb * sizeof(*volume->dim_name));
-  volume->dim_name_char = malloc(volume->dim_nb * sizeof(*volume->dim_name_char));
+  volume->dim_name_char = malloc((volume->dim_nb + 1) * sizeof(*volume->dim_name_char));
   volume->slice_size = malloc(volume->dim_nb * sizeof(*volume->slice_size));
   volume->dim_offset = malloc(volume->dim_nb * sizeof(*volume->dim_offset));
 }
@@ -273,6 +273,7 @@ int		raw_volume_init(t_vol *volume, int fd)
   volume->dim_name_char[0] = info[7][0];
   volume->dim_name_char[1] = info[8][0];
   volume->dim_name_char[2] = info[9][0];
+  volume->dim_name_char[3] = '\0';
 
   set_slice_size(volume, info[10]);
 
@@ -355,6 +356,7 @@ int		init_volume(t_vol *volume, char *path)
       volume->dim_name_char[0] = volume->dim_name[0][0];
       volume->dim_name_char[1] = volume->dim_name[1][0];
       volume->dim_name_char[2] = volume->dim_name[2][0];
+      volume->dim_name_char[3] = '\0';
     }
 
   // get slices_max
@@ -468,19 +470,30 @@ void		remove_volume(char *path, t_tissue_stack *t)
 
 void		free_volume(t_vol *v)
 {
+  if (v == NULL) return;
+
   int		i;
 
   i = 0;
   while (i < v->dim_nb)
-    {
-      mifree_dimension_handle(v->dimensions[i]);
-      free(v->dim_name[i]);
-      i++;
-    }
-  free(v->dim_name);
-  free(v->dimensions);
-  free(v->size);
-  free(v->path);
+	{
+	  if (v->dimensions != NULL && v->dimensions[i] != NULL) mifree_dimension_handle(v->dimensions[i]);
+	  if (v->dim_name != NULL && v->dim_name[i] != NULL) free(v->dim_name[i]);
+	  i++;
+	}
+  if (v->dim_name != NULL) free(v->dim_name);
+  if (v->dimensions != NULL) free(v->dimensions);
+
+  if (v->starts != NULL) free(v->starts);
+  if (v->steps != NULL) free(v->steps);
+
+  if (v->size != NULL) free(v->size);
+  if (v->path != NULL) free(v->path);
+  if (v->dim_offset != NULL) free(v->dim_offset);
+  if (v->slice_size != NULL) free(v->slice_size);
+  if (v->dim_name_char != NULL) free(v->dim_name_char);
+
+  v->next = NULL;
   free(v);
 }
 
