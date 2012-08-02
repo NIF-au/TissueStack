@@ -49,9 +49,9 @@ void            *get_all_slices_of_all_dimensions(void *args)
       i++;
     }
   // some free variable
-  free(a);
-  free(start);
-  free(count);
+  free_image_args(a);
+  if (start != NULL) free(start);
+  if (count != NULL) free(count);
   return (NULL);
 }
 
