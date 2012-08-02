@@ -193,7 +193,6 @@ void		write_header_into_file(int fd, t_header *h)
   len = strlen(head);
   memset(lenhead, '\0', 200);
   sprintf(lenhead, "@IaMraW@|%i|", len);
-  printf("\n\nheader =\n%s%s\n\n", lenhead, head);
   write(fd, lenhead, strlen(lenhead));
   write(fd, head, len);
 }
@@ -220,7 +219,7 @@ void  		*start(void *args)
   minc_volume = init_get_volume_from_minc_file(a->commands[0]);
   header = create_header_from_minc_struct(minc_volume);
   write_header_into_file(fd, header);
-  //  dim_loop(fd, minc_volume->dim_nb, minc_volume);
+  dim_loop(fd, minc_volume->dim_nb, minc_volume);
   if (close(fd) == -1)
     {
       perror("Close ");
