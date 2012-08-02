@@ -91,28 +91,40 @@ char		**copy_args(int start, char **commands)
 
 void		destroy_plug_args(t_args_plug *a)
 {
-  int		i;
-
-  i = 0;
-
   if (a == NULL) {
 	  return;
   }
 
-  if (a->commands != NULL)
-    {
-      while (a->commands[i] != NULL)
-	{
-	  free(a->commands[i]);
-	  i++;
-	}
-      free(a->commands);
-    }
-  if (a->name != NULL)
+  destroy_command_args(a->commands);
+
+  if (a->name != NULL) {
     free(a->name);
-  if (a->path != NULL)
-    free(a->path);
+    a->name = NULL;
+  }
+  if (a->path != NULL) {
+	  free(a->path);
+	  a->path = NULL;
+  }
+
   free(a);
+  a = NULL;
+}
+
+void		destroy_command_args(char ** args)
+{
+  if (args == NULL) {
+	  return;
+  }
+
+  int i=0;
+  while (args[i] != NULL) {
+	  free(args[i]);
+	  args[i] = NULL;
+	  i++;
+  }
+
+  free(args);
+  args = NULL;
 }
 
 t_args_plug	*create_copy_args(t_args_plug *args)
@@ -140,13 +152,10 @@ t_args_plug	*create_plug_args(char **commands, t_tissue_stack *general, void *bo
   args = malloc(sizeof(*args));
   if (commands[1] == NULL)
     return (NULL);
-  args->name = malloc((strlen(commands[1]) + 1) * sizeof(*args->path));
-  strcpy(args->name, commands[1]);
-  args->name = commands[1];
+  args->name = strdup(commands[1]);
   if (!strcmp(commands[0], "load"))
     {
-      args->path = malloc((strlen(commands[2]) + 1) * sizeof(*args->path));
-      strcpy(args->path, commands[2]);
+      args->path = strdup(commands[2]);
       com = copy_args(3, commands);
     }
   else
@@ -156,14 +165,14 @@ t_args_plug	*create_plug_args(char **commands, t_tissue_stack *general, void *bo
 	{
 	  if (!strcmp(tmp->name, args->name))
 	    {
-	      args->path = malloc((strlen(tmp->name) + 1) * sizeof(*args->path));
-	      strcpy(args->path, tmp->name);
+	      args->path = strdup(tmp->name);
 	      break;
 	    }
 	  tmp = tmp->next;
 	}
       com = copy_args(2, commands);
     }
+
   args->commands = com;
   args->general_info = general;
   args->this = NULL;
@@ -182,6 +191,7 @@ void		prompt_exec(char **commands, t_tissue_stack *general, void *box)
 
   prog = commands[0];
   args = create_plug_args(commands, general, box);
+
   i = 0;
   while (i < general->nb_func)
     {
@@ -206,9 +216,12 @@ void		prompt_exec(char **commands, t_tissue_stack *general, void *box)
 	}
       i++;
     }
+
+  //destroy_command_args(commands);
+
   if (i == general->nb_func)
     {
-      free(args);
+	  destroy_plug_args(args);
       printf("%s: Unknown command\n", prog);
     }
 }
@@ -299,20 +312,6 @@ void		aff_prompt(t_tissue_stack *general)
 	    }
 	}
     }
-  /*
-  i = 0;
-  c = general->prompt_first;
-  if (c)
-    {
-      fprintf(stderr, "[Position = %i - Caract = %c]\n", c->position, c->c);
-      c = c->next;
-      while (c != general->prompt_first)
-	{
-	  fprintf(stderr, "[Position = %i - Caract = %c]\n", c->position, c->c);
-	  c = c->next;
-	}
-    }
-  */
 }
 
 int		get_position_nb(t_tissue_stack *general)

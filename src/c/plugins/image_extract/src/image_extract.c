@@ -93,26 +93,77 @@ int		**generate_dims_start_end_thread(t_vol *v, int dim, int start, int end)
   return (dim_start_end);
 }
 
-t_image_args	*create_args_thread(t_thread_pool *p, t_vol *vol, t_image_extract *image_general, t_plugin *this, FILE *sock)
+t_image_args	*create_args_thread(t_thread_pool *p, t_vol *vol, t_image_extract *image_general, FILE *sock)
 {
-  t_image_args   *args = NULL;
-
-  args = malloc(sizeof(*args));
-  args->volume = vol;
+  t_image_args   *args = malloc(sizeof(*args));
+  // shared objects
   args->p = p;
+  args->file = sock;
+  args->this = NULL; //  not needed for our purposes
+
+  // copy and override pointers within struct.
+  //note: we copy only what we need, the rest gets nulled to prevent pointers from being copied!
+
+  // t_vol DEEP COPY
+  args->volume = malloc(sizeof(*args->volume));
+  memcpy(args->volume, vol, sizeof(*vol));
+
+  if (vol->minc_volume != NULL) {
+	  args->volume->minc_volume = malloc(sizeof(args->volume->minc_volume));
+	  memcpy(args->volume->minc_volume, vol->minc_volume, sizeof(vol->minc_volume));
+  }
+  if (vol->size != NULL) {
+	  args->volume->size = malloc(sizeof(*args->volume->size) * args->volume->dim_nb);
+	  memcpy(args->volume->size, vol->size, sizeof(*vol->size) * args->volume->dim_nb);
+  }
+  if (vol->slice_size != NULL) {
+	  args->volume->slice_size = malloc(sizeof(*args->volume->slice_size) * args->volume->dim_nb);
+	  memcpy(args->volume->slice_size, vol->slice_size, sizeof(*vol->slice_size) * args->volume->dim_nb);
+  }
+  if (vol->dim_offset != NULL) {
+	  args->volume->dim_offset = malloc(sizeof(*args->volume->dim_offset) * args->volume->dim_nb);
+	  memcpy(args->volume->dim_offset, vol->dim_offset, sizeof(*vol->dim_offset) * args->volume->dim_nb);
+  }
+  args->volume->path = NULL;
+  args->volume->dimensions = NULL;
+  args->volume->dim_name = NULL;
+  args->volume->next = NULL;
+  args->volume->starts = NULL;
+  args->volume->steps = NULL;
+
+  // t_image_extract DEEP COPY
   args->info = malloc(sizeof(*args->info));
   memcpy(args->info, image_general, sizeof(*image_general));
-  args->this = this;
-  args->file = sock;
+
+  if (image_general->dim_start_end != NULL) {
+	  args->info->dim_start_end = malloc(sizeof(*image_general->dim_start_end) * args->volume->dim_nb);
+	  int i = 0;
+	  while (i < args->volume->dim_nb) {
+		  args->info->dim_start_end[i] = malloc(sizeof(*image_general->dim_start_end[i]) * 2);
+		  args->info->dim_start_end[i][0] =  image_general->dim_start_end[i][0];
+		  args->info->dim_start_end[i][1] =  image_general->dim_start_end[i][1];
+		  i++;
+	  }
+  }
+
+  if (image_general->image_type != NULL) {
+	  args->info->image_type = strdup(image_general->image_type);
+  }
+  if (image_general->root_path != NULL) {
+	  args->info->root_path = strdup(image_general->root_path);
+  }
+  if (image_general->service != NULL) {
+	  args->info->service = strdup(image_general->service);
+  }
 
   return (args);
 }
 
-void		lunch_percent_display(t_thread_pool *p, t_vol *vol, t_image_extract *image_general, t_plugin *this)
+void		lunch_percent_display(t_thread_pool *p, t_vol *vol, t_image_extract *image_general)
 {
   t_image_args   *args;
 
-  args = create_args_thread(p, vol, image_general, this, NULL);
+  args = create_args_thread(p, vol, image_general, NULL);
   (*p->add)(percentage, (void *)args, p);
 }
 
@@ -141,7 +192,7 @@ void		image_creation_lunch(t_vol *vol, int step, t_thread_pool *p, t_image_extra
 	  nb_slices = ((dim_start_end[i][1] == 0 ? vol->size[i] : dim_start_end[i][1]) - dim_start_end[i][0]);
 	  while (j < nb_slices)
 	    {
-	      args = create_args_thread(p, vol, image_general, this, sock);
+	      args = create_args_thread(p, vol, image_general, sock);
 	      if ((dim_start_end[i][0] + step) <= dim_start_end[i][1])
 		args->dim_start_end = generate_dims_start_end_thread(vol, i, dim_start_end[i][0], dim_start_end[i][0] + step);
 	      else
@@ -216,6 +267,9 @@ t_image_extract	*create_image_struct()
   image_args->slices_done = 0;
   image_args->step = 0;
   image_args->dim_start_end = NULL;
+  image_args->root_path = NULL;
+  image_args->service = NULL;
+  image_args->image_type = NULL;
   pthread_mutex_init(&image_args->mut, NULL);
   pthread_cond_init(&image_args->cond, NULL);
   return (image_args);
@@ -275,6 +329,7 @@ void		*start(void *args)
   socketDescriptor = (FILE*)a->box;
 
   image_args = create_image_struct();
+  image_args->dim_nb = volume->dim_nb;
 
   if (strcmp(a->commands[1], "percent") == 0)
     {
@@ -347,6 +402,8 @@ void		*start(void *args)
   step = (strcmp(image_args->service, "tiles") == 0 ? atoi(a->commands[14]) : (strcmp(image_args->service, "full") == 0 ? atoi(a->commands[11]) : atoi(a->commands[15])));
   image_creation_lunch(volume, step, a->general_info->tp, image_args, a->this, socketDescriptor);
 
+  a->destroy(a);
+
   return (NULL);
 }
 
@@ -360,19 +417,67 @@ void		*unload(void *args)
 
   image_args = (t_image_extract *)a->this->stock;
 
-  if (image_args != NULL) {
-	  free(image_args->dim_start_end[0]);
-	  free(image_args->dim_start_end[1]);
-	  free(image_args->dim_start_end[2]);
-	  free(image_args->dim_start_end);
-	  free(image_args);
-  }
+  free_image_extract(image_args);
 
   if (a != NULL) {
 	  free(a->name);
 	  free(a->path);
 	  a->this->busy = 0;
+	  free(a);
   }
 
   return (NULL);
+}
+
+void			free_image_extract(t_image_extract * extract) {
+	if (extract == NULL) {
+		return;
+	}
+
+	if (extract->dim_start_end != NULL) {
+		int i=0;
+		while (i<extract->dim_nb) {
+			if (extract->dim_start_end[i] != NULL) free(extract->dim_start_end[i]);
+			i++;
+		}
+		free(extract->dim_start_end);
+	}
+
+	if (extract->image_type != NULL) free(extract->image_type);
+	if (extract->root_path != NULL) free(extract->root_path);
+	if (extract->service != NULL) free(extract->service);
+
+	free(extract);
+}
+
+void			free_image_args(t_image_args * args) {
+	if (args == NULL) {
+		return;
+	}
+
+	if (args->this != NULL) free(args->this);
+
+	free_image_extract(args->info);
+
+	if (args->dim_start_end != NULL) {
+		int i=0;
+		while (i<args->volume->dim_nb) {
+			if (args->dim_start_end[i] != NULL) free(args->dim_start_end[i]);
+			i++;
+		}
+		free(args->dim_start_end);
+	}
+
+	if (args->volume != NULL) {
+		  if (args->volume->size != NULL) free(args->volume->size);
+		  if (args->volume->slice_size != NULL) free(args->volume->slice_size);
+		  if (args->volume->dim_offset != NULL) free(args->volume->dim_offset);
+		  if (args->volume->path != NULL) free(args->volume->path);
+		  if (args->volume->dim_name != NULL) free(args->volume->dim_name);
+		  if (args->volume->starts != NULL) free(args->volume->starts);
+		  if (args->volume->steps != NULL) free(args->volume->steps);
+		  free(args->volume);
+	}
+
+	free(args);
 }

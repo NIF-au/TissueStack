@@ -209,5 +209,8 @@ void		*plugin_unload(void *args)
 	general->first->prev = NULL;
     }
   free(this);
+
+  destroy_plug_args(a);
+
   return (NULL);
 }

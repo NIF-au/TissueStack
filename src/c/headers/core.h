@@ -152,6 +152,9 @@ void            prompt_exec(char **commands, t_tissue_stack *general, void *box)
 void            free_all_history(t_tissue_stack *t);
 void            free_all_prompt(t_tissue_stack *t);
 
+void		destroy_plug_args(t_args_plug *a);
+void		destroy_command_args(char ** args);
+
 /*		plugin.c		*/
 
 void		list_plugins(t_tissue_stack *t, char *command);
