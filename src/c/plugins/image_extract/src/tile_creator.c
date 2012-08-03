@@ -251,7 +251,7 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
 
         char dir[200]; // first path
         sprintf(dir, "%s/%c/%i", a->info->root_path, volume->dim_name[current_dimension][0], current_slice);
-        t_string_buffer * finalPath = createDirectory(dir, 0777);
+	t_string_buffer * finalPath = createDirectory(dir, 0777);
         if (finalPath == NULL) {
         	return;
         }
