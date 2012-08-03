@@ -6,7 +6,7 @@ void		*worker_start(void *pool)
   t_thread_pool	*p;
 
   p = (t_thread_pool*)pool;
-  while (p->loop)
+  while (p != NULL && p->loop)
     {
       task = NULL;
       // lock mutex to avoid concurrent access
@@ -32,6 +32,7 @@ void		*worker_start(void *pool)
       if (task != NULL)
 	{
 	  task->function(task->argument);
+	  //free(task->argument);
 	  free(task);
 	}
     }
@@ -132,6 +133,7 @@ void		thread_pool_destroy(t_thread_pool *p)
   //free(p->threads);
   thread_pool_free(p);
   free(p);
+  p = NULL;
 }
 
 void		thread_pool_free(t_thread_pool *p)

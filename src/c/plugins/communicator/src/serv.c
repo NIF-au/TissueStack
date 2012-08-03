@@ -366,5 +366,6 @@ void		*start(void *args)
 
 void		*unload(void *args)
 {
+  destroy_plug_args((t_args_plug*)args);
   return (NULL);
 }
