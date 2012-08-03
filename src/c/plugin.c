@@ -173,14 +173,14 @@ void		*plugin_start(void *args)
 
 void		*plugin_unload(void *args)
 {
-  //t_tissue_stack *general;
+  t_tissue_stack *general;
   t_args_plug	*a;
   t_plugin	*this;
   void		*(*quit)(void *a);
   char		*error;
 
   a = (t_args_plug *)args;
-  //general = a->general_info;
+  general = a->general_info;
   if ((this = get_plugin_by_name(a->name, a->general_info->first)) == NULL)
     {
       this->error = 1;
@@ -200,8 +200,8 @@ void		*plugin_unload(void *args)
   while (this->busy != 0)
     usleep(1000);
 
-  //destroy_t_plugin(this, general);
-  //destroy_plug_args(a);
+  destroy_t_plugin(this, general);
+  destroy_plug_args(a);
 
   return (NULL);
 }
