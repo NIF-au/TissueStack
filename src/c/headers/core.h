@@ -167,6 +167,7 @@ void            *plugin_start(void *a);
 void            *plugin_unload(void *a);
 void		*plugin_try_start(void *a);
 void            free_all_plugins(t_tissue_stack *t);
+void 		destroy_t_plugin(t_plugin * this, t_tissue_stack * general);
 
 /*		volume.c		*/
 

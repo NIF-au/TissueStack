@@ -118,7 +118,7 @@ void		destroy_command_args(char ** args)
 
   int i=0;
   while (args[i] != NULL) {
-	  free(args[i]);
+	  if (args[i] != NULL) free(args[i]);
 	  args[i] = NULL;
 	  i++;
   }
@@ -689,8 +689,8 @@ void		free_all_prompt(t_tissue_stack *t)
 
 void		free_all_history(t_tissue_stack *t)
 {
-  t_hist_prompt	*c;
-  t_hist_prompt	*save;
+  t_hist_prompt	*c = NULL;
+  t_hist_prompt	*save = NULL;
 
   c = t->hist_first;
   if (c != NULL && c->next == t->hist_first)

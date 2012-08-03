@@ -125,9 +125,17 @@ t_image_args	*create_args_thread(t_thread_pool *p, t_vol *vol, t_image_extract *
 	  args->volume->dim_name_char = strdup(vol->dim_name_char);
   }
 
+  if (vol->dim_name != NULL) {
+	  args->volume->dim_name = malloc(sizeof(*args->volume->dim_name) * args->volume->dim_nb);
+	  int i = 0;
+	  while (i < args->volume->dim_nb) {
+		  args->volume->dim_name[i] = strdup(vol->dim_name[i]);
+		  i++;
+	  }
+  }
+
   args->volume->path = NULL;
   args->volume->dimensions = NULL;
-  args->volume->dim_name = NULL;
   args->volume->next = NULL;
   args->volume->starts = NULL;
   args->volume->steps = NULL;
@@ -287,6 +295,9 @@ void		*init(void *args)
   image_args->slices_done = 0;
   image_args->step = 0;
   image_args->dim_start_end = NULL;
+  image_args->root_path = NULL;
+  image_args->service = NULL;
+  image_args->image_type = NULL;
   pthread_mutex_init(&image_args->mut, NULL);
   pthread_cond_init(&image_args->cond, NULL);
   a->this->stock = (void*)image_args;
@@ -443,10 +454,11 @@ void			free_image_extract(t_image_extract * extract) {
 	}
 
 	if (extract->image_type != NULL) free(extract->image_type);
-	if (extract->root_path != NULL) free(extract->root_path);
-	if (extract->service != NULL) free(extract->service);
+	if (extract->root_path != NULL)  free(extract->root_path);
+	if (extract->service != NULL)    free(extract->service);
 
 	free(extract);
+	extract = NULL;
 }
 
 void			free_image_args(t_image_args * args) {

@@ -77,7 +77,6 @@ void		client_diconnected(t_serv_comm *s, int sock)
       tmp = c;
       c = c->next;
     }
-  printf("JUST DISCONNECTED\n");
 }
 
 void		check_modified_fd(t_serv_comm *s)
@@ -175,24 +174,16 @@ int		serv_init_connect(t_serv_comm *s)
 
 void		*init(void *args)
 {
-  t_args_plug	*a;
-  t_serv_comm	*principal;
-
-  a = (t_args_plug*)args;
-  principal = malloc(sizeof(*principal));
-  a->this->stock = principal;
   return (NULL);
 }
 
 void		*start(void *args)
 {
-  t_args_plug	*a;
-  t_serv_comm	*s;
-
-  a = (t_args_plug*)args;
-  s = (t_serv_comm*)a->this->stock;
+  t_args_plug	*a = (t_args_plug*)args;
+  t_serv_comm	*s = malloc(sizeof(*s));
   s->bigger_fd = 0;
   s->general = a->general_info;
+  a->this->stock = s;
   serv_init_connect(s);
   serv_working_loop(s);
   return (NULL);
@@ -200,5 +191,6 @@ void		*start(void *args)
 
 void		*unload(void *args)
 {
+  destroy_plug_args((t_args_plug*)args);
   return (NULL);
 }
