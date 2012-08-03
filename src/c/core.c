@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Fri Aug  3 10:50:31 2012 Oliver Nicolini
+** Last update Fri Aug  3 13:14:01 2012 Oliver Nicolini
 */
 
 
@@ -186,10 +186,12 @@ int		main(int argc, char **argv)
   else
     t->volume_first = NULL;
 
+  /*
   t_vol *v = t->volume_first;
 
 
   printf("dim nb = %i\nsize = %i - %i - %i\nstarts = %f - %f - %f\nsteps = %f - %f - %f\npath = %s\nslice_max = %i\ndim_name = %s - %s - %s\ndim_name_char = %c - %c - %c\nraw_data = %i\ndim_offset = %lld - %lld - %lld\nslices_size = %i - %i - %i\n raw_fd = %i\n", v->dim_nb, v->size[0], v->size[1], v->size[2], v->starts[0], v->starts[1], v->starts[2], v->steps[0], v->steps[1], v->steps[2], v->path, v->slices_max, v->dim_name[0], v->dim_name[1], v->dim_name[2], v->dim_name_char[0], v->dim_name_char[1], v->dim_name_char[2], v->raw_data, v->dim_offset[0], v->dim_offset[1], v->dim_offset[2], v->slice_size[0], v->slice_size[1], v->slice_size[2], v->raw_fd);
+  */
 
   // lunch thread_pool
   t->tp = malloc(sizeof(*t->tp));

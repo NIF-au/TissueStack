@@ -85,7 +85,7 @@ char		**get_array_info(int fd, int *count, int *h_len)
   magick_len = strlen(string_magick_len) + 10;
 
   lseek(fd, magick_len, SEEK_SET);
-  header = malloc(header_len * sizeof(*header));
+  header = malloc(header_len * sizeof(*header) + 1);
   if ((len = read(fd, header, header_len)) == -1)
     {
       perror("Read ");
@@ -99,9 +99,14 @@ char		**get_array_info(int fd, int *count, int *h_len)
 
   *h_len = magick_len + header_len;
 
-  free(buffer->buffer);
-  free(buffer);
-  free(header);
+  // frees
+  if (string_magick_len != NULL) free(string_magick_len);
+  if (buffer != NULL) {
+	  if (buffer->buffer != NULL) free(buffer->buffer);
+	  free(buffer);
+  }
+  if (header != NULL) free(header);
+
   return (tab_info);
 }
 
@@ -113,8 +118,13 @@ char		**get_splitted(char *src, char c, int *count)
   tmp_buff = appendToBuffer(tmp_buff, src);
   *count = countTokens(tmp_buff->buffer, c, '\\');
   dest = tokenizeString(tmp_buff->buffer, c, '\\');
-  free(tmp_buff->buffer);
-  free(tmp_buff);
+
+  // frees
+  if (tmp_buff != NULL) {
+	  if (tmp_buff->buffer != NULL) free(tmp_buff->buffer);
+	  free(tmp_buff);
+  }
+
   return (dest);
 }
 
@@ -283,6 +293,8 @@ int		raw_volume_init(t_vol *volume, int fd)
   volume->raw_data = 1;
   volume->minc_volume = NULL;
   volume->next = NULL;
+
+  free_null_terminated_char_2D_array(info);
 
   return (0);
 }
@@ -493,6 +505,8 @@ void		free_volume(t_vol *v)
   if (v->slice_size != NULL) free(v->slice_size);
   if (v->dim_name_char != NULL) free(v->dim_name_char);
 
+  miclose_volume(v->minc_volume);
+
   v->next = NULL;
   free(v);
 }
@@ -505,7 +519,6 @@ void		free_all_volumes(t_tissue_stack *t)
   tmp = t->volume_first;
   while (tmp != NULL)
     {
-      miclose_volume(tmp->minc_volume);
       save = tmp;
       tmp = tmp->next;
       free_volume(save);

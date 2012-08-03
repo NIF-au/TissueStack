@@ -127,7 +127,6 @@ void convert_tiles_to_pixel_coord(t_image_args *a)
 void fclose_check(FILE *file) {
 	if (file && fcntl(fileno(file), F_GETFL) != -1) {
         fclose(file);
-        //close(fileno(file));
     }
 }
 
@@ -250,6 +249,7 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
     	}
 
         char dir[200]; // first path
+        printf("%s\n", a->info->root_path);
         sprintf(dir, "%s/%c/%i", a->info->root_path, volume->dim_name[current_dimension][0], current_slice);
 	t_string_buffer * finalPath = createDirectory(dir, 0777);
         if (finalPath == NULL) {

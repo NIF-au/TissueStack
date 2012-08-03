@@ -25,6 +25,8 @@ t_string_buffer * appendToBuffer(t_string_buffer * buffer, char * someString);
 /** creates a directory (recursively incl. sub directories) */
 t_string_buffer * createDirectory(char * path, mode_t mode);
 
+void free_null_terminated_char_2D_array(char ** strings);
+
 char* strupper( char* s );
 char* strlower( char* s );
 

@@ -386,6 +386,17 @@ short testToUpAndLow() {
 	  return 1;
 }
 
+void free_null_terminated_char_2D_array(char ** strings) {
+	if (strings == NULL) return;
+
+	int i=0;
+	while (strings[i] != NULL) {
+		free(strings[i]);
+		i++;
+	}
+	free(strings);
+}
+
 /** TESTS **/
 /*
 int		main(int argc, char ** args)
