@@ -61,7 +61,6 @@ void		get_raw_data_hyperslab(t_vol *volume, int dim, int slice, char *hyperslab)
 
   if (volume->raw_data == 1)
     {
-      printf("RAW DATA ----------------\n");
       offset = (volume->dim_offset[dim] + (unsigned long long int)((unsigned long long int)volume->slice_size[dim] * (unsigned long long int)slice));
       /*#ifdef __off64_t_defined
       //#ifndef __USE_LARGEFILE64

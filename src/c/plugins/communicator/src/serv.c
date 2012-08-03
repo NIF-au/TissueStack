@@ -278,7 +278,6 @@ void		serv_accept_new_connections(t_serv_comm *s)
   l = read(socket, buff, 4096);
   buff[l] = '\0';
   file = fdopen(socket, "wr");
-  printf("************ Socket Number = %i****************\n", socket);
   interpret_header(buff, file, s);
 }
 

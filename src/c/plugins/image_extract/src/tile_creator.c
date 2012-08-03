@@ -75,11 +75,6 @@ int check_and_set_position(int kind, int width, int height, t_image_args *a)
         i = check_pixels_range(width, height, a->info->h_position,
                 a->info->w_position, a->info->h_position_end,
                 a->info->w_position_end);
-        printf(
-                "***** i = %i  - h = %i - w = %i - he = %i - we = %i - height = %i - width = %i\n\n\n",
-                i, a->info->h_position, a->info->w_position,
-                a->info->h_position_end, a->info->w_position_end, height,
-                width);
     }
     if (i != 0)
         return (1);
