@@ -9,7 +9,6 @@ LIB_PATH	=
 LIBS		=	-lhdf5								\
 			-lnetcdf 							\
 			-lminc2								\
-			-lpng								\
 			-lpthread							\
 			-ldl
 
