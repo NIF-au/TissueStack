@@ -141,12 +141,23 @@ TissueStack.Events.prototype = {
 
 		// MOUSE WHEEL
 		this.getCanvasElement().bind('mousewheel', function(e, delta) {
+			if (delta == 0) {
+				return;
+			}
+			
 			// annoying opera
 			if ($.browser.opera) {
 				delta = delta > 0 ? 1.5 : 0.5; 
 			}
-			// call zoom
-			_this.zoom(e, delta);
+			// call zoom BUT no, jeremy wants it to be in and out of slice instead
+			// _this.zoom(e, delta);
+			if (delta > 0) _this.canvas.data_extent.slice++; else  _this.canvas.data_extent.slice--;
+			
+			var slider = $("#" + _this.canvas.dataset_id + "_canvas_main_slider");
+			slider.attr("value", _this.canvas.data_extent.slice);
+			slider.blur();
+			
+			_this.changeSliceForPlane(_this.canvas.data_extent.slice);
 		});
 		
 		// this is sadly necessary to keep the window from scrolling when only the canvas should be scrolled
@@ -246,6 +257,9 @@ TissueStack.Events.prototype = {
 		if (typeof(slice) != "number") {
 			slice = parseInt(slice);
 		}
+		if (slice < 0) slice = 0;
+		if (slice > this.canvas.data_extent.max_slices) slice = this.canvas.data_extent.max_slices;
+		
 		this.canvas.data_extent.slice = slice;
 		
 		var upper_left_corner = {x: this.canvas.upper_left_x, y: this.canvas.upper_left_y};
