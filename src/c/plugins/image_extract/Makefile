@@ -25,9 +25,9 @@ all: compile install
 
 compile:
 	@echo "\n================== Compile $(NAME) ===================="
-	gcc $(SRCS) -c $(INCLUDE) $(FLAGS) -fPIC `pkg-config --cflags gtk+-2.0`
+	gcc $(SRCS) -c $(INCLUDE) $(FLAGS) -fPIC `GraphicsMagick-config --cppflags` `pkg-config --cflags gtk+-2.0`
 	gcc *.o -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -shared 	\
-		`GraphicsMagick-config --cppflags --ldflags --libs`				\
+		`GraphicsMagick-config --ldflags --libs`				\
 		`pkg-config --libs gtk+-2.0`
 
 clean:
