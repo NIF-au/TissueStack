@@ -135,7 +135,7 @@ void            init_prog(t_tissue_stack *t)
 {
   t->plug_actions = plug_actions_from_external_plugin;
   t->tile_requests = malloc(sizeof(*t->tile_requests));
-  init_tile_requests_set(t->tile_requests);
+  init_tile_requests(t->tile_requests);
   t->get_volume = get_volume;
   t->check_volume = check_volume;
   t->clean_quit = clean_quit;

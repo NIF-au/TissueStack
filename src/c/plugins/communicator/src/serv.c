@@ -174,6 +174,8 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
   char		**tmp2;
   char		*line;
   char		*image_type;
+  char		*id;
+  char		*time;
   char		comm[400];
 
   if (strncmp(buff, "GET /?volume=", 13) == 0)
@@ -205,6 +207,8 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
 	  else if (strcmp(tmp2[0], "y_end") == 0)	y_end = serv_copy_check_clean_string_from_tab(tmp2);
 	  else if (strcmp(tmp2[0], "x_end") == 0)	x_end = serv_copy_check_clean_string_from_tab(tmp2);
 	  else if (strcmp(tmp2[0], "image_type") == 0)	image_type = serv_copy_check_clean_string_from_tab(tmp2);
+	  else if (strcmp(tmp2[0], "id") == 0)	id = serv_copy_check_clean_string_from_tab(tmp2);
+	  else if (strcmp(tmp2[0], "timestamp") == 0)	time = serv_copy_check_clean_string_from_tab(tmp2);
 	  j = 0;
 	  while (tmp2[j] != NULL)
 	    free(tmp2[j++]);
@@ -252,7 +256,10 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
 		  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
 		  scale, quality, service, image_type, y, x, y_end, x_end);
 	}
+
       write_header(file, image_type);
+      s->general->tile_requests->add(s->general->tile_requests, id, time);
+      //TODO: hand through id and time to thread so that it can check against hash map
       s->general->plug_actions(s->general, comm, file);
     }
 }
