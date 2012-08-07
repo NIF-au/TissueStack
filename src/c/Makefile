@@ -6,7 +6,8 @@ SRCS		=	$(DIRSRC)core.c							\
 			$(DIRSRC)volume.c						\
 			$(DIRSRC)error.c						\
 			$(DIRSRC)thread_pool.c						\
-			$(DIRSRC)utils/utils.c
+			$(DIRSRC)utils/utils.c						\
+			$(DIRSRC)tile_requests.c
 
 INCLUDE		=	-I./headers -I./utils
 
@@ -28,7 +29,7 @@ all: compile install
 compile:	
 	@clear
 	@echo "\n================== Compile $(NAME) ===================="
-	gcc $(SRCS) -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS)
+	gcc $(SRCS) -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) `pkg-config --cflags --libs gtk+-2.0`
 	make -C ./plugins/communicator/ compile
 	make -C ./plugins/image_extract/ compile
 	make -C ./plugins/comm_inter_process/ compile
