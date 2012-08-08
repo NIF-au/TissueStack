@@ -35,6 +35,8 @@ typedef	struct	s_image_extract
   char 		*image_type;
   int		done;
   char		*root_path;
+  char 		*request_id;
+  char 		*request_time;
   pthread_cond_t	cond;
   pthread_mutex_t	mut;
 }		t_image_extract;
@@ -46,6 +48,7 @@ typedef struct  s_image_args
   t_thread_pool *p;
   t_plugin	*this;
   t_image_extract	*info;
+  t_tile_requests * requests;
   FILE		*file;
 }               t_image_args;
 
@@ -57,9 +60,9 @@ unsigned int    get_total_slices_to_do(t_vol *v, int **dim_start_end);
 int             **generate_dims_start_end(t_vol *v, int sx, int ex, int sy,
                                           int ey, int sz, int ez);
 int             **generate_dims_start_end_thread(t_vol *v, int dim, int start, int end);
-t_image_args      *create_args_thread(t_thread_pool *p, t_vol *vol, t_image_extract *image_general, FILE *sock);
-void            image_creation_lunch(t_vol *vol, int step, t_thread_pool *p, t_image_extract *image_general, t_plugin *this, FILE *sock);
-void			lunch_percent_display(t_thread_pool *p, t_vol *vol, t_image_extract *image_general);
+t_image_args      *create_args_thread(t_tissue_stack *t, t_vol *vol, t_image_extract *image_general, FILE *sock);
+void            image_creation_lunch(t_tissue_stack *t, t_vol *vol, int step, t_image_extract *image_general, FILE *sock);
+void			lunch_percent_display(t_tissue_stack *t, t_vol *vol, t_image_extract *image_general);
 void            *init(void *args);
 void            *start(void *args);
 

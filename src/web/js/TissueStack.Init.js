@@ -72,6 +72,8 @@ TissueStack.InitUserInterface = function () {
 		// we use that for the image service to be able to abort pending requests
 		var sessionId = TissueStack.Utils.generateSessionId();
 		
+		var now = new Date().getTime() + 5000;
+		
 		// loop over all planes in the data, create canvas and extent objects, then display them
 		for (var i=0; i < dataSet.data.length; i++) {
 			var dataForPlane = dataSet.data[i];
@@ -113,7 +115,7 @@ TissueStack.InitUserInterface = function () {
 			
 			// display data extent info on page
 			plane.updateExtentInfo(dataSet.realWorldCoords[planeId]);
-			
+
 			// for desktop version show 2 small canvases
 			if ((TissueStack.desktop || TissueStack.tablet) && planeId != 'y') {
 				plane.changeToZoomLevel(0);
@@ -123,13 +125,12 @@ TissueStack.InitUserInterface = function () {
 			if (TissueStack.phone ) {
 				plane.changeToZoomLevel(0);
 			}
-			
-			// pre-emptive erasal
+
 			plane.eraseCanvasContent();
 			
 			// fill canvases
-			plane.queue.drawLowResolutionPreview();
-			plane.queue.drawRequestAfterLowResolutionPreview();
+			plane.queue.drawLowResolutionPreview(now);
+			plane.queue.drawRequestAfterLowResolutionPreview(null, now);
 		}
 	} 
 	
@@ -293,7 +294,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 			for (var id in dataSet.planes) {	
 				dataSet.planes[id].color_map = e.target.value;
 				dataSet.planes[id].drawMe();
-				dataSet.planes[id].applyColorMapToCanvasContent();
+				if (dataSet.planes[id].getDataExtent().getIsTiled()) dataSet.planes[id].applyColorMapToCanvasContent();
 			}
 		}
 	});
@@ -446,8 +447,9 @@ TissueStack.BindDataSetDependentEvents = function () {
 				$("#dataset_" + (x+1) + "_canvas_main_slider").attr("max", event.data[0].actualDataSet.planes[sideViewPlaneId].data_extent.max_slices);
 				
 				// redraw and change the zoom level as well
-				event.data[0].actualDataSet.planes[sideViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(sideCanvasRelativeCross);
-				event.data[0].actualDataSet.planes[mainViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(mainCanvasRelativeCross);
+				var now = new Date().getTime();
+				event.data[0].actualDataSet.planes[sideViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(sideCanvasRelativeCross, now);
+				event.data[0].actualDataSet.planes[mainViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(mainCanvasRelativeCross, now);
 				event.data[0].actualDataSet.planes[sideViewPlaneId].changeToZoomLevel(event.data[0].actualDataSet.planes[mainViewPlaneId].getDataExtent().zoom_level);
 				event.data[0].actualDataSet.planes[mainViewPlaneId].changeToZoomLevel(zoomLevelSideView);
 				event.data[0].actualDataSet.planes[sideViewPlaneId].updateExtentInfo(

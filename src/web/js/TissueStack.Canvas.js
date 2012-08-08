@@ -208,11 +208,9 @@ TissueStack.Canvas.prototype = {
 
 		return {x: newX, y: newY};
 	},
-	redrawWithCenterAndCrossAtGivenPixelCoordinates: function(coords) {
+	redrawWithCenterAndCrossAtGivenPixelCoordinates: function(coords, timestamp) {
 		// this stops any still running draw requests 
-		var now = new Date().getTime(); 
-		this.queue.latestDrawRequestTimestamp = now;
-
+		var now = typeof(timestamp) == 'number' ? timestamp : new Date().getTime(); 
 		this.eraseCanvasContent();
 		
 		// make sure crosshair is centered:
@@ -226,8 +224,11 @@ TissueStack.Canvas.prototype = {
 			this.data_extent.slice = coords.z;
 		}
 
-		this.queue.drawLowResolutionPreview(now);
-		this.queue.drawRequestAfterLowResolutionPreview(null,now);
+		var _t = this;
+		setTimeout(function() {
+			_t.queue.drawLowResolutionPreview(now);
+			_t.queue.drawRequestAfterLowResolutionPreview(null,now);
+		}, 300);
 
 		// look for the cross overlay which will be the top layer
 		var canvas = this.getCoordinateCrossCanvas();
@@ -403,11 +404,6 @@ TissueStack.Canvas.prototype = {
 					break;
 				}
 
-				// brief check as to whether there exists a newer drawing request
-				if (timestamp && timestamp < this.queue.latestDrawRequestTimestamp) {
-					return;
-				}
-				
 				// create the image object that loads the tile we need
 				var imageTile = new Image();
 				imageTile.crossOrigin = '';
@@ -433,11 +429,17 @@ TissueStack.Canvas.prototype = {
 				// append session id & timestamp for image service
 				if (!this.getDataExtent().getIsTiled()) {
 					src += ("&id=" + this.sessionId);
-					src += ("&timestamp=" + (this.queue.latestDrawRequestTimestamp == 0 ? new Date().getTime() : this.queue.latestDrawRequestTimestamp));
+					src += ("&timestamp=" + timestamp);
 				}
-				imageTile.src = src; 
+
+				// damn you async loads
+				if (this.getDataExtent().getIsTiled() && timestamp && timestamp < this.queue.latestDrawRequestTimestamp) {
+					return;
+				}
 
 				counter++;
+				
+				imageTile.src = src; 
 				
 				(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, tile_size) {
 					imageTile.onload = function() {
@@ -456,21 +458,18 @@ TissueStack.Canvas.prototype = {
 								height = this.height;
 						}
 
+						counter--;
+
 						// damn you async loads
-						if (timestamp && timestamp < _this.queue.latestDrawRequestTimestamp) {
+						if (_this.getDataExtent().getIsTiled() && timestamp && timestamp < _this.queue.latestDrawRequestTimestamp) {
 							return;
 						}
-						
-						ctx.globalAlpha=1;
+
 						ctx.drawImage(this,
 								imageOffsetX, imageOffsetY, width, height, // tile dimensions
 								canvasX, canvasY, width, height); // canvas dimensions
 						
-						counter--;
-						
-						if (counter == 0) {
-							_this.applyColorMapToCanvasContent();
-						}
+						if (counter == 0 && _this.getDataExtent().getIsTiled()) _this.applyColorMapToCanvasContent();
 					};
 				})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, this.getDataExtent().tile_size);
 				

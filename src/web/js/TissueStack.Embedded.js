@@ -219,6 +219,7 @@ TissueStack.Embedded.prototype = {
 		// we use that for the image service to be able to abort pending requests
 		var sessionId = TissueStack.Utils.generateSessionId();
 
+		var now = new Date().getTime();
 		
 		// loop over all planes in the data, create canvas and extent objects, then display them
 		for (var i=0; i < dataSet.data.length; i++) {
@@ -265,8 +266,8 @@ TissueStack.Embedded.prototype = {
 			}
 			
 			// fill canvases
-			plane.queue.drawLowResolutionPreview();
-			plane.queue.drawRequestAfterLowResolutionPreview();
+			plane.queue.drawLowResolutionPreview(now);
+			plane.queue.drawRequestAfterLowResolutionPreview(null,now);
 		}
 	},
 	adjustCanvasSizes : function() {

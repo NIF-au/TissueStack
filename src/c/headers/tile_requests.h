@@ -7,7 +7,7 @@
 
 #include "gtk/gtk.h"
 
-#define MAX_REQUESTS 100000
+#define MAX_REQUESTS 10000
 
 typedef struct		s_tile_requests	t_tile_requests;
 
@@ -23,5 +23,7 @@ void init_tile_requests(t_tile_requests * this);
 void add_tile_request(t_tile_requests * this, char * id, char * timestamp);
 short is_expired_tile_request(t_tile_requests * this, char * id, char * timestamp);
 void destroy_tile_requests(t_tile_requests * this);
+
+inline int convertRequestIdAndTimeIntoNumericDifference(char * id, char * timestamp);
 
 #endif	/* __TILE_REQUESTS__ */

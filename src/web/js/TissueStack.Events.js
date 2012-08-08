@@ -313,6 +313,8 @@ TissueStack.Events.prototype = {
 
 		this.canvas.drawCoordinateCross(cross_coords);
 
+		this.canvas.drawMe(now);
+		
 		// update coordinate info displayed
 		this.updateCoordinateDisplay(coords);
 		

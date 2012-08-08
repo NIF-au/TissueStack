@@ -174,8 +174,8 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
   char		**tmp2;
   char		*line;
   char		*image_type;
-  char		*id;
-  char		*time;
+  char		*id = NULL;
+  char		*time = NULL;
   char		comm[400];
 
   if (strncmp(buff, "GET /?volume=", 13) == 0)
@@ -217,49 +217,58 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
       if (is_not_num(slice) || is_not_num(dimension) || is_not_num(scale) ||
 	  is_not_num(quality) || is_not_num(x) || is_not_num(y))
 	{
-	  fprintf(stderr, "Invalid argumen: non interger\n");
+	  fprintf(stderr, "Invalid argument: non interger\n");
 	  return;
 	}
-      if ((dimension[0] = get_by_name_dimension_id(volume, dimension, s)) == 0)
-	return;
+      if ((dimension[0] = get_by_name_dimension_id(volume, dimension, s)) == 0) return;
+
       if (service == NULL)
 	{
-	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s 1", volume,
+	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s 1 %s %s", volume,
 		  (dimension[0] == '0' ? atoi(slice) : -1),
 		  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
 		  (dimension[0] == '1' ? atoi(slice) : -1),
 		  (dimension[0] == '1' ? (atoi(slice) + 1) : -1),
 		  (dimension[0] == '2' ? atoi(slice) : -1),
 		  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
-		  scale, quality, "full", image_type);
+		  scale, quality, "full", image_type,
+		  id != NULL ? id : "0", time != NULL ? time : "0");
 
 	}
       else if (strcmp(service, "tiles") == 0)
 	{
-	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s %s 1", volume,
+	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s %s 1 %s %s", volume,
 		  (dimension[0] == '0' ? atoi(slice) : -1),
 		  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
 		  (dimension[0] == '1' ? atoi(slice) : -1),
 		  (dimension[0] == '1' ? (atoi(slice) + 1) : -1),
 		  (dimension[0] == '2' ? atoi(slice) : -1),
 		  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
-		  scale, quality, service, image_type, square, y, x);
+		  scale, quality, service, image_type, square, y, x,
+		  id != NULL ? id : "0", time != NULL ? time : "0");
 	}
       else if (strcmp(service, "images") == 0)
 	{
-	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s %s %s 1", volume,
+	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s %s %s 1 %s %s", volume,
 		  (dimension[0] == '0' ? atoi(slice) : -1),
 		  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
 		  (dimension[0] == '1' ? atoi(slice) : -1),
 		  (dimension[0] == '1' ? (atoi(slice) + 1) : -1),
 		  (dimension[0] == '2' ? atoi(slice) : -1),
 		  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
-		  scale, quality, service, image_type, y, x, y_end, x_end);
+		  scale, quality, service, image_type, y, x, y_end, x_end,
+		  id != NULL ? id : "0", time != NULL ? time : "0");
 	}
 
       write_header(file, image_type);
+
       s->general->tile_requests->add(s->general->tile_requests, id, time);
-      //TODO: hand through id and time to thread so that it can check against hash map
+
+      if (s->general->tile_requests->is_expired(s->general->tile_requests, id, time)) {
+    	  close(fileno(file));
+    	  return;
+      }
+
       s->general->plug_actions(s->general, comm, file);
     }
 }

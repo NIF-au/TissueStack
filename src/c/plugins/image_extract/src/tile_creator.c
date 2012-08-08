@@ -53,11 +53,9 @@ int check_and_set_position(int kind, int width, int height, t_image_args *a)
     i = 2;
     while (i == 2) {
     	if (a->info->w_position > width) {
-    		printf("I'm in\n");
     		a->info->w_position = a->info->start_w;
     	}
     	if (a->info->h_position > height) {
-    		printf("I'm in\n");
     		a->info->h_position = a->info->start_h;
     	}
         if (kind == 2)
@@ -135,6 +133,11 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
     ImageInfo *image_info;
     int kind;
     short streamToSocket;
+
+    if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+  	  close(fileno(a->file));
+  	  return;
+    }
 
     streamToSocket = a->file && fcntl(fileno(a->file), F_GETFL) != -1;
 
@@ -221,7 +224,6 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
         }
         DestroyImage(tmp);
     }
-
 
     // write image
     if (streamToSocket) { // SOCKET STREAM

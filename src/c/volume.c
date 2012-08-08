@@ -489,7 +489,7 @@ void		free_volume(t_vol *v)
   i = 0;
   while (i < v->dim_nb)
 	{
-	  if (v->dimensions != NULL && v->dimensions[i] != NULL) mifree_dimension_handle(v->dimensions[i]);
+	  //if (v->dimensions != NULL && v->dimensions[i] != NULL) mifree_dimension_handle(v->dimensions[i]);
 	  if (v->dim_name != NULL && v->dim_name[i] != NULL) free(v->dim_name[i]);
 	  i++;
 	}

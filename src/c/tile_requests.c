@@ -61,7 +61,7 @@ void add_tile_request(t_tile_requests * this, char * id, char * timestamp) {
 	gint64 * id_num = malloc(sizeof(*id_num));
 	*id_num = atol(id);
 
-	g_hash_table_insert(this->hash, id_num, requestDelta);
+	g_hash_table_replace(this->hash, id_num, requestDelta);
 }
 
 short is_expired_tile_request(t_tile_requests * this, char * id, char * timestamp) {
@@ -71,24 +71,17 @@ short is_expired_tile_request(t_tile_requests * this, char * id, char * timestam
 	gint64 * id_num = malloc(sizeof(*id_num));
 	*id_num = atol(id);
 
-	//if (g_hash_table_lookup_extended(this->hash, &id_num, NULL, (void **) &storedValue) == FALSE) {
 	if ((storedValue = g_hash_table_lookup(this->hash, id_num)) == NULL) {
 		return 0;
 	}
 
 	int requestDelta = convertRequestIdAndTimeIntoNumericDifference(id, timestamp);
-	if (requestDelta > *storedValue) return 1;
+	if (requestDelta < *storedValue) return 1;
 
 	return 0;
-}
-void iterator(gpointer key, gpointer value, gpointer user_data) {
- printf(user_data, *(gint64*)key, *(int*)value);
 }
 
 void destroy_tile_requests(t_tile_requests * this) {
 	if (this == NULL || this->hash == NULL) return;
-
-	g_hash_table_foreach(this->hash, (GHFunc)iterator, "Key => %ld | Value => %i\n");
-
 	g_hash_table_destroy(this->hash);
 }
