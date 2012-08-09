@@ -25,7 +25,7 @@ inline int convertRequestIdAndTimeIntoNumericDifference(char * id, char * timest
 	int id_len = strlen(id);
 	int time_len = strlen(timestamp);
 
-	char * zeroPad = malloc(sizeof(*zeroPad * (id_len-time_len+1)));
+	char * zeroPad = malloc(sizeof(*zeroPad) * (id_len-time_len+1));
 	int i=0;
 	while(i<id_len-time_len) {
 		zeroPad[i] = '0';
@@ -33,7 +33,7 @@ inline int convertRequestIdAndTimeIntoNumericDifference(char * id, char * timest
 	}
 	zeroPad[id_len-time_len] = '\0';
 
-	char * zeroPaddedTimeStamp = malloc(sizeof(*zeroPaddedTimeStamp * (id_len + 1)));
+	char * zeroPaddedTimeStamp = malloc(sizeof(*zeroPaddedTimeStamp) * (id_len + 1));
 	sprintf(zeroPaddedTimeStamp, "%s%s", timestamp, zeroPad);
 	free(zeroPad);
 

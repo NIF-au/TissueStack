@@ -3,6 +3,7 @@ DIRSRC		=	./src/
 SRCS		=	$(DIRSRC)image_extract.c					\
 			$(DIRSRC)tile_creator.c						\
 			$(DIRSRC)slice.c							\
+			$(DIRSRC)../../../volume.c				\
 			$(DIRSRC)../../../utils/utils.c
 
 INCLUDE		=	-I./headers -I./../../utils -I../../headers
