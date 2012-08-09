@@ -149,9 +149,13 @@ TissueStack.Events.prototype = {
 			if ($.browser.opera) {
 				delta = delta > 0 ? 1.5 : -1.5; 
 			}
-			// call zoom
-			_this.zoom(e, delta);
-			/*
+
+			if (!e.altKey) {
+				// call zoom
+				_this.zoom(e, delta);
+				return;
+			}
+
 			if (delta > 0) _this.canvas.data_extent.slice++; else  _this.canvas.data_extent.slice--;
 			
 			var slider = $("#" + _this.canvas.dataset_id + "_canvas_main_slider");
@@ -159,7 +163,7 @@ TissueStack.Events.prototype = {
 			slider.blur();
 			
 			_this.changeSliceForPlane(_this.canvas.data_extent.slice);
-			*/
+			e.stopPropagation();
 		});
 		
 		// this is sadly necessary to keep the window from scrolling when only the canvas should be scrolled

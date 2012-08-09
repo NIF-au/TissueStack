@@ -234,10 +234,10 @@ int		check_input(char **in)
   i = 1;
   while (in[i + 1] != NULL)
     {
-	  in[i] = strlower(in[i]);
+	  if (in[i][0] != '/') in[i] = strlower(in[i]);
       if (strcmp(in[i], "-1") != 0 && strcmp(in[i], "tiles") != 0 &&
-	  strcmp(in[i], "images") != 0 && strcmp(in[i], "full") != 0
-	  && strcmp(in[i], "jpeg") != 0 && strcmp(in[i], "png") != 0)
+	  strcmp(in[i], "images") != 0 && strcmp(in[i], "full") != 0  && in[i][0] != '/'
+			  && strcmp(in[i], "jpeg") != 0 && strcmp(in[i], "png") != 0)
 	{
 	  j = 0;
 	  while (in[i][j] != '\0')

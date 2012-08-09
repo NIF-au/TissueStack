@@ -464,6 +464,7 @@ JNIEXPORT jstring JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMin
 	}
 
 	startTilingCommand = appendToBuffer(startTilingCommand, (char *) dir);
+	startTilingCommand = appendToBuffer(startTilingCommand, " 0 0");
 
 	write(fileDescriptor, startTilingCommand->buffer, startTilingCommand->size);
 	shutdown(fileDescriptor, 2);

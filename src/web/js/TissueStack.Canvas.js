@@ -224,11 +224,11 @@ TissueStack.Canvas.prototype = {
 			this.data_extent.slice = coords.z;
 		}
 
-		var _t = this;
+		var _this = this
 		setTimeout(function() {
-			_t.queue.drawLowResolutionPreview(now);
-			_t.queue.drawRequestAfterLowResolutionPreview(null,now);
-		}, 300);
+			_this.queue.drawLowResolutionPreview(now);
+			_this.queue.drawRequestAfterLowResolutionPreview(null,now);
+		}, 200);
 
 		// look for the cross overlay which will be the top layer
 		var canvas = this.getCoordinateCrossCanvas();
@@ -433,12 +433,12 @@ TissueStack.Canvas.prototype = {
 				}
 
 				// damn you async loads
-				if (this.getDataExtent().getIsTiled() && timestamp && timestamp < this.queue.latestDrawRequestTimestamp) {
+				if (this.queue.latestDrawRequestTimestamp < 0 ||
+						(timestamp && timestamp < this.queue.latestDrawRequestTimestamp)) {
 					return;
 				}
 
 				counter++;
-				
 				imageTile.src = src; 
 				
 				(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, tile_size) {
@@ -461,7 +461,8 @@ TissueStack.Canvas.prototype = {
 						counter--;
 
 						// damn you async loads
-						if (_this.getDataExtent().getIsTiled() && timestamp && timestamp < _this.queue.latestDrawRequestTimestamp) {
+						if (_this.queue.latestDrawRequestTimestamp < 0 ||
+								(timestamp && timestamp < _this.queue.latestDrawRequestTimestamp)) {
 							return;
 						}
 

@@ -92,6 +92,8 @@ TissueStack.DataSetNavigation.prototype = {
 		
 		// for all canvases, unbind the events
 		for (var plane in dataSet.planes) {
+			dataSet.planes[plane].queue.latestDrawRequestTimestamp = -1;
+			dataSet.planes[plane].queue.stopQueue();
 			dataSet.planes[plane].events.unbindAllEvents();
 		}
 		dataSet.planes = {};

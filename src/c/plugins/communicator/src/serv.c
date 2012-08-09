@@ -81,7 +81,7 @@ char		**serv_str_to_wordtab(char *buff, char c)
 
   return (dest);
 }
-
+/*
 void		write_header(FILE * socket, char * image_type)
 {
   char		header[4096];
@@ -102,6 +102,7 @@ void		write_header(FILE * socket, char * image_type)
 		);
   write(fileno(socket), header, len);
 }
+*/
 
 int		is_not_num(char *str)
 {
@@ -260,11 +261,10 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
 		  id != NULL ? id : "0", time != NULL ? time : "0");
 	}
 
-      write_header(file, image_type);
-
       s->general->tile_requests->add(s->general->tile_requests, id, time);
 
       if (s->general->tile_requests->is_expired(s->general->tile_requests, id, time)) {
+          write_http_header(file, "408 Request Timeout", image_type);
     	  close(fileno(file));
     	  return;
       }
