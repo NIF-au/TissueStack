@@ -139,8 +139,12 @@ TissueStack.DataSetNavigation.prototype = {
 		}
 
 		// restore some settings 
-		$("#colormap_choice input").removeAttr("checked").checkboxradio("refresh");
-		$("#colormap_grey").attr("checked", "checked").checkboxradio("refresh");
+		try {
+			$("#colormap_choice input").removeAttr("checked").checkboxradio("refresh");
+			$("#colormap_grey").attr("checked", "checked").checkboxradio("refresh");
+		} catch (e) {
+			// we don't care, stupif jquery mobile ...
+		}
 			
 		if(TissueStack.desktop || TissueStack.tablet){
 			// restore slider states
