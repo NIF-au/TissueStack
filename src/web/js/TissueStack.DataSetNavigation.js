@@ -144,6 +144,7 @@ TissueStack.DataSetNavigation.prototype = {
 			$("#colormap_grey").attr("checked", "checked").checkboxradio("refresh");
 		} catch (e) {
 			// we don't care, stupif jquery mobile ...
+			$("#colormap_grey").attr("checked", "checked");
 		}
 			
 		if(TissueStack.desktop || TissueStack.tablet){
