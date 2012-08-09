@@ -585,7 +585,7 @@ $(document).ready(function() {
 		// create an instance of the navigation
 		TissueStack.dataSetNavigation = new TissueStack.DataSetNavigation();
 		// on the first load we always display the first data set received from the backend list
-		TissueStack.dataSetNavigation.addToOrReplaceSelectedDataSets(
+		TissueStack.dataSetNavigation.addDataSet(
 				TissueStack.dataSetStore.getDataSetByIndex(0).id, 0);
 		 // show first one by default
 		TissueStack.dataSetNavigation.showDataSet(1);

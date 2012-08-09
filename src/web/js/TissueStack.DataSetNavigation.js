@@ -53,6 +53,28 @@ TissueStack.DataSetNavigation.prototype = {
 			}
 		}
 	},
+	addDataSet : function(key, index) {
+		if (typeof(key) != "string") {
+			return;
+		}
+		if (TissueStack.desktop && typeof(index) != "number") {
+			return;
+		}
+		if (TissueStack.desktop && (index < 0 || index > 1)) {
+			return;
+		} else if (TissueStack.tablet || TissueStack.phone) {
+			index = 0;
+		}
+		
+		if (key == this.selectedDataSets["dataset_" + index]) {
+			// nothing to do, we have already that very same data set there
+			return; 
+		} 
+
+		// add the new data set
+		this.selectedDataSets["dataset_" + (index+1)] = key;
+		this.selectedDataSets.count++;
+	},
 	addToOrReplaceSelectedDataSets : function(key, index) {
 		if (typeof(key) != "string") {
 			return;
