@@ -306,6 +306,12 @@ TissueStack.Canvas.prototype = {
     	// put altered data back into canvas
     	ctx.putImageData(myImageData, xStart, yStart);  	
 	}, drawMe : function(timestamp) {
+		// damn you async loads
+		if (this.queue.latestDrawRequestTimestamp < 0 ||
+				(timestamp && timestamp < this.queue.latestDrawRequestTimestamp)) {
+			return;
+		}
+		
 		// preliminary check if we are within the slice range
 		var slice = this.getDataExtent().slice;
 		if (slice < 0 || slice > this.getDataExtent().max_slices) {
@@ -465,7 +471,7 @@ TissueStack.Canvas.prototype = {
 								(timestamp && timestamp < _this.queue.latestDrawRequestTimestamp)) {
 							return;
 						}
-
+						
 						ctx.drawImage(this,
 								imageOffsetX, imageOffsetY, width, height, // tile dimensions
 								canvasX, canvasY, width, height); // canvas dimensions

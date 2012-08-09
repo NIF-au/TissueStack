@@ -6,7 +6,7 @@ TissueStack.Queue.prototype = {
 	canvas : null,
 	queue_handle : null,
 	drawingIntervalInMillis : 150,
-	requests : {},
+	requests : [],
 	presentlyQueuedZoomLevelAndSlice: null,
 	lowResolutionPreviewDrawn : false,
 	latestDrawRequestTimestamp : 0,
@@ -101,11 +101,16 @@ TissueStack.Queue.prototype = {
 				}
 				clearInterval(lowResBackdrop);
 			}
-		}, 25);		
+		}, 125);		
 	},
 	clearRequestQueue : function() {
 		this.requests = [];
 	}, drawLowResolutionPreview : function(timestamp) {
+		if (this.latestDrawRequestTimestamp < 0 || timestamp < this.latestDrawRequestTimestamp) {
+			this.lowResolutionPreviewDrawn = true;
+			return;
+		}
+
 		// this is to prevent preview fetching for the cases when the user is navigating in a view that exceeds the data extent
 		// so that they can set the crosshair outside of the extent
 		var slice = this.canvas.getDataExtent().slice;
@@ -187,11 +192,12 @@ TissueStack.Queue.prototype = {
 
 		(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height) {
 			imageTile.onload = function() {
+			
 				if (_this.latestDrawRequestTimestamp < 0 || timestamp < _this.latestDrawRequestTimestamp) {
 					_this.lowResolutionPreviewDrawn = true;
 					return;
 				}
-			
+
 				if (this.width < width) {
 					width = this.width;
 				}
