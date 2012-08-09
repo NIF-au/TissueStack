@@ -116,6 +116,10 @@ TissueStack.DataSetNavigation.prototype = {
 				});
 		}
 
+		// restore some settings 
+		$("#colormap_choice input").removeAttr("checked").checkboxradio("refresh");
+		$("#colormap_grey").attr("checked", "checked").checkboxradio("refresh");
+			
 		if(TissueStack.desktop || TissueStack.tablet){
 			// restore slider states
 			var old_classes = $("#" + dataset + "_canvas_main_slider").attr("class");
