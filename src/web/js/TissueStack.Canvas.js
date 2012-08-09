@@ -224,11 +224,11 @@ TissueStack.Canvas.prototype = {
 			this.data_extent.slice = coords.z;
 		}
 
-		var _this = this
+		var _this = this;
 		setTimeout(function() {
 			_this.queue.drawLowResolutionPreview(now);
 			_this.queue.drawRequestAfterLowResolutionPreview(null,now);
-		}, 200);
+		}, 250);
 
 		// look for the cross overlay which will be the top layer
 		var canvas = this.getCoordinateCrossCanvas();
