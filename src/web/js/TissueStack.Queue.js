@@ -108,7 +108,7 @@ TissueStack.Queue.prototype = {
 				}
 				clearInterval(lowResBackdrop);
 			}
-		}, 25);		
+		}, 400);		
 	},
 	clearRequestQueue : function() {
 		this.requests = [];
