@@ -309,6 +309,7 @@ TissueStack.Canvas.prototype = {
 		// damn you async loads
 		if (this.queue.latestDrawRequestTimestamp < 0 ||
 				(timestamp && timestamp < this.queue.latestDrawRequestTimestamp)) {
+			//console.info('Beginning abort for ' + this.getDataExtent().data_id + '[' + this.getDataExtent().getOriginalPlane() + ']: ' + timestamp);
 			return;
 		}
 		
@@ -441,13 +442,14 @@ TissueStack.Canvas.prototype = {
 				// damn you async loads
 				if (this.queue.latestDrawRequestTimestamp < 0 ||
 						(timestamp && timestamp < this.queue.latestDrawRequestTimestamp)) {
+					//console.info('Abort for ' + this.getDataExtent().data_id + '[' + this.getDataExtent().getOriginalPlane() + ']: R: ' + rowIndex + ' C: ' + colIndex  + ' t: ' + timestamp + ' qt: ' + this.queue.latestDrawRequestTimestamp);	
 					return;
 				}
 
 				counter++;
 				imageTile.src = src; 
 				
-				(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, tile_size) {
+				(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, tile_size, row, col) {
 					imageTile.onload = function() {
 						// check with actual image dimensions ...
 						if (canvasX == 0 && width != tile_size && deltaStartTileXAndUpperLeftCornerX !=0) {
@@ -469,16 +471,18 @@ TissueStack.Canvas.prototype = {
 						// damn you async loads
 						if (_this.queue.latestDrawRequestTimestamp < 0 ||
 								(timestamp && timestamp < _this.queue.latestDrawRequestTimestamp)) {
+							//console.info('Abort for ' + _this.getDataExtent().data_id + '[' + _this.getDataExtent().getOriginalPlane() + ']: R: ' + row + ' C: ' + col + ' t: ' + timestamp + ' qt: ' + _this.queue.latestDrawRequestTimestamp);
 							return;
 						}
 						
+						//console.info('Drawing [' + _this.getDataExtent().data_id + ']: ' + timestamp + ' (' + _this.getDataExtent().getOriginalPlane()  + ') R => ' + row + ' C => ' + col + ' Left: ' + counter);
 						ctx.drawImage(this,
 								imageOffsetX, imageOffsetY, width, height, // tile dimensions
 								canvasX, canvasY, width, height); // canvas dimensions
 						
 						if (counter == 0 && _this.getDataExtent().getIsTiled()) _this.applyColorMapToCanvasContent();
 					};
-				})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, this.getDataExtent().tile_size);
+				})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, this.getDataExtent().tile_size, rowIndex, colIndex);
 				
 				// increment canvasY
 				canvasY += height;

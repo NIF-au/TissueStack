@@ -455,7 +455,7 @@ JNIEXPORT jstring JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMin
 		startTilingCommand = appendToBuffer(startTilingCommand, conversionBuffer);
 	}
 	if (preview == JNI_TRUE) {
-		sprintf(conversionBuffer, " %.4g 10 full %s 1 ", (double)zoom_factor, imageType);
+		sprintf(conversionBuffer, " %.4g 6 full %s 1 ", (double)zoom_factor, imageType);
 		startTilingCommand = appendToBuffer(startTilingCommand, conversionBuffer);
 	} else {
 		sprintf(conversionBuffer, " %.4g 1 tiles %s %i", (double)zoom_factor, imageType, (int) size);

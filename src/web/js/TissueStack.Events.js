@@ -344,6 +344,12 @@ TissueStack.Events.prototype = {
 			return;
 		}
 		
+		// if more than 1 data set is displayed, we stop propagation to the other here !
+		var thisHereDataSet = this.canvas.dataset_id;
+		if (thisHereDataSet != dataset_id) {
+			return false;
+		}
+		
 		// queue events 
 		this.canvas.queue.addToQueue(
 				{	data_id : data_id,
@@ -394,6 +400,12 @@ TissueStack.Events.prototype = {
 			return;
 		}
 
+		// if more than 1 data set is displayed, we stop propagation to the other here !
+		var thisHereDataSet = this.canvas.dataset_id;
+		if (thisHereDataSet != dataset_id) {
+			return false;
+		}
+		
 		this.canvas.queue.addToQueue(
 				{	data_id : this.canvas.data_extent.data_id,
 					dataset_id : this.canvas.dataset_id,	 
