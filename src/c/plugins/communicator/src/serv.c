@@ -82,27 +82,6 @@ char		**serv_str_to_wordtab(char *buff, char c)
   return (dest);
 }
 
-void		write_header(FILE * socket, char * image_type)
-{
-  char		header[4096];
-  int		len;
-
-  len = sprintf(header,
-		 "%s %s %s %s %s %s %s %s %s %s",
-		"HTTP/1.1 200 OK\r\n",
-		"Dat: Thu, 20 May 2004 21:12:11 GMT\r\n",
-		"Connection: close\r\n",
-		"Server: TissueStack Server\r\n",
-		"Accept-Ranges: bytes\r\n",
-		"Content-Type: image/",
-		strlower(image_type),
-		"\r\n",
-		"Access-Control-Allow-Origin: *\r\n",
-		"Last-Modified: Thu, 20 May 2004 21:12:11 GMT\r\n\r\n"
-		);
-  write(fileno(socket), header, len);
-}
-
 int		is_not_num(char *str)
 {
   int		i;
@@ -120,29 +99,20 @@ int		is_not_num(char *str)
   return (0);
 }
 
-char		get_by_name_dimension_id(char *volume, char *dimension, t_serv_comm *s)
+char		get_by_name_dimension_id(t_vol * vol, char *dimension, t_serv_comm *s)
 {
-  t_vol		*tmp;
   int		i;
 
-  if (!dimension || !volume || !s)
-    return (0);
-  tmp = s->general->volume_first;
-  while (tmp != NULL)
-    {
-      if (tmp->path && strcmp(tmp->path, volume) == 0)
-	{
+  if (!dimension || !vol || !s) return (0);
+
 	  i = 0;
-	  while (tmp->dim_name[i] != NULL)
+	  while (vol->dim_name[i] != NULL)
 	    {
-	      if (strcmp(tmp->dim_name[i], dimension) == 0)
-		return (i + 48);
+	      if (strcmp(vol->dim_name[i], dimension) == 0) return (i + 48);
 	      i++;
 	    }
-	}
-      tmp = tmp->next;
-    }
-  return (48);
+
+	  return (48);
 }
 
 char		*serv_copy_check_clean_string_from_tab(char **tab)
@@ -155,7 +125,7 @@ char		*serv_copy_check_clean_string_from_tab(char **tab)
   return (str);
 }
 
-void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
+void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
 {
   int		i;
   int		j;
@@ -220,7 +190,16 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
 	  fprintf(stderr, "Invalid argument: non interger\n");
 	  return;
 	}
-      if ((dimension[0] = get_by_name_dimension_id(volume, dimension, s)) == 0) return;
+
+      t_vol		*vol = load_volume(a, volume);
+
+      if (vol == NULL) {
+          write_http_header(file, "500 Server Error", "png");
+    	  fclose(file);
+    	  return;
+      }
+
+      if ((dimension[0] = get_by_name_dimension_id(vol, dimension, s)) == 0) return;
 
       if (service == NULL)
 	{
@@ -260,11 +239,10 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
 		  id != NULL ? id : "0", time != NULL ? time : "0");
 	}
 
-      write_header(file, image_type);
-
       s->general->tile_requests->add(s->general->tile_requests, id, time);
 
       if (s->general->tile_requests->is_expired(s->general->tile_requests, id, time)) {
+          write_http_header(file, "408 Request Timeout", image_type);
     	  close(fileno(file));
     	  return;
       }
@@ -273,7 +251,7 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
     }
 }
 
-void		serv_accept_new_connections(t_serv_comm *s)
+void		serv_accept_new_connections(t_args_plug * a, t_serv_comm *s)
 {
   int		socket;
   struct sockaddr_in	client_addr;
@@ -294,7 +272,7 @@ void		serv_accept_new_connections(t_serv_comm *s)
   l = read(socket, buff, 4096);
   buff[l] = '\0';
   file = fdopen(socket, "wr");
-  interpret_header(buff, file, s);
+  interpret_header(a, buff, file, s);
 }
 
 void		reset_set_fd_to_monitor(t_serv_comm *s)
@@ -306,7 +284,7 @@ void		reset_set_fd_to_monitor(t_serv_comm *s)
     s->bigger_fd = s->sock_serv;
 }
 
-void		serv_working_loop(t_serv_comm *s)
+void		serv_working_loop(t_args_plug * a, t_serv_comm *s)
 {
   s->state = ON;
   while (s->state != OFF && s->state != FAIL)
@@ -319,7 +297,7 @@ void		serv_working_loop(t_serv_comm *s)
 	  s->state = FAIL;
 	}
       if (FD_ISSET(s->sock_serv, &(s->rd_fds)))
-	serv_accept_new_connections(s);
+	serv_accept_new_connections(a, s);
     }
 }
 
@@ -375,7 +353,7 @@ void		*start(void *args)
   s->bigger_fd = 0;
   s->general = a->general_info;
   serv_init_connect(s);
-  serv_working_loop(s);
+  serv_working_loop(a, s);
   return (NULL);
 }
 

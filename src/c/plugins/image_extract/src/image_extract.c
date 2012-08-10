@@ -234,10 +234,10 @@ int		check_input(char **in)
   i = 1;
   while (in[i + 1] != NULL)
     {
-	  in[i] = strlower(in[i]);
+	  if (in[i][0] != '/') in[i] = strlower(in[i]);
       if (strcmp(in[i], "-1") != 0 && strcmp(in[i], "tiles") != 0 &&
-	  strcmp(in[i], "images") != 0 && strcmp(in[i], "full") != 0
-	  && strcmp(in[i], "jpeg") != 0 && strcmp(in[i], "png") != 0)
+	  strcmp(in[i], "images") != 0 && strcmp(in[i], "full") != 0  && in[i][0] != '/'
+			  && strcmp(in[i], "jpeg") != 0 && strcmp(in[i], "png") != 0)
 	{
 	  j = 0;
 	  while (in[i][j] != '\0')
@@ -269,7 +269,7 @@ int		check_range(int **d, t_vol *v)
     {
       if (d[i][0] != -1 || d[i][1] != -1)
 	{
-	  if (d[i][0] > v->size[i] || d[i][1] > v->size[i] || d[i][0] < 0 || d[i][1] < 0)
+      if (d[i][0] > v->size[i] || d[i][1] > v->size[i] || d[i][0] < 0 || d[i][1] < 0)
 	    return (1);
 	}
       i++;
@@ -327,32 +327,16 @@ void		*start(void *args)
 {
   t_image_extract	*image_args;
   t_args_plug	*a;
-  t_vol		*volume;
   int		step;
-  char		volume_load[200];
-  FILE		*socketDescriptor;
-
   a = (t_args_plug *)args;
-  if ((volume = a->general_info->get_volume(a->commands[0], a->general_info)) == NULL)
-    {
-      a->this->busy = 1;
-      sprintf(volume_load, "file load %s", a->commands[0]);
-      a->general_info->plug_actions(a->general_info, volume_load, NULL);
-      int waitLoops = 0;
-      while (volume == NULL && waitLoops < 5) {
-    	  usleep(100000);
-    	  volume = a->general_info->get_volume(a->commands[0], a->general_info);
-    	  waitLoops++;
-      }
-      a->this->busy = 0;
-      if (volume == NULL) {
-    	  printf("Failed to load volume: %s\n", a->commands[0] == NULL ? "no file given" : a->commands[0]);
-   		  return NULL;
-      }
-    }
+  FILE		*socketDescriptor = (FILE*)a->box;
+  t_vol		*volume = load_volume(a, a->commands[0]);
 
-  // please don't move this line up above the loading of the volume
-  socketDescriptor = (FILE*)a->box;
+  if (volume == NULL) {
+      write_http_header(socketDescriptor, "500 Server Error", "png");
+	  fclose(socketDescriptor);
+	  return NULL;
+  }
 
   image_args = create_image_struct();
   image_args->dim_nb = volume->dim_nb;

@@ -6,7 +6,7 @@ TissueStack.Queue.prototype = {
 	canvas : null,
 	queue_handle : null,
 	drawingIntervalInMillis : 150,
-	requests : {},
+	requests : [],
 	presentlyQueuedZoomLevelAndSlice: null,
 	lowResolutionPreviewDrawn : false,
 	latestDrawRequestTimestamp : 0,
@@ -47,6 +47,7 @@ TissueStack.Queue.prototype = {
 			}
 
 			_this.latestDrawRequestTimestamp = latestRequest.timestamp;
+			//console.info('Action: ' + latestRequest.action + ' @ '  + latestRequest.timestamp + ' [' + latestRequest.data_id + ']');
 			
 			if (_this.prepareDrawRequest(latestRequest)) {
 				_this.drawLowResolutionPreview(_this.latestDrawRequestTimestamp);
@@ -58,7 +59,7 @@ TissueStack.Queue.prototype = {
 		if (!this.queue_handle) {
 			return;
 		}
-		clearInterval(this.queue_handle);
+		clearInterval();
 		this.queue_handle = null;
 	},
 	addToQueue : function(draw_request) {
@@ -75,10 +76,16 @@ TissueStack.Queue.prototype = {
 			var deepCopyOfRequest = $.extend(true, {}, draw_request);
 			this.latestDrawRequestTimestamp = deepCopyOfRequest.timestamp;
 			
+			//console.info('Action: ' + deepCopyOfRequest.action + ' @ '  + deepCopyOfRequest.timestamp + ' [' + draw_request.data_id + ']');
+			
 			// work with a deep copy
 			if (this.prepareDrawRequest(deepCopyOfRequest)) {
+				if (deepCopyOfRequest.action == 'ZOOM' || deepCopyOfRequest.action == 'SLICE') {
+					this.canvas.eraseCanvasContent();
+				}
+
 				this.drawLowResolutionPreview(deepCopyOfRequest.timestamp);
-				this.drawRequestAfterLowResolutionPreview(deepCopyOfRequest);
+				this.drawRequestAfterLowResolutionPreview(deepCopyOfRequest, deepCopyOfRequest.timestamp);
 			}
 
 			return;
@@ -101,11 +108,18 @@ TissueStack.Queue.prototype = {
 				}
 				clearInterval(lowResBackdrop);
 			}
-		}, 50);		
+		}, 400);		
 	},
 	clearRequestQueue : function() {
 		this.requests = [];
 	}, drawLowResolutionPreview : function(timestamp) {
+		if (this.latestDrawRequestTimestamp < 0 || timestamp < this.latestDrawRequestTimestamp) {
+			//console.info('Drawing preview for ' + this.canvas.getDataExtent().data_id + '[' + this.canvas.getDataExtent().getOriginalPlane() +  ']: ' + timestamp);
+
+			this.lowResolutionPreviewDrawn = true;
+			return;
+		}
+
 		// this is to prevent preview fetching for the cases when the user is navigating in a view that exceeds the data extent
 		// so that they can set the crosshair outside of the extent
 		var slice = this.canvas.getDataExtent().slice;
@@ -187,11 +201,13 @@ TissueStack.Queue.prototype = {
 
 		(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height) {
 			imageTile.onload = function() {
-				if (timestamp < _this.latestDrawRequestTimestamp) {
+			
+				if (_this.latestDrawRequestTimestamp < 0 || timestamp < _this.latestDrawRequestTimestamp) {
 					_this.lowResolutionPreviewDrawn = true;
+					//console.info('Aborting preview for ' + _this.canvas.getDataExtent().data_id + '[' +_this.canvas.getDataExtent().getOriginalPlane() +  ']: ' + timestamp);
 					return;
 				}
-			
+
 				if (this.width < width) {
 					width = this.width;
 				}
@@ -200,9 +216,9 @@ TissueStack.Queue.prototype = {
 					height = this.height;
 				}
 
-				ctx.globalAlpha=1;
-				ctx.drawImage(this, imageOffsetX, imageOffsetY, width, height, canvasX, canvasY, width, height);
+				//console.info('Drawing preview for ' +  _this.canvas.getDataExtent().data_id + '[' +_this.canvas.getDataExtent().getOriginalPlane() +  ']: ' + timestamp);
 				_this.lowResolutionPreviewDrawn = true;
+				ctx.drawImage(this, imageOffsetX, imageOffsetY, width, height, canvasX, canvasY, width, height);
 				
 				if (_this.canvas.getDataExtent().getIsTiled()) _this.canvas.applyColorMapToCanvasContent();
 			};
@@ -392,10 +408,6 @@ TissueStack.Queue.prototype = {
 		
 		return true;
 	}, drawRequest : function(draw_request) {
-		if (draw_request.action == 'ZOOM' || draw_request.action == 'SLICE') {
-			this.canvas.eraseCanvasContent();
-		}
-		
 		// redraw 
 		this.canvas.drawMe(draw_request.timestamp);
 

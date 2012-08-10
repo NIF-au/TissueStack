@@ -135,7 +135,8 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
     short streamToSocket;
 
     if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
-  	  close(fileno(a->file));
+      write_http_header(a->file, "408 Request Timeout", a->info->image_type);
+      fclose_check(a->file);
   	  return;
     }
 
@@ -168,6 +169,14 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
         return;
     }
 
+    if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+    	DestroyImage(img);
+        DestroyImageInfo(image_info);
+        write_http_header(a->file, "408 Request Timeout", a->info->image_type);
+        fclose_check(a->file);
+        return;
+    }
+
     tmp = img;
     if ((img = FlipImage(img, &exception)) == NULL) {
         CatchException(&exception);
@@ -177,6 +186,14 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
         return;
     }
     DestroyImage(tmp);
+
+    if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+    	DestroyImage(img);
+        DestroyImageInfo(image_info);
+        write_http_header(a->file, "408 Request Timeout", a->info->image_type);
+        fclose_check(a->file);
+        return;
+    }
 
     if (a->info->quality != 1) {
         tmp = img;
@@ -200,6 +217,14 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
         DestroyImage(tmp);
     }
 
+    if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+    	DestroyImage(img);
+        DestroyImageInfo(image_info);
+        write_http_header(a->file, "408 Request Timeout", a->info->image_type);
+        fclose_check(a->file);
+        return;
+    }
+
     if (a->info->scale != 1) {
         tmp = img;
         if ((img = ScaleImage(img, (width * a->info->scale),
@@ -211,6 +236,14 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
             return;
         }
         DestroyImage(tmp);
+    }
+
+    if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+    	DestroyImage(img);
+        DestroyImageInfo(image_info);
+        write_http_header(a->file, "408 Request Timeout", a->info->image_type);
+        fclose_check(a->file);
+        return;
     }
 
     if (kind == 1 || kind == 3) {
@@ -225,11 +258,20 @@ void print_image(char *hyperslab, t_vol *volume, int current_dimension,
         DestroyImage(tmp);
     }
 
+    if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+    	DestroyImage(img);
+        DestroyImageInfo(image_info);
+        write_http_header(a->file, "408 Request Timeout", a->info->image_type);
+        fclose_check(a->file);
+        return;
+    }
+
     // write image
     if (streamToSocket) { // SOCKET STREAM
         strcpy(img->magick, a->info->image_type);
     	image_info->file = a->file;
 
+    	write_http_header(a->file, "200 OK", a->info->image_type);
     	WriteImage(image_info, img);
 
         // clean up

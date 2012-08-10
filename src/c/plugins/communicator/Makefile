@@ -1,6 +1,6 @@
 DIRSRC		=	./src/
 
-SRCS		=	$(DIRSRC)serv.c	$(DIRSRC)../../../utils/utils.c
+SRCS		=	$(DIRSRC)serv.c	$(DIRSRC)../../../volume.c $(DIRSRC)../../../utils/utils.c
 
 INCLUDE		=	-I./headers -I../../headers -I./../../utils
 

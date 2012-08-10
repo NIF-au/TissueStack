@@ -357,7 +357,7 @@ TissueStack.Utils = {
 		    url = url + "/" + path + "/?volume=" + filename + "&image_type=JPEG&scale=" + zoom + "&dimension=" + plane + "space" + "&slice=" + slice;
 			
 			if (is_preview) {
-				return url + "&quality=10";
+				return url + "&quality=8";
 			}
 			
 			return url  + "&quality=1&service=tiles&square=" + tile_size + '&y=' + col + "&x=" + row;

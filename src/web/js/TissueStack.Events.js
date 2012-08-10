@@ -149,9 +149,13 @@ TissueStack.Events.prototype = {
 			if ($.browser.opera) {
 				delta = delta > 0 ? 1.5 : -1.5; 
 			}
-			// call zoom
-			_this.zoom(e, delta);
-			/*
+
+			if (!e.altKey) {
+				// call zoom
+				_this.zoom(e, delta);
+				return;
+			}
+
 			if (delta > 0) _this.canvas.data_extent.slice++; else  _this.canvas.data_extent.slice--;
 			
 			var slider = $("#" + _this.canvas.dataset_id + "_canvas_main_slider");
@@ -159,7 +163,7 @@ TissueStack.Events.prototype = {
 			slider.blur();
 			
 			_this.changeSliceForPlane(_this.canvas.data_extent.slice);
-			*/
+			e.stopPropagation();
 		});
 		
 		// this is sadly necessary to keep the window from scrolling when only the canvas should be scrolled
@@ -340,6 +344,12 @@ TissueStack.Events.prototype = {
 			return;
 		}
 		
+		// if more than 1 data set is displayed, we stop propagation to the other here !
+		var thisHereDataSet = this.canvas.dataset_id;
+		if (thisHereDataSet != dataset_id) {
+			return false;
+		}
+		
 		// queue events 
 		this.canvas.queue.addToQueue(
 				{	data_id : data_id,
@@ -390,6 +400,12 @@ TissueStack.Events.prototype = {
 			return;
 		}
 
+		// if more than 1 data set is displayed, we stop propagation to the other here !
+		var thisHereDataSet = this.canvas.dataset_id;
+		if (thisHereDataSet != dataset_id) {
+			return false;
+		}
+		
 		this.canvas.queue.addToQueue(
 				{	data_id : this.canvas.data_extent.data_id,
 					dataset_id : this.canvas.dataset_id,	 
