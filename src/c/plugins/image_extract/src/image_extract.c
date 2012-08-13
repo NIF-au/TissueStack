@@ -1,5 +1,118 @@
 #include "image_extract.h"
 
+
+float		colormapa[3][25][4] = {{{0, 0, 0, 0},
+					{0.05, 0.46667, 0, 0.05333},
+					{0.1, 0.5333, 0, 0.6},
+					{0.15, 0, 0, 0.6667},
+					{0.2, 0, 0, 0.8667},
+					{0.25, 0, 0.4667, 0.8667},
+					{0.3, 0, 0.6, 0.8667},
+					{0.35, 0, 0.6667, 0.6667},
+					{0.4, 0, 0.6667, 0.5333},
+					{0.45, 0, 0.6, 0},
+					{0.5, 0, 0.7333, 0},
+					{0.55, 0, 0.8667, 0},
+					{0.6, 0, 1, 0},
+					{0.65, 0.7333, 1, 0},
+					{0.7, 0.9333, 0.9333, 0},
+					{0.75, 1, 0.8, 0},
+					{0.8, 1, 0.6, 0},
+					{0.85, 1, 0, 0},
+					{0.9, 0.8667, 0, 0},
+					{0.95, 0.8, 0, 0},
+					{1, 0.8, 0.8, 0.8},
+					{99, 0, 0, 0}},
+				       {{0, 0, 0, 0},
+					{0.25, 0.5, 0, 0},
+					{0.5, 1, 0.5, 0},
+					{0.75, 1, 1, 0.5},
+					{1, 1, 1, 1},
+					{99, 0, 0, 0}}};
+
+char		*colormapa_name[3] = {"spectral", "hot", NULL};
+
+int		get_size_colormap(float **colormap)
+{
+  int		i;
+
+  i = 0;
+  while (colormap[i][0] != 99)
+    i++;
+  return (i);
+}
+
+void		alloc_and_init_colormap_space(float **new_colormap, int index)
+{
+  int		i;
+  int		j;
+  float		start_red;
+  float		end_red;
+  float		start_green;
+  float		end_green;
+  float		start_blue;
+  float		end_blue;
+  float		start_range;
+  float		end_range;
+  float		red_delta;
+  float		green_delta;
+  float		blue_delta;
+  float		delta;
+  int		end_loop;
+
+  i = 0;
+  j = 1;
+  while (colormapa[index][j][0] < 99)
+    {
+      start_range	= floor(colormapa[index][j - 1][0] * 255);
+      end_range		= floor(colormapa[index][j][0] * 255);
+      delta		= end_range - start_range;
+
+      start_red		= colormapa[index][j - 1][1];
+      end_red		= colormapa[index][j][1];
+
+      start_green	= colormapa[index][j - 1][2];
+      end_green		= colormapa[index][j][2];
+
+      start_blue	= colormapa[index][j - 1][3];
+      end_blue		= colormapa[index][j][3];
+
+      red_delta = round((end_red - start_red) / delta);
+      green_delta = round((end_green - start_green) / delta);
+      blue_delta = round((end_blue - start_blue) / delta);
+
+      end_loop = i + delta;
+      while (i < end_loop)
+	{
+	  new_colormap[i] = malloc(3 * sizeof(*new_colormap[i]));
+
+	  new_colormap[i][0] = round((i * start_red) + ((end_red - i) * red_delta));
+	  new_colormap[i][1] = round((i * start_green) + ((end_green - i) * green_delta));
+	  new_colormap[i][2] = round((i * start_blue) + ((end_blue - i) * blue_delta));
+	  i++;
+	}
+      j++;
+    }
+}
+
+void		colormap_init(t_image_extract *image_args)
+{
+  int		i;
+  int		clormp_nb;
+
+  clormp_nb = 2;
+  image_args->premapped_colormap = malloc((clormp_nb + 1) * sizeof(*image_args->premapped_colormap));
+  i = 0;
+  while (i < clormp_nb)
+    {
+      image_args->premapped_colormap[i] = malloc((255 + 1) * sizeof(*image_args->premapped_colormap[i]));
+      alloc_and_init_colormap_space(image_args->premapped_colormap[i], i);
+      i++;
+    }
+  image_args->colormap_name = colormapa_name;
+  image_args->premapped_colormap[clormp_nb] = NULL;
+}
+
 void		get_percent(FILE *file, t_image_extract *a)
 {
   char		buff[20];
@@ -206,7 +319,6 @@ void		image_creation_lunch(t_vol *vol, int step, t_thread_pool *p, t_image_extra
 		args->dim_start_end = generate_dims_start_end_thread(vol, i, dim_start_end[i][0], dim_start_end[i][0] + step);
 	      else
 		args->dim_start_end = generate_dims_start_end_thread(vol, i, dim_start_end[i][0], dim_start_end[i][1]);
-	      //get_all_slices_of_all_dimensions(args);
 	      (*p->add)(get_all_slices_of_all_dimensions, (void *)args, p);
 	      j += step;
 	      dim_start_end[i][0] += step;
@@ -214,6 +326,20 @@ void		image_creation_lunch(t_vol *vol, int step, t_thread_pool *p, t_image_extra
 	}
       i++;
     }
+}
+
+int		check_colormap_name(char *str)
+{
+  int		i;
+
+  i = 0;
+  while (colormapa_name[i] != NULL)
+    {
+      if (strcmp(str, colormapa_name[i]) == 0)
+	return (0);
+      i++;
+    }
+  return (1);
 }
 
 int		check_input(char **in)
@@ -227,7 +353,8 @@ int		check_input(char **in)
 	  in[i] = strlower(in[i]);
       if (strcmp(in[i], "-1") != 0 && strcmp(in[i], "tiles") != 0 &&
 	  strcmp(in[i], "images") != 0 && strcmp(in[i], "full") != 0
-	  && strcmp(in[i], "jpeg") != 0 && strcmp(in[i], "png") != 0)
+	  && strcmp(in[i], "jpeg") != 0 && strcmp(in[i], "png") != 0 &&
+	  check_colormap_name(in[i]))
 	{
 	  j = 0;
 	  while (in[i][j] != '\0')
@@ -269,7 +396,7 @@ int		check_range(int **d, t_vol *v)
 
 t_image_extract	*create_image_struct()
 {
-	t_image_extract	*image_args;
+  t_image_extract	*image_args;
 
   image_args = malloc(sizeof(*image_args));
   image_args->total_slices_to_do = 0;
@@ -300,8 +427,9 @@ void		*init(void *args)
   image_args->image_type = NULL;
   pthread_mutex_init(&image_args->mut, NULL);
   pthread_cond_init(&image_args->cond, NULL);
-  a->this->stock = (void*)image_args;
   InitializeMagick("./");
+  colormap_init(image_args);
+  a->this->stock = (void*)image_args;
 
   // free command line args
   a->destroy(a);
@@ -312,11 +440,14 @@ void		*init(void *args)
 void		*start(void *args)
 {
   t_image_extract	*image_args;
+  t_image_extract	*image_args_tmp;
   t_args_plug	*a;
   t_vol		*volume;
   int		step;
+  char		*colormap;
   char		volume_load[200];
   FILE		*socketDescriptor;
+  int		i = 0;
 
   a = (t_args_plug *)args;
   if ((volume = a->general_info->get_volume(a->commands[0], a->general_info)) == NULL)
@@ -340,8 +471,10 @@ void		*start(void *args)
   // please don't move this line up above the loading of the volume
   socketDescriptor = (FILE*)a->box;
 
+  image_args_tmp = (t_image_extract*)a->this->stock;
   image_args = create_image_struct();
   image_args->dim_nb = volume->dim_nb;
+  image_args->premapped_colormap = image_args_tmp->premapped_colormap;
 
   if (strcmp(a->commands[1], "percent") == 0)
     {
@@ -364,11 +497,13 @@ void		*start(void *args)
       a->this->busy = 0;
       return (NULL);
     }
+
   image_args->square_size = -1;
   image_args->w_position = 0;
   image_args->h_position = 0;
   image_args->w_position_end = -1;
   image_args->h_position_end = -1;
+  image_args->colormap_id = -1;
   image_args->scale = (float)atof(a->commands[7]);
   image_args->quality = atoi(a->commands[8]);
   image_args->service = a->commands[9];
@@ -382,8 +517,8 @@ void		*start(void *args)
       image_args->w_position = atoi(a->commands[13]);
       image_args->start_h = atoi(a->commands[12]);
       image_args->start_w = atoi(a->commands[13]);
-      if (a->commands[15] != NULL)
-	image_args->root_path = strdup(a->commands[15]);
+      if (a->commands[16] != NULL)
+	image_args->root_path = strdup(a->commands[16]);
     }
   else if (strcmp(image_args->service, "images") == 0)
     {
@@ -393,8 +528,8 @@ void		*start(void *args)
       image_args->start_w = atoi(a->commands[12]);
       image_args->h_position_end = atoi(a->commands[13]);
       image_args->w_position_end = atoi(a->commands[14]);
-      if (a->commands[16] != NULL)
-	image_args->root_path = strdup(a->commands[16]);
+      if (a->commands[17] != NULL)
+	image_args->root_path = strdup(a->commands[17]);
     }
   else
     {
@@ -406,12 +541,22 @@ void		*start(void *args)
 	}
       else
 	{
-	  if (a->commands[12] != NULL)
-	    image_args->root_path = strdup(a->commands[12]);
+	  if (a->commands[13] != NULL)
+	    image_args->root_path = strdup(a->commands[13]);
 	}
     }
   image_args->total_slices_to_do = get_total_slices_to_do(volume, image_args->dim_start_end);
-  step = (strcmp(image_args->service, "tiles") == 0 ? atoi(a->commands[14]) : (strcmp(image_args->service, "full") == 0 ? atoi(a->commands[11]) : atoi(a->commands[15])));
+  i = 0;
+  colormap = (strcmp(image_args->service, "tiles") == 0 ? strdup(a->commands[14]) : (strcmp(image_args->service, "full") == 0 ? strdup(a->commands[11]) : strdup(a->commands[15])));
+  while (colormapa_name[i] != NULL)
+    {
+      if (strcmp(colormap, colormapa_name[i]) == 0)
+	break;
+      i++;
+    }
+  if (colormapa_name[i] != NULL)
+    image_args->colormap_id = i;
+  step = (strcmp(image_args->service, "tiles") == 0 ? atoi(a->commands[15]) : (strcmp(image_args->service, "full") == 0 ? atoi(a->commands[12]) : atoi(a->commands[16])));
   image_creation_lunch(volume, step, a->general_info->tp, image_args, a->this, socketDescriptor);
 
   a->destroy(a);
