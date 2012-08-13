@@ -411,5 +411,37 @@ TissueStack.Utils = {
 		var randomPart = Math.floor((Math.random()*100));
 		
 		return timestampPart + randomPart;
+	}, readQueryStringFromAddressBar : function() {
+		if (!document.location.search || document.location.search.length == 0 || document.location.search === '?') {
+			return null;
+		}
+		
+		// prepare query string
+		var queryString = $.trim(document.location.search);
+		// omit '?'
+		var queryStringStart = queryString.lastIndexOf('?');
+		if (queryStringStart >= 0) queryString = queryString.substring(queryStringStart + 1);
+		// do a URIdecode
+		queryString = decodeURIComponent(queryString);
+		//extract potential params by splitting into tokens delimited by '&'
+		var tokens = queryString.split('&');
+		if (!tokens || tokens.length == 0) return null;
+		
+		// potential args
+		var args = ['ds', 'x', 'y', 'z', 'zoom'];
+		var ret = {}; // return object
+
+		var c = 0;
+		for (var i=0;i<tokens.length; i++) {
+			for (var j=0;j<args.length;j++) {
+				var index = tokens[i].indexOf(args[j] + '=');
+				if (index ==0) {
+					ret[args[j]] = parseFloat(tokens[i].substring(args[j].length + 1));
+					c++;
+				}
+			}			
+		}
+
+		return c == 0 ? null : ret;
 	}
 };

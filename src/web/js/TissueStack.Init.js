@@ -37,11 +37,13 @@ TissueStack.Init = function (afterLoadingRoutine) {
 	});
 };
 
-TissueStack.InitUserInterface = function () {
+TissueStack.InitUserInterface = function (initOpts) {
 	if (TissueStack.dataSetNavigation.selectedDataSets.count == 0) {
 		return;
 	}
 
+	var initOpts = TissueStack.configuration['initOpts'];
+	
 	// get all data sets that have been selected from the store and stuff them into the array for binding its events
 	var datasets = [];
 	for (var x=0;x<TissueStack.dataSetNavigation.selectedDataSets.count;x++) {
@@ -72,7 +74,7 @@ TissueStack.InitUserInterface = function () {
 		// we use that for the image service to be able to abort pending requests
 		var sessionId = TissueStack.Utils.generateSessionId();
 		
-		var now = new Date().getTime() + 5000;
+		var now = new Date().getTime();
 		
 		// loop over all planes in the data, create canvas and extent objects, then display them
 		for (var i=0; i < dataSet.data.length; i++) {
@@ -117,23 +119,49 @@ TissueStack.InitUserInterface = function () {
 			plane.updateExtentInfo(dataSet.realWorldCoords[planeId]);
 
 			// for desktop version show 2 small canvases
-			if ((TissueStack.desktop || TissueStack.tablet) && planeId != 'y') {
+			// user requested specific zoom level
+			if (planeId == 'y' && initOpts && initOpts['zoom'] != null && initOpts['zoom'] >= 0 && initOpts['zoom'] < plane.data_extent.zoom_levels.length) {
+				plane.changeToZoomLevel(initOpts['zoom']); 
+			} else if ((TissueStack.desktop || TissueStack.tablet) && planeId != 'y') {
 				plane.changeToZoomLevel(0);
-				
+			} else if (TissueStack.phone ) {
+				plane.changeToZoomLevel(0);
 			}
 			
-			if (TissueStack.phone ) {
-				plane.changeToZoomLevel(0);
-			}
-
 			plane.eraseCanvasContent();
 			
-			// fill canvases
-			plane.queue.drawLowResolutionPreview(now);
-			plane.queue.drawRequestAfterLowResolutionPreview(null, now);
+			(function(p) {
+				setTimeout(function() {
+					if (initOpts && (initOpts['x'] != null || initOpts['y'] != null || initOpts['z'] != null)) {
+						if (p.data_extent.plane != 'y') return;
+		
+						var givenCoords = {x: initOpts['x'] != null ? initOpts['x'] : 0,
+								y: initOpts['y'] != null ? initOpts['y'] : 0,
+								z: initOpts['z'] != null ? initOpts['z'] : 0};
+						
+						if (p.getDataExtent().worldCoordinatesTransformationMatrix) {
+							givenCoords = p.getDataExtent().getPixelForWorldCoordinates(givenCoords);
+						}
+						p.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords);
+						
+						var slider = TissueStack.phone ? 
+							$("#canvas_" + p.data_extent.plane + "_slider") :
+							$("#" + (p.dataset_id == "" ? "" : p.dataset_id + "_") + "canvas_main_slider");
+						if (slider) {
+							slider.attr("value", givenCoords.z);
+							 if (!TissueStack.phone) slider.slider("refresh");
+						};
+						
+						// erase initial opts
+						TissueStack.configuration['initOpts'] = null;
+					} else {
+						p.queue.drawLowResolutionPreview(now);
+						p.queue.drawRequestAfterLowResolutionPreview(null, now);
+					}
+				}, 200);
+			}(plane));
 		}
-	} 
-	
+	}
 };
 
 TissueStack.BindGlobalEvents = function () {
@@ -498,9 +526,10 @@ TissueStack.BindDataSetDependentEvents = function () {
 				return;
 			}
 			
-			if (slice < 0 || slice > actualDataSet.planes[id].data_extent.max_slices) {
-				return;
-			}
+			slice = parseInt(slice);
+			
+			if (slice < 0) slice = 0;
+			else if (slice > actualDataSet.planes[id].data_extent.max_slices) slice = actualDataSet.planes[id].data_extent.max_slices;
 			
 			actualDataSet.planes[id].events.updateCoordinateDisplay();
 			actualDataSet.planes[id].events.changeSliceForPlane(slice);			
@@ -584,12 +613,24 @@ $(document).ready(function() {
 	var afterLoadingRoutine = function() {
 		// create an instance of the navigation
 		TissueStack.dataSetNavigation = new TissueStack.DataSetNavigation();
-		// on the first load we always display the first data set received from the backend list
-		TissueStack.dataSetNavigation.addDataSet(
-				TissueStack.dataSetStore.getDataSetByIndex(0).id, 0);
-		 // show first one by default
+		
+		// see if we have received initial values for data set incl. coords and zoom level
+		var initOpts = TissueStack.Utils.readQueryStringFromAddressBar();
+		if (initOpts) TissueStack.configuration['initOpts'] = initOpts;
+		
+		// display the first data set received from the backend list unless a particular was requested or the requested one does not exist
+		if (TissueStack.configuration['initOpts'] && TissueStack.configuration['initOpts']['ds'] 
+				&& TissueStack.dataSetStore.getDataSetById('localhost_' + TissueStack.configuration['initOpts']['ds'])) {
+			if (TissueStack.desktop)
+				TissueStack.dataSetNavigation.getDynaTreeObject().selectKey("localhost_" + TissueStack.configuration['initOpts']['ds']);
+			else
+				TissueStack.dataSetNavigation.addDataSet(TissueStack.dataSetStore.getDataSetById('localhost_' + TissueStack.configuration['initOpts']['ds']).id, 0);
+		} else {
+			var ds = TissueStack.dataSetStore.getDataSetByIndex(0);
+			if (TissueStack.desktop) TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(ds.id);
+			else TissueStack.dataSetNavigation.addDataSet(ds.id, 0);
+		}
 		TissueStack.dataSetNavigation.showDataSet(1);
-
 		
 		// initialize ui and events
 		TissueStack.InitUserInterface();
