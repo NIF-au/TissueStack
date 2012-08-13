@@ -134,6 +134,8 @@ void		clean_quit(t_tissue_stack *t)
 void            init_prog(t_tissue_stack *t)
 {
   t->plug_actions = plug_actions_from_external_plugin;
+  t->tile_requests = malloc(sizeof(*t->tile_requests));
+  init_tile_requests(t->tile_requests);
   t->get_volume = get_volume;
   t->check_volume = check_volume;
   t->clean_quit = clean_quit;
@@ -154,6 +156,7 @@ void		free_core_struct(t_tissue_stack *t)
   free_all_plugins(t);
   free_all_history(t);
   free_all_prompt(t);
+  if (t->tile_requests != NULL) t->tile_requests->destroy(t->tile_requests);
   free(t->functions);
   free(t);
 }

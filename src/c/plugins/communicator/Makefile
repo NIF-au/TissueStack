@@ -1,6 +1,6 @@
 DIRSRC		=	./src/
 
-SRCS		=	$(DIRSRC)serv.c	$(DIRSRC)../../../utils/utils.c
+SRCS		=	$(DIRSRC)serv.c	$(DIRSRC)../../../volume.c $(DIRSRC)../../../utils/utils.c
 
 INCLUDE		=	-I./headers -I../../headers -I./../../utils
 
@@ -22,8 +22,8 @@ all: compile install
 
 compile:	
 	@echo "\n================== Compile $(NAME) ===================="
-	gcc $(SRCS) -c $(INCLUDE) $(FLAGS) -fPIC
-	gcc *.o -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -shared
+	gcc $(SRCS) -c $(INCLUDE) $(FLAGS) -fPIC `pkg-config --cflags gtk+-2.0`
+	gcc *.o -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -shared `pkg-config --libs gtk+-2.0`
 
 install:
 	mkdir -p $(PLUGIN_INSTALL_DIR)

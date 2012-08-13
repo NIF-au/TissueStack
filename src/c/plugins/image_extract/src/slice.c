@@ -100,6 +100,12 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
   int		save_h_position = a->info->h_position;
   int		save_w_position = a->info->w_position;
 
+  if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+    write_http_header(a->file, "408 Request Timeout", a->info->image_type);
+    fclose(a->file);
+	return;
+  }
+
   // allocation of a hyperslab (portion of the file, can be 1 slice or 1 demension...)
   hyperslab =  malloc(volume->slices_max * sizeof(*hyperslab));
   // set the first slice extracted

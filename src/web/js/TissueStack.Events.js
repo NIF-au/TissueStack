@@ -141,12 +141,29 @@ TissueStack.Events.prototype = {
 
 		// MOUSE WHEEL
 		this.getCanvasElement().bind('mousewheel', function(e, delta) {
+			if (delta == 0) {
+				return;
+			}
+			
 			// annoying opera
 			if ($.browser.opera) {
-				delta = delta > 0 ? 1.5 : 0.5; 
+				delta = delta > 0 ? 1.5 : -1.5; 
 			}
-			// call zoom
-			_this.zoom(e, delta);
+
+			if (!e.altKey) {
+				// call zoom
+				_this.zoom(e, delta);
+				return;
+			}
+
+			if (delta > 0) _this.canvas.data_extent.slice++; else  _this.canvas.data_extent.slice--;
+			
+			var slider = $("#" + _this.canvas.dataset_id + "_canvas_main_slider");
+			slider.attr("value", _this.canvas.data_extent.slice);
+			slider.blur();
+			
+			_this.changeSliceForPlane(_this.canvas.data_extent.slice);
+			e.stopPropagation();
 		});
 		
 		// this is sadly necessary to keep the window from scrolling when only the canvas should be scrolled
@@ -246,6 +263,9 @@ TissueStack.Events.prototype = {
 		if (typeof(slice) != "number") {
 			slice = parseInt(slice);
 		}
+		if (slice < 0) slice = 0;
+		if (slice > this.canvas.data_extent.max_slices) slice = this.canvas.data_extent.max_slices;
+		
 		this.canvas.data_extent.slice = slice;
 		
 		var upper_left_corner = {x: this.canvas.upper_left_x, y: this.canvas.upper_left_y};
@@ -297,6 +317,8 @@ TissueStack.Events.prototype = {
 
 		this.canvas.drawCoordinateCross(cross_coords);
 
+		this.canvas.drawMe(now);
+		
 		// update coordinate info displayed
 		this.updateCoordinateDisplay(coords);
 		
@@ -320,6 +342,12 @@ TissueStack.Events.prototype = {
 		var thisHerePlane = this.canvas.getDataExtent().plane;
 		if (thisHerePlane === plane) {
 			return;
+		}
+		
+		// if more than 1 data set is displayed, we stop propagation to the other here !
+		var thisHereDataSet = this.canvas.dataset_id;
+		if (thisHereDataSet != dataset_id) {
+			return false;
 		}
 		
 		// queue events 
@@ -372,6 +400,12 @@ TissueStack.Events.prototype = {
 			return;
 		}
 
+		// if more than 1 data set is displayed, we stop propagation to the other here !
+		var thisHereDataSet = this.canvas.dataset_id;
+		if (thisHereDataSet != dataset_id) {
+			return false;
+		}
+		
 		this.canvas.queue.addToQueue(
 				{	data_id : this.canvas.data_extent.data_id,
 					dataset_id : this.canvas.dataset_id,	 

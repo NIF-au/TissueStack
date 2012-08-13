@@ -206,11 +206,11 @@ int		**generate_dims_start_end_thread(t_vol *v, int dim, int start, int end)
   return (dim_start_end);
 }
 
-t_image_args	*create_args_thread(t_thread_pool *p, t_vol *vol, t_image_extract *image_general, FILE *sock)
+t_image_args	*create_args_thread(t_tissue_stack *t, t_vol *vol, t_image_extract *image_general, FILE *sock)
 {
   t_image_args   *args = malloc(sizeof(*args));
   // shared objects
-  args->p = p;
+  args->p = t->tp;
   args->file = sock;
   args->this = NULL; //  not needed for our purposes
 
@@ -253,6 +253,9 @@ t_image_args	*create_args_thread(t_thread_pool *p, t_vol *vol, t_image_extract *
   args->volume->starts = NULL;
   args->volume->steps = NULL;
 
+  // we leave the reference to the request map, this is meant to be shared
+  args->requests = t->tile_requests;
+
   // t_image_extract DEEP COPY
   args->info = malloc(sizeof(*args->info));
   memcpy(args->info, image_general, sizeof(*image_general));
@@ -277,19 +280,25 @@ t_image_args	*create_args_thread(t_thread_pool *p, t_vol *vol, t_image_extract *
   if (image_general->service != NULL) {
 	  args->info->service = strdup(image_general->service);
   }
+  if (image_general->request_id != NULL) {
+	  args->info->request_id = strdup(image_general->request_id);
+  }
+  if (image_general->request_time != NULL) {
+	  args->info->request_time = strdup(image_general->request_time);
+  }
 
   return (args);
 }
 
-void		lunch_percent_display(t_thread_pool *p, t_vol *vol, t_image_extract *image_general)
+void		lunch_percent_display(t_tissue_stack *t, t_vol *vol, t_image_extract *image_general)
 {
   t_image_args   *args;
 
-  args = create_args_thread(p, vol, image_general, NULL);
-  (*p->add)(percentage, (void *)args, p);
+  args = create_args_thread(t, vol, image_general, NULL);
+  (*t->tp->add)(percentage, (void *)args, t->tp);
 }
 
-void		image_creation_lunch(t_vol *vol, int step, t_thread_pool *p, t_image_extract *image_general, t_plugin *this, FILE *sock)
+void		image_creation_lunch(t_tissue_stack *t, t_vol *vol, int step, t_image_extract *image_general, FILE *sock)
 {
   t_image_args	*args;
   unsigned int	i;
@@ -314,12 +323,13 @@ void		image_creation_lunch(t_vol *vol, int step, t_thread_pool *p, t_image_extra
 	  nb_slices = ((dim_start_end[i][1] == 0 ? vol->size[i] : dim_start_end[i][1]) - dim_start_end[i][0]);
 	  while (j < nb_slices)
 	    {
-	      args = create_args_thread(p, vol, image_general, sock);
+	      args = create_args_thread(t, vol, image_general, sock);
+
 	      if ((dim_start_end[i][0] + step) <= dim_start_end[i][1])
 		args->dim_start_end = generate_dims_start_end_thread(vol, i, dim_start_end[i][0], dim_start_end[i][0] + step);
 	      else
 		args->dim_start_end = generate_dims_start_end_thread(vol, i, dim_start_end[i][0], dim_start_end[i][1]);
-	      (*p->add)(get_all_slices_of_all_dimensions, (void *)args, p);
+	      (*t->tp->add)(get_all_slices_of_all_dimensions, (void *)args, t->tp);
 	      j += step;
 	      dim_start_end[i][0] += step;
 	    }
@@ -350,11 +360,11 @@ int		check_input(char **in)
   i = 1;
   while (in[i + 1] != NULL)
     {
-	  in[i] = strlower(in[i]);
+      if (in[i][0] != '/') in[i] = strlower(in[i]);
       if (strcmp(in[i], "-1") != 0 && strcmp(in[i], "tiles") != 0 &&
-	  strcmp(in[i], "images") != 0 && strcmp(in[i], "full") != 0
-	  && strcmp(in[i], "jpeg") != 0 && strcmp(in[i], "png") != 0 &&
-	  check_colormap_name(in[i]))
+	  strcmp(in[i], "images") != 0 && strcmp(in[i], "full") != 0  && in[i][0] != '/'
+	  && strcmp(in[i], "jpeg") != 0 && strcmp(in[i], "png") != 0 && check_colormap_name(in[i])
+	  && strcmp(in[i], "null") != 0)
 	{
 	  j = 0;
 	  while (in[i][j] != '\0')
@@ -386,7 +396,7 @@ int		check_range(int **d, t_vol *v)
     {
       if (d[i][0] != -1 || d[i][1] != -1)
 	{
-	  if (d[i][0] > v->size[i] || d[i][1] > v->size[i] || d[i][0] < 0 || d[i][1] < 0)
+      if (d[i][0] > v->size[i] || d[i][1] > v->size[i] || d[i][0] < 0 || d[i][1] < 0)
 	    return (1);
 	}
       i++;
@@ -406,6 +416,8 @@ t_image_extract	*create_image_struct()
   image_args->root_path = NULL;
   image_args->service = NULL;
   image_args->image_type = NULL;
+  image_args->request_id = NULL;
+  image_args->request_time = NULL;
   pthread_mutex_init(&image_args->mut, NULL);
   pthread_cond_init(&image_args->cond, NULL);
   return (image_args);
@@ -425,6 +437,8 @@ void		*init(void *args)
   image_args->root_path = NULL;
   image_args->service = NULL;
   image_args->image_type = NULL;
+  image_args->request_id = NULL;
+  image_args->request_time = NULL;
   pthread_mutex_init(&image_args->mut, NULL);
   pthread_cond_init(&image_args->cond, NULL);
   InitializeMagick("./");
@@ -437,39 +451,26 @@ void		*init(void *args)
   return (NULL);
 }
 
-void		*start(void *args)
+void			*start(void *args)
 {
   t_image_extract	*image_args;
   t_image_extract	*image_args_tmp;
-  t_args_plug	*a;
-  t_vol		*volume;
-  int		step;
-  char		*colormap;
-  char		volume_load[200];
-  FILE		*socketDescriptor;
-  int		i = 0;
+  t_args_plug		*a;
+  int			step;
+  char			*colormap;
+  int			i = 0;
+  FILE			*socketDescriptor;
+  t_vol			*volume;
 
   a = (t_args_plug *)args;
-  if ((volume = a->general_info->get_volume(a->commands[0], a->general_info)) == NULL)
-    {
-      a->this->busy = 1;
-      sprintf(volume_load, "file load %s", a->commands[0]);
-      a->general_info->plug_actions(a->general_info, volume_load, NULL);
-      int waitLoops = 0;
-      while (volume == NULL && waitLoops < 5) {
-    	  usleep(100000);
-    	  volume = a->general_info->get_volume(a->commands[0], a->general_info);
-    	  waitLoops++;
-      }
-      a->this->busy = 0;
-      if (volume == NULL) {
-    	  printf("Failed to load volume: %s\n", a->commands[0] == NULL ? "no file given" : a->commands[0]);
-   		  return NULL;
-      }
-    }
 
-  // please don't move this line up above the loading of the volume
   socketDescriptor = (FILE*)a->box;
+  volume = load_volume(a, a->commands[0]);
+  if (volume == NULL) {
+    write_http_header(socketDescriptor, "500 Server Error", "png");
+    fclose(socketDescriptor);
+    return NULL;
+  }
 
   image_args_tmp = (t_image_extract*)a->this->stock;
   image_args = create_image_struct();
@@ -488,9 +489,9 @@ void		*start(void *args)
       return (NULL);
     }
   image_args->dim_start_end = generate_dims_start_end(volume,
-  						    atoi(a->commands[1]), atoi(a->commands[2]),
-						    atoi(a->commands[3]), atoi(a->commands[4]),
-						    atoi(a->commands[5]), atoi(a->commands[6]));
+						      atoi(a->commands[1]), atoi(a->commands[2]),
+						      atoi(a->commands[3]), atoi(a->commands[4]),
+						      atoi(a->commands[5]), atoi(a->commands[6]));
   if (check_range(image_args->dim_start_end, volume))
     {
       fprintf(stderr, "Slice out of volume range\n");
@@ -517,8 +518,8 @@ void		*start(void *args)
       image_args->w_position = atoi(a->commands[13]);
       image_args->start_h = atoi(a->commands[12]);
       image_args->start_w = atoi(a->commands[13]);
-      if (a->commands[16] != NULL)
-	image_args->root_path = strdup(a->commands[16]);
+      if (a->commands[18] != NULL)
+	image_args->root_path = strdup(a->commands[18]);
     }
   else if (strcmp(image_args->service, "images") == 0)
     {
@@ -528,8 +529,8 @@ void		*start(void *args)
       image_args->start_w = atoi(a->commands[12]);
       image_args->h_position_end = atoi(a->commands[13]);
       image_args->w_position_end = atoi(a->commands[14]);
-      if (a->commands[17] != NULL)
-	image_args->root_path = strdup(a->commands[17]);
+      if (a->commands[19] != NULL)
+	image_args->root_path = strdup(a->commands[19]);
     }
   else
     {
@@ -541,11 +542,12 @@ void		*start(void *args)
 	}
       else
 	{
-	  if (a->commands[13] != NULL)
-	    image_args->root_path = strdup(a->commands[13]);
+	  if (a->commands[15] != NULL)
+	    image_args->root_path = strdup(a->commands[15]);
 	}
     }
   image_args->total_slices_to_do = get_total_slices_to_do(volume, image_args->dim_start_end);
+
   i = 0;
   colormap = (strcmp(image_args->service, "tiles") == 0 ? strdup(a->commands[14]) : (strcmp(image_args->service, "full") == 0 ? strdup(a->commands[11]) : strdup(a->commands[15])));
   while (colormapa_name[i] != NULL)
@@ -556,11 +558,16 @@ void		*start(void *args)
     }
   if (colormapa_name[i] != NULL)
     image_args->colormap_id = i;
+
+
   step = (strcmp(image_args->service, "tiles") == 0 ? atoi(a->commands[15]) : (strcmp(image_args->service, "full") == 0 ? atoi(a->commands[12]) : atoi(a->commands[16])));
-  image_creation_lunch(volume, step, a->general_info->tp, image_args, a->this, socketDescriptor);
+
+  image_args->request_id = (strcmp(image_args->service, "tiles") == 0 ? strdup(a->commands[16]) : (strcmp(image_args->service, "full") == 0 ? strdup(a->commands[13]) : strdup(a->commands[17])));
+  image_args->request_time = (strcmp(image_args->service, "tiles") == 0 ? strdup(a->commands[17]) : (strcmp(image_args->service, "full") == 0 ? strdup(a->commands[14]) : strdup(a->commands[18])));
+
+  image_creation_lunch(a->general_info,volume, step, image_args, socketDescriptor);
 
   a->destroy(a);
-
   return (NULL);
 }
 
@@ -601,6 +608,8 @@ void			free_image_extract(t_image_extract * extract) {
 	if (extract->image_type != NULL) free(extract->image_type);
 	if (extract->root_path != NULL)  free(extract->root_path);
 	if (extract->service != NULL)    free(extract->service);
+	if (extract->request_id != NULL)    free(extract->request_id);
+	if (extract->request_time != NULL)    free(extract->request_time);
 
 	free(extract);
 	extract = NULL;
@@ -644,6 +653,9 @@ void			free_image_args(t_image_args * args) {
 
 		free(args->volume);
 	}
+
+	// set shared pointer to requests to null
+	args->requests = NULL;
 
 	free(args);
 }

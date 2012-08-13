@@ -208,11 +208,9 @@ TissueStack.Canvas.prototype = {
 
 		return {x: newX, y: newY};
 	},
-	redrawWithCenterAndCrossAtGivenPixelCoordinates: function(coords) {
+	redrawWithCenterAndCrossAtGivenPixelCoordinates: function(coords, timestamp) {
 		// this stops any still running draw requests 
-		var now = new Date().getTime(); 
-		this.queue.latestDrawRequestTimestamp = now;
-
+		var now = typeof(timestamp) == 'number' ? timestamp : new Date().getTime(); 
 		this.eraseCanvasContent();
 		
 		// make sure crosshair is centered:
@@ -226,8 +224,11 @@ TissueStack.Canvas.prototype = {
 			this.data_extent.slice = coords.z;
 		}
 
-		this.queue.drawLowResolutionPreview(now);
-		this.queue.drawRequestAfterLowResolutionPreview(null,now);
+		var _this = this;
+		setTimeout(function() {
+			_this.queue.drawLowResolutionPreview(now);
+			_this.queue.drawRequestAfterLowResolutionPreview(null,now);
+		}, 250);
 
 		// look for the cross overlay which will be the top layer
 		var canvas = this.getCoordinateCrossCanvas();
@@ -305,6 +306,13 @@ TissueStack.Canvas.prototype = {
     	// put altered data back into canvas
     	ctx.putImageData(myImageData, xStart, yStart);  	
 	}, drawMe : function(timestamp) {
+		// damn you async loads
+		if (this.queue.latestDrawRequestTimestamp < 0 ||
+				(timestamp && timestamp < this.queue.latestDrawRequestTimestamp)) {
+			//console.info('Beginning abort for ' + this.getDataExtent().data_id + '[' + this.getDataExtent().getOriginalPlane() + ']: ' + timestamp);
+			return;
+		}
+		
 		// preliminary check if we are within the slice range
 		var slice = this.getDataExtent().slice;
 		if (slice < 0 || slice > this.getDataExtent().max_slices) {
@@ -403,11 +411,6 @@ TissueStack.Canvas.prototype = {
 					break;
 				}
 
-				// brief check as to whether there exists a newer drawing request
-				if (timestamp && timestamp < this.queue.latestDrawRequestTimestamp) {
-					return;
-				}
-				
 				// create the image object that loads the tile we need
 				var imageTile = new Image();
 				imageTile.crossOrigin = '';
@@ -433,13 +436,20 @@ TissueStack.Canvas.prototype = {
 				// append session id & timestamp for image service
 				if (!this.getDataExtent().getIsTiled()) {
 					src += ("&id=" + this.sessionId);
-					src += ("&timestamp=" + (this.queue.latestDrawRequestTimestamp == 0 ? new Date().getTime() : this.queue.latestDrawRequestTimestamp));
+					src += ("&timestamp=" + timestamp);
 				}
-				imageTile.src = src; 
+
+				// damn you async loads
+				if (this.queue.latestDrawRequestTimestamp < 0 ||
+						(timestamp && timestamp < this.queue.latestDrawRequestTimestamp)) {
+					//console.info('Abort for ' + this.getDataExtent().data_id + '[' + this.getDataExtent().getOriginalPlane() + ']: R: ' + rowIndex + ' C: ' + colIndex  + ' t: ' + timestamp + ' qt: ' + this.queue.latestDrawRequestTimestamp);	
+					return;
+				}
 
 				counter++;
+				imageTile.src = src; 
 				
-				(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, tile_size) {
+				(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, tile_size, row, col) {
 					imageTile.onload = function() {
 						// check with actual image dimensions ...
 						if (canvasX == 0 && width != tile_size && deltaStartTileXAndUpperLeftCornerX !=0) {
@@ -456,23 +466,23 @@ TissueStack.Canvas.prototype = {
 								height = this.height;
 						}
 
+						counter--;
+
 						// damn you async loads
-						if (timestamp && timestamp < _this.queue.latestDrawRequestTimestamp) {
+						if (_this.queue.latestDrawRequestTimestamp < 0 ||
+								(timestamp && timestamp < _this.queue.latestDrawRequestTimestamp)) {
+							//console.info('Abort for ' + _this.getDataExtent().data_id + '[' + _this.getDataExtent().getOriginalPlane() + ']: R: ' + row + ' C: ' + col + ' t: ' + timestamp + ' qt: ' + _this.queue.latestDrawRequestTimestamp);
 							return;
 						}
 						
-						ctx.globalAlpha=1;
+						//console.info('Drawing [' + _this.getDataExtent().data_id + ']: ' + timestamp + ' (' + _this.getDataExtent().getOriginalPlane()  + ') R => ' + row + ' C => ' + col + ' Left: ' + counter);
 						ctx.drawImage(this,
 								imageOffsetX, imageOffsetY, width, height, // tile dimensions
 								canvasX, canvasY, width, height); // canvas dimensions
 						
-						counter--;
-						
-						if (counter == 0) {
-							_this.applyColorMapToCanvasContent();
-						}
+						if (counter == 0 && _this.getDataExtent().getIsTiled()) _this.applyColorMapToCanvasContent();
 					};
-				})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, this.getDataExtent().tile_size);
+				})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, this.getDataExtent().tile_size, rowIndex, colIndex);
 				
 				// increment canvasY
 				canvasY += height;

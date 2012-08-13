@@ -53,11 +53,9 @@ int check_and_set_position(int kind, int width, int height, t_image_args *a)
     i = 2;
     while (i == 2) {
     	if (a->info->w_position > width) {
-    		printf("I'm in\n");
     		a->info->w_position = a->info->start_w;
     	}
     	if (a->info->h_position > height) {
-    		printf("I'm in\n");
     		a->info->h_position = a->info->start_h;
     	}
         if (kind == 2)
@@ -144,6 +142,13 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
   int		i = 0;
   int		j = 0;
 
+
+  if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+    write_http_header(a->file, "408 Request Timeout", a->info->image_type);
+    fclose_check(a->file);
+    return;
+  }
+
   streamToSocket = a->file && fcntl(fileno(a->file), F_GETFL) != -1;
 
   kind = set_service_type(a);
@@ -184,6 +189,14 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
 	return;
       }
 
+      if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+	DestroyImage(img);
+	DestroyImageInfo(image_info);
+	write_http_header(a->file, "408 Request Timeout", a->info->image_type);
+	fclose_check(a->file);
+	return;
+      }
+
       new_image_info->colorspace = RGBColorspace;
       new_image = AllocateImage(new_image_info);
       new_image->rows = height;
@@ -199,6 +212,15 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
 	  return;
 	}
 
+      if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+	DestroyImage(img);
+	DestroyImageInfo(image_info);
+	DestroyImageInfo(new_image_info);
+	write_http_header(a->file, "408 Request Timeout", a->info->image_type);
+	fclose_check(a->file);
+	return;
+      }
+
       if ((px_tmp = SetImagePixelsEx(new_image, 0, 0, width, height, &exception)) == NULL)
 	{
 	  DestroyImage(img);
@@ -208,6 +230,15 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
 	  CatchException(&exception);
 	  return;
 	}
+
+      if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+	DestroyImage(img);
+	DestroyImageInfo(new_image_info);
+	DestroyImageInfo(image_info);
+	write_http_header(a->file, "408 Request Timeout", a->info->image_type);
+	fclose_check(a->file);
+	return;
+      }
 
       while (i < height)
 	{
@@ -225,6 +256,15 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
 	  i++;
 	}
 
+      if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+	DestroyImage(img);
+	DestroyImageInfo(image_info);
+	DestroyImageInfo(new_image_info);
+	write_http_header(a->file, "408 Request Timeout", a->info->image_type);
+	fclose_check(a->file);
+	return;
+      }
+
       SyncImagePixels(new_image);
 
       DestroyImage(img);
@@ -233,6 +273,14 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
       DestroyImageInfo(image_info_cpy);
       img = new_image;
     }
+
+  if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+    DestroyImage(img);
+    DestroyImageInfo(image_info);
+    write_http_header(a->file, "408 Request Timeout", a->info->image_type);
+    fclose_check(a->file);
+    return;
+  }
 
   tmp = img;
   if ((img = FlipImage(img, &exception)) == NULL) {
@@ -243,6 +291,14 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
     return;
   }
   DestroyImage(tmp);
+
+  if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+    DestroyImage(img);
+    DestroyImageInfo(image_info);
+    write_http_header(a->file, "408 Request Timeout", a->info->image_type);
+    fclose_check(a->file);
+    return;
+  }
 
   if (a->info->quality != 1) {
     tmp = img;
@@ -266,6 +322,14 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
     DestroyImage(tmp);
   }
 
+  if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+    DestroyImage(img);
+    DestroyImageInfo(image_info);
+    write_http_header(a->file, "408 Request Timeout", a->info->image_type);
+    fclose_check(a->file);
+    return;
+  }
+
   if (a->info->scale != 1) {
     tmp = img;
     if ((img = ScaleImage(img, (width * a->info->scale),
@@ -277,6 +341,14 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
       return;
     }
     DestroyImage(tmp);
+  }
+
+  if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+    DestroyImage(img);
+    DestroyImageInfo(image_info);
+    write_http_header(a->file, "408 Request Timeout", a->info->image_type);
+    fclose_check(a->file);
+    return;
   }
 
   if (kind == 1 || kind == 3) {
@@ -291,48 +363,58 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
     DestroyImage(tmp);
   }
 
+  if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+    DestroyImage(img);
+    DestroyImageInfo(image_info);
+    write_http_header(a->file, "408 Request Timeout", a->info->image_type);
+    fclose_check(a->file);
+    return;
+  }
+
   // write image
   if (streamToSocket) { // SOCKET STREAM
     strcpy(img->magick, a->info->image_type);
     image_info->file = a->file;
 
+    write_http_header(a->file, "200 OK", a->info->image_type);
     WriteImage(image_info, img);
 
     // clean up
     DestroyImage(img);
     DestroyImageInfo(image_info);
-
     fclose_check(a->file);
-  } else { // WRITE FILE
-    a->info->image_type = strlower(a->info->image_type);
-
-    if (!a->info->root_path) {
-      printf("Error: root path is NULL\n");
-      return;
-    }
-
-    char dir[200]; // first path
-    sprintf(dir, "%s/%c/%i", a->info->root_path, volume->dim_name[current_dimension][0], current_slice);
-    t_string_buffer * finalPath = createDirectory(dir, 0777);
-    if (finalPath == NULL) {
-      return;
-    }
-
-    // complete filename
-    if (strcmp(a->info->service, "full") == 0 && a->info->quality != 1) {
-      sprintf(dir, "/%i.low.res.%s", current_slice, a->info->image_type);
-    } else {
-      sprintf(dir, "/%i_%i.%s", a->info->start_w, a->info->start_h, a->info->image_type);
-    }
-    finalPath = appendToBuffer(finalPath, dir);
-    strcpy(img->filename, finalPath->buffer);
-
-    WriteImage(image_info, img);
-
-    DestroyImage(img);
-    DestroyImageInfo(image_info);
-
-    free(finalPath->buffer);
-    free(finalPath);
   }
+  else
+    { // WRITE FILE
+      a->info->image_type = strlower(a->info->image_type);
+
+      if (!a->info->root_path) {
+	printf("Error: root path is NULL\n");
+	return;
+      }
+
+      char dir[200]; // first path
+      sprintf(dir, "%s/%c/%i", a->info->root_path, volume->dim_name[current_dimension][0], current_slice);
+      t_string_buffer * finalPath = createDirectory(dir, 0777);
+      if (finalPath == NULL) {
+	return;
+      }
+
+      // complete filename
+      if (strcmp(a->info->service, "full") == 0 && a->info->quality != 1) {
+	sprintf(dir, "/%i.low.res.%s", current_slice, a->info->image_type);
+      } else {
+	sprintf(dir, "/%i_%i.%s", a->info->start_w, a->info->start_h, a->info->image_type);
+      }
+      finalPath = appendToBuffer(finalPath, dir);
+      strcpy(img->filename, finalPath->buffer);
+
+      WriteImage(image_info, img);
+
+      DestroyImage(img);
+      DestroyImageInfo(image_info);
+
+      free(finalPath->buffer);
+      free(finalPath);
+    }
 }

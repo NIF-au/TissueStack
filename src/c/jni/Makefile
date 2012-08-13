@@ -17,8 +17,8 @@ all: compile install
 
 compile:	
 	@echo "\n================== Building Shared Library For Tissue Stack JNI Access Layer ===================="
-	gcc $(SRCS) -c $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -fPIC
-	gcc *.o -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -shared
+	gcc $(SRCS) -c $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -fPIC `pkg-config --cflags gtk+-2.0`
+	gcc *.o -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -shared `pkg-config --libs gtk+-2.0`
 
 install:
 	echo "\n=========== Copy shared library to: /usr/local/lib ==============="
