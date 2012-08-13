@@ -51,7 +51,7 @@ TissueStack.Queue.prototype = {
 			
 			if (_this.prepareDrawRequest(latestRequest)) {
 				_this.drawLowResolutionPreview(_this.latestDrawRequestTimestamp);
-				_this.drawRequestAfterLowResolutionPreview(latestRequest);
+				setTimeout(function() {_this.drawRequestAfterLowResolutionPreview(latestRequest);}, 200);
 			}
 		}, this.drawingIntervalInMillis);
 	},
@@ -85,7 +85,8 @@ TissueStack.Queue.prototype = {
 				}
 
 				this.drawLowResolutionPreview(deepCopyOfRequest.timestamp);
-				this.drawRequestAfterLowResolutionPreview(deepCopyOfRequest, deepCopyOfRequest.timestamp);
+				var _this = this;
+				setTimeout(function() {_this.drawRequestAfterLowResolutionPreview(deepCopyOfRequest, deepCopyOfRequest.timestamp);}, 200);
 			}
 
 			return;
@@ -100,6 +101,12 @@ TissueStack.Queue.prototype = {
 	drawRequestAfterLowResolutionPreview : function(draw_request, timestamp) {
 		var _this = this;
 		var lowResBackdrop = setInterval(function() {
+			var t = draw_request ? draw_request.timestamp : timestamp;
+			if (_this.latestDrawRequestTimestamp > 0 && t > _this.latestDrawRequestTimestamp) {
+				clearInterval(lowResBackdrop);
+				return;
+			}
+
 			if (_this.lowResolutionPreviewDrawn) {
 				if (draw_request) {
 					_this.drawRequest(draw_request);
