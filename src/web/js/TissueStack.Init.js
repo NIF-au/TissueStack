@@ -634,14 +634,16 @@ $(document).ready(function() {
 				TissueStack.dataSetNavigation.addDataSet(TissueStack.dataSetStore.getDataSetById('localhost_' + TissueStack.configuration['initOpts']['ds']).id, 0);
 		} else {
 			var ds = TissueStack.dataSetStore.getDataSetByIndex(0);
-			if (TissueStack.desktop) TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(ds.id);
+			if (TissueStack.desktop) TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(ds.id); 
 			else TissueStack.dataSetNavigation.addDataSet(ds.id, 0);
 		}
 		TissueStack.dataSetNavigation.showDataSet(1);
 		
 		// initialize ui and events
-		TissueStack.InitUserInterface();
-		TissueStack.BindDataSetDependentEvents();
+		if (!TissueStack.desktop) { // avoid double binding
+			TissueStack.InitUserInterface();
+			TissueStack.BindDataSetDependentEvents();
+		}
 		TissueStack.BindGlobalEvents();
 
 		// add admin functionality to all versions
