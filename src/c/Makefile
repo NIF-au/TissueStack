@@ -77,6 +77,8 @@ clean:
 	make -C ./plugins/minc_convert/ clean
 	make -C ./jni/ clean
 
+recompile: clean compile
+
 re: clean all
 
-.PHONY: all compile install clean re
+.PHONY: all compile install clean re recompile
