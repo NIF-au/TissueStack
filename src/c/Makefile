@@ -48,12 +48,22 @@ compile: $(OBJS)
 	@echo "\n================== Compile $(NAME) ===================="
 	gcc $(OBJS) -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) `pkg-config --cflags --libs gtk+-2.0`
 	rm -rf volume.o
-	rm -rf utils/utils.o	
+	rm -rf utils/utils.o
 	make -C ./plugins/communicator/ compile
+	rm -rf volume.o
+	rm -rf utils/utils.o	
 	make -C ./plugins/image_extract/ compile
+	rm -rf volume.o
+	rm -rf utils/utils.o	
 	make -C ./plugins/comm_inter_process/ compile
+	rm -rf volume.o
+	rm -rf utils/utils.o	
 	make -C ./plugins/minc_info/ compile
+	rm -rf volume.o
+	rm -rf utils/utils.o	
 	make -C ./plugins/minc_convert/ compile
+	rm -rf volume.o
+	rm -rf utils/utils.o	
 	make -C ./jni/ compile
 
 install:
