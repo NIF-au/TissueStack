@@ -278,3 +278,67 @@ a.ui-slider-handle-horizontal{
 	padding:0px;
 	bottom:0px;
 }
+
+/* SCALE DISTANCE CONTROL */
+.scalecontrol_main{
+	height: 26px; 
+	z-index: 2400; 
+	position: absolute;
+	left: 10px;
+	top: 10px; 
+	color: white; 
+	font-family: Arial, sans-serif; 
+	font-size: 11px;
+}
+.scalecontrol_left{
+	overflow: hidden; 
+	position: absolute; 
+	left: 0px; 
+	top: 0px; 
+	width: 4px; 
+	height: 26px;
+}
+.scalecontrol_middle{
+	overflow: hidden; 
+	position: absolute; 
+	left: 3px; 
+	top: 11px; 
+	width: 89px; 
+	height: 4px;
+}
+.scalecontrol_center{
+	overflow: hidden; 
+	position: absolute; 
+	left: 92px; 
+	top: 11px; 
+	width: 1px; 
+	height: 4px;
+}
+.scalecontrol_up{
+	overflow: hidden; 
+	position: absolute; 
+	left: 55px; 
+	top: 0px; 
+	width: 4px; 
+	height: 12px;
+}
+.scalecontrol_down{
+	overflow: hidden; 
+	position: absolute; 
+	left: 89px; 
+	top: 14px; 
+	width: 4px; 
+	height: 12px;
+}
+.dataset_1_scalecontrol_image, .dataset_2_scalecontrol_image{
+	margin: 0px; 
+	padding: 0px; 
+	position: absolute; 
+	height: 492px;
+	background: url(/images/distance_scale.png);
+}
+.scalecontrol_text_down{
+	position: absolute; 
+	left: 8px; 
+	top: 15px;
+}

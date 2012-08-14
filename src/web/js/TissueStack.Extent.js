@@ -27,6 +27,7 @@ TissueStack.Extent.prototype = {
 	max_slices : 0,
 	slice: 0,
 	worldCoordinatesTransformationMatrix: null,
+	micron: 100, //set up dataset micron (default 100)
 	setDataId : function(data_id) {
 		if (typeof(data_id) != "string" || data_id.length == 0) {
 			throw new Error("data_id has to be a non-empty string");
@@ -89,7 +90,7 @@ TissueStack.Extent.prototype = {
 		this.one_to_one_y = y;
 	}, changeToZoomLevel : function(zoom_level) {
 		var zoom_level_factor = this.getZoomLevelFactorForZoomLevel(zoom_level);
-
+		
 		if (zoom_level_factor == -1) {
 			return;
 		}
@@ -103,6 +104,9 @@ TissueStack.Extent.prototype = {
 			return;
 		}
 		this.setDimensions(zoom_level_dim.x, zoom_level_dim.y);
+		
+		//update distance scale info (insert px manually)
+		this.adjustDistanceScale(this.micron, zoom_level_factor);
 	}, getZoomLevelFactorForZoomLevel : function(zoom_level) {
 		if (typeof(zoom_level) != "number" || Math.floor(zoom_level) < 0 || Math.floor(zoom_level) >= this.zoom_levels.length) {
 			return -1;
@@ -141,7 +145,7 @@ TissueStack.Extent.prototype = {
 		} else {
 			this.slice = Math.ceil(slice / this.zoom_level_factor);
 		}
-
+		
 		var canvasSlider = $("#" + (this.canvas.dataset_id == "" ? "canvas_" : this.canvas.dataset_id + "_canvas_") + "main_slider");
 		if (canvasSlider.length == 0) {
 			return;
@@ -211,7 +215,6 @@ TissueStack.Extent.prototype = {
 		var pixelCoords = TissueStack.Utils.transformWorldCoordinatesToPixelCoordinates(
 				[worldCoords.x, worldCoords.y, worldCoords.z, 1],
 				this.worldCoordinatesTransformationMatrix);
-		
 		if (pixelCoords == null) {
 			return null;
 		}
@@ -281,5 +284,17 @@ TissueStack.Extent.prototype = {
 		}
 	
 		return coords;
+	}, adjustDistanceScale : function (micron, zoom_level_factor) {
+		var zoom_level = zoom_level_factor;
+		if((micron / zoom_level) / 100 >=1){
+			TissueStack.Extent.prototype.adjustDistanceScaleContent(this.canvas.dataset_id, micron, zoom_level, 3);
+			return;
+		}
+		TissueStack.Extent.prototype.adjustDistanceScaleContent(this.canvas.dataset_id, micron, zoom_level, 1);
+	}, adjustDistanceScaleContent :function (dataset, micron, zoom_level,adjustValue) { 
+		$('#'+dataset+'_scale_middle, .'+dataset+'_scalecontrol_image').css({"width" : (micron / zoom_level) / adjustValue});
+		$('#'+dataset+'_scale_center').css({"left" : ((micron / zoom_level) / adjustValue) + 3});
+		$('#'+dataset+'_scale_up').css({"left" : (micron / zoom_level) / adjustValue});
+		$('#'+dataset+'_scale_text_down').text((((micron / zoom_level) / 100) / adjustValue).toFixed(2) +"mm");
 	}
 };

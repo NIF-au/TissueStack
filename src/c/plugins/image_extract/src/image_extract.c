@@ -1,7 +1,7 @@
 #include "image_extract.h"
 
 
-float		colormapa[3][25][4] = {{{0, 0, 0, 0},
+float		colormapa[4][25][4] = {{{0, 0, 0, 0},
 					{0.05, 0.46667, 0, 0.05333},
 					{0.1, 0.5333, 0, 0.6},
 					{0.15, 0, 0, 0.6667},
@@ -28,9 +28,15 @@ float		colormapa[3][25][4] = {{{0, 0, 0, 0},
 					{0.5, 1, 0.5, 0},
 					{0.75, 1, 1, 0.5},
 					{1, 1, 1, 1},
+					{99, 0, 0, 0}},
+				       {{0, 0, 0, 0},
+					{1, 1, 1, 1},
+					{99, 0, 0, 0}},
+				       {{0, 0, 0, 0},
+					{1, 1, 1, 1},
 					{99, 0, 0, 0}}};
 
-char		*colormapa_name[3] = {"spectral", "hot", NULL};
+char		*colormapa_name[5] = {"spectral", "hot", "gray", "grey", NULL};
 
 int		get_size_colormap(float **colormap)
 {
@@ -352,19 +358,15 @@ int		check_colormap_name(char *str)
   return (1);
 }
 
-int		check_input(char **in)
+int		check_num_input(char **in, int start, int end)
 {
   int		i;
   int		j;
 
-  i = 1;
-  while (in[i + 1] != NULL)
+  i = start;
+  while (i < end)
     {
-      if (in[i][0] != '/') in[i] = strlower(in[i]);
-      if (strcmp(in[i], "-1") != 0 && strcmp(in[i], "tiles") != 0 &&
-	  strcmp(in[i], "images") != 0 && strcmp(in[i], "full") != 0  && in[i][0] != '/'
-	  && strcmp(in[i], "jpeg") != 0 && strcmp(in[i], "png") != 0 && check_colormap_name(in[i])
-	  && strcmp(in[i], "null") != 0)
+      if (strcmp(in[i], "-1") != 0)
 	{
 	  j = 0;
 	  while (in[i][j] != '\0')
@@ -373,7 +375,7 @@ int		check_input(char **in)
 		{
 		  if (in[i][j] < '0' || in[i][j] > '9')
 		    {
-		      fprintf(stderr, "Error invalid argument : %s\n", in[i]);
+		      fprintf(stderr, "Error invalid numerical input : %s\n", in[i]);
 		      return (1);
 		    }
 		}
@@ -483,7 +485,7 @@ void			*start(void *args)
       a->this->busy = 0;
       return (NULL);
     }
-  if (check_input(a->commands))
+  if (check_num_input(a->commands, 1, 9))
     {
       a->this->busy = 0;
       return (NULL);
@@ -513,6 +515,11 @@ void			*start(void *args)
 
   if (strcmp(image_args->service, "tiles") == 0)
     {
+      if (check_num_input(a->commands, 11, 14))
+	{
+	  a->this->busy = 0;
+	  return (NULL);
+	}
       image_args->square_size = atoi(a->commands[11]);
       image_args->h_position = atoi(a->commands[12]);
       image_args->w_position = atoi(a->commands[13]);
@@ -523,6 +530,11 @@ void			*start(void *args)
     }
   else if (strcmp(image_args->service, "images") == 0)
     {
+      if (check_num_input(a->commands, 11, 15))
+	{
+	  a->this->busy = 0;
+	  return (NULL);
+	}
       image_args->h_position = atoi(a->commands[11]);
       image_args->w_position = atoi(a->commands[12]);
       image_args->start_h = atoi(a->commands[11]);
@@ -550,15 +562,18 @@ void			*start(void *args)
 
   i = 0;
   colormap = (strcmp(image_args->service, "tiles") == 0 ? strdup(a->commands[14]) : (strcmp(image_args->service, "full") == 0 ? strdup(a->commands[11]) : strdup(a->commands[15])));
+  if (check_colormap_name(colormap))
+    fprintf(stderr, "Warning : colormap '%s' does not exist\n", colormap);
   while (colormapa_name[i] != NULL)
     {
       if (strcmp(colormap, colormapa_name[i]) == 0)
 	break;
       i++;
     }
-  if (colormapa_name[i] != NULL)
+  if (colormapa_name[i] != NULL && strcmp(colormapa_name[i], "gray") != 0 && strcmp(colormapa_name[i], "grey") != 0)
     image_args->colormap_id = i;
-
+  else
+    image_args->colormap_id = -1;
 
   step = (strcmp(image_args->service, "tiles") == 0 ? atoi(a->commands[15]) : (strcmp(image_args->service, "full") == 0 ? atoi(a->commands[12]) : atoi(a->commands[16])));
 
