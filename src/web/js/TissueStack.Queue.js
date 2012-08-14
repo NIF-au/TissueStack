@@ -47,11 +47,13 @@ TissueStack.Queue.prototype = {
 			}
 
 			_this.latestDrawRequestTimestamp = latestRequest.timestamp;
-			//console.info('Action: ' + latestRequest.action + ' @ '  + latestRequest.timestamp + ' [' + latestRequest.data_id + ']');
+			console.info('Action: ' + latestRequest.action + ' @ '  + latestRequest.timestamp + ' [' + latestRequest.data_id + ']');
 			
 			if (_this.prepareDrawRequest(latestRequest)) {
-				_this.drawLowResolutionPreview(_this.latestDrawRequestTimestamp);
-				setTimeout(function() {_this.drawRequestAfterLowResolutionPreview(latestRequest);}, 200);
+				setTimeout(function() {
+					_this.drawLowResolutionPreview(_this.latestDrawRequestTimestamp);
+					_this.drawRequestAfterLowResolutionPreview(latestRequest);}
+				, 200);
 			}
 		}, this.drawingIntervalInMillis);
 	},
@@ -72,21 +74,26 @@ TissueStack.Queue.prototype = {
 		}
 		
 		// clicks and zooms are processed instantly
-		if (draw_request.action == "CLICK" || draw_request.action == "ZOOM") {
+		if (draw_request.action == "CLICK" || draw_request.action == "ZOOM" || draw_request.action == "POINT") {
 			var deepCopyOfRequest = $.extend(true, {}, draw_request);
 			this.latestDrawRequestTimestamp = deepCopyOfRequest.timestamp;
 			
-			//console.info('Action: ' + deepCopyOfRequest.action + ' @ '  + deepCopyOfRequest.timestamp + ' [' + draw_request.data_id + ']');
+			console.info('Action: ' + deepCopyOfRequest.action + ' @ '  + deepCopyOfRequest.timestamp + ' [' + draw_request.data_id + ']');
 			
 			// work with a deep copy
 			if (this.prepareDrawRequest(deepCopyOfRequest)) {
-				if (deepCopyOfRequest.action == 'ZOOM' || deepCopyOfRequest.action == 'SLICE') {
+				if (deepCopyOfRequest.action == 'ZOOM') {
 					this.canvas.eraseCanvasContent();
-				}
 
-				this.drawLowResolutionPreview(deepCopyOfRequest.timestamp);
-				var _this = this;
-				setTimeout(function() {_this.drawRequestAfterLowResolutionPreview(deepCopyOfRequest, deepCopyOfRequest.timestamp);}, 200);
+					var _this = this;
+					setTimeout(function() {
+						_this.drawLowResolutionPreview(deepCopyOfRequest.timestamp);
+						_this.drawRequestAfterLowResolutionPreview(deepCopyOfRequest, deepCopyOfRequest.timestamp);}
+					, 200);
+				} else {
+					this.drawLowResolutionPreview(deepCopyOfRequest.timestamp);
+					this.drawRequestAfterLowResolutionPreview(deepCopyOfRequest, deepCopyOfRequest.timestamp);
+				}
 			}
 
 			return;
@@ -106,7 +113,6 @@ TissueStack.Queue.prototype = {
 				clearInterval(lowResBackdrop);
 				return;
 			}
-
 			if (_this.lowResolutionPreviewDrawn) {
 				if (draw_request) {
 					_this.drawRequest(draw_request);
@@ -115,7 +121,7 @@ TissueStack.Queue.prototype = {
 				}
 				clearInterval(lowResBackdrop);
 			}
-		}, 400);		
+		}, 100);		
 	},
 	clearRequestQueue : function() {
 		this.requests = [];
@@ -196,6 +202,7 @@ TissueStack.Queue.prototype = {
 								this.canvas.getDataExtent().getZoomLevelFactorForZoomLevel(this.canvas.getDataExtent().zoom_level),
 					this.canvas.getDataExtent().getOriginalPlane(),
 					slice,
+					this.canvas.colormap,
 					this.canvas.image_format
 		);
 		// append session id & timestamp for image service

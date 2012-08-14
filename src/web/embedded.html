@@ -11,12 +11,21 @@
 
         <script type="text/javascript">
         $(document).ready(function() {
-       	  new TissueStack.Embedded(
+          // specify intiial zoom and coordinates	
+          var initOpts = {
+        		    zoom : 6,
+        		    x:    100,
+        		    y:    -43,
+        		    z:    80
+          };
+       	  
+          new TissueStack.Embedded(
        		  "test", // id of parent div that will hold the TissueStack Canvas elements 
        		  "caivm1.qern.qcif.edu.au", // server name of the TissueStack instance that houses the data as well as the js and css
        		  21, // id of data set that is requested
        		  true, // display cross hair canvas on top (defaults to: true)
-       		  true); // use direct querying as opposed to pre tiles (defaults to: false)
+       		  true, // use direct querying as opposed to pre tiles (defaults to: false)
+       	      initOpts); 
         });
         </script>
   </head>

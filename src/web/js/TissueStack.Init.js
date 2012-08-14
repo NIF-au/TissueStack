@@ -371,23 +371,26 @@ TissueStack.BindDataSetDependentEvents = function () {
 				}
 
 				if ((event.data[0].actualDataSet.planes[planeId] && (givenCoords.x < 0
-						|| givenCoords.x > event.data[0].actualDataSet.planes[planeId].data_extent.max_slices + 1)) 
+						|| givenCoords.x > event.data[0].actualDataSet.planes[planeId].data_extent.x)) 
 						|| (event.data[0].actualDataSet.planes[planeId] && (givenCoords.y < 0
-								|| givenCoords.y > event.data[0].actualDataSet.planes[planeId].data_extent.max_slices + 1))
+								|| givenCoords.y > event.data[0].actualDataSet.planes[planeId].y))
 								|| (event.data[0].actualDataSet.planes['z'] && (givenCoords.z < 0
-										|| givenCoords.z > event.data[0].actualDataSet.planes[planeId].data_extent.max_slices + 1))	) {
+										|| givenCoords.z > event.data[0].actualDataSet.planes[planeId].data_extent.max_slices))	) {
 					alert("Illegal coords");
 					return;
 				}
 				
 				
-				plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords);
+				plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, new Date().getTime());
 
 				if (event.data[0].actualDataSet.data.length > 1) {
 					var slider = $("#" + (plane.dataset_id == "" ? "" : plane.dataset_id + "_") + "canvas_main_slider");
 					if (slider) {
 						slider.val(givenCoords.z);
 						slider.blur();
+						setTimeout(function() {
+							plane.events.changeSliceForPlane(givenCoords.z);
+							}, 150);
 					}
 				}
 			});

@@ -293,7 +293,7 @@ TissueStack.Utils = {
 	},
 	assembleTissueStackImageRequest : function(
 			protocol, host, isTiled, filename, dataset_id, is_preview,
-			zoom, plane, slice, image_extension, tile_size, row, col) {
+			zoom, plane, slice, colormap, image_extension, tile_size, row, col) {
 		if (typeof(protocol) != "string") {
 			protocol = "http";
 		} 
@@ -327,6 +327,9 @@ TissueStack.Utils = {
 		if (typeof(slice) != "number" || slice < 0) {
 			return null;
 		}
+		if (typeof(colormap) != "string") {
+			colormap = "grey";
+		}
 		if (typeof(image_extension) != "string") {
 			image_extension = "png";
 		}
@@ -354,7 +357,8 @@ TissueStack.Utils = {
 			return url + row + '_' + col + "." + image_extension;
 		} else {
 			// seems to work for server so why not use it
-		    url = url + "/" + path + "/?volume=" + filename + "&image_type=JPEG&scale=" + zoom + "&dimension=" + plane + "space" + "&slice=" + slice;
+		    url = url + "/" + path + "/?volume=" + filename + "&image_type=JPEG&scale=" + zoom + "&dimension="
+		    	+ plane + "space" + "&slice=" + slice + "&colormap=" + colormap;
 			
 			if (is_preview) {
 				return url + "&quality=8";

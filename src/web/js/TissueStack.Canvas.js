@@ -224,12 +224,6 @@ TissueStack.Canvas.prototype = {
 			this.data_extent.slice = coords.z;
 		}
 
-		var _this = this;
-		setTimeout(function() {
-			_this.queue.drawLowResolutionPreview(now);
-			_this.queue.drawRequestAfterLowResolutionPreview(null,now);
-		}, 250);
-
 		// look for the cross overlay which will be the top layer
 		var canvas = this.getCoordinateCrossCanvas();
 		if (!canvas || !canvas[0]) {
@@ -428,6 +422,7 @@ TissueStack.Canvas.prototype = {
 										this.getDataExtent().getZoomLevelFactorForZoomLevel(this.getDataExtent().zoom_level),
 							this.getDataExtent().getOriginalPlane(),
 							slice,
+							this.colormap,
 							this.image_format,
 							this.getDataExtent().tile_size,
 							rowIndex,
