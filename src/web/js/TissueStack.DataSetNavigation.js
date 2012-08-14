@@ -201,7 +201,7 @@ TissueStack.DataSetNavigation.prototype = {
 						title: dataSet.local_id + '@' +dataSet.host,
 						key: dataSet.id,
 						tooltip: (dataSet.description ? dataSet.description : ""),
-						select: counter == 0 ? true : false,
+						select: false,
 						isFolder: true,
 						expand: true
 					};
@@ -212,7 +212,7 @@ TissueStack.DataSetNavigation.prototype = {
 						isBaseLayer : true,
 						key: dataSet.id + "_base_layer",
 						tooltip: (dataSet.description ? dataSet.description : ""),
-						select: counter == 0 ? true : false,
+						select: false,
 						expand: false
 				};
 				counter++;

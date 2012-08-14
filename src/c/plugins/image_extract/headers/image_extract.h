@@ -35,6 +35,9 @@ typedef	struct	s_image_extract
   char 		*image_type;
   int		done;
   char		*root_path;
+  float		***premapped_colormap;
+  int		colormap_id;
+  char		**colormap_name;
   char 		*request_id;
   char 		*request_time;
   pthread_cond_t	cond;
@@ -78,5 +81,35 @@ void            print_image(char *hyperslab, t_vol *volume, int current_dimensio
 
 void			free_image_extract(t_image_extract * extract);
 void			free_image_args(t_image_args * args);
+
+/*float		colormap[3][25][4] = {{{0, 0, 0, 0},
+				    {0.05, 0.46667, 0, 0.05333},
+				    {0.1, 0.5333, 0, 0.6},
+				    {0.15, 0, 0, 0.6667},
+				    {0.2, 0, 0, 0.8667},
+				    {0.25, 0, 0.4667, 0.8667},
+				    {0.3, 0, 0.6, 0.8667},
+				    {0.35, 0, 0.6667, 0.6667},
+				    {0.4, 0, 0.6667, 0.5333},
+				    {0.45, 0, 0.6, 0},
+				    {0.5, 0, 0.7333, 0},
+				    {0.55, 0, 0.8667, 0},
+				    {0.6, 0, 1, 0},
+				    {0.65, 0.7333, 1, 0},
+				    {0.7, 0.9333, 0.9333, 0},
+				    {0.75, 1, 0.8, 0},
+				    {0.8, 1, 0.6, 0},
+				    {0.85, 1, 0, 0},
+				    {0.9, 0.8667, 0, 0},
+				    {0.95, 0.8, 0, 0},
+				    {1, 0.8, 0.8, 0.8},
+				    {99, 0, 0, 0}},
+				   {{0, 0, 0, 0},
+				    {0.25, 0.5, 0, 0},
+				    {0.5, 1, 0.5, 0},
+				    {0.75, 1, 1, 0.5},
+				    {1, 1, 1, 1},
+				    {99, 0, 0, 0}}};
+*/
 
 #endif		/* __IMAGE_EXTRACT__ */

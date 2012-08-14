@@ -12,21 +12,28 @@ FLAGS		=	-g3 -Wall -Werror
 
 PLUGIN_INSTALL_DIR = /usr/local/plugins
 
+OBJS		=	$(SRCS:%.c=%.o)
+
+%.o: %.c
+	gcc -c $(FLAGS) $(INCLUDE) `pkg-config --cflags gtk+-2.0` -fPIC -o $@ $<
+
 all: compile install
 
-compile:	
+compile: $(OBJS)
 	@echo "\n================== Compile $(NAME) ===================="
-	gcc $(SRCS) -c $(INCLUDE) $(FLAGS) -fPIC `pkg-config --cflags gtk+-2.0`
-	gcc *.o -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -shared `pkg-config --libs gtk+-2.0`
+	gcc $(OBJS) -o $(NAME) $(LIB_PATH) $(LIBS) $(FLAGS) -shared
+
+clean:
+	@echo "\n==================== Cleaning $(NAME) ====================="
+	rm -rf *~ \#*\# $(NAME) ./png/*
+	rm -rf $(DIRSRC)*.o
+	rm -rf *.so
+	rm -rf core
 
 install:
 	mkdir -p $(PLUGIN_INSTALL_DIR)
 	cp $(NAME) $(PLUGIN_INSTALL_DIR)/$(NAME)
 
+re:	clean all
 
-clean:
-	@echo "\n==================== Cleaning $(NAME) ====================="
-	rm -rf *~ \#*\# $(NAME)
-	rm -rf *.o
-	rm -rf *.so
-	rm -rf core
+.PHONY: all compile install clean re

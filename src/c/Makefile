@@ -21,15 +21,33 @@ LIBS		=	-lhdf5								\
 
 NAME		=	TissueStackImageServer
 
-FLAGS		=	-Wall -Werror -DDEB -g3
+FLAGS		=	-Wall -Werror -g3
 
+OBJS		=	$(SRCS:%.c=%.o)
+
+
+OBJS		=	$(SRCS:%.c=%.o)
+
+
+#%.o: %.c
+#		gcc -c $< -o $@ $(INCLUDE) $(FLAGS) `pkg-config --cflags gtk+-2.0`
+#
+#all: compile install
+#
+#compile: $(OBJS)
+#	@echo "\n================== Compile $(NAME) ===================="
+#	gcc $(OBJS) -o $(NAME) $(LIBS)
+
+
+%.o: %.c
+	gcc -c $(FLAGS) $(INCLUDE) `pkg-config --cflags gtk+-2.0` -o $@ $<
 
 all: compile install
 
-compile:	
-	@clear
+compile: $(OBJS)
 	@echo "\n================== Compile $(NAME) ===================="
-	gcc $(SRCS) -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) `pkg-config --cflags --libs gtk+-2.0`
+	gcc $(OBJS) -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) `pkg-config --cflags --libs gtk+-2.0`
+	rm -rf volume.o
 	make -C ./plugins/communicator/ compile
 	make -C ./plugins/image_extract/ compile
 	make -C ./plugins/comm_inter_process/ compile
@@ -51,7 +69,7 @@ install:
 clean:
 	@echo "\n==================== Cleaning $(NAME) ====================="
 	rm -rf *~ \#*\# $(NAME) ./png/* core
-	rm -rf *.o
+	rm -rf $(DIRSRC)*.o
 	make -C ./plugins/communicator/ clean
 	make -C ./plugins/image_extract/ clean
 	make -C ./plugins/comm_inter_process/ clean
@@ -59,12 +77,6 @@ clean:
 	make -C ./plugins/minc_convert/ clean
 	make -C ./jni/ clean
 
-e:	clean
-	@echo "\n==================== Execution ====================\n\n"
-	@./yop ../00-normal-model-nonsym.mnc
-	@echo "\n\n================== Exec finished ==================\n\n"
+re: clean all
 
-time:	clean
-	@echo "\n==================== Execution ====================\n\n"
-	@time ./yop ../00-normal-model-nonsym.mnc
-	@echo "\n\n================== Exec finished ==================\n\n"
+.PHONY: all compile install clean re
