@@ -53,7 +53,7 @@ TissueStack.Queue.prototype = {
 				_this.drawLowResolutionPreview(_this.latestDrawRequestTimestamp);
 				setTimeout(function() {
 					_this.drawRequestAfterLowResolutionPreview(latestRequest);
-				}, 250);
+				}, 50);
 			}
 		}, this.drawingIntervalInMillis);
 	},
@@ -90,7 +90,7 @@ TissueStack.Queue.prototype = {
 				_this.drawLowResolutionPreview(deepCopyOfRequest.timestamp);
 				setTimeout(function() {
 					_this.drawRequestAfterLowResolutionPreview(deepCopyOfRequest, deepCopyOfRequest.timestamp);
-				}, 250);
+				}, 50);
 			}
 
 			return;
@@ -118,7 +118,7 @@ TissueStack.Queue.prototype = {
 				}
 				clearInterval(lowResBackdrop);
 			}
-		}, 50);		
+		}, 20);		
 	},
 	clearRequestQueue : function() {
 		this.requests = [];
