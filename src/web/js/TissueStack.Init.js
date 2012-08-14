@@ -103,12 +103,16 @@ TissueStack.InitUserInterface = function (initOpts) {
 				planeId = 'y';
 				extent.plane = planeId;
 			}
-
+			
 			// create canvas
 			var canvasElementSelector = "dataset_" + (x+1); 
 			var plane = new TissueStack.Canvas(extent, "canvas_" + planeId + "_plane", canvasElementSelector);
 			plane.sessionId = sessionId;
 
+			// for scalebar to know its parent
+			if (planeId == 'y') plane.is_main_view = true;
+			plane.updateScaleBar();
+			
 			// store plane  
 			dataSet.planes[planeId] = plane;
 

@@ -255,6 +255,10 @@ TissueStack.Embedded.prototype = {
 					canvasElementSelector,
 					this.include_cross_hair);
 			plane.sessionId = sessionId;
+
+			// for scalebar to know its parent
+			if (i == 0) plane.is_main_view = true;
+			plane.updateScaleBar();
 			
 			// store plane  
 			dataSet.planes[planeId] = plane;
@@ -264,7 +268,7 @@ TissueStack.Embedded.prototype = {
 			
 			// display data extent info on page
 			plane.updateExtentInfo(dataSet.realWorldCoords[planeId]);
-			
+
 			// if we have more than 1 plane => show y as the main plane and make x and z the small views
 			if (i != 0) {
 				plane.changeToZoomLevel(0);

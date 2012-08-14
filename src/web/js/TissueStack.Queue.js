@@ -47,7 +47,7 @@ TissueStack.Queue.prototype = {
 			}
 
 			_this.latestDrawRequestTimestamp = latestRequest.timestamp;
-			console.info('Action: ' + latestRequest.action + ' @ '  + latestRequest.timestamp + ' [' + latestRequest.data_id + ']');
+			//console.info('Action: ' + latestRequest.action + ' @ '  + latestRequest.timestamp + ' [' + latestRequest.data_id + ']');
 			
 			if (_this.prepareDrawRequest(latestRequest)) {
 				setTimeout(function() {
@@ -78,7 +78,7 @@ TissueStack.Queue.prototype = {
 			var deepCopyOfRequest = $.extend(true, {}, draw_request);
 			this.latestDrawRequestTimestamp = deepCopyOfRequest.timestamp;
 			
-			console.info('Action: ' + deepCopyOfRequest.action + ' @ '  + deepCopyOfRequest.timestamp + ' [' + draw_request.data_id + ']');
+			//console.info('Action: ' + deepCopyOfRequest.action + ' @ '  + deepCopyOfRequest.timestamp + ' [' + draw_request.data_id + ']');
 			
 			// work with a deep copy
 			if (this.prepareDrawRequest(deepCopyOfRequest)) {
@@ -202,7 +202,7 @@ TissueStack.Queue.prototype = {
 								this.canvas.getDataExtent().getZoomLevelFactorForZoomLevel(this.canvas.getDataExtent().zoom_level),
 					this.canvas.getDataExtent().getOriginalPlane(),
 					slice,
-					this.canvas.colormap,
+					this.canvas.color_map,
 					this.canvas.image_format
 		);
 		// append session id & timestamp for image service

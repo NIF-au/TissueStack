@@ -17,6 +17,7 @@ TissueStack.Canvas = function(data_extent, canvas_id, dataset_id, include_cross_
 };
 
 TissueStack.Canvas.prototype = {
+	is_main_view: false,
 	data_extent: null,
 	dataset_id: "",
 	canvas_id: this.dataset_id + "canvas_" + this.plane,
@@ -34,7 +35,10 @@ TissueStack.Canvas.prototype = {
 	cross_y : 0,
 	queue : null,
 	color_map : "grey",
-	setIncludeCrossHair : function(include_cross_hair) {
+	updateScaleBar : function() {
+		// update scale bar if main view
+		if (this.is_main_view) this.getDataExtent().adjustScaleBar(100);
+	}, setIncludeCrossHair : function(include_cross_hair) {
 		// include cross hair canvas or not
 		if (typeof(include_cross_hair) != 'boolean' || include_cross_hair == true) {
 			this.include_cross_hair = true;
@@ -422,7 +426,7 @@ TissueStack.Canvas.prototype = {
 										this.getDataExtent().getZoomLevelFactorForZoomLevel(this.getDataExtent().zoom_level),
 							this.getDataExtent().getOriginalPlane(),
 							slice,
-							this.colormap,
+							this.color_map,
 							this.image_format,
 							this.getDataExtent().tile_size,
 							rowIndex,
