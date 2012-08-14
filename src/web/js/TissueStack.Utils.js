@@ -354,7 +354,7 @@ TissueStack.Utils = {
 			return url + row + '_' + col + "." + image_extension;
 		} else {
 			// seems to work for server so why not use it
-		    url = url + "/" + path + "/?volume=" + filename + "&image_type=JPEG&scale=" + zoom + "&dimension=" + plane + "space" + "&slice=" + slice;
+		    url = url + "/" + path + "/?volume=" + filename + "&image_type=JPEG&colormap=wqartsfjuyglis&scale=" + zoom + "&dimension=" + plane + "space" + "&slice=" + slice;
 			
 			if (is_preview) {
 				return url + "&quality=8";
