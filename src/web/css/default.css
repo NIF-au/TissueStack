@@ -337,12 +337,7 @@ a.ui-slider-handle-horizontal{
 	height: 492px;
 	background: url(/images/distance_scale.png);
 }
-.scalecontrol_text_top{
-	position: absolute; 
-	left: 8px; 
-	bottom: 16px;
-}
-.scalecontrol_text_bottom{
+.scalecontrol_text_down{
 	position: absolute; 
 	left: 8px; 
 	top: 15px;

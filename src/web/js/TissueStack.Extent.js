@@ -287,14 +287,14 @@ TissueStack.Extent.prototype = {
 	}, adjustDistanceScale : function (micron, zoom_level_factor) {
 		var zoom_level = zoom_level_factor;
 		if((micron / zoom_level) / 100 >=1){
-			TissueStack.Extent.prototype.adjustDistanceScaleContent(1, micron, zoom_level, 3);
+			TissueStack.Extent.prototype.adjustDistanceScaleContent(this.canvas.dataset_id, micron, zoom_level, 3);
 			return;
 		}
-		TissueStack.Extent.prototype.adjustDistanceScaleContent(1, micron, zoom_level, 1);
-	}, adjustDistanceScaleContent :function (setNum, micron, zoom_level,adjustValue) { 
-		$('#dataset_'+setNum+'_scale_middle, .dataset_'+setNum+'_scalecontrol_image').css({"width" : (micron / zoom_level) / adjustValue});
-		$('#dataset_'+setNum+'_scale_center').css({"left" : ((micron / zoom_level) / adjustValue) + 3});
-		$('#dataset_'+setNum+'_scale_up').css({"left" : (micron / zoom_level) / adjustValue});
-		$('#dataset_'+setNum+'_scale_text_top').text((((micron / zoom_level) / 100) / adjustValue).toFixed(2) +"mm");
+		TissueStack.Extent.prototype.adjustDistanceScaleContent(this.canvas.dataset_id, micron, zoom_level, 1);
+	}, adjustDistanceScaleContent :function (dataset, micron, zoom_level,adjustValue) { 
+		$('#'+dataset+'_scale_middle, .'+dataset+'_scalecontrol_image').css({"width" : (micron / zoom_level) / adjustValue});
+		$('#'+dataset+'_scale_center').css({"left" : ((micron / zoom_level) / adjustValue) + 3});
+		$('#'+dataset+'_scale_up').css({"left" : (micron / zoom_level) / adjustValue});
+		$('#'+dataset+'_scale_text_down').text((((micron / zoom_level) / 100) / adjustValue).toFixed(2) +"mm");
 	}
 };
