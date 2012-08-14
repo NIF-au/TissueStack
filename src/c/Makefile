@@ -48,6 +48,7 @@ compile: $(OBJS)
 	@echo "\n================== Compile $(NAME) ===================="
 	gcc $(OBJS) -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) `pkg-config --cflags --libs gtk+-2.0`
 	rm -rf volume.o
+	rm -rf utils/utils.o	
 	make -C ./plugins/communicator/ compile
 	make -C ./plugins/image_extract/ compile
 	make -C ./plugins/comm_inter_process/ compile
