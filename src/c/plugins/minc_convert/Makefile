@@ -1,21 +1,27 @@
 DIRSRC		=	./src/
 
-SRCS		=	$(DIRSRC)minc_info.c ./../../utils/utils.c
+SRCS		=	$(DIRSRC)converter.c
 
 INCLUDE		=	-I./headers -I./../../headers -I./../../utils
 
 LIB_PATH	=	
 
-NAME		=	TissueStackMincInfo.so
+LIBS		=	-lhdf5								\
+			-lnetcdf 							\
+			-lminc2								\
+			-lpthread							\
+			-ldl
 
-FLAGS		=	-g3 -Wall -Werror
+NAME		=	TissueStackMincConverter.so
+
+FLAGS		=	-Wall -Werror -g3
 
 PLUGIN_INSTALL_DIR = /usr/local/plugins
 
 OBJS		=	$(SRCS:%.c=%.o)
 
 %.o: %.c
-	gcc -c $(FLAGS) $(INCLUDE) `pkg-config --cflags gtk+-2.0` -fPIC -o $@ $<
+	gcc -c $(FLAGS) $(INCLUDE) `GraphicsMagick-config --cppflags` `pkg-config --cflags gtk+-2.0` -fPIC -o $@ $<
 
 all: compile install
 

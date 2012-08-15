@@ -53,6 +53,28 @@ TissueStack.DataSetNavigation.prototype = {
 			}
 		}
 	},
+	addDataSet : function(key, index) {
+		if (typeof(key) != "string") {
+			return;
+		}
+		if (TissueStack.desktop && typeof(index) != "number") {
+			return;
+		}
+		if (TissueStack.desktop && (index < 0 || index > 1)) {
+			return;
+		} else if (TissueStack.tablet || TissueStack.phone) {
+			index = 0;
+		}
+		
+		if (key == this.selectedDataSets["dataset_" + index]) {
+			// nothing to do, we have already that very same data set there
+			return; 
+		} 
+
+		// add the new data set
+		this.selectedDataSets["dataset_" + (index+1)] = key;
+		this.selectedDataSets.count++;
+	},
 	addToOrReplaceSelectedDataSets : function(key, index) {
 		if (typeof(key) != "string") {
 			return;
@@ -92,6 +114,8 @@ TissueStack.DataSetNavigation.prototype = {
 		
 		// for all canvases, unbind the events
 		for (var plane in dataSet.planes) {
+			dataSet.planes[plane].queue.latestDrawRequestTimestamp = -1;
+			dataSet.planes[plane].queue.stopQueue();
 			dataSet.planes[plane].events.unbindAllEvents();
 		}
 		dataSet.planes = {};
@@ -114,6 +138,15 @@ TissueStack.DataSetNavigation.prototype = {
 				});
 		}
 
+		// restore some settings 
+		try {
+			$("#colormap_choice input").removeAttr("checked").checkboxradio("refresh");
+			$("#colormap_grey").attr("checked", "checked").checkboxradio("refresh");
+		} catch (e) {
+			// we don't care, stupif jquery mobile ...
+			$("#colormap_grey").attr("checked", "checked");
+		}
+			
 		if(TissueStack.desktop || TissueStack.tablet){
 			// restore slider states
 			var old_classes = $("#" + dataset + "_canvas_main_slider").attr("class");
@@ -168,7 +201,7 @@ TissueStack.DataSetNavigation.prototype = {
 						title: dataSet.local_id + '@' +dataSet.host,
 						key: dataSet.id,
 						tooltip: (dataSet.description ? dataSet.description : ""),
-						select: counter == 0 ? true : false,
+						select: false,
 						isFolder: true,
 						expand: true
 					};
@@ -179,7 +212,7 @@ TissueStack.DataSetNavigation.prototype = {
 						isBaseLayer : true,
 						key: dataSet.id + "_base_layer",
 						tooltip: (dataSet.description ? dataSet.description : ""),
-						select: counter == 0 ? true : false,
+						select: false,
 						expand: false
 				};
 				counter++;

@@ -379,47 +379,47 @@ JNIEXPORT jobject JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_getMinc
 	return mincInfo;
 }
 
-JNIEXPORT void JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMincVolume
-		  (JNIEnv * env, jobject obj, jstring filename, jstring base_dir, jintArray arr_dimensions, jint size, jdouble zoom_factor, jboolean preview) {
+JNIEXPORT jstring JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMincVolume
+		  (JNIEnv * env, jobject obj, jstring filename, jstring base_dir, jintArray arr_dimensions, jint size, jdouble zoom_factor, jstring image_type, jboolean preview) {
 	// tedious parameter checking
 	if (filename == NULL) { // MINC FILE NAME
 		throwJavaException(env, "java/lang/RuntimeException", "File Name is null!");
-		return;
+		return NULL;
 	}
 	const char * file = (*env)->GetStringUTFChars(env, filename, NULL);
 	if (file == NULL) {
 		throwJavaException(env, "java/lang/RuntimeException", "Could not convert java to c string");
-		return;
+		return NULL;
 	}
 	if (base_dir == NULL) { // TILING BASE DIRECTORY
 		(*env)->ReleaseStringUTFChars(env, filename, file);
 		throwJavaException(env, "java/lang/RuntimeException", "Base Directory is null!");
-		return;
+		return NULL;
 	}
 	const char * dir = (*env)->GetStringUTFChars(env, base_dir, NULL);
 	if (dir == NULL) {
 		(*env)->ReleaseStringUTFChars(env, filename, file);
 		throwJavaException(env, "java/lang/RuntimeException", "Could not convert java to c string");
-		return;
+		return NULL;
 	}
 	if (arr_dimensions == NULL) { // 6 element DIMENSION array
 		(*env)->ReleaseStringUTFChars(env, filename, file);
 		(*env)->ReleaseStringUTFChars(env, base_dir, dir);
 		throwJavaException(env, "java/lang/RuntimeException", "Dimensions Argument is null!");
-		return;
+		return NULL;
 	}
 	int arraySize = (int) (*env)->GetArrayLength(env, arr_dimensions);
 	if (arraySize != 6) {
 		(*env)->ReleaseStringUTFChars(env, filename, file);
 		(*env)->ReleaseStringUTFChars(env, base_dir, dir);
 		throwJavaException(env, "java/lang/RuntimeException", "Dimensions Array has to have 6 elements!");
-		return;
+		return NULL;
 	}
 	if (zoom_factor <= 0) { // ZOOM FACTOR
 		(*env)->ReleaseStringUTFChars(env, filename, file);
 		(*env)->ReleaseStringUTFChars(env, base_dir, dir);
 		throwJavaException(env, "java/lang/RuntimeException", "Zoom Factor has to be greater than 0.0!");
-		return;
+		return NULL;
 	}
 
 	if (size <= 0) {
@@ -432,12 +432,18 @@ JNIEXPORT void JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMincVo
 		(*env)->ReleaseStringUTFChars(env, base_dir, dir);
 		//(*env)->ReleaseIntArrayElements(env, arr_dimensions, dimensions, 0);
 		throwJavaException(env, "java/lang/RuntimeException", "Could not establish unix socket to image server!");
-		return;
+		return NULL;
 	}
 
-	// load and start png extract plugin
+	const char * imageType = image_type == NULL ? "PNG" : (*env)->GetStringUTFChars(env, image_type, NULL);
+	if (imageType == NULL) {
+		throwJavaException(env, "java/lang/RuntimeException", "Could not convert java to c string");
+		return NULL;
+	}
+
+	// load and start image extract plugin
 	t_string_buffer * startTilingCommand = NULL;
-	startTilingCommand = appendToBuffer(startTilingCommand, "start png ");
+	startTilingCommand = appendToBuffer(startTilingCommand, "start image ");
 	startTilingCommand = appendToBuffer(startTilingCommand, (char *) file);
 
 	jint * dimensions = (*env)->GetIntArrayElements(env, arr_dimensions, NULL);
@@ -449,26 +455,31 @@ JNIEXPORT void JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMincVo
 		startTilingCommand = appendToBuffer(startTilingCommand, conversionBuffer);
 	}
 	if (preview == JNI_TRUE) {
-		sprintf(conversionBuffer, " %.4g 10 full 1 ", (double)zoom_factor);
+		sprintf(conversionBuffer, " %.4g 6 full %s 1 ", (double)zoom_factor, imageType);
 		startTilingCommand = appendToBuffer(startTilingCommand, conversionBuffer);
 	} else {
-		sprintf(conversionBuffer, " %.4g 1 tiles %i", (double)zoom_factor, (int) size);
+		sprintf(conversionBuffer, " %.4g 1 tiles %s %i", (double)zoom_factor, imageType, (int) size);
 		startTilingCommand = appendToBuffer(startTilingCommand, conversionBuffer);
 		startTilingCommand = appendToBuffer(startTilingCommand, " -1 -1 1 ");
 	}
 
 	startTilingCommand = appendToBuffer(startTilingCommand, (char *) dir);
+	startTilingCommand = appendToBuffer(startTilingCommand, " 0 0");
 
 	write(fileDescriptor, startTilingCommand->buffer, startTilingCommand->size);
 	shutdown(fileDescriptor, 2);
 	close(fileDescriptor);
 
-	throwJavaException(env, "java/lang/RuntimeException", startTilingCommand->buffer);
-	return;
+	// set return
+	jstring ret = (*env)->NewStringUTF(env,startTilingCommand->buffer);
 
+	// clean up
 	free(startTilingCommand->buffer);
 	free(startTilingCommand);
 	(*env)->ReleaseStringUTFChars(env, filename, file);
 	(*env)->ReleaseStringUTFChars(env, base_dir, dir);
+	if (image_type != NULL) (*env)->ReleaseStringUTFChars(env, image_type, imageType);
 	(*env)->ReleaseIntArrayElements(env, arr_dimensions, dimensions, 0);
+
+	return ret;
 }

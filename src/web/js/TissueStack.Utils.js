@@ -223,11 +223,11 @@ TissueStack.Utils = {
 			$("#treedataset").css({"height": treeHeight});
 		}
 
-		$('.dataset').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height * 0.99});
+		$('.dataset').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height});
 		for (var x=1;x<=datasets;x++) {
-			$('#dataset_' + x + '_main_view_canvas').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height * 0.99});
-			$('#dataset_' + x + '_main_view_canvas canvas').attr("width", TissueStack.canvasDimensions.width * 0.99);
-			$('#dataset_' + x + '_main_view_canvas canvas').attr("height", TissueStack.canvasDimensions.height * 0.99);
+			$('#dataset_' + x + '_main_view_canvas').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height});
+			$('#dataset_' + x + '_main_view_canvas canvas').attr("width", TissueStack.canvasDimensions.width);
+			$('#dataset_' + x + '_main_view_canvas canvas').attr("height", TissueStack.canvasDimensions.height);
 		}
 
 		// apply screen and canvas size changes
@@ -293,7 +293,7 @@ TissueStack.Utils = {
 	},
 	assembleTissueStackImageRequest : function(
 			protocol, host, isTiled, filename, dataset_id, is_preview,
-			zoom, plane, slice, image_extension, tile_size, row, col) {
+			zoom, plane, slice, colormap, image_extension, tile_size, row, col) {
 		if (typeof(protocol) != "string") {
 			protocol = "http";
 		} 
@@ -327,6 +327,9 @@ TissueStack.Utils = {
 		if (typeof(slice) != "number" || slice < 0) {
 			return null;
 		}
+		if (typeof(colormap) != "string") {
+			colormap = "grey";
+		}
 		if (typeof(image_extension) != "string") {
 			image_extension = "png";
 		}
@@ -354,10 +357,11 @@ TissueStack.Utils = {
 			return url + row + '_' + col + "." + image_extension;
 		} else {
 			// seems to work for server so why not use it
-		    url = url + "/" + path + "/?volume=" + filename + "&scale=" + zoom + "&dimension=" + plane + "space" + "&slice=" + slice;
+		    url = url + "/" + path + "/?volume=" + filename + "&image_type=JPEG&scale=" + zoom + "&dimension="
+		    	+ plane + "space" + "&slice=" + slice + "&colormap=" + colormap;
 			
 			if (is_preview) {
-				return url + "&quality=10";
+				return url + "&quality=8";
 			}
 			
 			return url  + "&quality=1&service=tiles&square=" + tile_size + '&y=' + col + "&x=" + row;
@@ -408,8 +412,40 @@ TissueStack.Utils = {
 		});
 	}, generateSessionId : function() {
 		var timestampPart = "" + new Date().getTime();
-		var randomPart = Math.floor((Math.random()*100000));
+		var randomPart = Math.floor((Math.random()*100));
 		
 		return timestampPart + randomPart;
+	}, readQueryStringFromAddressBar : function() {
+		if (!document.location.search || document.location.search.length == 0 || document.location.search === '?') {
+			return null;
+		}
+		
+		// prepare query string
+		var queryString = $.trim(document.location.search);
+		// omit '?'
+		var queryStringStart = queryString.lastIndexOf('?');
+		if (queryStringStart >= 0) queryString = queryString.substring(queryStringStart + 1);
+		// do a URIdecode
+		queryString = decodeURIComponent(queryString);
+		//extract potential params by splitting into tokens delimited by '&'
+		var tokens = queryString.split('&');
+		if (!tokens || tokens.length == 0) return null;
+		
+		// potential args
+		var args = ['ds', 'x', 'y', 'z', 'zoom'];
+		var ret = {}; // return object
+
+		var c = 0;
+		for (var i=0;i<tokens.length; i++) {
+			for (var j=0;j<args.length;j++) {
+				var index = tokens[i].indexOf(args[j] + '=');
+				if (index ==0) {
+					ret[args[j]] = parseFloat(tokens[i].substring(args[j].length + 1));
+					c++;
+				}
+			}			
+		}
+
+		return c == 0 ? null : ret;
 	}
 };

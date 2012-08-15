@@ -242,6 +242,55 @@ t_string_buffer * createDirectory(char * path, mode_t mode) {
 	return pathWithoutSlashAtEnd;
 }
 
+char* strupper( char* s )
+{
+  if (s == NULL) return NULL;
+
+  int i = 0;
+  while (s[i] != '\0') {
+	  s[i] = toupper(s[i]);
+    i++;
+  }
+  return s;
+}
+
+char* strlower( char* s )
+{
+  if (s == NULL) return NULL;
+
+  int i = 0;
+  while (s[i] != '\0') {
+    s[i] = tolower(s[i]);
+    i++;
+  }
+  return s;
+}
+
+
+void		write_http_header(FILE * socket, char * status, char * image_type)
+{
+	t_string_buffer * header = appendToBuffer(NULL, "HTTP/1.1 ");
+	header = appendToBuffer(header, status); // HTTP STATUS
+	header = appendToBuffer(header, "\r\nDate: Thu, 20 May 2004 21:12:11 GMT\r\n"); // Date (in the past)
+	header = appendToBuffer(header, "Connection: close\r\n"); // Connection header (close)
+	header = appendToBuffer(header, "Server: Tissue Stack Image Server\r\n"); // Server header
+	header = appendToBuffer(header, "Accept-Ranges: bytes\r\n"); // Accept-Ranges header
+	/*
+	char contLen[150];
+	sprintf(contLen, "Content-Length: %lu\r\n", content_length);
+	//header = appendToBuffer(header, contLen); // Content-Length header
+	 */
+	header = appendToBuffer(header, "Content-Type: image/"); // Content-Type header
+	header = appendToBuffer(header, image_type); // image type
+	header = appendToBuffer(header, "\r\nAccess-Control-Allow-Origin: *\r\n"); // allow cross origin requests
+	header = appendToBuffer(header, "Last-Modified: Thu, 20 May 2004 21:12:11 GMT\r\n\r\n"); // last modified header in the past
+
+	write(fileno(socket), header->buffer, header->size);
+
+	free(header->buffer);
+	free(header);
+}
+
 short testBufferAppend() {
 	printf("\t*) String Append => ");
 
@@ -339,7 +388,42 @@ short testDirectoryCreation() {
 	  return 1;
 }
 
+short testToUpAndLow() {
+	  printf("\t*) To Upper And Lower => ");
+
+	  char * t = strdup("test1");
+
+	  if (strcmp(strupper(t), "TEST1") != 0) {
+		  printf("FAILED !\n");
+	  }
+
+	  free(t);
+
+	  t = strdup("TEST2");
+	  if (strcmp(strlower(t), "test2") != 0) {
+		  printf("FAILED !\n");
+	  }
+
+	  free(t);
+
+	  printf("PASSED.\n");
+
+	  return 1;
+}
+
+void free_null_terminated_char_2D_array(char ** strings) {
+	if (strings == NULL) return;
+
+	int i=0;
+	while (strings[i] != NULL) {
+		free(strings[i]);
+		i++;
+	}
+	free(strings);
+}
+
 /** TESTS **/
+/*
 int		main(int argc, char ** args)
 {
 	printf("Running tests ....\n\n");
@@ -359,9 +443,14 @@ int		main(int argc, char ** args)
 	   exit(0);
    }
 
+   // UPPER AND LOWER TEST
+   if (!testToUpAndLow()) {
+	   printf("Tests aborted because of errors!\n");
+	   exit(0);
+   }
 
 	printf("\nAll tests finished without error.\n");
 
 	return 1;
 }
-
+*/

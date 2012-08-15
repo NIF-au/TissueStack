@@ -27,6 +27,8 @@ TissueStack.Extent.prototype = {
 	max_slices : 0,
 	slice: 0,
 	worldCoordinatesTransformationMatrix: null,
+	resolution: 10,
+	units: '&micro;',
 	setDataId : function(data_id) {
 		if (typeof(data_id) != "string" || data_id.length == 0) {
 			throw new Error("data_id has to be a non-empty string");
@@ -89,7 +91,7 @@ TissueStack.Extent.prototype = {
 		this.one_to_one_y = y;
 	}, changeToZoomLevel : function(zoom_level) {
 		var zoom_level_factor = this.getZoomLevelFactorForZoomLevel(zoom_level);
-
+		
 		if (zoom_level_factor == -1) {
 			return;
 		}
@@ -103,6 +105,9 @@ TissueStack.Extent.prototype = {
 			return;
 		}
 		this.setDimensions(zoom_level_dim.x, zoom_level_dim.y);
+		
+		// update scale bar if main view
+		this.canvas.updateScaleBar();
 	}, getZoomLevelFactorForZoomLevel : function(zoom_level) {
 		if (typeof(zoom_level) != "number" || Math.floor(zoom_level) < 0 || Math.floor(zoom_level) >= this.zoom_levels.length) {
 			return -1;
@@ -141,7 +146,7 @@ TissueStack.Extent.prototype = {
 		} else {
 			this.slice = Math.ceil(slice / this.zoom_level_factor);
 		}
-
+		
 		var canvasSlider = $("#" + (this.canvas.dataset_id == "" ? "canvas_" : this.canvas.dataset_id + "_canvas_") + "main_slider");
 		if (canvasSlider.length == 0) {
 			return;
@@ -211,7 +216,6 @@ TissueStack.Extent.prototype = {
 		var pixelCoords = TissueStack.Utils.transformWorldCoordinatesToPixelCoordinates(
 				[worldCoords.x, worldCoords.y, worldCoords.z, 1],
 				this.worldCoordinatesTransformationMatrix);
-		
 		if (pixelCoords == null) {
 			return null;
 		}
@@ -281,5 +285,13 @@ TissueStack.Extent.prototype = {
 		}
 	
 		return coords;
+	}, adjustScaleBar :function (length) { 
+		var scaleMiddle = $('#'+this.canvas.dataset_id+'_scale_middle, .'+this.canvas.dataset_id+'_scalecontrol_image');
+		if (!scaleMiddle || scaleMiddle.length == 0) return;
+		
+		scaleMiddle.css({"width" : length});
+		$('#'+this.canvas.dataset_id+'_scale_center').css({"left" : length + 3});
+		$('#'+this.canvas.dataset_id+'_scale_text_down').html(
+				((this.resolution / this.zoom_level_factor)).toFixed(2) + '&nbsp;m' + this.units);
 	}
 };

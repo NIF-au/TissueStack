@@ -82,24 +82,6 @@ char		**serv_str_to_wordtab(char *buff, char c)
   return (dest);
 }
 
-void		write_header(int socket)
-{
-  char		header[4096];
-  int		len;
-
-  len = sprintf(header,
-		"HTTP/1.1 200 OK\r\n"
-		"Dat: Thu, 20 May 2004 21:12:11 GMT\r\n"
-		"Connection: close\r\n"
-		"Server: TissueStack Server\r\n"
-		"Accept-Ranges: bytes\r\n"
-		"Content-Type: image/png\r\n"
-		"Access-Control-Allow-Origin: *\r\n"
-		"Last-Modified: Thu, 20 May 2004 21:12:11 GMT\r\n"
-		"\r\n");
-  write(socket, header, len);
-}
-
 int		is_not_num(char *str)
 {
   int		i;
@@ -117,29 +99,20 @@ int		is_not_num(char *str)
   return (0);
 }
 
-char		get_by_name_dimension_id(char *volume, char *dimension, t_serv_comm *s)
+char		get_by_name_dimension_id(t_vol * vol, char *dimension, t_serv_comm *s)
 {
-  t_vol		*tmp;
   int		i;
 
-  if (!dimension || !volume || !s)
-    return (0);
-  tmp = s->general->volume_first;
-  while (tmp != NULL)
-    {
-      if (strcmp(tmp->path, volume) == 0)
-	{
+  if (!dimension || !vol || !s) return (0);
+
 	  i = 0;
-	  while (tmp->dim_name[i] != NULL)
+	  while (vol->dim_name[i] != NULL)
 	    {
-	      if (strcmp(tmp->dim_name[i], dimension) == 0)
-		return (i + 48);
+	      if (strcmp(vol->dim_name[i], dimension) == 0) return (i + 48);
 	      i++;
 	    }
-	}
-      tmp = tmp->next;
-    }
-  return (48);
+
+	  return (48);
 }
 
 char		*serv_copy_check_clean_string_from_tab(char **tab)
@@ -152,7 +125,7 @@ char		*serv_copy_check_clean_string_from_tab(char **tab)
   return (str);
 }
 
-void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
+void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
 {
   int		i;
   int		j;
@@ -167,10 +140,14 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
   char		*y = NULL;
   char		*x_end = NULL;
   char		*y_end = NULL;
-  char		**tmp;
-  char		**tmp2;
-  char		*line;
-  char		comm[400];
+  char		**tmp = NULL;
+  char		**tmp2 = NULL;
+  char		*line = NULL;
+  char		*image_type = NULL;
+  char		*colormap_name = NULL;
+  char		*id = NULL;
+  char		*time = NULL;
+  char		comm[500];
 
   if (strncmp(buff, "GET /?volume=", 13) == 0)
     {
@@ -200,6 +177,10 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
 	  else if (strcmp(tmp2[0], "x") == 0)		x = serv_copy_check_clean_string_from_tab(tmp2);
 	  else if (strcmp(tmp2[0], "y_end") == 0)	y_end = serv_copy_check_clean_string_from_tab(tmp2);
 	  else if (strcmp(tmp2[0], "x_end") == 0)	x_end = serv_copy_check_clean_string_from_tab(tmp2);
+	  else if (strcmp(tmp2[0], "colormap") == 0)	colormap_name = serv_copy_check_clean_string_from_tab(tmp2);
+	  else if (strcmp(tmp2[0], "image_type") == 0)	image_type = serv_copy_check_clean_string_from_tab(tmp2);
+	  else if (strcmp(tmp2[0], "id") == 0)	id = serv_copy_check_clean_string_from_tab(tmp2);
+	  else if (strcmp(tmp2[0], "timestamp") == 0)	time = serv_copy_check_clean_string_from_tab(tmp2);
 	  j = 0;
 	  while (tmp2[j] != NULL)
 	    free(tmp2[j++]);
@@ -208,51 +189,70 @@ void		interpret_header(char *buff, FILE *file, t_serv_comm *s)
       if (is_not_num(slice) || is_not_num(dimension) || is_not_num(scale) ||
 	  is_not_num(quality) || is_not_num(x) || is_not_num(y))
 	{
-	  fprintf(stderr, "Invalid argumen: non interger\n");
+	  fprintf(stderr, "Invalid argument: non interger\n");
 	  return;
 	}
-      if ((dimension[0] = get_by_name_dimension_id(volume, dimension, s)) == 0)
-	return;
+
+      t_vol		*vol = load_volume(a, volume);
+
+      if (vol == NULL) {
+          write_http_header(file, "500 Server Error", "png");
+    	  fclose(file);
+    	  return;
+      }
+
+      if ((dimension[0] = get_by_name_dimension_id(vol, dimension, s)) == 0) return;
+
       if (service == NULL)
 	{
-	  sprintf(comm, "start png %s %i %i %i %i %i %i %s %s %s 1", volume,
+	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s 1 %s %s", volume,
 		  (dimension[0] == '0' ? atoi(slice) : -1),
 		  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
 		  (dimension[0] == '1' ? atoi(slice) : -1),
 		  (dimension[0] == '1' ? (atoi(slice) + 1) : -1),
 		  (dimension[0] == '2' ? atoi(slice) : -1),
 		  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
-		  scale, quality, "full");
-
+		  scale, quality, "full", image_type, (colormap_name == NULL ? "NULL" : colormap_name),
+		  id != NULL ? id : "0", time != NULL ? time : "0");
 	}
       else if (strcmp(service, "tiles") == 0)
 	{
-	  sprintf(comm, "start png %s %i %i %i %i %i %i %s %s %s %s %s %s 1", volume,
+	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s %s %s 1 %s %s", volume,
 		  (dimension[0] == '0' ? atoi(slice) : -1),
 		  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
 		  (dimension[0] == '1' ? atoi(slice) : -1),
 		  (dimension[0] == '1' ? (atoi(slice) + 1) : -1),
 		  (dimension[0] == '2' ? atoi(slice) : -1),
 		  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
-		  scale, quality, service, square, y, x);
+		  scale, quality, service, image_type, square, y, x, (colormap_name == NULL ? "NULL" : colormap_name),
+		  id != NULL ? id : "0", time != NULL ? time : "0");
 	}
       else if (strcmp(service, "images") == 0)
 	{
-	  sprintf(comm, "start png %s %i %i %i %i %i %i %s %s %s %s %s %s %s 1", volume,
+	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s %s %s %s 1 %s %s", volume,
 		  (dimension[0] == '0' ? atoi(slice) : -1),
 		  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
 		  (dimension[0] == '1' ? atoi(slice) : -1),
 		  (dimension[0] == '1' ? (atoi(slice) + 1) : -1),
 		  (dimension[0] == '2' ? atoi(slice) : -1),
 		  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
-		  scale, quality, service, y, x, y_end, x_end);
+		  scale, quality, service, image_type, y, x, y_end, x_end, (colormap_name == NULL ? "NULL" : colormap_name),
+		  id != NULL ? id : "0", time != NULL ? time : "0");
 	}
-      printf("%s\n", comm);
+
+      s->general->tile_requests->add(s->general->tile_requests, id, time);
+
+      if (s->general->tile_requests->is_expired(s->general->tile_requests, id, time)) {
+          write_http_header(file, "408 Request Timeout", image_type);
+    	  close(fileno(file));
+    	  return;
+      }
+
       s->general->plug_actions(s->general, comm, file);
     }
 }
 
-void		serv_accept_new_connections(t_serv_comm *s)
+void		serv_accept_new_connections(t_args_plug * a, t_serv_comm *s)
 {
   int		socket;
   struct sockaddr_in	client_addr;
@@ -273,10 +273,7 @@ void		serv_accept_new_connections(t_serv_comm *s)
   l = read(socket, buff, 4096);
   buff[l] = '\0';
   file = fdopen(socket, "wr");
-  write_header(socket);
-  printf("************ Socket Number = %i****************\n", socket);
-  //s->general->plug_actions(s->general, buff, file);
-  interpret_header(buff, file, s);
+  interpret_header(a, buff, file, s);
 }
 
 void		reset_set_fd_to_monitor(t_serv_comm *s)
@@ -288,7 +285,7 @@ void		reset_set_fd_to_monitor(t_serv_comm *s)
     s->bigger_fd = s->sock_serv;
 }
 
-void		serv_working_loop(t_serv_comm *s)
+void		serv_working_loop(t_args_plug * a, t_serv_comm *s)
 {
   s->state = ON;
   while (s->state != OFF && s->state != FAIL)
@@ -301,7 +298,7 @@ void		serv_working_loop(t_serv_comm *s)
 	  s->state = FAIL;
 	}
       if (FD_ISSET(s->sock_serv, &(s->rd_fds)))
-	serv_accept_new_connections(s);
+	serv_accept_new_connections(a, s);
     }
 }
 
@@ -357,11 +354,12 @@ void		*start(void *args)
   s->bigger_fd = 0;
   s->general = a->general_info;
   serv_init_connect(s);
-  serv_working_loop(s);
+  serv_working_loop(a, s);
   return (NULL);
 }
 
 void		*unload(void *args)
 {
+  destroy_plug_args((t_args_plug*)args);
   return (NULL);
 }

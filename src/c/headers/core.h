@@ -1,5 +1,5 @@
-#ifndef __MINC_TOOL_CORE__
-#define __MINC_TOOL_CORE__
+#ifndef __TISSUE_STACK_CORE__
+#define __TISSUE_STACK_CORE__
 
 #include <sys/select.h>
 #include <sys/time.h>
@@ -15,7 +15,11 @@
 #include <sys/ioctl.h>
 #include <minc2.h>
 
+#include "utils.h"
 #include "thread_pool.h"
+#include "tile_requests.h"
+
+#include "gtk/gtk.h"
 
 typedef struct		s_args_plug	t_args_plug;
 typedef struct		s_plugin	t_plugin;
@@ -80,6 +84,7 @@ struct			s_tissue_stack
   t_thread_pool		*tp;
   t_char_prompt		*prompt_first;
   t_hist_prompt		*hist_first;
+  t_tile_requests 	*tile_requests;
   t_vol			*(*get_volume)(char *path, t_tissue_stack *general);
   t_vol			*(*check_volume)(char *path, t_tissue_stack *general);
   void			(*plug_actions)(t_tissue_stack *general, char *commands, void *box);
@@ -97,6 +102,11 @@ struct			s_vol
   char			*path;
   unsigned int		slices_max;
   char			**dim_name;
+  char			*dim_name_char;
+  int			raw_data;
+  unsigned long long int	*dim_offset;
+  int			*slice_size;
+  int			raw_fd;
   t_vol			*next;
 };
 
@@ -148,6 +158,9 @@ void            prompt_exec(char **commands, t_tissue_stack *general, void *box)
 void            free_all_history(t_tissue_stack *t);
 void            free_all_prompt(t_tissue_stack *t);
 
+void		destroy_plug_args(t_args_plug *a);
+void		destroy_command_args(char ** args);
+
 /*		plugin.c		*/
 
 void		list_plugins(t_tissue_stack *t, char *command);
@@ -158,6 +171,7 @@ void            *plugin_start(void *a);
 void            *plugin_unload(void *a);
 void		*plugin_try_start(void *a);
 void            free_all_plugins(t_tissue_stack *t);
+void 		destroy_t_plugin(t_plugin * this, t_tissue_stack * general);
 
 /*		volume.c		*/
 
@@ -167,6 +181,7 @@ void		list_volumes(t_tissue_stack *t, char *options);
 void		add_volume(char *path, t_tissue_stack *t);
 t_vol		*get_volume(char *path, t_tissue_stack *t);
 t_vol		*check_volume(char *path, t_tissue_stack *t);
+t_vol  *load_volume(t_args_plug * a, char * path);
 void		remove_volume(char *path, t_tissue_stack *t);
 void		free_volume(t_vol *v);
 void		free_all_volumes(t_tissue_stack *t);
@@ -193,4 +208,4 @@ void		clean_error_list(t_tissue_stack *general, int min);
 #define ERROR_MAX 5
 #define CLEANING_ERROR_TIME 30
 
-#endif /* __MINC_TOOL_CORE__ */
+#endif /* __TISSUE_STACK_CORE__ */

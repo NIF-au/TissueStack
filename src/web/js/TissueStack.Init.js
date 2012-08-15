@@ -37,11 +37,13 @@ TissueStack.Init = function (afterLoadingRoutine) {
 	});
 };
 
-TissueStack.InitUserInterface = function () {
+TissueStack.InitUserInterface = function (initOpts) {
 	if (TissueStack.dataSetNavigation.selectedDataSets.count == 0) {
 		return;
 	}
 
+	var initOpts = TissueStack.configuration['initOpts'];
+	
 	// get all data sets that have been selected from the store and stuff them into the array for binding its events
 	var datasets = [];
 	for (var x=0;x<TissueStack.dataSetNavigation.selectedDataSets.count;x++) {
@@ -72,6 +74,8 @@ TissueStack.InitUserInterface = function () {
 		// we use that for the image service to be able to abort pending requests
 		var sessionId = TissueStack.Utils.generateSessionId();
 		
+		var now = new Date().getTime();
+		
 		// loop over all planes in the data, create canvas and extent objects, then display them
 		for (var i=0; i < dataSet.data.length; i++) {
 			var dataForPlane = dataSet.data[i];
@@ -99,12 +103,16 @@ TissueStack.InitUserInterface = function () {
 				planeId = 'y';
 				extent.plane = planeId;
 			}
-
+			
 			// create canvas
 			var canvasElementSelector = "dataset_" + (x+1); 
 			var plane = new TissueStack.Canvas(extent, "canvas_" + planeId + "_plane", canvasElementSelector);
 			plane.sessionId = sessionId;
 
+			// for scalebar to know its parent
+			if (planeId == 'y') plane.is_main_view = true;
+			plane.updateScaleBar();
+			
 			// store plane  
 			dataSet.planes[planeId] = plane;
 
@@ -113,26 +121,51 @@ TissueStack.InitUserInterface = function () {
 			
 			// display data extent info on page
 			plane.updateExtentInfo(dataSet.realWorldCoords[planeId]);
-			
+
 			// for desktop version show 2 small canvases
-			if ((TissueStack.desktop || TissueStack.tablet) && planeId != 'y') {
+			// user requested specific zoom level
+			if (planeId == 'y' && initOpts && initOpts['zoom'] != null && initOpts['zoom'] >= 0 && initOpts['zoom'] < plane.data_extent.zoom_levels.length) {
+				plane.changeToZoomLevel(initOpts['zoom']); 
+			} else if ((TissueStack.desktop || TissueStack.tablet) && planeId != 'y') {
 				plane.changeToZoomLevel(0);
-				
+			} else if (TissueStack.phone ) {
+				plane.changeToZoomLevel(0);
 			}
 			
-			if (TissueStack.phone ) {
-				plane.changeToZoomLevel(0);
-				
-			}
-			// pre-emptive erasal
 			plane.eraseCanvasContent();
 			
-			// fill canvases
-			plane.queue.drawLowResolutionPreview();
-			plane.queue.drawRequestAfterLowResolutionPreview();
+			(function(p) {
+				setTimeout(function() {
+					if (initOpts && (initOpts['x'] != null || initOpts['y'] != null || initOpts['z'] != null)) {
+						if (p.data_extent.plane != 'y') return;
+		
+						var givenCoords = {x: initOpts['x'] != null ? initOpts['x'] : 0,
+								y: initOpts['y'] != null ? initOpts['y'] : 0,
+								z: initOpts['z'] != null ? initOpts['z'] : 0};
+						
+						if (p.getDataExtent().worldCoordinatesTransformationMatrix) {
+							givenCoords = p.getDataExtent().getPixelForWorldCoordinates(givenCoords);
+						}
+						p.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords);
+						
+						var slider = TissueStack.phone ? 
+							$("#canvas_" + p.data_extent.plane + "_slider") :
+							$("#" + (p.dataset_id == "" ? "" : p.dataset_id + "_") + "canvas_main_slider");
+						if (slider) {
+							slider.attr("value", givenCoords.z);
+							 if (!TissueStack.phone) slider.slider("refresh");
+						};
+						
+						// erase initial opts
+						TissueStack.configuration['initOpts'] = null;
+					} else {
+						p.queue.drawLowResolutionPreview(now);
+						p.queue.drawRequestAfterLowResolutionPreview(null, now);
+					}
+				}, 200);
+			}(plane));
 		}
-	} 
-	
+	}
 };
 
 TissueStack.BindGlobalEvents = function () {
@@ -293,7 +326,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 			for (var id in dataSet.planes) {	
 				dataSet.planes[id].color_map = e.target.value;
 				dataSet.planes[id].drawMe();
-				dataSet.planes[id].applyColorMapToCanvasContent();
+				if (dataSet.planes[id].getDataExtent().getIsTiled()) dataSet.planes[id].applyColorMapToCanvasContent();
 			}
 		}
 	});
@@ -329,10 +362,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 					event.data[0].actualDataSet.realWorldCoords[planeId].max_z = Number.POSITIVE_INFINITY;
 				}
 				
-				if (isNaN(xCoord) || isNaN(yCoord) || isNaN(zCoord)
-						|| xCoord < event.data[0].actualDataSet.realWorldCoords[planeId].min_x || xCoord > event.data[0].actualDataSet.realWorldCoords[planeId].max_x 
-						|| yCoord < event.data[0].actualDataSet.realWorldCoords[planeId].min_y || yCoord > event.data[0].actualDataSet.realWorldCoords[planeId].max_y
-						|| zCoord < event.data[0].actualDataSet.realWorldCoords[planeId].min_z || zCoord > event.data[0].actualDataSet.realWorldCoords[planeId].max_z) {
+				if (isNaN(xCoord) || isNaN(yCoord) || isNaN(zCoord)) {
 					alert("Illegal coords");
 					return;
 				}
@@ -344,13 +374,27 @@ TissueStack.BindDataSetDependentEvents = function () {
 					givenCoords = plane.getDataExtent().getPixelForWorldCoordinates(givenCoords);
 				}
 
-				plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords);
+				if ((event.data[0].actualDataSet.planes[planeId] && (givenCoords.x < 0
+						|| givenCoords.x > event.data[0].actualDataSet.planes[planeId].data_extent.x)) 
+						|| (event.data[0].actualDataSet.planes[planeId] && (givenCoords.y < 0
+								|| givenCoords.y > event.data[0].actualDataSet.planes[planeId].y))
+								|| (event.data[0].actualDataSet.planes['z'] && (givenCoords.z < 0
+										|| givenCoords.z > event.data[0].actualDataSet.planes[planeId].data_extent.max_slices))	) {
+					alert("Illegal coords");
+					return;
+				}
+				
+				
+				plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, new Date().getTime());
 
 				if (event.data[0].actualDataSet.data.length > 1) {
 					var slider = $("#" + (plane.dataset_id == "" ? "" : plane.dataset_id + "_") + "canvas_main_slider");
 					if (slider) {
 						slider.val(givenCoords.z);
 						slider.blur();
+						setTimeout(function() {
+							plane.events.changeSliceForPlane(givenCoords.z);
+							}, 150);
 					}
 				}
 			});
@@ -446,8 +490,9 @@ TissueStack.BindDataSetDependentEvents = function () {
 				$("#dataset_" + (x+1) + "_canvas_main_slider").attr("max", event.data[0].actualDataSet.planes[sideViewPlaneId].data_extent.max_slices);
 				
 				// redraw and change the zoom level as well
-				event.data[0].actualDataSet.planes[sideViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(sideCanvasRelativeCross);
-				event.data[0].actualDataSet.planes[mainViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(mainCanvasRelativeCross);
+				var now = new Date().getTime();
+				event.data[0].actualDataSet.planes[sideViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(sideCanvasRelativeCross, now);
+				event.data[0].actualDataSet.planes[mainViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(mainCanvasRelativeCross, now);
 				event.data[0].actualDataSet.planes[sideViewPlaneId].changeToZoomLevel(event.data[0].actualDataSet.planes[mainViewPlaneId].getDataExtent().zoom_level);
 				event.data[0].actualDataSet.planes[mainViewPlaneId].changeToZoomLevel(zoomLevelSideView);
 				event.data[0].actualDataSet.planes[sideViewPlaneId].updateExtentInfo(
@@ -488,9 +533,10 @@ TissueStack.BindDataSetDependentEvents = function () {
 				return;
 			}
 			
-			if (slice < 0 || slice > actualDataSet.planes[id].data_extent.max_slices) {
-				return;
-			}
+			slice = parseInt(slice);
+			
+			if (slice < 0) slice = 0;
+			else if (slice > actualDataSet.planes[id].data_extent.max_slices) slice = actualDataSet.planes[id].data_extent.max_slices;
 			
 			actualDataSet.planes[id].events.updateCoordinateDisplay();
 			actualDataSet.planes[id].events.changeSliceForPlane(slice);			
@@ -574,16 +620,30 @@ $(document).ready(function() {
 	var afterLoadingRoutine = function() {
 		// create an instance of the navigation
 		TissueStack.dataSetNavigation = new TissueStack.DataSetNavigation();
-		// on the first load we always display the first data set received from the backend list
-		TissueStack.dataSetNavigation.addToOrReplaceSelectedDataSets(
-				TissueStack.dataSetStore.getDataSetByIndex(0).id, 0);
-		 // show first one by default
+		
+		// see if we have received initial values for data set incl. coords and zoom level
+		var initOpts = TissueStack.Utils.readQueryStringFromAddressBar();
+		if (initOpts) TissueStack.configuration['initOpts'] = initOpts;
+		
+		// display the first data set received from the backend list unless a particular was requested or the requested one does not exist
+		if (TissueStack.configuration['initOpts'] && TissueStack.configuration['initOpts']['ds'] 
+				&& TissueStack.dataSetStore.getDataSetById('localhost_' + TissueStack.configuration['initOpts']['ds'])) {
+			if (TissueStack.desktop)
+				TissueStack.dataSetNavigation.getDynaTreeObject().selectKey("localhost_" + TissueStack.configuration['initOpts']['ds']);
+			else
+				TissueStack.dataSetNavigation.addDataSet(TissueStack.dataSetStore.getDataSetById('localhost_' + TissueStack.configuration['initOpts']['ds']).id, 0);
+		} else {
+			var ds = TissueStack.dataSetStore.getDataSetByIndex(0);
+			if (TissueStack.desktop) TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(ds.id); 
+			else TissueStack.dataSetNavigation.addDataSet(ds.id, 0);
+		}
 		TissueStack.dataSetNavigation.showDataSet(1);
-
 		
 		// initialize ui and events
-		TissueStack.InitUserInterface();
-		TissueStack.BindDataSetDependentEvents();
+		if (!TissueStack.desktop) { // avoid double binding
+			TissueStack.InitUserInterface();
+			TissueStack.BindDataSetDependentEvents();
+		}
 		TissueStack.BindGlobalEvents();
 
 		// add admin functionality to all versions

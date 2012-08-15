@@ -10,8 +10,9 @@ void		free_all_plugins(t_tissue_stack *t)
     {
       save = p;
       dlclose(p->handle);
-      free(p->name);
-      free(p->path);
+      if (p->name != NULL) free(p->name);
+      if (p->path != NULL) free(p->path);
+      if (p->stock != NULL) free(p->stock);
       p = p->next;
       free(save);
     }
@@ -147,7 +148,6 @@ void		*plugin_start(void *args)
   t_plugin	*this;
 
   a = (t_args_plug *)args;
-  printf("Hello nig\n");
   if ((this = get_plugin_by_name(a->name, a->general_info->first)) == NULL)
     {
       if (this)
@@ -199,16 +199,29 @@ void		*plugin_unload(void *args)
     this->error = 2;
   while (this->busy != 0)
     usleep(1000);
-  free(this->name);
-  free(this->path);
-  if (this->prev != NULL)
-    this->prev->next = this->next;
-  else
-    {
-      general->first = this->next;
-      if (general->first != NULL)
-	general->first->prev = NULL;
-    }
-  free(this);
+
+  destroy_t_plugin(this, general);
+  destroy_plug_args(a);
+
   return (NULL);
+}
+
+void destroy_t_plugin(t_plugin * this, t_tissue_stack * general) {
+	  if (this == NULL) return;
+
+	  if (this->prev != NULL)
+		this->prev->next = this->next;
+	  else
+	  {
+		  general->first = this->next;
+		  if (general->first != NULL) general->first->prev = NULL;
+	  }
+
+	  if (this->start_command != NULL) destroy_command_args(this->start_command);
+	  if (this->handle != NULL) dlclose(this->handle);
+	  if (this->name != NULL) free(this->name);
+	  if (this->path != NULL) free(this->path);
+	  if (this->stock != NULL) free(this->stock);
+
+	  free(this);
 }
