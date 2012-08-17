@@ -18,6 +18,7 @@
         <script src="js/libs/jquery/jquery-1.7.1.js"></script>
         <script src="js/libs/jquery/jquery.mobile-1.1.0.min.js"></script>
         <script src="js/libs/jquery/jquery.form.js"></script>
+        <script src="js/libs/jquery/jquery.circleslider.js"></script> 
         <script src="js/TissueStack.Slider.js"></script>
 		<script src="js/libs/sylvester/sylvester.js"></script>
 		
@@ -44,6 +45,11 @@
 			document.addEventListener('touchmove', function(event) {
   			   event.preventDefault();
 			}, false);
+			//Temp js for rotatescrolling
+			$(document).ready(function(){
+				$('#rotatescroll').tinycircleslider({radius: 68, lightbox: true, snaptodots: true, hidedots: false});
+			});
+			//End of retatescrolling
 		</script>
   </head>
 <body>
@@ -112,7 +118,18 @@
 							<img id="dataset_1_right_side_view_maximize" class="canvas_z maximize_view_icon" src="images/maximize.png" alt="Maximize View" />
 							<canvas id="dataset_1_canvas_z_plane" class="side_canvas"></canvas>
 							<canvas id="dataset_1_canvas_z_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>
-						</div>							     	    			
+						</div>
+						<!--Temp Development for rotatescrolling-->
+						<div id="rotatescroll">
+							<div class="viewport">
+								<ul class="overview">							
+								</ul>
+							</div>
+							<div class="dot"></div>
+							<div class="overlay"></div>
+							<div class="thumb"></div>
+						</div>
+						<!--End of retatescrolling-->							     	    			
 	     	    	</div>
      	    	
 	     	    	<div id="dataset_1_right_panel" class="right_panel hidden">
