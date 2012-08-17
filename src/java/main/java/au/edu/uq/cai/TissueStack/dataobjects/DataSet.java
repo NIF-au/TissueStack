@@ -1,5 +1,6 @@
 package au.edu.uq.cai.TissueStack.dataobjects;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -205,6 +206,8 @@ public class DataSet {
 						}
 						matrix.append("]");
 						++pos;
+						// also store the resolution which equals the step
+						p.setResolutionMm(new BigDecimal(info.getSteps()[indexOfX]));
 					}
 					// add 'adjoint' row 
 					matrix.append(",[");
@@ -278,6 +281,8 @@ public class DataSet {
 						}
 						matrix.append("]");
 						++pos;
+						// also store the resolution which equals the step
+						p.setResolutionMm(new BigDecimal(info.getSteps()[indexOfY]));
 					}
 					// add 'adjoint' row 
 					matrix.append(",[");
@@ -351,6 +356,8 @@ public class DataSet {
 						}
 						matrix.append("]");
 						++pos;
+						// also store the resolution which equals the step
+						p.setResolutionMm(new BigDecimal(info.getSteps()[indexOfZ]));
 					}
 					// add 'adjoint' row 
 					matrix.append(",[");

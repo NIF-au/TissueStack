@@ -1,5 +1,7 @@
 package au.edu.uq.cai.TissueStack.dataobjects;
 
+import java.math.BigDecimal;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -25,6 +27,7 @@ public class DataSetPlanes{
 	  private String zoomLevels; 
 	  private int oneToOneZoomLevel; 
 	  private String transformationMatrix;
+	  private BigDecimal resolutionMm;
 
 	@Id	@GeneratedValue(strategy = GenerationType.IDENTITY)
  	@Column(name="id")
@@ -134,6 +137,16 @@ public class DataSetPlanes{
 	
 	public void setTransformationMatrix(String transformationMatrix) {
 		this.transformationMatrix = transformationMatrix;
+	}
+	
+	@Column(name="resolution_mm")
+	@XmlElement(name="ResolutionInMm", namespace=IGlobalConstants.XML_NAMESPACE)	
+	public BigDecimal getResolutionMm() {
+		return this.resolutionMm;
+	}
+	
+	public void setResolutionMm(BigDecimal resolutionMm) {
+		this.resolutionMm = resolutionMm;
 	}
 }
 

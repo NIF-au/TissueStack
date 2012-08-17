@@ -95,7 +95,8 @@ TissueStack.InitUserInterface = function (initOpts) {
 					dataForPlane.maxX,
 					dataForPlane.maxY,
 					zoomLevels,
-					transformationMatrix);
+					transformationMatrix, 
+					dataForPlane.resolutionMm);
 
 			// this is a bit of a hack to not have to change the fixed html layout if we have only 1 plane (classic 2D data):
 			// in order to use the main view which is hard-coded to plane with id 'y', we'll make the only plane that we have 'y' 
