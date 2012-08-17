@@ -103,12 +103,16 @@ TissueStack.InitUserInterface = function (initOpts) {
 				planeId = 'y';
 				extent.plane = planeId;
 			}
-
+			
 			// create canvas
 			var canvasElementSelector = "dataset_" + (x+1); 
 			var plane = new TissueStack.Canvas(extent, "canvas_" + planeId + "_plane", canvasElementSelector);
 			plane.sessionId = sessionId;
 
+			// for scalebar to know its parent
+			if (planeId == 'y') plane.is_main_view = true;
+			plane.updateScaleBar();
+			
 			// store plane  
 			dataSet.planes[planeId] = plane;
 
@@ -371,23 +375,26 @@ TissueStack.BindDataSetDependentEvents = function () {
 				}
 
 				if ((event.data[0].actualDataSet.planes[planeId] && (givenCoords.x < 0
-						|| givenCoords.x > event.data[0].actualDataSet.planes[planeId].data_extent.max_slices + 1)) 
+						|| givenCoords.x > event.data[0].actualDataSet.planes[planeId].data_extent.x)) 
 						|| (event.data[0].actualDataSet.planes[planeId] && (givenCoords.y < 0
-								|| givenCoords.y > event.data[0].actualDataSet.planes[planeId].data_extent.max_slices + 1))
+								|| givenCoords.y > event.data[0].actualDataSet.planes[planeId].y))
 								|| (event.data[0].actualDataSet.planes['z'] && (givenCoords.z < 0
-										|| givenCoords.z > event.data[0].actualDataSet.planes[planeId].data_extent.max_slices + 1))	) {
+										|| givenCoords.z > event.data[0].actualDataSet.planes[planeId].data_extent.max_slices))	) {
 					alert("Illegal coords");
 					return;
 				}
 				
 				
-				plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords);
+				plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, new Date().getTime());
 
 				if (event.data[0].actualDataSet.data.length > 1) {
 					var slider = $("#" + (plane.dataset_id == "" ? "" : plane.dataset_id + "_") + "canvas_main_slider");
 					if (slider) {
 						slider.val(givenCoords.z);
 						slider.blur();
+						setTimeout(function() {
+							plane.events.changeSliceForPlane(givenCoords.z);
+							}, 150);
 					}
 				}
 			});
@@ -627,14 +634,16 @@ $(document).ready(function() {
 				TissueStack.dataSetNavigation.addDataSet(TissueStack.dataSetStore.getDataSetById('localhost_' + TissueStack.configuration['initOpts']['ds']).id, 0);
 		} else {
 			var ds = TissueStack.dataSetStore.getDataSetByIndex(0);
-			if (TissueStack.desktop) TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(ds.id);
+			if (TissueStack.desktop) TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(ds.id); 
 			else TissueStack.dataSetNavigation.addDataSet(ds.id, 0);
 		}
 		TissueStack.dataSetNavigation.showDataSet(1);
 		
 		// initialize ui and events
-		TissueStack.InitUserInterface();
-		TissueStack.BindDataSetDependentEvents();
+		if (!TissueStack.desktop) { // avoid double binding
+			TissueStack.InitUserInterface();
+			TissueStack.BindDataSetDependentEvents();
+		}
 		TissueStack.BindGlobalEvents();
 
 		// add admin functionality to all versions

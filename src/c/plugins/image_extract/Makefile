@@ -6,7 +6,7 @@ SRCS		=	$(DIRSRC)image_extract.c					\
 			$(DIRSRC)../../../volume.c				\
 			$(DIRSRC)../../../utils/utils.c
 
-INCLUDE		=	-I./headers -I./../../utils -I../../headers
+INCLUDE		=	-I./headers -I./../../utils -I../../headers -I/usr/include/GraphicsMagick
 
 LIB_PATH	=	
 
@@ -25,13 +25,13 @@ PLUGIN_INSTALL_DIR = /usr/local/plugins
 OBJS		=	$(SRCS:%.c=%.o)
 
 %.o: %.c
-	gcc -c $(FLAGS) $(INCLUDE) `GraphicsMagick-config --cppflags` `pkg-config --cflags gtk+-2.0` -fPIC -o $@ $<
+	gcc -c $(FLAGS) `pkg-config --cflags gtk+-2.0` -fPIC -o $@ $< $(INCLUDE)
 
 all: compile install
 
 compile: $(OBJS)
 	@echo "\n================== Compile $(NAME) ===================="
-	gcc $(OBJS) -o $(NAME) $(LIB_PATH) $(LIBS) $(FLAGS) -shared
+	gcc $(OBJS) -o $(NAME) $(LIB_PATH) $(LIBS) $(FLAGS) -shared `GraphicsMagick-config --cppflags --libs --ldflags`
 
 clean:
 	@echo "\n==================== Cleaning $(NAME) ====================="

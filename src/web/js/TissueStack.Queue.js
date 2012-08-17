@@ -5,14 +5,14 @@ TissueStack.Queue = function (canvas) {
 TissueStack.Queue.prototype = {
 	canvas : null,
 	queue_handle : null,
-	drawingIntervalInMillis : 150,
+	drawingIntervalInMillis : 25,
 	requests : [],
 	presentlyQueuedZoomLevelAndSlice: null,
 	lowResolutionPreviewDrawn : false,
 	latestDrawRequestTimestamp : 0,
 	setDrawingInterval : function(value) {
 		if (typeof(value) !== 'number' || value < 0) {
-			value = 150; // set to default
+			value = 25; // set to default
 		}
 		this.stopQueue();
 		this.drawingIntervalInMillis = value;
@@ -51,7 +51,9 @@ TissueStack.Queue.prototype = {
 			
 			if (_this.prepareDrawRequest(latestRequest)) {
 				_this.drawLowResolutionPreview(_this.latestDrawRequestTimestamp);
-				setTimeout(function() {_this.drawRequestAfterLowResolutionPreview(latestRequest);}, 200);
+				setTimeout(function() {
+					_this.drawRequestAfterLowResolutionPreview(latestRequest);
+				}, 50);
 			}
 		}, this.drawingIntervalInMillis);
 	},
@@ -72,7 +74,7 @@ TissueStack.Queue.prototype = {
 		}
 		
 		// clicks and zooms are processed instantly
-		if (draw_request.action == "CLICK" || draw_request.action == "ZOOM") {
+		if (draw_request.action == "CLICK" || draw_request.action == "ZOOM" || draw_request.action == "POINT") {
 			var deepCopyOfRequest = $.extend(true, {}, draw_request);
 			this.latestDrawRequestTimestamp = deepCopyOfRequest.timestamp;
 			
@@ -80,13 +82,15 @@ TissueStack.Queue.prototype = {
 			
 			// work with a deep copy
 			if (this.prepareDrawRequest(deepCopyOfRequest)) {
-				if (deepCopyOfRequest.action == 'ZOOM' || deepCopyOfRequest.action == 'SLICE') {
-					this.canvas.eraseCanvasContent();
-				}
-
-				this.drawLowResolutionPreview(deepCopyOfRequest.timestamp);
 				var _this = this;
-				setTimeout(function() {_this.drawRequestAfterLowResolutionPreview(deepCopyOfRequest, deepCopyOfRequest.timestamp);}, 200);
+				if (deepCopyOfRequest.action == 'ZOOM') {
+					_this.canvas.eraseCanvasContent();
+				}	
+
+				_this.drawLowResolutionPreview(deepCopyOfRequest.timestamp);
+				setTimeout(function() {
+					_this.drawRequestAfterLowResolutionPreview(deepCopyOfRequest, deepCopyOfRequest.timestamp);
+				}, 50);
 			}
 
 			return;
@@ -106,7 +110,6 @@ TissueStack.Queue.prototype = {
 				clearInterval(lowResBackdrop);
 				return;
 			}
-
 			if (_this.lowResolutionPreviewDrawn) {
 				if (draw_request) {
 					_this.drawRequest(draw_request);
@@ -115,7 +118,7 @@ TissueStack.Queue.prototype = {
 				}
 				clearInterval(lowResBackdrop);
 			}
-		}, 400);		
+		}, 20);		
 	},
 	clearRequestQueue : function() {
 		this.requests = [];
@@ -196,6 +199,7 @@ TissueStack.Queue.prototype = {
 								this.canvas.getDataExtent().getZoomLevelFactorForZoomLevel(this.canvas.getDataExtent().zoom_level),
 					this.canvas.getDataExtent().getOriginalPlane(),
 					slice,
+					this.canvas.color_map,
 					this.canvas.image_format
 		);
 		// append session id & timestamp for image service

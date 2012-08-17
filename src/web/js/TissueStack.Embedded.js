@@ -12,7 +12,7 @@ TissueStack = {
 	                ]
 };
 
-TissueStack.Embedded = function (div, server, data_set_id, include_cross_hair, use_image_service) {
+TissueStack.Embedded = function (div, server, data_set_id, include_cross_hair, use_image_service, initOpts) {
 	// evaluate input and conduct peliminary checks
 	
 	if (typeof(div) != 'string' || $.trim(div) == '') {
@@ -48,6 +48,12 @@ TissueStack.Embedded = function (div, server, data_set_id, include_cross_hair, u
 		this.use_image_service = true;
 	} else {
 		this.use_image_service = false;
+	}
+
+	if (typeof(initOpts) == 'object') {
+		this.initOpts = initOpts;
+	} else {
+		this.initOpts = null;
 	}
 	
 	// check canvas support
@@ -218,7 +224,6 @@ TissueStack.Embedded.prototype = {
 	initCanvasView : function(dataSet, use_image_service) {
 		// we use that for the image service to be able to abort pending requests
 		var sessionId = TissueStack.Utils.generateSessionId();
-
 		var now = new Date().getTime();
 		
 		// loop over all planes in the data, create canvas and extent objects, then display them
@@ -250,6 +255,10 @@ TissueStack.Embedded.prototype = {
 					canvasElementSelector,
 					this.include_cross_hair);
 			plane.sessionId = sessionId;
+
+			// for scalebar to know its parent
+			if (i == 0) plane.is_main_view = true;
+			plane.updateScaleBar();
 			
 			// store plane  
 			dataSet.planes[planeId] = plane;
@@ -259,15 +268,37 @@ TissueStack.Embedded.prototype = {
 			
 			// display data extent info on page
 			plane.updateExtentInfo(dataSet.realWorldCoords[planeId]);
-			
+
 			// if we have more than 1 plane => show y as the main plane and make x and z the small views
 			if (i != 0) {
 				plane.changeToZoomLevel(0);
+			} else if (i == 0 && this.initOpts && this.initOpts['zoom'] && this.initOpts['zoom'] >=0 && this.initOpts['zoom'] < plane.data_extent.max_slices) {
+				plane.changeToZoomLevel(this.initOpts['zoom']);
 			}
-			
-			// fill canvases
-			plane.queue.drawLowResolutionPreview(now);
-			plane.queue.drawRequestAfterLowResolutionPreview(null,now);
+		
+			var _this = this;
+			(function(p, index) {
+				setTimeout(function() {
+					if (_this.initOpts && (_this.initOpts['x'] != null || _this.initOpts['y'] != null || _this.initOpts['z'] != null)) {
+						if (index != 0) return;
+							
+						var givenCoords = {x: _this.initOpts['x'] != null ? _this.initOpts['x'] : 0,
+								y: _this.initOpts['y'] != null ? _this.initOpts['y'] : 0,
+								z: _this.initOpts['z'] != null ? _this.initOpts['z'] : 0};
+						
+						if (p.getDataExtent().worldCoordinatesTransformationMatrix) {
+							givenCoords = p.getDataExtent().getPixelForWorldCoordinates(givenCoords);
+						}
+						p.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, now);
+						setTimeout(function() {
+							p.events.changeSliceForPlane(givenCoords.z);
+						}, 200);
+					} else {
+						p.queue.drawLowResolutionPreview(now);
+						p.queue.drawRequestAfterLowResolutionPreview(null, now);
+					}
+				}, 200);
+			}(plane, i));
 		}
 	},
 	adjustCanvasSizes : function() {
