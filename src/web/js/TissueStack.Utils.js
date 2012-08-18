@@ -447,5 +447,21 @@ TissueStack.Utils = {
 		}
 
 		return c == 0 ? null : ret;
+	}, getResolutionString : function(resolution_in_mm_times_scale_bar_width_in_pixels) {
+		if (typeof(resolution_in_mm_times_scale_bar_width_in_pixels) != 'number') return "NaN";
+		if (resolution_in_mm_times_scale_bar_width_in_pixels < 0) return "negative value";
+		
+		var unit_lookup = ['mm', '&micro;m', '&nano;m'];
+		var unit_step = 0;
+		var newRes = resolution_in_mm_times_scale_bar_width_in_pixels;
+		// start at mm and see if we need to go smaller
+		while (true) {
+			if (newRes == 0 || Math.floor(newRes) > 0 || unit_step + 1 > unit_lookup.length - 1) break;
+			
+			newRes *= 1000;
+			unit_step++;
+		}
+
+		return ((newRes - Math.floor(newRes) > 0.00001) ? newRes.toFixed(3) : newRes) + '&nbsp;' + unit_lookup[unit_step];
 	}
 };

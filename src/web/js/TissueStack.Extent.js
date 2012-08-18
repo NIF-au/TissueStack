@@ -29,7 +29,6 @@ TissueStack.Extent.prototype = {
 	slice: 0,
 	worldCoordinatesTransformationMatrix: null,
 	resolution_mm: 0,
-	units: 'mm',
 	setDataId : function(data_id) {
 		if (typeof(data_id) != "string" || data_id.length == 0) {
 			throw new Error("data_id has to be a non-empty string");
@@ -293,6 +292,6 @@ TissueStack.Extent.prototype = {
 		scaleMiddle.css({"width" : length});
 		$('#'+this.canvas.dataset_id+'_scale_center').css({"left" : length + 3});
 		$('#'+this.canvas.dataset_id+'_scale_text_down').html(
-				((this.resolution_mm / this.zoom_level_factor)).toFixed(2) + '&nbsp;' + this.units);
+				TissueStack.Utils.getResolutionString(this.resolution_mm * length/ this.zoom_level_factor));
 	}
 };
