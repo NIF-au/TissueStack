@@ -207,7 +207,7 @@ public class DataSet {
 						matrix.append("]");
 						++pos;
 						// also store the resolution which equals the step
-						p.setResolutionMm(new BigDecimal(info.getSteps()[indexOfX]));
+						p.setResolutionMm(new BigDecimal(Math.abs(info.getSteps()[indexOfX])));
 					}
 					// add 'adjoint' row 
 					matrix.append(",[");
@@ -282,7 +282,7 @@ public class DataSet {
 						matrix.append("]");
 						++pos;
 						// also store the resolution which equals the step
-						p.setResolutionMm(new BigDecimal(info.getSteps()[indexOfY]));
+						p.setResolutionMm(new BigDecimal(Math.abs(info.getSteps()[indexOfY])));
 					}
 					// add 'adjoint' row 
 					matrix.append(",[");
@@ -357,7 +357,7 @@ public class DataSet {
 						matrix.append("]");
 						++pos;
 						// also store the resolution which equals the step
-						p.setResolutionMm(new BigDecimal(info.getSteps()[indexOfZ]));
+						p.setResolutionMm(new BigDecimal(Math.abs(info.getSteps()[indexOfZ])));
 					}
 					// add 'adjoint' row 
 					matrix.append(",[");

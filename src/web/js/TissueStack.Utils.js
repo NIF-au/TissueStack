@@ -451,7 +451,7 @@ TissueStack.Utils = {
 		if (typeof(resolution_in_mm_times_scale_bar_width_in_pixels) != 'number') return "NaN";
 		if (resolution_in_mm_times_scale_bar_width_in_pixels < 0) return "negative value";
 		
-		var unit_lookup = ['mm', '&micro;m', '&nano;m'];
+		var unit_lookup = ['mm', '&micro;m', 'nm'];
 		var unit_step = 0;
 		var newRes = resolution_in_mm_times_scale_bar_width_in_pixels;
 		// start at mm and see if we need to go smaller
