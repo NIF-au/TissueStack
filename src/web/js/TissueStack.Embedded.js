@@ -245,7 +245,8 @@ TissueStack.Embedded.prototype = {
 					dataForPlane.maxX,
 					dataForPlane.maxY,
 					zoomLevels,
-					transformationMatrix);
+					transformationMatrix,
+					dataForPlane.resolutionMm);
 			
 			// create canvas
 			var canvasElementSelector = "dataset_1"; 
