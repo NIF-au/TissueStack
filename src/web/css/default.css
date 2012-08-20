@@ -290,6 +290,14 @@ a.ui-slider-handle-horizontal{
 	font-family: Arial, sans-serif; 
 	font-size: 11px;
 }
+.scalecontrol_middle{
+	overflow: hidden; 
+	position: absolute; 
+	left: 1px; 
+	top: 11px; 
+	width: 92px; 
+	height: 4px;
+}
 .scalecontrol_left{
 	overflow: hidden; 
 	position: absolute; 
@@ -298,18 +306,18 @@ a.ui-slider-handle-horizontal{
 	width: 4px; 
 	height: 26px;
 }
-.scalecontrol_middle{
-	overflow: hidden; 
-	position: absolute; 
-	left: 3px; 
-	top: 11px; 
-	width: 89px; 
-	height: 4px;
-}
-.scalecontrol_center{
+.scalecontrol_center_right{
 	overflow: hidden; 
 	position: absolute; 
 	left: 92px; 
+	top: 11px; 
+	width: 1px; 
+	height: 4px;
+}
+.scalecontrol_center_left{
+	overflow: hidden; 
+	position: absolute; 
+	left: 0px; 
 	top: 11px; 
 	width: 1px; 
 	height: 4px;
@@ -339,7 +347,7 @@ a.ui-slider-handle-horizontal{
 }
 .scalecontrol_text_down{
 	position: absolute; 
-	left: 8px; 
+	left: 0px; 
 	top: 15px;
 }
 .scalecontrol_text_up{
