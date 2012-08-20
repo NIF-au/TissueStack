@@ -352,6 +352,6 @@ a.ui-slider-handle-horizontal{
 }
 .scalecontrol_text_up{
 	position: absolute; 
-	left: 8px; 
-	top: 0px;
+	left: 25px; 
+	top: -3px;
 }
