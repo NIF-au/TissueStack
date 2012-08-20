@@ -51,9 +51,7 @@ TissueStack.Queue.prototype = {
 			
 			if (_this.prepareDrawRequest(latestRequest)) {
 				_this.drawLowResolutionPreview(_this.latestDrawRequestTimestamp);
-				setTimeout(function() {
-					_this.drawRequestAfterLowResolutionPreview(latestRequest);
-				}, 50);
+				_this.drawRequestAfterLowResolutionPreview(latestRequest);
 			}
 		}, this.drawingIntervalInMillis);
 	},
@@ -88,9 +86,7 @@ TissueStack.Queue.prototype = {
 				}	
 
 				_this.drawLowResolutionPreview(deepCopyOfRequest.timestamp);
-				setTimeout(function() {
-					_this.drawRequestAfterLowResolutionPreview(deepCopyOfRequest, deepCopyOfRequest.timestamp);
-				}, 50);
+				_this.drawRequestAfterLowResolutionPreview(deepCopyOfRequest, deepCopyOfRequest.timestamp);
 			}
 
 			return;
@@ -112,17 +108,19 @@ TissueStack.Queue.prototype = {
 			}
 			if (_this.lowResolutionPreviewDrawn) {
 				if (draw_request) {
-					_this.drawRequest(draw_request);
+					setTimeout(function() {_this.drawRequest(draw_request);}, 25);
 				} else {
-					_this.canvas.drawMe(timestamp);
+					setTimeout(function() {_this.canvas.drawMe(timestamp);}, 25);
 				}
 				clearInterval(lowResBackdrop);
 			}
-		}, 20);		
+		}, 75);		
 	},
 	clearRequestQueue : function() {
 		this.requests = [];
 	}, drawLowResolutionPreview : function(timestamp) {
+		this.lowResolutionPreviewDrawn = false;
+
 		if (this.latestDrawRequestTimestamp < 0 || timestamp < this.latestDrawRequestTimestamp) {
 			//console.info('Drawing preview for ' + this.canvas.getDataExtent().data_id + '[' + this.canvas.getDataExtent().getOriginalPlane() +  ']: ' + timestamp);
 
@@ -137,8 +135,6 @@ TissueStack.Queue.prototype = {
 			this.lowResolutionPreviewDrawn = true;
 			return;
 		}
-
-		this.lowResolutionPreviewDrawn = false;
 
 		var ctx = this.canvas.getCanvasContext();
 		
@@ -228,10 +224,10 @@ TissueStack.Queue.prototype = {
 				}
 
 				//console.info('Drawing preview for ' +  _this.canvas.getDataExtent().data_id + '[' +_this.canvas.getDataExtent().getOriginalPlane() +  ']: ' + timestamp);
-				_this.lowResolutionPreviewDrawn = true;
 				ctx.drawImage(this, imageOffsetX, imageOffsetY, width, height, canvasX, canvasY, width, height);
-				
 				if (_this.canvas.getDataExtent().getIsTiled()) _this.canvas.applyColorMapToCanvasContent();
+
+				_this.lowResolutionPreviewDrawn = true;
 			};
 		})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height);
 	}, prepareDrawRequest : function(draw_request) {
