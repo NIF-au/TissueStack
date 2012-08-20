@@ -490,6 +490,10 @@ TissueStack.BindDataSetDependentEvents = function () {
 				$("#dataset_" + (x+1) + "_canvas_main_slider").attr("value", event.data[0].actualDataSet.planes[sideViewPlaneId].data_extent.slice);
 				$("#dataset_" + (x+1) + "_canvas_main_slider").attr("max", event.data[0].actualDataSet.planes[sideViewPlaneId].data_extent.max_slices);
 				
+				// swap main view
+				event.data[0].actualDataSet.planes[mainViewPlaneId].is_main_view = false;
+				event.data[0].actualDataSet.planes[sideViewPlaneId].is_main_view = true;
+				
 				// redraw and change the zoom level as well
 				var now = new Date().getTime();
 				event.data[0].actualDataSet.planes[sideViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(sideCanvasRelativeCross, now);
