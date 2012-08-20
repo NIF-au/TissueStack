@@ -292,7 +292,7 @@ TissueStack.Extent.prototype = {
 		scaleMiddle.css({"width" : length + 3});
 		$('#'+this.canvas.dataset_id+'_scale_center_right').css({"left" : length + 3});
 		$('#'+this.canvas.dataset_id+'_scale_up').css({"left" : length});
-		$('#'+this.canvas.dataset_id+'_scale_text_down').html(
+		$('#'+this.canvas.dataset_id+'_scale_text_up').html(
 				TissueStack.Utils.getResolutionString(this.resolution_mm * length/ this.zoom_level_factor));
 	}
 };
