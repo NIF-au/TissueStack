@@ -317,7 +317,7 @@ a.ui-slider-handle-horizontal{
 .scalecontrol_up{
 	overflow: hidden; 
 	position: absolute; 
-	left: 55px; 
+	left: 59px; 
 	top: 0px; 
 	width: 4px; 
 	height: 12px;
@@ -341,4 +341,9 @@ a.ui-slider-handle-horizontal{
 	position: absolute; 
 	left: 8px; 
 	top: 15px;
+}
+.scalecontrol_text_up{
+	position: absolute; 
+	left: 8px; 
+	top: 0px;
 }
