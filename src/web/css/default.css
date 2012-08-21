@@ -355,3 +355,65 @@ a.ui-slider-handle-horizontal{
 	left: 25px; 
 	top: -3px;
 }
+
+/*URL Link*/
+.url_link_main{
+	height: 26px; 
+	z-index: 2400; 
+	position: absolute;
+	right: 10px;
+	top: 10px; 
+	color: white; 
+	font-family: Arial, sans-serif; 
+	font-size: 11px;
+}
+.url_box {
+	display: none;
+	background:#DDD;
+	border:solid 1px #FFF;
+	border-radius:5px;
+	box-shadow: 0px 0px 5px #CCC;
+	background:-webkit-gradient(linear,left top,left bottom,from(#f4f4f4),to(#e8e8e8));
+	background:-moz-linear-gradient(top,#f4f4f4,#e8e8e8);
+	background:linear-gradient(top,#f4f4f4,#e8e8e8);
+	padding:8px;
+	position:absolute;
+	width: 350px;
+	height: 40px;
+	top: 28px;
+	right: 5px;;
+}
+.url_arrow {
+	width: 0;
+	height: 0;
+	border-left: 11px solid transparent;
+	border-right: 11px solid transparent;
+	border-bottom: 11px solid #f4f4f4;
+	position:absolute;
+	top:-10px;
+	right: 10px;
+	z-index:1001;
+}
+
+.url_arrow-border {
+	width: 0;
+	height: 0;
+	border-left: 11px solid transparent;
+	border-right: 11px solid transparent;
+	border-bottom: 11px solid #e8e8e8;
+	position:absolute;
+	top:-12px;
+	right: 10px;
+	z-index:1000;
+}
+.url_link_message{
+	height: 40px;
+	z-index: 2400; 
+	position: absolute;
+	right: 10px;
+	top: 8px; 
+	color: black; 
+	font-size: 14px;
+	font-family: Arial; 
+	text-shadow: 0 0 1px rgba(255, 255, 255, 0);
+}

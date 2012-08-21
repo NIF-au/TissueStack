@@ -61,6 +61,11 @@ TissueStack.InitUserInterface = function (initOpts) {
 	
 	if(TissueStack.desktop){
 		TissueStack.Utils.adjustBorderColorWhenMouseOver();
+		
+		//Show or Hide "URL Link" Box
+		$(".url_link_button").click(function(){
+			$('.url_box').toggle();		
+		});	
 	}
 	
 	for (var x=0;x<maxDataSets;x++) {
