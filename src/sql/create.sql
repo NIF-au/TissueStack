@@ -85,6 +85,7 @@ CREATE TABLE dataset_planes
   zoom_levels TEXT NOT NULL,
   one_to_one_zoom_level INTEGER NOT NULL,
   transformation_matrix TEXT,
+  resolution_mm NUMERIC(18,10),
   CONSTRAINT dataset_planes_pk PRIMARY KEY (id),
   CONSTRAINT dataset_planes_fk FOREIGN KEY (dataset_id)
       REFERENCES dataset (id),

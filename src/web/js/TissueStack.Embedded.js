@@ -179,7 +179,19 @@ TissueStack.Embedded.prototype = {
 			var planeId = dataSet.data[i].name;
 			
 			switch(i) {
-				case 0: // first is main canvas
+				case 0: // first is main canvas (incl. scale bar)
+					html += ('<div class="scalecontrol_main"><div id="dataset_1_scale_middle" class="scalecontrol_middle">'
+						+ '<div class="dataset_1_scalecontrol_image" style="left: 0px; top: -424px; width: 89px;"></div></div>'
+						+ '<div id="dataset_1_scale_left" class="scalecontrol_left">'
+						+ '<div class="dataset_1_scalecontrol_image" style="left: -4px; top: -398px; width: 59px;"></div></div>'
+						+ '<div id="dataset_1_scale_center_left" class="scalecontrol_center_left">'
+	    				+ '<div class="dataset_1_scalecontrol_image" style="left: 0px; top: -398px; width: 59px;"></div></div>'
+	    				+ '<div id="dataset_1_scale_center_right" class="scalecontrol_center_right">'
+	    				+ '<div class="dataset_1_scalecontrol_image" style="left: 0px; top: -398px; width: 59px;"></div></div>'
+	    				+ '<div id="dataset_1_scale_up" class="scalecontrol_up">'
+    					+ '<div class="dataset_1_scalecontrol_image" style="left: -4px; top: -398px; width: 59px;"></div></div>'
+	    				+ '<div id="dataset_1_scale_text_up" class="scalecontrol_text_up"></div></div>');
+					
 					html +=
 							'<div id="dataset_1_main_view_canvas" class="canvasview canvas_' + planeId + '">'
 						+ 	'<canvas id="dataset_1_canvas_' + planeId + '_plane" class="plane"></canvas>'
@@ -245,7 +257,8 @@ TissueStack.Embedded.prototype = {
 					dataForPlane.maxX,
 					dataForPlane.maxY,
 					zoomLevels,
-					transformationMatrix);
+					transformationMatrix,
+					dataForPlane.resolutionMm);
 			
 			// create canvas
 			var canvasElementSelector = "dataset_1"; 

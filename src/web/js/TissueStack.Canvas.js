@@ -13,7 +13,6 @@ TissueStack.Canvas = function(data_extent, canvas_id, dataset_id, include_cross_
 	this.queue = new TissueStack.Queue(this);
 	// make parent and ourselves visible
 	this.getCanvasElement().parent().removeClass("hidden");
-	
 };
 
 TissueStack.Canvas.prototype = {
@@ -89,6 +88,7 @@ TissueStack.Canvas.prototype = {
 		
 		// update displayed info
 		this.updateExtentInfo(this.getDataExtent().getExtentCoordinates());
+		
 	},
 	getDataCoordinates : function(relative_mouse_coords) {
 		var relDataX = -1;
@@ -537,6 +537,9 @@ TissueStack.Canvas.prototype = {
 			
 			this.updateExtentInfo(dataSet.realWorldCoords[this.data_extent.plane]);
 			
+			// update url link info
+			this.getUrlLinkString(dataSet.realWorldCoords[this.data_extent.plane]);
+			
 			return;
 		}
 		
@@ -551,6 +554,7 @@ TissueStack.Canvas.prototype = {
 			log = $('.world_coords');
 			log.html("World > X: " +  Math.round(worldCoords.x * 1000) / 1000 + ", Y: " +  Math.round(worldCoords.y * 1000) / 1000);
 		}
+		
 	}, getXYCoordinatesWithRespectToZoomLevel : function(coords) {
 		if (this.upper_left_y < this.dim_y - this.cross_y || this.upper_left_y - (this.data_extent.y - 1) > this.dim_y - this.cross_y) {
 			return;
@@ -562,5 +566,28 @@ TissueStack.Canvas.prototype = {
 		}
 
 		return this.data_extent.getXYCoordinatesWithRespectToZoomLevel(coords);
+	}, getUrlLinkString : function (realWorldCoords) {	
+		thisURL = this;
+		var url_link_message = "";
+		var ds, x_link, y_link, z_link, zoom;
+		
+		ds = thisURL.dataset_id;
+		x_link = $('#canvas_point_x').val();
+		y_link = $('#canvas_point_y').val();
+		z_link = $('#canvas_point_z').val();
+		zoom = thisURL.getDataExtent().zoom_level;
+		
+		if(ds.search("dataset") != -1){
+			ds = ds.replace("dataset_", "");
+		}
+		else if (ds.length = ""){
+			url_link_message = "NO DATASET SELECTED";
+		}
+		
+		if(x_link != "" || y_link != "" || z_link != ""){
+			url_link_message = document.location.href + "?ds=" + ds + "&x=" + x_link + "&y=" + y_link + "&z=" + z_link + "&zoom=" + zoom;
+		}
+		
+		$('.url_link_message').html(url_link_message); 
 	}
 };

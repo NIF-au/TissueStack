@@ -1,4 +1,4 @@
-TissueStack.Extent = function (data_id, is_tiled, zoom_level, plane, max_slices, x, y, zoom_levels, worldCoordinatesTransformationMatrix) {
+TissueStack.Extent = function (data_id, is_tiled, zoom_level, plane, max_slices, x, y, zoom_levels, worldCoordinatesTransformationMatrix, res_mm) {
 	this.setDataId(data_id);
 	this.setIsTiled(is_tiled);
 	this.setZoomLevel(zoom_level);
@@ -9,6 +9,7 @@ TissueStack.Extent = function (data_id, is_tiled, zoom_level, plane, max_slices,
 	this.rememberOneToOneZoomLevel(this.x, this.y, this.zoom_level);
 	this.setZoomLevels(zoom_levels);
 	this.worldCoordinatesTransformationMatrix = worldCoordinatesTransformationMatrix;
+	if (typeof(res_mm) == 'number')  this.resolution_mm = res_mm;
 };
 
 TissueStack.Extent.prototype = {
@@ -27,8 +28,7 @@ TissueStack.Extent.prototype = {
 	max_slices : 0,
 	slice: 0,
 	worldCoordinatesTransformationMatrix: null,
-	resolution: 10,
-	units: '&micro;',
+	resolution_mm: 0,
 	setDataId : function(data_id) {
 		if (typeof(data_id) != "string" || data_id.length == 0) {
 			throw new Error("data_id has to be a non-empty string");
@@ -289,9 +289,10 @@ TissueStack.Extent.prototype = {
 		var scaleMiddle = $('#'+this.canvas.dataset_id+'_scale_middle, .'+this.canvas.dataset_id+'_scalecontrol_image');
 		if (!scaleMiddle || scaleMiddle.length == 0) return;
 		
-		scaleMiddle.css({"width" : length});
-		$('#'+this.canvas.dataset_id+'_scale_center').css({"left" : length + 3});
-		$('#'+this.canvas.dataset_id+'_scale_text_down').html(
-				((this.resolution / this.zoom_level_factor)).toFixed(2) + '&nbsp;m' + this.units);
+		scaleMiddle.css({"width" : length + 3});
+		$('#'+this.canvas.dataset_id+'_scale_center_right').css({"left" : length + 3});
+		$('#'+this.canvas.dataset_id+'_scale_up').css({"left" : length});
+		$('#'+this.canvas.dataset_id+'_scale_text_up').html(
+				TissueStack.Utils.getResolutionString(this.resolution_mm * length/ this.zoom_level_factor));
 	}
 };
