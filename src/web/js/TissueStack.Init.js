@@ -60,8 +60,10 @@ TissueStack.InitUserInterface = function (initOpts) {
 	TissueStack.Utils.adjustScreenContentToActualScreenSize(maxDataSets);
 	
 	if(TissueStack.desktop){
-		TissueStack.Utils.adjustBorderColorWhenMouseOver();
-		
+		TissueStack.Utils.adjustBorderColorWhenMouseOver();	
+	}
+	
+	if(TissueStack.desktop || TissueStack.tablet){
 		//Show or Hide "URL Link" Box
 		$(".url_link_button").click(function(){
 			$('.url_box').toggle();		

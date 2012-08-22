@@ -567,15 +567,14 @@ TissueStack.Canvas.prototype = {
 
 		return this.data_extent.getXYCoordinatesWithRespectToZoomLevel(coords);
 	}, getUrlLinkString : function (realWorldCoords) {	
-		thisURL = this;
 		var url_link_message = "";
 		var ds, x_link, y_link, z_link, zoom;
 		
-		ds = thisURL.dataset_id;
+		ds = this.dataset_id;
 		x_link = $('#canvas_point_x').val();
 		y_link = $('#canvas_point_y').val();
 		z_link = $('#canvas_point_z').val();
-		zoom = thisURL.getDataExtent().zoom_level;
+		zoom = this.getDataExtent().zoom_level;
 		
 		if(ds.search("dataset") != -1){
 			ds = ds.replace("dataset_", "");
