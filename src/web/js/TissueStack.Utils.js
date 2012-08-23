@@ -448,7 +448,7 @@ TissueStack.Utils = {
 		if (!tokens || tokens.length == 0) return null;
 		
 		// potential args
-		var args = ['ds', 'x', 'y', 'z', 'zoom'];
+		var args = ['ds','plane', 'x', 'y', 'z', 'zoom'];
 		var ret = {}; // return object
 
 		var c = 0;
@@ -456,7 +456,8 @@ TissueStack.Utils = {
 			for (var j=0;j<args.length;j++) {
 				var index = tokens[i].indexOf(args[j] + '=');
 				if (index ==0) {
-					ret[args[j]] = parseFloat(tokens[i].substring(args[j].length + 1));
+					if (args[j] === 'plane') ret[args[j]] = tokens[i].substring(args[j].length + 1);
+					else ret[args[j]] = parseFloat(tokens[i].substring(args[j].length + 1));
 					c++;
 				}
 			}			
