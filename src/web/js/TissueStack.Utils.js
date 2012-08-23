@@ -226,9 +226,11 @@ TissueStack.Utils = {
 		$('.dataset').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height * 0.99});
 		
 		for (var x=1;x<=datasets;x++) {
-			$("#dataset_" + x + "_toolbox_canvas").css({"width" : TissueStack.canvasDimensions.width, "height" : 105});
+			var contrast = null;
+			
+			$("#dataset_" + x + "_toolbox_canvas").css({"width" : TissueStack.canvasDimensions.width, "height" : 80});
 			$("#dataset_" + x + "_toolbox_canvas").attr("width", TissueStack.canvasDimensions.width);
-			$("#dataset_" + x + "_toolbox_canvas").attr("height", 105);
+			$("#dataset_" + x + "_toolbox_canvas").attr("height", 80);
 			if (TissueStack.dataSetNavigation.selectedDataSets["dataset_" + x]) {
 				var ds = TissueStack.dataSetStore.getDataSetById(TissueStack.dataSetNavigation.selectedDataSets["dataset_" + x]);
 				if (ds && ds.planes) {
