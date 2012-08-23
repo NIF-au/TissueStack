@@ -570,17 +570,18 @@ TissueStack.Canvas.prototype = {
 		var url_link_message = "";
 		var ds, x_link, y_link, z_link, zoom;
 		
-		ds = this.dataset_id;
+		ds = this.data_extent.data_id;
 		x_link = $('#canvas_point_x').val();
 		y_link = $('#canvas_point_y').val();
 		z_link = $('#canvas_point_z').val();
 		zoom = this.getDataExtent().zoom_level;
 		
-		if(ds.search("dataset") != -1){
-			ds = ds.replace("dataset_", "");
+		//need to fix localhost or image server link later
+		if(ds.search("localhost_") != -1){
+			ds = ds.replace("localhost_", "");
 		}
-		else if (x_link = ""){
-			url_link_message = "No Coordation Selected";
+		else if (ds.length = 0){
+			url_link_message = "No Dataset Selected";
 		}
 		
 		// Show Url Link info (solve the problem (used split ?) when user entering website by query string link)
@@ -589,6 +590,6 @@ TissueStack.Canvas.prototype = {
 							 + z_link + "&zoom=" + zoom;
 		}
 		
-		$('#'+this.dataset_id+'_link_message').html(url_link_message);
+		$('#'+this.dataset_id +'_link_message').html(url_link_message);
 	}
 };
