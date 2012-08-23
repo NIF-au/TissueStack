@@ -65,7 +65,8 @@ TissueStack.InitUserInterface = function (initOpts) {
 	
 	if(TissueStack.desktop || TissueStack.tablet){
 		//Show or Hide "URL Link" Box (used unbind "click" to solve the problem when opening two datasets)
-		$(".url_link_button").unbind('click').click(function(){ 
+		
+		$('.url_link_button').unbind('click').click(function(){ 
 			$('.url_box').toggle("fast");		
 		});	
 	}

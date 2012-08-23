@@ -579,8 +579,8 @@ TissueStack.Canvas.prototype = {
 		if(ds.search("dataset") != -1){
 			ds = ds.replace("dataset_", "");
 		}
-		else if (ds.length = ""){
-			url_link_message = "NO DATASET SELECTED";
+		else if (x_link = ""){
+			url_link_message = "No Coordation Selected";
 		}
 		
 		// Show Url Link info (solve the problem (used split ?) when user entering website by query string link)
@@ -589,6 +589,6 @@ TissueStack.Canvas.prototype = {
 							 + z_link + "&zoom=" + zoom;
 		}
 		
-		$('.url_link_message').html(url_link_message);
+		$('#'+this.dataset_id+'_link_message').html(url_link_message);
 	}
 };
