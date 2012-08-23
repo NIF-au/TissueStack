@@ -224,7 +224,21 @@ TissueStack.Utils = {
 		}
 
 		$('.dataset').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height * 0.99});
+		
 		for (var x=1;x<=datasets;x++) {
+			$("#dataset_" + x + "_toolbox_canvas").css({"width" : TissueStack.canvasDimensions.width, "height" : 105});
+			$("#dataset_" + x + "_toolbox_canvas").attr("width", TissueStack.canvasDimensions.width);
+			$("#dataset_" + x + "_toolbox_canvas").attr("height", 105);
+			if (TissueStack.dataSetNavigation.selectedDataSets["dataset_" + x]) {
+				var ds = TissueStack.dataSetStore.getDataSetById(TissueStack.dataSetNavigation.selectedDataSets["dataset_" + x]);
+				if (ds && ds.planes) {
+					for (var p in ds.planes) {
+						// use the first we can get and init the contrast slider
+						if (ds.planes[p].contrast) ds.planes[p].contrast.initContrastSlider(); 
+						break;
+					}
+				}
+			}; 					
 			$('#dataset_' + x + '_main_view_canvas').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height * 0.99});
 			$('#dataset_' + x + '_main_view_canvas canvas').attr("width", TissueStack.canvasDimensions.width);
 			$('#dataset_' + x + '_main_view_canvas canvas').attr("height", TissueStack.canvasDimensions.height * 0.99);

@@ -11,6 +11,7 @@ TissueStack.Canvas = function(data_extent, canvas_id, dataset_id, include_cross_
 	this.setIncludeCrossHair(include_cross_hair);
 	this.events = new TissueStack.Events(this, this.include_cross_hair); 
 	this.queue = new TissueStack.Queue(this);
+	this.contrast = null; // a shared instance of a contrast slider
 	// make parent and ourselves visible
 	this.getCanvasElement().parent().removeClass("hidden");
 	
