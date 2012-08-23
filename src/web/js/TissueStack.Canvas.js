@@ -11,8 +11,10 @@ TissueStack.Canvas = function(data_extent, canvas_id, dataset_id, include_cross_
 	this.setIncludeCrossHair(include_cross_hair);
 	this.events = new TissueStack.Events(this, this.include_cross_hair); 
 	this.queue = new TissueStack.Queue(this);
+	this.contrast = null; // a shared instance of a contrast slider
 	// make parent and ourselves visible
 	this.getCanvasElement().parent().removeClass("hidden");
+	this.triggerUrlLink(); //trigger url link function
 };
 
 TissueStack.Canvas.prototype = {
@@ -567,27 +569,37 @@ TissueStack.Canvas.prototype = {
 
 		return this.data_extent.getXYCoordinatesWithRespectToZoomLevel(coords);
 	}, getUrlLinkString : function (realWorldCoords) {	
-		thisURL = this;
 		var url_link_message = "";
 		var ds, x_link, y_link, z_link, zoom;
 		
-		ds = thisURL.dataset_id;
+		ds = this.data_extent.data_id;
 		x_link = $('#canvas_point_x').val();
 		y_link = $('#canvas_point_y').val();
 		z_link = $('#canvas_point_z').val();
-		zoom = thisURL.getDataExtent().zoom_level;
+		zoom = this.getDataExtent().zoom_level;
 		
-		if(ds.search("dataset") != -1){
-			ds = ds.replace("dataset_", "");
+		//need to fix localhost or image server link later
+		if(ds.search("localhost_") != -1){
+			ds = ds.replace("localhost_", "");
 		}
-		else if (ds.length = ""){
-			url_link_message = "NO DATASET SELECTED";
+		else if (ds.length == 0){
+			url_link_message = "No Dataset Selected";
 		}
 		
+		// Show Url Link info (solve the problem (used split ?) when user entering website by query string link)
 		if(x_link != "" || y_link != "" || z_link != ""){
-			url_link_message = document.location.href + "?ds=" + ds + "&x=" + x_link + "&y=" + y_link + "&z=" + z_link + "&zoom=" + zoom;
+			url_link_message = document.location.href.split('?')[0] + "?ds=" + ds + "&plane=" + this.data_extent.plane + "&x=" + x_link + "&y=" + y_link + "&z=" 
+							 + z_link + "&zoom=" + zoom;
 		}
 		
-		$('.url_link_message').html(url_link_message); 
+		$('#'+this.dataset_id +'_link_message').html(url_link_message);
+	}, triggerUrlLink : function () {
+		var thisUrl = this;
+		if(TissueStack.desktop || TissueStack.tablet){
+			//Show or Hide "URL Link" Box (used unbind "click" to solve the problem when opening two datasets)
+			$('#'+ thisUrl.dataset_id + '_url_button').unbind('click').click(function(){ 
+				$('#'+ thisUrl.dataset_id + '_url_box').toggle("fast");		
+			});	
+		}
 	}
 };

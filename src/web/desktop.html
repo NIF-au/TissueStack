@@ -37,6 +37,7 @@
 		<script src="js/TissueStack.DataSetStore.js"></script>
 		<script src="js/TissueStack.DataSetNavigation.js"></script>
 		<script src="js/TissueStack.Admin.js"></script>
+		<script src="js/TissueStack.ContrastCanvas.js"></script>
 		<script src="js/TissueStack.Init.js"></script>
 		
 		<script type="text/javascript">
@@ -104,11 +105,11 @@
 	     	    	<!--END OF DISTANCE SCALE-->
 	     	    	<!--URL LINK-->
 	     	    		<div class="url_link_main">
-	     	    			<a class="url_link_button" style="color: white;" href="#">URL LINK</a>
-	     	    			<div class='url_box'>
+	     	    			<a id="dataset_1_url_button" class="url_link_button" style="color: white;" href="#">URL LINK</a>
+	     	    			<div id="dataset_1_url_box" class='url_box'>
 		     	    			<div class='url_arrow'></div>
 		     	    			<div class='url_arrow-border'></div>
-		     	    			<div class="url_link_message"></div>
+		     	    			<div id="dataset_1_link_message" class="url_link_message"></div>
 	     	    			</div>
 	     	    		</div>
 	     	    	<!--END OF URL LINK-->	
@@ -116,6 +117,9 @@
 	     	    			<canvas id="dataset_1_canvas_y_plane" class="plane"></canvas>
 	     	    			<canvas id="dataset_1_canvas_y_plane_cross_overlay" class="cross_overlay"></canvas>
 						</div>
+						
+						<canvas id="dataset_1_toolbox_canvas" class="contrast_slider hidden"></canvas>
+						
 						<div id="dataset_1_left_side_view_canvas" class="left_side_view ui-bar-a hidden">     	    			
 							<img id="dataset_1_left_side_view_maximize" class="canvas_x maximize_view_icon" src="images/maximize.png" alt="Maximize View" />
 							<canvas id="dataset_1_canvas_x_plane" class="side_canvas"></canvas>
@@ -153,11 +157,23 @@
 	                  		</div>
 	                  		<div id="dataset_2_scale_text_up" class="scalecontrol_text_up"></div>
 	                  	</div>
-	                  <!--END OF DISTANCE SCALE-->	
+	                  <!--END OF DISTANCE SCALE-->
+	                 <!--URL LINK-->
+	                 	<div class="url_link_main">
+	                 		<a id="dataset_2_url_button" class="url_link_button" style="color: white;" href="#">URL LINK</a>
+	                 		<div id="dataset_2_url_box" class='url_box'>
+	                 			<div class='url_arrow'></div>
+	                 			<div class='url_arrow-border'></div>
+	                 			<div id="dataset_2_link_message" class="url_link_message"></div>
+	                 		</div>
+	                 	</div>
+	                 <!--END OF URL LINK-->			
 	                   <div id="dataset_2_main_view_canvas" class="canvasview canvas_y" >
 	                       <canvas id="dataset_2_canvas_y_plane" class="plane"></canvas> 
 	                       <canvas id="dataset_2_canvas_y_plane_cross_overlay" class="cross_overlay"></canvas>
 	                   </div>
+	                   
+	                   <canvas id="dataset_2_toolbox_canvas" class="contrast_slider hidden"></canvas>
 	                       <div  id="dataset_2_left_side_view_canvas" class="left_side_view ui-bar-a hidden">                       
 	                           <img id="dataset_2_left_side_view_maximize" class="canvas_x maximize_view_icon" src="images/maximize.png" alt="Maximize View" />
 	                           <canvas id="dataset_2_canvas_x_plane" class="side_canvas"></canvas>

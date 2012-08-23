@@ -117,6 +117,7 @@ TissueStack.DataSetNavigation.prototype = {
 			dataSet.planes[plane].queue.latestDrawRequestTimestamp = -1;
 			dataSet.planes[plane].queue.stopQueue();
 			dataSet.planes[plane].events.unbindAllEvents();
+			if (dataSet.planes[plane].contrast) dataSet.planes[plane].contrast.unregisterListeners();
 		}
 		dataSet.planes = {};
 		
@@ -146,7 +147,10 @@ TissueStack.DataSetNavigation.prototype = {
 			// we don't care, stupif jquery mobile ...
 			$("#colormap_grey").attr("checked", "checked");
 		}
-			
+		
+		$("#dataset_1_url_box").hide("fast");
+		$("#dataset_2_url_box").hide("fast");
+		
 		if(TissueStack.desktop || TissueStack.tablet){
 			// restore slider states
 			var old_classes = $("#" + dataset + "_canvas_main_slider").attr("class");

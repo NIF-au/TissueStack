@@ -417,3 +417,9 @@ a.ui-slider-handle-horizontal{
 	font-family: Arial; 
 	text-shadow: 0 0 1px rgba(255, 255, 255, 0);
 }
+.contrast_slider{
+	position: absolute;
+	left: 0px;
+	top: 25px;
+	z-index: 5500;
+}
