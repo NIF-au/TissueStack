@@ -580,7 +580,7 @@ TissueStack.Canvas.prototype = {
 		if(ds.search("localhost_") != -1){
 			ds = ds.replace("localhost_", "");
 		}
-		else if (ds.length = 0){
+		else if (ds.length == 0){
 			url_link_message = "No Dataset Selected";
 		}
 		
