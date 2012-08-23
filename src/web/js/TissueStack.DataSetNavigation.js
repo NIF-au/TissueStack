@@ -117,6 +117,7 @@ TissueStack.DataSetNavigation.prototype = {
 			dataSet.planes[plane].queue.latestDrawRequestTimestamp = -1;
 			dataSet.planes[plane].queue.stopQueue();
 			dataSet.planes[plane].events.unbindAllEvents();
+			if (dataSet.planes[plane].contrast) dataSet.planes[plane].contrast.unregisterListeners();
 		}
 		dataSet.planes = {};
 		

@@ -84,6 +84,9 @@ TissueStack.InitUserInterface = function (initOpts) {
 		
 		var now = new Date().getTime();
 		
+		// crate a contrast slider per data set
+		var contrast = new TissueStack.ContrastCanvas("dataset_" + (x+1) + "_toolbox_canvas");
+		
 		// loop over all planes in the data, create canvas and extent objects, then display them
 		for (var i=0; i < dataSet.data.length; i++) {
 			var dataForPlane = dataSet.data[i];
@@ -116,6 +119,9 @@ TissueStack.InitUserInterface = function (initOpts) {
 			// create canvas
 			var canvasElementSelector = "dataset_" + (x+1); 
 			var plane = new TissueStack.Canvas(extent, "canvas_" + planeId + "_plane", canvasElementSelector);
+			// set contrast
+			plane.contrast = contrast;
+			// set session id
 			plane.sessionId = sessionId;
 
 			// for scalebar to know its parent
@@ -508,8 +514,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 				event.data[0].actualDataSet.planes[mainViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(mainCanvasRelativeCross, now);
 				event.data[0].actualDataSet.planes[sideViewPlaneId].changeToZoomLevel(event.data[0].actualDataSet.planes[mainViewPlaneId].getDataExtent().zoom_level);
 				event.data[0].actualDataSet.planes[mainViewPlaneId].changeToZoomLevel(zoomLevelSideView);
-				event.data[0].actualDataSet.planes[sideViewPlaneId].updateExtentInfo(
-				event.data[0].actualDataSet.planes[sideViewPlaneId].getDataExtent().getExtentCoordinates());
+				event.data[0].actualDataSet.planes[sideViewPlaneId].updateExtentInfo(event.data[0].actualDataSet.planes[sideViewPlaneId].getDataExtent().getExtentCoordinates());
 			});
 		}	
 	
