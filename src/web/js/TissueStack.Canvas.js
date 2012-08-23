@@ -583,10 +583,12 @@ TissueStack.Canvas.prototype = {
 			url_link_message = "NO DATASET SELECTED";
 		}
 		
+		// Show Url Link info (solve the problem (used split ?) when user entering website by query string link)
 		if(x_link != "" || y_link != "" || z_link != ""){
-			url_link_message = document.location.href + "?ds=" + ds + "&x=" + x_link + "&y=" + y_link + "&z=" + z_link + "&zoom=" + zoom;
+			url_link_message = document.location.href.split('?')[0] + "?ds=" + ds + "&x=" + x_link + "&y=" + y_link + "&z=" 
+							 + z_link + "&zoom=" + zoom;
 		}
 		
-		$('.url_link_message').html(url_link_message); 
+		$('.url_link_message').html(url_link_message);
 	}
 };
