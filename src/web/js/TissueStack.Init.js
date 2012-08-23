@@ -63,14 +63,6 @@ TissueStack.InitUserInterface = function (initOpts) {
 		TissueStack.Utils.adjustBorderColorWhenMouseOver();	
 	}
 	
-	if(TissueStack.desktop || TissueStack.tablet){
-		//Show or Hide "URL Link" Box (used unbind "click" to solve the problem when opening two datasets)
-		
-		$('.url_link_button').unbind('click').click(function(){ 
-			$('.url_box').toggle("fast");		
-		});	
-	}
-	
 	for (var x=0;x<maxDataSets;x++) {
 		var dataSet = datasets[x];
 		

@@ -14,6 +14,7 @@ TissueStack.Canvas = function(data_extent, canvas_id, dataset_id, include_cross_
 	this.contrast = null; // a shared instance of a contrast slider
 	// make parent and ourselves visible
 	this.getCanvasElement().parent().removeClass("hidden");
+	this.triggerUrlLink(); //trigger url link function
 };
 
 TissueStack.Canvas.prototype = {
@@ -592,5 +593,13 @@ TissueStack.Canvas.prototype = {
 		}
 		
 		$('#'+this.dataset_id +'_link_message').html(url_link_message);
+	}, triggerUrlLink : function () {
+		var thisUrl = this;
+		if(TissueStack.desktop || TissueStack.tablet){
+			//Show or Hide "URL Link" Box (used unbind "click" to solve the problem when opening two datasets)
+			$('#'+ thisUrl.dataset_id + '_url_button').unbind('click').click(function(){ 
+				$('#'+ thisUrl.dataset_id + '_url_box').toggle("fast");		
+			});	
+		}
 	}
 };
