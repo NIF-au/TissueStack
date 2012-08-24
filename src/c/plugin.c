@@ -80,6 +80,14 @@ void		*plugin_try_start(void *args)
   return (NULL);
 }
 
+void		plugin_load_from_string(char *str, t_tissue_stack *t)
+{
+  t_args_plug	*args;
+
+  args = create_plug_args(str_to_wordtab(str), t, NULL);
+  plugin_load(args);
+}
+
 void		*plugin_load(void *args)
 {
   t_args_plug	*a;
@@ -138,6 +146,14 @@ void		*plugin_load(void *args)
     this->error = 2;
   //  free(a);
   return (NULL);
+}
+
+void		plugin_start_from_string(char *str, t_tissue_stack *t)
+{
+  t_args_plug	*args;
+
+  args = create_plug_args(str_to_wordtab(str), t, NULL);
+  plugin_start(args);
 }
 
 void		*plugin_start(void *args)
