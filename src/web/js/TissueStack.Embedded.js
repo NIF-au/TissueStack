@@ -285,34 +285,50 @@ TissueStack.Embedded.prototype = {
 			// if we have more than 1 plane => show y as the main plane and make x and z the small views
 			if (i != 0) {
 				plane.changeToZoomLevel(0);
-			} else if (i == 0 && this.initOpts && this.initOpts['zoom'] && this.initOpts['zoom'] >=0 && this.initOpts['zoom'] < plane.data_extent.max_slices) {
-				plane.changeToZoomLevel(this.initOpts['zoom']);
-			}
-		
-			var _this = this;
-			(function(p, index) {
-				setTimeout(function() {
-					if (_this.initOpts && (_this.initOpts['x'] != null || _this.initOpts['y'] != null || _this.initOpts['z'] != null)) {
-						if (index != 0) return;
-							
-						var givenCoords = {x: _this.initOpts['x'] != null ? _this.initOpts['x'] : 0,
-								y: _this.initOpts['y'] != null ? _this.initOpts['y'] : 0,
-								z: _this.initOpts['z'] != null ? _this.initOpts['z'] : 0};
-						
-						if (p.getDataExtent().worldCoordinatesTransformationMatrix) {
-							givenCoords = p.getDataExtent().getPixelForWorldCoordinates(givenCoords);
-						}
-						p.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, now);
-						setTimeout(function() {
-							p.events.changeSliceForPlane(givenCoords.z);
-						}, 200);
-					} else {
-						p.queue.drawLowResolutionPreview(now);
-						p.queue.drawRequestAfterLowResolutionPreview(null, now);
-					}
-				}, 200);
-			}(plane, i));
+			} 
+
+			plane.queue.drawLowResolutionPreview(now);
+			plane.queue.drawRequestAfterLowResolutionPreview(null, now);
 		}
+	}, applyUserParameters : function(dataSet) {
+		if (!this.initOpts) return;
+		
+		var plane_id = typeof(this.initOpts['plane']) === 'string' ?  this.initOpts['plane'] : 'y';
+
+		// plane or data set does not exist => good bye
+		if (!dataSet || !dataSet.planes[plane_id]) return;
+		
+		// do we need to swap planes in the main view
+		var maximizeIcon = $("#dataset_1 .canvas_" + plane_id + ",maximize_view_icon");
+		if (maximizeIcon && maximizeIcon.length == 1) {
+			// not elegant but fire event to achieve our plane swap
+			maximizeIcon.click();
+		}
+		
+		var _this = this;
+		var plane = dataSet.planes[plane_id];
+		
+		if (_this.initOpts['zoom'] != null && _this.initOpts['zoom'] >= 0 && _this.initOpts['zoom'] < plane.data_extent.zoom_levels.length) {
+			plane.changeToZoomLevel(_this.initOpts['zoom']); 
+		}
+
+		var givenCoords = {};
+		if (_this.initOpts['x'] != null || _this.initOpts['y'] != null || _this.initOpts['z'] != null) {
+			givenCoords = {x: _this.initOpts['x'] != null ? _this.initOpts['x'] : 0,
+					y: _this.initOpts['y'] != null ? _this.initOpts['y'] : 0,
+					z: _this.initOpts['z'] != null ? _this.initOpts['z'] : 0};
+			
+			if (plane.getDataExtent().worldCoordinatesTransformationMatrix) {
+				givenCoords = plane.getDataExtent().getPixelForWorldCoordinates(givenCoords);
+			}
+		} else {
+			givenCoords = plane.getRelativeCrossCoordinates();
+			givenCoords.z = plane.getDataExtent().slice;
+		}
+		plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, new Date().getTime());
+		setTimeout(function() {
+			plane.events.changeSliceForPlane(givenCoords.z);
+		}, 200);
 	},
 	adjustCanvasSizes : function() {
 		// get dimensions from parent and impose them on the canvases
@@ -381,6 +397,7 @@ TissueStack.Embedded.prototype = {
 				if (dataSet.data.length > 1) {
 					_this.registerMaximizeEvents();
 				}
+				if (_this.initOpts) _this.applyUserParameters(dataSet);
 			},
 			function(jqXHR, textStatus, errorThrown) {
 				_this.writeErrorMessageIntoDiv("Error connecting to backend: " + textStatus + " " + errorThrown);

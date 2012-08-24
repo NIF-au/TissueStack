@@ -147,7 +147,10 @@ TissueStack.DataSetNavigation.prototype = {
 			// we don't care, stupif jquery mobile ...
 			$("#colormap_grey").attr("checked", "checked");
 		}
-			
+		
+		$("#dataset_1_url_box").hide("fast");
+		$("#dataset_2_url_box").hide("fast");
+		
 		if(TissueStack.desktop || TissueStack.tablet){
 			// restore slider states
 			var old_classes = $("#" + dataset + "_canvas_main_slider").attr("class");

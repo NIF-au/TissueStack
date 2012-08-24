@@ -589,7 +589,7 @@ TissueStack.Canvas.prototype = {
 		
 		// Show Url Link info (solve the problem (used split ?) when user entering website by query string link)
 		if(x_link != "" || y_link != "" || z_link != ""){
-			url_link_message = document.location.href.split('?')[0] + "?ds=" + ds + "&x=" + x_link + "&y=" + y_link + "&z=" 
+			url_link_message = document.location.href.split('?')[0] + "?ds=" + ds + "&plane=" + this.data_extent.plane + "&x=" + x_link + "&y=" + y_link + "&z=" 
 							 + z_link + "&zoom=" + zoom;
 		}
 		
