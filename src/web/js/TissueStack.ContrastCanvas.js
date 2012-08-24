@@ -10,7 +10,7 @@ TissueStack.ContrastCanvas.prototype = {
 	margin : 0,  // left hand and right hand margin in between canvas bounds and contrast 'bar'
 	step : 0,	 // step size for each contrast step
 	width : 0,	 // width of the contrast 'bar' in px
-	height: 25,  // height of the contrast 'bar' in px
+	height: 75,  // height of the contrast 'bar' in px
 	start_coords : {x: 0, y: 0}, // the starting coordinate pair (upper left corner) of the contrast bar
 	min_bar_pos : -1,	// the position for the min bar position
 	max_bar_pos : -1,    // the position for the max bar position
@@ -40,7 +40,7 @@ TissueStack.ContrastCanvas.prototype = {
 		
 		this.step = Math.floor(this.getCanvasWidth() / this.range);
 		this.width = this.step * (this.range + 1);
-		this.height = 25;
+		this.height = 75;
 		
 		this.margin = Math.floor((this.getCanvasWidth() - this.width) / 2);
 		this.start_coords.x = this.margin;
@@ -74,7 +74,7 @@ TissueStack.ContrastCanvas.prototype = {
 		ctx.lineTo(this.start_coords.x,this.start_coords.y);
 		ctx.stroke();
 		
-		this.drawClosingX();
+		//this.drawClosingX();
 	}, drawClosingX : function() {
 		var ctx = this.getContext();
 		if (!ctx) return;
@@ -83,8 +83,8 @@ TissueStack.ContrastCanvas.prototype = {
 		
 		var close = new Image();
 		close.src = '/images/close.png';
-		this.close_coords.x = _this.start_coords.x + _this.width - 30;
-		this.close_coords.y = _this.start_coords.y - 30;
+		this.close_coords.x = _this.start_coords.x + _this.width - 35;
+		this.close_coords.y = _this.start_coords.y - 35;
 		
 		close.onload = function() {
 			ctx.drawImage(this, _this.close_coords.x, _this.close_coords.y);
@@ -93,7 +93,7 @@ TissueStack.ContrastCanvas.prototype = {
 		var ctx = this.getContext();
 		if (!ctx) return;
 
-		ctx.font = "12.5pt Calibri";
+		ctx.font = "12pt Calibri";
 		ctx.fillStyle = "rgba(0, 0, 200, 1)";
 		ctx.fillText("Min: " + this.getMinimum(), this.start_coords.x + (this.width / 4) - 50, 40);
 		ctx.fillStyle = "rgba(200, 0, 0, 1)";
@@ -118,10 +118,10 @@ TissueStack.ContrastCanvas.prototype = {
 		}
 		
 		// make sure that min and max don't conflict
-		if ((this.min_bar_pos > 0 && which === 'min' && position + this.step >= this.max_bar_pos)
-				|| (this.max_bar_pos > 0 && which === 'max' && position -this.step <= this.min_bar_pos)) {
+		if ((this.min_bar_pos > 0 && which === 'min' && position + this.step * 2 >= this.max_bar_pos)
+				|| (this.max_bar_pos > 0 && which === 'max' && position - this.step * 2 <= this.min_bar_pos)) {
 			var other = which === 'min' ? 'max' : 'min';
-			position = this[other + "_bar_pos"] + (which === 'min' ? -this.step : this.step);
+			position = this[other + "_bar_pos"] + (which === 'min' ? - this.step : this.step);
 		} 
 		
 		this[which + '_bar_pos'] = position;
@@ -131,7 +131,7 @@ TissueStack.ContrastCanvas.prototype = {
 		
 		// draw bar
 		ctx.fillStyle = (which == 'min' ? "rgba(0, 0, 200, 1)" : "rgba(200, 0, 0, 1)");
-		ctx.fillRect(this[which + "_bar_pos"], this.start_coords.y, this.step, this.height);
+		ctx.fillRect(this[which + "_bar_pos"], this.start_coords.y, this.step * 2, this.height);
 	},
 	registerListeners : function() {
 		if (!this.getCanvasElement()) return;
@@ -189,9 +189,9 @@ TissueStack.ContrastCanvas.prototype = {
 		this.getCanvasElement().unbind("click");
 	},
 	isMinOrMaxMove : function(coords) {
-		if (coords.x >= this.min_bar_pos && coords.x <= this.min_bar_pos + this.step) {
+		if (coords.x >= this.min_bar_pos - this.step * 2 && coords.x <= this.min_bar_pos + this.step * 5) {
 			return "min";
-		} else if (coords.x >= this.max_bar_pos && coords.x <= this.max_bar_pos + this.step) {
+		} else if (coords.x >= this.max_bar_pos - this.step * 2 && coords.x <= this.max_bar_pos + this.step * 5) {
 			return "max";
 		}
 		
@@ -205,10 +205,5 @@ TissueStack.ContrastCanvas.prototype = {
 		if (!this.getCanvasElement()) return;
 		
 		this.getCanvasElement().hide();
-	}, showContrastCanvas : function() {
-		if (!this.getCanvasElement()) return;
-		
-		this.getCanvasElement().show();
 	}
-	
 };

@@ -1,5 +1,18 @@
 #include "serv.h"
 
+unsigned int		get_slices_max(t_vol *volume)
+{
+  // get the larger number of slices possible
+  if ((volume->size[X] * volume->size[Y]) > (volume->size[Z] * volume->size[X]))
+    {
+      if ((volume->size[X] * volume->size[Y]) > (volume->size[Z] * volume->size[Y]))
+	return (volume->size[X] * volume->size[Y]);
+    }
+  else if ((volume->size[Z] * volume->size[X]) > (volume->size[Z] * volume->size[Y]))
+    return (volume->size[Z] * volume->size[X]);
+  return (volume->size[Z] * volume->size[Y]);
+}
+
 char		*str_n_cpy(char *str, int position, int len)
 {
   char		*dest;
