@@ -11,12 +11,15 @@ TissueStack.Canvas = function(data_extent, canvas_id, dataset_id, include_cross_
 	this.setIncludeCrossHair(include_cross_hair);
 	this.events = new TissueStack.Events(this, this.include_cross_hair); 
 	this.queue = new TissueStack.Queue(this);
+	this.contrast = null; // a shared instance of a contrast slider
 	// make parent and ourselves visible
 	this.getCanvasElement().parent().removeClass("hidden");
-	
+	this.triggerUrlLink(); //trigger url link function
+	this.triggerContrastControl();
 };
 
 TissueStack.Canvas.prototype = {
+	is_main_view: false,
 	data_extent: null,
 	dataset_id: "",
 	canvas_id: this.dataset_id + "canvas_" + this.plane,
@@ -34,7 +37,10 @@ TissueStack.Canvas.prototype = {
 	cross_y : 0,
 	queue : null,
 	color_map : "grey",
-	setIncludeCrossHair : function(include_cross_hair) {
+	updateScaleBar : function() {
+		// update scale bar if main view
+		if (this.is_main_view) this.getDataExtent().adjustScaleBar(100);
+	}, setIncludeCrossHair : function(include_cross_hair) {
 		// include cross hair canvas or not
 		if (typeof(include_cross_hair) != 'boolean' || include_cross_hair == true) {
 			this.include_cross_hair = true;
@@ -85,6 +91,7 @@ TissueStack.Canvas.prototype = {
 		
 		// update displayed info
 		this.updateExtentInfo(this.getDataExtent().getExtentCoordinates());
+		
 	},
 	getDataCoordinates : function(relative_mouse_coords) {
 		var relDataX = -1;
@@ -208,11 +215,9 @@ TissueStack.Canvas.prototype = {
 
 		return {x: newX, y: newY};
 	},
-	redrawWithCenterAndCrossAtGivenPixelCoordinates: function(coords) {
+	redrawWithCenterAndCrossAtGivenPixelCoordinates: function(coords, timestamp) {
 		// this stops any still running draw requests 
-		var now = new Date().getTime(); 
-		this.queue.latestDrawRequestTimestamp = now;
-
+		var now = typeof(timestamp) == 'number' ? timestamp : new Date().getTime(); 
 		this.eraseCanvasContent();
 		
 		// make sure crosshair is centered:
@@ -225,9 +230,6 @@ TissueStack.Canvas.prototype = {
 		if (coords.z) {
 			this.data_extent.slice = coords.z;
 		}
-
-		this.queue.drawLowResolutionPreview(now);
-		this.queue.drawRequestAfterLowResolutionPreview(null,now);
 
 		// look for the cross overlay which will be the top layer
 		var canvas = this.getCoordinateCrossCanvas();
@@ -305,6 +307,13 @@ TissueStack.Canvas.prototype = {
     	// put altered data back into canvas
     	ctx.putImageData(myImageData, xStart, yStart);  	
 	}, drawMe : function(timestamp) {
+		// damn you async loads
+		if (this.queue.latestDrawRequestTimestamp < 0 ||
+				(timestamp && timestamp < this.queue.latestDrawRequestTimestamp)) {
+			//console.info('Beginning abort for ' + this.getDataExtent().data_id + '[' + this.getDataExtent().getOriginalPlane() + ']: ' + timestamp);
+			return;
+		}
+		
 		// preliminary check if we are within the slice range
 		var slice = this.getDataExtent().slice;
 		if (slice < 0 || slice > this.getDataExtent().max_slices) {
@@ -403,11 +412,6 @@ TissueStack.Canvas.prototype = {
 					break;
 				}
 
-				// brief check as to whether there exists a newer drawing request
-				if (timestamp && timestamp < this.queue.latestDrawRequestTimestamp) {
-					return;
-				}
-				
 				// create the image object that loads the tile we need
 				var imageTile = new Image();
 				imageTile.crossOrigin = '';
@@ -425,6 +429,7 @@ TissueStack.Canvas.prototype = {
 										this.getDataExtent().getZoomLevelFactorForZoomLevel(this.getDataExtent().zoom_level),
 							this.getDataExtent().getOriginalPlane(),
 							slice,
+							this.color_map,
 							this.image_format,
 							this.getDataExtent().tile_size,
 							rowIndex,
@@ -433,13 +438,20 @@ TissueStack.Canvas.prototype = {
 				// append session id & timestamp for image service
 				if (!this.getDataExtent().getIsTiled()) {
 					src += ("&id=" + this.sessionId);
-					src += ("&timestamp=" + (this.queue.latestDrawRequestTimestamp == 0 ? new Date().getTime() : this.queue.latestDrawRequestTimestamp));
+					src += ("&timestamp=" + timestamp);
 				}
-				imageTile.src = src; 
+
+				// damn you async loads
+				if (this.queue.latestDrawRequestTimestamp < 0 ||
+						(timestamp && timestamp < this.queue.latestDrawRequestTimestamp)) {
+					//console.info('Abort for ' + this.getDataExtent().data_id + '[' + this.getDataExtent().getOriginalPlane() + ']: R: ' + rowIndex + ' C: ' + colIndex  + ' t: ' + timestamp + ' qt: ' + this.queue.latestDrawRequestTimestamp);	
+					return;
+				}
 
 				counter++;
+				imageTile.src = src; 
 				
-				(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, tile_size) {
+				(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, tile_size, row, col) {
 					imageTile.onload = function() {
 						// check with actual image dimensions ...
 						if (canvasX == 0 && width != tile_size && deltaStartTileXAndUpperLeftCornerX !=0) {
@@ -456,23 +468,23 @@ TissueStack.Canvas.prototype = {
 								height = this.height;
 						}
 
+						counter--;
+
 						// damn you async loads
-						if (timestamp && timestamp < _this.queue.latestDrawRequestTimestamp) {
+						if (_this.queue.latestDrawRequestTimestamp < 0 ||
+								(timestamp && timestamp < _this.queue.latestDrawRequestTimestamp)) {
+							//console.info('Abort for ' + _this.getDataExtent().data_id + '[' + _this.getDataExtent().getOriginalPlane() + ']: R: ' + row + ' C: ' + col + ' t: ' + timestamp + ' qt: ' + _this.queue.latestDrawRequestTimestamp);
 							return;
 						}
 						
-						ctx.globalAlpha=1;
+						//console.info('Drawing [' + _this.getDataExtent().data_id + ']: ' + timestamp + ' (' + _this.getDataExtent().getOriginalPlane()  + ') R => ' + row + ' C => ' + col + ' Left: ' + counter);
 						ctx.drawImage(this,
 								imageOffsetX, imageOffsetY, width, height, // tile dimensions
 								canvasX, canvasY, width, height); // canvas dimensions
 						
-						counter--;
-						
-						if (counter == 0) {
-							_this.applyColorMapToCanvasContent();
-						}
+						if (counter == 0 && _this.getDataExtent().getIsTiled()) _this.applyColorMapToCanvasContent();
 					};
-				})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, this.getDataExtent().tile_size);
+				})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, this.getDataExtent().tile_size, rowIndex, colIndex);
 				
 				// increment canvasY
 				canvasY += height;
@@ -528,6 +540,9 @@ TissueStack.Canvas.prototype = {
 			
 			this.updateExtentInfo(dataSet.realWorldCoords[this.data_extent.plane]);
 			
+			// update url link info
+			this.getUrlLinkString(dataSet.realWorldCoords[this.data_extent.plane]);
+			
 			return;
 		}
 		
@@ -542,6 +557,7 @@ TissueStack.Canvas.prototype = {
 			log = $('.world_coords');
 			log.html("World > X: " +  Math.round(worldCoords.x * 1000) / 1000 + ", Y: " +  Math.round(worldCoords.y * 1000) / 1000);
 		}
+		
 	}, getXYCoordinatesWithRespectToZoomLevel : function(coords) {
 		if (this.upper_left_y < this.dim_y - this.cross_y || this.upper_left_y - (this.data_extent.y - 1) > this.dim_y - this.cross_y) {
 			return;
@@ -553,5 +569,45 @@ TissueStack.Canvas.prototype = {
 		}
 
 		return this.data_extent.getXYCoordinatesWithRespectToZoomLevel(coords);
+	}, getUrlLinkString : function (realWorldCoords) {	
+		var url_link_message = "";
+		var ds, x_link, y_link, z_link, zoom;
+		
+		ds = this.data_extent.data_id;
+		x_link = $('#canvas_point_x').val();
+		y_link = $('#canvas_point_y').val();
+		z_link = $('#canvas_point_z').val();
+		zoom = this.getDataExtent().zoom_level;
+		
+		//need to fix localhost or image server link later
+		if(ds.search("localhost_") != -1){
+			ds = ds.replace("localhost_", "");
+		}
+		else if (ds.length == 0){
+			url_link_message = "No Dataset Selected";
+		}
+		
+		// Show Url Link info (solve the problem (used split ?) when user entering website by query string link)
+		if(x_link != "" || y_link != "" || z_link != ""){
+			url_link_message = document.location.href.split('?')[0] + "?ds=" + ds + "&plane=" + this.data_extent.plane + "&x=" + x_link + "&y=" + y_link + "&z=" 
+							 + z_link + "&zoom=" + zoom;
+		}
+		
+		$('#'+this.dataset_id +'_link_message').html(url_link_message);
+	}, triggerUrlLink : function () {
+		var thisUrl = this;
+		if(TissueStack.desktop || TissueStack.tablet){
+			//Show or Hide "URL Link" Box (used unbind "click" to solve the problem when opening two datasets)
+			$('#'+ thisUrl.dataset_id + '_url_button').unbind('click').click(function(){ 
+				$('#'+ thisUrl.dataset_id + '_url_box').toggle();		
+			});	
+		}
+	}, triggerContrastControl: function () {
+		var thisDataset = this;
+		if(TissueStack.desktop || TissueStack.tablet){
+			$('#'+ thisDataset.dataset_id + '_toolbox_canvas_button').unbind('click').click(function(){ 
+				$('#'+ thisDataset.dataset_id + '_contrast_box').toggle();		
+			});	
+		}
 	}
 };

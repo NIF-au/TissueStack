@@ -12,7 +12,7 @@ TissueStack = {
 	                ]
 };
 
-TissueStack.Embedded = function (div, server, data_set_id, include_cross_hair, use_image_service) {
+TissueStack.Embedded = function (div, server, data_set_id, include_cross_hair, use_image_service, initOpts) {
 	// evaluate input and conduct peliminary checks
 	
 	if (typeof(div) != 'string' || $.trim(div) == '') {
@@ -48,6 +48,12 @@ TissueStack.Embedded = function (div, server, data_set_id, include_cross_hair, u
 		this.use_image_service = true;
 	} else {
 		this.use_image_service = false;
+	}
+
+	if (typeof(initOpts) == 'object') {
+		this.initOpts = initOpts;
+	} else {
+		this.initOpts = null;
 	}
 	
 	// check canvas support
@@ -173,7 +179,19 @@ TissueStack.Embedded.prototype = {
 			var planeId = dataSet.data[i].name;
 			
 			switch(i) {
-				case 0: // first is main canvas
+				case 0: // first is main canvas (incl. scale bar)
+					html += ('<div class="scalecontrol_main"><div id="dataset_1_scale_middle" class="scalecontrol_middle">'
+						+ '<div class="dataset_1_scalecontrol_image" style="left: 0px; top: -424px; width: 89px;"></div></div>'
+						+ '<div id="dataset_1_scale_left" class="scalecontrol_left">'
+						+ '<div class="dataset_1_scalecontrol_image" style="left: -4px; top: -398px; width: 59px;"></div></div>'
+						+ '<div id="dataset_1_scale_center_left" class="scalecontrol_center_left">'
+	    				+ '<div class="dataset_1_scalecontrol_image" style="left: 0px; top: -398px; width: 59px;"></div></div>'
+	    				+ '<div id="dataset_1_scale_center_right" class="scalecontrol_center_right">'
+	    				+ '<div class="dataset_1_scalecontrol_image" style="left: 0px; top: -398px; width: 59px;"></div></div>'
+	    				+ '<div id="dataset_1_scale_up" class="scalecontrol_up">'
+    					+ '<div class="dataset_1_scalecontrol_image" style="left: -4px; top: -398px; width: 59px;"></div></div>'
+	    				+ '<div id="dataset_1_scale_text_up" class="scalecontrol_text_up"></div></div>');
+					
 					html +=
 							'<div id="dataset_1_main_view_canvas" class="canvasview canvas_' + planeId + '">'
 						+ 	'<canvas id="dataset_1_canvas_' + planeId + '_plane" class="plane"></canvas>'
@@ -218,7 +236,7 @@ TissueStack.Embedded.prototype = {
 	initCanvasView : function(dataSet, use_image_service) {
 		// we use that for the image service to be able to abort pending requests
 		var sessionId = TissueStack.Utils.generateSessionId();
-
+		var now = new Date().getTime();
 		
 		// loop over all planes in the data, create canvas and extent objects, then display them
 		for (var i=0; i < dataSet.data.length; i++) {
@@ -239,7 +257,8 @@ TissueStack.Embedded.prototype = {
 					dataForPlane.maxX,
 					dataForPlane.maxY,
 					zoomLevels,
-					transformationMatrix);
+					transformationMatrix,
+					dataForPlane.resolutionMm);
 			
 			// create canvas
 			var canvasElementSelector = "dataset_1"; 
@@ -249,6 +268,10 @@ TissueStack.Embedded.prototype = {
 					canvasElementSelector,
 					this.include_cross_hair);
 			plane.sessionId = sessionId;
+
+			// for scalebar to know its parent
+			if (i == 0) plane.is_main_view = true;
+			plane.updateScaleBar();
 			
 			// store plane  
 			dataSet.planes[planeId] = plane;
@@ -258,16 +281,54 @@ TissueStack.Embedded.prototype = {
 			
 			// display data extent info on page
 			plane.updateExtentInfo(dataSet.realWorldCoords[planeId]);
-			
+
 			// if we have more than 1 plane => show y as the main plane and make x and z the small views
 			if (i != 0) {
 				plane.changeToZoomLevel(0);
-			}
-			
-			// fill canvases
-			plane.queue.drawLowResolutionPreview();
-			plane.queue.drawRequestAfterLowResolutionPreview();
+			} 
+
+			plane.queue.drawLowResolutionPreview(now);
+			plane.queue.drawRequestAfterLowResolutionPreview(null, now);
 		}
+	}, applyUserParameters : function(dataSet) {
+		if (!this.initOpts) return;
+		
+		var plane_id = typeof(this.initOpts['plane']) === 'string' ?  this.initOpts['plane'] : 'y';
+
+		// plane or data set does not exist => good bye
+		if (!dataSet || !dataSet.planes[plane_id]) return;
+		
+		// do we need to swap planes in the main view
+		var maximizeIcon = $("#dataset_1 .canvas_" + plane_id + ",maximize_view_icon");
+		if (maximizeIcon && maximizeIcon.length == 1) {
+			// not elegant but fire event to achieve our plane swap
+			maximizeIcon.click();
+		}
+		
+		var _this = this;
+		var plane = dataSet.planes[plane_id];
+		
+		if (_this.initOpts['zoom'] != null && _this.initOpts['zoom'] >= 0 && _this.initOpts['zoom'] < plane.data_extent.zoom_levels.length) {
+			plane.changeToZoomLevel(_this.initOpts['zoom']); 
+		}
+
+		var givenCoords = {};
+		if (_this.initOpts['x'] != null || _this.initOpts['y'] != null || _this.initOpts['z'] != null) {
+			givenCoords = {x: _this.initOpts['x'] != null ? _this.initOpts['x'] : 0,
+					y: _this.initOpts['y'] != null ? _this.initOpts['y'] : 0,
+					z: _this.initOpts['z'] != null ? _this.initOpts['z'] : 0};
+			
+			if (plane.getDataExtent().worldCoordinatesTransformationMatrix) {
+				givenCoords = plane.getDataExtent().getPixelForWorldCoordinates(givenCoords);
+			}
+		} else {
+			givenCoords = plane.getRelativeCrossCoordinates();
+			givenCoords.z = plane.getDataExtent().slice;
+		}
+		plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, new Date().getTime());
+		setTimeout(function() {
+			plane.events.changeSliceForPlane(givenCoords.z);
+		}, 200);
 	},
 	adjustCanvasSizes : function() {
 		// get dimensions from parent and impose them on the canvases
@@ -336,6 +397,7 @@ TissueStack.Embedded.prototype = {
 				if (dataSet.data.length > 1) {
 					_this.registerMaximizeEvents();
 				}
+				if (_this.initOpts) _this.applyUserParameters(dataSet);
 			},
 			function(jqXHR, textStatus, errorThrown) {
 				_this.writeErrorMessageIntoDiv("Error connecting to backend: " + textStatus + " " + errorThrown);

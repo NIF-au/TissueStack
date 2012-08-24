@@ -61,7 +61,6 @@ void		get_raw_data_hyperslab(t_vol *volume, int dim, int slice, char *hyperslab)
 
   if (volume->raw_data == 1)
     {
-      printf("RAW DATA ----------------\n");
       offset = (volume->dim_offset[dim] + (unsigned long long int)((unsigned long long int)volume->slice_size[dim] * (unsigned long long int)slice));
       /*#ifdef __off64_t_defined
       //#ifndef __USE_LARGEFILE64
@@ -100,6 +99,12 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
   int		h_max_iteration;
   int		save_h_position = a->info->h_position;
   int		save_w_position = a->info->w_position;
+
+  if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+    write_http_header(a->file, "408 Request Timeout", a->info->image_type);
+    fclose(a->file);
+	return;
+  }
 
   // allocation of a hyperslab (portion of the file, can be 1 slice or 1 demension...)
   hyperslab =  malloc(volume->slices_max * sizeof(*hyperslab));

@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 /** for string tokenization **/
 int countTokens(char *buffer, char delimiter, char escape);
@@ -24,6 +25,8 @@ t_string_buffer * appendToBuffer(t_string_buffer * buffer, char * someString);
 
 /** creates a directory (recursively incl. sub directories) */
 t_string_buffer * createDirectory(char * path, mode_t mode);
+
+void		write_http_header(FILE * socket, char * status, char * image_type);
 
 void free_null_terminated_char_2D_array(char ** strings);
 

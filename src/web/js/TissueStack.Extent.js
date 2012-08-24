@@ -1,4 +1,4 @@
-TissueStack.Extent = function (data_id, is_tiled, zoom_level, plane, max_slices, x, y, zoom_levels, worldCoordinatesTransformationMatrix) {
+TissueStack.Extent = function (data_id, is_tiled, zoom_level, plane, max_slices, x, y, zoom_levels, worldCoordinatesTransformationMatrix, res_mm) {
 	this.setDataId(data_id);
 	this.setIsTiled(is_tiled);
 	this.setZoomLevel(zoom_level);
@@ -9,6 +9,7 @@ TissueStack.Extent = function (data_id, is_tiled, zoom_level, plane, max_slices,
 	this.rememberOneToOneZoomLevel(this.x, this.y, this.zoom_level);
 	this.setZoomLevels(zoom_levels);
 	this.worldCoordinatesTransformationMatrix = worldCoordinatesTransformationMatrix;
+	if (typeof(res_mm) == 'number')  this.resolution_mm = res_mm;
 };
 
 TissueStack.Extent.prototype = {
@@ -27,6 +28,7 @@ TissueStack.Extent.prototype = {
 	max_slices : 0,
 	slice: 0,
 	worldCoordinatesTransformationMatrix: null,
+	resolution_mm: 0,
 	setDataId : function(data_id) {
 		if (typeof(data_id) != "string" || data_id.length == 0) {
 			throw new Error("data_id has to be a non-empty string");
@@ -89,7 +91,7 @@ TissueStack.Extent.prototype = {
 		this.one_to_one_y = y;
 	}, changeToZoomLevel : function(zoom_level) {
 		var zoom_level_factor = this.getZoomLevelFactorForZoomLevel(zoom_level);
-
+		
 		if (zoom_level_factor == -1) {
 			return;
 		}
@@ -103,6 +105,9 @@ TissueStack.Extent.prototype = {
 			return;
 		}
 		this.setDimensions(zoom_level_dim.x, zoom_level_dim.y);
+		
+		// update scale bar if main view
+		this.canvas.updateScaleBar();
 	}, getZoomLevelFactorForZoomLevel : function(zoom_level) {
 		if (typeof(zoom_level) != "number" || Math.floor(zoom_level) < 0 || Math.floor(zoom_level) >= this.zoom_levels.length) {
 			return -1;
@@ -141,7 +146,7 @@ TissueStack.Extent.prototype = {
 		} else {
 			this.slice = Math.ceil(slice / this.zoom_level_factor);
 		}
-
+		
 		var canvasSlider = $("#" + (this.canvas.dataset_id == "" ? "canvas_" : this.canvas.dataset_id + "_canvas_") + "main_slider");
 		if (canvasSlider.length == 0) {
 			return;
@@ -211,7 +216,6 @@ TissueStack.Extent.prototype = {
 		var pixelCoords = TissueStack.Utils.transformWorldCoordinatesToPixelCoordinates(
 				[worldCoords.x, worldCoords.y, worldCoords.z, 1],
 				this.worldCoordinatesTransformationMatrix);
-		
 		if (pixelCoords == null) {
 			return null;
 		}
@@ -281,5 +285,14 @@ TissueStack.Extent.prototype = {
 		}
 	
 		return coords;
+	}, adjustScaleBar :function (length) { 
+		var scaleMiddle = $('#'+this.canvas.dataset_id+'_scale_middle, .'+this.canvas.dataset_id+'_scalecontrol_image');
+		if (!scaleMiddle || scaleMiddle.length == 0) return;
+		
+		scaleMiddle.css({"width" : length + 3});
+		$('#'+this.canvas.dataset_id+'_scale_center_right').css({"left" : length + 3});
+		$('#'+this.canvas.dataset_id+'_scale_up').css({"left" : length});
+		$('#'+this.canvas.dataset_id+'_scale_text_up').html(
+				TissueStack.Utils.getResolutionString(this.resolution_mm * length/ this.zoom_level_factor));
 	}
 };

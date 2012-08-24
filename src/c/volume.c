@@ -480,6 +480,34 @@ void		remove_volume(char *path, t_tissue_stack *t)
     }
 }
 
+t_vol * load_volume(t_args_plug * a, char * path) {
+		if (path == NULL) return NULL;
+
+		t_vol * volume = a->general_info->get_volume(path, a->general_info);
+		if (volume != NULL) return volume;
+
+		a->this->busy = 1;
+
+		char		volume_load[200];
+		sprintf(volume_load, "file load %s", path);
+
+		a->general_info->plug_actions(a->general_info, volume_load, NULL);
+
+		int waitLoops = 0;
+		while (volume == NULL && waitLoops < 5) {
+		  usleep(100000);
+		  volume = a->general_info->get_volume(path, a->general_info);
+		  waitLoops++;
+		}
+		a->this->busy = 0;
+		if (volume == NULL) {
+		  printf("Failed to load volume: %s\n", path);
+		  return NULL;
+		}
+
+		return volume;
+}
+
 void		free_volume(t_vol *v)
 {
   if (v == NULL) return;
@@ -489,7 +517,7 @@ void		free_volume(t_vol *v)
   i = 0;
   while (i < v->dim_nb)
 	{
-	  if (v->dimensions != NULL && v->dimensions[i] != NULL) mifree_dimension_handle(v->dimensions[i]);
+	  //if (v->dimensions != NULL && v->dimensions[i] != NULL) mifree_dimension_handle(v->dimensions[i]);
 	  if (v->dim_name != NULL && v->dim_name[i] != NULL) free(v->dim_name[i]);
 	  i++;
 	}

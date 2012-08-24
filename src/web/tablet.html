@@ -10,6 +10,7 @@
        	
         <link rel="stylesheet" href="css/jquery.mobile-1.1.0.min.css" />
         <link rel="stylesheet" href="css/default.css" />
+        <link rel="stylesheet" href="css/admin_login.css" />
         
         <!--Apple Device Start Up Splash Screen and ICON-->
 		<link rel="apple-touch-startup-image" href="images/mobile/ipadscreen.png" /> <!--For iPad-->
@@ -30,6 +31,7 @@
 		<script src="js/TissueStack.Events.js"></script>
         <script src="js/TissueStack.DataSetStore.js"></script>
         <script src="js/TissueStack.DataSetNavigation.js"></script>
+        <script src="js/TissueStack.ContrastCanvas.js"></script>
         <script src="js/TissueStack.Admin.js"></script>
 		<script src="js/TissueStack.Init.js"></script>
 		
@@ -69,7 +71,7 @@
                     <button type="button" id="server_search_button">Connect to TissueStack Server</button>
 
      	    		<!--ADD TREE DATA SET NAVI BAR-->					
-					<div id="mobile_style_tree_dataset" style="height: 250px; width: 155px; overflow: auto;">
+					<div id="mobile_style_tree_dataset" style="height: 250px; overflow-x: scroll;">
 						<div data-role="collapsible-set" data-theme="a" data-content-theme="d" data-mini="true">
 						<div id="tablet_tree"></div>
 						</div>
@@ -78,6 +80,36 @@
      	    	</div>
      	    	
      	    	<div class="dataset">
+     	    		<!--DISTANCE SCALE-->
+     	    			<div class="scalecontrol_main">
+     	    				<div id="dataset_1_scale_middle" class="scalecontrol_middle">
+     	    					<div class="dataset_1_scalecontrol_image" style="left: 0px; top: -424px; width: 89px;"></div>
+     	    				</div>
+     	    				<div id="dataset_1_scale_left" class="scalecontrol_left">
+     	    					<div class="dataset_1_scalecontrol_image" style="left: -4px; top: -398px; width: 59px;"></div>
+     	    				</div>
+     	    				<div id="dataset_1_scale_center_left" class="scalecontrol_center_left">
+     	    					<div class="dataset_1_scalecontrol_image" style="left: 0px; top: -398px; width: 59px;"></div>
+     	    				</div>
+     	    				<div id="dataset_1_scale_center_right" class="scalecontrol_center_right">
+     	    					<div class="dataset_1_scalecontrol_image" style="left: 0px; top: -398px; width: 59px;"></div>
+     	    				</div>
+     	    				<div id="dataset_1_scale_up" class="scalecontrol_up">
+     	    					<div class="dataset_1_scalecontrol_image" style="left: -4px; top: -398px; width: 59px;"></div>
+     	    				</div>
+     	    				<div id="dataset_1_scale_text_up" class="scalecontrol_text_up"></div>
+     	    			</div>
+     	    		<!--END OF DISTANCE SCALE-->
+     	    		<!--URL LINK-->
+     	    			<div class="url_link_main">
+     	    				<a class="url_link_button" style="color: white;" href="#">URL LINK</a>
+     	    				<div class='url_box'>
+     	    					<div class='url_arrow'></div>
+     	    					<div class='url_arrow-border'></div>
+     	    					<div id="dataset_1_link_message" class="url_link_message"></div>
+     	    				</div>
+     	    			</div>
+     	    		<!--END OF URL LINK-->		
      	    		<div id="dataset_1_main_view_canvas" class="main_view canvasview canvas_y" >
      	    			<canvas id="dataset_1_canvas_y_plane" class="plane"></canvas>	
      	    			<canvas id="dataset_1_canvas_y_plane_cross_overlay" class="cross_overlay"></canvas>
@@ -116,21 +148,21 @@
      	
 	     	<div class="settings-left-column">
 	     		Color Mapping:
-	     	    <fieldset data-role="radio-choice-1">
-	     				<input type="radio" name="color_map" id="radio-choice-1" value="grey" checked="checked" />
-	     	         	<label for="radio-choice-1">Grey</label>
+	     	    <fieldset id="colormap_choice" data-role="radio-choice-1">
+	     				<input type="radio" name="color_map" id="colormap_grey" value="grey" checked="checked" />
+	     	         	<label for="colormap_grey">Grey</label>
 	     	
-	     	         	<input type="radio" name="color_map" id="radio-choice-2" value="hot"  />
-	     	         	<label for="radio-choice-2">Hot</label>
+	     	         	<input type="radio" name="color_map" id="colormap_hot" value="hot"  />
+	     	         	<label for="colormap_hot">Hot</label>
 	     	
-	     	         	<input type="radio" name="color_map" id="radio-choice-3" value="spectral"  />
-	     	         	<label for="radio-choice-3">Spectral</label>
+	     	         	<input type="radio" name="color_map" id="colormap_spectral" value="spectral"  />
+	     	         	<label for="colormap_spectral">Spectral</label>
 	     		</fieldset>
 	     	</div>
      	
 	     	<div class="settings-right-column">
 				<label for="drawing_interval">Drawing Interval (in millis): </label>
-				<input id="drawing_interval" type="text" value="150" >
+				<input id="drawing_interval" type="text" value="75" >
 				<a href="tablet.html#data" data-role="button" id="drawing_interval_button">Apply</a>
 			</div>
 		</div>
@@ -147,29 +179,57 @@
 			  		 </div>
 	            </div>
 	 	    </div>
- 	    <!--ADMIN LOGIN-->
-		   <div id="page_container">
-	 		  <div id="toppanel">
-	 		    <div id="panel">
-	 		      <div id="panel_contents"> </div>
-	 		      <div class="border" id="login">
-	 		        <p>
-	 		          User:<input type="text" size="15" name="username" id="username" disabled="disabled" value="Admin"/>
-	 		          Password:<input type="password" size="15" name="password" id="password" /><br/>
-	 		          <input type="button" accesskey="l" class="login_btn_check" id="login_btn" name="login" value="Login" />
-	 		        </p>
-	 		      </div>
-	 		     </div>
-		 		    <div class="panel_button" style="display: visible;">
-		 		    	<img src="images/expand.png"  alt="expand"/> <a href="#">Login Here</a> 
-		 		   	</div>
-		 		    <div class="panel_button" id="hide_button" style="display: none;">
-		 		    	<img src="images/collapse.png" alt="collapse" /> <a href="#">Hide</a> 
-		 		    </div>
-		 		</div>
-			</div>
-		<!--END OF ADMIN LOGIN-->
- 	       	<div id="div_file_upload" class="settings-left-column">
+ 	   <!--ADMIN LOGIN-->
+ 	     <div id="toppanel">
+ 	     	<div id="panel">
+ 	     		<div class="content clearfix">
+ 	     			<div class="left">
+ 	     				<h1>Welcome to Tissue Stack</h1>
+ 	     				<h2>Login to upload or add dataset</h2>		
+ 	     				<p class="grey">
+ 	     				Its purpose is to allow researchers to view multi-TB imaging datasets online through an interface on machines local to the network segment of the TissueStack server.
+ 	     				</p>
+ 	     				<h2>Project</h2>
+ 	     				<p class="grey">Details can be found in  <a href="http://cai.uq.edu.au" title="CAI" target="_blank">CAI &raquo;</a></p>
+ 	     			</div>
+ 	     			<div class="left">
+ 	     				<!-- Login Form -->
+ 	     				<form class="clearfix" action="#" method="post">
+ 	     					<h1>Member Login</h1>
+ 	     					<label class="grey" for="log">Username:</label>
+ 	     					<input type="text" size="15" name="username" id="username" disabled="disabled" value="Admin"/>
+ 	     					<label class="grey" for="pwd">Password:</label>
+ 	     					<input type="password" size="15" name="password" id="password" /><br/>
+ 	     					<input type="button" accesskey="l" class="login_btn_check" id="login_btn" name="login" value="Login" />
+ 	     				</form>
+ 	     			</div>
+ 	     			<div class="left right">			
+ 	     				<!-- Contact Form -->
+ 	     				<form action="#" method="post">
+ 	     					<h1>Contact CAI</h1>				
+ 	     					<label class="grey" for="email">Email:</label>
+ 	     					<input type="text" name="email" id="email" size="15" disabled="disabled" value="disabled"/>
+ 	     					<input type="button" accesskey="l" class="register_btn_check" id="register_btn" name="register" value="Register"/>
+ 	     				</form>
+ 	     			</div>
+ 	     		</div>
+ 	     	</div>
+ 	     	<!-- The tab on top -->	
+ 	     	<div class="tab">
+ 	     		<ul class="login">
+ 	     			<li class="left"></li>
+ 	     			<li id="name_tap">Hello Guest!</li>
+ 	     			<li class="sep">|</li>
+ 	     			<li id="toggle">
+ 	     				<a id="open" class="open" href="#">Log In </a>
+ 	     				<a id="close" style="display: none;" class="close" href="#">Close Panel</a>			
+ 	     			</li>
+ 	     			<li class="right"></li>
+ 	     		</ul> 
+ 	      	</div> <!-- / top -->
+ 	    </div> <!-- /login -->	
+ 	   <!--END OF ADMIN LOGIN-->
+ 	    	       	<div id="div_file_upload" class="settings-left-column">
 	    			<h1>File Upload</h1>
 	    			<hr/>
 	    			<div id="file_uploaded_message" ></div>

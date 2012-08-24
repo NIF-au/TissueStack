@@ -9,7 +9,6 @@ LIB_PATH	=
 LIBS		=	-lhdf5								\
 			-lnetcdf 							\
 			-lminc2								\
-			-lpng								\
 			-lpthread							\
 			-ldl
 
@@ -19,31 +18,28 @@ FLAGS		=	-g3 -Wall -Werror
 
 PLUGIN_INSTALL_DIR = /usr/local/plugins
 
+OBJS		=	$(SRCS:%.c=%.o)
+
+%.o: %.c
+	gcc -c $(FLAGS) $(INCLUDE) `pkg-config --cflags gtk+-2.0` -fPIC -o $@ $<
+
 all: compile install
 
-compile:	
+compile: $(OBJS)
 	@echo "\n================== Compile $(NAME) ===================="
-	gcc $(SRCS) -c $(INCLUDE) $(FLAGS) -fPIC
-	gcc *.o -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -shared
+	gcc $(OBJS) -o $(NAME) $(LIB_PATH) $(LIBS) $(FLAGS) -shared
 
 install:
 	mkdir -p $(PLUGIN_INSTALL_DIR)
 	cp $(NAME) $(PLUGIN_INSTALL_DIR)/$(NAME)
 
-
 clean:
 	@echo "\n==================== Cleaning $(NAME) ====================="
 	rm -rf *~ \#*\# $(NAME) ./png/*
-	rm -rf *.o
+	rm -rf $(DIRSRC)*.o
 	rm -rf *.so
 	rm -rf core
 
-e:	clean
-	@echo "\n==================== Execution ====================\n\n"
-	@./yop ../00-normal-model-nonsym.mnc
-	@echo "\n\n================== Exec finished ==================\n\n"
+re: clean all
 
-time:	clean
-	@echo "\n==================== Execution ====================\n\n"
-	@time ./yop ../00-normal-model-nonsym.mnc
-	@echo "\n\n================== Exec finished ==================\n\n"
+.PHONY: all compile install clean re

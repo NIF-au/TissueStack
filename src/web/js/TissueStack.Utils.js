@@ -224,9 +224,28 @@ TissueStack.Utils = {
 		}
 
 		$('.dataset').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height * 0.99});
+		
 		for (var x=1;x<=datasets;x++) {
+			var contrast = null;
+			
+			$("#dataset_" + x + "_toolbox_canvas").css({"width" : TissueStack.canvasDimensions.width * 0.8, "height" : 80});
+			$("#dataset_" + x + "_contrast_box").css({"width" : TissueStack.canvasDimensions.width * 0.8, "height" : 80});
+			$("#dataset_" + x + "_toolbox_canvas").attr("width", TissueStack.canvasDimensions.width * 0.8);
+			$("#dataset_" + x + "_toolbox_canvas").attr("height", 80);
+			$("#dataset_" + x + "_contrast_box").attr({"width" : TissueStack.canvasDimensions.width * 0.8});
+			$("#dataset_" + x + "_contrast_box").attr({"height" : 80});
+			if (TissueStack.dataSetNavigation.selectedDataSets["dataset_" + x]) {
+				var ds = TissueStack.dataSetStore.getDataSetById(TissueStack.dataSetNavigation.selectedDataSets["dataset_" + x]);
+				if (ds && ds.planes) {
+					for (var p in ds.planes) {
+						// use the first we can get and init the contrast slider
+						if (ds.planes[p].contrast) ds.planes[p].contrast.initContrastSlider(); 
+						break;
+					}
+				}
+			}; 					
 			$('#dataset_' + x + '_main_view_canvas').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height * 0.99});
-			$('#dataset_' + x + '_main_view_canvas canvas').attr("width", TissueStack.canvasDimensions.width * 0.99);
+			$('#dataset_' + x + '_main_view_canvas canvas').attr("width", TissueStack.canvasDimensions.width);
 			$('#dataset_' + x + '_main_view_canvas canvas').attr("height", TissueStack.canvasDimensions.height * 0.99);
 		}
 
@@ -293,7 +312,7 @@ TissueStack.Utils = {
 	},
 	assembleTissueStackImageRequest : function(
 			protocol, host, isTiled, filename, dataset_id, is_preview,
-			zoom, plane, slice, image_extension, tile_size, row, col) {
+			zoom, plane, slice, colormap, image_extension, tile_size, row, col) {
 		if (typeof(protocol) != "string") {
 			protocol = "http";
 		} 
@@ -327,6 +346,9 @@ TissueStack.Utils = {
 		if (typeof(slice) != "number" || slice < 0) {
 			return null;
 		}
+		if (typeof(colormap) != "string") {
+			colormap = "grey";
+		}
 		if (typeof(image_extension) != "string") {
 			image_extension = "png";
 		}
@@ -354,10 +376,11 @@ TissueStack.Utils = {
 			return url + row + '_' + col + "." + image_extension;
 		} else {
 			// seems to work for server so why not use it
-		    url = url + "/" + path + "/?volume=" + filename + "&image_type=JPEG&scale=" + zoom + "&dimension=" + plane + "space" + "&slice=" + slice;
+		    url = url + "/" + path + "/?volume=" + filename + "&image_type=JPEG&scale=" + zoom + "&dimension="
+		    	+ plane + "space" + "&slice=" + slice + "&colormap=" + colormap;
 			
 			if (is_preview) {
-				return url + "&quality=10";
+				return url + "&quality=8";
 			}
 			
 			return url  + "&quality=1&service=tiles&square=" + tile_size + '&y=' + col + "&x=" + row;
@@ -408,8 +431,57 @@ TissueStack.Utils = {
 		});
 	}, generateSessionId : function() {
 		var timestampPart = "" + new Date().getTime();
-		var randomPart = Math.floor((Math.random()*100000));
+		var randomPart = Math.floor((Math.random()*100));
 		
 		return timestampPart + randomPart;
+	}, readQueryStringFromAddressBar : function() {
+		if (!document.location.search || document.location.search.length == 0 || document.location.search === '?') {
+			return null;
+		}
+		
+		// prepare query string
+		var queryString = $.trim(document.location.search);
+		// omit '?'
+		var queryStringStart = queryString.lastIndexOf('?');
+		if (queryStringStart >= 0) queryString = queryString.substring(queryStringStart + 1);
+		// do a URIdecode
+		queryString = decodeURIComponent(queryString);
+		//extract potential params by splitting into tokens delimited by '&'
+		var tokens = queryString.split('&');
+		if (!tokens || tokens.length == 0) return null;
+		
+		// potential args
+		var args = ['ds','plane', 'x', 'y', 'z', 'zoom'];
+		var ret = {}; // return object
+
+		var c = 0;
+		for (var i=0;i<tokens.length; i++) {
+			for (var j=0;j<args.length;j++) {
+				var index = tokens[i].indexOf(args[j] + '=');
+				if (index ==0) {
+					if (args[j] === 'plane') ret[args[j]] = tokens[i].substring(args[j].length + 1);
+					else ret[args[j]] = parseFloat(tokens[i].substring(args[j].length + 1));
+					c++;
+				}
+			}			
+		}
+
+		return c == 0 ? null : ret;
+	}, getResolutionString : function(resolution_in_mm_times_scale_bar_width_in_pixels) {
+		if (typeof(resolution_in_mm_times_scale_bar_width_in_pixels) != 'number') return "NaN";
+		if (resolution_in_mm_times_scale_bar_width_in_pixels < 0) return "negative value";
+		
+		var unit_lookup = ['mm', '&micro;m', 'nm'];
+		var unit_step = 0;
+		var newRes = resolution_in_mm_times_scale_bar_width_in_pixels;
+		// start at mm and see if we need to go smaller
+		while (true) {
+			if (newRes == 0 || Math.floor(newRes) > 0 || unit_step + 1 > unit_lookup.length - 1) break;
+			
+			newRes *= 1000;
+			unit_step++;
+		}
+
+		return ((newRes - Math.floor(newRes) > 0.00001) ? newRes.toFixed(3) : newRes) + '&nbsp;' + unit_lookup[unit_step];
 	}
 };

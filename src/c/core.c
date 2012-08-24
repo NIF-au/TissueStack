@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Fri Aug  3 13:14:01 2012 Oliver Nicolini
+** Last update Tue Aug 14 15:02:02 2012 Oliver Nicolini
 */
 
 
@@ -134,6 +134,8 @@ void		clean_quit(t_tissue_stack *t)
 void            init_prog(t_tissue_stack *t)
 {
   t->plug_actions = plug_actions_from_external_plugin;
+  t->tile_requests = malloc(sizeof(*t->tile_requests));
+  init_tile_requests(t->tile_requests);
   t->get_volume = get_volume;
   t->check_volume = check_volume;
   t->clean_quit = clean_quit;
@@ -154,6 +156,7 @@ void		free_core_struct(t_tissue_stack *t)
   free_all_plugins(t);
   free_all_history(t);
   free_all_prompt(t);
+  if (t->tile_requests != NULL) t->tile_requests->destroy(t->tile_requests);
   free(t->functions);
   free(t);
 }
@@ -200,7 +203,7 @@ int		main(int argc, char **argv)
   /*
   (t->plug_actions)(t, "load converter /usr/local/plugins/TissueStackMincConverter.so", NULL);
   sleep(1);
-  (t->plug_actions)(t, "start converter /media/Back/anglerfish/anglerfish.new.range.mnc /opt/data/fish_head.raw", NULL);
+  (t->plug_actions)(t, "start converter /media/Data/lowback.minc2.mnc /media/Data/lowback.raw", NULL);
   */
 
   (t->plug_actions)(t, "load image /usr/local/plugins/TissueStackImageExtract.so", NULL);

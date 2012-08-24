@@ -6,7 +6,8 @@ SRCS		=	$(DIRSRC)core.c							\
 			$(DIRSRC)volume.c						\
 			$(DIRSRC)error.c						\
 			$(DIRSRC)thread_pool.c						\
-			$(DIRSRC)utils/utils.c
+			$(DIRSRC)utils/utils.c						\
+			$(DIRSRC)tile_requests.c
 
 INCLUDE		=	-I./headers -I./utils
 
@@ -15,26 +16,54 @@ LIB_PATH	=
 LIBS		=	-lhdf5								\
 			-lnetcdf 							\
 			-lminc2								\
-			-lpng								\
 			-lpthread							\
 			-ldl
 
 NAME		=	TissueStackImageServer
 
-FLAGS		=	-Wall -Werror -DDEB -g3
+FLAGS		=	-Wall -Werror -g3
 
+OBJS		=	$(SRCS:%.c=%.o)
+
+
+OBJS		=	$(SRCS:%.c=%.o)
+
+
+#%.o: %.c
+#		gcc -c $< -o $@ $(INCLUDE) $(FLAGS) `pkg-config --cflags gtk+-2.0`
+#
+#all: compile install
+#
+#compile: $(OBJS)
+#	@echo "\n================== Compile $(NAME) ===================="
+#	gcc $(OBJS) -o $(NAME) $(LIBS)
+
+
+%.o: %.c
+	gcc -c $(FLAGS) $(INCLUDE) `pkg-config --cflags gtk+-2.0` -o $@ $<
 
 all: compile install
 
-compile:	
-	@clear
+compile: $(OBJS)
 	@echo "\n================== Compile $(NAME) ===================="
-	gcc $(SRCS) -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS)
+	gcc $(OBJS) -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) `pkg-config --cflags --libs gtk+-2.0`
+	rm -rf volume.o
+	rm -rf utils/utils.o
 	make -C ./plugins/communicator/ compile
+	rm -rf volume.o
+	rm -rf utils/utils.o	
 	make -C ./plugins/image_extract/ compile
+	rm -rf volume.o
+	rm -rf utils/utils.o	
 	make -C ./plugins/comm_inter_process/ compile
+	rm -rf volume.o
+	rm -rf utils/utils.o	
 	make -C ./plugins/minc_info/ compile
+	rm -rf volume.o
+	rm -rf utils/utils.o	
 	make -C ./plugins/minc_convert/ compile
+	rm -rf volume.o
+	rm -rf utils/utils.o	
 	make -C ./jni/ compile
 
 install:
@@ -51,7 +80,7 @@ install:
 clean:
 	@echo "\n==================== Cleaning $(NAME) ====================="
 	rm -rf *~ \#*\# $(NAME) ./png/* core
-	rm -rf *.o
+	rm -rf $(DIRSRC)*.o
 	make -C ./plugins/communicator/ clean
 	make -C ./plugins/image_extract/ clean
 	make -C ./plugins/comm_inter_process/ clean
@@ -59,12 +88,8 @@ clean:
 	make -C ./plugins/minc_convert/ clean
 	make -C ./jni/ clean
 
-e:	clean
-	@echo "\n==================== Execution ====================\n\n"
-	@./yop ../00-normal-model-nonsym.mnc
-	@echo "\n\n================== Exec finished ==================\n\n"
+recompile: clean compile
 
-time:	clean
-	@echo "\n==================== Execution ====================\n\n"
-	@time ./yop ../00-normal-model-nonsym.mnc
-	@echo "\n\n================== Exec finished ==================\n\n"
+re: clean all
+
+.PHONY: all compile install clean re recompile
