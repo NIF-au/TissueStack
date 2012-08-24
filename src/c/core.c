@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Fri Aug 24 14:37:05 2012 Oliver Nicolini
+** Last update Fri Aug 24 15:19:02 2012 Oliver Nicolini
 */
 
 
@@ -192,7 +192,7 @@ int		main(int argc, char **argv)
 
   // lunch thread_pool
   t->tp = malloc(sizeof(*t->tp));
-  thread_pool_init(t->tp, 10);
+  thread_pool_init(t->tp, 16);
 
 
   // load plugins
