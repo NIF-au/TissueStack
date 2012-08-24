@@ -5,14 +5,14 @@ TissueStack.Queue = function (canvas) {
 TissueStack.Queue.prototype = {
 	canvas : null,
 	queue_handle : null,
-	drawingIntervalInMillis : 25,
+	drawingIntervalInMillis : 75,
 	requests : [],
 	presentlyQueuedZoomLevelAndSlice: null,
 	lowResolutionPreviewDrawn : false,
 	latestDrawRequestTimestamp : 0,
 	setDrawingInterval : function(value) {
 		if (typeof(value) !== 'number' || value < 0) {
-			value = 25; // set to default
+			value = 75; // set to default
 		}
 		this.stopQueue();
 		this.drawingIntervalInMillis = value;
@@ -51,7 +51,7 @@ TissueStack.Queue.prototype = {
 			
 			if (_this.prepareDrawRequest(latestRequest)) {
 				_this.drawLowResolutionPreview(_this.latestDrawRequestTimestamp);
-				_this.drawRequestAfterLowResolutionPreview(latestRequest);
+				setTimeout(function() {_this.drawRequestAfterLowResolutionPreview(latestRequest);}, 150);
 			}
 		}, this.drawingIntervalInMillis);
 	},
@@ -86,7 +86,7 @@ TissueStack.Queue.prototype = {
 				}	
 
 				_this.drawLowResolutionPreview(deepCopyOfRequest.timestamp);
-				_this.drawRequestAfterLowResolutionPreview(deepCopyOfRequest, deepCopyOfRequest.timestamp);
+				setTimeout(function() {_this.drawRequestAfterLowResolutionPreview(deepCopyOfRequest, deepCopyOfRequest.timestamp);}, 150);
 			}
 
 			return;
@@ -108,13 +108,13 @@ TissueStack.Queue.prototype = {
 			}
 			if (_this.lowResolutionPreviewDrawn) {
 				if (draw_request) {
-					setTimeout(function() {_this.drawRequest(draw_request);}, 25);
+					_this.drawRequest(draw_request);
 				} else {
-					setTimeout(function() {_this.canvas.drawMe(timestamp);}, 25);
+					_this.canvas.drawMe(timestamp);
 				}
 				clearInterval(lowResBackdrop);
 			}
-		}, 75);		
+		}, 25);		
 	},
 	clearRequestQueue : function() {
 		this.requests = [];
@@ -415,6 +415,7 @@ TissueStack.Queue.prototype = {
 		
 		return true;
 	}, drawRequest : function(draw_request) {
+
 		// redraw 
 		this.canvas.drawMe(draw_request.timestamp);
 
