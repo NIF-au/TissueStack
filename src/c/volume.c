@@ -434,9 +434,16 @@ void		list_volumes(t_tissue_stack *t, char *options)
 	  printf("\nVolume = %s\n", tmp->path);
 	  if (options != NULL && strcmp(options, "--verbose") == 0)
 	    {
+	      printf("\tMinc Volume address = %p\n", tmp->minc_volume);
+	      printf("\tRAW Volume file descriptor = %i\n", tmp->raw_fd);
 	      printf("\tDimension Number = %i\n", tmp->dim_nb);
 	      printf("\tDimension Name = %s - %s - %s\n", tmp->dim_name[0], tmp->dim_name[1], tmp->dim_name[2]);
 	      printf("\tDimension sizes = %u - %u - %u\n", tmp->size[0], tmp->size[1], tmp->size[2]);
+	      printf("\tStart value = %g - %g - %g\n", tmp->starts[0], tmp->starts[1], tmp->starts[2]);
+	      printf("\tSteps value = %g - %g - %g\n", tmp->steps[0], tmp->steps[1], tmp->steps[2]);
+	      printf("\tIs it raw? %s\n", tmp->raw_data == 1 ? "YES" : "NO");
+	      printf("\tDimension offsets = %llu - %llu - %llu\n", tmp->dim_offset[0], tmp->dim_offset[1], tmp->dim_offset[2]);
+	      printf("\tSlice size (in px) = %i\n", tmp->slice_size[0]);
 	    }
 	  tmp = tmp->next;
 	}
@@ -488,11 +495,12 @@ void		remove_volume(char *path, t_tissue_stack *t)
     }
 }
 
-t_vol * load_volume(t_args_plug * a, char * path)
+t_vol		*load_volume(t_args_plug * a, char * path)
 {
   if (path == NULL) return NULL;
 
-  t_vol * volume = a->general_info->get_volume(path, a->general_info);
+  t_vol * volume = get_volume(path, a->general_info);
+  //  printf("volume = %p\n", volume);
   if (volume != NULL) return volume;
 
   a->this->busy = 1;
@@ -500,14 +508,16 @@ t_vol * load_volume(t_args_plug * a, char * path)
   char		volume_load[200];
   sprintf(volume_load, "file load %s", path);
 
-  a->general_info->plug_actions(a->general_info, volume_load, NULL);
-
+  add_volume(path, a->general_info);
+  //  a->general_info->plug_actions(a->general_info, volume_load, NULL);
+  volume = get_volume(path, a->general_info);
+  /*
   int waitLoops = 0;
   while (volume == NULL && waitLoops < 5) {
     usleep(100000);
     volume = a->general_info->get_volume(path, a->general_info);
     waitLoops++;
-  }
+    }*/
   a->this->busy = 0;
   if (volume == NULL) {
     printf("Failed to load volume: %s\n", path);
