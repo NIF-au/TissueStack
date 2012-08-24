@@ -441,13 +441,12 @@ a.ui-slider-handle-horizontal{
 	background:linear-gradient(top,#f4f4f4,#e8e8e8);
 	padding:8px;
 	position:absolute;
-	height: 50px;
 	top: 28px;
 	right: 10px;;
 }
 .contrast_slider{
 	position: absolute;
 	left: 0px;
-	top: 10px;
+	top: -17px;
 	z-index: 2400;	
 }
