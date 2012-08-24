@@ -15,6 +15,7 @@ TissueStack.Canvas = function(data_extent, canvas_id, dataset_id, include_cross_
 	// make parent and ourselves visible
 	this.getCanvasElement().parent().removeClass("hidden");
 	this.triggerUrlLink(); //trigger url link function
+	this.triggerContrastControl();
 };
 
 TissueStack.Canvas.prototype = {
@@ -598,7 +599,14 @@ TissueStack.Canvas.prototype = {
 		if(TissueStack.desktop || TissueStack.tablet){
 			//Show or Hide "URL Link" Box (used unbind "click" to solve the problem when opening two datasets)
 			$('#'+ thisUrl.dataset_id + '_url_button').unbind('click').click(function(){ 
-				$('#'+ thisUrl.dataset_id + '_url_box').toggle("fast");		
+				$('#'+ thisUrl.dataset_id + '_url_box').toggle();		
+			});	
+		}
+	}, triggerContrastControl: function () {
+		var thisDataset = this;
+		if(TissueStack.desktop || TissueStack.tablet){
+			$('#'+ thisDataset.dataset_id + '_toolbox_canvas_button').unbind('click').click(function(){ 
+				$('#'+ thisDataset.dataset_id + '_contrast_box').toggle();		
 			});	
 		}
 	}
