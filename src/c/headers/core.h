@@ -93,20 +93,22 @@ struct			s_tissue_stack
 
 struct			s_vol
 {
-  mihandle_t		minc_volume;
-  int			dim_nb;
-  midimhandle_t		*dimensions;
-  unsigned int		*size;
-  double		*starts;
-  double		*steps;
-  char			*path;
-  unsigned int		slices_max;
-  char			**dim_name;
-  char			*dim_name_char;
-  int			raw_data;
-  unsigned long long int	*dim_offset;
-  int			*slice_size;
-  int			raw_fd;
+  mihandle_t		minc_volume;		// pointer on a MINC structure containig the MINC volume information.
+  int			dim_nb;			// number of dimensions presents into the file
+  midimhandle_t		*dimensions;		// array[dimension] internal MINC pointer of the dimension
+  unsigned int		*size;			// array[dimension] containig the size of each dimension (in slices)
+  double		*starts;		// array[dimension] containig the starts of each dimension
+  double		*steps;			// array[dimension] containig the steps between each voxel
+  char			*path;			// file path
+  unsigned int		slices_max;		// total number of slices presents inside of the volume
+  char			**dim_name;		// array[dimension] containing the name of each dimension
+  char			*dim_name_char;		// array[dimension] containing the firts character of the dimension name
+  int			raw_data;		// flag in order to know if is a MINC or a RAW
+  unsigned long long int	*dim_offset;	// array[dimension] containing the offset of the beginning of each dimension
+  int			*slice_size;		// array[dimension] containing the size of a slice in each dimension
+  int			raw_fd;			// File descriptor associate to a raw file
+  double		min;                    // min value of the volume
+  double		max;                    // max value of the volume
   t_vol			*next;
 };
 
@@ -172,6 +174,8 @@ void            *plugin_unload(void *a);
 void		*plugin_try_start(void *a);
 void            free_all_plugins(t_tissue_stack *t);
 void 		destroy_t_plugin(t_plugin * this, t_tissue_stack * general);
+void		plugin_load_from_string(char *str, t_tissue_stack *t);
+void		plugin_start_from_string(char *str, t_tissue_stack *t);
 
 /*		volume.c		*/
 

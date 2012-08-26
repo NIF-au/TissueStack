@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Tue Aug 14 15:02:02 2012 Oliver Nicolini
+** Last update Fri Aug 24 15:19:02 2012 Oliver Nicolini
 */
 
 
@@ -189,32 +189,26 @@ int		main(int argc, char **argv)
   else
     t->volume_first = NULL;
 
-  /*
-  t_vol *v = t->volume_first;
-
-
-  printf("dim nb = %i\nsize = %i - %i - %i\nstarts = %f - %f - %f\nsteps = %f - %f - %f\npath = %s\nslice_max = %i\ndim_name = %s - %s - %s\ndim_name_char = %c - %c - %c\nraw_data = %i\ndim_offset = %lld - %lld - %lld\nslices_size = %i - %i - %i\n raw_fd = %i\n", v->dim_nb, v->size[0], v->size[1], v->size[2], v->starts[0], v->starts[1], v->starts[2], v->steps[0], v->steps[1], v->steps[2], v->path, v->slices_max, v->dim_name[0], v->dim_name[1], v->dim_name[2], v->dim_name_char[0], v->dim_name_char[1], v->dim_name_char[2], v->raw_data, v->dim_offset[0], v->dim_offset[1], v->dim_offset[2], v->slice_size[0], v->slice_size[1], v->slice_size[2], v->raw_fd);
-  */
 
   // lunch thread_pool
   t->tp = malloc(sizeof(*t->tp));
-  thread_pool_init(t->tp, 10);
+  thread_pool_init(t->tp, 16);
 
-  /*
-  (t->plug_actions)(t, "load converter /usr/local/plugins/TissueStackMincConverter.so", NULL);
-  sleep(1);
-  (t->plug_actions)(t, "start converter /media/Data/lowback.minc2.mnc /media/Data/lowback.raw", NULL);
-  */
 
-  (t->plug_actions)(t, "load image /usr/local/plugins/TissueStackImageExtract.so", NULL);
-  sleep(1);
-  (t->plug_actions)(t, "load serv /usr/local/plugins/TissueStackCommunicator.so", NULL);
-  sleep(2);
+  // load plugins
+  plugin_load_from_string("load image /usr/local/plugins/TissueStackImageExtract.so", t);
+  plugin_load_from_string("load serv /usr/local/plugins/TissueStackCommunicator.so", t);
+  plugin_load_from_string("load comm /usr/local/plugins/TissueStackProcessCommunicator.so", t);
+  //plugin_load_from_string("load converter /usr/local/plugins/TissueStackMincConverter.so", t);
+
   sprintf(serv_command, "start serv %s", argv[1]);
+
+  // start plugins
   (t->plug_actions)(t, serv_command, NULL);
-  (t->plug_actions)(t, "load comm /usr/local/plugins/TissueStackProcessCommunicator.so", NULL);
-  sleep(2);
   (t->plug_actions)(t, "start comm", NULL);
+  //(t->plug_actions)(t, "start converter /media/Data/lowback.minc2.mnc /media/Data/lowback.raw", NULL);
+
+
   signal_manager(t);
   if ((argv[2] != NULL && strcmp(argv[2], "--prompt") == 0) ||
       (argv[3] != NULL && strcmp(argv[3], "--prompt") == 0))

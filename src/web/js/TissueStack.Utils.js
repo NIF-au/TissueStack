@@ -228,12 +228,12 @@ TissueStack.Utils = {
 		for (var x=1;x<=datasets;x++) {
 			var contrast = null;
 			
-			$("#dataset_" + x + "_toolbox_canvas").css({"width" : TissueStack.canvasDimensions.width * 0.8, "height" : 80});
-			$("#dataset_" + x + "_contrast_box").css({"width" : TissueStack.canvasDimensions.width * 0.8, "height" : 80});
+			$("#dataset_" + x + "_toolbox_canvas").css({"width" : TissueStack.canvasDimensions.width * 0.8, "height" : 75});
+			$("#dataset_" + x + "_contrast_box").css({"width" : TissueStack.canvasDimensions.width * 0.8, "height" : 55});
 			$("#dataset_" + x + "_toolbox_canvas").attr("width", TissueStack.canvasDimensions.width * 0.8);
-			$("#dataset_" + x + "_toolbox_canvas").attr("height", 80);
+			$("#dataset_" + x + "_toolbox_canvas").attr("height", 75);
 			$("#dataset_" + x + "_contrast_box").attr({"width" : TissueStack.canvasDimensions.width * 0.8});
-			$("#dataset_" + x + "_contrast_box").attr({"height" : 80});
+			$("#dataset_" + x + "_contrast_box").attr({"height" : 75});
 			if (TissueStack.dataSetNavigation.selectedDataSets["dataset_" + x]) {
 				var ds = TissueStack.dataSetStore.getDataSetById(TissueStack.dataSetNavigation.selectedDataSets["dataset_" + x]);
 				if (ds && ds.planes) {
