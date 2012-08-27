@@ -1,5 +1,7 @@
-TissueStack.ContrastCanvas = function(element_id) {
+TissueStack.ContrastCanvas = function(element_id, min, max) {
 	this.element_id = element_id;
+	this.dataset_min = typeof(min) === 'number' ? min : 0;
+	this.dataset_max = typeof(max) === 'number' ? max : 255;
 	this.initContrastSlider();
 	this.registerListeners();
 };
@@ -16,7 +18,8 @@ TissueStack.ContrastCanvas.prototype = {
 	max_bar_pos : -1,    // the position for the max bar position
 	element_id : null, 	// the canvas element id
 	min_or_max : null, // last mouse position was over min or max or nowhere
-	close_coords : {x: -1, y: -1}, // coords of the closing x
+	dataset_min : 0,	// the dataset's min value
+	dataset_max : 255,  // the dataset's max value
 	getCanvasElement : function() {
 		if (typeof(this.element_id) != 'string') return null;
 		
@@ -47,8 +50,8 @@ TissueStack.ContrastCanvas.prototype = {
 		this.start_coords.y = 50;
 
 		this.drawContrastSlider();
-		this.moveBar('min', this.start_coords.x);
-		this.moveBar('max', this.start_coords.x + this.width);
+		this.moveBar('min', this.start_coords.x + this.dataset_min * this.step);
+		this.moveBar('max', this.start_coords.x + this.dataset_max * this.step);
 		this.drawMinMaxValues();
 	}, drawContrastSlider : function() {
 		var ctx = this.getContext();
@@ -59,7 +62,7 @@ TissueStack.ContrastCanvas.prototype = {
 		var index = this.range;
 		while (index >= 0) {
 			ctx.fillStyle = "rgba(" + index + "," + index + "," + index +", 1)";
-			ctx.fillRect(this.start_coords.x + (this.range-index)*this.step, this.start_coords.y, this.step, this.height);
+			ctx.fillRect(this.start_coords.x + index*this.step, this.start_coords.y, this.step, this.height);
 			index--;
 		}
 		
@@ -73,22 +76,6 @@ TissueStack.ContrastCanvas.prototype = {
 		ctx.lineTo(this.start_coords.x,this.start_coords.y+this.height);
 		ctx.lineTo(this.start_coords.x,this.start_coords.y);
 		ctx.stroke();
-		
-		//this.drawClosingX();
-	}, drawClosingX : function() {
-		var ctx = this.getContext();
-		if (!ctx) return;
-		
-		var _this = this;
-		
-		var close = new Image();
-		close.src = '/images/close.png';
-		this.close_coords.x = _this.start_coords.x + _this.width - 35;
-		this.close_coords.y = _this.start_coords.y - 35;
-		
-		close.onload = function() {
-			ctx.drawImage(this, _this.close_coords.x, _this.close_coords.y);
-		};
 	}, drawMinMaxValues : function() {
 		var ctx = this.getContext();
 		if (!ctx) return;
@@ -141,23 +128,6 @@ TissueStack.ContrastCanvas.prototype = {
 		// avoid potential double binding
 		this.unregisterListeners();
 		
-		// CLICK
-		this.getCanvasElement().bind("click", function(e) {
-			if (e.originalEvent.touches) {
-				var touches = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
-				e.pageX = touches.pageX;
-				e.pageY = touches.pageY;
-			}
-			
-			var coords = TissueStack.Utils.getRelativeMouseCoords(e);
-			
-			// do we want to close
-			if (coords.x >= _this.close_coords.x && coords.x <= _this.close_coords.x + 30 
-					&& coords.y >= _this.close_coords.y && coords.y <= _this.close_coords.y + 30) {
-				_this.hideContrastCanvas();
-			}
-		});
-		
 		// MOUSE UP
 		this.getCanvasElement().bind("mouseup", function(e) {
 			_this.mouse_down = false;
@@ -186,7 +156,6 @@ TissueStack.ContrastCanvas.prototype = {
 		this.getCanvasElement().unbind("mouseup");
 		this.getCanvasElement().unbind("mousedown");
 		this.getCanvasElement().unbind("mousemove");
-		this.getCanvasElement().unbind("click");
 	},
 	isMinOrMaxMove : function(coords) {
 		if (coords.x >= this.min_bar_pos - this.step * 2 && coords.x <= this.min_bar_pos + this.step * 5) {

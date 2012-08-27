@@ -273,8 +273,10 @@ TissueStack.Canvas.prototype = {
     		myImageData.data[i + 3] = 0;
     	}
     	ctx.putImageData(myImageData, x, y);
-	}, applyColorMapToCanvasContent: function() {
-		if (!this.color_map || this.color_map == "grey") {
+	}, applyContrastAndColorMapToCanvasContent: function() {
+		// no need to neither set a color map or contrast
+		if ((!this.color_map || this.color_map == "grey") &&
+				(!this.contrast || (this.contrast.getMinimum() == this.contrast.dataset_min && this.contrast.getMaximum() == this.contrast.dataset_max)) ) {
 			return;
 		}
 
@@ -296,12 +298,22 @@ TissueStack.Canvas.prototype = {
     	for ( var x = 0; x < myImageData.data.length; x += 4) {
     		var val = myImageData.data[x];
 
-			// set new red value
-			myImageData.data[x] = TissueStack.indexed_color_maps[this.color_map][val][0];
-			// set new green value
-			myImageData.data[x + 1] = TissueStack.indexed_color_maps[this.color_map][val][1];			
-			// set new blue value
-			myImageData.data[x + 2] = TissueStack.indexed_color_maps[this.color_map][val][2];
+    		// apply contrast settings first
+    		if (this.contrast && (this.contrast.getMinimum() != this.contrast.dataset_min || this.contrast.getMaximum() != this.contrast.dataset_max)) {
+        		var factor = (this.contrast.getMaximum() - this.contrast.getMinimum()) / (this.contrast.dataset_max - this.contrast.dataset_min);
+        		val = this.contrast.getMinimum() + Math.round(val * factor);
+        		myImageData.data[x] = myImageData.data[x+1] = myImageData.data[x+2] = val; 
+    		}
+    		
+    		// apply color map
+    		if (this.color_map && this.color_map != "grey") {
+				// set new red value
+				myImageData.data[x] = TissueStack.indexed_color_maps[this.color_map][val][0];
+				// set new green value
+				myImageData.data[x + 1] = TissueStack.indexed_color_maps[this.color_map][val][1];			
+				// set new blue value
+				myImageData.data[x + 2] = TissueStack.indexed_color_maps[this.color_map][val][2];
+    		}
     	}
     	
     	// put altered data back into canvas
@@ -435,8 +447,12 @@ TissueStack.Canvas.prototype = {
 							rowIndex,
 							colIndex
 					);
-				// append session id & timestamp for image service
+				// append session id & timestamp for image service as well as contrast (if deviates from original range)
 				if (!this.getDataExtent().getIsTiled()) {
+					if (this.contrast && this.contrast.getMinimum() != this.contrast.dataset_min || this.contrast.getMaximum() != this.contrast.dataset_max) {
+						src += ("&min=" + this.contrast.getMinimum());
+						src += ("&max=" + this.contrast.getMaximum());
+					}
 					src += ("&id=" + this.sessionId);
 					src += ("&timestamp=" + timestamp);
 				}
@@ -482,7 +498,7 @@ TissueStack.Canvas.prototype = {
 								imageOffsetX, imageOffsetY, width, height, // tile dimensions
 								canvasX, canvasY, width, height); // canvas dimensions
 						
-						if (counter == 0 && _this.getDataExtent().getIsTiled()) _this.applyColorMapToCanvasContent();
+						if (counter == 0 && _this.getDataExtent().getIsTiled()) _this.applyContrastAndColorMapToCanvasContent();
 					};
 				})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, this.getDataExtent().tile_size, rowIndex, colIndex);
 				
