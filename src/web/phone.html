@@ -3,8 +3,7 @@
 	<head> 
 	<title>Tissue Stack - Phone</title> 
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
-	<meta name="apple-mobile-web-app-capable" content="yes">
-	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+	<meta name="apple-mobile-web-app-capable" content="yes">	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
 	
 	<!--Apple Smart Phone Devices Start Up Splash Screen and ICON-->
 	<link rel="apple-touch-startup-image" href="images/phone/iphone4screen.png" /> <!--For iPhone4 and 4S-->
@@ -58,6 +57,7 @@
 	</div>
 	<ul>
 		<li class="active"><a href="#home" class="contentLink" data-transition="slide">Setting<span class="icon"></span></a></li>
+		<li><a href="#contrast" class="contentLink" data-transition="slide">Contrast<span class="icon"></span></a></li>
 		<li><a href="#dataset" class="contentLink" data-transition="slide">Data Server<span class="icon"></span></a></li>
 		<li><a href="#admin" class="contentLink" data-transition="slide">Administrator<span class="icon"></span></a></li>
 	</ul>
@@ -175,6 +175,23 @@
 					<div data-role="collapsible-set" data-theme="b" data-content-theme="b">
 						<div id="tablet_tree"></div>
 					</div>
+		</div><!-- /content -->
+	</div><!-- /page -->
+	
+	<!-- Contrast Control -->
+	<div data-role="page" class="pages" id="contrast" data-theme="a"  data-content-theme="b">
+		<div data-role="header" class="headers" style="overflow: hidden;">
+			<a href="#" class="showMenu menuBtn">Menu</a>
+			<h1>Contrast Control</h1>
+		</div><!-- /header -->
+		<div data-role="content">			
+			<div class="phone_contrast_box">
+				<canvas id="dataset_1_toolbox_canvas_phone" class="phone_contrast_slider"></canvas>
+			</div>
+			<div style="text-align: center;" >
+				<p>Apply for New Contrast:</p>
+				<a href="phone.html#tissueX" data-role="button" id="drawing_interval_button" data-transition="flip">Apply</a>
+			</div>
 		</div><!-- /content -->
 	</div><!-- /page -->
 	
