@@ -200,6 +200,10 @@ TissueStack.Queue.prototype = {
 		);
 		// append session id & timestamp for image service
 		if (!this.canvas.getDataExtent().getIsTiled()) {
+			if (this.canvas.contrast && this.canvas.contrast.getMinimum() != this.canvas.contrast.dataset_min || this.canvas.contrast.getMaximum() != this.canvas.contrast.dataset_max) {
+				src += ("&min=" + this.canvas.contrast.getMinimum());
+				src += ("&max=" + this.canvas.contrast.getMaximum());
+			}
 			src += ("&id=" + this.canvas.sessionId);
 			src += ("&timestamp=" + timestamp);
 		}
@@ -225,7 +229,7 @@ TissueStack.Queue.prototype = {
 
 				//console.info('Drawing preview for ' +  _this.canvas.getDataExtent().data_id + '[' +_this.canvas.getDataExtent().getOriginalPlane() +  ']: ' + timestamp);
 				ctx.drawImage(this, imageOffsetX, imageOffsetY, width, height, canvasX, canvasY, width, height);
-				if (_this.canvas.getDataExtent().getIsTiled()) _this.canvas.applyColorMapToCanvasContent();
+				if (_this.canvas.getDataExtent().getIsTiled()) _this.canvas.applyContrastAndColorMapToCanvasContent();
 
 				_this.lowResolutionPreviewDrawn = true;
 			};

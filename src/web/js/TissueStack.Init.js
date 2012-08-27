@@ -303,7 +303,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 			for (var id in dataSet.planes) {	
 				dataSet.planes[id].color_map = e.target.value;
 				dataSet.planes[id].drawMe();
-				if (dataSet.planes[id].getDataExtent().getIsTiled()) dataSet.planes[id].applyColorMapToCanvasContent();
+				if (dataSet.planes[id].getDataExtent().getIsTiled()) dataSet.planes[id].applyContrastAndColorMapToCanvasContent();
 			}
 		}
 	});
