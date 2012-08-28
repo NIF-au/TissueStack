@@ -218,7 +218,7 @@ TissueStack.Canvas.prototype = {
 	redrawWithCenterAndCrossAtGivenPixelCoordinates: function(coords, timestamp) {
 		// this stops any still running draw requests 
 		var now = typeof(timestamp) == 'number' ? timestamp : new Date().getTime(); 
-		this.eraseCanvasContent();
+		//this.eraseCanvasContent();
 		
 		// make sure crosshair is centered:
 		this.drawCoordinateCross(this.getCenter());
@@ -226,7 +226,7 @@ TissueStack.Canvas.prototype = {
 		this.setUpperLeftCorner(
 				Math.floor(this.dim_x / 2) - coords.x,
 				Math.floor(this.dim_y / 2) + coords.y);
-		
+
 		if (coords.z) {
 			this.data_extent.slice = coords.z;
 		}

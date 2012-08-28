@@ -1,13 +1,16 @@
 TissueStack.ContrastCanvas = function(element_id, min, max) {
+	if (typeof(element_id) != "string") return;
+	
 	this.element_id = element_id;
 	this.dataset_min = typeof(min) === 'number' ? min : 0;
 	this.dataset_max = typeof(max) === 'number' ? max : 255;
 	this.initContrastSlider();
 	this.registerListeners();
-	this.resetContrastCanvas();
+	this.registerAdditionalPhoneEvents();
 };
 
 TissueStack.ContrastCanvas.prototype = {
+	canvas: null,
 	mouse_down: false,
 	range : 255, // contrast value range
 	margin : 0,  // left hand and right hand margin in between canvas bounds and contrast 'bar'
@@ -120,6 +123,11 @@ TissueStack.ContrastCanvas.prototype = {
 		// draw bar
 		ctx.fillStyle = (which == 'min' ? "rgba(0, 0, 200, 1)" : "rgba(200, 0, 0, 1)");
 		ctx.fillRect(this[which + "_bar_pos"], this.start_coords.y, this.step * 2, this.height);
+		
+		// trigger redraw
+		if ((TissueStack.desktop || TissueStack.tablet) && this.canvas) {
+			this.canvas.events.changeSliceForPlane(this.canvas.getDataExtent().slice);
+		}
 	},
 	registerListeners : function() {
 		if (!this.getCanvasElement()) return;
@@ -177,6 +185,10 @@ TissueStack.ContrastCanvas.prototype = {
 		};
 	},
 	unregisterListeners : function() {
+		if(TissueStack.phone) {
+			$('#contrast_button, #reset_contrast_button').unbind("click");
+		};
+		
 		if (!this.getCanvasElement()) return;
 		
 		this.getCanvasElement().unbind("touchend mouseup");
@@ -215,12 +227,16 @@ TissueStack.ContrastCanvas.prototype = {
 		_this.moveBar(other, _this[other + "_bar_pos"]);
 		_this.drawMinMaxValues();
 	},
-	resetContrastCanvas : function() {
+	registerAdditionalPhoneEvents : function() {
+		if(!TissueStack.phone) return;
+		
 		var _this = this;
-		if(TissueStack.phone){
-			$('#reset_contrast_button').click(function(){
-				_this.initContrastSlider();
-			});
-		}
+		$('#contrast_button').click(function(){
+			if (_this.canvas) _this.canvas.events.changeSliceForPlane(_this.canvas.getDataExtent().slice);
+		});
+		$('#reset_contrast_button').click(function(){
+			_this.initContrastSlider();
+			if (_this.canvas) _this.canvas.events.changeSliceForPlane(_this.canvas.getDataExtent().slice);
+		});
 	}
 };
