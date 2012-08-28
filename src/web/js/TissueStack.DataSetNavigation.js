@@ -148,10 +148,10 @@ TissueStack.DataSetNavigation.prototype = {
 			$("#colormap_grey").attr("checked", "checked");
 		}
 		
-		$("#dataset_1_url_box").hide("fast");
-		$("#dataset_1_contrast_box").hide("fast");
-		$("#dataset_2_url_box").hide("fast");
-		$("#dataset_2_contrast_box").hide("fast");
+		//reset contrast box
+		$("#dataset_1_url_box, #dataset_1_contrast_box").hide("fast");
+		$("#dataset_2_url_box, #dataset_2_contrast_box").hide("fast");
+		
 		
 		if(TissueStack.desktop || TissueStack.tablet){
 			// restore slider states
