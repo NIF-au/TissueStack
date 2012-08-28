@@ -9,7 +9,6 @@ TissueStack.ContrastCanvas = function(element_id, min, max) {
 
 TissueStack.ContrastCanvas.prototype = {
 	mouse_down: false,
-	touch_down:false,
 	range : 255, // contrast value range
 	margin : 0,  // left hand and right hand margin in between canvas bounds and contrast 'bar'
 	step : 0,	 // step size for each contrast step
@@ -130,44 +129,52 @@ TissueStack.ContrastCanvas.prototype = {
 		// avoid potential double binding
 		this.unregisterListeners();
 		
-		// MOUSE UP OR TOUCH END
-		this.getCanvasElement().bind("touchend mouseup", function(e) {
-			if(TissueStack.desktop){
+		// DESKTOP
+		if (TissueStack.desktop || TissueStack.debug) {
+			// MOUSE UP
+			this.getCanvasElement().bind("mouseup", function(e) {
 				_this.mouse_down = false;
-			}
-			if(TissueStack.tablet || TissueStack.phone){
-				_this.touch_down = false;
-			}
-		});
-		//TOUCH OR MOUSE DOWN
-		this.getCanvasElement().bind("touchstart mousedown", function(e) {
-			if(TissueStack.desktop){
+			});
+			// MOUSE DOWN
+			this.getCanvasElement().bind("mousedown", function(e) {
 				var coords = TissueStack.Utils.getRelativeMouseCoords(e);
 				_this.min_or_max = _this.isMinOrMaxMove(coords);
 				if (TissueStack.Utils.isLeftMouseButtonPressed(e) && _this.min_or_max) _this.mouse_down = true;
-			}
-			if(e.originalEvent.touches && (TissueStack.tablet || TissueStack.phone)){
-				var touches = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
-				var coords = {x:touches.pageX, y:touches.pageY};
-				_this.min_or_max = _this.isMinOrMaxMove(coords);
-				if (_this.min_or_max) _this.touch_down = true;
-			}
-		});			
-		// TOUCH OR MOUSE MOVE
-		this.getCanvasElement().bind("touchmove mousemove", function(e) {
-			if(TissueStack.desktop){
+			});
+			// MOUSE MOVE
+			this.getCanvasElement().bind("mousemove", function(e) {
 				var coords = TissueStack.Utils.getRelativeMouseCoords(e);
 				if (_this.mouse_down) {
 					_this.makeTouchMouseMove(coords.x);
 				}
-			}
-			if(e.originalEvent.touches && (TissueStack.tablet || TissueStack.phone)){
-				var touches = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
-				if(_this.touch_down){
-					_this.makeTouchMouseMove(touches.pageX);
+			});
+		};
+
+		// TABLET & PHONE
+		if(TissueStack.tablet || TissueStack.phone) {
+			// TOUCH END
+			this.getCanvasElement().bind("touchend", function(e) {
+				_this.mouse_down = false;
+			});
+			// TOUCH START 			
+			this.getCanvasElement().bind("touchstart", function(e) {
+				if(e.originalEvent.touches){
+					var touches = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
+					var coords = {x:touches.pageX, y:touches.pageY};
+					_this.min_or_max = _this.isMinOrMaxMove(coords);
+					if (_this.min_or_max) _this.mouse_down = true;
 				}
-			}
-		});
+			});
+			// TOUCH MOVE
+			this.getCanvasElement().bind("touchmove", function(e) {
+				if(e.originalEvent.touches){
+					var touches = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
+					if(_this.mouse_down){
+						_this.makeTouchMouseMove(touches.pageX);
+					}
+				}
+			});
+		};
 	},
 	unregisterListeners : function() {
 		if (!this.getCanvasElement()) return;
