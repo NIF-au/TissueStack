@@ -1,10 +1,16 @@
-TissueStack.ContrastCanvas = function(element_id) {
+TissueStack.ContrastCanvas = function(element_id, min, max) {
+	if (typeof(element_id) != "string") return;
+	
 	this.element_id = element_id;
+	this.dataset_min = typeof(min) === 'number' ? min : 0;
+	this.dataset_max = typeof(max) === 'number' ? max : 255;
 	this.initContrastSlider();
 	this.registerListeners();
+	this.registerAdditionalPhoneEvents();
 };
 
 TissueStack.ContrastCanvas.prototype = {
+	canvas: null,
 	mouse_down: false,
 	range : 255, // contrast value range
 	margin : 0,  // left hand and right hand margin in between canvas bounds and contrast 'bar'
@@ -16,7 +22,8 @@ TissueStack.ContrastCanvas.prototype = {
 	max_bar_pos : -1,    // the position for the max bar position
 	element_id : null, 	// the canvas element id
 	min_or_max : null, // last mouse position was over min or max or nowhere
-	close_coords : {x: -1, y: -1}, // coords of the closing x
+	dataset_min : 0,	// the dataset's min value
+	dataset_max : 255,  // the dataset's max value
 	getCanvasElement : function() {
 		if (typeof(this.element_id) != 'string') return null;
 		
@@ -47,8 +54,8 @@ TissueStack.ContrastCanvas.prototype = {
 		this.start_coords.y = 50;
 
 		this.drawContrastSlider();
-		this.moveBar('min', this.start_coords.x);
-		this.moveBar('max', this.start_coords.x + this.width);
+		this.moveBar('min', this.start_coords.x + this.dataset_min * this.step);
+		this.moveBar('max', this.start_coords.x + this.dataset_max * this.step);
 		this.drawMinMaxValues();
 	}, drawContrastSlider : function() {
 		var ctx = this.getContext();
@@ -59,7 +66,7 @@ TissueStack.ContrastCanvas.prototype = {
 		var index = this.range;
 		while (index >= 0) {
 			ctx.fillStyle = "rgba(" + index + "," + index + "," + index +", 1)";
-			ctx.fillRect(this.start_coords.x + (this.range-index)*this.step, this.start_coords.y, this.step, this.height);
+			ctx.fillRect(this.start_coords.x + index*this.step, this.start_coords.y, this.step, this.height);
 			index--;
 		}
 		
@@ -73,22 +80,6 @@ TissueStack.ContrastCanvas.prototype = {
 		ctx.lineTo(this.start_coords.x,this.start_coords.y+this.height);
 		ctx.lineTo(this.start_coords.x,this.start_coords.y);
 		ctx.stroke();
-		
-		//this.drawClosingX();
-	}, drawClosingX : function() {
-		var ctx = this.getContext();
-		if (!ctx) return;
-		
-		var _this = this;
-		
-		var close = new Image();
-		close.src = '/images/close.png';
-		this.close_coords.x = _this.start_coords.x + _this.width - 35;
-		this.close_coords.y = _this.start_coords.y - 35;
-		
-		close.onload = function() {
-			ctx.drawImage(this, _this.close_coords.x, _this.close_coords.y);
-		};
 	}, drawMinMaxValues : function() {
 		var ctx = this.getContext();
 		if (!ctx) return;
@@ -132,6 +123,11 @@ TissueStack.ContrastCanvas.prototype = {
 		// draw bar
 		ctx.fillStyle = (which == 'min' ? "rgba(0, 0, 200, 1)" : "rgba(200, 0, 0, 1)");
 		ctx.fillRect(this[which + "_bar_pos"], this.start_coords.y, this.step * 2, this.height);
+		
+		// trigger redraw
+		if ((TissueStack.desktop || TissueStack.tablet) && this.canvas) {
+			this.canvas.events.changeSliceForPlane(this.canvas.getDataExtent().slice);
+		}
 	},
 	registerListeners : function() {
 		if (!this.getCanvasElement()) return;
@@ -141,69 +137,106 @@ TissueStack.ContrastCanvas.prototype = {
 		// avoid potential double binding
 		this.unregisterListeners();
 		
-		// CLICK
-		this.getCanvasElement().bind("click", function(e) {
-			if (e.originalEvent.touches) {
-				var touches = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
-				e.pageX = touches.pageX;
-				e.pageY = touches.pageY;
-			}
-			
-			var coords = TissueStack.Utils.getRelativeMouseCoords(e);
-			
-			// do we want to close
-			if (coords.x >= _this.close_coords.x && coords.x <= _this.close_coords.x + 30 
-					&& coords.y >= _this.close_coords.y && coords.y <= _this.close_coords.y + 30) {
-				_this.hideContrastCanvas();
-			}
-		});
-		
-		// MOUSE UP
-		this.getCanvasElement().bind("mouseup", function(e) {
-			_this.mouse_down = false;
-		});
-		//MOUSE DOWN
-		this.getCanvasElement().bind("mousedown", function(e) {
-			var coords = TissueStack.Utils.getRelativeMouseCoords(e);
-			_this.min_or_max = _this.isMinOrMaxMove(coords);
-			if (TissueStack.Utils.isLeftMouseButtonPressed(e) && _this.min_or_max) _this.mouse_down = true;
-		});			
-		// MOUSE MOVE
-		this.getCanvasElement().bind("mousemove", function(e) {
-			var coords = TissueStack.Utils.getRelativeMouseCoords(e);
-			if (_this.mouse_down) {
-				_this.drawContrastSlider();
-				_this.moveBar(_this.min_or_max, coords.x);
-				var other = (_this.min_or_max === "max" ? "min" : "max");
-				_this.moveBar(other, _this[other + "_bar_pos"]);
-				_this.drawMinMaxValues();
-			}
-		});
+		// DESKTOP
+		if (TissueStack.desktop || TissueStack.debug) {
+			// MOUSE UP
+			this.getCanvasElement().bind("mouseup", function(e) {
+				_this.mouse_down = false;
+			});
+			// MOUSE DOWN
+			this.getCanvasElement().bind("mousedown", function(e) {
+				var coords = TissueStack.Utils.getRelativeMouseCoords(e);
+				_this.min_or_max = _this.isMinOrMaxMove(coords);
+				if (TissueStack.Utils.isLeftMouseButtonPressed(e) && _this.min_or_max) _this.mouse_down = true;
+			});
+			// MOUSE MOVE
+			this.getCanvasElement().bind("mousemove", function(e) {
+				var coords = TissueStack.Utils.getRelativeMouseCoords(e);
+				if (_this.mouse_down) {
+					_this.makeTouchMouseMove(coords.x);
+				}
+			});
+		};
+
+		// TABLET & PHONE
+		if(TissueStack.tablet || TissueStack.phone) {
+			// TOUCH END
+			this.getCanvasElement().bind("touchend", function(e) {
+				_this.mouse_down = false;
+			});
+			// TOUCH START 			
+			this.getCanvasElement().bind("touchstart", function(e) {
+				if(e.originalEvent.touches){
+					var touches = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
+					var coords = {x:touches.pageX, y:touches.pageY};
+					_this.min_or_max = _this.isMinOrMaxMove(coords);
+					if (_this.min_or_max) _this.mouse_down = true;
+				}
+			});
+			// TOUCH MOVE
+			this.getCanvasElement().bind("touchmove", function(e) {
+				if(e.originalEvent.touches){
+					var touches = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
+					if(_this.mouse_down){
+						_this.makeTouchMouseMove(touches.pageX);
+					}
+				}
+			});
+		};
 	},
 	unregisterListeners : function() {
+		if(TissueStack.phone) {
+			$('#contrast_button, #reset_contrast_button').unbind("click");
+		};
+		
 		if (!this.getCanvasElement()) return;
 		
-		this.getCanvasElement().unbind("mouseup");
-		this.getCanvasElement().unbind("mousedown");
-		this.getCanvasElement().unbind("mousemove");
-		this.getCanvasElement().unbind("click");
+		this.getCanvasElement().unbind("touchend mouseup");
+		this.getCanvasElement().unbind("touchstart mousedown");
+		this.getCanvasElement().unbind("touchmove mousemove");
 	},
 	isMinOrMaxMove : function(coords) {
-		if (coords.x >= this.min_bar_pos - this.step * 2 && coords.x <= this.min_bar_pos + this.step * 5) {
-			return "min";
-		} else if (coords.x >= this.max_bar_pos - this.step * 2 && coords.x <= this.max_bar_pos + this.step * 5) {
-			return "max";
+		if(TissueStack.desktop){
+			if (coords.x >= this.min_bar_pos - this.step * 2 && coords.x <= this.min_bar_pos + this.step * 5) {
+				return "min";
+			} else if (coords.x >= this.max_bar_pos - this.step * 2 && coords.x <= this.max_bar_pos + this.step * 5) {
+				return "max";
+			}
 		}
-		
+		if(TissueStack.tablet || TissueStack.phone){
+			if (coords.x >= this.min_bar_pos - this.step * 30 && coords.x <= this.min_bar_pos + this.step * 30) {
+				return "min";
+			} else if (coords.x >= this.max_bar_pos - this.step * 30 && coords.x <= this.max_bar_pos + this.step * 30) {
+				return "max";
+			}
+		}
 		return null;
-	},getMinimum : function() {
+	},
+	getMinimum : function() {
 		return Math.floor((this.min_bar_pos - this.margin) /this.step);
-	}
-	,getMaximum : function() {
+	},
+	getMaximum : function() {
 		return Math.floor((this.max_bar_pos - this.margin) /this.step);
-	}, hideContrastCanvas : function() {
-		if (!this.getCanvasElement()) return;
+	},
+	makeTouchMouseMove: function (coords) {
+	 	var _this = this;
+	 	
+		_this.drawContrastSlider();
+		_this.moveBar(_this.min_or_max, coords);
+		var other = (_this.min_or_max === "max" ? "min" : "max");
+		_this.moveBar(other, _this[other + "_bar_pos"]);
+		_this.drawMinMaxValues();
+	},
+	registerAdditionalPhoneEvents : function() {
+		if(!TissueStack.phone) return;
 		
-		this.getCanvasElement().hide();
+		var _this = this;
+		$('#contrast_button').click(function(){
+			if (_this.canvas) _this.canvas.events.changeSliceForPlane(_this.canvas.getDataExtent().slice);
+		});
+		$('#reset_contrast_button').click(function(){
+			_this.initContrastSlider();
+			if (_this.canvas) _this.canvas.events.changeSliceForPlane(_this.canvas.getDataExtent().slice);
+		});
 	}
 };

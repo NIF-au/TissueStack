@@ -75,7 +75,13 @@ TissueStack.InitUserInterface = function (initOpts) {
 		var now = new Date().getTime();
 		
 		// crate a contrast slider per data set
-		var contrast = new TissueStack.ContrastCanvas("dataset_" + (x+1) + "_toolbox_canvas");
+		var contrast = null;
+		if(TissueStack.desktop || TissueStack.tablet)
+			contrast = new TissueStack.ContrastCanvas("dataset_" + (x+1) + "_toolbox_canvas");
+		// crate a contrast slider per data set for phone version
+		if (TissueStack.phone){
+			contrast = new TissueStack.ContrastCanvas("dataset_1_toolbox_canvas_phone");
+		}
 		
 		// loop over all planes in the data, create canvas and extent objects, then display them
 		for (var i=0; i < dataSet.data.length; i++) {
@@ -109,8 +115,10 @@ TissueStack.InitUserInterface = function (initOpts) {
 			// create canvas
 			var canvasElementSelector = "dataset_" + (x+1); 
 			var plane = new TissueStack.Canvas(extent, "canvas_" + planeId + "_plane", canvasElementSelector);
-			// set contrast
+			// set bidirectional relationship for contrast
 			plane.contrast = contrast;
+			if (contrast) contrast.canvas = plane;
+			
 			// set session id
 			plane.sessionId = sessionId;
 
@@ -298,7 +306,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 			for (var id in dataSet.planes) {	
 				dataSet.planes[id].color_map = e.target.value;
 				dataSet.planes[id].drawMe();
-				if (dataSet.planes[id].getDataExtent().getIsTiled()) dataSet.planes[id].applyColorMapToCanvasContent();
+				if (dataSet.planes[id].getDataExtent().getIsTiled()) dataSet.planes[id].applyContrastAndColorMapToCanvasContent();
 			}
 		}
 	});

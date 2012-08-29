@@ -208,3 +208,12 @@ body{
 	top: 0px; 
 	z-index: 1549;
 }
+
+/*Contrast control slider*/
+.phone_contrast_box{
+	position: relative;
+	text-align: center;
+}
+.phone_contrast_slider{
+	width: 300px;
+}
