@@ -75,11 +75,12 @@ TissueStack.InitUserInterface = function (initOpts) {
 		var now = new Date().getTime();
 		
 		// crate a contrast slider per data set
+		var contrast = null;
 		if(TissueStack.desktop || TissueStack.tablet)
-			var contrast = new TissueStack.ContrastCanvas("dataset_" + (x+1) + "_toolbox_canvas");
+			contrast = new TissueStack.ContrastCanvas("dataset_" + (x+1) + "_toolbox_canvas");
 		// crate a contrast slider per data set for phone version
 		if (TissueStack.phone){
-			var contrast = new TissueStack.ContrastCanvas("dataset_1_toolbox_canvas_phone");
+			contrast = new TissueStack.ContrastCanvas("dataset_1_toolbox_canvas_phone");
 		}
 		
 		// loop over all planes in the data, create canvas and extent objects, then display them
@@ -114,8 +115,10 @@ TissueStack.InitUserInterface = function (initOpts) {
 			// create canvas
 			var canvasElementSelector = "dataset_" + (x+1); 
 			var plane = new TissueStack.Canvas(extent, "canvas_" + planeId + "_plane", canvasElementSelector);
-			// set contrast
+			// set bidirectional relationship for contrast
 			plane.contrast = contrast;
+			if (contrast) contrast.canvas = plane;
+			
 			// set session id
 			plane.sessionId = sessionId;
 
