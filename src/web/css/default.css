@@ -380,7 +380,7 @@ a.ui-slider-handle-horizontal{
 	position:absolute;
 	width: 350px;
 	height: 40px;
-	top: 28px;
+	top: 40px;
 	right: 5px;;
 }
 .url_arrow {
@@ -417,13 +417,12 @@ a.ui-slider-handle-horizontal{
 	font-family: Arial; 
 	text-shadow: 0 0 1px rgba(255, 255, 255, 0);
 }
-
 /*Contrast CSS*/
 .contrast_main{
 	height: 26px; 
 	z-index: 2400; 
 	position: absolute;
-	right: 80px;
+	right: 85px;
 	top: 10px; 
 	color: white; 
 	font-family: Arial, sans-serif; 
@@ -441,7 +440,7 @@ a.ui-slider-handle-horizontal{
 	background:linear-gradient(top,#f4f4f4,#e8e8e8);
 	padding:8px;
 	position:absolute;
-	top: 28px;
+	top: 40px;
 	right: 10px;;
 }
 .contrast_slider{
@@ -450,3 +449,35 @@ a.ui-slider-handle-horizontal{
 	top: -17px;
 	z-index: 2400;	
 }
+/*Top Right Button Style*/
+.top_right_button {
+	display: inline-block;
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#5383e2), color-stop(100%,#4075de));
+	background: -moz-linear-gradient(center top, #5383e2 0%, #5686e6 100%);
+	-webkit-box-shadow: 0px 1px 0px #6591e9 inset;
+	-moz-box-shadow: 0px 1px 0px #6591e9 inset;
+	box-shadow: 0px 1px 0px #6591e9 inset;
+	-webkit-border-radius: 3px;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+	text-shadow: 0px 1px 0px #3373A5 ;
+	padding: 7px 10px;
+	border-color: #1e6d6f;
+	border-width: 1px;
+	border-style: solid;
+	font-family: Helvetica;
+	font-size: 11px;
+	color: #105354;
+	font-weight: bold;
+	font-style: normal;
+	text-decoration: none;
+}
+.top_right_button:hover {
+	text-shadow: 0px 1px 0px #185f60;
+	color: #ffffff;
+}
+.top_right_button:active {
+	-webkit-box-shadow: 1px 1px 5px 1px #207c7d inset;
+	-moz-box-shadow: 1px 1px 5px 1px #207c7d inset;
+	box-shadow: 1px 1px 5px 1px #207c7d inset;
+ }
