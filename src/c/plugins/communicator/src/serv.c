@@ -194,8 +194,8 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
 	  else if (strcmp(tmp2[0], "x_end") == 0)	x_end = serv_copy_check_clean_string_from_tab(tmp2);
 	  else if (strcmp(tmp2[0], "colormap") == 0)	colormap_name = serv_copy_check_clean_string_from_tab(tmp2);
 	  else if (strcmp(tmp2[0], "image_type") == 0)	image_type = serv_copy_check_clean_string_from_tab(tmp2);
-	  else if (strcmp(tmp2[0], "contrast_min") == 0)	contrast_min = serv_copy_check_clean_string_from_tab(tmp2);
-	  else if (strcmp(tmp2[0], "contrast_max") == 0)	contrast_max = serv_copy_check_clean_string_from_tab(tmp2);
+	  else if (strcmp(tmp2[0], "min") == 0)	contrast_min = serv_copy_check_clean_string_from_tab(tmp2);
+	  else if (strcmp(tmp2[0], "max") == 0)	contrast_max = serv_copy_check_clean_string_from_tab(tmp2);
 	  else if (strcmp(tmp2[0], "id") == 0)	id = serv_copy_check_clean_string_from_tab(tmp2);
 	  else if (strcmp(tmp2[0], "timestamp") == 0)	time = serv_copy_check_clean_string_from_tab(tmp2);
 	  j = 0;
