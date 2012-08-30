@@ -23,7 +23,8 @@ TissueStack.ContrastCanvas.prototype = {
 	element_id : null, 	// the canvas element id
 	min_or_max : null, // last mouse position was over min or max or nowhere
 	dataset_min : 0,	// the dataset's min value
-	dataset_max : 255,  // the dataset's max value
+	dataset_max : 255, 	// the dataset's max value
+	adjustcoords : 0,  	// adjust coords for touch function
 	getCanvasElement : function() {
 		if (typeof(this.element_id) != 'string') return null;
 		
@@ -52,7 +53,7 @@ TissueStack.ContrastCanvas.prototype = {
 		this.margin = Math.floor((this.getCanvasWidth() - this.width) / 2);
 		this.start_coords.x = this.margin;
 		this.start_coords.y = 50;
-
+		
 		this.drawContrastSlider();
 		this.moveBar('min', this.start_coords.x + this.dataset_min * this.step);
 		this.moveBar('max', this.start_coords.x + this.dataset_max * this.step);
@@ -168,7 +169,9 @@ TissueStack.ContrastCanvas.prototype = {
 			this.getCanvasElement().bind("touchstart", function(e) {
 				if(e.originalEvent.touches){
 					var touches = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
-					var coords = {x:touches.pageX, y:touches.pageY};
+					_this.adjustcoords = Math.floor(($(window).width() - _this.getCanvasWidth())/2);
+					
+					var coords = {x:touches.pageX - _this.adjustcoords, y:touches.pageY};
 					_this.min_or_max = _this.isMinOrMaxMove(coords);
 					if (_this.min_or_max) _this.mouse_down = true;
 				}
@@ -178,7 +181,7 @@ TissueStack.ContrastCanvas.prototype = {
 				if(e.originalEvent.touches){
 					var touches = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
 					if(_this.mouse_down){
-						_this.makeTouchMouseMove(touches.pageX);
+						_this.makeTouchMouseMove(touches.pageX - _this.adjustcoords);
 					}
 				}
 			});
