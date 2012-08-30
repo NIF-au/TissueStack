@@ -8,7 +8,7 @@
         <title> Tissue Stack - Tablet </title>
        	<link rel="icon" type="image/png" href="images/favicon.png" />
        	
-        <link rel="stylesheet" href="css/jquery.mobile-1.1.0.min.css" />
+        <link rel="stylesheet" href="css/jquery.mobile-1.1.1.min.css" />
         <link rel="stylesheet" href="css/default.css" />
         <link rel="stylesheet" href="css/admin_login.css" />
         
@@ -16,8 +16,8 @@
 		<link rel="apple-touch-startup-image" href="images/mobile/ipadscreen.png" /> <!--For iPad-->
 		<link rel="apple-touch-icon" href="images/favicon_icon.png" />
 		
-        <script src="js/libs/jquery/jquery-1.7.1.js"></script>
-        <script src="js/libs/jquery/jquery.mobile-1.1.0.min.js"></script>
+        <script src="js/libs/jquery/jquery-1.7.1.min.js"></script>
+        <script src="js/libs/jquery/jquery.mobile-1.1.1.min.js"></script>
         <script src="js/libs/jquery/jquery.form.js"></script>
         <script src="js/TissueStack.Slider.js"></script>
 		<script src="js/libs/sylvester/sylvester.js"></script>
@@ -51,8 +51,8 @@
          	  	     <div data-role="navbar">
 						<ul>
 							<li><a href="#data" data-icon="plus" class="ui-btn-active">Data</a></li>
-							<li><a href="#setting" data-icon="gear">Setting</a></li>
-							<li><a href="#admin" data-icon="gear">Admin</a></li>							
+							<li><a href="#setting" data-icon="minus">Settings</a></li>
+							<li><a href="#admin" data-icon="minus">Admin</a></li>							
 						</ul>
 			  		 </div>
                 </div>
@@ -60,15 +60,15 @@
      	    <div style="min-width: 1400px;">
      	    	<div class="left_panel"> 
      	    		<div id="canvas_extent" class="text-align-center"></div>
-     	    		<input size="8" maxlength="10" type="text" id="canvas_point_x" value="0"/>
-     	    		<input size="8" maxlength="10" type="text" id="canvas_point_y" value="0"/>
-     	    		<input size="8" maxlength="10" type="text" id="canvas_point_z" value="0"/>
-     	    		<button type="button" id="dataset_1_center_point_in_canvas">Center Coordinates</button>
+     	    		<input data-mini="true" size="8" maxlength="10" type="text" id="canvas_point_x" value="0"/>
+     	    		<input data-mini="true" size="8" maxlength="10" type="text" id="canvas_point_y" value="0"/>
+     	    		<input data-mini="true" size="8" maxlength="10" type="text" id="canvas_point_z" value="0"/>
+     	    		<button data-mini="true" type="button" id="dataset_1_center_point_in_canvas">Center Coordinates</button>
 
                     <hr />
                     
-                    <input size="8" maxlength="50" type="text" id="server_search_input" value="http://"/>
-                    <button type="button" id="server_search_button">Connect to TissueStack Server</button>
+                    <input data-mini="true" size="8" maxlength="50" type="text" id="server_search_input" value="http://"/>
+                    <button data-mini="true" type="button" id="server_search_button">Connect to TissueStack Server</button>
 
      	    		<!--ADD TREE DATA SET NAVI BAR-->					
 					<div id="mobile_style_tree_dataset" style="height: 250px; overflow-x: scroll;">
@@ -102,7 +102,7 @@
      	    		<!--END OF DISTANCE SCALE-->
      	    		<!--URL LINK-->
      	    			<div class="url_link_main">
-     	    				<a id="dataset_1_url_button" class="top_right_button" style="color: white;" href="#">URL LINK</a>
+     	    				<a id="dataset_1_url_button" class="top_right_button" style="color: white;" href="#">URL</a>
      	    				<div id="dataset_1_url_box" class='url_box'>
      	    					<div class='url_arrow'></div>
      	    					<div class='url_arrow-border'></div>
@@ -136,7 +136,7 @@
 						</div>					     	    			
      	    	</div>
 		     	<div id="dataset_1_right_panel" class="right_panel hidden">
-		     		<input id="dataset_1_canvas_main_slider" class="canvasslider canvas_y" type="range" min="0" max="1000" value="500" step="1" orientation="vertical"  />
+		     		<input data-mini="true" id="dataset_1_canvas_main_slider" class="canvasslider canvas_y" type="range" min="0" max="1000" value="500" step="1" orientation="vertical"  />
 		     	</div>										
      	    </div>
        </div>  
@@ -149,8 +149,8 @@
         	  	     <div data-role="navbar">
 						<ul>
 							<li><a href="#data" data-icon="minus">Data</a></li>
-							<li><a href="#setting" data-icon="gear" class="ui-btn-active">Setting</a></li>
-							<li><a href="#admin" data-icon="gear">Admin</a></li>
+							<li><a href="#setting" data-icon="plus" class="ui-btn-active">Settings</a></li>
+							<li><a href="#admin" data-icon="minus">Admin</a></li>
 						</ul>
 			  		 </div>
                 </div>
@@ -183,8 +183,8 @@
 	    	  	     <div data-role="navbar">
 						<ul>
 							<li><a href="#data" data-icon="minus">Data</a></li>
-							<li><a href="#setting" data-icon="gear">Setting</a></li>
-							<li><a href="#admin" data-icon="gear" class="ui-btn-active">Admin</a></li>
+							<li><a href="#setting" data-icon="minus">Settings</a></li>
+							<li><a href="#admin" data-icon="plus" class="ui-btn-active">Admin</a></li>
 						</ul>
 			  		 </div>
 	            </div>

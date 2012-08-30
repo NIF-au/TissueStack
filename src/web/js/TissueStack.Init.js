@@ -374,7 +374,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 				}
 				
 				
-				plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, new Date().getTime());
+				plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, true, new Date().getTime());
 
 				if (event.data[0].actualDataSet.data.length > 1) {
 					var slider = $("#" + (plane.dataset_id == "" ? "" : plane.dataset_id + "_") + "canvas_main_slider");
@@ -440,8 +440,10 @@ TissueStack.BindDataSetDependentEvents = function () {
 				sideCanvasChildren.detach();
 				
 				// swap dimensions
-				var sideCanvasRelativeCross = event.data[0].actualDataSet.planes[sideViewPlaneId].getRelativeCrossCoordinates(); 
+				var sideCanvasRelativeCross = event.data[0].actualDataSet.planes[sideViewPlaneId].getRelativeCrossCoordinates();
+				sideCanvasRelativeCross.z = event.data[0].actualDataSet.planes[sideViewPlaneId].getDataExtent().slice;
 				var mainCanvasRelativeCross = event.data[0].actualDataSet.planes[mainViewPlaneId].getRelativeCrossCoordinates();
+				mainCanvasRelativeCross.z = event.data[0].actualDataSet.planes[mainViewPlaneId].getDataExtent().slice;
 				
 				var sideCanvasDims = {x: sideCanvasChildren[0].width, y: sideCanvasChildren[0].height};
 				var mainCanvasDims = {x: mainCanvasChildren[0].width, y: mainCanvasChildren[0].height};
@@ -484,10 +486,14 @@ TissueStack.BindDataSetDependentEvents = function () {
 				
 				// redraw and change the zoom level as well
 				var now = new Date().getTime();
-				event.data[0].actualDataSet.planes[sideViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(sideCanvasRelativeCross, now);
-				event.data[0].actualDataSet.planes[mainViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(mainCanvasRelativeCross, now);
+				
+				event.data[0].actualDataSet.planes[sideViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(sideCanvasRelativeCross, false, now);
+				event.data[0].actualDataSet.planes[mainViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(mainCanvasRelativeCross, false, now);
+				event.data[0].actualDataSet.planes[sideViewPlaneId].events.changeSliceForPlane(event.data[0].actualDataSet.planes[sideViewPlaneId].data_extent.slice);
 				event.data[0].actualDataSet.planes[sideViewPlaneId].changeToZoomLevel(event.data[0].actualDataSet.planes[mainViewPlaneId].getDataExtent().zoom_level);
 				event.data[0].actualDataSet.planes[mainViewPlaneId].changeToZoomLevel(zoomLevelSideView);
+				$("#dataset_" + (x+1) + "_canvas_main_slider").blur();
+				
 				event.data[0].actualDataSet.planes[sideViewPlaneId].updateExtentInfo(event.data[0].actualDataSet.planes[sideViewPlaneId].getDataExtent().getExtentCoordinates());
 			});
 		}	
@@ -660,7 +666,7 @@ TissueStack.applyUserParameters = function() {
 			givenCoords = plane.getRelativeCrossCoordinates();
 			givenCoords.z = plane.getDataExtent().slice;
 		}
-		plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords);
+		plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, false, new Date().getTime());
 
 		var slider = TissueStack.phone ? 
 				$("#canvas_" + plane.data_extent.plane + "_slider") :

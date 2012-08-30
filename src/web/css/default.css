@@ -378,7 +378,7 @@ a.ui-slider-handle-horizontal{
 	background:linear-gradient(top,#f4f4f4,#e8e8e8);
 	padding:8px;
 	position:absolute;
-	width: 500px;
+    width: 500px;
 	height: 40px;
 	top: 40px;
 	right: 5px;;
@@ -412,8 +412,10 @@ a.ui-slider-handle-horizontal{
 	position: absolute;
 	right: 10px;
 	top: 8px; 
-	color: black; 
-	font-size: 14px;
+	color: blue; 
+    text-decoration: underline; 
+    text-align: center;
+	font-size: 13px;
 	font-family: Arial; 
 	text-shadow: 0 0 1px rgba(255, 255, 255, 0);
 }
@@ -422,7 +424,7 @@ a.ui-slider-handle-horizontal{
 	height: 26px; 
 	z-index: 2400; 
 	position: absolute;
-	right: 85px;
+	right: 56px;
 	top: 10px; 
 	color: white; 
 	font-family: Arial, sans-serif; 

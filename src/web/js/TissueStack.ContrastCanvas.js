@@ -133,7 +133,7 @@ TissueStack.ContrastCanvas.prototype = {
 		this.unregisterListeners();
 		
 		// DESKTOP
-		if (TissueStack.desktop) {
+		if (TissueStack.desktop || TissueStack.debug) {
 			// MOUSE UP
 			this.getCanvasElement().bind("mouseup", function(e) {
 				_this.mouse_down = false;

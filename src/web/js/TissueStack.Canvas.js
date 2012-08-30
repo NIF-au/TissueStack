@@ -215,10 +215,9 @@ TissueStack.Canvas.prototype = {
 
 		return {x: newX, y: newY};
 	},
-	redrawWithCenterAndCrossAtGivenPixelCoordinates: function(coords, timestamp) {
+	redrawWithCenterAndCrossAtGivenPixelCoordinates: function(coords, sync, timestamp) {
 		// this stops any still running draw requests 
 		var now = typeof(timestamp) == 'number' ? timestamp : new Date().getTime(); 
-		//this.eraseCanvasContent();
 		
 		// make sure crosshair is centered:
 		this.drawCoordinateCross(this.getCenter());
@@ -236,6 +235,8 @@ TissueStack.Canvas.prototype = {
 		if (!canvas || !canvas[0]) {
 			canvas = this.getCanvasElement();
 		}
+		
+		if (typeof(sync) == 'boolean' && !sync) return;
 		
 		// send message out to others that they need to redraw as well
 		canvas.trigger("sync", [this.data_extent.data_id,
@@ -449,7 +450,7 @@ TissueStack.Canvas.prototype = {
 					);
 				// append session id & timestamp for image service as well as contrast (if deviates from original range)
 				if (!this.getDataExtent().getIsTiled()) {
-					if (this.contrast && this.contrast.getMinimum() != this.contrast.dataset_min || this.contrast.getMaximum() != this.contrast.dataset_max) {
+					if (this.contrast && (this.contrast.getMinimum() != this.contrast.dataset_min || this.contrast.getMaximum() != this.contrast.dataset_max)) {
 						src += ("&min=" + this.contrast.getMinimum());
 						src += ("&max=" + this.contrast.getMaximum());
 					}

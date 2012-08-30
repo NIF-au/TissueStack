@@ -10,11 +10,11 @@
 	<link rel="apple-touch-icon" href="images/favicon_icon.png" />	
 	
 	<link rel="stylesheet" href="css/phone.css" />
-	<link rel="stylesheet" href="css/jquery.mobile-1.1.0.min.css" />
+	<link rel="stylesheet" href="css/jquery.mobile-1.1.1.min.css" />
 	<link rel="stylesheet" href="css/default.css" />
 	
-	<script src="js/libs/jquery/jquery-1.7.1.js"></script>
-	<script src="js/libs/jquery/jquery.mobile-1.1.0.min.js"></script>
+	<script src="js/libs/jquery/jquery-1.7.1.min.js"></script>
+	<script src="js/libs/jquery/jquery.mobile-1.1.1.min.js"></script>
 	<script src="js/libs/jquery/jquery.form.js"></script>
 	<script src="js/TissueStack.Slider.js"></script>
 	<script src="js/libs/sylvester/sylvester.js"></script>
@@ -48,18 +48,18 @@
 		<h3>Tissue Stack</h3>
 	</div>
 	<ul>
-		<li><a href="#tissueX" class="contentLink" data-transition="slide">Tissue X<span class="icon"></span></a></li>
-		<li><a href="#tissueY" class="contentLink" data-transition="slide">Tissue Y<span class="icon"></span></a></li>
-		<li><a href="#tissueZ" class="contentLink" data-transition="slide">Tissue Z<span class="icon"></span></a></li>
+		<li><a href="#tissueX" class="contentLink" data-transition="slide">Plane X<span class="icon"></span></a></li>
+		<li><a href="#tissueY" class="contentLink" data-transition="slide">Plane Y<span class="icon"></span></a></li>
+		<li><a href="#tissueZ" class="contentLink" data-transition="slide">Plane Z<span class="icon"></span></a></li>
 	</ul>
 	<div id="memberDetails" style="text-align: center;">
 		<h3>Dashboard</h3>
 	</div>
 	<ul>
-		<li class="active"><a href="#home" class="contentLink" data-transition="slide">Setting<span class="icon"></span></a></li>
+		<li class="active"><a href="#home" class="contentLink" data-transition="slide">Settings<span class="icon"></span></a></li>
 		<li><a href="#contrast" class="contentLink" data-transition="slide">Contrast<span class="icon"></span></a></li>
 		<li><a href="#dataset" class="contentLink" data-transition="slide">Data Server<span class="icon"></span></a></li>
-		<li><a href="#admin" class="contentLink" data-transition="slide">Administrator<span class="icon"></span></a></li>
+		<li><a href="#admin" class="contentLink" data-transition="slide">Admin Page<span class="icon"></span></a></li>
 	</ul>
 </div>
 	<!--HOME Page (SETTING PAGE)-->
@@ -90,7 +90,7 @@
 		</div><!-- /content -->
 	</div><!-- /page -->
 	
-	<!--Tissue X Page-->
+	<!--Plane X Page-->
 	<div data-role="page" class="pages" id="tissueX" data-theme="a"  data-content-theme="b">
 		<div data-role="header" class="headers" style="overflow: hidden;">
 			<a href="#" class="showMenu menuBtn">Menu</a>
@@ -111,11 +111,11 @@
 					</div> 
 			</div>
 			<br />
-			<input id="canvas_x_slider" class="canvasslider canvas_x" type="range" min="0" max="1000" value="500" step="5" orientation="horizontal"  />
+			<input id="canvas_x_slider" class="canvasslider canvas_x" type="range" min="0" max="1000" value="500" step="1" orientation="horizontal"  />
 		</div><!-- /content -->
 	</div><!-- /page -->
 	
-	<!--Tissue Y Page-->
+	<!--Plane Y Page-->
 	<div data-role="page" class="pages" id="tissueY" data-theme="a"  data-content-theme="b">
 		<div data-role="header" class="headers" style="overflow: hidden;">
 			<a href="#" class="showMenu menuBtn">Menu</a>
@@ -135,7 +135,7 @@
 				</div> 
 			</div>
 			<br />
-			<input id="canvas_y_slider" class="canvasslider canvas_y" type="range" min="0" max="1000" value="500" step="5" orientation="horizontal"  />
+			<input id="canvas_y_slider" class="canvasslider canvas_y" type="range" min="0" max="1000" value="500" step="1" orientation="horizontal"  />
 		</div><!-- /content -->
 	</div><!-- /page -->
 
@@ -159,7 +159,7 @@
 				</div> 
 			</div>
 			<br />
-			<input id="canvas_z_slider" class="canvasslider canvas_z" type="range" min="0" max="1000" value="500" step="5" orientation="horizontal"  />
+			<input id="canvas_z_slider" class="canvasslider canvas_z" type="range" min="0" max="1000" value="500" step="1" orientation="horizontal"  />
 		</div><!-- /content -->
 	</div><!-- /page -->
 	
