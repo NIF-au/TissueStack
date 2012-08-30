@@ -218,6 +218,12 @@ TissueStack.ContrastCanvas.prototype = {
 	getMaximum : function() {
 		return Math.floor((this.max_bar_pos - this.margin) /this.step);
 	},
+	getMinimumBarPositionForValue : function(val) {
+		return this.min_bar_pos = this.margin + val * this.step;
+	}, 
+	getMaximumBarPositionForValue : function(val) {
+		return this.max_bar_pos =this.margin + val * this.step;
+	},
 	makeTouchMouseMove: function (coords) {
 	 	var _this = this;
 	 	
@@ -238,5 +244,10 @@ TissueStack.ContrastCanvas.prototype = {
 			_this.initContrastSlider();
 			if (_this.canvas) _this.canvas.events.changeSliceForPlane(_this.canvas.getDataExtent().slice);
 		});
+	},
+	isMinOrMaxDifferentFromDataSetMinOrMax : function() {
+		if (this.dataset_min == this.getMinimum() && this.dataset_max == this.getMaximum()) return false;
+		
+		return true;
 	}
 };

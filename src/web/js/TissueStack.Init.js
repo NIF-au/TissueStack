@@ -284,13 +284,22 @@ TissueStack.BindDataSetDependentEvents = function () {
 	$('#drawing_interval_button').unbind("click");
 	//rebind
 	$('#drawing_interval_button').bind("click", function() {
-		TissueStack.configuration['default_drawing_interval'].value = parseInt($('#drawing_interval').val());
-		
+		var oldVal = (TissueStack.configuration['default_drawing_interval'] ?
+				TissueStack.configuration['default_drawing_interval'].value : 100);
+		var val = ($('#drawing_interval') && $('#drawing_interval').length > 0) ?
+				parseInt($('#drawing_interval').val()) : oldVal;
+		if (typeof(val) != 'number' || isNaN(val)) val = 100;
+		if (val < 10 || val > 1000) {
+			alert("Please enter a number in between 10ms and 1000ms (=1s)");
+			$('#drawing_interval').val(oldVal);
+			return;
+		}
+				
 		for (var x=0;x<maxDataSets;x++) {
 			var dataSet = datasets[x];
 			
 			for (var id in dataSet.planes) {	
-				dataSet.planes[id].queue.setDrawingInterval(TissueStack.configuration['default_drawing_interval'].value);
+				dataSet.planes[id].queue.setDrawingInterval(val);
 			}
 		}
 	});
@@ -610,6 +619,25 @@ TissueStack.applyUserParameters = function() {
 			plane.changeToZoomLevel(initOpts['zoom']); 
 		}
 
+		if (initOpts['color'] &&
+				(initOpts['color'] == 'grey' || initOpts['color'] == 'hot' || initOpts['color'] == 'spectral')) {
+			// change color map collectively for all planes
+			for (var id in dataSet.planes) dataSet.planes[id].color_map = initOpts['color']; 
+		}
+		if (typeof(initOpts['min']) === 'number' &&  typeof(initOpts['max']) === 'number') {
+			// change contrast collectively for all planes
+			for (var id in dataSet.planes) {
+				if (dataSet.planes[id].contrast) {
+					dataSet.planes[id].contrast.drawContrastSlider();
+					dataSet.planes[id].contrast.moveBar('min',
+							dataSet.planes[id].contrast.getMinimumBarPositionForValue(initOpts['min'])); 
+					dataSet.planes[id].contrast.moveBar('max',
+							dataSet.planes[id].contrast.getMaximumBarPositionForValue(initOpts['max']));
+					dataSet.planes[id].contrast.drawMinMaxValues();
+				}
+			}
+		}
+		
 		var givenCoords = {};
 		if (initOpts['x'] != null || initOpts['y'] != null || initOpts['z'] != null) {
 			givenCoords = {x: initOpts['x'] != null ? initOpts['x'] : 0,
