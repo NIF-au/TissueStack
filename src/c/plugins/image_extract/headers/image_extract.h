@@ -38,6 +38,9 @@ typedef	struct	s_image_extract
   float		***premapped_colormap;
   int		colormap_id;
   char		**colormap_name;
+  unsigned char	contrast_min;
+  unsigned char	contrast_max;
+  int		contrast;
   char 		*request_id;
   char 		*request_time;
   pthread_cond_t	cond;
@@ -81,6 +84,8 @@ void            print_image(char *hyperslab, t_vol *volume, int current_dimensio
 
 void			free_image_extract(t_image_extract * extract);
 void			free_image_args(t_image_args * args);
+
+void		alloc_and_init_colormap_space_from_src(float **new_colormap, float **source);
 
 /*float		colormap[3][25][4] = {{{0, 0, 0, 0},
 				    {0.05, 0.46667, 0, 0.05333},

@@ -109,6 +109,8 @@ struct			s_vol
   int			raw_fd;			// File descriptor associate to a raw file
   double		min;                    // min value of the volume
   double		max;                    // max value of the volume
+  unsigned char		color_range_min;	// min value of the volume color range
+  unsigned char		color_range_max;	// max value of the volume color range
   t_vol			*next;
 };
 

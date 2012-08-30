@@ -101,6 +101,59 @@ void		alloc_and_init_colormap_space(float **new_colormap, int index)
     }
 }
 
+void		alloc_and_init_colormap_space_from_src(float **new_colormap, float **source)
+{
+  int		i;
+  int		j;
+  float		start_red;
+  float		end_red;
+  float		start_green;
+  float		end_green;
+  float		start_blue;
+  float		end_blue;
+  float		start_range;
+  float		end_range;
+  float		red_delta;
+  float		green_delta;
+  float		blue_delta;
+  float		delta;
+  int		end_loop;
+
+  i = 0;
+  j = 1;
+  while (source[j][0] < 99)
+    {
+      start_range	= floor(source[j - 1][0] * 255);
+      end_range		= floor(source[j][0] * 255);
+      delta		= end_range - start_range;
+
+      start_red		= source[j - 1][1];
+      end_red		= source[j][1];
+
+      start_green	= source[j - 1][2];
+      end_green		= source[j][2];
+
+      start_blue	= source[j - 1][3];
+      end_blue		= source[j][3];
+
+      red_delta = round((end_red - start_red) / delta);
+      green_delta = round((end_green - start_green) / delta);
+      blue_delta = round((end_blue - start_blue) / delta);
+
+      end_loop = i + delta;
+      while (i < end_loop)
+	{
+	  new_colormap[i] = malloc(3 * sizeof(*new_colormap[i]));
+
+	  new_colormap[i][0] = round((i * start_red) + ((end_red - i) * red_delta));
+	  new_colormap[i][1] = round((i * start_green) + ((end_green - i) * green_delta));
+	  new_colormap[i][2] = round((i * start_blue) + ((end_blue - i) * blue_delta));
+	  i++;
+	}
+      j++;
+    }
+}
+
 void		colormap_init(t_image_extract *image_args)
 {
   int		i;
@@ -525,7 +578,7 @@ void			*start(void *args)
       image_args->w_position = atoi(a->commands[13]);
       image_args->start_h = atoi(a->commands[12]);
       image_args->start_w = atoi(a->commands[13]);
-      if (a->commands[18] != NULL)
+      if (a->commands[20] != NULL)
 	image_args->root_path = strdup(a->commands[18]);
     }
   else if (strcmp(image_args->service, "images") == 0)
@@ -541,7 +594,7 @@ void			*start(void *args)
       image_args->start_w = atoi(a->commands[12]);
       image_args->h_position_end = atoi(a->commands[13]);
       image_args->w_position_end = atoi(a->commands[14]);
-      if (a->commands[19] != NULL)
+      if (a->commands[21] != NULL)
 	image_args->root_path = strdup(a->commands[19]);
     }
   else
@@ -554,7 +607,7 @@ void			*start(void *args)
 	}
       else
 	{
-	  if (a->commands[15] != NULL)
+	  if (a->commands[17] != NULL)
 	    image_args->root_path = strdup(a->commands[15]);
 	}
     }
@@ -575,10 +628,18 @@ void			*start(void *args)
   else
     image_args->colormap_id = -1;
 
-  step = (strcmp(image_args->service, "tiles") == 0 ? atoi(a->commands[15]) : (strcmp(image_args->service, "full") == 0 ? atoi(a->commands[12]) : atoi(a->commands[16])));
+  image_args->contrast_min = (strcmp(image_args->service, "tiles") == 0 ? atoi(a->commands[15]) : (strcmp(image_args->service, "full") == 0 ? atoi(a->commands[12]) : atoi(a->commands[16])));
+  image_args->contrast_max = (strcmp(image_args->service, "tiles") == 0 ? atoi(a->commands[16]) : (strcmp(image_args->service, "full") == 0 ? atoi(a->commands[13]) : atoi(a->commands[17])));
 
-  image_args->request_id = (strcmp(image_args->service, "tiles") == 0 ? strdup(a->commands[16]) : (strcmp(image_args->service, "full") == 0 ? strdup(a->commands[13]) : strdup(a->commands[17])));
-  image_args->request_time = (strcmp(image_args->service, "tiles") == 0 ? strdup(a->commands[17]) : (strcmp(image_args->service, "full") == 0 ? strdup(a->commands[14]) : strdup(a->commands[18])));
+  if (image_args->contrast_max != 0)
+    image_args->contrast = 1;
+  else
+    image_args->contrast = 0;
+
+  step = (strcmp(image_args->service, "tiles") == 0 ? atoi(a->commands[17]) : (strcmp(image_args->service, "full") == 0 ? atoi(a->commands[14]) : atoi(a->commands[18])));
+
+  image_args->request_id = (strcmp(image_args->service, "tiles") == 0 ? strdup(a->commands[18]) : (strcmp(image_args->service, "full") == 0 ? strdup(a->commands[15]) : strdup(a->commands[19])));
+  image_args->request_time = (strcmp(image_args->service, "tiles") == 0 ? strdup(a->commands[19]) : (strcmp(image_args->service, "full") == 0 ? strdup(a->commands[16]) : strdup(a->commands[20])));
 
   image_creation_lunch(a->general_info,volume, step, image_args, socketDescriptor);
 
