@@ -160,6 +160,8 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
   char		*colormap_name = NULL;
   char		*id = NULL;
   char		*time = NULL;
+  char		*contrast_min = NULL;
+  char		*contrast_max = NULL;
   char		comm[500];
 
   if (strncmp(buff, "GET /?volume=", 13) == 0)
@@ -192,6 +194,8 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
 	  else if (strcmp(tmp2[0], "x_end") == 0)	x_end = serv_copy_check_clean_string_from_tab(tmp2);
 	  else if (strcmp(tmp2[0], "colormap") == 0)	colormap_name = serv_copy_check_clean_string_from_tab(tmp2);
 	  else if (strcmp(tmp2[0], "image_type") == 0)	image_type = serv_copy_check_clean_string_from_tab(tmp2);
+	  else if (strcmp(tmp2[0], "contrast_min") == 0)	contrast_min = serv_copy_check_clean_string_from_tab(tmp2);
+	  else if (strcmp(tmp2[0], "contrast_max") == 0)	contrast_max = serv_copy_check_clean_string_from_tab(tmp2);
 	  else if (strcmp(tmp2[0], "id") == 0)	id = serv_copy_check_clean_string_from_tab(tmp2);
 	  else if (strcmp(tmp2[0], "timestamp") == 0)	time = serv_copy_check_clean_string_from_tab(tmp2);
 	  j = 0;
@@ -218,7 +222,7 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
 
       if (service == NULL)
 	{
-	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s 1 %s %s", volume,
+	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s %s 1 %s %s", volume,
 		  (dimension[0] == '0' ? atoi(slice) : -1),
 		  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
 		  (dimension[0] == '1' ? atoi(slice) : -1),
@@ -226,11 +230,12 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
 		  (dimension[0] == '2' ? atoi(slice) : -1),
 		  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
 		  scale, quality, "full", image_type, (colormap_name == NULL ? "NULL" : colormap_name),
+		  (contrast_min == NULL ? "0" : contrast_min), (contrast_max == NULL ? "0" : contrast_max),
 		  id != NULL ? id : "0", time != NULL ? time : "0");
 	}
       else if (strcmp(service, "tiles") == 0)
 	{
-	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s %s %s 1 %s %s", volume,
+	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s %s %s %s %s 1 %s %s", volume,
 		  (dimension[0] == '0' ? atoi(slice) : -1),
 		  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
 		  (dimension[0] == '1' ? atoi(slice) : -1),
@@ -238,11 +243,12 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
 		  (dimension[0] == '2' ? atoi(slice) : -1),
 		  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
 		  scale, quality, service, image_type, square, y, x, (colormap_name == NULL ? "NULL" : colormap_name),
+		  (contrast_min == NULL ? "0" : contrast_min), (contrast_max == NULL ? "0" : contrast_max),
 		  id != NULL ? id : "0", time != NULL ? time : "0");
 	}
       else if (strcmp(service, "images") == 0)
 	{
-	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s %s %s %s 1 %s %s", volume,
+	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s %s %s %s %s %s 1 %s %s", volume,
 		  (dimension[0] == '0' ? atoi(slice) : -1),
 		  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
 		  (dimension[0] == '1' ? atoi(slice) : -1),
@@ -250,6 +256,7 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
 		  (dimension[0] == '2' ? atoi(slice) : -1),
 		  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
 		  scale, quality, service, image_type, y, x, y_end, x_end, (colormap_name == NULL ? "NULL" : colormap_name),
+		  (contrast_min == NULL ? "0" : contrast_min), (contrast_max == NULL ? "0" : contrast_max),
 		  id != NULL ? id : "0", time != NULL ? time : "0");
 	}
 

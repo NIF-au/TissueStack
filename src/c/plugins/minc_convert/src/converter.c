@@ -133,6 +133,9 @@ t_header	*create_header_from_minc_struct(t_vol *minc_volume)
   int		j;
 
   h = malloc(sizeof(*h));
+
+  h->dim_nb = minc_volume->dim_nb;
+
   h->sizes = malloc(h->dim_nb * sizeof(*h->sizes));
   h->start = malloc(h->dim_nb * sizeof(*h->start));
   h->steps = malloc(h->dim_nb * sizeof(*h->steps));
@@ -140,7 +143,6 @@ t_header	*create_header_from_minc_struct(t_vol *minc_volume)
   h->dim_offset = malloc(h->dim_nb * sizeof(*h->dim_offset));
   h->slice_size = malloc(h->dim_nb * sizeof(*h->slice_size));
 
-  h->dim_nb = minc_volume->dim_nb;
   h->slice_max = minc_volume->slices_max;
 
   i = 0;
