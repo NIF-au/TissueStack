@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Fri Aug 24 15:19:02 2012 Oliver Nicolini
+** Last update Thu Aug 30 17:02:17 2012 Oliver Nicolini
 */
 
 
@@ -199,14 +199,16 @@ int		main(int argc, char **argv)
   plugin_load_from_string("load image /usr/local/plugins/TissueStackImageExtract.so", t);
   plugin_load_from_string("load serv /usr/local/plugins/TissueStackCommunicator.so", t);
   plugin_load_from_string("load comm /usr/local/plugins/TissueStackProcessCommunicator.so", t);
-  //plugin_load_from_string("load converter /usr/local/plugins/TissueStackMincConverter.so", t);
+  //plugin_load_from_string("load minc_converter /usr/local/plugins/TissueStackMincConverter.so", t);
+  //  plugin_load_from_string("load nifti_converter /usr/local/plugins/TissueStackNiftiConverter.so", t);
 
   sprintf(serv_command, "start serv %s", argv[1]);
 
   // start plugins
   (t->plug_actions)(t, serv_command, NULL);
   (t->plug_actions)(t, "start comm", NULL);
-  //(t->plug_actions)(t, "start converter /media/Data/lowback.minc2.mnc /media/Data/lowback.raw", NULL);
+  //(t->plug_actions)(t, "start minc_converter /media/Data/lowback.minc2.mnc /media/Data/lowback.raw", NULL);
+  //(t->plug_actions)(t, "start nifti_converter /opt/data/brain.nii /opt/data/brain_from_nifti.raw", NULL);
 
 
   signal_manager(t);

@@ -6,18 +6,36 @@ void set_grayscale(unsigned char *ptr, float val)
     ptr[1] = (unsigned char) ((int) val >> 8);
 }
 
-void get_width_height(int *height, int *width, int current_dimension,
-        t_vol *volume)
+int		get_dim_size(t_vol *volume, char c)
 {
-    if (current_dimension == X) {
-        *height = volume->size[Y];
-        *width = volume->size[Z];
-    } else if (current_dimension == Y) {
-        *height = volume->size[X];
-        *width = volume->size[Z];
-    } else {
-        *height = volume->size[X];
-        *width = volume->size[Y];
+  int		i = 0;
+
+  while (i < volume->dim_nb)
+    {
+      if (volume->dim_name_char[i] == c)
+	return (volume->size[i]);
+      i++;
+    }
+  return (0);
+}
+
+void		get_width_height(int *height, int *width, int current_dimension,
+				 t_vol *volume)
+{
+  if (volume->dim_name_char[current_dimension] == 'x')
+    {
+      *height = get_dim_size(volume, 'z'); //volume->size[Y];
+      *width = get_dim_size(volume, 'y'); //volume->size[Z];
+    }
+  else if (volume->dim_name_char[current_dimension] == 'y')
+    {
+      *height = get_dim_size(volume, 'z');//volume->size[X];
+      *width = get_dim_size(volume, 'x');//volume->size[Z];
+    }
+  else
+    {
+      *height = get_dim_size(volume, 'y');//volume->size[X];
+      *width = get_dim_size(volume, 'x');//volume->size[Y];
     }
 }
 
@@ -123,6 +141,68 @@ void fclose_check(FILE *file) {
     }
 }
 
+void		apply_colormap(PixelPacket *px, PixelPacket *px_final, float **premapped_colormap,
+			       t_image_args *a, int width, int height)
+{
+  int		i = 0;
+  int		j = 0;
+  unsigned char	pixel_value;
+
+  while (i < height)
+    {
+      j = 0;
+      while (j < width)
+	{
+	  pixel_value = px[(width * i) + j].red;
+	  pixel_value = (pixel_value >= 255 ? 254 : pixel_value);
+
+	  px_final[(width * i) + j].red = (unsigned short)(premapped_colormap[pixel_value][0]);
+	  px_final[(width * i) + j].green = (unsigned short)(premapped_colormap[pixel_value][1]);
+	  px_final[(width * i) + j].blue = (unsigned short)(premapped_colormap[pixel_value][2]);
+	  j++;
+	}
+      i++;
+    }
+}
+
+unsigned char	get_contrasted_value(unsigned char min, unsigned char max,
+				     unsigned char dataset_min, unsigned char dataset_max, unsigned char initial_value)
+{
+  float	ratio;
+  unsigned char	final_value;
+
+  ratio = (float)((float)((float)max - (float)min) / (float)((float)dataset_max - (float)dataset_min));
+  final_value = min + round(initial_value * ratio);
+  return (final_value);
+}
+
+void		apply_contrast(PixelPacket *px, unsigned char min, unsigned char max,
+			       unsigned char dataset_min, unsigned char dataset_max,
+			       t_image_args *a, int width, int height)
+{
+  int		i = 0;
+  int		j = 0;
+  unsigned char	pixel_value;
+
+  while (i < height)
+    {
+      j = 0;
+      while (j < width)
+	{
+	  pixel_value = px[(width * i) + j].red;
+	  pixel_value = (pixel_value >= 255 ? 254 : pixel_value);
+
+	  pixel_value = get_contrasted_value(min, max, dataset_min, dataset_max, pixel_value);
+
+	  px[(width * i) + j].red = (unsigned char)(pixel_value);
+	  px[(width * i) + j].green = (unsigned char)(pixel_value);
+	  px[(width * i) + j].blue = (unsigned char)(pixel_value);
+	  j++;
+	}
+      i++;
+    }
+}
+
 void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
 			    unsigned int current_slice, int width, int height, t_image_args *a)
 {
@@ -138,9 +218,6 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
   ImageInfo	*image_info_cpy;
   PixelPacket	*px;
   PixelPacket	*px_tmp;
-  unsigned int	pixel_value;
-  int		i = 0;
-  int		j = 0;
 
 
   if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
@@ -177,6 +254,56 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
     fclose_check(a->file);
     return;
   }
+
+  if (a->info->contrast != 0)
+    {
+      if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+	DestroyImage(img);
+	DestroyImageInfo(image_info);
+	write_http_header(a->file, "408 Request Timeout", a->info->image_type);
+	fclose_check(a->file);
+	return;
+      }
+
+      if ((px = GetImagePixelsEx(img, 0, 0, width, height, &exception)) == NULL)
+	{
+	  DestroyImage(img);
+	  DestroyImageInfo(image_info);
+	  fclose_check(a->file);
+	  CatchException(&exception);
+	  return;
+	}
+
+      if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+	DestroyImage(img);
+	DestroyImageInfo(image_info);
+	write_http_header(a->file, "408 Request Timeout", a->info->image_type);
+	fclose_check(a->file);
+	return;
+      }
+
+      apply_contrast(px, a->info->contrast_min, a->info->contrast_max,
+		     a->volume->color_range_min, a->volume->color_range_max, a, width, height);
+
+      if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+	DestroyImage(img);
+	DestroyImageInfo(image_info);
+	write_http_header(a->file, "408 Request Timeout", a->info->image_type);
+	fclose_check(a->file);
+	return;
+      }
+
+      SyncImagePixels(img);
+
+      if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+	DestroyImage(img);
+	DestroyImageInfo(image_info);
+	write_http_header(a->file, "408 Request Timeout", a->info->image_type);
+	fclose_check(a->file);
+	return;
+      }
+
+    }
 
   if (a->info->colormap_id > -1)
     {
@@ -240,21 +367,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
 	return;
       }
 
-      while (i < height)
-	{
-	  j = 0;
-	  while (j < width)
-	    {
-	      pixel_value = px[(width * i) + j].red;
-	      pixel_value = (pixel_value >= 255 ? 254 : pixel_value);
-
-	      px_tmp[(width * i) + j].red = (unsigned short)(a->info->premapped_colormap[a->info->colormap_id][pixel_value][0]);
-	      px_tmp[(width * i) + j].green = (unsigned short)(a->info->premapped_colormap[a->info->colormap_id][pixel_value][1]);
-	      px_tmp[(width * i) + j].blue = (unsigned short)(a->info->premapped_colormap[a->info->colormap_id][pixel_value][2]);
-	      j++;
-	    }
-	  i++;
-	}
+      apply_colormap(px, px_tmp, a->info->premapped_colormap[a->info->colormap_id], a, width, height);
 
       if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
 	DestroyImage(img);

@@ -312,6 +312,12 @@ TissueStack.Embedded.prototype = {
 			plane.changeToZoomLevel(_this.initOpts['zoom']); 
 		}
 
+		if (_this.initOpts['color'] &&
+				(_this.initOpts['color'] == 'grey' || _this.initOpts['color'] == 'hot' || _this.initOpts['color'] == 'spectral')) {
+			// change color map collectively for all planes
+			for (var id in dataSet.planes) dataSet.planes[id].color_map = _this.initOpts['color']; 
+		}
+
 		var givenCoords = {};
 		if (_this.initOpts['x'] != null || _this.initOpts['y'] != null || _this.initOpts['z'] != null) {
 			givenCoords = {x: _this.initOpts['x'] != null ? _this.initOpts['x'] : 0,
@@ -325,10 +331,10 @@ TissueStack.Embedded.prototype = {
 			givenCoords = plane.getRelativeCrossCoordinates();
 			givenCoords.z = plane.getDataExtent().slice;
 		}
-		plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, new Date().getTime());
+		plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, true, new Date().getTime());
 		setTimeout(function() {
 			plane.events.changeSliceForPlane(givenCoords.z);
-		}, 200);
+		}, 150);
 	},
 	adjustCanvasSizes : function() {
 		// get dimensions from parent and impose them on the canvases
@@ -434,6 +440,8 @@ TissueStack.Embedded.prototype = {
 					TissueStack.configuration[configuration[x].name].value = configuration[x].value;
 					TissueStack.configuration[configuration[x].name].description = configuration[x].description ? configuration[x].description : "";
 				};
+				
+				TissueStack.Utils.indexColorMaps();
 			},
 			function(jqXHR, textStatus, errorThrown) {
 				alert("Error connecting to backend: " + textStatus + " " + errorThrown);
@@ -531,10 +539,13 @@ TissueStack.Embedded.prototype = {
 			$("#dataset_1_main_view_canvas").removeClass("canvas_" + mainViewPlaneId);
 			
 			// redraw and change the zoom level as well
-			dataSet.planes[sideViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(sideCanvasRelativeCross);
-			dataSet.planes[mainViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(mainCanvasRelativeCross);
+			var now = new Date().getTime();
+			dataSet.planes[sideViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(sideCanvasRelativeCross, false, now);
+			dataSet.planes[mainViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(mainCanvasRelativeCross, false, now);
+			dataSet.planes[sideViewPlaneId].events.changeSliceForPlane(dataSet.planes[sideViewPlaneId].data_extent.slice);
 			dataSet.planes[sideViewPlaneId].changeToZoomLevel(dataSet.planes[mainViewPlaneId].getDataExtent().zoom_level);
 			dataSet.planes[mainViewPlaneId].changeToZoomLevel(zoomLevelSideView);
+
 			dataSet.planes[sideViewPlaneId].updateExtentInfo(
 			dataSet.planes[sideViewPlaneId].getDataExtent().getExtentCoordinates());
 		});

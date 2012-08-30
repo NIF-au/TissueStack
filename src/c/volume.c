@@ -312,6 +312,9 @@ int		init_volume(t_vol *volume, char *path)
   if (volume->path == NULL)
     return (-1);
 
+  volume->color_range_min = 0;
+  volume->color_range_max = 255;
+
   // check if is raw file
   if ((result = israw(volume->path)) == -1)
     return (-1);
