@@ -144,7 +144,7 @@ TissueStack.DataSetNavigation.prototype = {
 			$("#colormap_choice input").removeAttr("checked").checkboxradio("refresh");
 			$("#colormap_grey").attr("checked", "checked").checkboxradio("refresh");
 		} catch (e) {
-			// we don't care, stupif jquery mobile ...
+			// we don't care, stupid jquery mobile ...
 			$("#colormap_grey").attr("checked", "checked");
 		}
 		

@@ -622,7 +622,16 @@ TissueStack.applyUserParameters = function() {
 		if (initOpts['color'] &&
 				(initOpts['color'] == 'grey' || initOpts['color'] == 'hot' || initOpts['color'] == 'spectral')) {
 			// change color map collectively for all planes
-			for (var id in dataSet.planes) dataSet.planes[id].color_map = initOpts['color']; 
+			for (var id in dataSet.planes) dataSet.planes[id].color_map = initOpts['color'];
+
+			// set right radio button
+			try {
+				$("#colormap_choice input").removeAttr("checked").checkboxradio("refresh");
+				$("#colormap_" + initOpts['color']).attr("checked", "checked").checkboxradio("refresh");
+			} catch (e) {
+				// we don't care, stupid jquery mobile ...
+				$("#colormap_" + initOpts['color']).attr("checked", "checked");
+			}
 		}
 		if (typeof(initOpts['min']) === 'number' &&  typeof(initOpts['max']) === 'number') {
 			// change contrast collectively for all planes
