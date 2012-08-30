@@ -605,8 +605,15 @@ TissueStack.Canvas.prototype = {
 		
 		// Show Url Link info (solve the problem (used split ?) when user entering website by query string link)
 		if(x_link != "" || y_link != "" || z_link != ""){
-			url_link_message = document.location.href.split('?')[0] + "?ds=" + ds + "&plane=" + this.data_extent.plane + "&x=" + x_link + "&y=" + y_link + "&z=" 
-							 + z_link + "&zoom=" + zoom;
+			url_link_message = 
+				document.location.href.split('?')[0] + "?ds=" + ds + "&plane=" + this.data_extent.plane
+					+ "&x=" + x_link + "&y=" + y_link + "&z=" + z_link + "&zoom=" + zoom;
+		}
+		if (typeof(this.color_map) == 'string' && (this.color_map == 'hot' || this.color_map == 'spectral') ) {
+			url_link_message += ("&color=" + this.color_map); 
+		}
+		if (this.contrast && this.contrast.isMinOrMaxDifferentFromDataSetMinOrMax()) {
+			url_link_message += ("&min=" + this.contrast.getMinimum() + "&max=" + this.contrast.getMaximum()); 
 		}
 		
 		$('#'+this.dataset_id +'_link_message').html(url_link_message);

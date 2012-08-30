@@ -312,6 +312,12 @@ TissueStack.Embedded.prototype = {
 			plane.changeToZoomLevel(_this.initOpts['zoom']); 
 		}
 
+		if (_this.initOpts['color'] &&
+				(_this.initOpts['color'] == 'grey' || _this.initOpts['color'] == 'hot' || _this.initOpts['color'] == 'spectral')) {
+			// change color map collectively for all planes
+			for (var id in dataSet.planes) dataSet.planes[id].color_map = _this.initOpts['color']; 
+		}
+
 		var givenCoords = {};
 		if (_this.initOpts['x'] != null || _this.initOpts['y'] != null || _this.initOpts['z'] != null) {
 			givenCoords = {x: _this.initOpts['x'] != null ? _this.initOpts['x'] : 0,
@@ -434,6 +440,8 @@ TissueStack.Embedded.prototype = {
 					TissueStack.configuration[configuration[x].name].value = configuration[x].value;
 					TissueStack.configuration[configuration[x].name].description = configuration[x].description ? configuration[x].description : "";
 				};
+				
+				TissueStack.Utils.indexColorMaps();
 			},
 			function(jqXHR, textStatus, errorThrown) {
 				alert("Error connecting to backend: " + textStatus + " " + errorThrown);
