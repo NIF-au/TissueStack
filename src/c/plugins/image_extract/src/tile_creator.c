@@ -6,18 +6,36 @@ void set_grayscale(unsigned char *ptr, float val)
     ptr[1] = (unsigned char) ((int) val >> 8);
 }
 
-void get_width_height(int *height, int *width, int current_dimension,
-        t_vol *volume)
+int		get_dim_size(t_vol *volume, char c)
 {
-    if (current_dimension == X) {
-        *height = volume->size[Y];
-        *width = volume->size[Z];
-    } else if (current_dimension == Y) {
-        *height = volume->size[X];
-        *width = volume->size[Z];
-    } else {
-        *height = volume->size[X];
-        *width = volume->size[Y];
+  int		i = 0;
+
+  while (i < volume->dim_nb)
+    {
+      if (volume->dim_name_char[i] == c)
+	return (volume->size[i]);
+      i++;
+    }
+  return (0);
+}
+
+void		get_width_height(int *height, int *width, int current_dimension,
+				 t_vol *volume)
+{
+  if (volume->dim_name_char[current_dimension] == 'x')
+    {
+      *height = get_dim_size(volume, 'z'); //volume->size[Y];
+      *width = get_dim_size(volume, 'y'); //volume->size[Z];
+    }
+  else if (volume->dim_name_char[current_dimension] == 'y')
+    {
+      *height = get_dim_size(volume, 'z');//volume->size[X];
+      *width = get_dim_size(volume, 'x');//volume->size[Z];
+    }
+  else
+    {
+      *height = get_dim_size(volume, 'y');//volume->size[X];
+      *width = get_dim_size(volume, 'x');//volume->size[Y];
     }
 }
 
