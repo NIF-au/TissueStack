@@ -159,7 +159,7 @@ TissueStack.ContrastCanvas.prototype = {
 			// TOUCH END
 			this.getCanvasElement().bind("touchend", function(e) {
 				_this.mouse_down = false;
-				if(TissueStack.tablet){
+				if(TissueStack.tablet || TissueStack.debug){
 					_this.canvas.events.changeSliceForPlane(_this.canvas.getDataExtent().slice);
 				}
 			});
