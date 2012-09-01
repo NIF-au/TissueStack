@@ -351,25 +351,24 @@ TissueStack.DataSetNavigation.prototype = {
 	addDataSetToTabletTree : function (dataSet) {
 		
 		$('#tablet_tree').empty();
+		$('#tablet_tree').unbind("expand");
 		var htmlString ="";
 
 		for (var dataSetKey in TissueStack.dataSetStore.datasets) {
 			var dataSet = TissueStack.dataSetStore.datasets[dataSetKey];
-			  htmlString += '<div data-role="collapsible"'+' id="tabletTreeDiv-'+ dataSet.local_id + dataSet.host +'">' + '<h3>'+ dataSet.local_id + 
-			  				' in ' + dataSet.host +'</h3>'+
-							'<p>'+ dataSet.description +'<br>'+ 'Location: '+ dataSet.filename +'</p>'+
-							'<fieldset data-role="controlgroup" data-mini="true">'+
-							'<input type="radio" name="radio-' + dataSet.local_id + '"'+' id="radio-'+ dataSet.local_id +'"'+' value="on" />'+
-							'<label for="radio-'+ dataSet.local_id +'"'+'>Overlay ON</label>'+
-							'<input type="radio" name="radio-' + dataSet.local_id + '"'+' id="radio-off-'+ dataSet.local_id +'"'+' value="off" />'+
-							'<label for="radio-off-'+ dataSet.local_id + '"'+'>Overlay OFF</label>'+
-							'</fieldset></div>';																							
-		}
-		
+			  htmlString += '<div data-role="collapsible"'+' id="tabletTreeDiv-'+ dataSet.local_id + dataSet.host +'">' 
+  			  			 + '<h3>'+ dataSet.local_id + ' in ' + dataSet.host +'</h3>'
+  			  			 + '<p>'+ dataSet.description +'<br>'+ 'Location: '+ dataSet.filename +'</p>'
+  			  			 + '<fieldset data-role="controlgroup" data-mini="true">'
+  			  			 + '<input type="radio" name="radio-' + dataSet.local_id + '"'+' id="radio-'+ dataSet.local_id +'"'+' value="on" />'
+  			  			 + '<label for="radio-'+ dataSet.local_id +'"'+'>Overlay ON</label>'
+  			  			 + '<input type="radio" name="radio-' + dataSet.local_id + '"'+' id="radio-off-'+ dataSet.local_id +'"'
+  			  			 + 'value="off" />' + '<label for="radio-off-'+ dataSet.local_id + '"'+'>Overlay OFF</label>'
+  			  			 + '</fieldset></div>';		
+		}		
 		$('#tablet_tree').append(htmlString)
 		.trigger("create").controlgroup('refresh', true);
-		
-		
+
 		this.getSelectedTabletTree(dataSet);
 	},
 	getSelectedTabletTree : function (dataSet) {
@@ -377,7 +376,7 @@ TissueStack.DataSetNavigation.prototype = {
 			var dataSet = TissueStack.dataSetStore.datasets[dataSetKey];
 			(function(dataSet,_this) {
 				$("#tabletTreeDiv-" + dataSet.local_id + dataSet.host + "").trigger("collapse");
-				$("#tabletTreeDiv-" + dataSet.local_id + dataSet.host + "").click(function() {
+				$("#tabletTreeDiv-" + dataSet.local_id + dataSet.host + "").bind("expand", function() {
 					if(TissueStack.phone){
 						TissueStack.Utils.adjustScreenContentToActualScreenSize(0);
 					}
@@ -385,7 +384,9 @@ TissueStack.DataSetNavigation.prototype = {
 					_this.showDataSet(1);
 					TissueStack.InitUserInterface();
 					TissueStack.BindDataSetDependentEvents();
-					$("#tabletTreeDiv-" + dataSet.local_id + dataSet.host + "").trigger("expand");
+					//redirect to x plane after expanded
+					window.location = document.location.href.split('#dataset')[0] + '#tissueX'
+					return;
 				});
 			})(dataSet, this);
 		}
