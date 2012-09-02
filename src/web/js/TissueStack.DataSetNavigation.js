@@ -385,7 +385,7 @@ TissueStack.DataSetNavigation.prototype = {
 					TissueStack.InitUserInterface();
 					TissueStack.BindDataSetDependentEvents();
 					//redirect to x plane after expanded
-					window.location = document.location.href.split('#dataset')[0] + '#tissueX'
+					if (TissueStack.phone) window.location = document.location.href.split('#dataset')[0] + '#tissueX';
 					return;
 				});
 			})(dataSet, this);
