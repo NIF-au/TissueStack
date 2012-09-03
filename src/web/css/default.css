@@ -1,19 +1,23 @@
 .text-align-center {
-  text-align: center;
+	text-align: center;
 }
 .text-align-right {
-  text-align: right;
+	text-align: right;
 }
 .scrollable {
-position: absolute;
-top: 50px;
-left: 0px;
-right: 0px;
-bottom: 0px;
-overflow: scroll;
--webkit-overflow-scrolling: touch;
+	position: absolute;
+	top: 50px;
+	left: 0px;
+	right: 0px;
+	bottom: 0px;
+	overflow: scroll;
+	-webkit-overflow-scrolling: touch;
 }
 
+.touch_scrolling{
+	overflow: scroll;
+	-webkit-overflow-scrolling:touch;
+}
 /*for coords, pixel and world coords*/
 
 .boxgrid{  
