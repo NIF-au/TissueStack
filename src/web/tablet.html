@@ -70,10 +70,12 @@
                     <input data-mini="true" size="8" maxlength="50" type="text" id="server_search_input" value="http://"/>
                     <button data-mini="true" type="button" id="server_search_button">Connect to TissueStack Server</button>
 
-     	    		<!--ADD TREE DATA SET NAVI BAR-->					
-					<div id="mobile_style_tree_dataset" style="height: 250px; overflow-x: scroll;">
-						<div data-role="collapsible-set" data-theme="a" data-content-theme="d" data-mini="true">
-						<div id="tablet_tree"></div>
+     	    		<!--ADD TREE DATA SET NAVI BAR-->
+     	    		<div class="touch_scrolling"> <!--Need to fix tree scroll problem in Tablet-->				
+						<div id="mobile_style_tree_dataset" style="height: 250px; margin: 8px;">
+							<div data-role="collapsible-set" data-theme="a" data-content-theme="d" data-mini="true">
+							<div id="tablet_tree"></div>
+							</div>
 						</div>
 					</div>
 					<!--END -->
