@@ -82,7 +82,7 @@ TissueStack.Queue.prototype = {
 			if (this.prepareDrawRequest(deepCopyOfRequest)) {
 				var _this = this;
 				if (deepCopyOfRequest.action == 'ZOOM') {
-					_this.canvas.eraseCanvasContent();
+					//_this.canvas.eraseCanvasContent();
 				}	
 
 				_this.drawLowResolutionPreview(deepCopyOfRequest.timestamp);
@@ -102,7 +102,7 @@ TissueStack.Queue.prototype = {
 		var _this = this;
 		var lowResBackdrop = setInterval(function() {
 			var t = draw_request ? draw_request.timestamp : timestamp;
-			if (_this.latestDrawRequestTimestamp > 0 && t > _this.latestDrawRequestTimestamp) {
+			if (_this.latestDrawRequestTimestamp > 0 && t < _this.latestDrawRequestTimestamp) {
 				clearInterval(lowResBackdrop);
 				return;
 			}
@@ -124,7 +124,7 @@ TissueStack.Queue.prototype = {
 		if (this.latestDrawRequestTimestamp < 0 || timestamp < this.latestDrawRequestTimestamp) {
 			//console.info('Drawing preview for ' + this.canvas.getDataExtent().data_id + '[' + this.canvas.getDataExtent().getOriginalPlane() +  ']: ' + timestamp);
 
-			this.lowResolutionPreviewDrawn = true;
+			//this.lowResolutionPreviewDrawn = true;
 			return;
 		}
 
@@ -214,7 +214,7 @@ TissueStack.Queue.prototype = {
 			imageTile.onload = function() {
 			
 				if (_this.latestDrawRequestTimestamp < 0 || timestamp < _this.latestDrawRequestTimestamp) {
-					_this.lowResolutionPreviewDrawn = true;
+					//_this.lowResolutionPreviewDrawn = true;
 					//console.info('Aborting preview for ' + _this.canvas.getDataExtent().data_id + '[' +_this.canvas.getDataExtent().getOriginalPlane() +  ']: ' + timestamp);
 					return;
 				}
