@@ -460,6 +460,7 @@ a.ui-slider-handle-horizontal{
 	display: inline-block;
 	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#5383e2), color-stop(100%,#4075de));
 	background: -moz-linear-gradient(center top, #5383e2 0%, #5686e6 100%);
+	background: #5383e2; /*For IE*/
 	-webkit-box-shadow: 0px 1px 0px #6591e9 inset;
 	-moz-box-shadow: 0px 1px 0px #6591e9 inset;
 	box-shadow: 0px 1px 0px #6591e9 inset;
