@@ -14,8 +14,12 @@
 #										 #
 # The used file formats will be anything that is supported by the MINC Tool Kit: # 
 #    http://www.bic.mni.mcgill.ca/ServicesSoftware/ServicesSoftwareMincToolKit   #
+# as well as the nifti format: http://nifti.nimh.nih.gov/                        #
+# The TissueStack Image Server supplies converter plugins to turn the above      #
+# mentioned formats into a "raw" file which is basically a stream of bytes       #
+# incl. header for quick and easy sequential reads                               #   
 #										 #
-# Of course any data that is pre-tiled as png and adheres to Tissue Stack's      #
+# Of course any data that is pre-tiled as png/jpeg and adheres to Tissue Stack's #
 # directory structure for tiled data sets can be consumed and viewed via the web #
 # front-end.									 # 
 #										 #

@@ -274,18 +274,15 @@ TissueStack.Canvas.prototype = {
     		myImageData.data[i + 3] = 0;
     	}
     	ctx.putImageData(myImageData, x, y);
-	}, applyContrastAndColorMapToCanvasContent: function() {
+	}, applyContrastAndColorMapToCanvasContent: function(tempCtx) {
 		// no need to neither set a color map or contrast
-		if ((!this.color_map || this.color_map == "grey") &&
-				(!this.contrast || (this.contrast.getMinimum() == this.contrast.dataset_min && this.contrast.getMaximum() == this.contrast.dataset_max)) ) {
-			return;
-		}
-
-    	if (this.upper_left_x > this.dim_x || this.upper_left_x + this.data_extent.x < 0 || this.upper_left_y < 0 || this.upper_left_y - this.data_extent.y > this.dim_y) {
+		if (!this.hasColorMapOrContrastSetting()) return;
+    	
+	  	if (this.upper_left_x > this.dim_x || this.upper_left_x + this.data_extent.x < 0 || this.upper_left_y < 0 || this.upper_left_y - this.data_extent.y > this.dim_y) {
     		return;
     	}
-    		
-    	var ctx = this.getCanvasContext();
+	  	
+    	var ctx = typeof(tempCtx) === 'object' ? tempCtx :  this.getCanvasContext();
     	var xStart = this.upper_left_x < 0 ? 0 : this.upper_left_x;
     	var yStart = this.upper_left_y > this.dim_y ? 0 : this.dim_y - this.upper_left_y;
     	var width = xStart + this.data_extent.x;
@@ -318,7 +315,18 @@ TissueStack.Canvas.prototype = {
     	}
     	
     	// put altered data back into canvas
-    	ctx.putImageData(myImageData, xStart, yStart);  	
+    	if (typeof(tempCtx) === 'object') {
+    		// let's copy from the temporary canvas
+    		this.getCanvasContext().putImageData(myImageData, xStart, yStart);
+    		tempCtx = null;
+    	} 	else ctx.putImageData(myImageData, xStart, yStart); 
+	}, hasColorMapOrContrastSetting : function() {
+		if ((!this.color_map || this.color_map == "grey") &&
+				(!this.contrast || (this.contrast.getMinimum() == this.contrast.dataset_min && this.contrast.getMaximum() == this.contrast.dataset_max)) ) {
+			return false;
+		}
+		
+		return true;
 	}, drawMe : function(timestamp) {
 		// damn you async loads
 		if (this.queue.latestDrawRequestTimestamp < 0 ||
@@ -334,7 +342,8 @@ TissueStack.Canvas.prototype = {
 		}
 		
 		var ctx = this.getCanvasContext();
-
+		var tempCanvas = null;
+		
 		// nothing to do if we are totally outside
 		if (this.upper_left_x < 0 && (this.upper_left_x + this.getDataExtent().x) <=0
 				|| this.upper_left_x > 0 && this.upper_left_x > this.dim_x
@@ -377,13 +386,17 @@ TissueStack.Canvas.prototype = {
 
 		var copyOfCanvasY = canvasY;
 
+		//create a temporary Canvas to avoid the flickering for contrast and colormaps
+		if (this.getDataExtent().getIsTiled() && this.hasColorMapOrContrastSetting()) {
+			tempCanvas = document.createElement("canvas");
+			tempCanvas.width = this.dim_x;
+			tempCanvas.height = this.dim_y;
+			// redirect original context to temporary canvas content
+			ctx = tempCanvas.getContext("2d");
+		}
+
 		// loop over rows
-		for (var tileX = startTileX  ; tileX < endTileX ; tileX++) {
-			// prelim check
-			if (this.data_extent.slice < 0 || this.data_extent.slice >= this.data_extent.x) {
-				//break;
-			}
-			
+		for (var tileX = startTileX  ; tileX < endTileX ; tileX++) {			
 			var tileOffsetX = startTileX * this.getDataExtent().tile_size;
 			var imageOffsetX = 0;
 			var width =  this.getDataExtent().tile_size;
@@ -498,8 +511,10 @@ TissueStack.Canvas.prototype = {
 						ctx.drawImage(this,
 								imageOffsetX, imageOffsetY, width, height, // tile dimensions
 								canvasX, canvasY, width, height); // canvas dimensions
-						
-						if (counter == 0 && _this.getDataExtent().getIsTiled()) _this.applyContrastAndColorMapToCanvasContent();
+
+						if (counter == 0 && _this.getDataExtent().getIsTiled() && _this.hasColorMapOrContrastSetting()) {
+							_this.applyContrastAndColorMapToCanvasContent(ctx);
+						}
 					};
 				})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, this.getDataExtent().tile_size, rowIndex, colIndex);
 				

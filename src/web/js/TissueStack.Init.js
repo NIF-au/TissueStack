@@ -285,10 +285,10 @@ TissueStack.BindDataSetDependentEvents = function () {
 	//rebind
 	$('#drawing_interval_button').bind("click", function() {
 		var oldVal = (TissueStack.configuration['default_drawing_interval'] ?
-				TissueStack.configuration['default_drawing_interval'].value : 100);
+				TissueStack.configuration['default_drawing_interval'].value : 150);
 		var val = ($('#drawing_interval') && $('#drawing_interval').length > 0) ?
 				parseInt($('#drawing_interval').val()) : oldVal;
-		if (typeof(val) != 'number' || isNaN(val)) val = 100;
+		if (typeof(val) != 'number' || isNaN(val)) val = 150;
 		if (val < 10 || val > 1000) {
 			alert("Please enter a number in between 10ms and 1000ms (=1s)");
 			$('#drawing_interval').val(oldVal);
@@ -311,11 +311,12 @@ TissueStack.BindDataSetDependentEvents = function () {
 	$('input[name="color_map"]').bind("click", function(e) {
 		for (var x=0;x<maxDataSets;x++) {
 			var dataSet = datasets[x];
-			
+			var now = new Date().getTime();
 			for (var id in dataSet.planes) {	
 				dataSet.planes[id].color_map = e.target.value;
-				dataSet.planes[id].drawMe();
-				if (dataSet.planes[id].getDataExtent().getIsTiled()) dataSet.planes[id].applyContrastAndColorMapToCanvasContent();
+				dataSet.planes[id].drawMe(now);
+				if (dataSet.planes[id].getDataExtent().getIsTiled() && dataSet.planes[id].hasColorMapOrContrastSetting())
+					dataSet.planes[id].applyContrastAndColorMapToCanvasContent();
 			}
 		}
 	});

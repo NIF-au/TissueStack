@@ -5,14 +5,14 @@ TissueStack.Queue = function (canvas) {
 TissueStack.Queue.prototype = {
 	canvas : null,
 	queue_handle : null,
-	drawingIntervalInMillis : 75,
+	drawingIntervalInMillis : 150,
 	requests : [],
 	presentlyQueuedZoomLevelAndSlice: null,
 	lowResolutionPreviewDrawn : false,
 	latestDrawRequestTimestamp : 0,
 	setDrawingInterval : function(value) {
 		if (typeof(value) !== 'number' || value < 0) {
-			value = 75; // set to default
+			value = 250; // set to default
 		}
 		this.stopQueue();
 		this.drawingIntervalInMillis = value;
@@ -228,8 +228,12 @@ TissueStack.Queue.prototype = {
 				}
 
 				//console.info('Drawing preview for ' +  _this.canvas.getDataExtent().data_id + '[' +_this.canvas.getDataExtent().getOriginalPlane() +  ']: ' + timestamp);
+				if (_this.canvas.getDataExtent().getIsTiled() && _this.canvas.hasColorMapOrContrastSetting()) _this.canvas.getCanvasElement().hide();
 				ctx.drawImage(this, imageOffsetX, imageOffsetY, width, height, canvasX, canvasY, width, height);
-				if (_this.canvas.getDataExtent().getIsTiled()) _this.canvas.applyContrastAndColorMapToCanvasContent();
+				if (_this.canvas.getDataExtent().getIsTiled() && _this.canvas.hasColorMapOrContrastSetting()) {
+					_this.canvas.applyContrastAndColorMapToCanvasContent();
+					_this.canvas.getCanvasElement().show();
+				}
 
 				_this.lowResolutionPreviewDrawn = true;
 			};
