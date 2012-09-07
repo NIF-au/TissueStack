@@ -9,13 +9,12 @@ TissueStack.Canvas = function(data_extent, canvas_id, dataset_id, include_cross_
 	this.centerUpperLeftCorner();
 	this.drawCoordinateCross(this.getCenter());
 	this.setIncludeCrossHair(include_cross_hair);
-	this.events = new TissueStack.Events(this, this.include_cross_hair); 
+	this.events = new TissueStack.Events(this, this.include_cross_hair);
+	this.bindControlEvents(); // ui events for show/hide of controls such as contrast slider and copyable url link 
 	this.queue = new TissueStack.Queue(this);
 	this.contrast = null; // a shared instance of a contrast slider
 	// make parent and ourselves visible
 	this.getCanvasElement().parent().removeClass("hidden");
-	this.triggerUrlLink(); //trigger url link function
-	this.triggerContrastControl();
 };
 
 TissueStack.Canvas.prototype = {
@@ -37,6 +36,7 @@ TissueStack.Canvas.prototype = {
 	cross_y : 0,
 	queue : null,
 	color_map : "grey",
+	has_been_synced: false,
 	updateScaleBar : function() {
 		// update scale bar if main view
 		if (this.is_main_view) this.getDataExtent().adjustScaleBar(100);
@@ -229,7 +229,7 @@ TissueStack.Canvas.prototype = {
 		if (coords.z) {
 			this.data_extent.slice = coords.z;
 		}
-
+		
 		// look for the cross overlay which will be the top layer
 		var canvas = this.getCoordinateCrossCanvas();
 		if (!canvas || !canvas[0]) {
@@ -515,6 +515,12 @@ TissueStack.Canvas.prototype = {
 						if (counter == 0 && _this.getDataExtent().getIsTiled() && _this.hasColorMapOrContrastSetting()) {
 							_this.applyContrastAndColorMapToCanvasContent(ctx);
 						}
+						
+						if (counter == 0) {
+							TissueStack.dataSetNavigation.syncDataSetCoordinates(_this);
+							_this.has_been_synced = false; // reset flag to accept syncing forwards again
+							_this.queue.last_sync_timestamp = -1; // reset last sync timestamp
+						}
 					};
 				})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, this.getDataExtent().tile_size, rowIndex, colIndex);
 				
@@ -633,19 +639,16 @@ TissueStack.Canvas.prototype = {
 		}
 		
 		$('#'+this.dataset_id +'_link_message').html(url_link_message);
-	}, triggerUrlLink : function () {
-		var thisUrl = this;
+	}, bindControlEvents : function () {
+		var _this = this;
 		if(TissueStack.desktop || TissueStack.tablet){
 			//Show or Hide "URL Link" Box (used unbind "click" to solve the problem when opening two datasets)
-			$('#'+ thisUrl.dataset_id + '_url_button').unbind('click').click(function(){ 
-				$('#'+ thisUrl.dataset_id + '_url_box').toggle();		
+			$('#'+ _this.dataset_id + '_url_button').unbind('click').click(function(){ 
+				$('#'+ _this.dataset_id + '_url_box').toggle();		
 			});	
-		}
-	}, triggerContrastControl: function () {
-		var thisDataset = this;
-		if(TissueStack.desktop || TissueStack.tablet){
-			$('#'+ thisDataset.dataset_id + '_toolbox_canvas_button').unbind('click').click(function(){ 
-				$('#'+ thisDataset.dataset_id + '_contrast_box').toggle();		
+			// show and hide events for contrast slider
+			$('#'+ _this.dataset_id + '_toolbox_canvas_button').unbind('click').click(function(){ 
+				$('#'+ _this.dataset_id + '_contrast_box').toggle();		
 			});	
 		}
 	}

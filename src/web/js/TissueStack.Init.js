@@ -279,6 +279,14 @@ TissueStack.BindDataSetDependentEvents = function () {
 		maxDataSets = datasets.length;
 	}
 
+	// SYNC DATA_SETS CHECKBOX CHANGE HANDLER
+    if (TissueStack.desktop) {
+    		$('#sync_data_sets').unbind("click");
+            $('#sync_data_sets').bind("change", function() {
+            	TissueStack.sync_datasets = $('#sync_data_sets')[0].checked;
+            });
+    }
+
 	// DRAWING INTERVAL CHANGE HANDLER
 	// avoid potential double binding by un-binding at this stage
 	$('#drawing_interval_button').unbind("click");
