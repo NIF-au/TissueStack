@@ -10,6 +10,7 @@ TissueStack.Queue.prototype = {
 	presentlyQueuedZoomLevelAndSlice: null,
 	lowResolutionPreviewDrawn : false,
 	latestDrawRequestTimestamp : 0,
+	last_sync_timestamp: -1,
 	setDrawingInterval : function(value) {
 		if (typeof(value) !== 'number' || value < 0) {
 			value = 250; // set to default
@@ -427,6 +428,8 @@ TissueStack.Queue.prototype = {
 		// redraw 
 		this.canvas.drawMe(draw_request.timestamp);
 
+		this.tidyUp();
+	}, tidyUp : function() {
 		if (this.canvas.getDataExtent().slice < 0 || this.canvas.getDataExtent().slice > this.canvas.getDataExtent().max_slices 
 				|| this.canvas.upper_left_x > this.canvas.dim_x || this.canvas.upper_left_x + this.canvas.data_extent.x < 0
 				|| this.canvas.upper_left_y < 0 || this.canvas.upper_left_y - this.canvas.data_extent.y > this.canvas.dim_y) {
