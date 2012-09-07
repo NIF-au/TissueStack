@@ -1,6 +1,7 @@
 TissueStack.DataSetNavigation = function() {
 	if (TissueStack.phone || TissueStack.tablet) {
 		this.buildTabletMenu();
+		//this.loadiScrollMenu();
 	} else if (TissueStack.desktop) {
 		this.buildDynaTree();
 	}
@@ -375,8 +376,8 @@ TissueStack.DataSetNavigation.prototype = {
 		for (var dataSetKey in TissueStack.dataSetStore.datasets) {
 			var dataSet = TissueStack.dataSetStore.datasets[dataSetKey];
 			(function(dataSet,_this) {
-				$("#tabletTreeDiv-" + dataSet.local_id + dataSet.host + "").trigger("collapse");
-				$("#tabletTreeDiv-" + dataSet.local_id + dataSet.host + "").bind("expand", function() {
+				$("#tabletTreeDiv-" + dataSet.local_id + dataSet.host).trigger("collapse");
+				$("#tabletTreeDiv-" + dataSet.local_id + dataSet.host).bind("expand", function() {
 					if(TissueStack.phone){
 						TissueStack.Utils.adjustScreenContentToActualScreenSize(0);
 					}
@@ -390,5 +391,14 @@ TissueStack.DataSetNavigation.prototype = {
 				});
 			})(dataSet, this);
 		}
+	},
+	loadiScrollMenu : function () {
+		var scroll1, scroll2;
+		$(document).ready(function() {
+			scroll1 = new iScroll('menutransition', { useTransition:true });
+			scroll2 = new iScroll('transition', { useTransition:true });
+		});
+		document.addEventListener('touchmove', function (e) { e.preventDefault(); }, false);
+		document.addEventListener('DOMContentLoaded', loaded, false);
 	}
 };		
