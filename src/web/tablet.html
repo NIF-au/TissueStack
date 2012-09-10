@@ -29,6 +29,7 @@
 		<script src="js/TissueStack.Queue.js"></script>
 		<script src="js/TissueStack.Canvas.js"></script>
 		<script src="js/TissueStack.Events.js"></script>
+		<script src="js/TissueStack.PhoneMenu.js"></script>
         <script src="js/TissueStack.DataSetStore.js"></script>
         <script src="js/TissueStack.DataSetNavigation.js"></script>
         <script src="js/TissueStack.ContrastCanvas.js"></script>
@@ -37,10 +38,6 @@
 		
 		<script type="text/javascript">
 		    TissueStack.tablet = true;
-		 
-			document.addEventListener('touchmove', function(event) {
-  			   event.preventDefault();
-			}, false);
 		</script>
   </head>
 <body>
@@ -71,8 +68,8 @@
                     <button data-mini="true" type="button" id="server_search_button">Connect to TissueStack Server</button>
 
      	    		<!--ADD TREE DATA SET NAVI BAR-->
-     	    		<div class="touch_scrolling"> <!--Need to fix tree scroll problem in Tablet-->				
-						<div id="mobile_style_tree_dataset" style="height: 250px; margin: 8px;">
+     	    		<div id="menutransition" style="height:280px; position:relative; overflow:auto;"> 				
+						<div id="mobile_style_tree_dataset" style="height: 500px; margin: 8px;">
 							<div data-role="collapsible-set" data-theme="a" data-content-theme="d" data-mini="true">
 							<div id="tablet_tree"></div>
 							</div>
