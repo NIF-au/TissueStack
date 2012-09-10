@@ -360,6 +360,10 @@ void		*init(void *args)
   a = (t_args_plug*)args;
   principal = malloc(sizeof(*principal));
   a->this->stock = principal;
+
+  LOG_INIT(a);
+  INFO("Server Plugin: Started");
+
   return (NULL);
 }
 

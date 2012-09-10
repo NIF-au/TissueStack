@@ -1,6 +1,9 @@
 #ifndef __IMAGE_EXTRACT__
 #define __IMAGE_EXTRACT__
 
+#include "core.h"
+#include "utils.h"
+
 #include <minc2.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,9 +13,6 @@
 #include <math.h>
 
 #include <magick/api.h>
-
-#include "core.h"
-#include "utils.h"
 
 typedef	struct	s_image_extract
 {
@@ -116,5 +116,7 @@ void		alloc_and_init_colormap_space_from_src(float **new_colormap, float **sourc
 				    {1, 1, 1, 1},
 				    {99, 0, 0, 0}}};
 */
+
+extern  t_log_plugin	log_plugin;
 
 #endif		/* __IMAGE_EXTRACT__ */

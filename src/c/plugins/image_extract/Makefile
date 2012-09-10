@@ -18,7 +18,7 @@ LIBS		=	-lhdf5								\
 
 NAME		=	TissueStackImageExtract.so
 
-FLAGS		=	-g3 -Wall -Werror -DDEB
+FLAGS		=	-g3 -Wall -Werror
 
 PLUGIN_INSTALL_DIR = /usr/local/plugins
 

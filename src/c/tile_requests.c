@@ -56,7 +56,7 @@ void add_tile_request(t_tile_requests * this, char * id, char * timestamp) {
 	empty_hash_if_above_threshold(this);
 
 	int * requestDelta = malloc(sizeof(*requestDelta));
-	*requestDelta = convertRequestIdAndTimeIntoNumericDifference(id, timestamp);;
+	*requestDelta = convertRequestIdAndTimeIntoNumericDifference(id, timestamp);
 
 	gint64 * id_num = malloc(sizeof(*id_num));
 	*id_num = atol(id);

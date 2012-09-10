@@ -1,6 +1,5 @@
 #include "image_extract.h"
 
-
 float		colormapa[4][25][4] = {{{0, 0, 0, 0},
 					{0.05, 0.46667, 0, 0.05333},
 					{0.1, 0.5333, 0, 0.6},
@@ -500,6 +499,10 @@ void		*init(void *args)
   colormap_init(image_args);
   a->this->stock = (void*)image_args;
 
+  LOG_INIT(a);
+
+  INFO("Image Extract Plugin: Started");
+
   // free command line args
   a->destroy(a);
 
@@ -518,6 +521,8 @@ void			*start(void *args)
   t_vol			*volume;
 
   a = (t_args_plug *)args;
+
+  INFO("Image Server Start");
 
   socketDescriptor = (FILE*)a->box;
   volume = load_volume(a, a->commands[0]);

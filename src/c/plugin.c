@@ -30,6 +30,8 @@ void		list_plugins(t_tissue_stack *t, char *command)
 	  printf("\nPlugin = %s\n", tmp->name);
 	  if (command != NULL && strcmp(command, "--verbose") == 0)
 	    {
+	      printf("\tAdress = %p\n", tmp);
+	      printf("\tid = %i", tmp->id);
 	      printf("\tPath = %s\n", tmp->path);
 	      printf("\tError = %i\n", tmp->error);
 	      printf("\tBusy = %s\n", tmp->busy == 0 ? "No" : "Yes");
@@ -47,6 +49,23 @@ void		plug_actions_from_external_plugin(t_tissue_stack *general, char *commands,
 
   splitted = str_to_wordtab(commands);
   prompt_exec(splitted, general, box);
+}
+
+t_plugin	*get_plugin_by_id(int id, t_tissue_stack *t)
+{
+  t_plugin	*p;
+
+  if (!t)
+    return (NULL);
+  if ((p = t->first) == NULL)
+    return (NULL);
+  while (p != NULL)
+    {
+      if (p->id == id)
+	return (p);
+      p = p->next;
+    }
+  return (NULL);
 }
 
 t_plugin	*get_plugin_by_name(char *name, t_plugin *first)
@@ -88,6 +107,42 @@ void		plugin_load_from_string(char *str, t_tissue_stack *t)
   plugin_load(args);
 }
 
+t_plugin	*plugindup(t_plugin *p)
+{
+  t_plugin	*new;
+  int		i;
+
+  if (p == NULL)
+    return (NULL);
+  new = malloc(sizeof(*new));
+  new->error = p->error;
+  new->busy = p->busy;
+  new->id = p->id;
+  i = 0;
+  if (p->start_command)
+    {
+      while (p->start_command[i] != NULL)
+	i++;
+      new->start_command = malloc((i + 1) * sizeof(*new->start_command));
+      i = 0;
+      while (p->start_command[i] != NULL)
+	{
+	  new->start_command[i] = strdup(p->start_command[i]);
+	  i++;
+	}
+      new->start_command[i] = NULL;
+    }
+  else
+    new->start_command = NULL;
+  new->name = strdup(p->name);
+  new->path = strdup(p->path);
+  new->handle = NULL;
+  new->stock = NULL;
+  new->prev = NULL;
+  new->next = NULL;
+  return (new);
+}
+
 void		*plugin_load(void *args)
 {
   t_args_plug	*a;
@@ -120,7 +175,7 @@ void		*plugin_load(void *args)
   this->error = 0;
   this->next = NULL;
   this->busy = 0;
-  this->thread_id = pthread_self();
+  this->id = rand();
   a->this = this;
   // open the plugin
   this->handle = dlopen(this->path, RTLD_LAZY);
@@ -144,7 +199,6 @@ void		*plugin_load(void *args)
   // run init of the plugin
   if ((*init)(a) != 0)
     this->error = 2;
-  //  free(a);
   return (NULL);
 }
 
@@ -222,22 +276,23 @@ void		*plugin_unload(void *args)
   return (NULL);
 }
 
-void destroy_t_plugin(t_plugin * this, t_tissue_stack * general) {
-	  if (this == NULL) return;
+void destroy_t_plugin(t_plugin * this, t_tissue_stack * general)
+{
+  if (this == NULL) return;
 
-	  if (this->prev != NULL)
-		this->prev->next = this->next;
-	  else
-	  {
-		  general->first = this->next;
-		  if (general->first != NULL) general->first->prev = NULL;
-	  }
+  if (this->prev != NULL)
+    this->prev->next = this->next;
+  else
+    {
+      general->first = this->next;
+      if (general->first != NULL) general->first->prev = NULL;
+    }
 
-	  if (this->start_command != NULL) destroy_command_args(this->start_command);
-	  if (this->handle != NULL) dlclose(this->handle);
-	  if (this->name != NULL) free(this->name);
-	  if (this->path != NULL) free(this->path);
-	  if (this->stock != NULL) free(this->stock);
+  if (this->start_command != NULL) destroy_command_args(this->start_command);
+  if (this->handle != NULL) dlclose(this->handle);
+  if (this->name != NULL) free(this->name);
+  if (this->path != NULL) free(this->path);
+  if (this->stock != NULL) free(this->stock);
 
-	  free(this);
+  free(this);
 }

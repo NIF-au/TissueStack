@@ -1,8 +1,8 @@
 #include "minc_info.h"
 
 void *init(void *args) {
-	// nothing to do
-	return NULL;
+  // nothing to do
+  return NULL;
 }
 
 void *start(void *args) {

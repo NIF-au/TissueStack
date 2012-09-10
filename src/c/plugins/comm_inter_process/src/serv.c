@@ -172,8 +172,18 @@ int		serv_init_connect(t_serv_comm *s)
   return (0);
 }
 
+void		yop(char *name, t_plugin *plugin, char *command, void *data, t_tissue_stack *t)
+{
+  printf("Fourth Notification ==>\n");
+  printf("name = %s\nid = %p\ncommand = %s\ndata = %p\n\n\n", name, plugin, command, data);
+}
+
 void		*init(void *args)
 {
+  t_args_plug	*a;
+
+  a = (t_args_plug *)args;
+  LOG_INIT(a);
   return (NULL);
 }
 

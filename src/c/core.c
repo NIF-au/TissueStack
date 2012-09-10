@@ -5,9 +5,8 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Thu Aug 30 17:02:17 2012 Oliver Nicolini
+** Last update Mon Sep 10 10:15:44 2012 Oliver Nicolini
 */
-
 
 #include "core.h"
 
@@ -133,6 +132,8 @@ void		clean_quit(t_tissue_stack *t)
 
 void            init_prog(t_tissue_stack *t)
 {
+  char		*path;
+
   t->plug_actions = plug_actions_from_external_plugin;
   t->tile_requests = malloc(sizeof(*t->tile_requests));
   init_tile_requests(t->tile_requests);
@@ -140,8 +141,41 @@ void            init_prog(t_tissue_stack *t)
   t->check_volume = check_volume;
   t->clean_quit = clean_quit;
   t->first = NULL;
+  t->first_notification = NULL;
   pthread_cond_init(&t->main_cond, NULL);
   pthread_mutex_init(&t->main_mutex, NULL);
+  nc_create_notification("log_debug",	lc_debug,   t);
+  nc_create_notification("log_info",	lc_info,    t);
+  nc_create_notification("log_warning", lc_warning, t);
+  nc_create_notification("log_error",	lc_error,   t);
+  nc_create_notification("log_fatal",	lc_fatal,   t);
+  t->create_notification = nc_create_notification;
+  t->subscribe = nc_subscribe;
+  t->raise = nc_raise;
+  t->log = malloc(sizeof(*t->log));
+  t->log->state = ON;
+  t->log->path = strdup("/tmp/tss-log/");
+  t->log->max_log_size = 1000;
+  t->log->current_log_size = 0;
+  t->log->debug = ON;
+  t->log->verbose = ON;
+  t->log->write_on_files = ON;
+  t->log->write_on_plug_files = ON;
+  t->log->write_on_level_files = ON;
+  log_plugin.id = pthread_self();
+  log_plugin.tss = t;
+  path = concat_path(t->log->path, "tss-general", ".log");
+  if (t->log->state)
+    {
+      if ((t->log->general_fd = open(path, O_CREAT | O_RDWR | O_TRUNC)) == -1)
+	{
+	  ERROR("Open %s failed", path);
+	  t->log->general_fd = 1;
+	}
+      else
+	if (chmod(path, 0644) == -1)
+	  ERROR("Chmod 644  %s failed", path);
+    }
   init_func_ptr(t);
 }
 
@@ -170,6 +204,7 @@ int		main(int argc, char **argv)
   // initialisation of some variable
   t = malloc(sizeof(*t));
   init_prog(t);
+  srand((unsigned)time(NULL));
   // intitialisation the volume
   if (argc > 2)
     {
@@ -196,6 +231,7 @@ int		main(int argc, char **argv)
 
 
   // load plugins
+
   plugin_load_from_string("load image /usr/local/plugins/TissueStackImageExtract.so", t);
   plugin_load_from_string("load serv /usr/local/plugins/TissueStackCommunicator.so", t);
   plugin_load_from_string("load comm /usr/local/plugins/TissueStackProcessCommunicator.so", t);
@@ -210,8 +246,8 @@ int		main(int argc, char **argv)
   //(t->plug_actions)(t, "start minc_converter /media/Data/lowback.minc2.mnc /media/Data/lowback.raw", NULL);
   //(t->plug_actions)(t, "start nifti_converter /opt/data/brain.nii /opt/data/brain_from_nifti.raw", NULL);
 
-
   signal_manager(t);
+
   if ((argv[2] != NULL && strcmp(argv[2], "--prompt") == 0) ||
       (argv[3] != NULL && strcmp(argv[3], "--prompt") == 0))
     prompt_start(t);
