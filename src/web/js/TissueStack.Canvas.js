@@ -516,7 +516,7 @@ TissueStack.Canvas.prototype = {
 							_this.applyContrastAndColorMapToCanvasContent(ctx);
 						}
 						
-						if (counter == 0) {
+						if (typeof(TissueStack.dataSetNavigation) === 'object' && counter == 0) {
 							TissueStack.dataSetNavigation.syncDataSetCoordinates(_this);
 							_this.has_been_synced = false; // reset flag to accept syncing forwards again
 							_this.queue.last_sync_timestamp = -1; // reset last sync timestamp
