@@ -22,6 +22,7 @@ struct s_string_buffer {
 };
 
 t_string_buffer * appendToBuffer(t_string_buffer * buffer, char * someString);
+void free_t_string_buffer(t_string_buffer * buffer);
 
 /** creates a directory (recursively incl. sub directories) */
 t_string_buffer * createDirectory(char * path, mode_t mode);

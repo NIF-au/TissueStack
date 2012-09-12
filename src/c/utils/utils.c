@@ -195,6 +195,12 @@ t_string_buffer *  appendToBuffer(t_string_buffer * buffer, char * someString) {
 
 	return buffer;
 }
+void free_t_string_buffer(t_string_buffer * buffer) {
+	if (buffer == NULL) return;
+
+	if (buffer->buffer != NULL) free(buffer->buffer);
+	free(buffer);
+}
 
 // Returns path for success, omitting last "/" OR NULL in case of failure
 t_string_buffer * createDirectory(char * path, mode_t mode) {
