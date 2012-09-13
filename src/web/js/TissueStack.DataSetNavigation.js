@@ -1,7 +1,7 @@
 TissueStack.DataSetNavigation = function() {
 	if (TissueStack.phone || TissueStack.tablet) {
 		this.buildTabletMenu();
-		//this.loadiScrollMenu();
+		this.loadScrollMenu();
 	} else if (TissueStack.desktop) {
 		this.buildDynaTree();
 	}
@@ -392,14 +392,14 @@ TissueStack.DataSetNavigation.prototype = {
 			})(dataSet, this);
 		}
 	},
-	loadiScrollMenu : function () {
-		var scroll1, scroll2;
-		$(document).ready(function() {
-			scroll1 = new iScroll('menutransition', { useTransition:true });
-			scroll2 = new iScroll('transition', { useTransition:true });
-		});
+	loadScrollMenu : function () {
+		//add touch transition for phone menu and dataset menu so that it can scroll over and see contents.
+		var LeftMenu, DataSetMenu;
+		
+		LeftMenu = new iScroll('menutransition', { useTransition:true });
+		if(TissueStack.phone) DataSetMenu = new iScroll('transition', { useTransition:true });
+		
 		document.addEventListener('touchmove', function (e) { e.preventDefault(); }, false);
-		document.addEventListener('DOMContentLoaded', loaded, false);
 	}, 
 	syncDataSetCoordinates : function(canvas) {
 		// basic checks whether the sync flag for desktop was set && we have more than 1 data sets selected 

@@ -132,7 +132,7 @@ void		clean_quit(t_tissue_stack *t)
 
 void            init_prog(t_tissue_stack *t)
 {
-  char		*path;
+  char		*path = NULL;
 
   t->plug_actions = plug_actions_from_external_plugin;
   t->tile_requests = malloc(sizeof(*t->tile_requests));
@@ -164,18 +164,33 @@ void            init_prog(t_tissue_stack *t)
   t->log->write_on_level_files = ON;
   log_plugin.id = pthread_self();
   log_plugin.tss = t;
-  path = concat_path(t->log->path, "tss-general", ".log");
   if (t->log->state)
     {
-      if ((t->log->general_fd = open(path, O_CREAT | O_RDWR | O_TRUNC)) == -1)
-	{
-	  ERROR("Open %s failed", path);
-	  t->log->general_fd = 1;
-	}
-      else
-	if (chmod(path, 0644) == -1)
-	  ERROR("Chmod 644  %s failed", path);
-    }
+	  // make sure directory exists !
+	  t_string_buffer * actualPath = createDirectory(t->log->path, 0766);
+	  // couldn't create directory
+	  if (actualPath == NULL)
+	  {
+		  ERROR("Couldn't create %s", t->log->path);
+		  t->log->state = OFF; // turn logging off
+	  } else
+	  {
+		  path = concat_path(actualPath->buffer, "tss-general", ".log");
+		  free_t_string_buffer(actualPath);
+	  }
+
+	  if ((t->log->general_fd = open(path, O_CREAT | O_RDWR | O_TRUNC)) == -1)
+	  {
+		  ERROR("Open %s failed", path);
+		  t->log->general_fd = 1;
+		  t->log->state = OFF; // turn logging off
+	  } else if (chmod(path, 0644) == -1)
+	  {
+		  ERROR("Chmod 644  %s failed", path);
+		  t->log->general_fd = 1;
+		  t->log->state = OFF; // turn logging off
+	  }
+  }
   init_func_ptr(t);
   init_percent_time(t);
 }
