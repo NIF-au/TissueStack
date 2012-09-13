@@ -5,6 +5,7 @@ SRCS		=	$(DIRSRC)core.c							\
 			$(DIRSRC)plugin.c						\
 			$(DIRSRC)volume.c						\
 			$(DIRSRC)error.c						\
+			$(DIRSRC)percent_and_time.c					\
 			$(DIRSRC)notification_center.c					\
 			$(DIRSRC)log_center.c						\
 			$(DIRSRC)thread_pool.c						\

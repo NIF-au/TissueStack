@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Mon Sep 10 10:15:44 2012 Oliver Nicolini
+** Last update Thu Sep 13 11:34:44 2012 Oliver Nicolini
 */
 
 #include "core.h"
@@ -153,7 +153,7 @@ void            init_prog(t_tissue_stack *t)
   t->subscribe = nc_subscribe;
   t->raise = nc_raise;
   t->log = malloc(sizeof(*t->log));
-  t->log->state = ON;
+  t->log->state = OFF;
   t->log->path = strdup("/tmp/tss-log/");
   t->log->max_log_size = 1000;
   t->log->current_log_size = 0;
@@ -177,6 +177,7 @@ void            init_prog(t_tissue_stack *t)
 	  ERROR("Chmod 644  %s failed", path);
     }
   init_func_ptr(t);
+  init_percent_time(t);
 }
 
 void		free_core_struct(t_tissue_stack *t)
@@ -245,6 +246,48 @@ int		main(int argc, char **argv)
   (t->plug_actions)(t, "start comm", NULL);
   //(t->plug_actions)(t, "start minc_converter /media/Data/lowback.minc2.mnc /media/Data/lowback.raw", NULL);
   //(t->plug_actions)(t, "start nifti_converter /opt/data/brain.nii /opt/data/brain_from_nifti.raw", NULL);
+
+
+
+
+
+
+  char		*str;
+  char		*str2;
+  char		**tab;
+
+  tab = malloc(5 * sizeof(*tab));
+
+  str = malloc(100 * sizeof(*str));
+  str2 = malloc(100 * sizeof(*str2));
+
+  tab[0] = strdup("a");
+  tab[1] = strdup("347");
+  tab[2] = strdup("string");
+  tab[3] = NULL;
+
+  percent_init(tab, (void*)str, t->percent);
+
+  DEBUG("Percent init done id == %s", str);
+
+  tab[0] = strdup("a");
+  tab[1] = strdup(str);
+  tab[2] = strdup("2");
+  tab[3] = strdup("string");
+  tab[4] = NULL;
+
+  int		i = 0;
+  while (i < 95)
+  {
+    percent_add(tab, NULL, t->percent);
+    i++;
+  }
+
+  printf("okidoki\n");
+
+  percent_get(tab, (void*)str2, t->percent);
+
+  DEBUG("gettage = %s", str2);
 
   signal_manager(t);
 
