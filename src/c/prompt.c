@@ -183,7 +183,7 @@ t_args_plug	*create_plug_args(char **commands, t_tissue_stack *general, void *bo
 
 void		prompt_exec(char **commands, t_tissue_stack *general, void *box)
 {
-  int		i;
+  int		i = 0;
   t_args_plug	*args;
   char		*prog;
   t_plugin	*p;
@@ -191,7 +191,6 @@ void		prompt_exec(char **commands, t_tissue_stack *general, void *box)
 
   prog = commands[0];
 
-  i = 0;
   while (commands[i] != NULL)
     {
       printf("commands[%i] = %s\n", i, commands[i]);

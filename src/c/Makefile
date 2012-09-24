@@ -5,12 +5,12 @@ SRCS		=	$(DIRSRC)core.c							\
 			$(DIRSRC)plugin.c						\
 			$(DIRSRC)volume.c						\
 			$(DIRSRC)error.c						\
-			$(DIRSRC)percent_and_time.c					\
 			$(DIRSRC)notification_center.c					\
 			$(DIRSRC)log_center.c						\
 			$(DIRSRC)thread_pool.c						\
 			$(DIRSRC)utils/utils.c						\
-			$(DIRSRC)tile_requests.c
+			$(DIRSRC)tile_requests.c					\
+			$(DIRSRC)memory_mapping.c					\
 
 INCLUDE		=	-I./headers -I./utils
 

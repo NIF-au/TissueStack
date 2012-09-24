@@ -221,7 +221,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
 
   FATAL("\n\n%p - %p - %i - %i - %i - %i - %p\n\n", hyperslab, volume, current_dimension, current_slice, width, height, a);
 
-  if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+  if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
     write_http_header(a->file, "408 Request Timeout", a->info->image_type);
     fclose_check(a->file);
     return;
@@ -258,7 +258,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
 
   if (a->info->contrast != 0)
     {
-      if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+      if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
 	DestroyImage(img);
 	DestroyImageInfo(image_info);
 	write_http_header(a->file, "408 Request Timeout", a->info->image_type);
@@ -275,7 +275,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
 	  return;
 	}
 
-      if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+      if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
 	DestroyImage(img);
 	DestroyImageInfo(image_info);
 	write_http_header(a->file, "408 Request Timeout", a->info->image_type);
@@ -286,7 +286,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
       apply_contrast(px, a->info->contrast_min, a->info->contrast_max,
 		     a->volume->color_range_min, a->volume->color_range_max, a, width, height);
 
-      if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+      if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
 	DestroyImage(img);
 	DestroyImageInfo(image_info);
 	write_http_header(a->file, "408 Request Timeout", a->info->image_type);
@@ -296,7 +296,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
 
       SyncImagePixels(img);
 
-      if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+      if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
 	DestroyImage(img);
 	DestroyImageInfo(image_info);
 	write_http_header(a->file, "408 Request Timeout", a->info->image_type);
@@ -317,7 +317,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
 	return;
       }
 
-      if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+      if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
 	DestroyImage(img);
 	DestroyImageInfo(image_info);
 	write_http_header(a->file, "408 Request Timeout", a->info->image_type);
@@ -340,7 +340,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
 	  return;
 	}
 
-      if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+      if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
 	DestroyImage(img);
 	DestroyImageInfo(image_info);
 	DestroyImageInfo(new_image_info);
@@ -359,7 +359,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
 	  return;
 	}
 
-      if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+      if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
 	DestroyImage(img);
 	DestroyImageInfo(new_image_info);
 	DestroyImageInfo(image_info);
@@ -370,7 +370,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
 
       apply_colormap(px, px_tmp, a->info->premapped_colormap[a->info->colormap_id], a, width, height);
 
-      if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+      if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
 	DestroyImage(img);
 	DestroyImageInfo(image_info);
 	DestroyImageInfo(new_image_info);
@@ -388,7 +388,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
       img = new_image;
     }
 
-  if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+  if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
     DestroyImage(img);
     DestroyImageInfo(image_info);
     write_http_header(a->file, "408 Request Timeout", a->info->image_type);
@@ -406,7 +406,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
   }
   DestroyImage(tmp);
 
-  if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+  if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
     DestroyImage(img);
     DestroyImageInfo(image_info);
     write_http_header(a->file, "408 Request Timeout", a->info->image_type);
@@ -436,7 +436,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
     DestroyImage(tmp);
   }
 
-  if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+  if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
     DestroyImage(img);
     DestroyImageInfo(image_info);
     write_http_header(a->file, "408 Request Timeout", a->info->image_type);
@@ -457,7 +457,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
     DestroyImage(tmp);
   }
 
-  if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+  if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
     DestroyImage(img);
     DestroyImageInfo(image_info);
     write_http_header(a->file, "408 Request Timeout", a->info->image_type);
@@ -477,7 +477,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
     DestroyImage(tmp);
   }
 
-  if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+  if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
     DestroyImage(img);
     DestroyImageInfo(image_info);
     write_http_header(a->file, "408 Request Timeout", a->info->image_type);
