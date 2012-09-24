@@ -40,6 +40,52 @@ typedef struct		s_log_level_fd	t_log_level_fd;
 typedef struct		s_log_info_list	t_log_info_list;
 typedef struct		s_log_plugin	t_log_plugin;
 
+
+typedef	struct		s_percent_elem	t_percent_elem;
+typedef	struct		s_time_elem	t_time_elem;
+typedef	struct		s_time_tps	t_time_tps;
+typedef	struct		s_prcnt_t	t_prcnt_t;
+typedef struct		s_func_prcnt_t	t_func_prcnt_t;
+
+struct			s_func_prcnt_t
+{
+  char			*name;
+  void			(*func)(char **commands, void *box, t_prcnt_t *p);
+};
+
+struct			s_prcnt_t
+{
+  t_percent_elem	*first_percent;
+  t_time_elem		*first_time;
+  t_func_prcnt_t	*percent_func;
+  t_func_prcnt_t	*time_func;
+};
+
+struct			s_percent_elem
+{
+  char			*id;
+  t_time_tps		*time;
+  int			total_blocks;
+  int			blocks_done;
+  float			percent;
+  t_percent_elem	*next;
+};
+
+struct			s_time_tps
+{
+  time_t		start_time;
+  time_t		end_time;
+};
+
+struct			s_time_elem
+{
+  char			*id;
+  t_time_tps		*time;
+  t_time_elem		*next;
+};
+
+/////////////////////////////////////////////////////////////////
+
 struct			s_log_plugin
 {
   t_tissue_stack	*tss;
@@ -158,6 +204,7 @@ struct			s_tissue_stack
   t_tile_requests 	*tile_requests;
   t_memory_mapping 	*memory_mappings;
   t_nc_action		*first_notification;
+  t_prcnt_t		*percent;
   t_vol			*(*get_volume)(char *path, t_tissue_stack *general);
   t_vol			*(*check_volume)(char *path, t_tissue_stack *general);
   void			(*plug_actions)(t_tissue_stack *general, char *commands, void *box);
@@ -285,6 +332,20 @@ int		get_errors_nb_by_plugin(t_tissue_stack *general, t_plugin * plug);
 int		*get_error_by_plugin(t_tissue_stack *general, t_plugin *plug);
 void		clean_error_list(t_tissue_stack *general, int min);
 
+/*		percent_and_time		*/
+
+int		is_num(char *str);
+void		percent_time_write(char *str, char **commands, void *box);
+void		percent_init(char **commands, void *box, t_prcnt_t *p);
+t_percent_elem	*get_percent_elem_by_id(char *id, t_prcnt_t *p);
+void		percent_add(char **commands, void *box, t_prcnt_t *p);
+void		percent_get(char **commands, void *box, t_prcnt_t *p);
+void		percent_destroy(char **commands, void *box, t_prcnt_t *p);
+void		percent_time_processing(char **commands, void *box,
+					t_func_prcnt_t *f, t_prcnt_t *p);
+void		init_func_ptr_percent(t_prcnt_t *p);
+void		init_func_ptr_time(t_prcnt_t *p);
+void		init_percent_time(t_tissue_stack *t);
 
 /*		notification_center.c		*/
 
