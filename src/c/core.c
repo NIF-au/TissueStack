@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Thu Sep 13 11:34:44 2012 Oliver Nicolini
+** Last update Mon Sep 24 11:13:29 2012 Oliver Nicolini
 */
 
 #include "core.h"
@@ -133,8 +133,12 @@ void		clean_quit(t_tissue_stack *t)
 void            init_prog(t_tissue_stack *t)
 {
   char		*path = NULL;
+  struct stat	results;
 
   t->plug_actions = plug_actions_from_external_plugin;
+  t->percent_init = percent_init_direct;
+  t->percent_add = percent_add_direct;
+  t->percent_get = percent_get_direct;
   t->tile_requests = malloc(sizeof(*t->tile_requests));
   init_tile_requests(t->tile_requests);
   t->get_volume = get_volume;
@@ -153,44 +157,53 @@ void            init_prog(t_tissue_stack *t)
   t->subscribe = nc_subscribe;
   t->raise = nc_raise;
   t->log = malloc(sizeof(*t->log));
-  t->log->state = OFF;
+  t->log->state = ON;
   t->log->path = strdup("/tmp/tss-log/");
   t->log->max_log_size = 1000;
   t->log->current_log_size = 0;
   t->log->debug = ON;
   t->log->verbose = ON;
-  t->log->write_on_files = ON;
-  t->log->write_on_plug_files = ON;
-  t->log->write_on_level_files = ON;
+  t->log->write_on_files = OFF;
+  t->log->write_on_plug_files = OFF;
+  t->log->write_on_level_files = OFF;
   log_plugin.id = pthread_self();
   log_plugin.tss = t;
   if (t->log->state)
     {
-	  // make sure directory exists !
-	  t_string_buffer * actualPath = createDirectory(t->log->path, 0766);
-	  // couldn't create directory
-	  if (actualPath == NULL)
-	  {
-		  ERROR("Couldn't create %s", t->log->path);
-		  t->log->state = OFF; // turn logging off
-	  } else
-	  {
-		  path = concat_path(actualPath->buffer, "tss-general", ".log");
-		  free_t_string_buffer(actualPath);
-	  }
+      // make sure directory exists !
+      t_string_buffer * actualPath = createDirectory(t->log->path, 0755);
+      // couldn't create directory
+      if (actualPath == NULL)
+	{
+	  ERROR("Couldn't create %s", t->log->path);
+	  t->log->state = OFF; // turn logging off
+	}
+      else
+	{
+	  path = concat_path(actualPath->buffer, "tss-general", ".log");
+	  free_t_string_buffer(actualPath);
+	}
 
+      if (t->log->state == ON)
+	{
 	  if ((t->log->general_fd = open(path, O_CREAT | O_RDWR | O_TRUNC)) == -1)
-	  {
-		  ERROR("Open %s failed", path);
-		  t->log->general_fd = 1;
+	    {
+	      ERROR("Open %s failed", path);
+	      t->log->state = OFF; // turn logging off
+	    }
+	  stat(path, &results);
+	  if (results.st_mode != 0666)
+	    {
+
+	      if (chmod(path, 0666) == -1)
+		{
+		  ERROR("Chmod 666  %s failed", path);
 		  t->log->state = OFF; // turn logging off
-	  } else if (chmod(path, 0644) == -1)
-	  {
-		  ERROR("Chmod 644  %s failed", path);
-		  t->log->general_fd = 1;
-		  t->log->state = OFF; // turn logging off
-	  }
-  }
+		}
+	    }
+	  stat(path, &results);
+	}
+    }
   init_func_ptr(t);
   init_percent_time(t);
 }
@@ -267,42 +280,28 @@ int		main(int argc, char **argv)
 
 
 
-  char		*str;
-  char		*str2;
-  char		**tab;
+  char		*id;
+  char		*buff;
 
-  tab = malloc(5 * sizeof(*tab));
+  percent_init_direct(100, &id, t->percent);
 
-  str = malloc(100 * sizeof(*str));
-  str2 = malloc(100 * sizeof(*str2));
-
-  tab[0] = strdup("a");
-  tab[1] = strdup("347");
-  tab[2] = strdup("string");
-  tab[3] = NULL;
-
-  percent_init(tab, (void*)str, t->percent);
-
-  DEBUG("Percent init done id == %s", str);
-
-  tab[0] = strdup("a");
-  tab[1] = strdup(str);
-  tab[2] = strdup("2");
-  tab[3] = strdup("string");
-  tab[4] = NULL;
+  DEBUG("Percent init done id == %s", id);
 
   int		i = 0;
   while (i < 95)
   {
-    percent_add(tab, NULL, t->percent);
+    percent_add_direct(1, id, t->percent);
     i++;
   }
 
-  printf("okidoki\n");
+  percent_get_direct(&buff, id, t->percent);
 
-  percent_get(tab, (void*)str2, t->percent);
+  DEBUG("gettage = %s", buff);
 
-  DEBUG("gettage = %s", str2);
+
+
+
+
 
   signal_manager(t);
 

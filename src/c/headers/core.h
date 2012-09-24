@@ -203,6 +203,9 @@ struct			s_tissue_stack
   t_tile_requests 	*tile_requests;
   t_nc_action		*first_notification;
   t_prcnt_t		*percent;
+  void			(*percent_get)(char **buff, char *id, t_prcnt_t *p);
+  void			(*percent_add)(int blocks, char *id, t_prcnt_t *p);
+  void			(*percent_init)(int total_blocks, char **id, t_prcnt_t *p);
   t_vol			*(*get_volume)(char *path, t_tissue_stack *general);
   t_vol			*(*check_volume)(char *path, t_tissue_stack *general);
   void			(*plug_actions)(t_tissue_stack *general, char *commands, void *box);
@@ -335,9 +338,12 @@ void		clean_error_list(t_tissue_stack *general, int min);
 int		is_num(char *str);
 void		percent_time_write(char *str, char **commands, void *box);
 void		percent_init(char **commands, void *box, t_prcnt_t *p);
+void		percent_init_direct(int total_blocks, char **id, t_prcnt_t *p);
 t_percent_elem	*get_percent_elem_by_id(char *id, t_prcnt_t *p);
 void		percent_add(char **commands, void *box, t_prcnt_t *p);
+void		percent_add_direct(int blocks, char *id, t_prcnt_t *p);
 void		percent_get(char **commands, void *box, t_prcnt_t *p);
+void		percent_get_direct(char **buff, char *id, t_prcnt_t *p);
 void		percent_destroy(char **commands, void *box, t_prcnt_t *p);
 void		percent_time_processing(char **commands, void *box,
 					t_func_prcnt_t *f, t_prcnt_t *p);

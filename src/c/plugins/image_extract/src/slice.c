@@ -13,6 +13,42 @@ unsigned int		get_slices_max(t_vol *volume)
   return (volume->size[Z] * volume->size[Y]);
 }
 
+int		get_nb_blocks_percent(t_image_extract *a, t_vol *volume)
+{
+  int		i = 0;
+  int		count = 0;
+  int		height;
+  int		width;
+  int		slices;
+  int		h_tiles;
+  int		w_tiles;
+  int		tiles_per_slice;
+
+  while (i < volume->dim_nb)
+    {
+      if (a->dim_start_end[i][0] != -1 &&
+	  a->dim_start_end[i][1] != -1 &&
+	  a->h_position == -1 &&
+	  a->w_position == -1)
+	{
+	  get_width_height(&height, &width, i, volume);
+	  h_tiles = (height * a->scale) / a->square_size;
+	  w_tiles = (width * a->scale) / a->square_size;
+
+	  if (a->dim_start_end[i][1] == 0 && a->dim_start_end[i][0] == 0)
+	    slices = volume->size[i];
+	  else
+	    slices = a->dim_start_end[i][1] - a->dim_start_end[i][0];
+
+	  tiles_per_slice = h_tiles * w_tiles;
+
+	  count += (slices * tiles_per_slice);
+	}
+      i++;
+    }
+  return (count);
+}
+
 void            *get_all_slices_of_all_dimensions(void *args)
 {
   t_vol		*volume;
@@ -147,9 +183,20 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
 		{
 		  a->info->h_position = a->info->start_h;
 		  a->info->w_position = a->info->start_w;
+		  INFO("before print img");
 
-		  print_image(hyperslab, volume, current_dimension, current_slice, width, height, a);
+		  FILE *f = fopen("/tmp/toto", "ar+");
+
+		  fwrite(hyperslab, sizeof(*hyperslab), width * height, f);
+
+		  INFO("after writing img");
+
+		  if (current_slice != 0)
+		    print_image(hyperslab, volume, current_dimension, current_slice, width, height, a);
+
+		  INFO("after printf img");
 		  a->info->start_w++;
+		  a->general_info->percent_add(1, a->info->id_percent, a->general_info->percent);
 		}
 	      a->info->start_h++;
 	    }
@@ -157,6 +204,10 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
       else {
 	print_image(hyperslab, volume, current_dimension, current_slice, width, height, a);
       }
+
+      /*      char *buff = NULL;
+      a->general_info->percent_get(&buff, a->info->id_percent, a->general_info->percent);
+      FATAL("========> %s%%", buff);*/
 
       pthread_mutex_lock(&(a->p->lock));
       a->info->slices_done++;

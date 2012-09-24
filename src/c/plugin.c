@@ -127,7 +127,8 @@ t_plugin	*plugindup(t_plugin *p)
       i = 0;
       while (p->start_command[i] != NULL)
 	{
-	  new->start_command[i] = strdup(p->start_command[i]);
+	  if (p->start_command[i])
+	    new->start_command[i] = NULL;//strdup(p->start_command[i]);
 	  i++;
 	}
       new->start_command[i] = NULL;

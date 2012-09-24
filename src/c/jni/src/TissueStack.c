@@ -460,18 +460,30 @@ JNIEXPORT jstring JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMin
 	} else {
 		sprintf(conversionBuffer, " %.4g 1 tiles %s %i", (double)zoom_factor, imageType, (int) size);
 		startTilingCommand = appendToBuffer(startTilingCommand, conversionBuffer);
-		startTilingCommand = appendToBuffer(startTilingCommand, " -1 -1 grey 1000 ");
+		startTilingCommand = appendToBuffer(startTilingCommand, " -1 -1 grey 0 255 1000 ");
 	}
 
 	startTilingCommand = appendToBuffer(startTilingCommand, "0 0 ");
 	startTilingCommand = appendToBuffer(startTilingCommand, (char *) dir);
+	startTilingCommand = appendToBuffer(startTilingCommand, " @tiling@");
 
 	write(fileDescriptor, startTilingCommand->buffer, startTilingCommand->size);
-	shutdown(fileDescriptor, 2);
-	close(fileDescriptor);
+
+
+	char * buff = malloc(11 * sizeof(*buff));
+
+	memset(buff, 0, 11);
+
+	read(fileDescriptor, buff, 10);
+
+	jstring ret = (*env)->NewStringUTF(env, buff);
+
+	//	shutdown(fileDescriptor, 2);
+	//	close(fileDescriptor);
+	//	return ret;
 
 	// set return
-	jstring ret = (*env)->NewStringUTF(env,startTilingCommand->buffer);
+	//	jstring ret = (*env)->NewStringUTF(env,startTilingCommand->buffer);
 
 	// clean up
 	free(startTilingCommand->buffer);

@@ -363,6 +363,7 @@ void		image_creation_lunch(t_tissue_stack *t, t_vol *vol, int step, t_image_extr
   unsigned int	j;
   unsigned int	nb_slices = 0;
   int		**dim_start_end;
+  char		*id_percent = NULL;
 
   i = 0;
 
@@ -372,6 +373,17 @@ void		image_creation_lunch(t_tissue_stack *t, t_vol *vol, int step, t_image_extr
   }
 
   dim_start_end = image_general->dim_start_end;
+
+  if (image_general->percentage)
+    {
+      t->percent_init(get_nb_blocks_percent(image_general, vol), &id_percent, t->percent);
+      if (write(image_general->percent_fd, id_percent, 10) < 0)
+	ERROR("Open Error");
+      //      close(image_general->percent_fd);
+      //    shutdown(image_general->percent_fd, 2);
+    }
+  image_general->id_percent = id_percent;
+
   //  lunch_percent_display(p, vol, image_general, this);
   while (i < 3)
     {
@@ -382,7 +394,7 @@ void		image_creation_lunch(t_tissue_stack *t, t_vol *vol, int step, t_image_extr
 	  while (j < nb_slices)
 	    {
 	      args = create_args_thread(t, vol, image_general, sock);
-
+	      args->general_info = t;
 	      if ((dim_start_end[i][0] + step) <= dim_start_end[i][1])
 		args->dim_start_end = generate_dims_start_end_thread(vol, i, dim_start_end[i][0], dim_start_end[i][0] + step);
 	      else
@@ -570,6 +582,7 @@ void			*start(void *args)
   image_args->service = a->commands[9];
   a->commands[10] = strupper(a->commands[10]);
   image_args->image_type = a->commands[10];
+  image_args->percentage = 0;
 
   if (strcmp(image_args->service, "tiles") == 0)
     {
@@ -584,7 +597,12 @@ void			*start(void *args)
       image_args->start_h = atoi(a->commands[12]);
       image_args->start_w = atoi(a->commands[13]);
       if (a->commands[20] != NULL)
-	image_args->root_path = strdup(a->commands[18]);
+	image_args->root_path = strdup(a->commands[20]);
+      if (a->commands[21] != NULL && strcmp(a->commands[21], "@tiling@") == 0)
+	{
+	  image_args->percentage = 1;
+  image_args->percent_fd = *((int*)a->box);
+	}
     }
   else if (strcmp(image_args->service, "images") == 0)
     {
@@ -600,7 +618,7 @@ void			*start(void *args)
       image_args->h_position_end = atoi(a->commands[13]);
       image_args->w_position_end = atoi(a->commands[14]);
       if (a->commands[21] != NULL)
-	image_args->root_path = strdup(a->commands[19]);
+	image_args->root_path = strdup(a->commands[21]);
     }
   else
     {
@@ -613,7 +631,7 @@ void			*start(void *args)
       else
 	{
 	  if (a->commands[17] != NULL)
-	    image_args->root_path = strdup(a->commands[15]);
+	    image_args->root_path = strdup(a->commands[17]);
 	}
     }
   image_args->total_slices_to_do = get_total_slices_to_do(volume, image_args->dim_start_end);

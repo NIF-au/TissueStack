@@ -3,7 +3,7 @@
 int		israw(char *path)
 {
   int		fd;
-  char		check[9];
+  char		check[10];
 
   memset(check, '\0', 9);
   if ((fd = open(path, O_RDWR)) == -1)

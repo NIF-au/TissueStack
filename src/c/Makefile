@@ -29,14 +29,16 @@ FLAGS		=	-Wall -Werror -g3 #-D_GNU_SOURCE
 
 OBJS		=	$(SRCS:%.c=%.o)
 
+CC		=	gcc
+
 %.o: %.c
-	gcc -c $(FLAGS) $(INCLUDE) `pkg-config --cflags gtk+-2.0` -o $@ $<
+	$(CC) -c $(FLAGS) $(INCLUDE) `pkg-config --cflags gtk+-2.0` -o $@ $<
 
 all: compile install
 
 compile: $(OBJS)
 	@echo "\n================== Compile $(NAME) ===================="
-	gcc $(OBJS) -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) `pkg-config --cflags --libs gtk+-2.0`
+	$(CC) $(OBJS) -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) `pkg-config --cflags --libs gtk+-2.0`
 	rm -rf volume.o
 	rm -rf utils/utils.o
 	make -C ./plugins/communicator/ compile 

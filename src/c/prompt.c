@@ -190,6 +190,13 @@ void		prompt_exec(char **commands, t_tissue_stack *general, void *box)
 
 
   prog = commands[0];
+
+  i = 0;
+  while (commands[i] != NULL)
+    {
+      printf("commands[%i] = %s\n", i, commands[i]);
+      i++;
+    }
   args = create_plug_args(commands, general, box);
 
   i = 0;
