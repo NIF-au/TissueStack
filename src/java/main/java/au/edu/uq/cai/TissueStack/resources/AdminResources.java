@@ -271,6 +271,13 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 			dataDir.mkdirs();
 		}
 		final File destination = new File(dataDir, uploadedFile.getName());
+		// double check if file exists already
+		if (destination.exists()) {
+			throw new RuntimeException(
+					"File cannot be moved to the data directory since another file exists with the same name: "
+							+ destination.getAbsolutePath());
+		}
+		
 		if (!uploadedFile.renameTo(destination)) {
 			throw new RuntimeException(
 					"Failed to move uploaded file (" + uploadedFile.getAbsolutePath()
