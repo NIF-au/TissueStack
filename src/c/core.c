@@ -139,9 +139,6 @@ void            init_prog(t_tissue_stack *t)
   init_tile_requests(t->tile_requests);
   t->memory_mappings = malloc(sizeof(*t->memory_mappings));
   init_memory_mapping(t->memory_mappings);
-  char * tmp = malloc(sizeof(tmp) * 100);
-  sprintf(tmp, "%s","/opt/data/anglerfish.raw");
-  t->memory_mappings->add(t->memory_mappings,tmp);
   t->get_volume = get_volume;
   t->check_volume = check_volume;
   t->clean_quit = clean_quit;
