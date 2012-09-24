@@ -140,7 +140,7 @@ void		lc_write_on_plug_fd(t_plugin *plugin, char *command, int log_level, t_tiss
 	}
       if (tmp == NULL)
 	{
-	  tmp = malloc(sizeof(tmp));
+	  tmp = malloc(sizeof(*tmp));
 	  tmp->plugin = plugin;
 	  if (plugin == NULL)
 	    complete_path = concat_path(log->path, "core", ".plugin.log");

@@ -14,6 +14,7 @@ void		nc_create_notification(char *name,
   else
     {
       tmp = t->first_notification;
+      if (tmp == NULL) printf("hsdkjvsdhkjghjk\n");
       while (tmp->next != NULL)
 	tmp = tmp->next;
       tmp->next = malloc(sizeof(*tmp->next));

@@ -62,27 +62,7 @@ void		get_raw_data_hyperslab(t_vol *volume, int dim, int slice, char *hyperslab)
   if (volume->raw_data == 1)
     {
       offset = (volume->dim_offset[dim] + (unsigned long long int)((unsigned long long int)volume->slice_size[dim] * (unsigned long long int)slice));
-      /*#ifdef __off64_t_defined
-      //#ifndef __USE_LARGEFILE64
-      printf("hello\n");*/
       lseek(volume->raw_fd, offset, SEEK_SET);
-      /*#else
-      unsigned long long int count;
-      unsigned long long int modulo;
-      unsigned long int i;
-
-      printf("hello1\n");
-      i = 0;
-      count = offset / 100000000;
-      modulo = offset % 100000000;
-      lseek(volume->raw_fd, 0, SEEK_SET);
-      while (i < count)
-	{
-	  lseek(volume->raw_fd, 100000000 - 1, SEEK_CUR);
-	  i++;
-	}
-      lseek(volume->raw_fd, modulo, SEEK_CUR);
-      #endif*/
       read(volume->raw_fd, hyperslab, volume->slice_size[dim]);
     }
 }

@@ -137,6 +137,11 @@ void            init_prog(t_tissue_stack *t)
   t->plug_actions = plug_actions_from_external_plugin;
   t->tile_requests = malloc(sizeof(*t->tile_requests));
   init_tile_requests(t->tile_requests);
+  t->memory_mappings = malloc(sizeof(*t->memory_mappings));
+  init_memory_mapping(t->memory_mappings);
+  char * tmp = malloc(sizeof(tmp) * 100);
+  sprintf(tmp, "%s","/opt/data/anglerfish.raw");
+  t->memory_mappings->add(t->memory_mappings,tmp);
   t->get_volume = get_volume;
   t->check_volume = check_volume;
   t->clean_quit = clean_quit;
@@ -206,6 +211,7 @@ void		free_core_struct(t_tissue_stack *t)
   free_all_history(t);
   free_all_prompt(t);
   if (t->tile_requests != NULL) t->tile_requests->destroy(t->tile_requests);
+  if (t->memory_mappings != NULL) destroy_memory_mapping(t->memory_mappings);
   free(t->functions);
   free(t);
 }

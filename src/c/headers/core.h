@@ -20,6 +20,7 @@
 #include "utils.h"
 #include "thread_pool.h"
 #include "tile_requests.h"
+#include "memory_mapping.h"
 
 #include "gtk/gtk.h"
 
@@ -155,6 +156,7 @@ struct			s_tissue_stack
   t_char_prompt		*prompt_first;
   t_hist_prompt		*hist_first;
   t_tile_requests 	*tile_requests;
+  t_memory_mapping 	*memory_mappings;
   t_nc_action		*first_notification;
   t_vol			*(*get_volume)(char *path, t_tissue_stack *general);
   t_vol			*(*check_volume)(char *path, t_tissue_stack *general);
