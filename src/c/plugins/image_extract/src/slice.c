@@ -24,6 +24,9 @@ void            *get_all_slices_of_all_dimensions(void *args)
   a = (t_image_args *)args;
   volume = a->volume;
   i = 0;
+  // copy path as well
+  volume->path = strdup(a->volume->path);
+
   // init start and count variable
   count = malloc(volume->dim_nb * sizeof(*count));
   while (i < volume->dim_nb)
@@ -55,13 +58,22 @@ void            *get_all_slices_of_all_dimensions(void *args)
   return (NULL);
 }
 
-void		get_raw_data_hyperslab(t_vol *volume, int dim, int slice, char *hyperslab)
+void		get_raw_data_hyperslab(t_memory_mapping * memory_mappings, t_vol *volume, int dim, int slice, char *hyperslab)
 {
   unsigned long long int offset;
 
   if (volume->raw_data == 1)
     {
       offset = (volume->dim_offset[dim] + (unsigned long long int)((unsigned long long int)volume->slice_size[dim] * (unsigned long long int)slice));
+      if (memory_mappings != NULL) {
+    	  char * data = memory_mappings->get(memory_mappings, volume->path);
+    	  if (data != NULL) {
+    		  memcpy(hyperslab, &data[offset], volume->slice_size[dim]);
+			  return;
+    	  }
+      }
+
+      // plan B: read in a regular fashion
       lseek(volume->raw_fd, offset, SEEK_SET);
       read(volume->raw_fd, hyperslab, volume->slice_size[dim]);
     }
@@ -80,7 +92,7 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
   int		save_h_position = a->info->h_position;
   int		save_w_position = a->info->w_position;
 
-  if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+  if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
     write_http_header(a->file, "408 Request Timeout", a->info->image_type);
     fclose(a->file);
 	return;
@@ -108,7 +120,7 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
 	  pthread_mutex_unlock(&(a->p->lock));
 	}
       else
-	get_raw_data_hyperslab(volume, current_dimension, current_slice, hyperslab);
+	get_raw_data_hyperslab(a->general_info->memory_mappings, volume, current_dimension, current_slice, hyperslab);
       // print image
       if (a->info->h_position == -1 && a->info->w_position == -1)
 	{

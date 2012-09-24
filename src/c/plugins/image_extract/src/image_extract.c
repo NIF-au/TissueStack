@@ -305,14 +305,15 @@ t_image_args	*create_args_thread(t_tissue_stack *t, t_vol *vol, t_image_extract 
 	  }
   }
 
-  args->volume->path = NULL;
+  if (vol->path != NULL) args->volume->path = strdup(vol->path);
+
   args->volume->dimensions = NULL;
   args->volume->next = NULL;
   args->volume->starts = NULL;
   args->volume->steps = NULL;
 
-  // we leave the reference to the request map, this is meant to be shared
-  args->requests = t->tile_requests;
+  // we leave the reference to the tissue stack instance, this is meant to be shared
+  args->general_info = t;
 
   // t_image_extract DEEP COPY
   args->info = malloc(sizeof(*args->info));
@@ -736,7 +737,7 @@ void			free_image_args(t_image_args * args) {
 	}
 
 	// set shared pointer to requests to null
-	args->requests = NULL;
+	args->general_info = NULL;
 
 	free(args);
 }

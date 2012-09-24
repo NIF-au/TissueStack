@@ -57,7 +57,6 @@ typedef struct  s_image_args
   t_thread_pool		*p;
   t_plugin		*this;
   t_image_extract	*info;
-  t_tile_requests	*requests;
   FILE			*file;
   t_tissue_stack	*general_info;
 }               t_image_args;
