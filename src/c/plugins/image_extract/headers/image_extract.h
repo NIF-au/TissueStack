@@ -43,19 +43,23 @@ typedef	struct	s_image_extract
   int		contrast;
   char 		*request_id;
   char 		*request_time;
+  char		*id_percent;
+  int		percentage;
+  int		percent_fd;
   pthread_cond_t	cond;
   pthread_mutex_t	mut;
 }		t_image_extract;
 
 typedef struct  s_image_args
 {
-  int           **dim_start_end;
-  t_vol         *volume;
-  t_thread_pool *p;
-  t_plugin	*this;
+  int			**dim_start_end;
+  t_vol			*volume;
+  t_thread_pool		*p;
+  t_plugin		*this;
   t_image_extract	*info;
-  t_tile_requests * requests;
-  FILE		*file;
+  t_tile_requests	*requests;
+  FILE			*file;
+  t_tissue_stack	*general_info;
 }               t_image_args;
 
 #define X 0
@@ -73,6 +77,7 @@ void            *init(void *args);
 void            *start(void *args);
 
 unsigned int            get_slices_max(t_vol *volume);
+int		get_nb_blocks_percent(t_image_extract *img, t_vol *volume);
 void            *get_all_slices_of_all_dimensions(void *args);
 void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *start, int current_dimension,
                                                 long unsigned int *count, t_image_args *a);
