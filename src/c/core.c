@@ -46,7 +46,7 @@ char			*from_array_to_string(char **array)
 
 void			signal_handler(int sig)
 {
-    printf("Signal : %i\n", sig);
+    WARNING("Received Signal : %i", sig);
 
     switch (sig) {
 		case SIGHUP:
@@ -132,7 +132,7 @@ void		clean_quit(t_tissue_stack *t)
 
 void            init_prog(t_tissue_stack *t)
 {
-  char		*path = NULL;
+  //char		*path = NULL;
 
   t->plug_actions = plug_actions_from_external_plugin;
   t->tile_requests = malloc(sizeof(*t->tile_requests));
@@ -160,9 +160,9 @@ void            init_prog(t_tissue_stack *t)
   t->log->max_log_size = 1000;
   t->log->current_log_size = 0;
   t->log->debug = ON;
-  t->log->verbose = ON;
+  t->log->verbose = OFF;
   t->log->write_on_files = ON;
-  t->log->write_on_plug_files = ON;
+  t->log->write_on_plug_files = OFF;
   t->log->write_on_level_files = ON;
   log_plugin.id = pthread_self();
   log_plugin.tss = t;
@@ -177,10 +177,11 @@ void            init_prog(t_tissue_stack *t)
 		  t->log->state = OFF; // turn logging off
 	  } else
 	  {
-		  path = concat_path(actualPath->buffer, "tss-general", ".log");
+		  //path = concat_path(actualPath->buffer, "tss-general", ".log");
 		  free_t_string_buffer(actualPath);
 	  }
 
+	  /*
 	  if ((t->log->general_fd = open(path, O_CREAT | O_RDWR | O_TRUNC)) == -1)
 	  {
 		  ERROR("Open %s failed", path);
@@ -191,7 +192,7 @@ void            init_prog(t_tissue_stack *t)
 		  ERROR("Chmod 644  %s failed", path);
 		  t->log->general_fd = 1;
 		  t->log->state = OFF; // turn logging off
-	  }
+	  }*/
   }
   init_func_ptr(t);
   //init_percent_time(t);
@@ -203,7 +204,7 @@ void		free_core_struct(t_tissue_stack *t)
 	  return;
   }
 
-  printf("\nFreeing\n");
+  INFO("Freeing Allocated Resources...");
   free_all_volumes(t);
   free_all_plugins(t);
   free_all_history(t);
@@ -272,20 +273,18 @@ int		main(int argc, char **argv)
     prompt_start(t);
   else
     {
-      printf("TissueStackImageServer Running\n");
+      INFO("TissueStackImageServer Running!");
       pthread_mutex_lock(&t->main_mutex);
       pthread_cond_wait(&t->main_cond, &t->main_mutex);
       pthread_mutex_unlock(&t->main_mutex);
     }
 
   // free all the stuff mallocked
-  printf("Shutting down ...\n");
+  INFO("Shutting down TissueStackImageServer!");
 
   t->tp->loop = 0;
   thread_pool_destroy(t->tp);
   free_core_struct(t);
-
-  printf("Good Bye\n");
 
   return (0);
 }

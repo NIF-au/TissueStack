@@ -241,7 +241,7 @@ void		lc_write_on_file(t_plugin *plugin, char *command, int log_level, t_tissue_
 	lc_write_on_plug_fd(plugin, command, log_level, t);
       if (log->write_on_level_files == ON)
 	lc_write_on_level_fd(plugin, command, log_level, t);
-      lc_write_on_general_fd(plugin, command, log_level, t);
+      //lc_write_on_general_fd(plugin, command, log_level, t);
     }
 }
 

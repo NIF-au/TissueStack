@@ -1,6 +1,8 @@
 #ifndef __UTILS_H__
 #define __UTILS_H__
 
+#include <core.h>
+
 #include <stdlib.h>
 #include <ctype.h>
 #include <stdio.h>

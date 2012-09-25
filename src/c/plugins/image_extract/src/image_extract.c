@@ -183,7 +183,7 @@ void		get_percent(FILE *file, t_image_extract *a)
       fwrite(buff, 1, strlen(buff), file);
       return;
     }
-  printf("%.2f%%\n", a->percent);
+  DEBUG("%.2f%%", a->percent);
 }
 
 void		*percentage(void *args)
@@ -428,7 +428,7 @@ int		check_num_input(char **in, int start, int end)
 		{
 		  if (in[i][j] < '0' || in[i][j] > '9')
 		    {
-		      fprintf(stderr, "Error invalid numerical input : %s\n", in[i]);
+		      ERROR("Error invalid numerical input : %s", in[i]);
 		      return (1);
 		    }
 		}
@@ -442,7 +442,7 @@ int		check_num_input(char **in, int start, int end)
 
 int		check_range(int **d, t_vol *v)
 {
-  if (v == NULL) printf("Volume is NULL\n");
+  if (v == NULL) ERROR("Volume is NULL");
 
   int		i;
 
@@ -523,8 +523,6 @@ void			*start(void *args)
 
   a = (t_args_plug *)args;
 
-  INFO("Image Server Start");
-
   socketDescriptor = (FILE*)a->box;
   volume = load_volume(a, a->commands[0]);
   if (volume == NULL) {
@@ -555,7 +553,7 @@ void			*start(void *args)
 						      atoi(a->commands[5]), atoi(a->commands[6]));
   if (check_range(image_args->dim_start_end, volume))
     {
-      fprintf(stderr, "Slice out of volume range\n");
+      ERROR("Slice out of volume range");
       a->this->busy = 0;
       return (NULL);
     }
@@ -607,7 +605,7 @@ void			*start(void *args)
     {
       if (strcmp(image_args->service, "full") != 0)
 	{
-	  fprintf(stderr, "Undefined kind. Please choose 'tiles' or 'images'\n");
+	  ERROR("Undefined kind. Please choose 'tiles' or 'images'");
 	  a->this->busy = 0;
 	  return (NULL);
 	}
@@ -622,7 +620,7 @@ void			*start(void *args)
   i = 0;
   colormap = (strcmp(image_args->service, "tiles") == 0 ? strdup(a->commands[14]) : (strcmp(image_args->service, "full") == 0 ? strdup(a->commands[11]) : strdup(a->commands[15])));
   if (check_colormap_name(colormap))
-    fprintf(stderr, "Warning : colormap '%s' does not exist\n", colormap);
+    ERROR("Warning : colormap '%s' does not exist", colormap);
   while (colormapa_name[i] != NULL)
     {
       if (strcmp(colormap, colormapa_name[i]) == 0)

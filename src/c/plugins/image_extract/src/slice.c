@@ -67,7 +67,6 @@ char *		get_raw_data_hyperslab(t_memory_mapping * memory_mappings, t_vol *volume
   if (memory_mappings != NULL) {
 	  hyperslab = memory_mappings->get(memory_mappings, volume->path);
 	  if (hyperslab != NULL)  return &hyperslab[offset];
-	  printf("Could not do it!!!\n");
   }
 
   // plan B: read in a regular fashion

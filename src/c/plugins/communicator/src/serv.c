@@ -164,9 +164,25 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
   char		*contrast_max = NULL;
   char		comm[500];
 
-  if (strncmp(buff, "GET /?volume=", 13) == 0)
+  if (buff != NULL) {
+	  tmp = serv_str_to_wordtab(buff, '\n');
+	  i = 0;
+	  t_string_buffer * request = appendToBuffer(NULL, tmp[i]);
+	    while (tmp[i] != NULL)
+	    {
+	    	if ( strncmp(tmp[i], "Host:", 5) == 0 ||  strncmp(tmp[i], "X-Forwarded-Host:", 17) ==0)
+	    	{
+	    		appendToBuffer(request, " | ");
+	    		appendToBuffer(request, tmp[i]);
+	    	}
+	    	i++;
+	    }
+	  INFO(request->buffer);
+	  free_t_string_buffer(request);
+  }
+
+  if (tmp != NULL && strncmp(tmp[0], "GET /?volume=", 13) == 0)
     {
-      tmp = serv_str_to_wordtab(buff, '\n');
       line = strdup(tmp[0]);
       i = 0;
       while (tmp[i] != NULL)
@@ -206,7 +222,7 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
       if (is_not_num(slice) || is_not_num(dimension) || is_not_num(scale) ||
 	  is_not_num(quality) || is_not_num(x) || is_not_num(y))
 	{
-	  fprintf(stderr, "Invalid argument: non interger\n");
+	  ERROR("Invalid argument: non interger");
 	  return;
 	}
 
@@ -269,6 +285,12 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
       }
 
       s->general->plug_actions(s->general, comm, file);
+    } else {
+        write_http_header(file, "404 Not Found", NULL);
+        char * notFoundMessage =
+        		"<html><head><title>404 - Not Found</title></head><body><h3>There is no file or resource under that url ...</h3></body></html>";
+        write(fileno(file), notFoundMessage, strlen(notFoundMessage));
+        close(fileno(file));
     }
 }
 
@@ -286,7 +308,7 @@ void		serv_accept_new_connections(t_args_plug * a, t_serv_comm *s)
   if ((socket = accept(s->sock_serv, (struct sockaddr*)&client_addr,
 		       &len)) == -1)
     {
-      fprintf(stderr, "Accept Error\n");
+      ERROR("Accept Error");
       s->state = FAIL;
       return;
     }
@@ -314,7 +336,7 @@ void		serv_working_loop(t_args_plug * a, t_serv_comm *s)
       if (select((s->bigger_fd + 1), &(s->rd_fds),
 		 NULL, NULL, NULL) == -1)
 	{
-	  fprintf(stderr, "Select Error\n");
+	  ERROR("Select Error");
 	  s->state = FAIL;
 	}
       if (FD_ISSET(s->sock_serv, &(s->rd_fds)))
@@ -329,7 +351,7 @@ int		serv_init_connect(t_serv_comm *s)
   yes = 1;
   if ((s->sock_serv = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
-      fprintf(stderr, "Socket creation Error\n");
+      ERROR("Socket creation Error");
       return (-1);
     }
   memset(&(s->serv_addr), 0, sizeof(s->serv_addr));
@@ -345,7 +367,7 @@ int		serv_init_connect(t_serv_comm *s)
   if (bind(s->sock_serv, (struct sockaddr*)&(s->serv_addr),
 	   sizeof(s->serv_addr)) < 0)
     {
-      fprintf(stderr, "Bind Error\n");
+      ERROR("Bind Error");
       return (-1);
     }
   listen(s->sock_serv, 75);

@@ -147,7 +147,7 @@ void  		*start(void *args)
   a = (t_args_plug*)args;
   if ((nim = nifti_image_read(a->commands[0], 0)) == NULL)
     {
-      fprintf(stderr, "Error Nifti read\n");
+      ERROR("Error Nifti read");
       return (NULL);
     }
 
@@ -176,7 +176,7 @@ void  		*start(void *args)
 	  dims[i] = slice;
 	  if ((ret = nifti_read_collapsed_image(nim, dims, (void*)&data)) < 0)
 	    {
-	      fprintf(stderr, "Error Nifti Get Hyperslab\n");
+	      ERROR("Error Nifti Get Hyperslab");
 	      return (NULL);
 	    }
 	  if( ret > 0 )
@@ -191,7 +191,7 @@ void  		*start(void *args)
       dims[i] = -1;
       i++;
     }
-  printf("Conversion: NIFTI: %s to RAW: %s ==> DONE\n", a->commands[0], a->commands[1]);
+  ERROR("Conversion: NIFTI: %s to RAW: %s ==> DONE", a->commands[0], a->commands[1]);
   if (close(fd) == -1)
     {
       perror("Close ");

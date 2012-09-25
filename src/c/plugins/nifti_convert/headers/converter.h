@@ -1,13 +1,15 @@
 #ifndef __NIFTI_CONVERTER__
 #define __NIFTI_CONVERTER__
 
+#include "core.h"
+
 #include <nifti1_io.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <netcdf.h>
 #include <minc2.h>
 #include <float.h>
-#include "core.h"
+
 
 typedef struct	s_header	t_header;
 

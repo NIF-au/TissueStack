@@ -1,6 +1,8 @@
 #ifndef __SERV_H__
 #define __SERV_H__
 
+#include "core.h"
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/select.h>
@@ -8,8 +10,6 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/un.h>
-
-#include "core.h"
 
 typedef	struct	s_serv_comm	t_serv_comm;
 typedef	struct	s_serv_clients	t_serv_clients;

@@ -327,13 +327,13 @@ int		init_volume(t_memory_mapping * memory_mappings, t_vol *volume, char *path)
   // open the minc file
   if ((result = miopen_volume(volume->path, MI2_OPEN_READ, &volume->minc_volume)) != MI_NOERROR)
     {
-      fprintf(stderr, "Error opening input file: %d.\n", result);
+      ERROR("Error opening input file: %d.", result);
       return (-1);
     }
 
   if ((result = miget_volume_dimension_count(volume->minc_volume, 0, 0, &volume->dim_nb)) != MI_NOERROR)
     {
-      fprintf(stderr, "Error getting number of dimensions: %d.\n", result);
+      ERROR("Error getting number of dimensions: %d.", result);
       return (-1);
     }
 
@@ -343,30 +343,30 @@ int		init_volume(t_memory_mapping * memory_mappings, t_vol *volume, char *path)
   if ((result = miget_volume_dimensions(volume->minc_volume, MI_DIMCLASS_SPATIAL, MI_DIMATTR_ALL,
 					MI_DIMORDER_FILE, volume->dim_nb, volume->dimensions)) == MI_ERROR)
     {
-      fprintf(stderr, "Error getting dimensions: %d.\n", result);
+      ERROR("Error getting dimensions: %d.", result);
       return (-1);
     }
   // get the size of each dimensions
   if ((result = miget_dimension_sizes(volume->dimensions, volume->dim_nb, volume->size)) != MI_NOERROR)
     {
-      fprintf(stderr, "Error getting dimensions size: %d.\n", result);
+      ERROR("Error getting dimensions size: %d.", result);
       return (-1);
     }
   if ((result = miget_dimension_starts(volume->dimensions, 0, volume->dim_nb, volume->starts)) != MI_NOERROR)
     {
-      fprintf(stderr, "Error getting dimensions start: %d.\n", result);
+      ERROR("Error getting dimensions start: %d.", result);
       return (-1);
     }
   if ((result = miget_dimension_separations(volume->dimensions, 0, volume->dim_nb, volume->steps)) != MI_NOERROR)
     {
-      fprintf(stderr, "Error getting dimensions steps: %d.\n", result);
+      ERROR("Error getting dimensions steps: %d.", result);
       return (-1);
     }
   if (miget_dimension_name(volume->dimensions[0], &volume->dim_name[0]) != MI_NOERROR ||
       miget_dimension_name(volume->dimensions[1], &volume->dim_name[1]) != MI_NOERROR ||
       miget_dimension_name(volume->dimensions[2], &volume->dim_name[2]))
     {
-      fprintf(stderr, "Error getting dimensions name.\n");
+      ERROR("Error getting dimensions name.");
       return (-1);
     }
   if (volume->dim_name[0] && volume->dim_name[1] && volume->dim_name[2])
@@ -376,14 +376,6 @@ int		init_volume(t_memory_mapping * memory_mappings, t_vol *volume, char *path)
       volume->dim_name_char[2] = volume->dim_name[2][0];
       volume->dim_name_char[3] = '\0';
     }
-
-  /*
-  if (miget_volume_valid_range(volume->minc_volume, &volume->max, &volume->min) != MI_NOERROR)
-    {
-      fprintf(stderr, "Error getting min/max value.\n");
-      return (-1);
-    }
-  */
 
   // get slices_max
   volume->slices_max = get_slices_max(volume);
@@ -506,7 +498,6 @@ t_vol		*load_volume(t_args_plug * a, char * path)
   if (path == NULL) return NULL;
 
   t_vol * volume = get_volume(path, a->general_info);
-  //  printf("volume = %p\n", volume);
   if (volume != NULL) return volume;
 
   a->this->busy = 1;
@@ -526,7 +517,7 @@ t_vol		*load_volume(t_args_plug * a, char * path)
     }*/
   a->this->busy = 0;
   if (volume == NULL) {
-    printf("Failed to load volume: %s\n", path);
+    ERROR("Failed to load volume: %s", path);
     return NULL;
   }
 
