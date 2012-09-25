@@ -155,8 +155,8 @@ void            init_prog(t_tissue_stack *t)
   t->subscribe = nc_subscribe;
   t->raise = nc_raise;
   t->log = malloc(sizeof(*t->log));
-  t->log->state = OFF;
-  t->log->path = strdup("/tmp/tss-log/");
+  t->log->state = ON;
+  t->log->path = strdup("/tmp/tissue_stack_logs/");
   t->log->max_log_size = 1000;
   t->log->current_log_size = 0;
   t->log->debug = ON;
