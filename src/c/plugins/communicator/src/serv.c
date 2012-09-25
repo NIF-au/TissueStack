@@ -170,7 +170,7 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
 	  t_string_buffer * request = appendToBuffer(NULL, tmp[i]);
 	    while (tmp[i] != NULL)
 	    {
-	    	if ( strncmp(tmp[i], "Host:", 5) == 0 ||  strncmp(tmp[i], "X-Forwarded-Host:", 17) ==0)
+	    	if ( strncmp(tmp[i], "Host:", 5) == 0 ||  strncmp(tmp[i], "X-Forwarded-For:", 16) ==0)
 	    	{
 	    		appendToBuffer(request, " | ");
 	    		appendToBuffer(request, tmp[i]);
