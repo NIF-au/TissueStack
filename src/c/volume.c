@@ -258,7 +258,7 @@ void		set_slice_size(t_vol *volume, char *str)
   free(tmp);
 }
 
-int		raw_volume_init(t_vol *volume, int fd)
+int		raw_volume_init(t_memory_mapping * memory_mappings, t_vol *volume, int fd)
 {
   char		**info;
   int		count;
@@ -296,10 +296,13 @@ int		raw_volume_init(t_vol *volume, int fd)
 
   free_null_terminated_char_2D_array(info);
 
+  // add memory mapping
+  if (memory_mappings != NULL) memory_mappings->add(memory_mappings, volume->path);
+
   return (0);
 }
 
-int		init_volume(t_vol *volume, char *path)
+int		init_volume(t_memory_mapping * memory_mappings, t_vol *volume, char *path)
 {
   int		result;
   int		path_len;
@@ -319,7 +322,7 @@ int		init_volume(t_vol *volume, char *path)
   if ((result = israw(volume->path)) == -1)
     return (-1);
   if (result > 0)
-    return (raw_volume_init(volume, result));
+    return (raw_volume_init(memory_mappings, volume, result));
 
   // open the minc file
   if ((result = miopen_volume(volume->path, MI2_OPEN_READ, &volume->minc_volume)) != MI_NOERROR)
@@ -412,7 +415,7 @@ void		add_volume(char *path, t_tissue_stack *t)
       tmp = tmp->next;
     }
   tmp = malloc(sizeof(*tmp));
-  if (init_volume(tmp, path) == 0)
+  if (init_volume(t->memory_mappings, tmp, path) == 0)
     {
       if (t->volume_first == NULL)
 	t->volume_first = tmp;

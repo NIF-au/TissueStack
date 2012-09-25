@@ -307,7 +307,7 @@ void		plugin_start_from_string(char *str, t_tissue_stack *t);
 
 /*		volume.c		*/
 
-int		init_volume(t_vol *volume, char *path);
+int		init_volume(t_memory_mapping * memory_mappings, t_vol *volume, char *path);
 void		*file_actions(void *args);
 void		list_volumes(t_tissue_stack *t, char *options);
 void		add_volume(char *path, t_tissue_stack *t);

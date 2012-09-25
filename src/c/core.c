@@ -230,13 +230,13 @@ int		main(int argc, char **argv)
       if (argv[2] != NULL && strcmp(argv[2], "--prompt") != 0)
 	{
 	  t->volume_first = malloc(sizeof(*t->volume_first));
-	  if ((result = init_volume(t->volume_first, argv[2])) != 0)
+	  if ((result = init_volume(t->memory_mappings, t->volume_first, argv[2])) != 0)
 	    return (result);
 	}
       else if (argv[3] != NULL && strcmp(argv[3], "--prompt") != 0)
 	{
 	  t->volume_first = malloc(sizeof(*t->volume_first));
-	  if ((result = init_volume(t->volume_first, argv[3])) != 0)
+	  if ((result = init_volume(t->memory_mappings, t->volume_first, argv[3])) != 0)
 	    return (result);
 	}
     }
