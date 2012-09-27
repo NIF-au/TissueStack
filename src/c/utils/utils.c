@@ -195,6 +195,12 @@ t_string_buffer *  appendToBuffer(t_string_buffer * buffer, char * someString) {
 
 	return buffer;
 }
+void free_t_string_buffer(t_string_buffer * buffer) {
+	if (buffer == NULL) return;
+
+	if (buffer->buffer != NULL) free(buffer->buffer);
+	free(buffer);
+}
 
 // Returns path for success, omitting last "/" OR NULL in case of failure
 t_string_buffer * createDirectory(char * path, mode_t mode) {
@@ -223,7 +229,7 @@ t_string_buffer * createDirectory(char * path, mode_t mode) {
 
 		if (mkdir(pathWithoutSlashAtEnd->buffer, mode) < 0 && errno != EEXIST) {
 			// if we we didn't fail because we exist already => abort
-			printf("Failed to create directory: %s\n", strerror(errno));
+			ERROR("Failed to create directory: %s\n", strerror(errno));
 			if (pathWithoutSlashAtEnd != NULL) { // free
 				if (pathWithoutSlashAtEnd->buffer != NULL) {
 					free(pathWithoutSlashAtEnd->buffer);
@@ -280,8 +286,13 @@ void		write_http_header(FILE * socket, char * status, char * image_type)
 	sprintf(contLen, "Content-Length: %lu\r\n", content_length);
 	//header = appendToBuffer(header, contLen); // Content-Length header
 	 */
-	header = appendToBuffer(header, "Content-Type: image/"); // Content-Type header
-	header = appendToBuffer(header, image_type); // image type
+	if (image_type != NULL)
+	{
+		header = appendToBuffer(header, "Content-Type: image/"); // Content-Type header
+		header = appendToBuffer(header, image_type); // image type
+	} else {
+		header = appendToBuffer(header, "Content-Type: text/html");
+	}
 	header = appendToBuffer(header, "\r\nAccess-Control-Allow-Origin: *\r\n"); // allow cross origin requests
 	header = appendToBuffer(header, "Last-Modified: Thu, 20 May 2004 21:12:11 GMT\r\n\r\n"); // last modified header in the past
 

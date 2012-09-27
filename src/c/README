@@ -10,18 +10,7 @@ from the command line.
 
 Note: 
 ------
-sudo privileges are needed to install the compiled binaries (server & plugins) in the directories: /usr/local/lib and /usr/local/plugins
-
-                                                        ******
-                                                        
-To compile the JNI code invoke 
-            
-            "sudo make"
-
-in the sub directory jni.
-
-This will create the necessary shared libraries, copy them into /usr/local/lib. You may need to add that path to the LD_LIBRARY_PATH !
-
+sudo privileges are needed to install the compiled binaries (server & plugins) in the directories: /usr/local/lib, /usr/local/bin and /usr/local/plugins
 
 
 ATTENTION: This is a work in progress !                                                        

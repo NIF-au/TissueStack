@@ -13,6 +13,46 @@ unsigned int		get_slices_max(t_vol *volume)
   return (volume->size[Z] * volume->size[Y]);
 }
 
+int		get_nb_blocks_percent(t_image_extract *a, t_vol *volume)
+{
+  int		i = 0;
+  int		count = 0;
+  int		height;
+  int		width;
+  int		slices;
+  int		h_tiles;
+  int		w_tiles;
+  int		tiles_per_slice;
+
+  while (i < volume->dim_nb)
+    {
+      if (a->dim_start_end[i][0] != -1 &&
+	  a->dim_start_end[i][1] != -1 &&
+	  a->h_position == -1 &&
+	  a->w_position == -1)
+	{
+	  get_width_height(&height, &width, i, volume);
+	  h_tiles = (height * a->scale) / a->square_size;
+	  w_tiles = (width * a->scale) / a->square_size;
+
+	  if ((height % a->square_size) != 0)
+	    h_tiles++;
+	  if ((width % a->square_size) != 0)
+	    w_tiles++;
+	  if (a->dim_start_end[i][1] == 0 && a->dim_start_end[i][0] == 0)
+	    slices = volume->size[i];
+	  else
+	    slices = a->dim_start_end[i][1] - a->dim_start_end[i][0];
+
+	  tiles_per_slice = h_tiles * w_tiles;
+
+	  count += (slices * tiles_per_slice);
+	}
+      i++;
+    }
+  return (count);
+}
+
 void            *get_all_slices_of_all_dimensions(void *args)
 {
   t_vol		*volume;
@@ -24,6 +64,9 @@ void            *get_all_slices_of_all_dimensions(void *args)
   a = (t_image_args *)args;
   volume = a->volume;
   i = 0;
+  // copy path as well
+  volume->path = strdup(a->volume->path);
+
   // init start and count variable
   count = malloc(volume->dim_nb * sizeof(*count));
   while (i < volume->dim_nb)
@@ -55,36 +98,24 @@ void            *get_all_slices_of_all_dimensions(void *args)
   return (NULL);
 }
 
-void		get_raw_data_hyperslab(t_vol *volume, int dim, int slice, char *hyperslab)
+char *		get_raw_data_hyperslab(t_memory_mapping * memory_mappings, t_vol *volume, int dim, int slice, short * free_hyperslab)
 {
   unsigned long long int offset;
+  char * hyperslab = NULL;
 
-  if (volume->raw_data == 1)
-    {
-      offset = (volume->dim_offset[dim] + (unsigned long long int)((unsigned long long int)volume->slice_size[dim] * (unsigned long long int)slice));
-      /*#ifdef __off64_t_defined
-      //#ifndef __USE_LARGEFILE64
-      printf("hello\n");*/
-      lseek(volume->raw_fd, offset, SEEK_SET);
-      /*#else
-      unsigned long long int count;
-      unsigned long long int modulo;
-      unsigned long int i;
+  offset = (volume->dim_offset[dim] + (unsigned long long int)((unsigned long long int)volume->slice_size[dim] * (unsigned long long int)slice));
+  if (memory_mappings != NULL) {
+    hyperslab = memory_mappings->get(memory_mappings, volume->path);
+    if (hyperslab != NULL)  return &hyperslab[offset];
+  }
 
-      printf("hello1\n");
-      i = 0;
-      count = offset / 100000000;
-      modulo = offset % 100000000;
-      lseek(volume->raw_fd, 0, SEEK_SET);
-      while (i < count)
-	{
-	  lseek(volume->raw_fd, 100000000 - 1, SEEK_CUR);
-	  i++;
-	}
-      lseek(volume->raw_fd, modulo, SEEK_CUR);
-      #endif*/
-      read(volume->raw_fd, hyperslab, volume->slice_size[dim]);
-    }
+  // plan B: read in a regular fashion
+  hyperslab = malloc(volume->slices_max * sizeof(*hyperslab));
+  *free_hyperslab = 1;
+  lseek(volume->raw_fd, offset, SEEK_SET);
+  read(volume->raw_fd, hyperslab, volume->slice_size[dim]);
+
+  return hyperslab;
 }
 
 void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *start, int current_dimension,
@@ -99,15 +130,16 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
   int		h_max_iteration;
   int		save_h_position = a->info->h_position;
   int		save_w_position = a->info->w_position;
+  short 	free_hyperslab = -1;
 
-  if (a->requests->is_expired(a->requests, a->info->request_id, a->info->request_time)) {
+  char		*buff = NULL;
+
+  if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
     write_http_header(a->file, "408 Request Timeout", a->info->image_type);
     fclose(a->file);
 	return;
   }
 
-  // allocation of a hyperslab (portion of the file, can be 1 slice or 1 demension...)
-  hyperslab =  malloc(volume->slices_max * sizeof(*hyperslab));
   // set the first slice extracted
   current_slice = (unsigned int)a->dim_start_end[current_dimension][0];
   // set the last slice extracted
@@ -118,17 +150,21 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
   // loop all the slices
   while (current_slice < max)
     {
-      memset(hyperslab, 0, (volume->slices_max * sizeof(*hyperslab)));
       start[current_dimension] = current_slice;
       // get the data of 1 slice
       if (volume->raw_data != 1)
 	{
-	  pthread_mutex_lock(&(a->p->lock));
+      free_hyperslab = 1;
+	  // allocation of a hyperslab (portion of the file, can be 1 slice or 1 demension...)
+	  hyperslab =  malloc(volume->slices_max * sizeof(*hyperslab));
+      memset(hyperslab, 0, (volume->slices_max * sizeof(*hyperslab)));
+
+      pthread_mutex_lock(&(a->p->lock));
 	  miget_real_value_hyperslab(volume->minc_volume, MI_TYPE_UBYTE, start, count, hyperslab);
 	  pthread_mutex_unlock(&(a->p->lock));
 	}
       else
-	get_raw_data_hyperslab(volume, current_dimension, current_slice, hyperslab);
+	hyperslab = get_raw_data_hyperslab(a->general_info->memory_mappings, volume, current_dimension, current_slice, &free_hyperslab);
       // print image
       if (a->info->h_position == -1 && a->info->w_position == -1)
 	{
@@ -147,9 +183,10 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
 		{
 		  a->info->h_position = a->info->start_h;
 		  a->info->w_position = a->info->start_w;
-
 		  print_image(hyperslab, volume, current_dimension, current_slice, width, height, a);
 		  a->info->start_w++;
+		  a->general_info->percent_add(1, a->info->id_percent, a->general_info);
+		  a->general_info->percent_get(&buff, a->info->id_percent, a->general_info);
 		}
 	      a->info->start_h++;
 	    }
@@ -157,6 +194,10 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
       else {
 	print_image(hyperslab, volume, current_dimension, current_slice, width, height, a);
       }
+
+      /*      char *buff = NULL;
+      a->general_info->percent_get(&buff, a->info->id_percent, a->general_info->percent);
+      FATAL("========> %s%%", buff);*/
 
       pthread_mutex_lock(&(a->p->lock));
       a->info->slices_done++;
@@ -169,5 +210,5 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
       a->info->w_position = save_w_position;
     }
   start[current_dimension] = 0;
-  free(hyperslab);
+  if (free_hyperslab > 0) free(hyperslab);
 }

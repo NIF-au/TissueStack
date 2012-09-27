@@ -26,6 +26,7 @@ STARTUP_TOMCAT=$TOMCAT_HOME_BIN/startup.sh
 SHUTDOWN_TOMCAT=$TOMCAT_HOME_BIN/shutdown.sh
 DAEMON_ARGS="--options args"
 PIDFILE=/tmp/$NAME.pid
+USER=myuser
 
 # Exit if the package is not installed
 [ -x "$STARTUP_TOMCAT" ] || exit 0
@@ -46,7 +47,7 @@ PIDFILE=/tmp/$NAME.pid
 do_start()
 {
 	echo "Starting $NAME"
-	$STARTUP_TOMCAT
+	su -s /bin/sh $USER -c "$STARTUP_TOMCAT &"
 	touch $PIDFILE
 	echo "$NAME started"
 }

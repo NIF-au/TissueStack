@@ -9,13 +9,12 @@ TissueStack.Canvas = function(data_extent, canvas_id, dataset_id, include_cross_
 	this.centerUpperLeftCorner();
 	this.drawCoordinateCross(this.getCenter());
 	this.setIncludeCrossHair(include_cross_hair);
-	this.events = new TissueStack.Events(this, this.include_cross_hair); 
+	this.events = new TissueStack.Events(this, this.include_cross_hair);
+	this.bindControlEvents(); // ui events for show/hide of controls such as contrast slider and copyable url link 
 	this.queue = new TissueStack.Queue(this);
 	this.contrast = null; // a shared instance of a contrast slider
 	// make parent and ourselves visible
 	this.getCanvasElement().parent().removeClass("hidden");
-	this.triggerUrlLink(); //trigger url link function
-	this.triggerContrastControl();
 };
 
 TissueStack.Canvas.prototype = {
@@ -37,6 +36,7 @@ TissueStack.Canvas.prototype = {
 	cross_y : 0,
 	queue : null,
 	color_map : "grey",
+	has_been_synced: false,
 	updateScaleBar : function() {
 		// update scale bar if main view
 		if (this.is_main_view) this.getDataExtent().adjustScaleBar(100);
@@ -215,10 +215,9 @@ TissueStack.Canvas.prototype = {
 
 		return {x: newX, y: newY};
 	},
-	redrawWithCenterAndCrossAtGivenPixelCoordinates: function(coords, timestamp) {
+	redrawWithCenterAndCrossAtGivenPixelCoordinates: function(coords, sync, timestamp) {
 		// this stops any still running draw requests 
 		var now = typeof(timestamp) == 'number' ? timestamp : new Date().getTime(); 
-		this.eraseCanvasContent();
 		
 		// make sure crosshair is centered:
 		this.drawCoordinateCross(this.getCenter());
@@ -226,16 +225,18 @@ TissueStack.Canvas.prototype = {
 		this.setUpperLeftCorner(
 				Math.floor(this.dim_x / 2) - coords.x,
 				Math.floor(this.dim_y / 2) + coords.y);
-		
+
 		if (coords.z) {
 			this.data_extent.slice = coords.z;
 		}
-
+		
 		// look for the cross overlay which will be the top layer
 		var canvas = this.getCoordinateCrossCanvas();
 		if (!canvas || !canvas[0]) {
 			canvas = this.getCanvasElement();
 		}
+		
+		if (typeof(sync) == 'boolean' && !sync) return;
 		
 		// send message out to others that they need to redraw as well
 		canvas.trigger("sync", [this.data_extent.data_id,
@@ -273,16 +274,15 @@ TissueStack.Canvas.prototype = {
     		myImageData.data[i + 3] = 0;
     	}
     	ctx.putImageData(myImageData, x, y);
-	}, applyColorMapToCanvasContent: function() {
-		if (!this.color_map || this.color_map == "grey") {
-			return;
-		}
-
-    	if (this.upper_left_x > this.dim_x || this.upper_left_x + this.data_extent.x < 0 || this.upper_left_y < 0 || this.upper_left_y - this.data_extent.y > this.dim_y) {
+	}, applyContrastAndColorMapToCanvasContent: function(tempCtx) {
+		// no need to neither set a color map or contrast
+		if (!this.hasColorMapOrContrastSetting()) return;
+    	
+	  	if (this.upper_left_x > this.dim_x || this.upper_left_x + this.data_extent.x < 0 || this.upper_left_y < 0 || this.upper_left_y - this.data_extent.y > this.dim_y) {
     		return;
     	}
-    		
-    	var ctx = this.getCanvasContext();
+	  	
+    	var ctx = typeof(tempCtx) === 'object' ? tempCtx :  this.getCanvasContext();
     	var xStart = this.upper_left_x < 0 ? 0 : this.upper_left_x;
     	var yStart = this.upper_left_y > this.dim_y ? 0 : this.dim_y - this.upper_left_y;
     	var width = xStart + this.data_extent.x;
@@ -296,16 +296,37 @@ TissueStack.Canvas.prototype = {
     	for ( var x = 0; x < myImageData.data.length; x += 4) {
     		var val = myImageData.data[x];
 
-			// set new red value
-			myImageData.data[x] = TissueStack.indexed_color_maps[this.color_map][val][0];
-			// set new green value
-			myImageData.data[x + 1] = TissueStack.indexed_color_maps[this.color_map][val][1];			
-			// set new blue value
-			myImageData.data[x + 2] = TissueStack.indexed_color_maps[this.color_map][val][2];
+    		// apply contrast settings first
+    		if (this.contrast && (this.contrast.getMinimum() != this.contrast.dataset_min || this.contrast.getMaximum() != this.contrast.dataset_max)) {
+        		var factor = (this.contrast.getMaximum() - this.contrast.getMinimum()) / (this.contrast.dataset_max - this.contrast.dataset_min);
+        		val = this.contrast.getMinimum() + Math.round(val * factor);
+        		myImageData.data[x] = myImageData.data[x+1] = myImageData.data[x+2] = val; 
+    		}
+    		
+    		// apply color map
+    		if (this.color_map && this.color_map != "grey") {
+				// set new red value
+				myImageData.data[x] = TissueStack.indexed_color_maps[this.color_map][val][0];
+				// set new green value
+				myImageData.data[x + 1] = TissueStack.indexed_color_maps[this.color_map][val][1];			
+				// set new blue value
+				myImageData.data[x + 2] = TissueStack.indexed_color_maps[this.color_map][val][2];
+    		}
     	}
     	
     	// put altered data back into canvas
-    	ctx.putImageData(myImageData, xStart, yStart);  	
+    	if (typeof(tempCtx) === 'object') {
+    		// let's copy from the temporary canvas
+    		this.getCanvasContext().putImageData(myImageData, xStart, yStart);
+    		tempCtx = null;
+    	} 	else ctx.putImageData(myImageData, xStart, yStart); 
+	}, hasColorMapOrContrastSetting : function() {
+		if ((!this.color_map || this.color_map == "grey") &&
+				(!this.contrast || (this.contrast.getMinimum() == this.contrast.dataset_min && this.contrast.getMaximum() == this.contrast.dataset_max)) ) {
+			return false;
+		}
+		
+		return true;
 	}, drawMe : function(timestamp) {
 		// damn you async loads
 		if (this.queue.latestDrawRequestTimestamp < 0 ||
@@ -321,7 +342,8 @@ TissueStack.Canvas.prototype = {
 		}
 		
 		var ctx = this.getCanvasContext();
-
+		var tempCanvas = null;
+		
 		// nothing to do if we are totally outside
 		if (this.upper_left_x < 0 && (this.upper_left_x + this.getDataExtent().x) <=0
 				|| this.upper_left_x > 0 && this.upper_left_x > this.dim_x
@@ -364,13 +386,17 @@ TissueStack.Canvas.prototype = {
 
 		var copyOfCanvasY = canvasY;
 
+		//create a temporary Canvas to avoid the flickering for contrast and colormaps
+		if (this.getDataExtent().getIsTiled() && this.hasColorMapOrContrastSetting()) {
+			tempCanvas = document.createElement("canvas");
+			tempCanvas.width = this.dim_x;
+			tempCanvas.height = this.dim_y;
+			// redirect original context to temporary canvas content
+			ctx = tempCanvas.getContext("2d");
+		}
+
 		// loop over rows
-		for (var tileX = startTileX  ; tileX < endTileX ; tileX++) {
-			// prelim check
-			if (this.data_extent.slice < 0 || this.data_extent.slice >= this.data_extent.x) {
-				//break;
-			}
-			
+		for (var tileX = startTileX  ; tileX < endTileX ; tileX++) {			
 			var tileOffsetX = startTileX * this.getDataExtent().tile_size;
 			var imageOffsetX = 0;
 			var width =  this.getDataExtent().tile_size;
@@ -435,8 +461,12 @@ TissueStack.Canvas.prototype = {
 							rowIndex,
 							colIndex
 					);
-				// append session id & timestamp for image service
+				// append session id & timestamp for image service as well as contrast (if deviates from original range)
 				if (!this.getDataExtent().getIsTiled()) {
+					if (this.contrast && (this.contrast.getMinimum() != this.contrast.dataset_min || this.contrast.getMaximum() != this.contrast.dataset_max)) {
+						src += ("&min=" + this.contrast.getMinimum());
+						src += ("&max=" + this.contrast.getMaximum());
+					}
 					src += ("&id=" + this.sessionId);
 					src += ("&timestamp=" + timestamp);
 				}
@@ -481,8 +511,16 @@ TissueStack.Canvas.prototype = {
 						ctx.drawImage(this,
 								imageOffsetX, imageOffsetY, width, height, // tile dimensions
 								canvasX, canvasY, width, height); // canvas dimensions
+
+						if (counter == 0 && _this.getDataExtent().getIsTiled() && _this.hasColorMapOrContrastSetting()) {
+							_this.applyContrastAndColorMapToCanvasContent(ctx);
+						}
 						
-						if (counter == 0 && _this.getDataExtent().getIsTiled()) _this.applyColorMapToCanvasContent();
+						if (typeof(TissueStack.dataSetNavigation) === 'object' && counter == 0) {
+							TissueStack.dataSetNavigation.syncDataSetCoordinates(_this);
+							_this.has_been_synced = false; // reset flag to accept syncing forwards again
+							_this.queue.last_sync_timestamp = -1; // reset last sync timestamp
+						}
 					};
 				})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, this.getDataExtent().tile_size, rowIndex, colIndex);
 				
@@ -589,24 +627,28 @@ TissueStack.Canvas.prototype = {
 		
 		// Show Url Link info (solve the problem (used split ?) when user entering website by query string link)
 		if(x_link != "" || y_link != "" || z_link != ""){
-			url_link_message = document.location.href.split('?')[0] + "?ds=" + ds + "&plane=" + this.data_extent.plane + "&x=" + x_link + "&y=" + y_link + "&z=" 
-							 + z_link + "&zoom=" + zoom;
+			url_link_message = 
+				document.location.href.split('?')[0] + "?ds=" + ds + "&plane=" + this.data_extent.plane
+					+ "&x=" + x_link + "&y=" + y_link + "&z=" + z_link + "&zoom=" + zoom;
+		}
+		if (typeof(this.color_map) == 'string' && (this.color_map == 'hot' || this.color_map == 'spectral') ) {
+			url_link_message += ("&color=" + this.color_map); 
+		}
+		if (this.contrast && this.contrast.isMinOrMaxDifferentFromDataSetMinOrMax()) {
+			url_link_message += ("&min=" + this.contrast.getMinimum() + "&max=" + this.contrast.getMaximum()); 
 		}
 		
 		$('#'+this.dataset_id +'_link_message').html(url_link_message);
-	}, triggerUrlLink : function () {
-		var thisUrl = this;
+	}, bindControlEvents : function () {
+		var _this = this;
 		if(TissueStack.desktop || TissueStack.tablet){
 			//Show or Hide "URL Link" Box (used unbind "click" to solve the problem when opening two datasets)
-			$('#'+ thisUrl.dataset_id + '_url_button').unbind('click').click(function(){ 
-				$('#'+ thisUrl.dataset_id + '_url_box').toggle();		
+			$('#'+ _this.dataset_id + '_url_button').unbind('click').click(function(){ 
+				$('#'+ _this.dataset_id + '_url_box').toggle();		
 			});	
-		}
-	}, triggerContrastControl: function () {
-		var thisDataset = this;
-		if(TissueStack.desktop || TissueStack.tablet){
-			$('#'+ thisDataset.dataset_id + '_toolbox_canvas_button').unbind('click').click(function(){ 
-				$('#'+ thisDataset.dataset_id + '_contrast_box').toggle();		
+			// show and hide events for contrast slider
+			$('#'+ _this.dataset_id + '_toolbox_canvas_button').unbind('click').click(function(){ 
+				$('#'+ _this.dataset_id + '_contrast_box').toggle();		
 			});	
 		}
 	}

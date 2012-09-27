@@ -8,7 +8,7 @@ int		init_sock_comm_client(char *path)
   socket_fd = socket(AF_UNIX, SOCK_STREAM, 0);
   if(socket_fd < 0)
     {
-      printf("socket() failed\n");
+      ERROR("socket() failed");
       return 0;
     }
   memset(&address, 0, sizeof(struct sockaddr_un));
@@ -17,7 +17,7 @@ int		init_sock_comm_client(char *path)
   if(connect(socket_fd, (struct sockaddr *) &address,
 	     sizeof(struct sockaddr_un)) != 0)
     {
-      printf("connect() failed\n");
+      ERROR("connect() failed");
       return 0;
     }
   return (socket_fd);

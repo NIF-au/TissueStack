@@ -5,9 +5,8 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Fri Aug 24 15:19:02 2012 Oliver Nicolini
+** Last update Thu Sep 27 16:14:18 2012 Oliver Nicolini
 */
-
 
 #include "core.h"
 
@@ -47,7 +46,7 @@ char			*from_array_to_string(char **array)
 
 void			signal_handler(int sig)
 {
-    printf("Signal : %i\n", sig);
+    WARNING("Received Signal : %i", sig);
 
     switch (sig) {
 		case SIGHUP:
@@ -133,30 +132,92 @@ void		clean_quit(t_tissue_stack *t)
 
 void            init_prog(t_tissue_stack *t)
 {
+  //char		*path = NULL;
+
   t->plug_actions = plug_actions_from_external_plugin;
+
+  t->percent_init = percent_init_direct;
+  t->percent_add = percent_add_direct;
+  t->percent_get = percent_get_direct;
+
   t->tile_requests = malloc(sizeof(*t->tile_requests));
   init_tile_requests(t->tile_requests);
+  t->memory_mappings = malloc(sizeof(*t->memory_mappings));
+  init_memory_mapping(t->memory_mappings);
   t->get_volume = get_volume;
   t->check_volume = check_volume;
   t->clean_quit = clean_quit;
   t->first = NULL;
+  t->first_notification = NULL;
   pthread_cond_init(&t->main_cond, NULL);
   pthread_mutex_init(&t->main_mutex, NULL);
+  nc_create_notification("log_debug",	lc_debug,   t);
+  nc_create_notification("log_info",	lc_info,    t);
+  nc_create_notification("log_warning", lc_warning, t);
+  nc_create_notification("log_error",	lc_error,   t);
+  nc_create_notification("log_fatal",	lc_fatal,   t);
+  t->create_notification = nc_create_notification;
+  t->subscribe = nc_subscribe;
+  t->raise = nc_raise;
+  t->log = malloc(sizeof(*t->log));
+  t->log->state = ON;
+  t->log->path = strdup("/tmp/tissue_stack_logs/");
+  t->log->debug = OFF;
+  t->log->verbose = OFF;
+  t->log->write_on_files = ON;
+  t->log->write_on_plug_files = OFF;
+  t->log->write_on_level_files = ON;
+  log_plugin.id = pthread_self();
+  log_plugin.tss = t;
+  if (t->log->state)
+    {
+      // make sure directory exists !
+      t_string_buffer * actualPath = createDirectory(t->log->path, 0766);
+      // couldn't create directory
+      if (actualPath == NULL)
+	{
+	  ERROR("Couldn't create %s", t->log->path);
+	  t->log->state = OFF; // turn logging off
+	} else
+	{
+	  //path = concat_path(actualPath->buffer, "tss-general", ".log");
+	  free_t_string_buffer(actualPath);
+	}
+
+      /*
+	if ((t->log->general_fd = open(path, O_CREAT | O_RDWR | O_TRUNC)) == -1)
+	{
+	  ERROR("Open %s failed", path);
+	  t->log->state = OFF; // turn logging off
+	}
+	stat(path, &results);
+	if (results.st_mode != 0666)
+	{
+
+	  if (chmod(path, 0666) == -1)
+	    {
+	      ERROR("Chmod 666  %s failed", path);
+	      t->log->state = OFF; // turn logging off
+	    }
+	  stat(path, &results);
+	  }*/
+    }
   init_func_ptr(t);
+  init_percent_time(t);
 }
 
 void		free_core_struct(t_tissue_stack *t)
 {
   if (t == NULL) {
-	  return;
+    return;
   }
-
-  printf("\nFreeing\n");
+  INFO("Freeing Allocated Resources...");
   free_all_volumes(t);
   free_all_plugins(t);
   free_all_history(t);
   free_all_prompt(t);
   if (t->tile_requests != NULL) t->tile_requests->destroy(t->tile_requests);
+  if (t->memory_mappings != NULL) destroy_memory_mapping(t->memory_mappings);
   free(t->functions);
   free(t);
 }
@@ -167,22 +228,25 @@ int		main(int argc, char **argv)
   t_tissue_stack	*t;
   char			serv_command[20];
 
+  prctl(PR_SET_NAME, "TS_CORE");
+
   // initialisation of some variable
   t = malloc(sizeof(*t));
   init_prog(t);
+  srand((unsigned)time(NULL));
   // intitialisation the volume
   if (argc > 2)
     {
       if (argv[2] != NULL && strcmp(argv[2], "--prompt") != 0)
 	{
 	  t->volume_first = malloc(sizeof(*t->volume_first));
-	  if ((result = init_volume(t->volume_first, argv[2])) != 0)
+	  if ((result = init_volume(t->memory_mappings, t->volume_first, argv[2])) != 0)
 	    return (result);
 	}
       else if (argv[3] != NULL && strcmp(argv[3], "--prompt") != 0)
 	{
 	  t->volume_first = malloc(sizeof(*t->volume_first));
-	  if ((result = init_volume(t->volume_first, argv[3])) != 0)
+	  if ((result = init_volume(t->memory_mappings, t->volume_first, argv[3])) != 0)
 	    return (result);
 	}
     }
@@ -194,41 +258,42 @@ int		main(int argc, char **argv)
   t->tp = malloc(sizeof(*t->tp));
   thread_pool_init(t->tp, 16);
 
-
   // load plugins
+
   plugin_load_from_string("load image /usr/local/plugins/TissueStackImageExtract.so", t);
   plugin_load_from_string("load serv /usr/local/plugins/TissueStackCommunicator.so", t);
   plugin_load_from_string("load comm /usr/local/plugins/TissueStackProcessCommunicator.so", t);
-  //plugin_load_from_string("load converter /usr/local/plugins/TissueStackMincConverter.so", t);
+  //plugin_load_from_string("load minc_converter /usr/local/plugins/TissueStackMincConverter.so", t);
+  //  plugin_load_from_string("load nifti_converter /usr/local/plugins/TissueStackNiftiConverter.so", t);
 
   sprintf(serv_command, "start serv %s", argv[1]);
 
   // start plugins
   (t->plug_actions)(t, serv_command, NULL);
   (t->plug_actions)(t, "start comm", NULL);
-  //(t->plug_actions)(t, "start converter /media/Data/lowback.minc2.mnc /media/Data/lowback.raw", NULL);
+  //(t->plug_actions)(t, "start minc_converter /media/Data/lowback.minc2.mnc /media/Data/lowback.raw", NULL);
+  //(t->plug_actions)(t, "start nifti_converter /opt/data/brain.nii /opt/data/brain_from_nifti.raw", NULL);
 
 
   signal_manager(t);
+
   if ((argv[2] != NULL && strcmp(argv[2], "--prompt") == 0) ||
       (argv[3] != NULL && strcmp(argv[3], "--prompt") == 0))
     prompt_start(t);
   else
     {
-      printf("TissueStackImageServer Running\n");
+      INFO("TissueStackImageServer Running!");
       pthread_mutex_lock(&t->main_mutex);
       pthread_cond_wait(&t->main_cond, &t->main_mutex);
       pthread_mutex_unlock(&t->main_mutex);
     }
 
   // free all the stuff mallocked
-  printf("Shutting down ...\n");
+  INFO("Shutting down TissueStackImageServer!");
 
   t->tp->loop = 0;
   thread_pool_destroy(t->tp);
   free_core_struct(t);
-
-  printf("Good Bye\n");
 
   return (0);
 }

@@ -5,14 +5,15 @@ TissueStack.Queue = function (canvas) {
 TissueStack.Queue.prototype = {
 	canvas : null,
 	queue_handle : null,
-	drawingIntervalInMillis : 75,
+	drawingIntervalInMillis : 150,
 	requests : [],
 	presentlyQueuedZoomLevelAndSlice: null,
 	lowResolutionPreviewDrawn : false,
 	latestDrawRequestTimestamp : 0,
+	last_sync_timestamp: -1,
 	setDrawingInterval : function(value) {
 		if (typeof(value) !== 'number' || value < 0) {
-			value = 75; // set to default
+			value = 250; // set to default
 		}
 		this.stopQueue();
 		this.drawingIntervalInMillis = value;
@@ -82,7 +83,7 @@ TissueStack.Queue.prototype = {
 			if (this.prepareDrawRequest(deepCopyOfRequest)) {
 				var _this = this;
 				if (deepCopyOfRequest.action == 'ZOOM') {
-					_this.canvas.eraseCanvasContent();
+					//_this.canvas.eraseCanvasContent();
 				}	
 
 				_this.drawLowResolutionPreview(deepCopyOfRequest.timestamp);
@@ -102,7 +103,7 @@ TissueStack.Queue.prototype = {
 		var _this = this;
 		var lowResBackdrop = setInterval(function() {
 			var t = draw_request ? draw_request.timestamp : timestamp;
-			if (_this.latestDrawRequestTimestamp > 0 && t > _this.latestDrawRequestTimestamp) {
+			if (_this.latestDrawRequestTimestamp > 0 && t < _this.latestDrawRequestTimestamp) {
 				clearInterval(lowResBackdrop);
 				return;
 			}
@@ -124,7 +125,7 @@ TissueStack.Queue.prototype = {
 		if (this.latestDrawRequestTimestamp < 0 || timestamp < this.latestDrawRequestTimestamp) {
 			//console.info('Drawing preview for ' + this.canvas.getDataExtent().data_id + '[' + this.canvas.getDataExtent().getOriginalPlane() +  ']: ' + timestamp);
 
-			this.lowResolutionPreviewDrawn = true;
+			//this.lowResolutionPreviewDrawn = true;
 			return;
 		}
 
@@ -200,6 +201,10 @@ TissueStack.Queue.prototype = {
 		);
 		// append session id & timestamp for image service
 		if (!this.canvas.getDataExtent().getIsTiled()) {
+			if (this.canvas.contrast && (this.canvas.contrast.getMinimum() != this.canvas.contrast.dataset_min || this.canvas.contrast.getMaximum() != this.canvas.contrast.dataset_max)) {
+				src += ("&min=" + this.canvas.contrast.getMinimum());
+				src += ("&max=" + this.canvas.contrast.getMaximum());
+			}
 			src += ("&id=" + this.canvas.sessionId);
 			src += ("&timestamp=" + timestamp);
 		}
@@ -210,7 +215,7 @@ TissueStack.Queue.prototype = {
 			imageTile.onload = function() {
 			
 				if (_this.latestDrawRequestTimestamp < 0 || timestamp < _this.latestDrawRequestTimestamp) {
-					_this.lowResolutionPreviewDrawn = true;
+					//_this.lowResolutionPreviewDrawn = true;
 					//console.info('Aborting preview for ' + _this.canvas.getDataExtent().data_id + '[' +_this.canvas.getDataExtent().getOriginalPlane() +  ']: ' + timestamp);
 					return;
 				}
@@ -224,8 +229,12 @@ TissueStack.Queue.prototype = {
 				}
 
 				//console.info('Drawing preview for ' +  _this.canvas.getDataExtent().data_id + '[' +_this.canvas.getDataExtent().getOriginalPlane() +  ']: ' + timestamp);
+				if (_this.canvas.getDataExtent().getIsTiled() && _this.canvas.hasColorMapOrContrastSetting()) _this.canvas.getCanvasElement().hide();
 				ctx.drawImage(this, imageOffsetX, imageOffsetY, width, height, canvasX, canvasY, width, height);
-				if (_this.canvas.getDataExtent().getIsTiled()) _this.canvas.applyColorMapToCanvasContent();
+				if (_this.canvas.getDataExtent().getIsTiled() && _this.canvas.hasColorMapOrContrastSetting()) {
+					_this.canvas.applyContrastAndColorMapToCanvasContent();
+					_this.canvas.getCanvasElement().show();
+				}
 
 				_this.lowResolutionPreviewDrawn = true;
 			};
@@ -419,6 +428,8 @@ TissueStack.Queue.prototype = {
 		// redraw 
 		this.canvas.drawMe(draw_request.timestamp);
 
+		this.tidyUp();
+	}, tidyUp : function() {
 		if (this.canvas.getDataExtent().slice < 0 || this.canvas.getDataExtent().slice > this.canvas.getDataExtent().max_slices 
 				|| this.canvas.upper_left_x > this.canvas.dim_x || this.canvas.upper_left_x + this.canvas.data_extent.x < 0
 				|| this.canvas.upper_left_y < 0 || this.canvas.upper_left_y - this.canvas.data_extent.y > this.canvas.dim_y) {

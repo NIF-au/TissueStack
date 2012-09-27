@@ -160,11 +160,29 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
   char		*colormap_name = NULL;
   char		*id = NULL;
   char		*time = NULL;
+  char		*contrast_min = NULL;
+  char		*contrast_max = NULL;
   char		comm[500];
 
-  if (strncmp(buff, "GET /?volume=", 13) == 0)
+  if (buff != NULL) {
+	  tmp = serv_str_to_wordtab(buff, '\n');
+	  i = 0;
+	  t_string_buffer * request = appendToBuffer(NULL, tmp[i]);
+	    while (tmp[i] != NULL)
+	    {
+	    	if ( strncmp(tmp[i], "Host:", 5) == 0 ||  strncmp(tmp[i], "X-Forwarded-For:", 16) ==0)
+	    	{
+	    		appendToBuffer(request, " | ");
+	    		appendToBuffer(request, tmp[i]);
+	    	}
+	    	i++;
+	    }
+	  INFO("%s",request->buffer);
+	  free_t_string_buffer(request);
+  }
+
+  if (tmp != NULL && strncmp(tmp[0], "GET /?volume=", 13) == 0)
     {
-      tmp = serv_str_to_wordtab(buff, '\n');
       line = strdup(tmp[0]);
       i = 0;
       while (tmp[i] != NULL)
@@ -192,6 +210,8 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
 	  else if (strcmp(tmp2[0], "x_end") == 0)	x_end = serv_copy_check_clean_string_from_tab(tmp2);
 	  else if (strcmp(tmp2[0], "colormap") == 0)	colormap_name = serv_copy_check_clean_string_from_tab(tmp2);
 	  else if (strcmp(tmp2[0], "image_type") == 0)	image_type = serv_copy_check_clean_string_from_tab(tmp2);
+	  else if (strcmp(tmp2[0], "min") == 0)	contrast_min = serv_copy_check_clean_string_from_tab(tmp2);
+	  else if (strcmp(tmp2[0], "max") == 0)	contrast_max = serv_copy_check_clean_string_from_tab(tmp2);
 	  else if (strcmp(tmp2[0], "id") == 0)	id = serv_copy_check_clean_string_from_tab(tmp2);
 	  else if (strcmp(tmp2[0], "timestamp") == 0)	time = serv_copy_check_clean_string_from_tab(tmp2);
 	  j = 0;
@@ -202,7 +222,7 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
       if (is_not_num(slice) || is_not_num(dimension) || is_not_num(scale) ||
 	  is_not_num(quality) || is_not_num(x) || is_not_num(y))
 	{
-	  fprintf(stderr, "Invalid argument: non interger\n");
+	  ERROR("Invalid argument: non interger");
 	  return;
 	}
 
@@ -218,7 +238,7 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
 
       if (service == NULL)
 	{
-	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s 1 %s %s", volume,
+	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s %s 1 %s %s", volume,
 		  (dimension[0] == '0' ? atoi(slice) : -1),
 		  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
 		  (dimension[0] == '1' ? atoi(slice) : -1),
@@ -226,11 +246,12 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
 		  (dimension[0] == '2' ? atoi(slice) : -1),
 		  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
 		  scale, quality, "full", image_type, (colormap_name == NULL ? "NULL" : colormap_name),
+		  (contrast_min == NULL ? "0" : contrast_min), (contrast_max == NULL ? "0" : contrast_max),
 		  id != NULL ? id : "0", time != NULL ? time : "0");
 	}
       else if (strcmp(service, "tiles") == 0)
 	{
-	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s %s %s 1 %s %s", volume,
+	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s %s %s %s %s 1 %s %s", volume,
 		  (dimension[0] == '0' ? atoi(slice) : -1),
 		  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
 		  (dimension[0] == '1' ? atoi(slice) : -1),
@@ -238,11 +259,12 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
 		  (dimension[0] == '2' ? atoi(slice) : -1),
 		  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
 		  scale, quality, service, image_type, square, y, x, (colormap_name == NULL ? "NULL" : colormap_name),
+		  (contrast_min == NULL ? "0" : contrast_min), (contrast_max == NULL ? "0" : contrast_max),
 		  id != NULL ? id : "0", time != NULL ? time : "0");
 	}
       else if (strcmp(service, "images") == 0)
 	{
-	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s %s %s %s 1 %s %s", volume,
+	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s %s %s %s %s %s 1 %s %s", volume,
 		  (dimension[0] == '0' ? atoi(slice) : -1),
 		  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
 		  (dimension[0] == '1' ? atoi(slice) : -1),
@@ -250,6 +272,7 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
 		  (dimension[0] == '2' ? atoi(slice) : -1),
 		  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
 		  scale, quality, service, image_type, y, x, y_end, x_end, (colormap_name == NULL ? "NULL" : colormap_name),
+		  (contrast_min == NULL ? "0" : contrast_min), (contrast_max == NULL ? "0" : contrast_max),
 		  id != NULL ? id : "0", time != NULL ? time : "0");
 	}
 
@@ -262,6 +285,12 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
       }
 
       s->general->plug_actions(s->general, comm, file);
+    } else {
+        write_http_header(file, "404 Not Found", NULL);
+        char * notFoundMessage =
+        		"<html><head><title>404 - Not Found</title></head><body><h3>There is no file or resource under that url ...</h3></body></html>";
+        write(fileno(file), notFoundMessage, strlen(notFoundMessage));
+        close(fileno(file));
     }
 }
 
@@ -279,7 +308,7 @@ void		serv_accept_new_connections(t_args_plug * a, t_serv_comm *s)
   if ((socket = accept(s->sock_serv, (struct sockaddr*)&client_addr,
 		       &len)) == -1)
     {
-      fprintf(stderr, "Accept Error\n");
+      ERROR("Accept Error");
       s->state = FAIL;
       return;
     }
@@ -307,7 +336,7 @@ void		serv_working_loop(t_args_plug * a, t_serv_comm *s)
       if (select((s->bigger_fd + 1), &(s->rd_fds),
 		 NULL, NULL, NULL) == -1)
 	{
-	  fprintf(stderr, "Select Error\n");
+	  ERROR("Select Error");
 	  s->state = FAIL;
 	}
       if (FD_ISSET(s->sock_serv, &(s->rd_fds)))
@@ -322,7 +351,7 @@ int		serv_init_connect(t_serv_comm *s)
   yes = 1;
   if ((s->sock_serv = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
-      fprintf(stderr, "Socket creation Error\n");
+      ERROR("Socket creation Error");
       return (-1);
     }
   memset(&(s->serv_addr), 0, sizeof(s->serv_addr));
@@ -338,7 +367,7 @@ int		serv_init_connect(t_serv_comm *s)
   if (bind(s->sock_serv, (struct sockaddr*)&(s->serv_addr),
 	   sizeof(s->serv_addr)) < 0)
     {
-      fprintf(stderr, "Bind Error\n");
+      ERROR("Bind Error");
       return (-1);
     }
   listen(s->sock_serv, 75);
@@ -353,6 +382,10 @@ void		*init(void *args)
   a = (t_args_plug*)args;
   principal = malloc(sizeof(*principal));
   a->this->stock = principal;
+
+  LOG_INIT(a);
+  INFO("Server Plugin: Started");
+
   return (NULL);
 }
 
@@ -360,6 +393,8 @@ void		*start(void *args)
 {
   t_args_plug	*a;
   t_serv_comm	*s;
+
+  prctl(PR_SET_NAME, "TS_EXT_COMM");
 
   a = (t_args_plug*)args;
   s = (t_serv_comm*)a->this->stock;

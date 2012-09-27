@@ -26,7 +26,7 @@ void		dim_loop(int		fd,
   unsigned long		*start;
   long unsigned int	*count;
 
-  printf("dim_loop\n");
+  DEBUG("dim_loop");
 
   start = malloc(volume->dim_nb * sizeof(*start));
   count = malloc(volume->dim_nb * sizeof(*count));
@@ -51,7 +51,7 @@ void		dim_loop(int		fd,
 	  memset(hyperslab, '\0', size);
 	  miget_real_value_hyperslab(volume->minc_volume, MI_TYPE_UBYTE, start, count, hyperslab);
 	  write(fd, hyperslab, size);
-	  printf("Slice = %i - dim = %i\n", this_slice, dim);
+	  INFO("Slice = %i - dim = %i", this_slice, dim);
 	  this_slice++;
 	}
       start[dim] = 0;
@@ -74,13 +74,13 @@ t_vol		*init_get_volume_from_minc_file(char *path)
   // open the minc file
   if ((result = miopen_volume(volume->path, MI2_OPEN_READ, &volume->minc_volume)) != MI_NOERROR)
     {
-      fprintf(stderr, "Error opening input file: %d.\n", result);
+      ERROR("Error opening input file: %d.", result);
       return (NULL);
     }
 
   if ((result = miget_volume_dimension_count(volume->minc_volume, 0, 0, &volume->dim_nb)) != MI_NOERROR)
     {
-      fprintf(stderr, "Error getting number of dimensions: %d.\n", result);
+      ERROR("Error getting number of dimensions: %d.", result);
       return (NULL);
     }
 
@@ -94,30 +94,30 @@ t_vol		*init_get_volume_from_minc_file(char *path)
   if ((result = miget_volume_dimensions(volume->minc_volume, MI_DIMCLASS_SPATIAL, MI_DIMATTR_ALL,
 					MI_DIMORDER_FILE, volume->dim_nb, volume->dimensions)) == MI_ERROR)
     {
-      fprintf(stderr, "Error getting dimensions: %d.\n", result);
+      ERROR("Error getting dimensions: %d.", result);
       return (NULL);
     }
   // get the size of each dimensions
   if ((result = miget_dimension_sizes(volume->dimensions, volume->dim_nb, volume->size)) != MI_NOERROR)
     {
-      fprintf(stderr, "Error getting dimensions size: %d.\n", result);
+      ERROR("Error getting dimensions size: %d.", result);
       return (NULL);
     }
   if ((result = miget_dimension_starts(volume->dimensions, 0, volume->dim_nb, volume->starts)) != MI_NOERROR)
     {
-      fprintf(stderr, "Error getting dimensions start: %d.\n", result);
+      ERROR("Error getting dimensions start: %d.", result);
       return (NULL);
     }
   if ((result = miget_dimension_separations(volume->dimensions, 0, volume->dim_nb, volume->steps)) != MI_NOERROR)
     {
-      fprintf(stderr, "Error getting dimensions steps: %d.\n", result);
+      ERROR("Error getting dimensions steps: %d.", result);
       return (NULL);
     }
   if (miget_dimension_name (volume->dimensions[0], &volume->dim_name[0]) != MI_NOERROR ||
       miget_dimension_name (volume->dimensions[1], &volume->dim_name[1]) != MI_NOERROR ||
       miget_dimension_name (volume->dimensions[2], &volume->dim_name[2]))
     {
-      fprintf(stderr, "Error getting dimensions name.\n");
+      ERROR("Error getting dimensions name.");
       return (NULL);
     }
   // get slices_max
@@ -133,6 +133,9 @@ t_header	*create_header_from_minc_struct(t_vol *minc_volume)
   int		j;
 
   h = malloc(sizeof(*h));
+
+  h->dim_nb = minc_volume->dim_nb;
+
   h->sizes = malloc(h->dim_nb * sizeof(*h->sizes));
   h->start = malloc(h->dim_nb * sizeof(*h->start));
   h->steps = malloc(h->dim_nb * sizeof(*h->steps));
@@ -140,7 +143,6 @@ t_header	*create_header_from_minc_struct(t_vol *minc_volume)
   h->dim_offset = malloc(h->dim_nb * sizeof(*h->dim_offset));
   h->slice_size = malloc(h->dim_nb * sizeof(*h->slice_size));
 
-  h->dim_nb = minc_volume->dim_nb;
   h->slice_max = minc_volume->slices_max;
 
   i = 0;
@@ -167,7 +169,7 @@ t_header	*create_header_from_minc_struct(t_vol *minc_volume)
   while (i < h->dim_nb)
     {
       h->dim_offset[i] = (unsigned long long)(h->dim_offset[i - 1] + (unsigned long long)((unsigned long long)h->slice_size[i - 1] * (unsigned long long)h->sizes[i - 1]));
-      printf("----- %llu\n", (unsigned long long)h->dim_offset[i]);
+      DEBUG("----- %llu", (unsigned long long)h->dim_offset[i]);
       i++;
     }
   return (h);
@@ -210,6 +212,8 @@ void  		*start(void *args)
   t_args_plug	*a;
 
   a = (t_args_plug *)args;
+
+  prctl(PR_SET_NAME, "TS_MINC_CON");
 
   if ((fd = open(a->commands[1], (O_CREAT | O_TRUNC | O_RDWR))) == -1)
     {

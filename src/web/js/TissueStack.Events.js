@@ -306,7 +306,6 @@ TissueStack.Events.prototype = {
 	}, click : function(e) {
 		var now = new Date().getTime(); 
 		var coords = TissueStack.Utils.getRelativeMouseCoords(e);
-
 		if (this.canvas.isDragging) {
 			return;
 		}

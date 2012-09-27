@@ -1,9 +1,12 @@
 #ifndef __TISSUE_STACK_CORE__
 #define __TISSUE_STACK_CORE__
 
+#define _GNU_SOURCE
+
 #include <sys/select.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <sys/prctl.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -18,6 +21,7 @@
 #include "utils.h"
 #include "thread_pool.h"
 #include "tile_requests.h"
+#include "memory_mapping.h"
 
 #include "gtk/gtk.h"
 
@@ -29,6 +33,107 @@ typedef struct		s_vol		t_vol;
 typedef struct		s_char_prompt	t_char_prompt;
 typedef struct		s_hist_prompt	t_hist_prompt;
 typedef struct		s_error		t_error;
+typedef struct		s_nc_action	t_nc_action;
+typedef struct		s_nc_func	t_nc_func;
+typedef struct		s_log		t_log;
+typedef struct		s_log_plug_fd	t_log_plug_fd;
+typedef struct		s_log_level_fd	t_log_level_fd;
+typedef struct		s_log_info_list	t_log_info_list;
+typedef struct		s_log_plugin	t_log_plugin;
+
+
+typedef	struct		s_percent_elem	t_percent_elem;
+typedef	struct		s_time_elem	t_time_elem;
+typedef	struct		s_time_tps	t_time_tps;
+typedef	struct		s_prcnt_t	t_prcnt_t;
+typedef struct		s_func_prcnt_t	t_func_prcnt_t;
+
+struct			s_func_prcnt_t
+{
+  char			*name;
+  void			(*func)(char **commands, void *box, t_tissue_stack *t);
+};
+
+struct			s_prcnt_t
+{
+  t_percent_elem	*first_percent;
+  t_time_elem		*first_time;
+  t_func_prcnt_t	*percent_func;
+  t_func_prcnt_t	*time_func;
+};
+
+struct			s_percent_elem
+{
+  char			*id;
+  t_time_tps		*time;
+  int			total_blocks;
+  int			blocks_done;
+  float			percent;
+  t_percent_elem	*next;
+};
+
+struct			s_time_tps
+{
+  time_t		start_time;
+  time_t		end_time;
+};
+
+struct			s_time_elem
+{
+  char			*id;
+  t_time_tps		*time;
+  t_time_elem		*next;
+};
+
+/////////////////////////////////////////////////////////////////
+
+struct			s_log_plugin
+{
+  t_tissue_stack	*tss;
+  int			id;
+};
+
+struct			s_log_level_fd
+{
+  int			level;
+  int			fd;
+  t_log_level_fd	*next;
+};
+
+struct			s_log_plug_fd
+{
+  t_plugin		*plugin;
+  int			fd;
+  t_log_plug_fd		*next;
+};
+
+struct			s_log
+{
+  char			*path;
+  int			debug;
+  int			verbose;
+  int			write_on_files;
+  int			write_on_plug_files;
+  int			write_on_level_files;
+  int			general_fd;
+  int			state;
+  t_log_plug_fd		*first_plug_fd;
+  t_log_level_fd	*first_level_fd;
+};
+
+struct			s_nc_func
+{
+  void			(*action)(char *name, t_plugin *plugin, char *command, void *data, t_tissue_stack *t);
+  t_nc_func		*next;
+};
+
+struct			s_nc_action
+{
+  char			*name;
+  t_nc_func		*first_func;
+  t_nc_action		*next;
+};
+
 
 struct			s_error
 {
@@ -43,7 +148,7 @@ struct			s_plugin
 {
   int			error;
   unsigned int	       	busy;
-  pthread_t		thread_id;
+  int			id;
   char			**start_command;
   char			*name;
   char			*path;
@@ -82,13 +187,24 @@ struct			s_tissue_stack
   t_vol			*volume_first;
   t_plugin		*first;
   t_thread_pool		*tp;
+  t_log			*log;
   t_char_prompt		*prompt_first;
   t_hist_prompt		*hist_first;
   t_tile_requests 	*tile_requests;
+  t_memory_mapping 	*memory_mappings;
+  t_nc_action		*first_notification;
+  t_prcnt_t		*percent;
+  void			(*percent_get)(char **buff, char *id, t_tissue_stack *t);
+  void			(*percent_add)(int blocks, char *id, t_tissue_stack *t);
+  void			(*percent_init)(int total_blocks, char **id, t_tissue_stack *t);
   t_vol			*(*get_volume)(char *path, t_tissue_stack *general);
   t_vol			*(*check_volume)(char *path, t_tissue_stack *general);
   void			(*plug_actions)(t_tissue_stack *general, char *commands, void *box);
   void			(*clean_quit)(t_tissue_stack *t);
+  void			(*create_notification)(char *name,
+						  void (*action)(char *name, t_plugin *plugin, char *command, void *data, t_tissue_stack *t), t_tissue_stack *t);
+  int			(*raise)(int id, char *name, char *command, void *data, t_tissue_stack *t);
+  int			(*subscribe)(char *name, void (*action)(char *name, t_plugin *plugin, char *command, void *data, t_tissue_stack *t), t_tissue_stack *t);
 };
 
 struct			s_vol
@@ -109,6 +225,8 @@ struct			s_vol
   int			raw_fd;			// File descriptor associate to a raw file
   double		min;                    // min value of the volume
   double		max;                    // max value of the volume
+  unsigned char		color_range_min;	// min value of the volume color range
+  unsigned char		color_range_max;	// max value of the volume color range
   t_vol			*next;
 };
 
@@ -168,6 +286,8 @@ void		destroy_command_args(char ** args);
 void		list_plugins(t_tissue_stack *t, char *command);
 void            plug_actions_from_external_plugin(t_tissue_stack *general, char *commands, void *box);
 t_plugin        *get_plugin_by_name(char *name, t_plugin *first);
+t_plugin	*get_plugin_by_id(int id, t_tissue_stack *t);
+t_plugin	*plugindup(t_plugin *p);
 void            *plugin_load(void *a);
 void            *plugin_start(void *a);
 void            *plugin_unload(void *a);
@@ -179,7 +299,7 @@ void		plugin_start_from_string(char *str, t_tissue_stack *t);
 
 /*		volume.c		*/
 
-int		init_volume(t_vol *volume, char *path);
+int		init_volume(t_memory_mapping * memory_mappings, t_vol *volume, char *path);
 void		*file_actions(void *args);
 void		list_volumes(t_tissue_stack *t, char *options);
 void		add_volume(char *path, t_tissue_stack *t);
@@ -204,10 +324,108 @@ int		get_errors_nb_by_plugin(t_tissue_stack *general, t_plugin * plug);
 int		*get_error_by_plugin(t_tissue_stack *general, t_plugin *plug);
 void		clean_error_list(t_tissue_stack *general, int min);
 
+/*		percent_and_time		*/
+
+int		is_num(char *str);
+void		percent_time_write(char *str, char **commands, void *box);
+void		percent_init(char **commands, void *box, t_tissue_stack *t);
+void		percent_init_direct(int total_blocks, char **id, t_tissue_stack *t);
+t_percent_elem	*get_percent_elem_by_id(char *id, t_prcnt_t *p);
+void		percent_add(char **commands, void *box, t_tissue_stack *t);
+void		percent_add_direct(int blocks, char *id, t_tissue_stack *t);
+void		percent_get(char **commands, void *box, t_tissue_stack *t);
+void		percent_get_direct(char **buff, char *id, t_tissue_stack *t);
+void		percent_destroy(char **commands, void *box, t_tissue_stack *t);
+void		percent_time_processing(char **commands, void *box,
+					t_func_prcnt_t *f, t_tissue_stack *t);
+void		init_func_ptr_percent(t_tissue_stack *t);
+void		init_func_ptr_time(t_tissue_stack *t);
+void		init_percent_time(t_tissue_stack *t);
+
+/*		notification_center.c		*/
+
+void		nc_create_notification(char *name,
+				       void (*action)(char *name, t_plugin *plugin, char *command, void *data, t_tissue_stack *t),
+				       t_tissue_stack *t);
+t_nc_action	*nc_get_action_by_name(char *name, t_tissue_stack *t);
+int		nc_raise(int id, char *name, char *command, void *data, t_tissue_stack *t);
+int		nc_subscribe(char *name, void (*action)(char *name, t_plugin *plugin, char *command, void *data, t_tissue_stack *t),
+			     t_tissue_stack *t);
+void		nc_list(t_tissue_stack *t);
+
+/*		log_center.c			*/
+
+char		*concat_path(char *root, char *path, char *extension);
+void            lc_add_log_to_info_list(char *name, t_plugin *plugin, char *command, t_tissue_stack *t);
+void            lc_write_on_plug_fd(t_plugin *plugin, char *command, int log_level, t_tissue_stack *t);
+void            lc_write_on_level_fd(t_plugin *plugin, char *command, int log_level, t_tissue_stack *t);
+void            lc_write_on_general_fd(t_plugin *plugin, char *command, int log_level, t_tissue_stack *t);
+void            lc_debug(char *name, t_plugin *plugin, char *command, void *data, t_tissue_stack *t);
+void            lc_info(char *name, t_plugin *plugin, char *command, void *data, t_tissue_stack *t);
+void            lc_warning(char *name, t_plugin *plugin, char *command, void *data, t_tissue_stack *t);
+void            lc_error(char *name, t_plugin *plugin, char *command, void *data, t_tissue_stack *t);
+void            lc_fatal(char *name, t_plugin *plugin, char *command, void *data, t_tissue_stack *t);
 
 #define X 0
 #define Y 1
 #define Z 2
+
+#define ON 1
+#define OFF 0
+
+t_log_plugin		log_plugin;
+
+#define LOG_INIT(a) {				\
+    log_plugin.tss = a->general_info;		\
+    log_plugin.id = a->this->id;		\
+  }
+
+#define LOG_PROCESS(level_name, message, args...) {			\
+    char		*tmp, *tmp2;					\
+  									\
+    asprintf(&tmp, message, ## args);					\
+    if (log_plugin.tss->log->debug == ON) {				\
+      asprintf(&tmp2, "%s | %s | %d", tmp, __FILE__, __LINE__);		\
+      free(tmp);							\
+      log_plugin.tss->raise(log_plugin.id, level_name, (char*)tmp2, NULL, log_plugin.tss); \
+    }									\
+    else								\
+      log_plugin.tss->raise(log_plugin.id, level_name, (char*)tmp, NULL, log_plugin.tss); \
+  }
+
+#define DEBUG(message, args...) {					\
+    LOG_PROCESS("log_debug", message, ## args);				\
+  }
+
+#define INFO(message, args...) {					\
+    LOG_PROCESS("log_info", message, ## args);				\
+  }
+
+#define WARNING(message, args...) {					\
+    LOG_PROCESS("log_warning", message, ## args);				\
+  }
+
+#define ERROR(message, args...) {					\
+    LOG_PROCESS("log_error", message, ## args);				\
+  }
+
+#define FATAL(message, args...) {					\
+    LOG_PROCESS("log_fatal", message, ## args);				\
+  }
+
+
+#define LOG(level, message, args...) {					\
+    if (level == 0)							\
+      DEBUG(message, ## args);						\
+    else if (level == 1)						\
+      INFO(message, ## args);						\
+    else if (level == 2)						\
+      WARNING(message, ## args);						\
+    else if (level == 3)						\
+      ERROR(message, ## args);						\
+    else if (level == 4)						\
+      FATAL(message, ## args);						\
+  }
 
 #define ERROR_MAX 5
 #define CLEANING_ERROR_TIME 30

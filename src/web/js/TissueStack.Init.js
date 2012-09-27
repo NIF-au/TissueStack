@@ -75,7 +75,13 @@ TissueStack.InitUserInterface = function (initOpts) {
 		var now = new Date().getTime();
 		
 		// crate a contrast slider per data set
-		var contrast = new TissueStack.ContrastCanvas("dataset_" + (x+1) + "_toolbox_canvas");
+		var contrast = null;
+		if(TissueStack.desktop || TissueStack.tablet)
+			contrast = new TissueStack.ContrastCanvas("dataset_" + (x+1) + "_toolbox_canvas");
+		// crate a contrast slider per data set for phone version
+		if (TissueStack.phone){
+			contrast = new TissueStack.ContrastCanvas("dataset_1_toolbox_canvas_phone");
+		}
 		
 		// loop over all planes in the data, create canvas and extent objects, then display them
 		for (var i=0; i < dataSet.data.length; i++) {
@@ -109,8 +115,10 @@ TissueStack.InitUserInterface = function (initOpts) {
 			// create canvas
 			var canvasElementSelector = "dataset_" + (x+1); 
 			var plane = new TissueStack.Canvas(extent, "canvas_" + planeId + "_plane", canvasElementSelector);
-			// set contrast
+			// set bidirectional relationship for contrast
 			plane.contrast = contrast;
+			if (contrast) contrast.canvas = plane;
+			
 			// set session id
 			plane.sessionId = sessionId;
 
@@ -271,18 +279,35 @@ TissueStack.BindDataSetDependentEvents = function () {
 		maxDataSets = datasets.length;
 	}
 
+	// SYNC DATA_SETS CHECKBOX CHANGE HANDLER
+    if (TissueStack.desktop) {
+    		$('#sync_data_sets').unbind("click");
+            $('#sync_data_sets').bind("change", function() {
+            	TissueStack.sync_datasets = $('#sync_data_sets')[0].checked;
+            });
+    }
+
 	// DRAWING INTERVAL CHANGE HANDLER
 	// avoid potential double binding by un-binding at this stage
 	$('#drawing_interval_button').unbind("click");
 	//rebind
 	$('#drawing_interval_button').bind("click", function() {
-		TissueStack.configuration['default_drawing_interval'].value = parseInt($('#drawing_interval').val());
-		
+		var oldVal = (TissueStack.configuration['default_drawing_interval'] ?
+				TissueStack.configuration['default_drawing_interval'].value : 150);
+		var val = ($('#drawing_interval') && $('#drawing_interval').length > 0) ?
+				parseInt($('#drawing_interval').val()) : oldVal;
+		if (typeof(val) != 'number' || isNaN(val)) val = 150;
+		if (val < 10 || val > 1000) {
+			alert("Please enter a number in between 10ms and 1000ms (=1s)");
+			$('#drawing_interval').val(oldVal);
+			return;
+		}
+				
 		for (var x=0;x<maxDataSets;x++) {
 			var dataSet = datasets[x];
 			
 			for (var id in dataSet.planes) {	
-				dataSet.planes[id].queue.setDrawingInterval(TissueStack.configuration['default_drawing_interval'].value);
+				dataSet.planes[id].queue.setDrawingInterval(val);
 			}
 		}
 	});
@@ -294,11 +319,12 @@ TissueStack.BindDataSetDependentEvents = function () {
 	$('input[name="color_map"]').bind("click", function(e) {
 		for (var x=0;x<maxDataSets;x++) {
 			var dataSet = datasets[x];
-			
+			var now = new Date().getTime();
 			for (var id in dataSet.planes) {	
 				dataSet.planes[id].color_map = e.target.value;
-				dataSet.planes[id].drawMe();
-				if (dataSet.planes[id].getDataExtent().getIsTiled()) dataSet.planes[id].applyColorMapToCanvasContent();
+				dataSet.planes[id].drawMe(now);
+				if (dataSet.planes[id].getDataExtent().getIsTiled() && dataSet.planes[id].hasColorMapOrContrastSetting())
+					dataSet.planes[id].applyContrastAndColorMapToCanvasContent();
 			}
 		}
 	});
@@ -357,7 +383,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 				}
 				
 				
-				plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, new Date().getTime());
+				plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, true, new Date().getTime());
 
 				if (event.data[0].actualDataSet.data.length > 1) {
 					var slider = $("#" + (plane.dataset_id == "" ? "" : plane.dataset_id + "_") + "canvas_main_slider");
@@ -423,8 +449,10 @@ TissueStack.BindDataSetDependentEvents = function () {
 				sideCanvasChildren.detach();
 				
 				// swap dimensions
-				var sideCanvasRelativeCross = event.data[0].actualDataSet.planes[sideViewPlaneId].getRelativeCrossCoordinates(); 
+				var sideCanvasRelativeCross = event.data[0].actualDataSet.planes[sideViewPlaneId].getRelativeCrossCoordinates();
+				sideCanvasRelativeCross.z = event.data[0].actualDataSet.planes[sideViewPlaneId].getDataExtent().slice;
 				var mainCanvasRelativeCross = event.data[0].actualDataSet.planes[mainViewPlaneId].getRelativeCrossCoordinates();
+				mainCanvasRelativeCross.z = event.data[0].actualDataSet.planes[mainViewPlaneId].getDataExtent().slice;
 				
 				var sideCanvasDims = {x: sideCanvasChildren[0].width, y: sideCanvasChildren[0].height};
 				var mainCanvasDims = {x: mainCanvasChildren[0].width, y: mainCanvasChildren[0].height};
@@ -467,10 +495,14 @@ TissueStack.BindDataSetDependentEvents = function () {
 				
 				// redraw and change the zoom level as well
 				var now = new Date().getTime();
-				event.data[0].actualDataSet.planes[sideViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(sideCanvasRelativeCross, now);
-				event.data[0].actualDataSet.planes[mainViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(mainCanvasRelativeCross, now);
+				
+				event.data[0].actualDataSet.planes[sideViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(sideCanvasRelativeCross, false, now);
+				event.data[0].actualDataSet.planes[mainViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(mainCanvasRelativeCross, false, now);
+				event.data[0].actualDataSet.planes[sideViewPlaneId].events.changeSliceForPlane(event.data[0].actualDataSet.planes[sideViewPlaneId].data_extent.slice);
 				event.data[0].actualDataSet.planes[sideViewPlaneId].changeToZoomLevel(event.data[0].actualDataSet.planes[mainViewPlaneId].getDataExtent().zoom_level);
 				event.data[0].actualDataSet.planes[mainViewPlaneId].changeToZoomLevel(zoomLevelSideView);
+				$("#dataset_" + (x+1) + "_canvas_main_slider").blur();
+				
 				event.data[0].actualDataSet.planes[sideViewPlaneId].updateExtentInfo(event.data[0].actualDataSet.planes[sideViewPlaneId].getDataExtent().getExtentCoordinates());
 			});
 		}	
@@ -602,6 +634,34 @@ TissueStack.applyUserParameters = function() {
 			plane.changeToZoomLevel(initOpts['zoom']); 
 		}
 
+		if (initOpts['color'] &&
+				(initOpts['color'] == 'grey' || initOpts['color'] == 'hot' || initOpts['color'] == 'spectral')) {
+			// change color map collectively for all planes
+			for (var id in dataSet.planes) dataSet.planes[id].color_map = initOpts['color'];
+
+			// set right radio button
+			try {
+				$("#colormap_choice input").removeAttr("checked").checkboxradio("refresh");
+				$("#colormap_" + initOpts['color']).attr("checked", "checked").checkboxradio("refresh");
+			} catch (e) {
+				// we don't care, stupid jquery mobile ...
+				$("#colormap_" + initOpts['color']).attr("checked", "checked");
+			}
+		}
+		if (typeof(initOpts['min']) === 'number' &&  typeof(initOpts['max']) === 'number') {
+			// change contrast collectively for all planes
+			for (var id in dataSet.planes) {
+				if (dataSet.planes[id].contrast) {
+					dataSet.planes[id].contrast.drawContrastSlider();
+					dataSet.planes[id].contrast.moveBar('min',
+							dataSet.planes[id].contrast.getMinimumBarPositionForValue(initOpts['min'])); 
+					dataSet.planes[id].contrast.moveBar('max',
+							dataSet.planes[id].contrast.getMaximumBarPositionForValue(initOpts['max']));
+					dataSet.planes[id].contrast.drawMinMaxValues();
+				}
+			}
+		}
+		
 		var givenCoords = {};
 		if (initOpts['x'] != null || initOpts['y'] != null || initOpts['z'] != null) {
 			givenCoords = {x: initOpts['x'] != null ? initOpts['x'] : 0,
@@ -615,7 +675,7 @@ TissueStack.applyUserParameters = function() {
 			givenCoords = plane.getRelativeCrossCoordinates();
 			givenCoords.z = plane.getDataExtent().slice;
 		}
-		plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords);
+		plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, false, new Date().getTime());
 
 		var slider = TissueStack.phone ? 
 				$("#canvas_" + plane.data_extent.plane + "_slider") :

@@ -41,7 +41,7 @@ void		serv_accept_new_connections(t_serv_comm *s)
   if ((socket = accept(s->sock_serv, (struct sockaddr*)&client_addr,
 		       &len)) == -1)
     {
-      fprintf(stderr, "Accept Error\n");
+      ERROR("Accept Error");
       s->state = FAIL;
       return;
     }
@@ -141,7 +141,7 @@ void		serv_working_loop(t_serv_comm *s)
       if (select((s->bigger_fd + 1), &(s->rd_fds),
 		 NULL, NULL, NULL) == -1)
 	{
-	  fprintf(stderr, "Select Error\n");
+	  ERROR("Select Error");
 	  s->state = FAIL;
 	}
       check_modified_fd(s);
@@ -152,7 +152,7 @@ int		serv_init_connect(t_serv_comm *s)
 {
   if ((s->sock_serv = socket(AF_UNIX/*AF_INET*/, SOCK_STREAM, 0)) < 0)
     {
-      fprintf(stderr, "Socket creation Error\n");
+      ERROR("Socket creation Error");
       return (-1);
     }
   s->queue_size = 50;
@@ -165,20 +165,31 @@ int		serv_init_connect(t_serv_comm *s)
   if (bind(s->sock_serv, (struct sockaddr*)&(s->serv_addr),
 	   sizeof(s->serv_addr)) < 0)
     {
-      fprintf(stderr, "Bind Error\n");
+      ERROR("Bind Error");
       return (-1);
     }
   listen(s->sock_serv, s->queue_size);
   return (0);
 }
 
+void		yop(char *name, t_plugin *plugin, char *command, void *data, t_tissue_stack *t)
+{
+  DEBUG("Fourth Notification ==>");
+  DEBUG("name = %s\nid = %p\ncommand = %s\ndata = %p", name, plugin, command, data);
+}
+
 void		*init(void *args)
 {
+  t_args_plug	*a;
+
+  a = (t_args_plug *)args;
+  LOG_INIT(a);
   return (NULL);
 }
 
 void		*start(void *args)
 {
+  prctl(PR_SET_NAME, "TS_INT_COMM");
   t_args_plug	*a = (t_args_plug*)args;
   t_serv_comm	*s = malloc(sizeof(*s));
   s->bigger_fd = 0;

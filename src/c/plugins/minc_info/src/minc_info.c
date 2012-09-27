@@ -1,8 +1,8 @@
 #include "minc_info.h"
 
 void *init(void *args) {
-	// nothing to do
-	return NULL;
+  // nothing to do
+  return NULL;
 }
 
 void *start(void *args) {
@@ -15,6 +15,8 @@ void *start(void *args) {
 	if (a->commands == NULL) {
 		return NULL;
 	}
+
+    prctl(PR_SET_NAME, "TS_MINC_INFO");
 
 	// get our unix socket
 	int * unix_socket = (int *)a->box;
@@ -103,7 +105,7 @@ void *start(void *args) {
 		}
 	}
 
-	printf("Sending: #%s#\n", buffer->buffer);
+	DEBUG("Sending: #%s#", buffer->buffer);
 
 	// write out response
 	send(*unix_socket, buffer->buffer, buffer->size, 0);

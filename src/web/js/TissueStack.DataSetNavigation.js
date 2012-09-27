@@ -1,6 +1,7 @@
 TissueStack.DataSetNavigation = function() {
 	if (TissueStack.phone || TissueStack.tablet) {
 		this.buildTabletMenu();
+		this.loadScrollMenu();
 	} else if (TissueStack.desktop) {
 		this.buildDynaTree();
 	}
@@ -144,14 +145,14 @@ TissueStack.DataSetNavigation.prototype = {
 			$("#colormap_choice input").removeAttr("checked").checkboxradio("refresh");
 			$("#colormap_grey").attr("checked", "checked").checkboxradio("refresh");
 		} catch (e) {
-			// we don't care, stupif jquery mobile ...
+			// we don't care, stupid jquery mobile ...
 			$("#colormap_grey").attr("checked", "checked");
 		}
 		
-		$("#dataset_1_url_box").hide("fast");
-		$("#dataset_1_contrast_box").hide("fast");
-		$("#dataset_2_url_box").hide("fast");
-		$("#dataset_2_contrast_box").hide("fast");
+		//reset contrast box
+		$("#dataset_1_url_box, #dataset_1_contrast_box").hide("fast");
+		$("#dataset_2_url_box, #dataset_2_contrast_box").hide("fast");
+		
 		
 		if(TissueStack.desktop || TissueStack.tablet){
 			// restore slider states
@@ -351,33 +352,32 @@ TissueStack.DataSetNavigation.prototype = {
 	addDataSetToTabletTree : function (dataSet) {
 		
 		$('#tablet_tree').empty();
+		$('#tablet_tree').unbind("expand");
 		var htmlString ="";
 
 		for (var dataSetKey in TissueStack.dataSetStore.datasets) {
 			var dataSet = TissueStack.dataSetStore.datasets[dataSetKey];
-			  htmlString += '<div data-role="collapsible"'+' id="tabletTreeDiv-'+ dataSet.local_id + dataSet.host +'">' + '<h3>'+ dataSet.local_id + 
-			  				' in ' + dataSet.host +'</h3>'+
-							'<p>'+ dataSet.description +'<br>'+ 'Location: '+ dataSet.filename +'</p>'+
-							'<fieldset data-role="controlgroup" data-mini="true">'+
-							'<input type="radio" name="radio-' + dataSet.local_id + '"'+' id="radio-'+ dataSet.local_id +'"'+' value="on" />'+
-							'<label for="radio-'+ dataSet.local_id +'"'+'>Overlay ON</label>'+
-							'<input type="radio" name="radio-' + dataSet.local_id + '"'+' id="radio-off-'+ dataSet.local_id +'"'+' value="off" />'+
-							'<label for="radio-off-'+ dataSet.local_id + '"'+'>Overlay OFF</label>'+
-							'</fieldset></div>';																							
-		}
-		
+			  htmlString += '<div data-role="collapsible"'+' id="tabletTreeDiv-'+ dataSet.local_id + dataSet.host +'">' 
+  			  			 + '<h3>'+ dataSet.local_id + ' in ' + dataSet.host +'</h3>'
+  			  			 + '<p>'+ dataSet.description +'<br>'+ 'Location: '+ dataSet.filename +'</p>'
+  			  			 + '<fieldset data-role="controlgroup" data-mini="true">'
+  			  			 + '<input type="radio" name="radio-' + dataSet.local_id + '"'+' id="radio-'+ dataSet.local_id +'"'+' value="on" />'
+  			  			 + '<label for="radio-'+ dataSet.local_id +'"'+'>Overlay ON</label>'
+  			  			 + '<input type="radio" name="radio-' + dataSet.local_id + '"'+' id="radio-off-'+ dataSet.local_id +'"'
+  			  			 + 'value="off" />' + '<label for="radio-off-'+ dataSet.local_id + '"'+'>Overlay OFF</label>'
+  			  			 + '</fieldset></div>';		
+		}		
 		$('#tablet_tree').append(htmlString)
 		.trigger("create").controlgroup('refresh', true);
-		
-		
+
 		this.getSelectedTabletTree(dataSet);
 	},
 	getSelectedTabletTree : function (dataSet) {
 		for (var dataSetKey in TissueStack.dataSetStore.datasets) {
 			var dataSet = TissueStack.dataSetStore.datasets[dataSetKey];
 			(function(dataSet,_this) {
-				$("#tabletTreeDiv-" + dataSet.local_id + dataSet.host + "").trigger("collapse");
-				$("#tabletTreeDiv-" + dataSet.local_id + dataSet.host + "").click(function() {
+				$("#tabletTreeDiv-" + dataSet.local_id + dataSet.host).trigger("collapse");
+				$("#tabletTreeDiv-" + dataSet.local_id + dataSet.host).bind("expand", function() {
 					if(TissueStack.phone){
 						TissueStack.Utils.adjustScreenContentToActualScreenSize(0);
 					}
@@ -385,9 +385,79 @@ TissueStack.DataSetNavigation.prototype = {
 					_this.showDataSet(1);
 					TissueStack.InitUserInterface();
 					TissueStack.BindDataSetDependentEvents();
-					$("#tabletTreeDiv-" + dataSet.local_id + dataSet.host + "").trigger("expand");
+					//redirect to x plane after expanded
+					if (TissueStack.phone) window.location = document.location.href.split('#dataset')[0] + '#tissueX';
+					return;
 				});
 			})(dataSet, this);
 		}
+	},
+	loadScrollMenu : function () {
+		//add touch transition for phone menu and dataset menu so that it can scroll over and see contents.
+		var LeftMenu, DataSetMenu;
+		
+		LeftMenu = new iScroll('menutransition', { useTransition:true });
+		if(TissueStack.phone) DataSetMenu = new iScroll('transition', { useTransition:true });
+		
+		document.addEventListener('touchmove', function (e) { e.preventDefault(); }, false);
+	}, 
+	syncDataSetCoordinates : function(canvas) {
+		// basic checks whether the sync flag for desktop was set && we have more than 1 data sets selected 
+		// && we have been handed in a canvas with all the properties we need to go on 
+		if (!(
+				TissueStack.dataSetNavigation.selectedDataSets.count > 1 && TissueStack.desktop && TissueStack.sync_datasets 
+				&& typeof(canvas) === 'object' && typeof(canvas.dataset_id) === 'string'  
+				&& typeof(canvas.getRelativeCrossCoordinates) === 'function' && typeof(canvas.data_extent) === 'object'
+				&& typeof(canvas.data_extent.worldCoordinatesTransformationMatrix) === 'object' 
+		)) return;
+
+		// IMPORTANT !!!! we ALSO check whether we have been synced. we don't wanna trigger an ifinited syncing fest
+		if (typeof(canvas.has_been_synced) != 'boolean' || canvas.has_been_synced) return;
+		
+		// create a common sync timestamp for all planes if it does not already exist
+		var dataSet = TissueStack.dataSetStore.getDataSetById(TissueStack.dataSetNavigation.selectedDataSets[canvas.dataset_id]);
+		var sync_time = canvas.queue.last_sync_timestamp < 0 ? new Date().getTime() : canvas.queue.last_sync_timestamp;
+		for (var p in dataSet.planes) dataSet.planes[p].queue.last_sync_timestamp = sync_time;
+		
+		// extract the data set id from the given canvas and see if there is another data set displayed. if not => nothing to do and good bye
+		var other_ds_id = canvas.dataset_id === 'dataset_1' ? 'dataset_2' : 'dataset_1';
+		
+		// now fetch the other data set and see if we have a matching canvas or more accurately a matching plane with world coordinates
+		var other_ds = TissueStack.dataSetStore.getDataSetById(TissueStack.dataSetNavigation.selectedDataSets[other_ds_id]);
+		if (typeof(other_ds) != 'object' || typeof(other_ds.planes) != 'object'
+			||  typeof(other_ds.planes[canvas.data_extent.plane]) != 'object'
+			||  typeof(other_ds.planes[canvas.data_extent.plane].data_extent.worldCoordinatesTransformationMatrix) != 'object') return;
+		
+		var other_plane = other_ds.planes[canvas.data_extent.plane];
+		
+		// we've got all we need, now let's transform the pixel coords of the given canvas into real world coords
+		// so that we can then transform it back for the other data set using ITS real world transformation matrix
+		// this will potentially give us out-of-bounds results for non-mapping/overlapping coordinate systems but what the heck,
+		// the call to redraw will be able to handle it
+		var pixel_coords_for_handed_in_plane = canvas.getRelativeCrossCoordinates();
+		pixel_coords_for_handed_in_plane.z = canvas.getDataExtent().slice;
+		var real_world_coords_for_handed_in_plane = canvas.getDataExtent().getWorldCoordinatesForPixel(pixel_coords_for_handed_in_plane);
+		var pixel_coords_for_other_plane = other_plane.getDataExtent().getPixelForWorldCoordinates(real_world_coords_for_handed_in_plane);
+
+		// THIS IS VITAL TO AVOID an infinite sync chain!!!
+		for (var p in other_ds.planes) {
+			other_ds.planes[p].has_been_synced = true;
+			other_ds.planes[p].queue.last_sync_timestamp = -1;
+		}
+
+		other_plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(pixel_coords_for_other_plane, false);
+		other_plane.queue.drawLowResolutionPreview(sync_time);
+		other_plane.queue.drawRequestAfterLowResolutionPreview(null, sync_time);
+		other_plane.queue.tidyUp();
+
+		if (other_plane.is_main_view) {
+			var slider = $("#" + (other_plane.dataset_id == "" ? "" : other_plane.dataset_id + "_") + "canvas_main_slider");
+			if (slider) {
+				slider.val(pixel_coords_for_other_plane.z);
+				slider.blur();
+			}
+		}
+		
+		canvas.queue.last_sync_timestamp = -1; // reset 
 	}
 };		

@@ -1,6 +1,9 @@
 #ifndef __IMAGE_EXTRACT__
 #define __IMAGE_EXTRACT__
 
+#include "core.h"
+#include "utils.h"
+
 #include <minc2.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,9 +13,6 @@
 #include <math.h>
 
 #include <magick/api.h>
-
-#include "core.h"
-#include "utils.h"
 
 typedef	struct	s_image_extract
 {
@@ -38,21 +38,27 @@ typedef	struct	s_image_extract
   float		***premapped_colormap;
   int		colormap_id;
   char		**colormap_name;
+  unsigned char	contrast_min;
+  unsigned char	contrast_max;
+  int		contrast;
   char 		*request_id;
   char 		*request_time;
+  char		*id_percent;
+  int		percentage;
+  int		percent_fd;
   pthread_cond_t	cond;
   pthread_mutex_t	mut;
 }		t_image_extract;
 
 typedef struct  s_image_args
 {
-  int           **dim_start_end;
-  t_vol         *volume;
-  t_thread_pool *p;
-  t_plugin	*this;
+  int			**dim_start_end;
+  t_vol			*volume;
+  t_thread_pool		*p;
+  t_plugin		*this;
   t_image_extract	*info;
-  t_tile_requests * requests;
-  FILE		*file;
+  FILE			*file;
+  t_tissue_stack	*general_info;
 }               t_image_args;
 
 #define X 0
@@ -70,6 +76,7 @@ void            *init(void *args);
 void            *start(void *args);
 
 unsigned int            get_slices_max(t_vol *volume);
+int		get_nb_blocks_percent(t_image_extract *img, t_vol *volume);
 void            *get_all_slices_of_all_dimensions(void *args);
 void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *start, int current_dimension,
                                                 long unsigned int *count, t_image_args *a);
@@ -81,6 +88,8 @@ void            print_image(char *hyperslab, t_vol *volume, int current_dimensio
 
 void			free_image_extract(t_image_extract * extract);
 void			free_image_args(t_image_args * args);
+
+void		alloc_and_init_colormap_space_from_src(float **new_colormap, float **source);
 
 /*float		colormap[3][25][4] = {{{0, 0, 0, 0},
 				    {0.05, 0.46667, 0, 0.05333},
@@ -111,5 +120,7 @@ void			free_image_args(t_image_args * args);
 				    {1, 1, 1, 1},
 				    {99, 0, 0, 0}}};
 */
+
+extern  t_log_plugin	log_plugin;
 
 #endif		/* __IMAGE_EXTRACT__ */

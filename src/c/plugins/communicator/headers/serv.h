@@ -1,6 +1,8 @@
 #ifndef __SERV_H__
 #define __SERV_H__
 
+#include "core.h"
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/select.h>
@@ -8,8 +10,6 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include "utils.h"
-
-#include "core.h"
 
 typedef	struct	s_serv_comm	t_serv_comm;
 typedef	struct	s_serv_clients	t_serv_clients;
@@ -37,6 +37,8 @@ struct			s_serv_clients
 #define	ON	1
 #define	OFF	0
 #define FAIL	-1
+
+extern  t_log_plugin	log_plugin;
 
 #endif /* !__SERV_H__ */
 
