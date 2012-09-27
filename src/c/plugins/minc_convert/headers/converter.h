@@ -1,8 +1,9 @@
 #ifndef __MINC_TOOL_CORE__
 #define __MINC_TOOL_CORE__
 
-#include <sys/stat.h>
 #include "core.h"
+
+#include <sys/stat.h>
 
 typedef struct	s_header	t_header;
 

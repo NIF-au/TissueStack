@@ -43,20 +43,20 @@ int check_pixels_range(int width, int height, int h_position, int w_position,
         int h_position_end, int w_position_end)
 {
     if (h_position > height || w_position > width) {
-        printf("X - Y coordinates out of range\n");
+        ERROR("X - Y coordinates out of range");
         return (1);
     }
     if (h_position_end > height || w_position_end > width) {
-        printf("X - Y coordinates out of range\n");
+        ERROR("X - Y coordinates out of range");
         return (2);
     }
     if (h_position < 0 || w_position < 0 || h_position_end < 0
             || w_position_end < 0) {
-        printf("Negative X - Y coordinates\n");
+        ERROR("Negative X - Y coordinates");
         return (3);
     }
     if (h_position > h_position_end || w_position > w_position_end) {
-        printf("X - Y coordinates bigger than X_END - Y_END coordinates\n");
+        ERROR("X - Y coordinates bigger than X_END - Y_END coordinates");
         return (4);
     }
     return (0);
@@ -501,7 +501,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
       a->info->image_type = strlower(a->info->image_type);
 
       if (!a->info->root_path) {
-	printf("Error: root path is NULL\n");
+	ERROR("Error: root path is NULL");
 	return;
       }
 

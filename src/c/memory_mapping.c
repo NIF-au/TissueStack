@@ -24,10 +24,16 @@ void init_memory_mapping(t_memory_mapping * this) {
 void add_memory_mapped_file(t_memory_mapping * this, char * path) {
 	if (this == NULL || path == NULL || this->get(this, path) != NULL) return;
 
+	// make a copy of path
+	char * copyOfPath = strdup(path);
+
+	// hash entry exists already
+	if (this->get(this, copyOfPath) != NULL) return;
+
 	// memory map file
 	t_memory_mapped_file * mm_file = malloc(sizeof(* mm_file));
 
-	int fd = open (path, O_RDONLY);
+	int fd = open (copyOfPath, O_RDONLY);
 	if (fd == -1) {
 		//DEBUG("Failed to open file for memory mapping\n");
 		printf("Failed to open file for memory mapping\n");
@@ -48,7 +54,7 @@ void add_memory_mapped_file(t_memory_mapping * this, char * path) {
 		return;
 	}
 
-	g_hash_table_replace(this->hash, (gpointer *) path, (gpointer *) mm_file);
+	g_hash_table_replace(this->hash, (gpointer *) copyOfPath, (gpointer *) mm_file);
 }
 
 char * get_memory_mapped_data(t_memory_mapping * this, char * path) {

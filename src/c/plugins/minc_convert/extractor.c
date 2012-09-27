@@ -74,7 +74,7 @@ int		main(int ac, char **av)
 	  strcpy(img->filename, name);
 	  WriteImage(image_info, img);
 	  DestroyImage(img);
-	  printf("slice = %i\n", slice);
+	  DEBUG("slice = %i", slice);
 	}
       tmp_off += size[dim] * dim_size[dim];
       dim++;

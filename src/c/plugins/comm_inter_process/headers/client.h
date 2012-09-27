@@ -1,5 +1,6 @@
 #ifndef CLIENT_H_
 #define CLIENT_H_
+#include "core.h"
 
 #include <stdio.h>
 #include <stdlib.h>
