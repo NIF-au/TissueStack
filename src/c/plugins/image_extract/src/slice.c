@@ -35,6 +35,10 @@ int		get_nb_blocks_percent(t_image_extract *a, t_vol *volume)
 	  h_tiles = (height * a->scale) / a->square_size;
 	  w_tiles = (width * a->scale) / a->square_size;
 
+	  if ((height % a->square_size) != 0)
+	    h_tiles++;
+	  if ((width % a->square_size) != 0)
+	    w_tiles++;
 	  if (a->dim_start_end[i][1] == 0 && a->dim_start_end[i][0] == 0)
 	    slices = volume->size[i];
 	  else
@@ -101,13 +105,14 @@ void		get_raw_data_hyperslab(t_memory_mapping * memory_mappings, t_vol *volume, 
   if (volume->raw_data == 1)
     {
       offset = (volume->dim_offset[dim] + (unsigned long long int)((unsigned long long int)volume->slice_size[dim] * (unsigned long long int)slice));
+      /*
       if (memory_mappings != NULL) {
     	  char * data = memory_mappings->get(memory_mappings, volume->path);
     	  if (data != NULL) {
     		  memcpy(hyperslab, &data[offset], volume->slice_size[dim]);
 			  return;
-    	  }
-      }
+			  }
+			  }*/
 
       // plan B: read in a regular fashion
       lseek(volume->raw_fd, offset, SEEK_SET);
@@ -127,6 +132,7 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
   int		h_max_iteration;
   int		save_h_position = a->info->h_position;
   int		save_w_position = a->info->w_position;
+  char *buff = NULL;
 
   if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
     write_http_header(a->file, "408 Request Timeout", a->info->image_type);
@@ -175,20 +181,10 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
 		{
 		  a->info->h_position = a->info->start_h;
 		  a->info->w_position = a->info->start_w;
-		  INFO("before print img");
-
-		  FILE *f = fopen("/tmp/toto", "ar+");
-
-		  fwrite(hyperslab, sizeof(*hyperslab), width * height, f);
-
-		  INFO("after writing img");
-
-		  if (current_slice != 0)
-		    print_image(hyperslab, volume, current_dimension, current_slice, width, height, a);
-
-		  INFO("after printf img");
+		  print_image(hyperslab, volume, current_dimension, current_slice, width, height, a);
 		  a->info->start_w++;
-		  a->general_info->percent_add(1, a->info->id_percent, a->general_info->percent);
+		  a->general_info->percent_add(1, a->info->id_percent, a->general_info);
+		  a->general_info->percent_get(&buff, a->info->id_percent, a->general_info);
 		}
 	      a->info->start_h++;
 	    }

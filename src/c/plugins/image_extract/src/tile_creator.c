@@ -219,8 +219,6 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
   PixelPacket	*px;
   PixelPacket	*px_tmp;
 
-  FATAL("\n\n%p - %p - %i - %i - %i - %i - %p\n\n", hyperslab, volume, current_dimension, current_slice, width, height, a);
-
   if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
     write_http_header(a->file, "408 Request Timeout", a->info->image_type);
     fclose_check(a->file);
@@ -396,6 +394,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
     return;
   }
 
+
   tmp = img;
   if ((img = FlipImage(img, &exception)) == NULL) {
     CatchException(&exception);
@@ -512,29 +511,21 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
       if (finalPath == NULL) {
 	return;
       }
-      //      printf("ici ============== 1--\n");
       // complete filename
       if (strcmp(a->info->service, "full") == 0 && a->info->quality != 1) {
 	sprintf(dir, "/%i.low.res.%s", current_slice, a->info->image_type);
       } else {
 	sprintf(dir, "/%i_%i.%s", a->info->start_w, a->info->start_h, a->info->image_type);
       }
-      //printf("ici ============== 2--\n");
       finalPath = appendToBuffer(finalPath, dir);
       strcpy(img->filename, finalPath->buffer);
-
-      printf("filename = ====== %s\n", img->filename);
-      // printf("ici ============== 3--\n");
 
       if (img)
 	WriteImage(image_info, img);
 
-      printf("ici ============== 4--\n");
       DestroyImage(img);
       DestroyImageInfo(image_info);
-      printf("ici ============== 5--\n");
       free(finalPath->buffer);
       free(finalPath);
-      printf("ici ============== 6--\n");
     }
 }

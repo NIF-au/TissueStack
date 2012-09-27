@@ -460,7 +460,7 @@ JNIEXPORT jstring JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMin
 	} else {
 		sprintf(conversionBuffer, " %.4g 1 tiles %s %i", (double)zoom_factor, imageType, (int) size);
 		startTilingCommand = appendToBuffer(startTilingCommand, conversionBuffer);
-		startTilingCommand = appendToBuffer(startTilingCommand, " -1 -1 grey 0 255 1000 ");
+		startTilingCommand = appendToBuffer(startTilingCommand, " -1 -1 grey 0 0 1000 ");
 	}
 
 	startTilingCommand = appendToBuffer(startTilingCommand, "0 0 ");

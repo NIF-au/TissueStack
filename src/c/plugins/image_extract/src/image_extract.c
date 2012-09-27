@@ -377,7 +377,8 @@ void		image_creation_lunch(t_tissue_stack *t, t_vol *vol, int step, t_image_extr
 
   if (image_general->percentage)
     {
-      t->percent_init(get_nb_blocks_percent(image_general, vol), &id_percent, t->percent);
+      printf("totals blocks = %i\n", get_nb_blocks_percent(image_general, vol));
+      t->percent_init(get_nb_blocks_percent(image_general, vol), &id_percent, t);
       if (write(image_general->percent_fd, id_percent, 10) < 0)
 	ERROR("Open Error");
       //      close(image_general->percent_fd);
@@ -385,7 +386,6 @@ void		image_creation_lunch(t_tissue_stack *t, t_vol *vol, int step, t_image_extr
     }
   image_general->id_percent = id_percent;
 
-  //  lunch_percent_display(p, vol, image_general, this);
   while (i < 3)
     {
       if (dim_start_end[i][0] != -1 && dim_start_end[i][1] != -1)
@@ -535,8 +535,6 @@ void			*start(void *args)
 
   a = (t_args_plug *)args;
 
-  INFO("Image Server Start");
-
   socketDescriptor = (FILE*)a->box;
   volume = load_volume(a, a->commands[0]);
   if (volume == NULL) {
@@ -598,11 +596,13 @@ void			*start(void *args)
       image_args->start_h = atoi(a->commands[12]);
       image_args->start_w = atoi(a->commands[13]);
       if (a->commands[20] != NULL)
-	image_args->root_path = strdup(a->commands[20]);
-      if (a->commands[21] != NULL && strcmp(a->commands[21], "@tiling@") == 0)
 	{
-	  image_args->percentage = 1;
-  image_args->percent_fd = *((int*)a->box);
+	  image_args->root_path = strdup(a->commands[20]);
+	  if (a->commands[21] != NULL && strcmp(a->commands[21], "@tiling@") == 0)
+	    {
+	      image_args->percentage = 1;
+	      image_args->percent_fd = *((int*)a->box);
+	    }
 	}
     }
   else if (strcmp(image_args->service, "images") == 0)
@@ -668,6 +668,7 @@ void			*start(void *args)
   image_creation_lunch(a->general_info,volume, step, image_args, socketDescriptor);
 
   a->destroy(a);
+
   return (NULL);
 }
 

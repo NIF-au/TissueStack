@@ -191,14 +191,8 @@ void		prompt_exec(char **commands, t_tissue_stack *general, void *box)
 
   prog = commands[0];
 
-  while (commands[i] != NULL)
-    {
-      printf("commands[%i] = %s\n", i, commands[i]);
-      i++;
-    }
   args = create_plug_args(commands, general, box);
 
-  i = 0;
   while (i < general->nb_func)
     {
       if (strcmp(general->functions[i].name, prog) == 0)
@@ -215,7 +209,10 @@ void		prompt_exec(char **commands, t_tissue_stack *general, void *box)
 	  }
 	  else if (!p && (strcmp(prog, "load") != 0 || strcmp(prog, "try_start") != 0) &&
 		   (strcmp(prog, "start") == 0 || strcmp(prog, "unload") == 0))
-	    printf("%s: Unknown Plugin\n", args->name);
+	    {
+	      ERROR("%s - %p: Unknown Plugin", args->name, p);
+	      fclose((FILE*)box);
+	    }
 	  else
 	    thread_pool_add_task(general->functions[i].ptr, args, general->tp);
 	  break;
@@ -227,7 +224,7 @@ void		prompt_exec(char **commands, t_tissue_stack *general, void *box)
 
   if (i == general->nb_func)
     {
-	  destroy_plug_args(args);
+      destroy_plug_args(args);
       printf("%s: Unknown command\n", prog);
     }
 }

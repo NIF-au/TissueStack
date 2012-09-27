@@ -10,6 +10,7 @@ SRCS		=	$(DIRSRC)core.c							\
 			$(DIRSRC)thread_pool.c						\
 			$(DIRSRC)utils/utils.c						\
 			$(DIRSRC)tile_requests.c					\
+			$(DIRSRC)percent_and_time.c					\
 			$(DIRSRC)memory_mapping.c					\
 
 INCLUDE		=	-I./headers -I./utils

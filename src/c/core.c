@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Mon Sep 24 17:27:36 2012 Oliver Nicolini
+** Last update Thu Sep 27 15:55:51 2012 Oliver Nicolini
 */
 
 #include "core.h"
@@ -136,16 +136,15 @@ void            init_prog(t_tissue_stack *t)
   struct stat	results;
 
   t->plug_actions = plug_actions_from_external_plugin;
+
   t->percent_init = percent_init_direct;
   t->percent_add = percent_add_direct;
   t->percent_get = percent_get_direct;
+
   t->tile_requests = malloc(sizeof(*t->tile_requests));
   init_tile_requests(t->tile_requests);
   t->memory_mappings = malloc(sizeof(*t->memory_mappings));
   init_memory_mapping(t->memory_mappings);
-  char * tmp = malloc(sizeof(tmp) * 100);
-  sprintf(tmp, "%s","/opt/data/anglerfish.raw");
-  t->memory_mappings->add(t->memory_mappings,tmp);
   t->get_volume = get_volume;
   t->check_volume = check_volume;
   t->clean_quit = clean_quit;
@@ -164,8 +163,6 @@ void            init_prog(t_tissue_stack *t)
   t->log = malloc(sizeof(*t->log));
   t->log->state = ON;
   t->log->path = strdup("/tmp/tss-log/");
-  t->log->max_log_size = 1000;
-  t->log->current_log_size = 0;
   t->log->debug = ON;
   t->log->verbose = ON;
   t->log->write_on_files = OFF;
@@ -210,7 +207,7 @@ void            init_prog(t_tissue_stack *t)
 	}
     }
   init_func_ptr(t);
-  //init_percent_time(t);
+  init_percent_time(t);
 }
 
 void		free_core_struct(t_tissue_stack *t)
@@ -219,7 +216,7 @@ void		free_core_struct(t_tissue_stack *t)
 	  return;
   }
 
-  printf("\nFreeing\n");
+  INFO("Freeing");
   free_all_volumes(t);
   free_all_plugins(t);
   free_all_history(t);
@@ -264,7 +261,6 @@ int		main(int argc, char **argv)
   t->tp = malloc(sizeof(*t->tp));
   thread_pool_init(t->tp, 16);
 
-
   // load plugins
 
   plugin_load_from_string("load image /usr/local/plugins/TissueStackImageExtract.so", t);
@@ -281,25 +277,6 @@ int		main(int argc, char **argv)
   //(t->plug_actions)(t, "start minc_converter /media/Data/lowback.minc2.mnc /media/Data/lowback.raw", NULL);
   //(t->plug_actions)(t, "start nifti_converter /opt/data/brain.nii /opt/data/brain_from_nifti.raw", NULL);
 
-  /*
-  char		*id;
-  char		*buff;
-
-  percent_init_direct(100, &id, t->percent);
-
-  DEBUG("Percent init done id == %s", id);
-
-  int		i = 0;
-  while (i < 95)
-  {
-    percent_add_direct(1, id, t->percent);
-    i++;
-  }
-
-  percent_get_direct(&buff, id, t->percent);
-
-  DEBUG("gettage = %s", buff);
-  */
 
   signal_manager(t);
 
