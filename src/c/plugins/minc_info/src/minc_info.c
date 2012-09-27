@@ -16,6 +16,8 @@ void *start(void *args) {
 		return NULL;
 	}
 
+    prctl(PR_SET_NAME, "TS_MINC_INFO");
+
 	// get our unix socket
 	int * unix_socket = (int *)a->box;
 

@@ -228,6 +228,8 @@ int		main(int argc, char **argv)
   t_tissue_stack	*t;
   char			serv_command[20];
 
+  prctl(PR_SET_NAME, "TS_CORE");
+
   // initialisation of some variable
   t = malloc(sizeof(*t));
   init_prog(t);

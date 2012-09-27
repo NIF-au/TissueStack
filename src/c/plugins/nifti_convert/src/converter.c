@@ -144,6 +144,8 @@ void  		*start(void *args)
   t_header	*h;
   t_args_plug	*a;
 
+  prctl(PR_SET_NAME, "TS_NIFTI_CON");
+
   a = (t_args_plug*)args;
   if ((nim = nifti_image_read(a->commands[0], 0)) == NULL)
     {

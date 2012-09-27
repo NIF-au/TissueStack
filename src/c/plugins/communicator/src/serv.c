@@ -394,6 +394,8 @@ void		*start(void *args)
   t_args_plug	*a;
   t_serv_comm	*s;
 
+  prctl(PR_SET_NAME, "TS_EXT_COMM");
+
   a = (t_args_plug*)args;
   s = (t_serv_comm*)a->this->stock;
   s->port = atoi(a->commands[0]);

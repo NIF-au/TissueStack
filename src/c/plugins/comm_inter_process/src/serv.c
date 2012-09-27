@@ -189,6 +189,7 @@ void		*init(void *args)
 
 void		*start(void *args)
 {
+  prctl(PR_SET_NAME, "TS_INT_COMM");
   t_args_plug	*a = (t_args_plug*)args;
   t_serv_comm	*s = malloc(sizeof(*s));
   s->bigger_fd = 0;
