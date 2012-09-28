@@ -9,12 +9,12 @@ TissueStack.PhoneMenu = function() {
 				if(menuStatus != true){				
 				$(".ui-page-active").animate({
 					marginLeft: "165px",
-				  }, 300, function(){menuStatus = true;});
+				  }, 100, function(){menuStatus = true;});
 				  return false;
 				  } else {
 					$(".ui-page-active").animate({
 					marginLeft: "0px",
-				  }, 300, function(){menuStatus = false;});
+				  }, 100, function(){menuStatus = false;});
 					return false;
 				  }
 			});
@@ -24,7 +24,7 @@ TissueStack.PhoneMenu = function() {
 				if (menuStatus){	
 				$(".ui-page-active").animate({
 					marginLeft: "0px",
-				  }, 300, function(){menuStatus = false;});
+				  }, 100, function(){menuStatus = false;});
 				  }
 			});
 			
@@ -33,7 +33,7 @@ TissueStack.PhoneMenu = function() {
 				if (!menuStatus){	
 				$(".ui-page-active").animate({
 					marginLeft: "165px",
-				  }, 300, function(){menuStatus = true;});
+				  }, 100, function(){menuStatus = true;});
 				  }
 			});
 			

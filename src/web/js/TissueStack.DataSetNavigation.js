@@ -357,8 +357,8 @@ TissueStack.DataSetNavigation.prototype = {
 
 		for (var dataSetKey in TissueStack.dataSetStore.datasets) {
 			var dataSet = TissueStack.dataSetStore.datasets[dataSetKey];
-			  htmlString += '<div data-role="collapsible"'+' id="tabletTreeDiv-'+ dataSet.local_id + dataSet.host +'">' 
-  			  			 + '<h3>'+ dataSet.local_id + ' in ' + dataSet.host +'</h3>'
+			  htmlString += '<div data-role="collapsible"'+' id="tabletTreeDiv-'+ dataSet.local_id + dataSet.host + '"' 
+			  			 + 'data-transition="slide"'+'>' + '<h3>'+ dataSet.local_id + ' in ' + dataSet.host +'</h3>'
   			  			 + '<p>'+ dataSet.description +'<br>'+ 'Location: '+ dataSet.filename +'</p>'
   			  			 + '<fieldset data-role="controlgroup" data-mini="true">'
   			  			 + '<input type="radio" name="radio-' + dataSet.local_id + '"'+' id="radio-'+ dataSet.local_id +'"'+' value="on" />'
@@ -394,11 +394,12 @@ TissueStack.DataSetNavigation.prototype = {
 	},
 	loadScrollMenu : function () {
 		//add touch transition for phone menu and dataset menu so that it can scroll over and see contents.
-		var LeftMenu, DataSetMenu;
+		var LeftMenu, DataSetMenu, TableMenu;
 		
 		LeftMenu = new iScroll('menutransition', { useTransition:true });
-		if(TissueStack.phone) DataSetMenu = new iScroll('transition', { useTransition:true });
-		
+		if(TissueStack.phone) DataSetMenu = new iScroll('phonetransition', { useTransition:true });
+		if(TissueStack.tablet) TableMenu = new iScroll('tablettransition', { useTransition:true }); //For tablet version (Haven't apply yet)
+
 		document.addEventListener('touchmove', function (e) { e.preventDefault(); }, false);
 	}, 
 	syncDataSetCoordinates : function(canvas) {

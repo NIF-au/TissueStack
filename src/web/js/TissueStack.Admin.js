@@ -5,6 +5,7 @@ TissueStack.Admin = function () {
 	this.registerFileUpload();
 	this.registerAddToDataSetHandler();
 	this.displayUploadDirectory();
+	this.createTableView();
 };
 
 TissueStack.Admin.prototype = {
@@ -97,10 +98,10 @@ TissueStack.Admin.prototype = {
 	},
 	registerLoginHandler : function () {
 	   	$("#open").click(function(){
-	   		$("div#panel").slideDown("slow");	
+	   		$("div#panel").slideDown("fast");	
 	   	});		
    		$("#close").click(function(){
-   			$("div#panel").slideUp("slow");	
+   			$("div#panel").slideUp("fast");	
    		});		
    		$("#toggle a").click(function () {
    			$("#toggle a").toggle();
@@ -266,6 +267,72 @@ TissueStack.Admin.prototype = {
  				// we only come here if no file was selected	
  				_this.replaceErrorMessage("Please check a file that you want to add!");
 		  	});
-	});
-	}
+		});
+	},
+	// Create Table in Admin Page for Conversion Progress 
+	createTableView: function () {
+		var nrCols = 5;
+		var maxRows = 10;
+		var nrRows = maxRows+1;
+		
+		/*
+		while(nrRows > maxRows){
+			nrRows = Number(prompt('How many dataset would you like to display? Maximum '+maxRows+' allowed.',''));
+		}
+		*/
+		
+		var root = document.getElementById('createTable');
+		var tab = document.createElement('table');
+		
+		tab.className="conversion-table";
+		
+		var tbody = document.createElement('tbody');		
+		var row, cell, thead;
+		thead +='<thead><tr><th scope="col">Data Name</th><th scope="col">Data Type</th>'
+		 	  +'<th scope="col">Conversion</th><th scope="col">Completed %</th>'
+		 	  +'<th scope="col">Status</th></tr></thead>';
+		
+		for(var i = 0; i < nrRows; i++){
+			row=document.createElement('tr');
+			for(var j = 0; j < nrCols; j++){
+				var processBar = i+' - '+j ;
+				cell=document.createElement('td');
+				
+				if(j == 0){ // give ID as well
+					processBar = 'Localhost - ' + i;
+				}
+				
+				if(j == 1){ // give ID as well
+					processBar = 'RAW';
+				}
+				
+				if(j == 2){ // give ID as well
+					processBar = '<div data-role="controlgroup" data-type="horizontal">'
+							   + '<a id=' + 'constart_' + i + ' data-role="button" data-theme="c" data-icon="arrow-r" data-iconpos="notext">Start</a>'
+							   + '<a id=' + 'conrefresh_' + i + ' data-role="button" data-theme="c" data-icon="refresh" data-iconpos="notext">Refresh</a>'
+							   + '<a id=' + 'constop_' + i + ' data-role="button" data-theme="c" data-icon="delete" data-iconpos="notext">Stop</a>'
+							   + '</div>';
+				}
+				
+				if(j == 3){ //need to provide id for each div
+					processBar = '<div id='+'constatus_'+ i + ' class="statusCompleted">' 
+							   + '<div class="bar"></div ><div class="percent">0%</div >' 
+							   + '</div>';	
+				}
+				
+				if(j == 4){ // give ID as well
+					processBar = '<progress value="27" max="100"></progress>';
+				}
+				
+				$(cell).append(processBar);
+				$(row).append(cell);
+			}
+			$(tbody).append(row);
+		}	
+		$(tab).append(thead).append(tbody);
+		$(root).append(tab).trigger("create");
+	},
+	// under coding ????????
+	conversionStatus : function () {
+	},
 };
