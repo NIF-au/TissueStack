@@ -64,7 +64,7 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 		}
 
 		// query file upload directory
-		final File uploadDirectory = this.getUploadDirectory();
+		final File uploadDirectory = AdminResources.getUploadDirectory();
 		if (!uploadDirectory.exists()) {
 			uploadDirectory.mkdir();
 		}
@@ -205,7 +205,7 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 	@Path("/upload_directory")
 	@Description("Displays contents of upload directory")
 	public RestfulResource readFile() {
-		final File fileDirectory = this.getUploadDirectory();
+		final File fileDirectory = AdminResources.getUploadDirectory();
 		
 		File[] listOfFiles = fileDirectory.listFiles(new FilenameFilter() {
 			public boolean accept(File path, String fileOrDir) {
@@ -245,7 +245,7 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 			throw new IllegalArgumentException("File Parameter Is Empty");
 		}
 		// check for existence of file
-		final File uploadedFile = new File(this.getUploadDirectory(), filename); 
+		final File uploadedFile = new File(AdminResources.getUploadDirectory(), filename); 
 		if (!uploadedFile.exists()) {
 			throw new IllegalArgumentException("File '" + uploadedFile.getAbsolutePath() + "' does Not Exist");
 		}
@@ -299,7 +299,7 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 		return new RestfulResource(new Response(dataSetToBeAdded));
 	}
 		
-	private File getUploadDirectory() {
+	public static File getUploadDirectory() {
 		final Configuration upDir = ConfigurationDataProvider.queryConfigurationById("upload_directory");
 		return new File(upDir == null || upDir.getValue() == null ? DEFAULT_UPLOAD_DIRECTORY : upDir.getValue());
 	}
@@ -309,6 +309,93 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 		return new File(dataDir == null || dataDir.getValue() == null ? DEFAULT_DATA_DIRECTORY : dataDir.getValue());
 	}
 
+	@Path("/convert")
+	@Description("Converts a given minc/nifti file to RAW")
+	public RestfulResource convertImageFormatToRaw(
+			@Description("Mandatory: Parameter 'file': file name of the image format to be tiled (only nifti and minc are supported)")
+			@QueryParam("file")
+			String imageFile,
+			@Description("Optional: Parameter 'new_raw_file_name': the name of the new RAW file (default: original file name + extension: raw")
+			@QueryParam("new_raw_file")
+			String newRawFileName){			
+		/*
+		 *  TODO: put back in once working
+		// check permissions
+		if (!SecurityResources.checkSession(session)) {
+			throw new RuntimeException("Invalid Session! Please Log In.");
+		}*/
+		
+		// check existence of parameters and files
+		final File uploadDir = AdminResources.getUploadDirectory();
+		
+		if (imageFile == null || !new File(imageFile).exists())
+			throw new IllegalArgumentException("Either no file location was given or the one supplied is erroneous!");
+		
+		if (!imageFile.startsWith(uploadDir.getAbsolutePath()))
+				throw new IllegalArgumentException("Given image file is not in upload directory. only files in the upload directory can be converted!");
+		
+		final int extStart = imageFile.lastIndexOf(".");
+		if (extStart<1) 
+			throw new IllegalArgumentException("Given image file has to be NIFTI or minc with its corresponding extension .nii or .mnc !");
+		
+		final String ext = imageFile.substring(extStart);
+		if (ext.equalsIgnoreCase(".raw"))
+			throw new IllegalArgumentException("Given image file seems to be raw already (according to the .raw extension that is)!");
+		else if (!(ext.equalsIgnoreCase(".nii") || ext.equalsIgnoreCase(".mnc")))
+				throw new IllegalArgumentException("Given image file has to be NIFTI or minc with its corresponding extension .nii or .mnc !");
+		
+		final String originalFilenameWithoutExtension = imageFile.substring(0, extStart);
+		
+		// assemble new raw file name, either by using the given name or the default: original file name with extension changed to .raw
+		if (newRawFileName != null) {
+			// append upload directory at beginning if not supplied
+			if (!newRawFileName.startsWith(uploadDir.getAbsolutePath()))
+				newRawFileName = new File (uploadDir, newRawFileName).getAbsolutePath();
+			
+			// see if we have an extension raw at the end already, if not append it
+			if (!newRawFileName.endsWith(".raw"))
+				newRawFileName += ".raw";
+		} else {
+			newRawFileName = originalFilenameWithoutExtension + ".raw";
+		}
+		
+		final File newRawFile = new File(newRawFileName);
+		if (newRawFile.exists())
+			throw new IllegalArgumentException("Raw file '" + newRawFile.getAbsolutePath() + "' exists already. Please supply a different file name for the new raw file");
+			
+		// check whether we have a minc file on our hands
+		short formatIdentifier = 1; // 1 for minc, 2 for nifti
+		if (ext.equalsIgnoreCase(".mnc")) {
+			final MincInfo mincTest = new TissueStack().getMincInfo(imageFile);
+			if (mincTest == null)
+				throw new IllegalArgumentException("Given file had .mnc extension but proved to be non minc. If it is in fact minc version 1, please convert it to minc 2 before you launch the raw file conversion!");
+		} else 
+			formatIdentifier = 2; // we assume it is the only other possibility left, if not the converter will give us an error anyhow!
+		
+		// now let JNI do the rest
+		return new RestfulResource(
+				new Response(new TissueStack().convertImageFormatToRaw(imageFile, newRawFile.getAbsolutePath(), formatIdentifier)));		
+	}
+
+	@Path("/progress")
+	@Description("Returns the progress for a running/finished task")
+	public RestfulResource queryTaskProgress(
+			@Description("Mandatory: Task Id")
+			@QueryParam("task_id")
+			String taskId){			
+		/*
+		 *  TODO: put back in once working
+		// check permissions
+		if (!SecurityResources.checkSession(session)) {
+			throw new RuntimeException("Invalid Session! Please Log In.");
+		}*/
+		if (taskId == null || taskId.length() != 10)
+			throw new IllegalArgumentException("Task Id has to be a non-empty string of 10 alphanumeric characters!");
+		
+		// now let JNI do the rest
+		return new RestfulResource(new Response(new TissueStack().queryTaskProgress(taskId)));		
+	}
+	
 	@Path("/meta-info")
 	@Description("Shows the Tissue Stack Admin's Meta Info.")
 	public RestfulResource getAdminResourcesMetaInfo() {

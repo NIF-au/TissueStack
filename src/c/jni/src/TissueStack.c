@@ -4,7 +4,7 @@
 JNIEnv * global_env = NULL;
 
 // signal handling - action
-void signal_handler(int sig)
+void jni_signal_handler(int sig)
 {
 	printf("Encountered signal: %i\n", sig);
 
@@ -37,7 +37,7 @@ void signal_handler(int sig)
 void registerSignalHandlers() {
   struct sigaction	act;
 
-  act.sa_handler = signal_handler;
+  act.sa_handler = jni_signal_handler;
   sigemptyset(&act.sa_mask);
   act.sa_flags = 0;
 
@@ -72,6 +72,8 @@ void throwJavaException(JNIEnv *env, const char *name, const char *msg) {
 
 /* get minc info */
 JNIEXPORT jobject JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_getMincInfo(JNIEnv * env, jobject obj, jstring filename) {
+	i_am_jni = 1;
+
 	// before anything install native signal handlers
 	//global_env = env;
 	//registerSignalHandlers();
@@ -381,6 +383,8 @@ JNIEXPORT jobject JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_getMinc
 
 JNIEXPORT jstring JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMincVolume
 		  (JNIEnv * env, jobject obj, jstring filename, jstring base_dir, jintArray arr_dimensions, jint size, jdouble zoom_factor, jstring image_type, jboolean preview) {
+	i_am_jni = 1;
+
 	// tedious parameter checking
 	if (filename == NULL) { // MINC FILE NAME
 		throwJavaException(env, "java/lang/RuntimeException", "File Name is null!");
@@ -492,6 +496,90 @@ JNIEXPORT jstring JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMin
 	(*env)->ReleaseStringUTFChars(env, base_dir, dir);
 	if (image_type != NULL) (*env)->ReleaseStringUTFChars(env, image_type, imageType);
 	(*env)->ReleaseIntArrayElements(env, arr_dimensions, dimensions, 0);
+
+	return ret;
+}
+
+JNIEXPORT jstring Java_au_edu_uq_cai_TissueStack_jni_TissueStack_convertImageFormatToRaw(
+		JNIEnv * env, jobject obj, jstring imageFile, jstring newRawFile, jshort  formatIdentifier) {
+	i_am_jni = 1;
+
+	// tedious parameter checking
+	if (imageFile == NULL) {
+		throwJavaException(env, "java/lang/RuntimeException", "File name for original image file is null!");
+		return NULL;
+	}
+	const char * in_file = (*env)->GetStringUTFChars(env, imageFile, NULL);
+	if (in_file == NULL) {
+		throwJavaException(env, "java/lang/RuntimeException", "Could not convert java to c string");
+		return NULL;
+	}
+	if (newRawFile == NULL) {
+		throwJavaException(env, "java/lang/RuntimeException", "File name for raw output file is null!");
+		return NULL;
+	}
+	const char * out_file = (*env)->GetStringUTFChars(env, newRawFile, NULL);
+	if (out_file == NULL) {
+		throwJavaException(env, "java/lang/RuntimeException", "Could not convert java to c string");
+		return NULL;
+	}
+	if (formatIdentifier != 1 && formatIdentifier != 2) {
+		throwJavaException(env, "java/lang/RuntimeException", "Image Format Identifier has to have 1 (MINC) or 2 (NIFTI) !");
+		return NULL;
+	}
+
+	// return value
+	jstring ret = NULL;
+
+	// TODO: implement actual code
+
+
+	// for now, test if JNI call works by simply returning input params
+	t_string_buffer * test = NULL;
+	test = appendToBuffer(test, "IN-FILE: ");
+	test = appendToBuffer(test, (char *) in_file);
+	test = appendToBuffer(test, " | OUT-FILE: ");
+	test = appendToBuffer(test, (char *) out_file);
+	test = appendToBuffer(test, " | FORMAT: ");
+	test = appendToBuffer(test, formatIdentifier == 1 ? "MINC" : "NIFTI");
+
+	ret = (*env)->NewStringUTF(env, test->buffer);
+
+	// freeing
+	(*env)->ReleaseStringUTFChars(env, imageFile, in_file);
+	(*env)->ReleaseStringUTFChars(env, newRawFile, out_file);
+	free_t_string_buffer(test);
+
+	return ret;
+}
+
+JNIEXPORT jobject  Java_au_edu_uq_cai_TissueStack_jni_TissueStack_queryTaskProgress(
+		JNIEnv * env, jobject obj, jstring taskID) {
+	i_am_jni = 1;
+
+
+	// TODO: implement actual code
+
+
+	// this is for testing only
+	// construct Java Objects for return and populate with response content
+	jclass doubleClazz = (*env)->FindClass(env, "java/lang/Double");
+	if (doubleClazz == NULL) {
+		throwJavaException(env, "java/lang/RuntimeException", "Could not find Double class!");
+		return NULL;
+	}
+	jmethodID constructor = (*env)->GetMethodID(env, doubleClazz, "<init>", "(Ljava/lang/String;)V");
+	if (constructor == NULL) {
+		throwJavaException(env, "java/lang/RuntimeException", "Could not create Double object!");
+		return NULL;
+	}
+
+	// call constructor with return value
+	jobject ret = (*env)->NewObject(env, doubleClazz, constructor, (*env)->NewStringUTF(env, "100"));
+	if (ret == NULL) {
+		throwJavaException(env, "java/lang/RuntimeException", "Could not create return object!");
+		return NULL;
+	}
 
 	return ret;
 }

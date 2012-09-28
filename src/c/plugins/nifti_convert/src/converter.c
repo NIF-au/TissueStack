@@ -193,7 +193,7 @@ void  		*start(void *args)
       dims[i] = -1;
       i++;
     }
-  ERROR("Conversion: NIFTI: %s to RAW: %s ==> DONE", a->commands[0], a->commands[1]);
+  INFO("Conversion: NIFTI: %s to RAW: %s ==> DONE", a->commands[0], a->commands[1]);
   if (close(fd) == -1)
     {
       perror("Close ");

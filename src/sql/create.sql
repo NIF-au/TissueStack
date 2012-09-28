@@ -88,7 +88,7 @@ CREATE TABLE dataset_planes
   resolution_mm NUMERIC(18,10),
   CONSTRAINT dataset_planes_pk PRIMARY KEY (id),
   CONSTRAINT dataset_planes_fk FOREIGN KEY (dataset_id)
-      REFERENCES dataset (id),
+      REFERENCES dataset (id) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT dataset_planes_unique UNIQUE (dataset_id, name)
 );
 ALTER TABLE dataset_planes OWNER TO tissuestack;
