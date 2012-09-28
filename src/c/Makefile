@@ -60,6 +60,9 @@ compile: $(OBJS)
 	make -C ./plugins/nifti_convert/ compile
 	rm -rf volume.o
 	rm -rf utils/utils.o
+	make -C ./plugins/percent/ compile
+	rm -rf volume.o
+	rm -rf utils/utils.o
 	make -C ./jni/ compile
 
 install:

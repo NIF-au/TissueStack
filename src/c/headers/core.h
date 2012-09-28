@@ -17,6 +17,9 @@
 #include <sys/ioctl.h>
 #include <minc2.h>
 
+#include <sys/prctl.h>
+
+
 #include "utils.h"
 #include "thread_pool.h"
 #include "tile_requests.h"
@@ -327,18 +330,11 @@ void		clean_error_list(t_tissue_stack *general, int min);
 
 int		is_num(char *str);
 void		percent_time_write(char *str, char **commands, void *box);
-void		percent_init(char **commands, void *box, t_tissue_stack *t);
 void		percent_init_direct(int total_blocks, char **id, t_tissue_stack *t);
 t_percent_elem	*get_percent_elem_by_id(char *id, t_prcnt_t *p);
-void		percent_add(char **commands, void *box, t_tissue_stack *t);
 void		percent_add_direct(int blocks, char *id, t_tissue_stack *t);
-void		percent_get(char **commands, void *box, t_tissue_stack *t);
 void		percent_get_direct(char **buff, char *id, t_tissue_stack *t);
 void		percent_destroy(char **commands, void *box, t_tissue_stack *t);
-void		percent_time_processing(char **commands, void *box,
-					t_func_prcnt_t *f, t_tissue_stack *t);
-void		init_func_ptr_percent(t_tissue_stack *t);
-void		init_func_ptr_time(t_tissue_stack *t);
 void		init_percent_time(t_tissue_stack *t);
 
 /*		notification_center.c		*/

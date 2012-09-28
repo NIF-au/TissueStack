@@ -496,6 +496,7 @@ void		*init(void *args)
   t_args_plug	*a;
 
   a = (t_args_plug *)args;
+  prctl(PR_SET_NAME, "Image_plug");
   image_args = malloc(sizeof(*image_args));
   image_args->total_slices_to_do = 0;
   image_args->slices_done = 0;
