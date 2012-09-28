@@ -144,6 +144,8 @@ void  		*start(void *args)
   t_header	*h;
   t_args_plug	*a;
 
+  prctl(PR_SET_NAME, "TS_NIFTI_CON");
+
   a = (t_args_plug*)args;
   if ((nim = nifti_image_read(a->commands[0], 0)) == NULL)
     {
@@ -191,7 +193,7 @@ void  		*start(void *args)
       dims[i] = -1;
       i++;
     }
-  ERROR("Conversion: NIFTI: %s to RAW: %s ==> DONE", a->commands[0], a->commands[1]);
+  INFO("Conversion: NIFTI: %s to RAW: %s ==> DONE", a->commands[0], a->commands[1]);
   if (close(fd) == -1)
     {
       perror("Close ");

@@ -213,6 +213,8 @@ void  		*start(void *args)
 
   a = (t_args_plug *)args;
 
+  prctl(PR_SET_NAME, "TS_MINC_CON");
+
   if ((fd = open(a->commands[1], (O_CREAT | O_TRUNC | O_RDWR))) == -1)
     {
       perror("Open ");

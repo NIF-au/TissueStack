@@ -39,7 +39,6 @@ public final class MincResources extends AbstractRestfulMetaInformation {
 	}
 
 	
-	//jstring base_dir, jintArray arr_dimensions, jdouble zoom_factor, jboolean preview
 	@Path("/tile")
 	@Description("Tiles a given data set")
 	public RestfulResource tileDataSet(

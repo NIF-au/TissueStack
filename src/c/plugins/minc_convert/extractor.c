@@ -21,9 +21,6 @@ int		main(int ac, char **av)
   char		name[200];
   int		tmp_off;
 
-  ac = ac;
-  av = av;
-
   InitializeMagick("./");
   buff = malloc(size[0] + 1 * sizeof(*buff));
   fd = open("./raw_data_file", O_RDWR);

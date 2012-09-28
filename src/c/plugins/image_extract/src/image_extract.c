@@ -535,6 +535,7 @@ void			*start(void *args)
   t_vol			*volume;
 
   a = (t_args_plug *)args;
+  prctl(PR_SET_NAME, "TS_IMAGES");
 
   socketDescriptor = (FILE*)a->box;
   volume = load_volume(a, a->commands[0]);
