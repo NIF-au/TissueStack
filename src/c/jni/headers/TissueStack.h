@@ -5,6 +5,7 @@
 	#include "jni.h"
 	#include "client.h"
 	#include "utils.h"
+	#include "strings.h"
 	#include <signal.h>
 
 	// IMPORTANT: use this variable to avoid seg faults that are caused by logging when called from JNI
