@@ -54,9 +54,9 @@
    				<div id="menu_header" data-theme="a" data-role="header" data-position="fixed" data-id="Head1">
          	  	     <div data-role="navbar">
 						<ul>
-							<li><a href="#data" data-icon="plus" class="ui-btn-active">Data</a></li>
-							<li><a href="#setting" data-icon="minus">Settings</a></li>
-							<li><a href="#admin" data-icon="minus">Admin</a></li>							
+							<li><a href="#data" data-icon="plus" data-prefetch="true"  class="ui-btn-active ui-state-persist">Data</a></li>
+							<li><a href="#setting" data-icon="minus" data-prefetch="true" >Settings</a></li>
+							<li><a href="#admin" data-icon="minus" data-prefetch="true" >Admin</a></li>							
 						</ul>
 			  		 </div>
                 </div>
@@ -215,9 +215,9 @@
    				<div data-theme="a" data-role="header" data-position="fixed">
         	  	     <div data-role="navbar">
 						<ul>
-							<li><a href="#data" data-icon="minus">Data</a></li>
-							<li><a href="#setting" data-icon="plus" class="ui-btn-active">Settings</a></li>
-							<li><a href="#admin" data-icon="minus">Admin</a></li>
+							<li><a href="#data" data-icon="minus" data-prefetch="true" >Data</a></li>
+							<li><a href="#setting" data-icon="plus" data-prefetch="true" class="ui-btn-active ui-state-persist">Settings</a></li>
+							<li><a href="#admin" data-icon="minus" data-prefetch="true" >Admin</a></li>
 						</ul>
 			  		 </div>
                 </div>
@@ -225,15 +225,15 @@
      	
 	     	<div class="settings-left-column">
 	     		Color Mapping:
-	     	    <fieldset id="colormap_choice" data-role="radio-choice-1">
-	     				<input type="radio" name="color_map" id="colormap_grey" value="grey" checked="checked" />
-	     	         	<label for="colormap_grey">Grey</label>
-	     	
-	     	         	<input type="radio" name="color_map" id="colormap_hot" value="hot"  />
-	     	         	<label for="colormap_hot">Hot</label>
-	     	
-	     	         	<input type="radio" name="color_map" id="colormap_spectral" value="spectral"  />
-	     	         	<label for="colormap_spectral">Spectral</label>
+	     		<fieldset id="colormap_choice" data-role="controlgroup">	    
+     				<input type="radio" name="color_map" id="colormap_grey" value="grey" checked="checked" />
+     	         	<label for="colormap_grey">Grey</label>
+     	
+     	         	<input type="radio" name="color_map" id="colormap_hot" value="hot"  />
+     	         	<label for="colormap_hot">Hot</label>
+     	
+     	         	<input type="radio" name="color_map" id="colormap_spectral" value="spectral"  />
+     	         	<label for="colormap_spectral">Spectral</label>
 	     		</fieldset>
 	     	</div>
      	
@@ -253,9 +253,9 @@
 					<div data-theme="a" data-role="header" data-position="fixed">
 	    	  	     <div data-role="navbar">
 						<ul>
-							<li><a href="#data" data-icon="minus">Data</a></li>
-							<li><a href="#setting" data-icon="minus">Settings</a></li>
-							<li><a href="#admin" data-icon="plus" class="ui-btn-active">Admin</a></li>
+							<li><a href="#data" data-icon="minus" data-prefetch="true" >Data</a></li>
+							<li><a href="#setting" data-icon="minus" data-prefetch="true" >Settings</a></li>
+							<li><a href="#admin" data-icon="plus" data-prefetch="true" class="ui-btn-active ui-state-persist">Admin</a></li>
 						</ul>
 			  		 </div>
 	            </div>
@@ -339,6 +339,11 @@
 				<label for="txtDesc" style="text-align: left;">&nbsp;&nbsp;Description:</label>
 				<input type="text" name="name" id="txtDesc" data-mini="true" />
 				<a href="" id="bt_add_dataset" data-role="button" data-inline="true" data-theme="e" data-icon="check">Add Data Set</a>
+			</div>
+			
+			<div class="setting-buttom-column">
+				<h1 style="text-align: center;">DataSet Table: Conversion Status</h1> <hr/>
+				<div id="createTable"></div>
 			</div>
 	  </div>
 	  <!--END OF ADMIN PAGE-->

@@ -129,16 +129,24 @@
 }
 .settings-left-column {
 	text-align: center;
-	margin: 5px;
+	margin: 10px;
 	float: left;
 	width: 45%	
 }
 
 .settings-right-column {
 	text-align: center;
-	margin: 5px;
-	float: left;
+	margin: 10px;
+	float: right;
 	width: 45%	
+}
+
+.setting-buttom-column{
+	width: 98%;
+	position: absolute;
+	bottom:0px;
+	margin: 10px 10px 10px 10px;
+	z-index: 50;
 }
 
 /* VERTICAL SLIDER CSS*/
@@ -260,7 +268,8 @@ a.ui-slider-handle-horizontal{
 
 /*PROGRESS BAR FOR UPLOAD FILES*/
 
-.progress { position:relative; width:400px; border: 1px solid #ddd; padding: 1px; border-radius: 3px; }
+.progress { position:relative; width:90%; border: 1px solid #ddd; padding: 1px; border-radius: 3px; }
+.statusCompleted { position:relative; width:150px; border: 2px solid #686868; padding: 1px; border-radius: 3px;}
 .bar { background-color: #70e0b4; width:0%; height:20px; border-radius: 3px;}
 .percent { position:absolute; display:inline-block; top:3px; left:48%; }
 
@@ -488,3 +497,41 @@ a.ui-slider-handle-horizontal{
 	-moz-box-shadow: 1px 1px 5px 1px #207c7d inset;
 	box-shadow: 1px 1px 5px 1px #207c7d inset;
  }
+/*Create Table in Admin*/
+#createTable{
+	height:180px; 
+	position:relative; 
+	overflow:auto;
+}
+.conversion-table
+{
+	font-size: 12px;
+	height: 180px;
+	width: 100%;
+	text-align: left;
+	border-collapse: collapse;
+	text-shadow: 0 0 0px #4f3e3e;
+}
+.conversion-table th
+{
+	padding: 15px 10px 10px 10px;
+	font-weight: normal;
+	font-size: 14px;
+	color: #c7800e;
+	background-color: #d2d1cf;
+}
+.conversion-table tbody
+{
+	background: #e8edff;
+}
+.conversion-table td
+{
+	padding: 10px;
+	color: #669;
+	border-top: 1px dashed #fff;
+}
+.conversion-table tbody tr:hover td
+{
+	color: #339;
+	background: #d0dafd;
+}

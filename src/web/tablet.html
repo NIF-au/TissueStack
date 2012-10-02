@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable = no" />
+        <meta name="viewport" content="width=device-width initial-scale=1, user-scalable=no" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
         
@@ -37,7 +37,7 @@
 		<script src="js/TissueStack.Init.js"></script>
 		
 		<script type="text/javascript">
-		    TissueStack.tablet = true;
+		    TissueStack.tablet = true;		    
 		</script>
   </head>
 <body>
@@ -47,9 +47,9 @@
    				<div id="menu_header" data-theme="a" data-role="header" data-position="fixed" data-id="Head1">
          	  	     <div data-role="navbar">
 						<ul>
-							<li><a href="#data" data-icon="plus" class="ui-btn-active">Data</a></li>
-							<li><a href="#setting" data-icon="minus">Settings</a></li>
-							<li><a href="#admin" data-icon="minus">Admin</a></li>							
+							<li><a href="#data" data-icon="plus" data-prefetch="true"class="ui-btn-active ui-state-persist">Data</a></li>
+							<li><a href="#setting" data-icon="minus" data-prefetch="true">Settings</a></li>
+							<li><a href="#admin" id="reload_table" data-icon="minus" data-prefetch="true">Admin</a></li>							
 						</ul>
 			  		 </div>
                 </div>
@@ -147,9 +147,9 @@
    				<div data-theme="a" data-role="header" data-position="fixed">
         	  	     <div data-role="navbar">
 						<ul>
-							<li><a href="#data" data-icon="minus">Data</a></li>
-							<li><a href="#setting" data-icon="plus" class="ui-btn-active">Settings</a></li>
-							<li><a href="#admin" data-icon="minus">Admin</a></li>
+							<li><a href="#data" data-icon="minus" data-prefetch="true">Data</a></li>
+							<li><a href="#setting" data-icon="plus" data-prefetch="true" class="ui-btn-active ui-state-persist">Settings</a></li>
+							<li><a href="#admin" id="reload_table" data-icon="minus" data-prefetch="true">Admin</a></li>
 						</ul>
 			  		 </div>
                 </div>
@@ -181,9 +181,9 @@
 				<div data-theme="a" data-role="header" data-position="fixed">
 	    	  	     <div data-role="navbar">
 						<ul>
-							<li><a href="#data" data-icon="minus">Data</a></li>
-							<li><a href="#setting" data-icon="minus">Settings</a></li>
-							<li><a href="#admin" data-icon="plus" class="ui-btn-active">Admin</a></li>
+							<li><a href="#data" data-icon="minus" data-prefetch="true">Data</a></li>
+							<li><a href="#setting" data-icon="minus" data-prefetch="true">Settings</a></li>
+							<li><a href="#admin" id="reload_table" data-icon="plus" data-prefetch="true" class="ui-btn-active ui-state-persist">Admin</a></li>
 						</ul>
 			  		 </div>
 	            </div>
@@ -265,6 +265,12 @@
 	    			<label for="txtDesc" style="text-align: left;">&nbsp;&nbsp;Description:</label>
 	    			<input type="text" name="name" id="txtDesc" data-mini="true" />
 	    			<a href="" id="bt_add_dataset" data-role="button" data-inline="true" data-theme="e" data-icon="check">Add Data Set</a>
+ 	    	</div>
+ 	    	<div class="setting-buttom-column">
+    			<h1 style="text-align: center;">DataSet Table: Conversion Status</h1> <hr/>
+    			<div id="tablettransition" style="height: 200px; position:relative; overflow:auto;">
+    				<div id="createTable" style="height: 800px"></div>
+    			</div>
  	    	</div>
 	 	</div>
  	    <!--END OF ADMIN PAGE-->
