@@ -26,25 +26,70 @@ void		*iter_all_pix_and_convert(void *data_in, unsigned int size, nifti_image *n
 {
   int		i;
   unsigned char	*data_out;
-
-  char		*data;
-
   double	dvalue = 0.0;
   void		*inptr;
   void		*outptr;
   int		sign;
   int		datatype;
+  void		*data;
 
   datatype = get_datatype_nifti(nim);
   sign = get_sign_nifti(nim);
 
-  data = (char*)data_in;
+
+
+  if (nim->datatype == 2 || nim->datatype == 256) {
+    if (nim->datatype == 2)
+      data = (unsigned char*)data_in;
+    else
+      data = (char*)data_in;
+  }
+  else if (nim->datatype == 4 || nim->datatype == 512) {
+    if (nim->datatype == 512)
+      data = (unsigned short*)data_in;
+    else
+      data = (short*)data_in;
+  }
+  else if (nim->datatype == 8 || nim->datatype == 768) {
+    if (nim->datatype == 768)
+      data = (unsigned int*)data_in;
+    else
+      data = (int*)data_in;
+  }
+  else if (nim->datatype == 16)
+    data = (float *)data_in;
+  else
+    data = (double*)data_in;
+
+  //  data = (char*)data_in;
 
   data_out = malloc((size + 1) * sizeof(*data_out));
   i = 0;
   while (i < size)
     {
-      inptr = &data[i];
+      if (nim->datatype == 2 || nim->datatype == 256) {
+	if (nim->datatype == 2)
+	  inptr = (unsigned char *)(&((unsigned char *)data)[i]);
+	else
+	  inptr = (char *)(&((char *)data)[i]);
+      }
+      else if (nim->datatype == 4 || nim->datatype == 512) {
+	if (nim->datatype == 512)
+	  inptr = (unsigned short *)(&((unsigned short *)data)[i]);
+	else
+	  inptr = (short *)(&((short *)data)[i]);
+      }
+      else if (nim->datatype == 8 || nim->datatype == 768) {
+	if (nim->datatype == 768)
+	  inptr = (unsigned int *)(&((unsigned int *)data)[i]);
+	else
+	  inptr = (int *)(&((int *)data)[i]);
+      }
+      else if (nim->datatype == 16)
+	inptr = (float *)(&((float *)data)[i]);
+      else
+	inptr = (double *)(&((double *)data)[i]);
+      //      inptr = &data[i];
       outptr = &data_out[i];
       MI_TO_DOUBLE(dvalue, datatype, sign, inptr);
       MI_FROM_DOUBLE(dvalue, NC_CHAR, MI_PRIV_UNSIGNED, outptr);
@@ -200,6 +245,7 @@ void  		*start(void *args)
 	    }
 	  free(data);
 	  slice++;
+	  DEBUG("Slice n %i on dimension %i", slice, i);
 	  a->general_info->percent_add(1, id_percent, a->general_info);
 	}
       dims[i] = -1;

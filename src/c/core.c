@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Tue Oct  2 16:02:24 2012 Oliver Nicolini
+** Last update Tue Oct  2 17:16:59 2012 Oliver Nicolini
 */
 
 #include "core.h"
@@ -208,9 +208,8 @@ void            init_prog(t_tissue_stack *t)
 
 void		free_core_struct(t_tissue_stack *t)
 {
-  if (t == NULL) {
-    return;
-  }
+  if (t == NULL) return;
+
   INFO("Freeing Allocated Resources...");
   free_all_volumes(t);
   free_all_plugins(t);
