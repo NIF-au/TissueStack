@@ -25,7 +25,9 @@ void			count_start_init(unsigned long		*start,
 					 t_vol			*volume);
 void			dim_loop(int		fd,
 				 int		dimensions_nb,
-				 t_vol		*volume);
+				 t_vol		*volume,
+				 t_tissue_stack	*t,
+				 char		*id_percent);
 t_vol			*init_get_volume_from_minc_file(char *path);
 t_header		*create_header_from_minc_struct(t_vol *minc_volume);
 void			write_header_into_file(int fd, t_header *h);

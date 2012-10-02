@@ -543,12 +543,6 @@ void			*start(void *args)
     return NULL;
   }
 
-  while (a->commands[i] != NULL)
-    {
-      printf("%s\n", a->commands[i]);
-      i++;
-    }
-
   image_args_tmp = (t_image_extract*)a->this->stock;
   image_args = create_image_struct();
   image_args->dim_nb = volume->dim_nb;
