@@ -586,7 +586,7 @@ JNIEXPORT jobject  Java_au_edu_uq_cai_TissueStack_jni_TissueStack_queryTaskProgr
 	// load and start appropriate conversion plugin
 	t_string_buffer * startProgressCommand = NULL;
 	startProgressCommand = appendToBuffer(startProgressCommand, "start progress ");
-	startProgressCommand = appendToBuffer(startProgressCommand, taskID);
+	startProgressCommand = appendToBuffer(startProgressCommand, (char *) task);
 
 	// send command to plugin
 	write(fileDescriptor, startProgressCommand->buffer, startProgressCommand->size);

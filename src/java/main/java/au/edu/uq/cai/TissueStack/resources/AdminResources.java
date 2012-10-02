@@ -347,7 +347,7 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 		final String originalFilenameWithoutExtension = imageFile.substring(0, extStart);
 		
 		// assemble new raw file name, either by using the given name or the default: original file name with extension changed to .raw
-		if (newRawFileName != null) {
+		if (newRawFileName != null && !newRawFileName.trim().isEmpty()) {
 			// append upload directory at beginning if not supplied
 			if (!newRawFileName.startsWith(uploadDir.getAbsolutePath()))
 				newRawFileName = new File (uploadDir, newRawFileName).getAbsolutePath();
