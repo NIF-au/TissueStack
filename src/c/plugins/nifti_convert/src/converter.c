@@ -143,6 +143,7 @@ void  		*start(void *args)
   unsigned int	size_per_slice;
   t_header	*h;
   t_args_plug	*a;
+  char		*id_percent;
 
   prctl(PR_SET_NAME, "TS_NIFTI_CON");
 
@@ -156,6 +157,10 @@ void  		*start(void *args)
   sizes[0] = nim->dim[1];
   sizes[1] = nim->dim[2];
   sizes[2] = nim->dim[3];
+
+  a->general_info->percent_init((sizes[0] + sizes[1] + sizes[2]), &id_percent, a->general_info);
+  if (write(*((int*)a->box), id_percent, 10) < 0)
+    ERROR("Open Error");
 
   if ((fd = open(a->commands[1], O_CREAT | O_TRUNC | O_RDWR)) < 0)
     {
@@ -189,6 +194,7 @@ void  		*start(void *args)
 	    }
 	  free(data);
 	  slice++;
+	  a->general_info->percent_add(1, id_percent, a->general_info);
 	}
       dims[i] = -1;
       i++;
