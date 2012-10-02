@@ -392,8 +392,11 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 		if (taskId == null || taskId.length() != 10)
 			throw new IllegalArgumentException("Task Id has to be a non-empty string of 10 alphanumeric characters!");
 		
+		Double ret = new TissueStack().queryTaskProgress(taskId);
+		if (ret == null)  throw new RuntimeException("Task with id '" + taskId + "' does not exist!");
+		
 		// now let JNI do the rest
-		return new RestfulResource(new Response(new TissueStack().queryTaskProgress(taskId)));		
+		return new RestfulResource(new Response(ret));		
 	}
 	
 	@Path("/meta-info")

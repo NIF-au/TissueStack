@@ -592,18 +592,17 @@ JNIEXPORT jobject  Java_au_edu_uq_cai_TissueStack_jni_TissueStack_queryTaskProgr
 	write(fileDescriptor, startProgressCommand->buffer, startProgressCommand->size);
 	free_t_string_buffer(startProgressCommand);
 
-	throwJavaException(env, "java/lang/RuntimeException", task);
-	return NULL;
+	char * buff = malloc(31 * sizeof(*buff));
+	memset(buff, 0, 31);
+	read(fileDescriptor, buff, 31);
 
-	char * buff = malloc(11 * sizeof(*buff));
-	memset(buff, 0, 11);
-	read(fileDescriptor, buff, 10);
-
-	if (buff == NULL || strcmp(buff, "NULL") == 0 || strcmp(buff, "") == 0) {
+	if (buff == NULL || strcmp(buff, "") == 0) {
 		(*env)->ReleaseStringUTFChars(env, taskID, task);
 		throwJavaException(env, "java/lang/RuntimeException", "0 length response!");
 		return NULL;
 	}
+
+	if (strcmp(buff, "NULL") == 0) return NULL;
 
 	// construct Java Objects for return and populate with response content
 	jclass doubleClazz = (*env)->FindClass(env, "java/lang/Double");
