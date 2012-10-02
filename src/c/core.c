@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Tue Oct  2 16:02:24 2012 Oliver Nicolini
+** Last update Tue Oct  2 16:50:33 2012 Oliver Nicolini
 */
 
 #include "core.h"
@@ -273,7 +273,7 @@ int		main(int argc, char **argv)
   (t->plug_actions)(t, serv_command, NULL);
   (t->plug_actions)(t, "start comm", NULL);
   //(t->plug_actions)(t, "start minc_converter /media/Data/lowback.minc2.mnc /media/Data/lowback.raw", NULL);
-  //  (t->plug_actions)(t, "start nifti_converter /media/Data/nifti/brain1mr_u8.nii /opt/data/yopiyop.raw", NULL);
+  (t->plug_actions)(t, "start nifti_converter /media/Data/nifti/brain_float.nii /opt/data/yepiyep.raw", NULL);
 
 
   signal_manager(t);
