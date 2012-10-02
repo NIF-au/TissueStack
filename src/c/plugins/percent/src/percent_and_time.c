@@ -31,8 +31,9 @@ void		percent_get(char **commands, void *box, t_prcnt_t *p)
       commands == NULL || commands[1] == NULL)
     return;
   if ((tmp = get_percent_elem_by_id(commands[0], p)) == NULL)
-    return;
-  sprintf(pc, "%f", tmp->percent);
+    sprintf(pc, "NULL");
+  else
+    sprintf(pc, "%f", tmp->percent);
   percent_time_write_plug(pc, box);
 }
 

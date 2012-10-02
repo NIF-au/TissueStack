@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Tue Oct  2 15:11:49 2012 Oliver Nicolini
+** Last update Tue Oct  2 16:02:24 2012 Oliver Nicolini
 */
 
 #include "core.h"
@@ -265,7 +265,7 @@ int		main(int argc, char **argv)
   plugin_load_from_string("load comm /usr/local/plugins/TissueStackProcessCommunicator.so", t);
   plugin_load_from_string("load percent /usr/local/plugins/TissueStackPercent.so", t);
   //plugin_load_from_string("load minc_converter /usr/local/plugins/TissueStackMincConverter.so", t);
-  //  plugin_load_from_string("load nifti_converter /usr/local/plugins/TissueStackNiftiConverter.so", t);
+  plugin_load_from_string("load nifti_converter /usr/local/plugins/TissueStackNiftiConverter.so", t);
 
   sprintf(serv_command, "start serv %s", argv[1]);
 
@@ -273,7 +273,7 @@ int		main(int argc, char **argv)
   (t->plug_actions)(t, serv_command, NULL);
   (t->plug_actions)(t, "start comm", NULL);
   //(t->plug_actions)(t, "start minc_converter /media/Data/lowback.minc2.mnc /media/Data/lowback.raw", NULL);
-  //(t->plug_actions)(t, "start nifti_converter /opt/data/brain.nii /opt/data/brain_from_nifti.raw", NULL);
+  //  (t->plug_actions)(t, "start nifti_converter /media/Data/nifti/brain1mr_u8.nii /opt/data/yopiyop.raw", NULL);
 
 
   signal_manager(t);

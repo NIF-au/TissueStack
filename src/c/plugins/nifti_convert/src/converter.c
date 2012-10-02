@@ -26,7 +26,9 @@ void		*iter_all_pix_and_convert(void *data_in, unsigned int size, nifti_image *n
 {
   int		i;
   unsigned char	*data_out;
-  float		*data;
+
+  char		*data;
+
   double	dvalue = 0.0;
   void		*inptr;
   void		*outptr;
@@ -35,7 +37,9 @@ void		*iter_all_pix_and_convert(void *data_in, unsigned int size, nifti_image *n
 
   datatype = get_datatype_nifti(nim);
   sign = get_sign_nifti(nim);
-  data = (float*)data_in;
+
+  data = (char*)data_in;
+
   data_out = malloc((size + 1) * sizeof(*data_out));
   i = 0;
   while (i < size)
@@ -159,9 +163,11 @@ void  		*start(void *args)
   sizes[2] = nim->dim[3];
 
   a->general_info->percent_init((sizes[0] + sizes[1] + sizes[2]), &id_percent, a->general_info);
-  if (write(*((int*)a->box), id_percent, 10) < 0)
-    ERROR("Open Error");
-
+  if (a->box != NULL)
+    {
+      if (write(*((int*)a->box), id_percent, 10) < 0)
+	ERROR("Open Error");
+    }
   if ((fd = open(a->commands[1], O_CREAT | O_TRUNC | O_RDWR)) < 0)
     {
       perror("Open ");
