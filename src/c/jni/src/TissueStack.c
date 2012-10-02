@@ -592,6 +592,9 @@ JNIEXPORT jobject  Java_au_edu_uq_cai_TissueStack_jni_TissueStack_queryTaskProgr
 	write(fileDescriptor, startProgressCommand->buffer, startProgressCommand->size);
 	free_t_string_buffer(startProgressCommand);
 
+	throwJavaException(env, "java/lang/RuntimeException", task);
+	return NULL;
+
 	char * buff = malloc(11 * sizeof(*buff));
 	memset(buff, 0, 11);
 	read(fileDescriptor, buff, 10);
