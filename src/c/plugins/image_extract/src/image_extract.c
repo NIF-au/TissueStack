@@ -381,8 +381,6 @@ void		image_creation_lunch(t_tissue_stack *t, t_vol *vol, int step, t_image_extr
       t->percent_init(get_nb_blocks_percent(image_general, vol), &id_percent, t);
       if (write(image_general->percent_fd, id_percent, 10) < 0)
 	ERROR("Open Error");
-      //      close(image_general->percent_fd);
-      //    shutdown(image_general->percent_fd, 2);
     }
   image_general->id_percent = id_percent;
 
@@ -496,6 +494,7 @@ void		*init(void *args)
   t_args_plug	*a;
 
   a = (t_args_plug *)args;
+  prctl(PR_SET_NAME, "Image_plug");
   image_args = malloc(sizeof(*image_args));
   image_args->total_slices_to_do = 0;
   image_args->slices_done = 0;
@@ -543,6 +542,12 @@ void			*start(void *args)
     fclose(socketDescriptor);
     return NULL;
   }
+
+  while (a->commands[i] != NULL)
+    {
+      printf("%s\n", a->commands[i]);
+      i++;
+    }
 
   image_args_tmp = (t_image_extract*)a->this->stock;
   image_args = create_image_struct();
@@ -633,7 +638,14 @@ void			*start(void *args)
       else
 	{
 	  if (a->commands[17] != NULL)
-	    image_args->root_path = strdup(a->commands[17]);
+	    {
+	      image_args->root_path = strdup(a->commands[17]);
+	      if (a->commands[18] != NULL && strcmp(a->commands[18], "@tiling@") == 0)
+		{
+		  image_args->percentage = 1;
+		  image_args->percent_fd = *((int*)a->box);
+		}
+	    }
 	}
     }
   image_args->total_slices_to_do = get_total_slices_to_do(volume, image_args->dim_start_end);

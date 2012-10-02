@@ -161,7 +161,7 @@ JNIEXPORT jobject JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_getMinc
 	// we have 1 token but it is 'NULL'
 	if (numberOfTokens == 1 && strcmp(tokens[0], "NULL") == 0) {
 		// we received nothing, this is legitimate, we return null
-		return NULL;response
+		return NULL;
 	}
 
 	// call constructor with file name
@@ -461,7 +461,7 @@ JNIEXPORT jstring JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMin
 		startTilingCommand = appendToBuffer(startTilingCommand, conversionBuffer);
 	}
 	if (preview == JNI_TRUE) {
-		sprintf(conversionBuffer, " %.4g 6 full %s 1 ", (double)zoom_factor, imageType);
+		sprintf(conversionBuffer, " %.4g 6 full %s grey 0 0 1000 ", (double)zoom_factor, imageType);
 		startTilingCommand = appendToBuffer(startTilingCommand, conversionBuffer);
 	} else {
 		sprintf(conversionBuffer, " %.4g 1 tiles %s %i", (double)zoom_factor, imageType, (int) size);
@@ -576,7 +576,6 @@ JNIEXPORT jobject  Java_au_edu_uq_cai_TissueStack_jni_TissueStack_queryTaskProgr
 		return NULL;
 	}
 
-	// TODO: implement actual code
 	int fileDescriptor = init_sock_comm_client(UNIX_SOCKET_PATH);
 	if (!fileDescriptor) {
 		(*env)->ReleaseStringUTFChars(env, taskID, task);
@@ -586,10 +585,23 @@ JNIEXPORT jobject  Java_au_edu_uq_cai_TissueStack_jni_TissueStack_queryTaskProgr
 
 	// load and start appropriate conversion plugin
 	t_string_buffer * startProgressCommand = NULL;
-	startProgressCommand = appendToBuffer(startProgressCommand, "start ");
+	startProgressCommand = appendToBuffer(startProgressCommand, "start progress ");
+	startProgressCommand = appendToBuffer(startProgressCommand, taskID);
 
+	// send command to plugin
+	write(fileDescriptor, startProgressCommand->buffer, startProgressCommand->size);
+	free_t_string_buffer(startProgressCommand);
 
-	// this is for testing only
+	char * buff = malloc(11 * sizeof(*buff));
+	memset(buff, 0, 11);
+	read(fileDescriptor, buff, 10);
+
+	if (buff == NULL || strcmp(buff, "NULL") == 0 || strcmp(buff, "") == 0) {
+		(*env)->ReleaseStringUTFChars(env, taskID, task);
+		throwJavaException(env, "java/lang/RuntimeException", "0 length response!");
+		return NULL;
+	}
+
 	// construct Java Objects for return and populate with response content
 	jclass doubleClazz = (*env)->FindClass(env, "java/lang/Double");
 	if (doubleClazz == NULL) {
@@ -603,7 +615,7 @@ JNIEXPORT jobject  Java_au_edu_uq_cai_TissueStack_jni_TissueStack_queryTaskProgr
 	}
 
 	// call constructor with return value
-	jobject ret = (*env)->NewObject(env, doubleClazz, constructor, (*env)->NewStringUTF(env, "100"));
+	jobject ret = (*env)->NewObject(env, doubleClazz, constructor, (*env)->NewStringUTF(env, buff));
 	if (ret == NULL) {
 		throwJavaException(env, "java/lang/RuntimeException", "Could not create return object!");
 		return NULL;
