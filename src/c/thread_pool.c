@@ -12,7 +12,10 @@ void		*worker_start(void *pool)
       // lock mutex to avoid concurrent access
       pthread_mutex_lock(&p->lock);
       if (p->tasks_to_do == 0)
-	pthread_cond_wait(&(p->condvar), &(p->lock));
+	{
+	  prctl(PR_SET_NAME, "TS_CORE");
+	  pthread_cond_wait(&(p->condvar), &(p->lock));
+	}
       // get the task and delete the task from the queue
       if (p->first != NULL)
 	{
