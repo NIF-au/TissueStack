@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Thu Sep 27 16:14:18 2012 Oliver Nicolini
+** Last update Tue Oct  2 17:16:59 2012 Oliver Nicolini
 */
 
 #include "core.h"
@@ -208,9 +208,8 @@ void            init_prog(t_tissue_stack *t)
 
 void		free_core_struct(t_tissue_stack *t)
 {
-  if (t == NULL) {
-    return;
-  }
+  if (t == NULL) return;
+
   INFO("Freeing Allocated Resources...");
   free_all_volumes(t);
   free_all_plugins(t);
@@ -258,22 +257,21 @@ int		main(int argc, char **argv)
   t->tp = malloc(sizeof(*t->tp));
   thread_pool_init(t->tp, 16);
 
-  // load plugins
-
+  // These are the plugins that should be loaded by default.
+  // Please no rash name changes since JNI asks for the predefined names!
   plugin_load_from_string("load image /usr/local/plugins/TissueStackImageExtract.so", t);
   plugin_load_from_string("load serv /usr/local/plugins/TissueStackCommunicator.so", t);
   plugin_load_from_string("load comm /usr/local/plugins/TissueStackProcessCommunicator.so", t);
-  //plugin_load_from_string("load minc_converter /usr/local/plugins/TissueStackMincConverter.so", t);
-  //  plugin_load_from_string("load nifti_converter /usr/local/plugins/TissueStackNiftiConverter.so", t);
+  plugin_load_from_string("load minc_info /usr/local/plugins/TissueStackMincInfo.so", t);
+  plugin_load_from_string("load minc_converter /usr/local/plugins/TissueStackMincConverter.so", t);
+  plugin_load_from_string("load nifti_converter /usr/local/plugins/TissueStackNiftiConverter.so", t);
+  plugin_load_from_string("load progress /usr/local/plugins/TissueStackPercent.so", t);
 
   sprintf(serv_command, "start serv %s", argv[1]);
 
   // start plugins
   (t->plug_actions)(t, serv_command, NULL);
   (t->plug_actions)(t, "start comm", NULL);
-  //(t->plug_actions)(t, "start minc_converter /media/Data/lowback.minc2.mnc /media/Data/lowback.raw", NULL);
-  //(t->plug_actions)(t, "start nifti_converter /opt/data/brain.nii /opt/data/brain_from_nifti.raw", NULL);
-
 
   signal_manager(t);
 

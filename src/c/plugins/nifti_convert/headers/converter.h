@@ -127,5 +127,4 @@ void		write_header_into_file(int fd, t_header *h);
   }									\
   }
 
-
 #endif /* __NIFTI_CONVERTER__ */

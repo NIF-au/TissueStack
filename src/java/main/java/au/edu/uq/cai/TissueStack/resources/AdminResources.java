@@ -347,7 +347,7 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 		final String originalFilenameWithoutExtension = imageFile.substring(0, extStart);
 		
 		// assemble new raw file name, either by using the given name or the default: original file name with extension changed to .raw
-		if (newRawFileName != null) {
+		if (newRawFileName != null && !newRawFileName.trim().isEmpty()) {
 			// append upload directory at beginning if not supplied
 			if (!newRawFileName.startsWith(uploadDir.getAbsolutePath()))
 				newRawFileName = new File (uploadDir, newRawFileName).getAbsolutePath();
@@ -392,8 +392,11 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 		if (taskId == null || taskId.length() != 10)
 			throw new IllegalArgumentException("Task Id has to be a non-empty string of 10 alphanumeric characters!");
 		
+		Double ret = new TissueStack().queryTaskProgress(taskId);
+		if (ret == null)  throw new RuntimeException("Task with id '" + taskId + "' does not exist!");
+		
 		// now let JNI do the rest
-		return new RestfulResource(new Response(new TissueStack().queryTaskProgress(taskId)));		
+		return new RestfulResource(new Response(ret));		
 	}
 	
 	@Path("/meta-info")

@@ -60,6 +60,9 @@ compile: $(OBJS)
 	make -C ./plugins/nifti_convert/ compile
 	rm -rf volume.o
 	rm -rf utils/utils.o
+	make -C ./plugins/percent/ compile
+	rm -rf volume.o
+	rm -rf utils/utils.o
 	make -C ./jni/ compile
 
 install:
@@ -72,6 +75,7 @@ install:
 	make -C ./plugins/minc_convert/ install
 	make -C ./plugins/nifti_convert/ install
 	make -C ./plugins/minc_info/ install
+	make -C ./plugins/percent/ install
 	make -C ./jni/ install
 
 clean:
@@ -84,6 +88,7 @@ clean:
 	make -C ./plugins/minc_info/ clean
 	make -C ./plugins/minc_convert/ clean
 	make -C ./plugins/nifti_convert/ clean
+	make -C ./plugins/percent/ clean
 	make -C ./jni/ clean
 
 recompile: clean compile

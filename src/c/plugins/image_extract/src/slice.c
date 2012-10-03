@@ -27,26 +27,38 @@ int		get_nb_blocks_percent(t_image_extract *a, t_vol *volume)
   while (i < volume->dim_nb)
     {
       if (a->dim_start_end[i][0] != -1 &&
-	  a->dim_start_end[i][1] != -1 &&
-	  a->h_position == -1 &&
-	  a->w_position == -1)
+	  a->dim_start_end[i][1] != -1)
 	{
-	  get_width_height(&height, &width, i, volume);
-	  h_tiles = (height * a->scale) / a->square_size;
-	  w_tiles = (width * a->scale) / a->square_size;
-
-	  if ((height % a->square_size) != 0)
-	    h_tiles++;
-	  if ((width % a->square_size) != 0)
-	    w_tiles++;
-	  if (a->dim_start_end[i][1] == 0 && a->dim_start_end[i][0] == 0)
-	    slices = volume->size[i];
+	  if (strcmp(a->service, "full") == 0)
+	    {
+	      if (a->dim_start_end[i][1] == 0 && a->dim_start_end[i][0] == 0)
+		slices = volume->size[i];
+	      else
+		slices = a->dim_start_end[i][1] - a->dim_start_end[i][0];
+	      count += slices;
+	    }
 	  else
-	    slices = a->dim_start_end[i][1] - a->dim_start_end[i][0];
+	    {
+	      if (a->h_position == -1 && a->w_position == -1)
+		{
+		  get_width_height(&height, &width, i, volume);
+		  h_tiles = (height * a->scale) / a->square_size;
+		  w_tiles = (width * a->scale) / a->square_size;
 
-	  tiles_per_slice = h_tiles * w_tiles;
+		  if ((height % a->square_size) != 0)
+		    h_tiles++;
+		  if ((width % a->square_size) != 0)
+		    w_tiles++;
+		  if (a->dim_start_end[i][1] == 0 && a->dim_start_end[i][0] == 0)
+		    slices = volume->size[i];
+		  else
+		    slices = a->dim_start_end[i][1] - a->dim_start_end[i][0];
 
-	  count += (slices * tiles_per_slice);
+		  tiles_per_slice = h_tiles * w_tiles;
+
+		  count += (slices * tiles_per_slice);
+		}
+	    }
 	}
       i++;
     }
@@ -64,9 +76,10 @@ void            *get_all_slices_of_all_dimensions(void *args)
   a = (t_image_args *)args;
   volume = a->volume;
   i = 0;
+  if (a->info->percent == 1)
+      prctl(PR_SET_NAME, "TS_TILING");
   // copy path as well
   volume->path = strdup(a->volume->path);
-
   // init start and count variable
   count = malloc(volume->dim_nb * sizeof(*count));
   while (i < volume->dim_nb)
@@ -132,8 +145,6 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
   int		save_w_position = a->info->w_position;
   short 	free_hyperslab = -1;
 
-  char		*buff = NULL;
-
   if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
     write_http_header(a->file, "408 Request Timeout", a->info->image_type);
     fclose(a->file);
@@ -186,7 +197,6 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
 		  print_image(hyperslab, volume, current_dimension, current_slice, width, height, a);
 		  a->info->start_w++;
 		  a->general_info->percent_add(1, a->info->id_percent, a->general_info);
-		  a->general_info->percent_get(&buff, a->info->id_percent, a->general_info);
 		}
 	      a->info->start_h++;
 	    }

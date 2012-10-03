@@ -1,5 +1,7 @@
 #include "TissueStack.h"
 
+#define UNIX_SOCKET_PATH "/tmp/tissue_stack_communication"
+
 // global environment
 JNIEnv * global_env = NULL;
 
@@ -87,7 +89,7 @@ JNIEXPORT jobject JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_getMinc
 		return NULL;
 	}
 
-	int fileDescriptor = init_sock_comm_client("/tmp/tissue_stack_communication");
+	int fileDescriptor = init_sock_comm_client(UNIX_SOCKET_PATH);
 	if (!fileDescriptor) {
 		(*env)->ReleaseStringUTFChars(env, filename, file);
 		throwJavaException(env, "java/lang/RuntimeException", "Could not establish unix socket to image server!");
@@ -124,7 +126,7 @@ JNIEXPORT jobject JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_getMinc
 
 	if (response == NULL) {
 		(*env)->ReleaseStringUTFChars(env, filename, file);
-		throwJavaException(env, "java/lang/RuntimeException", "0 byte content!");
+		throwJavaException(env, "java/lang/RuntimeException", "0 length response!");
 		return NULL;
 	}
 
@@ -430,7 +432,7 @@ JNIEXPORT jstring JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMin
 		size = 256;
 	}
 
-	int fileDescriptor = init_sock_comm_client("/tmp/tissue_stack_communication");
+	int fileDescriptor = init_sock_comm_client(UNIX_SOCKET_PATH);
 	if (!fileDescriptor) {
 		(*env)->ReleaseStringUTFChars(env, filename, file);
 		(*env)->ReleaseStringUTFChars(env, base_dir, dir);
@@ -459,7 +461,7 @@ JNIEXPORT jstring JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMin
 		startTilingCommand = appendToBuffer(startTilingCommand, conversionBuffer);
 	}
 	if (preview == JNI_TRUE) {
-		sprintf(conversionBuffer, " %.4g 6 full %s 1 ", (double)zoom_factor, imageType);
+		sprintf(conversionBuffer, " %.4g 6 full %s grey 0 0 1000 ", (double)zoom_factor, imageType);
 		startTilingCommand = appendToBuffer(startTilingCommand, conversionBuffer);
 	} else {
 		sprintf(conversionBuffer, " %.4g 1 tiles %s %i", (double)zoom_factor, imageType, (int) size);
@@ -472,26 +474,15 @@ JNIEXPORT jstring JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMin
 	startTilingCommand = appendToBuffer(startTilingCommand, " @tiling@");
 
 	write(fileDescriptor, startTilingCommand->buffer, startTilingCommand->size);
-
+	free_t_string_buffer(startTilingCommand);
 
 	char * buff = malloc(11 * sizeof(*buff));
-
 	memset(buff, 0, 11);
-
 	read(fileDescriptor, buff, 10);
 
 	jstring ret = (*env)->NewStringUTF(env, buff);
 
-	//	shutdown(fileDescriptor, 2);
-	//	close(fileDescriptor);
-	//	return ret;
-
-	// set return
-	//	jstring ret = (*env)->NewStringUTF(env,startTilingCommand->buffer);
-
 	// clean up
-	free(startTilingCommand->buffer);
-	free(startTilingCommand);
 	(*env)->ReleaseStringUTFChars(env, filename, file);
 	(*env)->ReleaseStringUTFChars(env, base_dir, dir);
 	if (image_type != NULL) (*env)->ReleaseStringUTFChars(env, image_type, imageType);
@@ -528,27 +519,43 @@ JNIEXPORT jstring Java_au_edu_uq_cai_TissueStack_jni_TissueStack_convertImageFor
 		return NULL;
 	}
 
+	int fileDescriptor = init_sock_comm_client(UNIX_SOCKET_PATH);
+	if (!fileDescriptor) {
+		(*env)->ReleaseStringUTFChars(env, imageFile, in_file);
+		(*env)->ReleaseStringUTFChars(env, newRawFile, out_file);
+		throwJavaException(env, "java/lang/RuntimeException", "Could not establish unix socket to image server!");
+		return NULL;
+	}
+
+	// load and start appropriate conversion plugin
+	t_string_buffer * startConversionCommand = NULL;
+	startConversionCommand = appendToBuffer(startConversionCommand, "start ");
+	startConversionCommand = appendToBuffer(startConversionCommand, formatIdentifier == 1 ? "minc_converter " : "nifti_converter ");
+	startConversionCommand = appendToBuffer(startConversionCommand, (char *) in_file);
+	startConversionCommand = appendToBuffer(startConversionCommand, " ");
+	startConversionCommand = appendToBuffer(startConversionCommand, (char *) out_file);
+
+	// send command to plugin
+	write(fileDescriptor, startConversionCommand->buffer, startConversionCommand->size);
+	free_t_string_buffer(startConversionCommand);
+
+	char * buff = malloc(11 * sizeof(*buff));
+	memset(buff, 0, 11);
+	read(fileDescriptor, buff, 10);
+
+	if (buff == NULL || strcmp(buff, "NULL") == 0 || strcmp(buff, "") == 0) {
+		(*env)->ReleaseStringUTFChars(env, imageFile, in_file);
+		(*env)->ReleaseStringUTFChars(env, newRawFile, out_file);
+		throwJavaException(env, "java/lang/RuntimeException", "0 length response!");
+		return NULL;
+	}
+
 	// return value
-	jstring ret = NULL;
-
-	// TODO: implement actual code
-
-
-	// for now, test if JNI call works by simply returning input params
-	t_string_buffer * test = NULL;
-	test = appendToBuffer(test, "IN-FILE: ");
-	test = appendToBuffer(test, (char *) in_file);
-	test = appendToBuffer(test, " | OUT-FILE: ");
-	test = appendToBuffer(test, (char *) out_file);
-	test = appendToBuffer(test, " | FORMAT: ");
-	test = appendToBuffer(test, formatIdentifier == 1 ? "MINC" : "NIFTI");
-
-	ret = (*env)->NewStringUTF(env, test->buffer);
+	jstring ret = (*env)->NewStringUTF(env, buff);
 
 	// freeing
 	(*env)->ReleaseStringUTFChars(env, imageFile, in_file);
 	(*env)->ReleaseStringUTFChars(env, newRawFile, out_file);
-	free_t_string_buffer(test);
 
 	return ret;
 }
@@ -557,11 +564,46 @@ JNIEXPORT jobject  Java_au_edu_uq_cai_TissueStack_jni_TissueStack_queryTaskProgr
 		JNIEnv * env, jobject obj, jstring taskID) {
 	i_am_jni = 1;
 
+	if (taskID == NULL)
+	{
+		throwJavaException(env, "java/lang/RuntimeException", "Task ID is null!");
+		return NULL;
+	}
 
-	// TODO: implement actual code
+	const char * task = (*env)->GetStringUTFChars(env, taskID, NULL);
+	if (task == NULL) {
+		throwJavaException(env, "java/lang/RuntimeException", "Could not convert java to c string");
+		return NULL;
+	}
 
+	int fileDescriptor = init_sock_comm_client(UNIX_SOCKET_PATH);
+	if (!fileDescriptor) {
+		(*env)->ReleaseStringUTFChars(env, taskID, task);
+		throwJavaException(env, "java/lang/RuntimeException", "Could not establish unix socket to image server!");
+		return NULL;
+	}
 
-	// this is for testing only
+	// load and start appropriate conversion plugin
+	t_string_buffer * startProgressCommand = NULL;
+	startProgressCommand = appendToBuffer(startProgressCommand, "start progress ");
+	startProgressCommand = appendToBuffer(startProgressCommand, (char *) task);
+
+	// send command to plugin
+	write(fileDescriptor, startProgressCommand->buffer, startProgressCommand->size);
+	free_t_string_buffer(startProgressCommand);
+
+	char * buff = malloc(31 * sizeof(*buff));
+	memset(buff, 0, 31);
+	read(fileDescriptor, buff, 31);
+
+	if (buff == NULL || strcmp(buff, "") == 0) {
+		(*env)->ReleaseStringUTFChars(env, taskID, task);
+		throwJavaException(env, "java/lang/RuntimeException", "0 length response!");
+		return NULL;
+	}
+
+	if (strcmp(buff, "NULL") == 0) return NULL;
+
 	// construct Java Objects for return and populate with response content
 	jclass doubleClazz = (*env)->FindClass(env, "java/lang/Double");
 	if (doubleClazz == NULL) {
@@ -575,7 +617,7 @@ JNIEXPORT jobject  Java_au_edu_uq_cai_TissueStack_jni_TissueStack_queryTaskProgr
 	}
 
 	// call constructor with return value
-	jobject ret = (*env)->NewObject(env, doubleClazz, constructor, (*env)->NewStringUTF(env, "100"));
+	jobject ret = (*env)->NewObject(env, doubleClazz, constructor, (*env)->NewStringUTF(env, buff));
 	if (ret == NULL) {
 		throwJavaException(env, "java/lang/RuntimeException", "Could not create return object!");
 		return NULL;

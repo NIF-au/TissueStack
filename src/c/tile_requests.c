@@ -53,6 +53,8 @@ void init_tile_requests(t_tile_requests * this) {
 }
 
 void add_tile_request(t_tile_requests * this, char * id, char * timestamp) {
+  if (!id || !timestamp)
+    return;
   empty_hash_if_above_threshold(this);
 
 	int * requestDelta = malloc(sizeof(*requestDelta));
@@ -66,7 +68,9 @@ void add_tile_request(t_tile_requests * this, char * id, char * timestamp) {
 
 short is_expired_tile_request(t_tile_requests * this, char * id, char * timestamp) {
 	// see whether we have a difference value for a given id already
-	int * storedValue = NULL;
+  if (!this || !id || !timestamp)
+    return 0;
+  int * storedValue = NULL;
 
 	gint64 * id_num = malloc(sizeof(*id_num));
 	*id_num = atol(id);
