@@ -13,104 +13,169 @@ int		is_num(char *str)
   return (1);
 }
 
-void		percent_time_write(char *str, char **commands, void *box)
+int		percent_word_count(char *buff, char c)
+{
+  int		i;
+  int		count;
+
+  i = 0;
+  count = 0;
+  if (buff[0] != c && buff[0] != '\0')
+    count++;
+  while (buff[i] != '\0')
+    {
+      if ((buff[i] == c && buff[i + 1] != c ) && buff[i + 1] != '\0')
+	count++;
+      i++;
+    }
+  return (count);
+}
+
+int		percent_letter_count(char *buff, int position, char c)
+{
+  int		i;
+
+  i = 0;
+  while (buff[position + i] != c && buff[position + i] != '\0')
+    i++;
+  return (i);
+}
+
+char		**percent_str_to_wordtab(char *buff, char c)
 {
   int		i = 0;
-  char		*tmp;
+  int		j = 0;
+  int wordCount = 0;
+  char		**dest = NULL;
 
-  while (commands[i + 1] != NULL)
-    i++;
+  // preliminary checks
+  if (buff == NULL) {
+	  return NULL;
+  }
 
-  if (commands[i] != NULL && strcmp(commands[i], "file") == 0)
-    fwrite(str, 1, strlen(str), (FILE *)box);
-  else if (str != NULL && commands[i] != NULL && strcmp(commands[i], "string") == 0)
+  // if word count is 0 => good bye
+  wordCount = percent_word_count(buff, c);
+  if (wordCount == 0) {
+	  return NULL;
+  }
+
+  dest = malloc((wordCount + 1) * sizeof(*dest));
+
+  while (buff[i] != '\0')
     {
-      tmp = (char *)box;
-      i = 0;
-      while (str[i] != '\0')
+      if (buff[i] != c && buff[i] != '\0')
 	{
-	  tmp[i] = str[i];
-	  i++;
+	  dest[j] = str_n_cpy(buff, i, percent_letter_count(buff, i, c));
+	  j++;
+	  i += percent_letter_count(buff, i, c);
 	}
-      tmp[i] = '\0';
+      if (buff[i] != '\0')
+	i++;
     }
+
+  // terminate 2D array with NULL
+  dest[j] = NULL;
+
+  return (dest);
 }
 
-void		percent_init_direct(int total_blocks, char **id, t_tissue_stack *t)
+void		percent_init_direct(int total_blocks, char **id, char *filename, t_tissue_stack *t)
 {
-  t_percent_elem *tmp;
   char		*str_log;
   struct timeval tv;
+  char		*complete_path;
+  int		len_path;
+  FILE		*f;
 
   gettimeofday(&tv,NULL);
-  tmp = malloc(sizeof(*tmp));
-  asprintf(&tmp->id, "%i", (int)tv.tv_sec);
-  tmp->time = malloc(sizeof(*tmp->time));
-  tmp->total_blocks = total_blocks;
-  tmp->blocks_done = 0;
-  tmp->percent = 0;
-  if (!t->percent)
+  asprintf(id, "%i", (int)tv.tv_sec);
+  if (t->percent->path)
     {
-      t->percent = malloc(sizeof(*t->percent));
-      t->percent->first_percent = NULL;
+      len_path = (strlen(*id) + strlen(t->percent->path));
+      complete_path = malloc((len_path + 1) * sizeof(*complete_path));
+      complete_path = strcpy(complete_path, t->percent->path);
+      complete_path = strcat(complete_path, *id);
+      f = fopen(complete_path, "w+");
+      fprintf(f, "0\n%i\n%i\n%s\n", 0, total_blocks, filename);
+      fclose(f);
+      free(complete_path);
+      str_log = *id;
+      INFO("Percentage: %s Initialized", str_log);
     }
-  tmp->next = t->percent->first_percent;
-  t->percent->first_percent = tmp;
-
-  *id = strdup(tmp->id);
-
-  str_log = tmp->id;
-  INFO("Percentage: %s Initialized", str_log);
 }
 
-t_percent_elem *get_percent_elem_by_id(char *id, t_prcnt_t *p)
+char		**read_from_file_by_id(char *id, FILE **f, t_tissue_stack *t)
 {
-  t_percent_elem *tmp;
+  char		*complete_path;
+  struct stat	info;
+  char		**result;
+  char		buff[4096];
 
-  if (id == NULL || p == NULL || (tmp = p->first_percent) == NULL)
-    return (NULL);
-  while (tmp != NULL)
+  *f = NULL;
+  if (t->percent->path)
     {
-      if (strcmp(tmp->id, id) == 0)
-	return (tmp);
-      tmp = tmp->next;
+      complete_path = malloc((strlen(id) + strlen(t->percent->path) + 1) * sizeof(*complete_path));
+      complete_path = strcpy(complete_path, t->percent->path);
+      complete_path = strcat(complete_path, id);
+      if (!stat(complete_path, &info))
+	{
+	  *f = fopen(complete_path, "r+");
+	  if (fread(buff, 1, 4096, *f) > 0)
+	    result = percent_str_to_wordtab(buff, '\n');
+	  fseek(*f, 0, SEEK_SET);
+	  free(complete_path);
+	  return (result);
+	}
     }
   return (NULL);
 }
 
 void		percent_add_direct(int blocks, char *id, t_tissue_stack *t)
 {
-  t_percent_elem *tmp;
-  char		*str_log;
+  char		**result;
+  float		percent_tmp;
+  float		blocks_done;
+  FILE		*f;
 
-  if (t->percent == NULL || t->percent->first_percent == NULL ||
-      id == NULL)
+  if (id == NULL || t->percent == NULL)
     return;
-  if ((tmp = get_percent_elem_by_id(id, t->percent)) == NULL)
-    return;
-  tmp->blocks_done += blocks;
-  if (tmp->percent < 100)
-    tmp->percent = (float)((float)((float)tmp->blocks_done / (float)tmp->total_blocks) * 100.0);
-  else
-    tmp->percent = 100;
-  if (tmp->percent >= 100)
+
+  if ((result = read_from_file_by_id(id, &f, t)) != NULL)
     {
-      str_log = tmp->id;
-      INFO("Percentage: %s ==> 100%%", str_log);
+      if (strcmp(result[0], "100") != 0)
+	{
+	  blocks_done = atof(result[1]);
+	  blocks_done += blocks;
+	  percent_tmp = (float)((float)((float)blocks_done / (float)atof(result[2])) * 100.0);
+	  fprintf(f, "%f\n%f\n%s\n%s\n", percent_tmp, blocks_done, result[2], result[3]);
+	  fclose(f);
+	}
     }
+  else
+    return;
+
+  if (percent_tmp >= 100)
+    INFO("Percentage: %s ==> 100%%", id);
 }
 
 void		percent_get_direct(char **buff, char *id, t_tissue_stack *t)
 {
-  t_percent_elem *tmp;
+  FILE		*f;
+  char		**result;
 
-  if (t->percent == NULL || t->percent->first_percent == NULL)
+  if (t->percent == NULL)
     return;
-  if ((tmp = get_percent_elem_by_id(id, t->percent)) == NULL)
-    return;
-  asprintf(buff, "%f", tmp->percent);
+  if ((result = read_from_file_by_id(id, &f, t)) != NULL)
+    {
+      *buff = strdup(result[0]);
+      //      asprintf(buff, "%s", result[0]);
+      fclose(f);
+    }
+  else
+    asprintf(buff, "ERROR");
 }
 
+/*
 void		percent_destroy(char **commands, void *box, t_tissue_stack *t)
 {
   t_percent_elem *tmp;
@@ -144,14 +209,17 @@ void		percent_destroy(char **commands, void *box, t_tissue_stack *t)
   free(tmp->next);
   tmp->next = sav;
 }
+*/
 
-void		init_percent_time(t_tissue_stack *t)
+void		init_percent_time(t_tissue_stack *t, char *path)
 {
   t_prcnt_t	*p;
 
   p = malloc(sizeof(*p));
-  p->first_time = NULL;
-  p->first_percent = NULL;
   t->percent = p;
+  if (path)
+    t->percent->path = strdup(path);
+  else
+    t->percent->path = NULL;
   INFO("Percent initialized");
 }

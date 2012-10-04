@@ -378,7 +378,7 @@ void		image_creation_lunch(t_tissue_stack *t, t_vol *vol, int step, t_image_extr
   if (image_general->percentage)
     {
       printf("totals blocks = %i\n", get_nb_blocks_percent(image_general, vol));
-      t->percent_init(get_nb_blocks_percent(image_general, vol), &id_percent, t);
+      t->percent_init(get_nb_blocks_percent(image_general, vol), &id_percent, vol->path, t);
       if (write(image_general->percent_fd, id_percent, 10) < 0)
 	ERROR("Open Error");
     }

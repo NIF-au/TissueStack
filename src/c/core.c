@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Tue Oct  2 17:16:59 2012 Oliver Nicolini
+** Last update Thu Oct  4 15:38:05 2012 Oliver Nicolini
 */
 
 #include "core.h"
@@ -203,7 +203,7 @@ void            init_prog(t_tissue_stack *t)
 	  }*/
     }
   init_func_ptr(t);
-  init_percent_time(t);
+  init_percent_time(t, "/tmp/tasks/");
 }
 
 void		free_core_struct(t_tissue_stack *t)
@@ -264,7 +264,7 @@ int		main(int argc, char **argv)
   plugin_load_from_string("load serv /usr/local/plugins/TissueStackCommunicator.so", t);
   plugin_load_from_string("load comm /usr/local/plugins/TissueStackProcessCommunicator.so", t);
   plugin_load_from_string("load percent /usr/local/plugins/TissueStackPercent.so", t);
-  //plugin_load_from_string("load minc_converter /usr/local/plugins/TissueStackMincConverter.so", t);
+  plugin_load_from_string("load minc_converter /usr/local/plugins/TissueStackMincConverter.so", t);
   plugin_load_from_string("load nifti_converter /usr/local/plugins/TissueStackNiftiConverter.so", t);
 
   sprintf(serv_command, "start serv %s", argv[1]);
