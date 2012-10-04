@@ -168,7 +168,6 @@ void		percent_get_direct(char **buff, char *id, t_tissue_stack *t)
   if ((result = read_from_file_by_id(id, &f, t)) != NULL)
     {
       *buff = strdup(result[0]);
-      //      asprintf(buff, "%s", result[0]);
       fclose(f);
     }
   else
@@ -214,11 +213,20 @@ void		percent_destroy(char **commands, void *box, t_tissue_stack *t)
 void		init_percent_time(t_tissue_stack *t, char *path)
 {
   t_prcnt_t	*p;
+  t_string_buffer * actualPath;
 
   p = malloc(sizeof(*p));
   t->percent = p;
-  if (path)
-    t->percent->path = strdup(path);
+  if (path != NULL)
+    {
+      t->percent->path = strdup(path);
+      actualPath = createDirectory(path, 0766);
+      if (actualPath == NULL) {
+	ERROR("Couldn't create %s", path);
+      }
+      else
+	free_t_string_buffer(actualPath);
+    }
   else
     t->percent->path = NULL;
   INFO("Percent initialized");
