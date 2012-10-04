@@ -2,7 +2,7 @@
 
 void		percent_time_write_plug(char *str, void *box)
 {
-  printf("\n\npercent = %s\n", str);
+  DEBUG("percent = %s", str);
   if (str && box)
     write(*((int *)box), str, strlen(str));
 }

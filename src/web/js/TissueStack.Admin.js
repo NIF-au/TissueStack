@@ -5,7 +5,7 @@ TissueStack.Admin = function () {
 	this.registerFileUpload();
 	this.registerAddToDataSetHandler();
 	this.displayUploadDirectory();
-	this.createTableView();
+	this.createTaskView();
 };
 
 TissueStack.Admin.prototype = {
@@ -269,56 +269,47 @@ TissueStack.Admin.prototype = {
 		  	});
 		});
 	},
-	// Create Table in Admin Page for Conversion Progress 
-	createTableView: function () {
+	createTaskView: function () {
 		var nrCols = 5;
-		var maxRows = 10;
+		var maxRows = 5;
 		var nrRows = maxRows+1;
 		
-		/*
-		while(nrRows > maxRows){
-			nrRows = Number(prompt('How many dataset would you like to display? Maximum '+maxRows+' allowed.',''));
-		}
-		*/
+		var tab = $('#task_table');
+		var tbody = ('#task_table tbody');
 		
-		var root = document.getElementById('createTable');
-		var tab = document.createElement('table');
-		
-		tab.className="conversion-table";
-		
-		var tbody = document.createElement('tbody');		
-		var row, cell, thead;
-		thead +='<thead><tr><th scope="col">Data Name</th><th scope="col">Data Type</th>'
-		 	  +'<th scope="col">Conversion</th><th scope="col">Completed %</th>'
-		 	  +'<th scope="col">Status</th></tr></thead>';
-		
+		var row, cell;
 		for(var i = 0; i < nrRows; i++){
 			row=document.createElement('tr');
 			for(var j = 0; j < nrCols; j++){
 				var processBar = i+' - '+j ;
 				cell=document.createElement('td');
 				
-				if(j == 0){ // give ID as well
-					processBar = 'Localhost - ' + i;
+				if(j == 0){ // ID
+					processBar = i;
 				}
-				
-				if(j == 1){ // give ID as well
-					processBar = 'RAW';
+
+				if(j == 1){ // file name
+					processBar = 'File ' + i;
 				}
-				
+
 				if(j == 2){ // give ID as well
+					processBar = (i % 2 == 0) ? 'Conversion' : 'Pre-Tiling';
+				}
+				
+				if(j == 3){ // give ID as well
 					processBar = '<div data-role="controlgroup" data-type="horizontal">'
 							   + '<a id=' + 'constart_' + i + ' data-role="button" data-theme="c" data-icon="arrow-r" data-iconpos="notext">Start</a>'
-							   + '<a id=' + 'conrefresh_' + i + ' data-role="button" data-theme="c" data-icon="refresh" data-iconpos="notext">Refresh</a>'
-							   + '<a id=' + 'constop_' + i + ' data-role="button" data-theme="c" data-icon="delete" data-iconpos="notext">Stop</a>'
+							   + '<a id=' + 'conrefresh_' + i + ' data-role="button" data-theme="c" data-icon="refresh" data-iconpos="notext">Resume</a>'
+							   + '<a id=' + 'constop_' + i + ' data-role="button" data-theme="c" data-icon="delete" data-iconpos="notext">Cancel</a>'
 							   + '</div>';
 				}
-				
-				if(j == 3){ //need to provide id for each div
+
+				/*
+				if(j == 4){ //need to provide id for each div
 					processBar = '<div id='+'constatus_'+ i + ' class="statusCompleted">' 
 							   + '<div class="bar"></div ><div class="percent">0%</div >' 
 							   + '</div>';	
-				}
+				}*/
 				
 				if(j == 4){ // give ID as well
 					processBar = '<progress value="27" max="100"></progress>';
@@ -329,10 +320,6 @@ TissueStack.Admin.prototype = {
 			}
 			$(tbody).append(row);
 		}	
-		$(tab).append(thead).append(tbody);
-		$(root).append(tab).trigger("create");
-	},
-	// under coding ????????
-	conversionStatus : function () {
-	},
+		tab.trigger("create");
+	}
 };

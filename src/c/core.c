@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Thu Oct  4 15:38:05 2012 Oliver Nicolini
+** Last update Thu Oct  4 16:35:57 2012 Oliver Nicolini
 */
 
 #include "core.h"
@@ -162,9 +162,9 @@ void            init_prog(t_tissue_stack *t)
   t->log = malloc(sizeof(*t->log));
   t->log->state = ON;
   t->log->path = strdup("/tmp/tissue_stack_logs/");
-  t->log->debug = ON;
-  t->log->verbose = ON;
-  t->log->write_on_files = OFF;
+  t->log->debug = OFF;
+  t->log->verbose = OFF;
+  t->log->write_on_files = ON;
   t->log->write_on_plug_files = OFF;
   t->log->write_on_level_files = ON;
   log_plugin.id = pthread_self();
@@ -208,9 +208,8 @@ void            init_prog(t_tissue_stack *t)
 
 void		free_core_struct(t_tissue_stack *t)
 {
-  if (t == NULL) {
-    return;
-  }
+  if (t == NULL) return;
+
   INFO("Freeing Allocated Resources...");
   free_all_volumes(t);
   free_all_plugins(t);
@@ -258,23 +257,21 @@ int		main(int argc, char **argv)
   t->tp = malloc(sizeof(*t->tp));
   thread_pool_init(t->tp, 16);
 
-  // load plugins
-
+  // These are the plugins that should be loaded by default.
+  // Please no rash name changes since JNI asks for the predefined names!
   plugin_load_from_string("load image /usr/local/plugins/TissueStackImageExtract.so", t);
   plugin_load_from_string("load serv /usr/local/plugins/TissueStackCommunicator.so", t);
   plugin_load_from_string("load comm /usr/local/plugins/TissueStackProcessCommunicator.so", t);
-  plugin_load_from_string("load percent /usr/local/plugins/TissueStackPercent.so", t);
+  plugin_load_from_string("load minc_info /usr/local/plugins/TissueStackMincInfo.so", t);
   plugin_load_from_string("load minc_converter /usr/local/plugins/TissueStackMincConverter.so", t);
   plugin_load_from_string("load nifti_converter /usr/local/plugins/TissueStackNiftiConverter.so", t);
+  plugin_load_from_string("load progress /usr/local/plugins/TissueStackPercent.so", t);
 
   sprintf(serv_command, "start serv %s", argv[1]);
 
   // start plugins
   (t->plug_actions)(t, serv_command, NULL);
   (t->plug_actions)(t, "start comm", NULL);
-  //(t->plug_actions)(t, "start minc_converter /media/Data/lowback.minc2.mnc /media/Data/lowback.raw", NULL);
-  //  (t->plug_actions)(t, "start nifti_converter /media/Data/nifti/brain_float.nii /opt/data/yepiyep.raw", NULL);
-
 
   signal_manager(t);
 

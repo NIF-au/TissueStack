@@ -19,12 +19,14 @@ import org.apache.log4j.Logger;
 import au.edu.uq.cai.TissueStack.dataobjects.Configuration;
 import au.edu.uq.cai.TissueStack.dataobjects.DataSet;
 import au.edu.uq.cai.TissueStack.dataobjects.Response;
+import au.edu.uq.cai.TissueStack.dataobjects.TaskStatus;
 import au.edu.uq.cai.TissueStack.dataprovider.ConfigurationDataProvider;
 import au.edu.uq.cai.TissueStack.dataprovider.DataSetDataProvider;
 import au.edu.uq.cai.TissueStack.dataobjects.MincInfo;
 import au.edu.uq.cai.TissueStack.jni.TissueStack;
 import au.edu.uq.cai.TissueStack.rest.AbstractRestfulMetaInformation;
 import au.edu.uq.cai.TissueStack.rest.Description;
+import au.edu.uq.cai.TissueStack.utils.ImageUtils;
 
 /*
  * !!!!!!! IMPORTANT : always call SecurityResources.checkSession(session) to check for session validity !!!!!!
@@ -250,6 +252,10 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 			throw new IllegalArgumentException("File '" + uploadedFile.getAbsolutePath() + "' does Not Exist");
 		}
 		
+		// we only allow raw converted files any more....
+		if (!ImageUtils.isRawFormat(uploadedFile)) 
+			throw new RuntimeException("Given file is not in RAW format. Please convert first!");
+		
 		// call native code to read meta info from minc file
 		final MincInfo newDataSet = new TissueStack().getMincInfo(uploadedFile.getAbsolutePath());
 		if (newDataSet == null) {
@@ -339,15 +345,15 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 			throw new IllegalArgumentException("Given image file has to be NIFTI or minc with its corresponding extension .nii or .mnc !");
 		
 		final String ext = imageFile.substring(extStart);
-		if (ext.equalsIgnoreCase(".raw"))
-			throw new IllegalArgumentException("Given image file seems to be raw already (according to the .raw extension that is)!");
+		if (ImageUtils.isRawFormat(imageFile)) 
+			throw new IllegalArgumentException("According to its header the given image file is raw already!");
 		else if (!(ext.equalsIgnoreCase(".nii") || ext.equalsIgnoreCase(".mnc")))
 				throw new IllegalArgumentException("Given image file has to be NIFTI or minc with its corresponding extension .nii or .mnc !");
 		
 		final String originalFilenameWithoutExtension = imageFile.substring(0, extStart);
 		
 		// assemble new raw file name, either by using the given name or the default: original file name with extension changed to .raw
-		if (newRawFileName != null) {
+		if (newRawFileName != null && !newRawFileName.trim().isEmpty()) {
 			// append upload directory at beginning if not supplied
 			if (!newRawFileName.startsWith(uploadDir.getAbsolutePath()))
 				newRawFileName = new File (uploadDir, newRawFileName).getAbsolutePath();
@@ -392,8 +398,11 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 		if (taskId == null || taskId.length() != 10)
 			throw new IllegalArgumentException("Task Id has to be a non-empty string of 10 alphanumeric characters!");
 		
+		TaskStatus ret = new TissueStack().queryTaskProgress(taskId);
+		if (ret == null)  throw new RuntimeException("Task with id '" + taskId + "' does not exist!");
+		
 		// now let JNI do the rest
-		return new RestfulResource(new Response(new TissueStack().queryTaskProgress(taskId)));		
+		return new RestfulResource(new Response(ret));		
 	}
 	
 	@Path("/meta-info")
