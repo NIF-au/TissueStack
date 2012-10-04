@@ -604,24 +604,29 @@ JNIEXPORT jobject  Java_au_edu_uq_cai_TissueStack_jni_TissueStack_queryTaskProgr
 
 	if (strcmp(buff, "NULL") == 0) return NULL;
 
+	// TODO: dissect string values
+
 	// construct Java Objects for return and populate with response content
-	jclass doubleClazz = (*env)->FindClass(env, "java/lang/Double");
-	if (doubleClazz == NULL) {
-		throwJavaException(env, "java/lang/RuntimeException", "Could not find Double class!");
+	jclass taskStatusClazz = (*env)->FindClass(env, "au/edu/uq/cai/TissueStack/dataobjects/TaskStatus");
+	if (taskStatusClazz == NULL) {
+		throwJavaException(env, "java/lang/RuntimeException", "Could not find TaskStatus class!");
 		return NULL;
 	}
-	jmethodID constructor = (*env)->GetMethodID(env, doubleClazz, "<init>", "(Ljava/lang/String;)V");
+	jmethodID constructor = (*env)->GetMethodID(env, taskStatusClazz, "<init>", "(Ljava/lang/String;Ljava/lang/String;)V");
 	if (constructor == NULL) {
-		throwJavaException(env, "java/lang/RuntimeException", "Could not create Double object!");
+		throwJavaException(env, "java/lang/RuntimeException", "Could not create TaskStatus object!");
+		return NULL;
+	}
+	jobject ret = (*env)->NewObject(env, taskStatusClazz, constructor,
+			(*env)->NewStringUTF(env, buff),
+			(*env)->NewStringUTF(env, buff));
+	if (ret == NULL) {
+		throwJavaException(env, "java/lang/RuntimeException", "Could not create TaskStatus return object!");
 		return NULL;
 	}
 
-	// call constructor with return value
-	jobject ret = (*env)->NewObject(env, doubleClazz, constructor, (*env)->NewStringUTF(env, buff));
-	if (ret == NULL) {
-		throwJavaException(env, "java/lang/RuntimeException", "Could not create return object!");
-		return NULL;
-	}
+	// clean up
+	(*env)->ReleaseStringUTFChars(env, taskID, task);
 
 	return ret;
 }
