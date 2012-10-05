@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Tue Oct  2 17:16:59 2012 Oliver Nicolini
+** Last update Thu Oct  4 16:35:57 2012 Oliver Nicolini
 */
 
 #include "core.h"
@@ -203,7 +203,7 @@ void            init_prog(t_tissue_stack *t)
 	  }*/
     }
   init_func_ptr(t);
-  init_percent_time(t);
+  init_percent_time(t, "/tmp/tasks/");
 }
 
 void		free_core_struct(t_tissue_stack *t)

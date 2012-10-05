@@ -221,6 +221,7 @@ void		*init(void *args)
 
   a = (t_args_plug *)args;
   LOG_INIT(a);
+  INFO("Minc Converter init");
   return (NULL);
 }
 
@@ -242,7 +243,7 @@ void  		*start(void *args)
     }
   minc_volume = init_get_volume_from_minc_file(a->commands[0]);
 
-  a->general_info->percent_init(get_nb_total_slices_to_do(minc_volume), &id_percent, a->general_info);
+  a->general_info->percent_init(get_nb_total_slices_to_do(minc_volume), &id_percent, a->commands[0], a->general_info);
   if (write(*((int*)a->box), id_percent, 10) < 0)
     ERROR("Open Error");
 
