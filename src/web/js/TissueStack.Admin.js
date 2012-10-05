@@ -5,7 +5,8 @@ TissueStack.Admin = function () {
 	this.registerFileUpload();
 	this.registerAddToDataSetHandler();
 	this.displayUploadDirectory();
-	this.createTaskView();
+	this.registerConvertHandler();
+	this.registerPreTileHandler();
 };
 
 TissueStack.Admin.prototype = {
@@ -107,7 +108,8 @@ TissueStack.Admin.prototype = {
    			$("#toggle a").toggle();
    		});	
 	},
-	displayUploadDirectory : function (){  
+	displayUploadDirectory : function (){
+		_this = this;  
 	     $(".file_radio_list").show(function(){
 	      TissueStack.Utils.sendAjaxRequest("/backend/admin/upload_directory/json", "GET", true,function(result) {
 	    	if (!result || !result.response || result.response.length == 0) {
@@ -116,17 +118,28 @@ TissueStack.Admin.prototype = {
 	    	// display results
         	var listOfFileName = "";	    	
 	        $.each(result.response, function(i, uploadedFile){
-	        	content = '<input type="checkbox" class="uploaded_file" id="check_' + i + '" value="' + uploadedFile + '" />'+
-	        			  '<label for="'+'check_'+ i +'">'+ uploadedFile + '</label>';
+	        	content = '<input type="radio" name="radio_listFile" class="uploaded_file" id="check_' + i + '" value="' + uploadedFile + '" />'
+	        			+ '<label for="'+'check_'+ i +'">'+ uploadedFile + '</label>';
 	        	listOfFileName += content; 
               });
             $('.file_radio_list').fadeIn(1500, function() {  
              	 $('.file_radio_list').html(listOfFileName)
-             	 	.trigger( "create" ); 
-             	 $('.file_radio_list').controlgroup();
+             	 	.trigger( "create" );
+             	 	_this.identifyFileType(); 
+             	 $('.file_radio_list').controlgroup('refresh', true);
 	        });
 	      });
 	    });
+	},
+	identifyFileType: function () {
+		$("input[name=radio_listFile]").change(function() {
+			if($(this).val().split('.').pop() == "raw") {
+				$('#radio_task').fadeOut(250, function() {  
+				 	 $("#radio_task input:radio[id^='bt_convert']:first").attr('disabled', true).checkboxradio("refresh");
+				 	 $('#radio_task').fadeIn();
+				});
+			}
+		});
 	},
 	registerFileUpload : function () {
 		var _this = this;
@@ -216,62 +229,83 @@ TissueStack.Admin.prototype = {
 	},
 	registerAddToDataSetHandler : function () {
 		var _this = this;
+		$("input[name=radio_task]").change(function() {
+			if($(this).val() == "rad_addDataSet") {
+				$("#bt_process").click(function(){
+					  	$.each($('.uploaded_file'), function(i, uploaded_file) {
+		 					if (uploaded_file.checked) {
+		 						var msgDescription = $('#txtDesc').val();
+		 						if (msgDescription == ""){
+		 							_this.replaceErrorMessage("Please Add Description Before Adding New Data Set!");
+		 							return false;
+		 						}
+		 						// send backend request
+		 				 		TissueStack.Utils.sendAjaxRequest(
+		 							"/backend/admin/add_dataset/json?session=" + _this.session + "&filename=" + uploaded_file.value + "&description=" + msgDescription,
+		 							'GET', true,
+		 							function(data, textStatus, jqXHR) {
+		 								if (!data.response && !data.error) {
+		 									_this.replaceErrorMessage("No Data Set Updated!");
+		 									return false;
+		 								}
+		 								if (data.error) {
+		 									var message = "Error: " + (data.error.message ? data.error.message : " No Data Set Updated!");
+		 									_this.replaceErrorMessage(message);				
+		 									return false;
+		 								}
+		 								if (data.response.noResults) {
+		 									_this.replaceErrorMessage("No Results!");
+		 									return false;
+		 								}
 		
-		$("#bt_add_dataset").click(function(){
-			  	$.each($('.uploaded_file'), function(i, uploaded_file) {
- 					if (uploaded_file.checked) {
- 						var msgDescription = $('#txtDesc').val();
- 						if (msgDescription == ""){
- 							_this.replaceErrorMessage("Please Add Description Before Adding New Data Set!");
- 							return false;
- 						}
- 						// send backend request
- 				 		TissueStack.Utils.sendAjaxRequest(
- 							"/backend/admin/add_dataset/json?session=" + _this.session + "&filename=" + uploaded_file.value + "&description=" + msgDescription,
- 							'GET', true,
- 							function(data, textStatus, jqXHR) {
- 								if (!data.response && !data.error) {
- 									_this.replaceErrorMessage("No Data Set Updated!");
- 									return false;
- 								}
- 								if (data.error) {
- 									var message = "Error: " + (data.error.message ? data.error.message : " No Data Set Updated!");
- 									_this.replaceErrorMessage(message);				
- 									return false;
- 								}
- 								if (data.response.noResults) {
- 									_this.replaceErrorMessage("No Results!");
- 									return false;
- 								}
-
- 								var dataSet = data.response;
-								var addedDataSet = TissueStack.dataSetStore.addDataSetToStore(dataSet, "localhost");
- 								if (addedDataSet) {
- 									if(TissueStack.desktop)	TissueStack.dataSetNavigation.addDataSetToDynaTree(addedDataSet);
-	 								if (TissueStack.tablet) TissueStack.dataSetNavigation.addDataSetToTabletTree(addedDataSet);
-	 								_this.displayUploadDirectory();
-	 								_this.replaceErrorMessage("Data Set Has Been Added Successfully!");
-	 								$('.error_message').css("background", "#32CD32");
-	 								return false;
- 								}
- 							},
- 							function(jqXHR, textStatus, errorThrown) {
- 								_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
- 								return false;
- 							}
- 						);
- 				 		
- 				 		// we only process the first that has been checked
- 				 		return false;
-			   		}
- 				// we only come here if no file was selected	
- 				_this.replaceErrorMessage("Please check a file that you want to add!");
-		  	});
+		 								var dataSet = data.response;
+										var addedDataSet = TissueStack.dataSetStore.addDataSetToStore(dataSet, "localhost");
+		 								if (addedDataSet) {
+		 									if(TissueStack.desktop)	TissueStack.dataSetNavigation.addDataSetToDynaTree(addedDataSet);
+			 								if (TissueStack.tablet) TissueStack.dataSetNavigation.addDataSetToTabletTree(addedDataSet);
+			 								_this.displayUploadDirectory();
+			 								_this.replaceErrorMessage("Data Set Has Been Added Successfully!");
+			 								$('.error_message').css("background", "#32CD32");
+			 								return false;
+		 								}
+		 							},
+		 							function(jqXHR, textStatus, errorThrown) {
+		 								_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
+		 								return false;
+		 							}
+		 						);
+		 				 		
+		 				 		// we only process the first that has been checked
+		 				 		return false;
+					   		}
+		 				// we only come here if no file was selected	
+		 				_this.replaceErrorMessage("Please check a file that you want to add!");
+				  	});
+				});
+			}
 		});
 	},
-	createTaskView: function () {
-		var nrCols = 5;
-		var maxRows = 5;
+	registerConvertHandler : function () {
+		_this = this;
+		$("#bt_process").click(function(){
+			$("input[name=radio_task]").change(function() {
+				if($(this).val() == "rad_convert") {
+					_this.createTaskView();
+				}
+			});
+		});
+	},
+	registerPreTileHandler : function () {
+		_this = this;
+		$("input[name=radio_task]").change(function() {
+			if($(this).val() == "rad_preTile") {
+				_this.createTaskView();
+			}
+		});
+	},
+	createTaskView: function (fileID, fileName, fileType) {
+		var nrCols = 5; //important! can't change!
+		var maxRows = 0;
 		var nrRows = maxRows+1;
 		
 		var tab = $('#task_table');

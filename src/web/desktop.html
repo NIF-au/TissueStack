@@ -338,7 +338,19 @@
 				</div>
 				<label for="txtDesc" style="text-align: left;">&nbsp;&nbsp;Description:</label>
 				<input type="text" name="name" id="txtDesc" data-mini="true" />
-				<a href="" id="bt_add_dataset" data-role="button" data-inline="true" data-theme="e" data-icon="check">Add Data Set</a>
+				
+				<div data-role="fieldcontain">
+				    <fieldset id="radio_task" data-role="controlgroup" data-type="horizontal">
+				         	<input type="radio" name="radio_task" id="bt_convert" value="rad_convert" />
+				         	<label for="bt_convert">Convert</label>
+				         	<input type="radio" name="radio_task" id="bt_preTile" value="rad_preTile"  />
+				         	<label for="bt_preTile">Pre Tile</label>
+				         	<input type="radio" name="radio_task" id="bt_AddDataSet" value="rad_addDataSet"  />
+				         	<label for="bt_AddDataSet">Add Data Set</label>
+				    </fieldset>
+				</div>
+<!--				<a href="" id="bt_add_dataset" data-role="button" data-inline="true" data-theme="e" data-icon="check">Add Data Set</a>-->
+					<a href="" id="bt_process" data-role="button" data-inline="true" data-theme="e" data-icon="check">Process</a>
 			</div>
 			
 			<div class="setting-buttom-column">
