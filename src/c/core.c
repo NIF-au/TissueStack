@@ -203,7 +203,7 @@ void            init_prog(t_tissue_stack *t)
 	  }*/
     }
   init_func_ptr(t);
-  init_percent_time(t, "/tmp/tasks/");
+  init_percent_time(t, "/opt/tasks/");
 }
 
 void		free_core_struct(t_tissue_stack *t)
