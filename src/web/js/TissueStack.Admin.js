@@ -6,11 +6,13 @@ TissueStack.Admin = function () {
 	this.registerAddToDataSetHandler();
 	this.displayUploadDirectory();
 	this.registerConvertHandler();
-	this.registerPreTileHandler();
+	//this.registerPreTileHandler();
 };
 
 TissueStack.Admin.prototype = {
 	session: null,
+	queue_handle : null,
+	processType: "",
 	registerCreateSessionHandler : function () {
 	 	var _this = this;
 
@@ -128,7 +130,7 @@ TissueStack.Admin.prototype = {
              	 	_this.identifyFileType(); 
              	 $('.file_radio_list').controlgroup('refresh', true);
 	        });
-	      });
+	      });	    
 	    });
 	},
 	identifyFileType: function () {
@@ -136,9 +138,18 @@ TissueStack.Admin.prototype = {
 			if($(this).val().split('.').pop() == "raw") {
 				$('#radio_task').fadeOut(250, function() {  
 				 	 $("#radio_task input:radio[id^='bt_convert']:first").attr('disabled', true).checkboxradio("refresh");
+				 	 $("#radio_task input:radio[id^='bt_preTile']:first").attr('disabled', true).checkboxradio("refresh"); //temp for development
 				 	 $('#radio_task').fadeIn();
 				});
 			}
+			if($(this).val().split('.').pop() == "mnc" || $(this).val().split('.').pop() == "ini") {
+				$('#radio_task').fadeOut(250, function() {  
+				 	 $("#radio_task input:radio[id^='bt_convert']:first").attr('disabled', false).checkboxradio("refresh");
+				 	 $("#radio_task input:radio[id^='bt_preTile']:first").attr('disabled', true).checkboxradio("refresh"); //temp for development
+				 	 $('#radio_task').fadeIn();
+				});
+			}
+			
 		});
 	},
 	registerFileUpload : function () {
@@ -230,7 +241,7 @@ TissueStack.Admin.prototype = {
 	registerAddToDataSetHandler : function () {
 		var _this = this;
 		$("input[name=radio_task]").change(function() {
-			if($(this).val() == "rad_addDataSet") {
+			if($('input[name=radio_task]:checked').val() == "rad_addDataSet") {
 				$("#bt_process").click(function(){
 					  	$.each($('.uploaded_file'), function(i, uploaded_file) {
 		 					if (uploaded_file.checked) {
@@ -287,23 +298,50 @@ TissueStack.Admin.prototype = {
 	},
 	registerConvertHandler : function () {
 		var _this = this;
-		$("#bt_process").click(function(){
 			$("input[name=radio_task]").change(function() {
-				if($(this).val() == "rad_convert") {
-					_this.createTaskView();
+				if($(this).val() == "CONVERT") {
+					// send backend request
+					$("#bt_process").click(function(){
+					   TissueStack.Utils.sendAjaxRequest(
+							"/backend/admin/convert/json?file=/opt/upload/" + $('input[name=radio_listFile]:checked').val(),
+							'GET', true,
+							function(data, textStatus, jqXHR) {
+								if (!data.response && !data.error) {
+									_this.replaceErrorMessage("No Data Set Updated!");
+									return false;
+								}
+								if (data.error) {
+									var message = "Error: " + (data.error.message ? data.error.message : " No Data Set Updated!");
+									_this.replaceErrorMessage(message);				
+									return false;
+								}
+								if (data.response.noResults) {
+									_this.replaceErrorMessage("No Results!");
+									return false;
+								}
+									_this.createTaskView(data.response);
+									return false;
+							},
+							function(jqXHR, textStatus, errorThrown) {
+								_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
+								return false;
+							}
+						);
+					});
 				}
 			});
-		});
+		
 	},
 	registerPreTileHandler : function () {
 		var _this = this;
 		$("input[name=radio_task]").change(function() {
-			if($(this).val() == "rad_preTile") {
-				_this.createTaskView();
+			if($(this).val() == "CONVERT") {
+				
 			}
 		});
 	},
-	createTaskView: function (fileID, fileName, fileType) {
+	createTaskView: function (process_task) {
+		var _this = this;
 		var nrCols = 5; //important! can't change!
 		var maxRows = 0;
 		var nrRows = maxRows+1;
@@ -315,19 +353,19 @@ TissueStack.Admin.prototype = {
 		for(var i = 0; i < nrRows; i++){
 			row=document.createElement('tr');
 			for(var j = 0; j < nrCols; j++){
-				var processBar = i+' - '+j ;
+				var processBar = "" ;
 				cell=document.createElement('td');
 				
 				if(j == 0){ // ID
-					processBar = i;
+					//processBar = i;
 				}
 
 				if(j == 1){ // file name
-					processBar = 'File ' + i;
+					processBar = $('input[name=radio_listFile]:checked').val();
 				}
 
 				if(j == 2){ // give ID as well
-					processBar = (i % 2 == 0) ? 'Conversion' : 'Pre-Tiling';
+					processBar = $('input[name=radio_task]:checked').val();
 				}
 				
 				if(j == 3){ // give ID as well
@@ -337,18 +375,46 @@ TissueStack.Admin.prototype = {
 							   + '<a id=' + 'constop_' + i + ' data-role="button" data-theme="c" data-icon="delete" data-iconpos="notext">Cancel</a>'
 							   + '</div>';
 				}
-
-				/*
-				if(j == 4){ //need to provide id for each div
-					processBar = '<div id='+'constatus_'+ i + ' class="statusCompleted">' 
-							   + '<div class="bar"></div ><div class="percent">0%</div >' 
-							   + '</div>';	
-				}*/
 				
 				if(j == 4){ // give ID as well
-					processBar = '<progress value="27" max="100"></progress>';
+					_this.queue_handle = setInterval(function () {
+						TissueStack.Utils.sendAjaxRequest(
+							"/backend/admin/progress/json?task_id="+ process_task,
+							'GET', true,
+							function(data, textStatus, jqXHR) {
+								if (!data.response && !data.error) {
+									_this.replaceErrorMessage("No Data Set Updated!");
+									return false;
+								}
+								if (data.error) {
+									var message = "Error: " + (data.error.message ? data.error.message : " No DataSet Selected!");
+									_this.replaceErrorMessage(message);				
+									return false;
+								}
+								if (data.response.noResults) {
+									_this.replaceErrorMessage("No Results!");
+									return false;
+								}
+	
+								var processTask = data.response;
+									content = '<progress id="bar" value="'+ processTask.progress +'" max="100"></progress>'
+											+ '<span style="text-align: left">'+ ' ' + processTask.progress.toFixed(2) +'%</span >';  
+									processBar = content;
+									$(cell).html(processBar);
+									$(row).append(cell);
+									if(processTask.progress == "100"){
+										_this.displayUploadDirectory();
+										clearInterval(_this.queue_handle);
+									}
+									return false;
+							},
+							function(jqXHR, textStatus, errorThrown) {
+								_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
+								return false;
+							}
+						);  
+					}, 2500);
 				}
-				
 				$(cell).append(processBar);
 				$(row).append(cell);
 			}
