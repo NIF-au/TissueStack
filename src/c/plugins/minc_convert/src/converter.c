@@ -27,6 +27,7 @@ void		dim_loop(int		fd,
   int		i;
   unsigned long		*start;
   long unsigned int	*count;
+  short			cancel;
 
   DEBUG("dim_loop");
 
@@ -39,7 +40,7 @@ void		dim_loop(int		fd,
       count[i] = volume->size[i];
       i++;
     }
-  while (dim < dimensions_nb)
+  while (dim < dimensions_nb && cancel == 0)
     {
       size = (dim == 0 ? (volume->size[2] * volume->size[1]) :
 	      (dim == 1 ? (volume->size[0] * volume->size[2]) : (volume->size[0] * volume->size[1])));
@@ -47,7 +48,7 @@ void		dim_loop(int		fd,
       slice = volume->size[dim];
       this_slice = 0;
       count[dim] = 1;
-      while (this_slice < slice)
+      while (this_slice < slice && cancel == 0)
 	{
 	  start[dim] = this_slice;
 	  memset(hyperslab, '\0', size);
@@ -56,6 +57,7 @@ void		dim_loop(int		fd,
 	  INFO("Slice = %i - dim = %i", this_slice, dim);
 	  this_slice++;
 	  t->percent_add(1, id_percent, t);
+	  cancel = t->is_percent_cancel(id_percent, t);
 	}
       start[dim] = 0;
       count[dim] = volume->size[dim];
@@ -244,9 +246,11 @@ void  		*start(void *args)
   minc_volume = init_get_volume_from_minc_file(a->commands[0]);
 
   a->general_info->percent_init(get_nb_total_slices_to_do(minc_volume), &id_percent, a->commands[0], a->general_info);
-  if (write(*((int*)a->box), id_percent, 10) < 0)
-    ERROR("Open Error");
-
+  if (a->box != NULL)
+    {
+      if (write(*((int*)a->box), id_percent, 10) < 0)
+	ERROR("Write Error");
+    }
   header = create_header_from_minc_struct(minc_volume);
   write_header_into_file(fd, header);
   dim_loop(fd, minc_volume->dim_nb, minc_volume, a->general_info, id_percent);
