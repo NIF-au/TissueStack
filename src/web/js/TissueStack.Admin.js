@@ -109,7 +109,7 @@ TissueStack.Admin.prototype = {
    		});	
 	},
 	displayUploadDirectory : function (){
-		_this = this;  
+		var _this = this;  
 	     $(".file_radio_list").show(function(){
 	      TissueStack.Utils.sendAjaxRequest("/backend/admin/upload_directory/json", "GET", true,function(result) {
 	    	if (!result || !result.response || result.response.length == 0) {
@@ -286,7 +286,7 @@ TissueStack.Admin.prototype = {
 		});
 	},
 	registerConvertHandler : function () {
-		_this = this;
+		var _this = this;
 		$("#bt_process").click(function(){
 			$("input[name=radio_task]").change(function() {
 				if($(this).val() == "rad_convert") {
@@ -296,7 +296,7 @@ TissueStack.Admin.prototype = {
 		});
 	},
 	registerPreTileHandler : function () {
-		_this = this;
+		var _this = this;
 		$("input[name=radio_task]").change(function() {
 			if($(this).val() == "rad_preTile") {
 				_this.createTaskView();
