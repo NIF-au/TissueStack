@@ -116,7 +116,7 @@ char		**read_from_file_by_id(char *id, FILE **f, t_tissue_stack *t)
 }
 
 
-void		percent_get(char **commands, void *box, t_tissue_stack *t)
+void		percent_get(char *id, void *box, t_tissue_stack *t)
 {
   char		pc[4096];
   char		**result;
@@ -124,7 +124,7 @@ void		percent_get(char **commands, void *box, t_tissue_stack *t)
 
   if (t->percent == NULL)
     return;
-  if ((result = read_from_file_by_id(commands[0], &f, t)) != NULL)
+  if ((result = read_from_file_by_id(id, &f, t)) != NULL)
     {
       sprintf(pc, "%s|%s", result[3], result[0]);
       fclose(f);
@@ -132,6 +132,31 @@ void		percent_get(char **commands, void *box, t_tissue_stack *t)
   else
     sprintf(pc, "NULL");
   percent_time_write_plug(pc, box);
+}
+
+void		percent_cancel(char *id, t_tissue_stack *t)
+{
+  t_cancel_queue	*tmp;
+
+  if (t && id)
+    {
+      if ((tmp = t->percent->cancel_first) != NULL)
+	{
+	  while (tmp->next)
+	    tmp = tmp->next;
+	  tmp->next = malloc(sizeof(*tmp->next));
+	  tmp = tmp->next;
+	  tmp->id = strdup(id);
+	  tmp->next = NULL;
+	}
+      else
+	{
+	  tmp = malloc(sizeof(*tmp));
+	  tmp->next = NULL;
+	  tmp->id = strdup(id);
+	  t->percent->cancel_first = tmp;
+	}
+    }
 }
 
 void		*init(void *args)
@@ -151,8 +176,10 @@ void		*start(void *args)
   a = (t_args_plug *)args;
 
   DEBUG("Started getting: %s", a->commands[0]);
-
-  percent_get(a->commands, a->box, a->general_info);
+  if (strcmp(a->commands[0], "get") == 0)
+    percent_get(a->commands[1], a->box, a->general_info);
+  else if (strcmp(a->commands[0], "cancel") == 0)
+    percent_cancel(a->commands[1], a->general_info);
   return (NULL);
 }
 

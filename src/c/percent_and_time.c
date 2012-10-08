@@ -174,6 +174,80 @@ void		percent_get_direct(char **buff, char *id, t_tissue_stack *t)
     asprintf(buff, "ERROR");
 }
 
+void		percent_cancel_direct(char *id, t_tissue_stack *t)
+{
+  t_cancel_queue	*tmp;
+
+  ERROR("HELLO je suis dans le cancel");
+
+  if (t && id)
+    {
+      ERROR("yop 1")
+
+      if ((tmp = t->percent->cancel_first) != NULL)
+	{
+	  ERROR("yop 2")
+	  while (tmp->next)
+	    tmp = tmp->next;
+	  tmp->next = malloc(sizeof(*tmp->next));
+	  tmp = tmp->next;
+	  tmp->id = strdup(id);
+	  tmp->next = NULL;
+	}
+      else
+	{
+	  ERROR("yop 3")
+	  tmp = malloc(sizeof(*tmp));
+	  tmp->next = NULL;
+	  tmp->id = strdup(id);
+	  t->percent->cancel_first = tmp;
+	}
+    }
+}
+
+void		clean_cancel_queue(t_cancel_queue *elem, t_tissue_stack *t)
+{
+  t_cancel_queue	*tmp;
+  t_cancel_queue	*save;
+
+  if (elem && t)
+    {
+      tmp = t->percent->cancel_first;
+      while (tmp)
+	{
+	  if (tmp->next && tmp->next == elem)
+	    {
+	      save = tmp->next;
+	      tmp->next = tmp->next->next;
+	      free(save->id);
+	      free(save);
+	      return;
+	    }
+	  tmp = tmp->next;
+	}
+    }
+}
+
+int		is_percent_cancel(char *id, t_tissue_stack *t)
+{
+  t_cancel_queue	*tmp;
+
+  if (t && id)
+    {
+      tmp = t->percent->cancel_first;
+      while (tmp)
+	{
+	  if (strcmp(id, tmp->id) == 0)
+	    {
+	      clean_cancel_queue(tmp, t);
+	      return (1);
+	    }
+	  tmp = tmp->next;
+	}
+    }
+  return (0);
+}
+
 /*
 void		percent_destroy(char **commands, void *box, t_tissue_stack *t)
 {
@@ -229,5 +303,6 @@ void		init_percent_time(t_tissue_stack *t, char *path)
     }
   else
     t->percent->path = NULL;
+  t->percent->cancel_first = NULL;
   INFO("Percent initialized");
 }

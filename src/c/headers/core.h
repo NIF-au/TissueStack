@@ -45,28 +45,31 @@ typedef struct		s_log_info_list	t_log_info_list;
 typedef struct		s_log_plugin	t_log_plugin;
 
 
+typedef	struct		s_prcnt_t	t_prcnt_t;
+
+/*
 typedef	struct		s_percent_elem	t_percent_elem;
 typedef	struct		s_time_elem	t_time_elem;
 typedef	struct		s_time_tps	t_time_tps;
-typedef	struct		s_prcnt_t	t_prcnt_t;
 typedef struct		s_func_prcnt_t	t_func_prcnt_t;
+*/
 
-struct			s_func_prcnt_t
+typedef	struct		s_cancel_queue	t_cancel_queue;
+
+struct			s_cancel_queue
 {
-  char			*name;
-  void			(*func)(char **commands, void *box, t_tissue_stack *t);
+  char			*id;
+  t_cancel_queue	*next;
 };
+
 
 struct			s_prcnt_t
 {
-  t_percent_elem	*first_percent;
-  t_time_elem		*first_time;
-  t_func_prcnt_t	*percent_func;
-  t_func_prcnt_t	*time_func;
-  int			files_writing;
+  t_cancel_queue	*cancel_first;
   char			*path;
 };
 
+/*
 struct			s_percent_elem
 {
   char			*id;
@@ -90,6 +93,7 @@ struct			s_time_elem
   t_time_tps		*time;
   t_time_elem		*next;
 };
+*/
 
 /////////////////////////////////////////////////////////////////
 
@@ -200,9 +204,11 @@ struct			s_tissue_stack
   t_memory_mapping 	*memory_mappings;
   t_nc_action		*first_notification;
   t_prcnt_t		*percent;
+  void			(*percent_cancel)(char *id, t_tissue_stack *t);
   void			(*percent_get)(char **buff, char *id, t_tissue_stack *t);
   void			(*percent_add)(int blocks, char *id, t_tissue_stack *t);
   void			(*percent_init)(int total_blocks, char **id, char *filename, t_tissue_stack *t);
+  int			(*is_percent_cancel)(char *id, t_tissue_stack *);
   t_vol			*(*get_volume)(char *path, t_tissue_stack *general);
   t_vol			*(*check_volume)(char *path, t_tissue_stack *general);
   void			(*plug_actions)(t_tissue_stack *general, char *commands, void *box);
@@ -333,13 +339,15 @@ void		clean_error_list(t_tissue_stack *general, int min);
 /*		percent_and_time		*/
 
 int		is_num(char *str);
+int		is_percent_cancel(char *id, t_tissue_stack *t);
 void		percent_time_write(char *str, char **commands, void *box);
-void		percent_init_direct(int total_blocks, char **id, char *filename, t_tissue_stack *t);
-t_percent_elem	*get_percent_elem_by_id(char *id, t_prcnt_t *p);
+void		percent_init_direct(int total_blocks, char **id, char *filename, t_tissue_stack *t);//t_percent_elem	*get_percent_elem_by_id(char *id, t_prcnt_t *p);
 void		percent_add_direct(int blocks, char *id, t_tissue_stack *t);
 void		percent_get_direct(char **buff, char *id, t_tissue_stack *t);
+void		percent_cancel_direct(char *id, t_tissue_stack *t);
 void		percent_destroy(char **commands, void *box, t_tissue_stack *t);
 void		init_percent_time(t_tissue_stack *t, char *path);
+
 
 /*		notification_center.c		*/
 

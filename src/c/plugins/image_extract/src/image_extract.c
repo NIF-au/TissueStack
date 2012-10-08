@@ -636,7 +636,10 @@ void			*start(void *args)
 	      if (a->commands[18] != NULL && strcmp(a->commands[18], "@tiling@") == 0)
 		{
 		  image_args->percentage = 1;
-		  image_args->percent_fd = *((int*)a->box);
+		  if (a->box != NULL)
+		    image_args->percent_fd = *((int*)a->box);
+		  else
+		    image_args->percent_fd = 1;
 		}
 	    }
 	}

@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Thu Oct  4 16:35:57 2012 Oliver Nicolini
+** Last update Mon Oct  8 14:03:25 2012 Oliver Nicolini
 */
 
 #include "core.h"
@@ -139,6 +139,9 @@ void            init_prog(t_tissue_stack *t)
   t->percent_init = percent_init_direct;
   t->percent_add = percent_add_direct;
   t->percent_get = percent_get_direct;
+  t->is_percent_cancel = is_percent_cancel;
+
+  t->percent_cancel = percent_cancel_direct;
 
   t->tile_requests = malloc(sizeof(*t->tile_requests));
   init_tile_requests(t->tile_requests);
@@ -162,8 +165,8 @@ void            init_prog(t_tissue_stack *t)
   t->log = malloc(sizeof(*t->log));
   t->log->state = ON;
   t->log->path = strdup("/tmp/tissue_stack_logs/");
-  t->log->debug = OFF;
-  t->log->verbose = OFF;
+  t->log->debug = ON;
+  t->log->verbose = ON;
   t->log->write_on_files = ON;
   t->log->write_on_plug_files = OFF;
   t->log->write_on_level_files = ON;
@@ -266,6 +269,7 @@ int		main(int argc, char **argv)
   plugin_load_from_string("load minc_converter /usr/local/plugins/TissueStackMincConverter.so", t);
   plugin_load_from_string("load nifti_converter /usr/local/plugins/TissueStackNiftiConverter.so", t);
   plugin_load_from_string("load progress /usr/local/plugins/TissueStackPercent.so", t);
+
 
   sprintf(serv_command, "start serv %s", argv[1]);
 
