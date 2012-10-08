@@ -95,7 +95,7 @@ TissueStack.DataSetStore.prototype = {
 					if (data.response.noResults) {
 						alert("No data sets found in configuration database");
 						// add admin functionality to all versions
-						TissueStack.admin = new TissueStack.Admin();
+						//TissueStack.admin = new TissueStack.Admin();
 						
 						return;
 					}
