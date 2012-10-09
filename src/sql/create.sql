@@ -21,6 +21,7 @@ ALTER TABLE configuration OWNER TO tissuestack;
 INSERT INTO configuration VALUES('version', '0.7', 'version');
 INSERT INTO configuration VALUES('image_service_directory', 'image_service', 'image service directory (relative to the application''s apache web server');
 INSERT INTO configuration VALUES('tile_directory', 'tiles', 'tile directory (relative to the application''s apache web server)');
+INSERT INTO configuration VALUES('server_tile_directory', '/opt/tiles', 'server side tile directory for pre-tiling');
 INSERT INTO configuration VALUES('upload_directory', '/opt/upload', 'upload directory (absolute system path on server)');
 INSERT INTO configuration VALUES('data_directory', '/opt/data', 'data directory (absolute system path on server)');
 INSERT INTO configuration VALUES('max_upload_size', '1073741824', 'the maximum number of bytes allowed to upload in one go. A gig by default');
