@@ -437,4 +437,7 @@ t_log_plugin		log_plugin;
 #define ERROR_MAX 5
 #define CLEANING_ERROR_TIME 30
 
+// NOTE: Should not exceed 108 characters !!!
+#define UNIX_SOCKET_PATH "/tmp/tissue_stack_communication"
+
 #endif /* __TISSUE_STACK_CORE__ */
