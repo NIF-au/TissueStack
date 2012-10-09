@@ -209,20 +209,18 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
       else {
 	print_image(hyperslab, volume, current_dimension, current_slice, width, height, a);
       }
-
-      /*      char *buff = NULL;
-      a->general_info->percent_get(&buff, a->info->id_percent, a->general_info->percent);
-      FATAL("========> %s%%", buff);*/
-
       pthread_mutex_lock(&(a->p->lock));
       a->info->slices_done++;
       pthread_mutex_unlock(&(a->p->lock));
       pthread_cond_signal(&(a->info->cond));
+      INFO("SLICE == %i ==> %i", current_slice, current_dimension);
       current_slice++;
 
       // restore original positions
       a->info->h_position = save_h_position;
       a->info->w_position = save_w_position;
+      if (current_slice == 20)
+	a->general_info->percent_cancel(a->info->id_percent, a->general_info);
     }
   start[current_dimension] = 0;
   if (free_hyperslab > 0) free(hyperslab);

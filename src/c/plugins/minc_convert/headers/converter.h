@@ -32,4 +32,6 @@ t_vol			*init_get_volume_from_minc_file(char *path);
 t_header		*create_header_from_minc_struct(t_vol *minc_volume);
 void			write_header_into_file(int fd, t_header *h);
 
+extern  t_log_plugin log_plugin;
+
 #endif /* __MINC_TOOL_CORE__ */

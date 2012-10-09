@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Mon Oct  8 14:03:25 2012 Oliver Nicolini
+** Last update Mon Oct  8 16:53:23 2012 Oliver Nicolini
 */
 
 #include "core.h"
@@ -142,6 +142,7 @@ void            init_prog(t_tissue_stack *t)
   t->is_percent_cancel = is_percent_cancel;
 
   t->percent_cancel = percent_cancel_direct;
+  t->percent_resume = percent_resume_direct;
 
   t->tile_requests = malloc(sizeof(*t->tile_requests));
   init_tile_requests(t->tile_requests);

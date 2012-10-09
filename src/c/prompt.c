@@ -191,8 +191,13 @@ void		prompt_exec(char **commands, t_tissue_stack *general, void *box)
 
   prog = commands[0];
 
-  args = create_plug_args(commands, general, box);
+  if (strcmp(commands[0], "resume") == 0)
+    {
+      general->percent_resume(commands[1], general);
+      return;
+    }
 
+  args = create_plug_args(commands, general, box);
   while (i < general->nb_func)
     {
       if (strcmp(general->functions[i].name, prog) == 0)
@@ -497,7 +502,7 @@ void		prompt_enter(t_tissue_stack *general)
     {
       prompt_exec(commands, general, NULL);
       clear_prompt_list(general);
-      write(1, "TisseStack > ", 13);
+      write(1, "TissueStack > ", 13);
       free(dest);
     }
 }
@@ -724,7 +729,7 @@ void		prompt_start(t_tissue_stack *general)
   general->prompt_first = NULL;
   general->hist_first = NULL;
   change_tty_attr();
-  write(1, "TisseStack > ", 13);
+  write(1, "TissueStack > ", 13);
   while (general->quit == 0)
     {
       memset(buff, '\0', 4096);

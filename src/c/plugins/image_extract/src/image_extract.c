@@ -365,6 +365,7 @@ void		image_creation_lunch(t_tissue_stack *t, t_vol *vol, int step, t_image_extr
   unsigned int	nb_slices = 0;
   int		**dim_start_end;
   char		*id_percent = NULL;
+  char		*zoom_f;
 
   i = 0;
 
@@ -375,13 +376,15 @@ void		image_creation_lunch(t_tissue_stack *t, t_vol *vol, int step, t_image_extr
 
   dim_start_end = image_general->dim_start_end;
 
-  if (image_general->percentage)
+  if (image_general->percentage && image_general->id_percent == NULL)
     {
-      t->percent_init(get_nb_blocks_percent(image_general, vol), &id_percent, vol->path, t);
+      asprintf(&zoom_f, "%f", image_general->scale);
+      t->percent_init(get_nb_blocks_percent(image_general, vol), &id_percent, vol->path, "0", image_general->root_path, zoom_f, t);
       if (write(image_general->percent_fd, id_percent, 10) < 0)
 	ERROR("Open Error");
+      image_general->id_percent = id_percent;
+      free(zoom_f);
     }
-  image_general->id_percent = id_percent;
 
   while (i < 3)
     {
@@ -581,6 +584,7 @@ void			*start(void *args)
   a->commands[10] = strupper(a->commands[10]);
   image_args->image_type = a->commands[10];
   image_args->percentage = 0;
+  image_args->id_percent = NULL;
 
   if (strcmp(image_args->service, "tiles") == 0)
     {
@@ -600,7 +604,14 @@ void			*start(void *args)
 	  if (a->commands[21] != NULL && strcmp(a->commands[21], "@tiling@") == 0)
 	    {
 	      image_args->percentage = 1;
-	      image_args->percent_fd = *((int*)a->box);
+	      if (a->commands[22] != NULL)
+		{
+		  image_args->id_percent = strdup(a->commands[22]);
+		  image_args->percent_fd = 1;
+		}
+	      else
+		image_args->percent_fd = *((int*)a->box);
+
 	    }
 	}
     }
@@ -636,10 +647,13 @@ void			*start(void *args)
 	      if (a->commands[18] != NULL && strcmp(a->commands[18], "@tiling@") == 0)
 		{
 		  image_args->percentage = 1;
-		  if (a->box != NULL)
-		    image_args->percent_fd = *((int*)a->box);
+		  if (a->commands[19] != NULL)
+		    {
+		      image_args->id_percent = strdup(a->commands[19]);
+		      image_args->percent_fd = 1;
+		    }
 		  else
-		    image_args->percent_fd = 1;
+		    image_args->percent_fd = *((int*)a->box);
 		}
 	    }
 	}
