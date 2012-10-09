@@ -2,7 +2,12 @@ if (typeof(TissueStack) == 'undefined') {
         TissueStack = {};
 };
 
-TissueStack.configuration = {};
+TissueStack.configuration = {
+		restful_service_proxy_path : 
+			{ 	value: "backend", 
+				description: "restful java service proxy path (relative to the application''s web root directory)"
+			}
+};
 TissueStack.debug = true;
 TissueStack.color_maps = null;
 TissueStack.sync_datasets = false;
