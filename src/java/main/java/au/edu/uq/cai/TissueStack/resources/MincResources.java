@@ -146,7 +146,7 @@ public final class MincResources extends AbstractRestfulMetaInformation {
 		
 		// check rest of params now
 		final String dims[] = StringUtils.convertCommaSeparatedQueryParamsIntoStringArray(dimensions, true);
-		int dimensionsArray[] = new int[] {-1,-1,-1,-1,-1,-1};
+		int dimensionsArray[] = new int[] {0,0,0,0,0,0};
 		// fill array with given values
 		if (dims != null) {
 			if (dims.length > 6) {
