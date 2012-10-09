@@ -127,4 +127,6 @@ void		write_header_into_file(int fd, t_header *h);
   }									\
   }
 
+extern  t_log_plugin log_plugin;
+
 #endif /* __NIFTI_CONVERTER__ */

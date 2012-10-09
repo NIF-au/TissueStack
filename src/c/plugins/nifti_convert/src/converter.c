@@ -207,7 +207,7 @@ void  		*start(void *args)
   sizes[1] = nim->dim[2];
   sizes[2] = nim->dim[3];
 
-  a->general_info->percent_init((sizes[0] + sizes[1] + sizes[2]), &id_percent, a->commands[0], a->general_info);
+  a->general_info->percent_init((sizes[0] + sizes[1] + sizes[2]), &id_percent, a->commands[0], "2", a->commands[1], NULL, a->general_info);
   if (a->box != NULL)
     {
       if (write(*((int*)a->box), id_percent, 10) < 0)

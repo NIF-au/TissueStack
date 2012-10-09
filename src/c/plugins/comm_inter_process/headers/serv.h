@@ -38,6 +38,8 @@ struct			s_serv_clients
 #define	OFF	0
 #define FAIL	-1
 
+extern  t_log_plugin log_plugin;
+
 #endif /* !__SERV_H__ */
 
 
