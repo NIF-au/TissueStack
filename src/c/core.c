@@ -164,7 +164,7 @@ void            init_prog(t_tissue_stack *t)
   t->raise = nc_raise;
   t->log = malloc(sizeof(*t->log));
   t->log->state = ON;
-  t->log->path = strdup("/tmp/tissue_stack_logs/");
+  t->log->path = strdup(CONCAT_APP_PATH("logs/"));
   t->log->debug = OFF;
   t->log->verbose = OFF;
   t->log->write_on_files = ON;
@@ -206,7 +206,7 @@ void            init_prog(t_tissue_stack *t)
 	  }*/
     }
   init_func_ptr(t);
-  init_percent_time(t, "/opt/tasks/");
+  init_percent_time(t, CONCAT_APP_PATH("tasks/"));
 }
 
 void		free_core_struct(t_tissue_stack *t)

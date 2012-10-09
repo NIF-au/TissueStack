@@ -359,7 +359,7 @@ TissueStack.Embedded.prototype = {
 	},
 	loadDataSetConfigurationFromServer : function() {
 		var _this = this;
-		var url = "http://" + _this.domain + "/backend/data/" + _this.data_set_id;
+		var url = "http://" + _this.domain + "/" + TissueStack.configuration['restful_service_proxy_path'].value + "/data/" + _this.data_set_id;
 		
 		// create a new data store
 		TissueStack.dataSetStore = new TissueStack.DataSetStore(null, true);
@@ -413,7 +413,7 @@ TissueStack.Embedded.prototype = {
 	loadDataBaseConfiguration : function() {
 		// we do this one synchronously
 		TissueStack.Utils.sendAjaxRequest(
-			"http://" + this.domain + "/backend/configuration/all/json", 'GET', false,
+			"http://" + this.domain + "/" + TissueStack.configuration['restful_service_proxy_path'].value + "/configuration/all/json", 'GET', false,
 			function(data, textStatus, jqXHR) {
 				if (!data.response && !data.error) {
 					alert("Did not receive anyting, neither success nor error ....");
