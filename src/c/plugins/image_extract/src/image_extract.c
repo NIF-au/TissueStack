@@ -599,6 +599,7 @@ void			*start(void *args)
 	  image_args->root_path = strdup(a->commands[20]);
 	  if (a->commands[21] != NULL && strcmp(a->commands[21], "@tiling@") == 0)
 	    {
+	      prctl(PR_SET_NAME, "TS_TILING");
 	      image_args->percentage = 1;
 	      image_args->percent_fd = *((int*)a->box);
 	    }
@@ -635,6 +636,7 @@ void			*start(void *args)
 	      image_args->root_path = strdup(a->commands[17]);
 	      if (a->commands[18] != NULL && strcmp(a->commands[18], "@tiling@") == 0)
 		{
+          prctl(PR_SET_NAME, "TS_TILING");
 		  image_args->percentage = 1;
 		  if (a->box != NULL)
 		    image_args->percent_fd = *((int*)a->box);

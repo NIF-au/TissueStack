@@ -77,8 +77,6 @@ void            *get_all_slices_of_all_dimensions(void *args)
   a = (t_image_args *)args;
   volume = a->volume;
   i = 0;
-  if (a->info->percent == 1)
-      prctl(PR_SET_NAME, "TS_TILING");
   // copy path as well
   volume->path = strdup(a->volume->path);
   // init start and count variable
