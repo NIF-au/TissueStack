@@ -1,7 +1,5 @@
 #include "TissueStack.h"
 
-#define UNIX_SOCKET_PATH "/tmp/tissue_stack_communication"
-
 // global environment
 JNIEnv * global_env = NULL;
 

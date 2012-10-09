@@ -181,7 +181,7 @@ TissueStack.BindGlobalEvents = function () {
 			url += "/";
 		}
 		
-		url += "backend/data/list?include_plane_data=true";
+		url += (TissueStack.configuration['restful_service_proxy_path'].value + "/data/list?include_plane_data=true");
 		
 		// contact server
 		TissueStack.Utils.sendAjaxRequest(
@@ -227,7 +227,7 @@ TissueStack.BindGlobalEvents = function () {
 TissueStack.LoadDataBaseConfiguration = function() {
 	// we do this one synchronously
 	TissueStack.Utils.sendAjaxRequest(
-		"/backend/configuration/all/json", 'GET', false,
+		"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/configuration/all/json", 'GET', false,
 		function(data, textStatus, jqXHR) {
 			if (!data.response && !data.error) {
 				alert("Did not receive anyting, neither success nor error ....");

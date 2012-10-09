@@ -376,6 +376,10 @@ void            lc_warning(char *name, t_plugin *plugin, char *command, void *da
 void            lc_error(char *name, t_plugin *plugin, char *command, void *data, t_tissue_stack *t);
 void            lc_fatal(char *name, t_plugin *plugin, char *command, void *data, t_tissue_stack *t);
 
+// GLOBAL APPLICATION PATH
+#define APPLICATION_PATH "/opt/tissuestack"
+#define CONCAT_APP_PATH(PATH_TO_BE_ADDED) APPLICATION_PATH "/" PATH_TO_BE_ADDED
+
 #define X 0
 #define Y 1
 #define Z 2
@@ -439,5 +443,8 @@ t_log_plugin		log_plugin;
 
 #define ERROR_MAX 5
 #define CLEANING_ERROR_TIME 30
+
+// NOTE: Should not exceed 108 characters !!!
+#define UNIX_SOCKET_PATH "/tmp/tissue_stack_communication"
 
 #endif /* __TISSUE_STACK_CORE__ */

@@ -37,8 +37,8 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 	
 	final static Logger logger = Logger.getLogger(AdminResources.class);
 	
-	private final static String DEFAULT_UPLOAD_DIRECTORY = "/opt/upload";
-	private final static String DEFAULT_DATA_DIRECTORY = "/opt/data";
+	private final static String DEFAULT_UPLOAD_DIRECTORY = "/opt/tissuestack/upload";
+	private final static String DEFAULT_DATA_DIRECTORY = "/opt/tissuestack/data";
 	private final static long DEFAULT_MAX_UPLOAD_SIZE = 1024 * 1024 * 1024;
 			
 	@Path("/")

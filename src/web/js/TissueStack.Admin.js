@@ -20,7 +20,7 @@ TissueStack.Admin.prototype = {
 		 	var password = $('#password').val();
 		 	if(password != "") {
 		 		TissueStack.Utils.sendAjaxRequest(
-	 				"backend/security/new_session/json?password="+ password, 'GET', true,
+		 			"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/security/new_session/json?password="+ password, 'GET', true,
 	 				function(data, textStatus, jqXHR) {
 						if (!data.response && !data.error) {
 							_this.replaceErrorMessage("Did not receive any session, neither lose session ....");
@@ -113,7 +113,7 @@ TissueStack.Admin.prototype = {
 	displayUploadDirectory : function (){
 		var _this = this;  
 	     $(".file_radio_list").show(function(){
-	      TissueStack.Utils.sendAjaxRequest("/backend/admin/upload_directory/json", "GET", true,function(result) {
+	      "/" + TissueStack.Utils.sendAjaxRequest(TissueStack.configuration['restful_service_proxy_path'].value + "/admin/upload_directory/json", "GET", true,function(result) {
 	    	if (!result || !result.response || result.response.length == 0) {
 	    		return;
 	    	}
@@ -157,7 +157,7 @@ TissueStack.Admin.prototype = {
 		_this.uploadProgress();
 		 $("#uploadForm").submit(function(){
 			$(this).ajaxSubmit({ 	
-				url :"/backend/admin/upload/json?session=" + _this.session,
+				url : "/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/upload/json?session=" + _this.session,
 				dataType : "json",
 				success: function(data, textStatus, jqXHR) {
 					if (!data.response && !data.error) {
@@ -252,7 +252,7 @@ TissueStack.Admin.prototype = {
 		 						}
 		 						// send backend request
 		 				 		TissueStack.Utils.sendAjaxRequest(
-		 							"/backend/admin/add_dataset/json?session=" + _this.session + "&filename=" + uploaded_file.value + "&description=" + msgDescription,
+	 				 				"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/add_dataset/json?session=" + _this.session + "&filename=" + uploaded_file.value + "&description=" + msgDescription,
 		 							'GET', true,
 		 							function(data, textStatus, jqXHR) {
 		 								if (!data.response && !data.error) {
@@ -303,7 +303,7 @@ TissueStack.Admin.prototype = {
 					// send backend request
 					$("#bt_process").click(function(){
 					   TissueStack.Utils.sendAjaxRequest(
-							"/backend/admin/convert/json?file=/opt/upload/" + $('input[name=radio_listFile]:checked').val(),
+							"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/convert/json?file=/opt/upload/" + $('input[name=radio_listFile]:checked').val(),
 							'GET', true,
 							function(data, textStatus, jqXHR) {
 								if (!data.response && !data.error) {
@@ -379,7 +379,7 @@ TissueStack.Admin.prototype = {
 				if(j == 4){ // give ID as well
 					_this.queue_handle = setInterval(function () {
 						TissueStack.Utils.sendAjaxRequest(
-							"/backend/admin/progress/json?task_id="+ process_task,
+							"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/progress/json?task_id="+ process_task,
 							'GET', true,
 							function(data, textStatus, jqXHR) {
 								if (!data.response && !data.error) {
