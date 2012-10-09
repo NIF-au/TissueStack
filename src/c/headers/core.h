@@ -65,6 +65,7 @@ struct			s_cancel_queue
 
 struct			s_prcnt_t
 {
+  pthread_mutex_t	mutex;
   t_cancel_queue	*cancel_first;
   char			*path;
 };

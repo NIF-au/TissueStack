@@ -136,13 +136,14 @@ char		**read_from_file_by_id(char *id, FILE **f, t_tissue_stack *t)
 void		percent_add_direct(int blocks, char *id, t_tissue_stack *t)
 {
   char		**result;
-  float		percent_tmp;
+  float		percent_tmp = 0;
   float		blocks_done;
   FILE		*f;
 
+
   if (id == NULL || t->percent == NULL)
     return;
-
+  pthread_mutex_lock(&t->percent->mutex);
   if ((result = read_from_file_by_id(id, &f, t)) != NULL)
     {
       if (strcmp(result[0], "100") != 0)
@@ -155,9 +156,7 @@ void		percent_add_direct(int blocks, char *id, t_tissue_stack *t)
 	  fclose(f);
 	}
     }
-  else
-    return;
-
+  pthread_mutex_unlock(&t->percent->mutex);
   if (percent_tmp >= 100)
     INFO("Percentage: %s ==> 100%%", id);
 }
@@ -227,6 +226,8 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
   int		h_tiles;
   float		scale;
   int		tiles_per_slice[3];
+  t_cancel_queue *tmp;
+  t_cancel_queue *tmp2;
 
   if ((result = read_from_file_by_id(id, &f, t)) != NULL)
     {
@@ -234,6 +235,31 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 	{
 	  if ((vol = t->get_volume(result[3], t)) != NULL)
 	    {
+	      if ((tmp = t->percent->cancel_first) != NULL)
+		{
+		  if (strcmp(id, tmp->id) == 0)
+		    {
+		      t->percent->cancel_first = tmp->next;
+		      free(tmp->id);
+		      free(tmp);
+		    }
+		  else
+		    {
+		      while (tmp)
+			{
+			  if (tmp->next && strcmp(id, tmp->next->id) == 0)
+			    break;
+			  tmp = tmp->next;
+			}
+		      if (tmp && tmp->next)
+			{
+			  tmp2 = tmp->next->next;
+			  free(tmp->next->id);
+			  free(tmp->next);
+			  tmp->next = tmp2;
+			}
+		    }
+		}
 	      blocks_done = atoi(result[1]);
 	      if (result[4][0] == '0')
 		{
@@ -242,18 +268,20 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 		  while (i < vol->dim_nb)
 		    {
 		      get_width_height(&height, &width, i, vol);
-		      ERROR("== %i - %i - %f - %s", height, width, scale, result[6]);
 		      h_tiles = (height * scale) / 256;
 		      w_tiles = (width * scale) / 256;
+		      if (height % 256 != 0)
+			h_tiles++;
+		      if (width % 256 != 0)
+			w_tiles++;
 		      tiles_per_slice[i] = h_tiles * w_tiles;
-		      tiles_nb[i] = h_tiles * w_tiles * vol->size[i];
-		      ERROR("||||| %i - %i - %i - %i", tiles_nb[i], tiles_per_slice[i], h_tiles, w_tiles);
+		      tiles_nb[i] = (h_tiles * w_tiles) * vol->size[i];
 		      i++;
 		    }
 		  i = 0;
 		  while (i < vol->dim_nb)
 		    {
-		      if (tiles_nb[i] > blocks_done)
+		      if (tiles_nb[i] > blocks_done && blocks_done > 0)
 			{
 			  dim_s_e[i][0] = blocks_done / tiles_per_slice[i];
 			  dim_s_e[i][1] = 0;
@@ -273,7 +301,7 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 		    }
 		  if ("full")
 		    {
-		      asprintf(&dest, "start image %s %i %i %i %i %i %i %.4f %i tiles JPEG 256 -1 -1 grey 0 0 1000 0 0 %s @tiling@ %s",
+		      asprintf(&dest, "start image %s %i %i %i %i %i %i %.4f %i tiles JPEG 256 -1 -1 grey 0 0 10000 0 0 %s @tiling@ %s",
 			       result[3],
 			       dim_s_e[0][0], dim_s_e[0][1],
 			       dim_s_e[1][0], dim_s_e[1][1],
@@ -285,7 +313,7 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 		    }
 		  else if ("preview")
 		    {
-		      asprintf(&dest, "start image %s %i %i %i %i %i %i %.4f %i full JPEG grey 0 0 1000 0 0 %s @tiling@ %s",
+		      asprintf(&dest, "start image %s %i %i %i %i %i %i %.4f %i full JPEG grey 0 0 10000 0 0 %s @tiling@ %s",
 			       result[3],
 			       dim_s_e[0][0], dim_s_e[0][1],
 			       dim_s_e[1][0], dim_s_e[1][1],
@@ -368,10 +396,7 @@ int		is_percent_cancel(char *id, t_tissue_stack *t)
       while (tmp)
 	{
 	  if (strcmp(id, tmp->id) == 0)
-	    {
-	      clean_cancel_queue(tmp, t);
-	      return (1);
-	    }
+	    return (1);
 	  tmp = tmp->next;
 	}
     }
@@ -423,6 +448,7 @@ void		init_percent_time(t_tissue_stack *t, char *path)
   t->percent = p;
   if (path != NULL)
     {
+      pthread_mutex_init(&t->percent->mutex, NULL);
       t->percent->path = strdup(path);
       actualPath = createDirectory(path, 0766);
       if (actualPath == NULL) {
