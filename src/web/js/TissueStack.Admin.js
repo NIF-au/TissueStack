@@ -341,45 +341,50 @@ TissueStack.Admin.prototype = {
 	},
 	registerPreTileHandler : function () {
 		var _this = this;
+		var task_zoom_level = eval(TissueStack.configuration.default_zoom_levels.value).length;
 		$("#bt_process").click(function(){
 			if($('input[name=radio_task]:checked').val() == "PreTile") {
-			   TissueStack.Utils.sendAjaxRequest(
-					"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/minc/tile/json?" 
-						+ "file=" + TissueStack.configuration['upload_directory'].value + "/" 
-						+ $('input[name=radio_listFile]:checked').val()
-						+ "&tile_dir=" + TissueStack.configuration['server_tile_directory'].value
-						+ "&dimensions=0,0,0,0,0,0" 
-						+ "&zoom=6" 
-						+ "&preview=false"
-						+ "&store_data_set=true",
-					'GET', true,
-					function(data, textStatus, jqXHR) {
-						if (!data.response && !data.error) {
-							_this.replaceErrorMessage("No Data Set To Be Tiled!");
-							return false;
-						}
-						if (data.error) {
-							var message = "Error: " + (data.error.message ? data.error.message : " No Data Set To Be Tiled!");
-							_this.replaceErrorMessage(message);				
-							return false;
-						}
-						if (data.response.noResults) {
-							_this.replaceErrorMessage("No Results!");
-							return false;
-						}
-							$(".file_radio_list input:radio[id^="+ "'check_" + $('input[name=radio_listFile]:checked').val() + "']:first").attr('disabled', true).checkboxradio("refresh");
-							_this.createTaskView(data.response);
-							return false;
-					},
-					function(jqXHR, textStatus, errorThrown) {
-						_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
-						return false;
-					}
-				);
+			   for(var i = 0; i < task_zoom_level ; i++){
+				   (function (i) {
+					   TissueStack.Utils.sendAjaxRequest(
+							"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/minc/tile/json?" 
+								+ "file=" + TissueStack.configuration['upload_directory'].value + "/" 
+								+ $('input[name=radio_listFile]:checked').val()
+								+ "&tile_dir=" + TissueStack.configuration['server_tile_directory'].value
+								+ "&dimensions=0,0,0,0,0,0" 
+								+ "&zoom=" + i 
+								+ "&preview=true",
+								//+ "&store_data_set=true",
+							'GET', true,
+							function(data, textStatus, jqXHR) {
+								if (!data.response && !data.error) {
+									_this.replaceErrorMessage("No Data Set To Be Tiled!");
+									return false;
+								} 
+								if (data.error) {
+									var message = "Error: " + (data.error.message ? data.error.message : " No Data Set To Be Tiled!");
+									_this.replaceErrorMessage(message);				
+									return false;
+								}
+								if (data.response.noResults) {
+									_this.replaceErrorMessage("No Results!");
+									return false;
+								}
+									$(".file_radio_list input:radio[id^="+ "'check_" + $('input[name=radio_listFile]:checked').val() + "']:first").attr('disabled', true).checkboxradio("refresh");
+									_this.createTaskView(data.response, i);
+									return false;
+							},
+							function(jqXHR, textStatus, errorThrown) {
+								_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
+								return false;
+							}
+						);
+					})(i);
+				}
 			}
 		});
 	},
-	createTaskView: function (process_task) {
+	createTaskView: function (process_task, zoom_level) {
 		var _this = this;
 		var nrCols = 5; //important! can't change!
 		var maxRows = 0;
@@ -436,8 +441,9 @@ TissueStack.Admin.prototype = {
 								}
 	
 								var processTask = data.response;
-									content = '<progress id="bar" value="'+ processTask.progress +'" max="100"></progress>'
-											+ '<span id="progess_in_process" style="text-align: left">'+ ' ' + processTask.progress.toFixed(2) +'%</span >';  
+									content = '<span id="progess_in_zoom_level" style="text-align: left">ZOOM:'+ ' ' + zoom_level +'  </span >'
+											+ '<progress id="bar" value="'+ processTask.progress +'" max="100"></progress>'
+											+ '<span id="progess_in_process" style="text-align: left">'+ ' ' + processTask.progress.toFixed(2) +'%</span >'; 
 									processBar = content;
 									$(cell).html(processBar);
 									$(row).append(cell);
