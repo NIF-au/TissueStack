@@ -345,11 +345,13 @@ TissueStack.Admin.prototype = {
 			if($('input[name=radio_task]:checked').val() == "PreTile") {
 			   TissueStack.Utils.sendAjaxRequest(
 					"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/minc/tile/json?" 
-						+ "file=/opt/tissuestack/upload/" + $('input[name=radio_listFile]:checked').val()
-						+ "&tile_dir=/opt/tissuestack/tile/" + $('input[name=radio_listFile]:checked').val()  
+						+ "file=" + TissueStack.configuration['upload_directory'].value + "/" 
+						+ $('input[name=radio_listFile]:checked').val()
+						+ "&tile_dir=" + TissueStack.configuration['server_tile_directory'].value
 						+ "&dimensions=0,0,0,0,0,0" 
 						+ "&zoom=6" 
-						+ "&preview=false",
+						+ "&preview=false"
+						+ "&store_data_set=true",
 					'GET', true,
 					function(data, textStatus, jqXHR) {
 						if (!data.response && !data.error) {
