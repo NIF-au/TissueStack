@@ -54,7 +54,7 @@ void		dim_loop(int		fd,
 	  memset(hyperslab, '\0', size);
 	  miget_real_value_hyperslab(volume->minc_volume, MI_TYPE_UBYTE, start, count, hyperslab);
 	  write(fd, hyperslab, size);
-	  INFO("Slice = %i - dim = %i", this_slice, dim);
+	  DEBUG("Slice = %i - dim = %i", this_slice, dim);
 	  this_slice++;
 	  t->percent_add(1, id_percent, t);
 	  cancel = t->is_percent_cancel(id_percent, t);
