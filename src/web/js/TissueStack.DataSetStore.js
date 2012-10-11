@@ -94,8 +94,7 @@ TissueStack.DataSetStore.prototype = {
 					
 					if (data.response.noResults) {
 						alert("No data sets found in configuration database");
-						// add admin functionality to all versions
-						//TissueStack.admin = new TissueStack.Admin();
+						if (customSuccessHandler) customSuccessHandler();
 						
 						return;
 					}
@@ -106,9 +105,7 @@ TissueStack.DataSetStore.prototype = {
 						_this.addDataSetToStore(dataSets[x], "localhost");
 					}
 
-					if (customSuccessHandler) {
-						customSuccessHandler();
-					}
+					if (customSuccessHandler) customSuccessHandler();
 				},
 				function(jqXHR, textStatus, errorThrown) {
 					alert("Error connecting to backend: " + textStatus + " " + errorThrown);

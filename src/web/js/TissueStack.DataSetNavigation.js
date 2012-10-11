@@ -198,9 +198,7 @@ TissueStack.DataSetNavigation.prototype = {
 	buildDynaTree : function() {
 		var treeData = [];
 
-		if (TissueStack.dataSetStore.getSize() == 0) {
-			treeData[0] = {title: "No Data Sets Found", tooltip: "No Data Sets Found"};
-		} else {
+		if (TissueStack.dataSetStore.getSize() != 0) {
 			var counter = 0;
 			for (var dataSetKey in TissueStack.dataSetStore.datasets) {
 				var dataSet = TissueStack.dataSetStore.datasets[dataSetKey];
@@ -297,10 +295,6 @@ TissueStack.DataSetNavigation.prototype = {
 	},
 	buildTabletMenu : function() {
 		//BUILD FISRT TABLET TREE WHEN BROWSER LOAD
-		var treeData = [];
-			if (TissueStack.dataSetStore.getSize() == 0) {
-				treeData[0] = {title: "No Data Sets Found", tooltip: "No Data Sets Found"};
-			} 
 		this.addDataSetToTabletTree();
 	},
 	getDynaTreeObject :function() {
