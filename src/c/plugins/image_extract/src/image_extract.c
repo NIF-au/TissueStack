@@ -378,7 +378,8 @@ void		image_creation_lunch(t_tissue_stack *t, t_vol *vol, int step, t_image_extr
     {
       asprintf(&zoom_f, "%f", image_general->scale);
       t->percent_init(get_nb_blocks_percent(image_general, vol), &id_percent, vol->path, "0", image_general->root_path, zoom_f, t);
-      if (write(image_general->percent_fd, id_percent, 10) < 0)
+      FATAL("======> %s <==========", id_percent);
+      if (write(image_general->percent_fd, id_percent, 16) < 0)
 	ERROR("Open Error");
       image_general->id_percent = id_percent;
       free(zoom_f);

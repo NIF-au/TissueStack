@@ -473,9 +473,9 @@ JNIEXPORT jstring JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMin
 	write(fileDescriptor, startTilingCommand->buffer, startTilingCommand->size);
 	free_t_string_buffer(startTilingCommand);
 
-	char * buff = malloc(11 * sizeof(*buff));
-	memset(buff, 0, 11);
-	read(fileDescriptor, buff, 10);
+	char * buff = malloc(17 * sizeof(*buff));
+	memset(buff, 0, 17);
+	read(fileDescriptor, buff, 16);
 
 	jstring ret = (*env)->NewStringUTF(env, buff);
 
@@ -536,9 +536,9 @@ JNIEXPORT jstring Java_au_edu_uq_cai_TissueStack_jni_TissueStack_convertImageFor
 	write(fileDescriptor, startConversionCommand->buffer, startConversionCommand->size);
 	free_t_string_buffer(startConversionCommand);
 
-	char * buff = malloc(11 * sizeof(*buff));
-	memset(buff, 0, 11);
-	read(fileDescriptor, buff, 10);
+	char * buff = malloc(17 * sizeof(*buff));
+	memset(buff, 0, 17);
+	read(fileDescriptor, buff, 16);
 
 	if (buff == NULL || strcmp(buff, "NULL") == 0 || strcmp(buff, "") == 0) {
 		(*env)->ReleaseStringUTFChars(env, imageFile, in_file);

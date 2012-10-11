@@ -395,14 +395,16 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 		if (!SecurityResources.checkSession(session)) {
 			throw new RuntimeException("Invalid Session! Please Log In.");
 		}*/
-		if (taskId == null || taskId.length() != 10)
-			throw new IllegalArgumentException("Task Id has to be a non-empty string of 10 alphanumeric characters!");
-		
+	    
+	    
+	    if (taskId == null || taskId.length() != 16)
+		throw new IllegalArgumentException("Task Id has to be a non-empty string of 16 alphanumeric characters!");
+	    
 		TaskStatus ret = new TissueStack().queryTaskProgress(taskId);
 		if (ret == null)  throw new RuntimeException("Task with id '" + taskId + "' does not exist!");
 		
 		// now let JNI do the rest
-		return new RestfulResource(new Response(ret));		
+		return new RestfulResource(new Response(ret));
 	}
 	
 	@Path("/meta-info")
