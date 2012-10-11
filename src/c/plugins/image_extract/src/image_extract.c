@@ -396,7 +396,6 @@ void		image_creation_lunch(t_tissue_stack *t, t_vol *vol, int step, t_image_extr
 	args->dim_start_end[i][1] =  image_general->dim_start_end[i][1];
 	i++;
       }
-      INFO("%p", args->dim_start_end);
       (*t->tp->add)(get_all_slices_of_all_dimensions, (void *)args, t->tp);
       return;
     }

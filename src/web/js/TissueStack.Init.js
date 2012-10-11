@@ -723,12 +723,12 @@ $(document).ready(function() {
 				TissueStack.dataSetNavigation.getDynaTreeObject().selectKey("localhost_" + TissueStack.configuration['initOpts']['ds']);
 			else
 				TissueStack.dataSetNavigation.addDataSet(TissueStack.dataSetStore.getDataSetById('localhost_' + TissueStack.configuration['initOpts']['ds']).id, 0);
-		} else {
+		} else if (TissueStack.dataSetStore && TissueStack.dataSetStore.datasetCount && TissueStack.dataSetStore.datasetCount > 1){
 			var ds = TissueStack.dataSetStore.getDataSetByIndex(0);
 			if (TissueStack.desktop) TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(ds.id); 
 			else TissueStack.dataSetNavigation.addDataSet(ds.id, 0);
 		}
-		TissueStack.dataSetNavigation.showDataSet(1);
+		if (TissueStack.dataSetStore && TissueStack.dataSetStore.datasetCount && TissueStack.dataSetStore.datasetCount > 1) TissueStack.dataSetNavigation.showDataSet(1);
 		
 		// initialize ui and events
 		if (!TissueStack.desktop) { // avoid double binding

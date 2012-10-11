@@ -213,9 +213,7 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
       a->info->slices_done++;
       pthread_mutex_unlock(&(a->p->lock));
       pthread_cond_signal(&(a->info->cond));
-      INFO("SLICE == %i ==> %i", current_slice, current_dimension);
-      if (current_slice == 20)
-	a->general_info->percent_cancel(a->info->id_percent, a->general_info);
+      DEBUG("SLICE == %i ==> %i", current_slice, current_dimension);
       cancel = a->general_info->is_percent_cancel(a->info->id_percent, a->general_info);
       current_slice++;
 

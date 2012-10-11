@@ -56,7 +56,7 @@
 						<ul>
 							<li><a href="#data" data-icon="plus" data-prefetch="true"  class="ui-btn-active ui-state-persist">Data</a></li>
 							<li><a href="#setting" data-icon="minus" data-prefetch="true" >Settings</a></li>
-							<li><a href="#admin" data-icon="minus" data-prefetch="true" >Admin</a></li>							
+							<li><a id="tab_admin_data" href="#admin" data-icon="minus" data-prefetch="true" >Admin</a></li>							
 						</ul>
 			  		 </div>
                 </div>
@@ -82,7 +82,7 @@
      	    	</div>
      	    	
      	    	<div>
-	     	    	<div id="dataset_1" class="dataset">
+	     	    	<div id="dataset_1" class="dataset hidden">
 	     	    	<!--DISTANCE SCALE-->
 	     	    		<div class="scalecontrol_main">
      	    				<div id="dataset_1_scale_middle" class="scalecontrol_middle">
@@ -217,7 +217,7 @@
 						<ul>
 							<li><a href="#data" data-icon="minus" data-prefetch="true" >Data</a></li>
 							<li><a href="#setting" data-icon="plus" data-prefetch="true" class="ui-btn-active ui-state-persist">Settings</a></li>
-							<li><a href="#admin" data-icon="minus" data-prefetch="true" >Admin</a></li>
+							<li><a id="tab_admin_setting" href="#admin" data-icon="minus" data-prefetch="true" >Admin</a></li>
 						</ul>
 			  		 </div>
                 </div>
@@ -242,6 +242,8 @@
 				<input id="drawing_interval" type="text" value="150" >
 				<input type="checkbox" id="sync_data_sets" />
                 <label for="sync_data_sets">Synchronize Data Sets</label>
+                <input type="checkbox" id="overlay_data_sets" />
+                <label for="overlay_data_sets">Overlay Second Data Set With First</label>
 				
 				<a href="desktop.html#data" data-role="button" id="drawing_interval_button">Apply</a>
 			</div>
@@ -255,7 +257,7 @@
 						<ul>
 							<li><a href="#data" data-icon="minus" data-prefetch="true" >Data</a></li>
 							<li><a href="#setting" data-icon="minus" data-prefetch="true" >Settings</a></li>
-							<li><a href="#admin" data-icon="plus" data-prefetch="true" class="ui-btn-active ui-state-persist">Admin</a></li>
+							<li><a id="tab_admin_admin" href="#admin" data-icon="plus" data-prefetch="true" class="ui-btn-active ui-state-persist">Admin</a></li>
 						</ul>
 			  		 </div>
 	            </div>
@@ -341,15 +343,14 @@
 				
 				<div data-role="fieldcontain">
 				    <fieldset id="radio_task" data-role="controlgroup" data-type="horizontal">
-				         	<input type="radio" name="radio_task" id="bt_convert" value="CONVERT" />
+				         	<input type="radio" name="radio_task" id="bt_convert" value="Convert" />
 				         	<label for="bt_convert">Convert</label>
-				         	<input type="radio" name="radio_task" id="bt_preTile" value="Pre-Tiling" disabled="true"/>
+				         	<input type="radio" name="radio_task" id="bt_preTile" value="PreTile" disabled="true"/>
 				         	<label for="bt_preTile">Pre Tile</label>
 				         	<input type="radio" name="radio_task" id="bt_AddDataSet" value="rad_addDataSet"  />
 				         	<label for="bt_AddDataSet">Add Data Set</label>
 				    </fieldset>
 				</div>
-<!--				<a href="" id="bt_add_dataset" data-role="button" data-inline="true" data-theme="e" data-icon="check">Add Data Set</a>-->
 					<a href="" id="bt_process" data-role="button" data-inline="true" data-theme="e" data-icon="check">Process</a>
 			</div>
 			
