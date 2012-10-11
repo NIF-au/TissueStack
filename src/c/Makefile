@@ -80,7 +80,7 @@ install:
 
 clean:
 	@echo "\n==================== Cleaning $(NAME) ====================="
-	rm -rf *~ \#*\# $(NAME) ./png/* core
+	rm -rf *~ \#*\# $(NAME) ./png/* core hs_err_pid*
 	rm -rf $(DIRSRC)*.o
 	make -C ./plugins/communicator/ clean
 	make -C ./plugins/image_extract/ clean

@@ -217,7 +217,7 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
   int		blocks_done;
   int		i = 0;
   int		tiles_nb[3];
-  char		*dest;
+  char		*comm;
   int		dim_s_e[3][2];
   FILE		*f;
   int		width;
@@ -301,7 +301,7 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 		    }
 		  if ("full")
 		    {
-		      asprintf(&dest, "start image %s %i %i %i %i %i %i %.4f %i tiles JPEG 256 -1 -1 grey 0 0 10000 0 0 %s @tiling@ %s",
+		      asprintf(&comm, "start image %s %i %i %i %i %i %i %.4f %i tiles JPEG 256 -1 -1 grey 0 0 10000 0 0 %s @tiling@ %s",
 			       result[3],
 			       dim_s_e[0][0], dim_s_e[0][1],
 			       dim_s_e[1][0], dim_s_e[1][1],
@@ -313,7 +313,7 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 		    }
 		  else if ("preview")
 		    {
-		      asprintf(&dest, "start image %s %i %i %i %i %i %i %.4f %i full JPEG grey 0 0 10000 0 0 %s @tiling@ %s",
+		      asprintf(&comm, "start image %s %i %i %i %i %i %i %.4f %i full JPEG grey 0 0 10000 0 0 %s @tiling@ %s",
 			       result[3],
 			       dim_s_e[0][0], dim_s_e[0][1],
 			       dim_s_e[1][0], dim_s_e[1][1],
@@ -323,15 +323,42 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 			       result[5],
 			       id);
 		    }
-		  DEBUG("%s\n", dest);
-		  t->plug_actions(t, dest, NULL);
+		  DEBUG("%s\n", comm);
+		  t->plug_actions(t, comm, NULL);
 		}
-	      /*
-	      else if (result[4][0] == '1')
-		;// minc conv
-	      else if (result[4][0] == '2')
-		;// nifti conv
-	      */
+	      else if (result[4][0] == '1' || result[4][0] == '2')
+		{
+		  int		slice = 0;
+		  int		dimension = 0;
+		  t_vol		*vol;
+		  int		blocks_done;
+		  int		blocks_calculed;
+		  int		i = 0;
+
+		  if ((vol = get_volume(result[3], t)) == NULL)
+		    {
+		      add_volume(result[3], t);
+		      vol = get_volume(result[3], t);
+		    }
+		  blocks_done = atoi(result[1]);
+		  while (i < vol->dim_nb)
+		    {
+		      if (blocks_calculed + vol->size[i] < blocks_done)
+			blocks_calculed += vol->size[i];
+		      else
+			{
+			  slice = blocks_done - blocks_calculed;
+			  dimension = i;
+			  break;
+			}
+		      i++;
+		    }
+		  asprintf(&comm, "start %s %s %s %i %i",
+			   (result[4][0] == '1' ? "minc_converter" : "nifti_converter"),
+			   result[3], result[5], dimension, slice);
+		  DEBUG("%s", comm);
+		  t->plug_actions(t, comm, NULL);
+		}
 	    }
 	}
     }

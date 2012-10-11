@@ -13,11 +13,9 @@ unsigned int            get_slices_max(t_vol *volume)
   return (volume->size[Z] * volume->size[Y]);
 }
 
-void		dim_loop(int		fd,
-			 int		dimensions_nb,
-			 t_vol		*volume,
-			 t_tissue_stack	*t,
-			 char *id_percent)
+void		dim_loop(int fd, int dimensions_nb, t_vol *volume,
+			 t_tissue_stack *t, char *id_percent,
+			 int slice_resume, int dimension_resume)
 {
   int		dim = 0;
   int		slice = 0;
@@ -31,6 +29,8 @@ void		dim_loop(int		fd,
 
   DEBUG("dim_loop");
 
+  if (dimension_resume > -1)
+    dim = dimension_resume;
   start = malloc(volume->dim_nb * sizeof(*start));
   count = malloc(volume->dim_nb * sizeof(*count));
   start[0] = start[1] = start[2] = 0;
@@ -46,7 +46,13 @@ void		dim_loop(int		fd,
 	      (dim == 1 ? (volume->size[0] * volume->size[2]) : (volume->size[0] * volume->size[1])));
       hyperslab = malloc(size * sizeof(*hyperslab));
       slice = volume->size[dim];
-      this_slice = 0;
+      if (slice_resume != -1)
+	{
+	  this_slice = slice_resume;
+	  slice_resume = -1;
+	}
+      else
+	this_slice = 0;
       count[dim] = 1;
       while (this_slice < slice && cancel == 0)
 	{
@@ -57,6 +63,8 @@ void		dim_loop(int		fd,
 	  INFO("Slice = %i - dim = %i", this_slice, dim);
 	  this_slice++;
 	  t->percent_add(1, id_percent, t);
+	  if (this_slice == 200)
+	    t->percent_cancel(id_percent, t);
 	  cancel = t->is_percent_cancel(id_percent, t);
 	}
       start[dim] = 0;
@@ -229,35 +237,66 @@ void		*init(void *args)
 
 void  		*start(void *args)
 {
-  int		fd;
+  int		fd = 0;
   t_vol		*minc_volume;
   t_header	*header;
   t_args_plug	*a;
   char		*id_percent;
+  unsigned int	dimension;
+  unsigned int	slice;
+  unsigned long long off;
+  int		i = 0;
 
   a = (t_args_plug *)args;
 
   prctl(PR_SET_NAME, "TS_MINC_CON");
-  if ((fd = open(a->commands[1], (O_CREAT | O_TRUNC | O_RDWR))) == -1)
+  if (a->commands[2] != NULL && a->commands[3] != NULL && a->commands[4] != NULL)
     {
-      ERROR("Open Failed");
-      return (NULL);
+      dimension = atoi(a->commands[2]);
+      slice = atoi(a->commands[3]);
+      if ((fd = open(a->commands[1], (O_APPEND | O_RDWR))) == -1)
+	{
+	  ERROR("Open Failed");
+	  return (NULL);
+	}
+      minc_volume = init_get_volume_from_minc_file(a->commands[0]);
+      header = create_header_from_minc_struct(minc_volume);
+      while (i < dimension)
+	{
+	  off += header->dim_offset[i];
+	  i++;
+	}
+      if (slice != 0)
+	off += header->slice_size[i] * (slice - 1);
+      dim_loop(fd, minc_volume->dim_nb, minc_volume, a->general_info,
+	       a->commands[4], (slice - 1), dimension);
     }
-  minc_volume = init_get_volume_from_minc_file(a->commands[0]);
-
-  a->general_info->percent_init(get_nb_total_slices_to_do(minc_volume), &id_percent, a->commands[0], "1", a->commands[1], NULL, a->general_info);
-  if (a->box != NULL)
+  else
     {
-      if (write(*((int*)a->box), id_percent, 10) < 0)
-	ERROR("Write Error");
+      if ((fd = open(a->commands[1], (O_CREAT | O_TRUNC | O_RDWR))) == -1)
+	{
+	  ERROR("Open Failed");
+	  return (NULL);
+	}
+      minc_volume = init_get_volume_from_minc_file(a->commands[0]);
+      a->general_info->percent_init(get_nb_total_slices_to_do(minc_volume), &id_percent, a->commands[0],
+				    "1", a->commands[1], NULL, a->general_info);
+      if (a->box != NULL)
+	{
+	  if (write(*((int*)a->box), id_percent, 10) < 0)
+	    ERROR("Write Error");
+	}
+      header = create_header_from_minc_struct(minc_volume);
+      write_header_into_file(fd, header);
+      dim_loop(fd, minc_volume->dim_nb, minc_volume, a->general_info, id_percent, -1, -1);
     }
-  header = create_header_from_minc_struct(minc_volume);
-  write_header_into_file(fd, header);
-  dim_loop(fd, minc_volume->dim_nb, minc_volume, a->general_info, id_percent);
-  if (close(fd) == -1)
+  if (fd != 0)
     {
-      ERROR("Close failed");
-      return (NULL);
+      if (close(fd) == -1)
+	{
+	  ERROR("Close failed");
+	  return (NULL);
+	}
     }
   if (chmod(a->commands[1], 0644) == -1)
     ERROR("Chmod failed");
