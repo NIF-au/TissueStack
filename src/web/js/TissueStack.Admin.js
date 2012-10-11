@@ -311,8 +311,7 @@ TissueStack.Admin.prototype = {
 		$("#bt_process").click(function(){
 			if($('input[name=radio_task]:checked').val() == "Convert") {
 			   TissueStack.Utils.sendAjaxRequest(
-					"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/convert/json?"
-						+ "file=" + "file=/" + TissueStack.configuration['upload_directory'].value + '/' + $('input[name=radio_listFile]:checked').val(),
+					"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/convert/json?file=/opt/tissuestack/upload/" + $('input[name=radio_listFile]:checked').val(),
 					'GET', true,
 					function(data, textStatus, jqXHR) {
 						if (!data.response && !data.error) {
