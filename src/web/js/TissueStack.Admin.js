@@ -7,7 +7,7 @@ TissueStack.Admin = function () {
 	this.refreshQueryList();
 	this.displayUploadDirectory();
 	this.registerConvertHandler();
-	//this.registerPreTileHandler();
+	this.registerPreTileHandler();
 };
 
 TissueStack.Admin.prototype = {
@@ -16,6 +16,11 @@ TissueStack.Admin.prototype = {
 	processType: "",
 	refreshQueryList : function () {
 		var _this = this;
+		
+		$("#radio_task input:radio[id^='bt_convert']:first").attr('disabled', true).checkboxradio("refresh");
+		$("#radio_task input:radio[id^='bt_preTile']:first").attr('disabled', true).checkboxradio("refresh");
+		$("#radio_task input:radio[id^='bt_AddDataSet']:first").attr('disabled', true).checkboxradio("refresh");
+		
 		//top tabs check for refreshing upload directory list
 		$('#tab_admin_data, #tab_admin_setting').click(function(){
 			_this.displayUploadDirectory();
@@ -146,18 +151,19 @@ TissueStack.Admin.prototype = {
 			if($(this).val().split('.').pop() == "raw") {
 				$('#radio_task').fadeOut(250, function() {  
 				 	 $("#radio_task input:radio[id^='bt_convert']:first").attr('disabled', true).checkboxradio("refresh");
-				 	 $("#radio_task input:radio[id^='bt_preTile']:first").attr('disabled', true).checkboxradio("refresh"); //temp for development
+				 	 $("#radio_task input:radio[id^='bt_AddDataSet']:first").attr('disabled', false).checkboxradio("refresh");
+				 	 $("#radio_task input:radio[id^='bt_preTile']:first").attr('disabled', false).checkboxradio("refresh");
 				 	 $('#radio_task').fadeIn();
 				});
 			}
-			if($(this).val().split('.').pop() == "mnc" || $(this).val().split('.').pop() == "ini") {
+			if($(this).val().split('.').pop() == "mnc" || $(this).val().split('.').pop() == "nii" ) {
 				$('#radio_task').fadeOut(250, function() {  
 				 	 $("#radio_task input:radio[id^='bt_convert']:first").attr('disabled', false).checkboxradio("refresh");
-				 	 $("#radio_task input:radio[id^='bt_preTile']:first").attr('disabled', true).checkboxradio("refresh"); //temp for development
+				 	 $("#radio_task input:radio[id^='bt_AddDataSet']:first").attr('disabled', true).checkboxradio("refresh");
+				 	 $("#radio_task input:radio[id^='bt_preTile']:first").attr('disabled', true).checkboxradio("refresh");
 				 	 $('#radio_task').fadeIn();
 				});
 			}
-			
 		});
 	},
 	registerFileUpload : function () {
@@ -303,9 +309,9 @@ TissueStack.Admin.prototype = {
 	registerConvertHandler : function () {
 		var _this = this;
 		$("#bt_process").click(function(){
-			if($('input[name=radio_task]:checked').val() == "CONVERT") {
+			if($('input[name=radio_task]:checked').val() == "Convert") {
 			   TissueStack.Utils.sendAjaxRequest(
-					"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/convert/json?file=/opt/upload/" + $('input[name=radio_listFile]:checked').val(),
+					"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/convert/json?file=/opt/tissuestack/upload/" + $('input[name=radio_listFile]:checked').val(),
 					'GET', true,
 					function(data, textStatus, jqXHR) {
 						if (!data.response && !data.error) {
@@ -335,9 +341,39 @@ TissueStack.Admin.prototype = {
 	},
 	registerPreTileHandler : function () {
 		var _this = this;
-		$("input[name=radio_task]").change(function() {
-			if($(this).val() == "PreTile") {
-				
+		$("#bt_process").click(function(){
+			if($('input[name=radio_task]:checked').val() == "PreTile") {
+			   TissueStack.Utils.sendAjaxRequest(
+					"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/minc/tile/json?" 
+						+ "file=/opt/tissuestack/upload/" + $('input[name=radio_listFile]:checked').val()
+						+ "&tile_dir=/opt/tissuestack/tile/" + $('input[name=radio_listFile]:checked').val()  
+						+ "&dimensions=0,0,0,0,0,0" 
+						+ "&zoom=6" 
+						+ "&preview=false",
+					'GET', true,
+					function(data, textStatus, jqXHR) {
+						if (!data.response && !data.error) {
+							_this.replaceErrorMessage("No Data Set To Be Tiled!");
+							return false;
+						}
+						if (data.error) {
+							var message = "Error: " + (data.error.message ? data.error.message : " No Data Set To Be Tiled!");
+							_this.replaceErrorMessage(message);				
+							return false;
+						}
+						if (data.response.noResults) {
+							_this.replaceErrorMessage("No Results!");
+							return false;
+						}
+							$(".file_radio_list input:radio[id^="+ "'check_" + $('input[name=radio_listFile]:checked').val() + "']:first").attr('disabled', true).checkboxradio("refresh");
+							_this.createTaskView(data.response);
+							return false;
+					},
+					function(jqXHR, textStatus, errorThrown) {
+						_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
+						return false;
+					}
+				);
 			}
 		});
 	},
