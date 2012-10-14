@@ -72,12 +72,13 @@ void            *get_all_slices_of_all_dimensions(void *args)
   int           i;
   unsigned long *start;
   long unsigned int *count;
+  short		cancel = 0;
 
   a = (t_image_args *)args;
   volume = a->volume;
   i = 0;
-  if (a->info->percent == 1)
-      prctl(PR_SET_NAME, "TS_TILING");
+  if (a->info->percentage == 1)
+    prctl(PR_SET_NAME, "TS_TILING");
   // copy path as well
   volume->path = strdup(a->volume->path);
   // init start and count variable
@@ -91,7 +92,7 @@ void            *get_all_slices_of_all_dimensions(void *args)
   start[X] = start[Y] = start[Z] = 0; // start to 0 = first slice
   // loop all dimensions
   i = 0;
-  while (i < volume->dim_nb)
+  while (i < volume->dim_nb && cancel == 0)
     {
       // check if the dimension need to be ignored
       if (a->dim_start_end[i][0] != -1 &&
@@ -103,7 +104,10 @@ void            *get_all_slices_of_all_dimensions(void *args)
 	  count[i] = volume->size[i];
 	}
       i++;
+      if (a->info->percent == 1)
+	cancel = a->general_info->is_percent_cancel(a->info->id_percent, a->general_info);
     }
+  //  a->general_info->percent_add(10, a->info->id_percent, a->general_info);
   // some free variable
   free_image_args(a);
   if (start != NULL) free(start);
@@ -144,33 +148,35 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
   int		save_h_position = a->info->h_position;
   int		save_w_position = a->info->w_position;
   short 	free_hyperslab = -1;
+  short		cancel = 0;
 
   if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
     write_http_header(a->file, "408 Request Timeout", a->info->image_type);
     fclose(a->file);
-	return;
+    return;
   }
 
   // set the first slice extracted
   current_slice = (unsigned int)a->dim_start_end[current_dimension][0];
+
   // set the last slice extracted
   max = (unsigned int)(a->dim_start_end[current_dimension][1] == 0 ?
 		       volume->size[current_dimension] : a->dim_start_end[current_dimension][1]);
   // init height and width compare to the dimension
   get_width_height(&height, &width, current_dimension, volume);
   // loop all the slices
-  while (current_slice < max)
+  while (current_slice < max && cancel == 0)
     {
       start[current_dimension] = current_slice;
       // get the data of 1 slice
       if (volume->raw_data != 1)
 	{
-      free_hyperslab = 1;
+	  free_hyperslab = 1;
 	  // allocation of a hyperslab (portion of the file, can be 1 slice or 1 demension...)
 	  hyperslab =  malloc(volume->slices_max * sizeof(*hyperslab));
-      memset(hyperslab, 0, (volume->slices_max * sizeof(*hyperslab)));
+	  memset(hyperslab, 0, (volume->slices_max * sizeof(*hyperslab)));
 
-      pthread_mutex_lock(&(a->p->lock));
+	  pthread_mutex_lock(&(a->p->lock));
 	  miget_real_value_hyperslab(volume->minc_volume, MI_TYPE_UBYTE, start, count, hyperslab);
 	  pthread_mutex_unlock(&(a->p->lock));
 	}
@@ -186,11 +192,10 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
 
 	  h_max_iteration = (height * a->info->scale) / a->info->square_size;
 	  w_max_iteration = (width * a->info->scale) / a->info->square_size;
-
-	  while (a->info->start_h <= h_max_iteration)
+	  while (a->info->start_h <= h_max_iteration && cancel == 0)
 	    {
 	      a->info->start_w = 0;
-	      while (a->info->start_w <= w_max_iteration)
+	      while (a->info->start_w <= w_max_iteration && cancel == 0)
 		{
 		  a->info->h_position = a->info->start_h;
 		  a->info->w_position = a->info->start_w;
@@ -204,15 +209,12 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
       else {
 	print_image(hyperslab, volume, current_dimension, current_slice, width, height, a);
       }
-
-      /*      char *buff = NULL;
-      a->general_info->percent_get(&buff, a->info->id_percent, a->general_info->percent);
-      FATAL("========> %s%%", buff);*/
-
       pthread_mutex_lock(&(a->p->lock));
       a->info->slices_done++;
       pthread_mutex_unlock(&(a->p->lock));
       pthread_cond_signal(&(a->info->cond));
+      DEBUG("SLICE == %i ==> %i", current_slice, current_dimension);
+      cancel = a->general_info->is_percent_cancel(a->info->id_percent, a->general_info);
       current_slice++;
 
       // restore original positions

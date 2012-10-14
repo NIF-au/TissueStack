@@ -177,7 +177,7 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
 	    	}
 	    	i++;
 	    }
-	  INFO("%s",request->buffer);
+	  DEBUG("%s",request->buffer);
 	  free_t_string_buffer(request);
   }
 

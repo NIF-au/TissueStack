@@ -498,7 +498,7 @@ a.ui-slider-handle-horizontal{
 	box-shadow: 1px 1px 5px 1px #207c7d inset;
  }
 /*Create Table in Admin*/
-#createTable{
+#task_list{
 	height:180px; 
 	position:relative; 
 	overflow:auto;
@@ -534,4 +534,23 @@ a.ui-slider-handle-horizontal{
 {
 	color: #339;
 	background: #d0dafd;
+}
+/*Progress Bar for Task*/
+/* Firefox - value portion of progress bar */
+progress#bar::-moz-progress-bar {
+background-color:  #70e0b4;
+}
+
+/* Chrome, Safari - value portion of progress bar */
+progress#bar::-webkit-progress-value {
+background-color:  #70e0b4;
+}
+
+/* All other attributes */
+progress#bar {
+background-color: #F0F0F0;
+border:  2px solid #686868;
+border-radius: 3px;
+padding: 1px;
+height: 25px;
 }

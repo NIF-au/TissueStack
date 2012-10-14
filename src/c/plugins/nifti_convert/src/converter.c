@@ -61,7 +61,6 @@ void		*iter_all_pix_and_convert(void *data_in, unsigned int size, nifti_image *n
   else
     data = (double*)data_in;
 
-  //  data = (char*)data_in;
 
   data_out = malloc((size + 1) * sizeof(*data_out));
   i = 0;
@@ -193,6 +192,7 @@ void  		*start(void *args)
   t_header	*h;
   t_args_plug	*a;
   char		*id_percent;
+  short		cancel = 0;
 
   prctl(PR_SET_NAME, "TS_NIFTI_CON");
 
@@ -207,7 +207,7 @@ void  		*start(void *args)
   sizes[1] = nim->dim[2];
   sizes[2] = nim->dim[3];
 
-  a->general_info->percent_init((sizes[0] + sizes[1] + sizes[2]), &id_percent, a->general_info);
+  a->general_info->percent_init((sizes[0] + sizes[1] + sizes[2]), &id_percent, a->commands[0], "2", a->commands[1], NULL, a->general_info);
   if (a->box != NULL)
     {
       if (write(*((int*)a->box), id_percent, 10) < 0)
@@ -223,12 +223,12 @@ void  		*start(void *args)
   write_header_into_file(fd, h);
 
   i = 1;
-  while (i <= nim->dim[0] + 1)
+  while (i <= nim->dim[0] + 1 && cancel == 0)
     {
       slice = 0;
       nslices = sizes[i - 1];
       size_per_slice = h->slice_size[i - 1];
-      while(slice < nslices)
+      while(slice < nslices && cancel == 0)
 	{
 	  data = NULL;
 	  dims[i] = slice;
@@ -247,11 +247,13 @@ void  		*start(void *args)
 	  slice++;
 	  DEBUG("Slice n %i on dimension %i", slice, i);
 	  a->general_info->percent_add(1, id_percent, a->general_info);
+	  cancel = a->general_info->is_percent_cancel(id_percent, a->general_info);
 	}
       dims[i] = -1;
       i++;
     }
-  INFO("Conversion: NIFTI: %s to RAW: %s ==> DONE", a->commands[0], a->commands[1]);
+  if (cancel == 0)
+    INFO("Conversion: NIFTI: %s to RAW: %s ==> DONE", a->commands[0], a->commands[1]);
   if (close(fd) == -1)
     {
       perror("Close ");

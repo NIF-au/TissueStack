@@ -360,13 +360,12 @@ void		lunch_percent_display(t_tissue_stack *t, t_vol *vol, t_image_extract *imag
 void		image_creation_lunch(t_tissue_stack *t, t_vol *vol, int step, t_image_extract *image_general, FILE *sock)
 {
   t_image_args	*args;
-  unsigned int	i;
+  unsigned int	i = 0;
   unsigned int	j;
   unsigned int	nb_slices = 0;
   int		**dim_start_end;
   char		*id_percent = NULL;
-
-  i = 0;
+  char		*zoom_f;
 
   // infinite loop paranoia
   if (step <= 0) {
@@ -375,14 +374,34 @@ void		image_creation_lunch(t_tissue_stack *t, t_vol *vol, int step, t_image_extr
 
   dim_start_end = image_general->dim_start_end;
 
+  if (image_general->percentage && image_general->id_percent == NULL)
+    {
+      asprintf(&zoom_f, "%f", image_general->scale);
+      t->percent_init(get_nb_blocks_percent(image_general, vol), &id_percent, vol->path, "0", image_general->root_path, zoom_f, t);
+      FATAL("======> %s <==========", id_percent);
+      if (write(image_general->percent_fd, id_percent, 16) < 0)
+	ERROR("Open Error");
+      image_general->id_percent = id_percent;
+      free(zoom_f);
+    }
   if (image_general->percentage)
     {
-      t->percent_init(get_nb_blocks_percent(image_general, vol), &id_percent, t);
-      if (write(image_general->percent_fd, id_percent, 10) < 0)
-	ERROR("Open Error");
+      // One thread only for each volume and all its dimentions
+      args = create_args_thread(t, vol, image_general, sock);
+      args->general_info = t;
+      i = 0;
+      args->dim_start_end = malloc(sizeof(*args->dim_start_end) * vol->dim_nb);
+      while (i < vol->dim_nb) {
+	args->dim_start_end[i] = malloc(sizeof(*args->dim_start_end[i]) * 2);
+	args->dim_start_end[i][0] =  image_general->dim_start_end[i][0];
+	args->dim_start_end[i][1] =  image_general->dim_start_end[i][1];
+	i++;
+      }
+      (*t->tp->add)(get_all_slices_of_all_dimensions, (void *)args, t->tp);
+      return;
     }
-  image_general->id_percent = id_percent;
 
+  i = 0;
   while (i < 3)
     {
       if (dim_start_end[i][0] != -1 && dim_start_end[i][1] != -1)
@@ -581,6 +600,7 @@ void			*start(void *args)
   a->commands[10] = strupper(a->commands[10]);
   image_args->image_type = a->commands[10];
   image_args->percentage = 0;
+  image_args->id_percent = NULL;
 
   if (strcmp(image_args->service, "tiles") == 0)
     {
@@ -600,7 +620,14 @@ void			*start(void *args)
 	  if (a->commands[21] != NULL && strcmp(a->commands[21], "@tiling@") == 0)
 	    {
 	      image_args->percentage = 1;
-	      image_args->percent_fd = *((int*)a->box);
+	      if (a->commands[22] != NULL)
+		{
+		  image_args->id_percent = strdup(a->commands[22]);
+		  image_args->percent_fd = 1;
+		}
+	      else
+		image_args->percent_fd = *((int*)a->box);
+
 	    }
 	}
     }
@@ -635,8 +662,15 @@ void			*start(void *args)
 	      image_args->root_path = strdup(a->commands[17]);
 	      if (a->commands[18] != NULL && strcmp(a->commands[18], "@tiling@") == 0)
 		{
+          prctl(PR_SET_NAME, "TS_TILING");
 		  image_args->percentage = 1;
-		  image_args->percent_fd = *((int*)a->box);
+		  if (a->commands[19] != NULL)
+		    {
+		      image_args->id_percent = strdup(a->commands[19]);
+		      image_args->percent_fd = 1;
+		    }
+		  else
+		    image_args->percent_fd = *((int*)a->box);
 		}
 	    }
 	}

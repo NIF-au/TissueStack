@@ -142,7 +142,7 @@ void		serv_working_loop(t_serv_comm *s)
 		 NULL, NULL, NULL) == -1)
 	{
 	  ERROR("Select Error");
-	  s->state = FAIL;
+	  //>state = FAIL;
 	}
       check_modified_fd(s);
     }
@@ -159,7 +159,7 @@ int		serv_init_connect(t_serv_comm *s)
   unlink("/tmp/tissue_stack_communication");
   memset(&(s->serv_addr), 0, sizeof(s->serv_addr));
   s->serv_addr.sun_family = AF_UNIX; //AF_INET;
-  snprintf(s->serv_addr.sun_path, 108, "/tmp/tissue_stack_communication");
+  snprintf(s->serv_addr.sun_path, 108, UNIX_SOCKET_PATH);
   //  s->serv_addr.sin_addr.s_addr = INADDR_ANY;
   //  s->serv_addr.sin_port = htons(s->port);
   if (bind(s->sock_serv, (struct sockaddr*)&(s->serv_addr),
@@ -168,6 +168,7 @@ int		serv_init_connect(t_serv_comm *s)
       ERROR("Bind Error");
       return (-1);
     }
+  chmod(UNIX_SOCKET_PATH, 0666);
   listen(s->sock_serv, s->queue_size);
   return (0);
 }

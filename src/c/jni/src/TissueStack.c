@@ -1,7 +1,5 @@
 #include "TissueStack.h"
 
-#define UNIX_SOCKET_PATH "/tmp/tissue_stack_communication"
-
 // global environment
 JNIEnv * global_env = NULL;
 
@@ -136,8 +134,7 @@ JNIEXPORT jobject JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_getMinc
 	char ** tokens = tokenizeString(response->buffer, '|', '\\');
 
 	// free response buffer
-	free(response->buffer);
-	free(response);
+	free_t_string_buffer(response);
 
 	// tokens are NULL
 	if (tokens == NULL || numberOfTokens == 0) {
@@ -461,12 +458,12 @@ JNIEXPORT jstring JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMin
 		startTilingCommand = appendToBuffer(startTilingCommand, conversionBuffer);
 	}
 	if (preview == JNI_TRUE) {
-		sprintf(conversionBuffer, " %.4g 6 full %s grey 0 0 1000 ", (double)zoom_factor, imageType);
+		sprintf(conversionBuffer, " %.4g 6 full %s grey 0 0 10000 ", (double)zoom_factor, imageType);
 		startTilingCommand = appendToBuffer(startTilingCommand, conversionBuffer);
 	} else {
 		sprintf(conversionBuffer, " %.4g 1 tiles %s %i", (double)zoom_factor, imageType, (int) size);
 		startTilingCommand = appendToBuffer(startTilingCommand, conversionBuffer);
-		startTilingCommand = appendToBuffer(startTilingCommand, " -1 -1 grey 0 0 1000 ");
+		startTilingCommand = appendToBuffer(startTilingCommand, " -1 -1 grey 0 0 10000 ");
 	}
 
 	startTilingCommand = appendToBuffer(startTilingCommand, "0 0 ");
@@ -476,9 +473,9 @@ JNIEXPORT jstring JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMin
 	write(fileDescriptor, startTilingCommand->buffer, startTilingCommand->size);
 	free_t_string_buffer(startTilingCommand);
 
-	char * buff = malloc(11 * sizeof(*buff));
-	memset(buff, 0, 11);
-	read(fileDescriptor, buff, 10);
+	char * buff = malloc(17 * sizeof(*buff));
+	memset(buff, 0, 17);
+	read(fileDescriptor, buff, 16);
 
 	jstring ret = (*env)->NewStringUTF(env, buff);
 
@@ -539,9 +536,9 @@ JNIEXPORT jstring Java_au_edu_uq_cai_TissueStack_jni_TissueStack_convertImageFor
 	write(fileDescriptor, startConversionCommand->buffer, startConversionCommand->size);
 	free_t_string_buffer(startConversionCommand);
 
-	char * buff = malloc(11 * sizeof(*buff));
-	memset(buff, 0, 11);
-	read(fileDescriptor, buff, 10);
+	char * buff = malloc(17 * sizeof(*buff));
+	memset(buff, 0, 17);
+	read(fileDescriptor, buff, 16);
 
 	if (buff == NULL || strcmp(buff, "NULL") == 0 || strcmp(buff, "") == 0) {
 		(*env)->ReleaseStringUTFChars(env, imageFile, in_file);
@@ -585,43 +582,75 @@ JNIEXPORT jobject  Java_au_edu_uq_cai_TissueStack_jni_TissueStack_queryTaskProgr
 
 	// load and start appropriate conversion plugin
 	t_string_buffer * startProgressCommand = NULL;
-	startProgressCommand = appendToBuffer(startProgressCommand, "start progress ");
+	startProgressCommand = appendToBuffer(startProgressCommand, "start progress get ");
 	startProgressCommand = appendToBuffer(startProgressCommand, (char *) task);
 
 	// send command to plugin
 	write(fileDescriptor, startProgressCommand->buffer, startProgressCommand->size);
 	free_t_string_buffer(startProgressCommand);
 
-	char * buff = malloc(31 * sizeof(*buff));
-	memset(buff, 0, 31);
-	read(fileDescriptor, buff, 31);
+	// read response
+	char * buffer = malloc(sizeof(buffer) * 1024);
+	memset(buffer, 0, 1024);
+	read(fileDescriptor, buffer, 1023);
 
-	if (buff == NULL || strcmp(buff, "") == 0) {
+	if (buffer == NULL || strcmp(buffer, "") == 0) {
 		(*env)->ReleaseStringUTFChars(env, taskID, task);
 		throwJavaException(env, "java/lang/RuntimeException", "0 length response!");
 		return NULL;
 	}
 
-	if (strcmp(buff, "NULL") == 0) return NULL;
+	if (strcmp(buffer, "NULL") == 0) return NULL;
+
+	// get token count
+	int numberOfTokens = countTokens(buffer, '|', '\\');
+	// tokenize response
+	char ** tokens = tokenizeString(buffer, '|', '\\');
+	// free original response now
+	free(buffer);
+
+	if (numberOfTokens < 2) {
+		(*env)->ReleaseStringUTFChars(env, taskID, task);
+		throwJavaException(env, "java/lang/RuntimeException", "Didn't receive all required data tokens (file name & progress)!");
+		return NULL;
+	}
+
+	const char * filename = strdup(tokens[0]);
+	free(tokens[0]);
+	const char * progress = strdup(tokens[1]);
+	free(tokens[1]);
+	free(tokens);
 
 	// construct Java Objects for return and populate with response content
-	jclass doubleClazz = (*env)->FindClass(env, "java/lang/Double");
-	if (doubleClazz == NULL) {
-		throwJavaException(env, "java/lang/RuntimeException", "Could not find Double class!");
+	jclass taskStatusClazz = (*env)->FindClass(env, "au/edu/uq/cai/TissueStack/dataobjects/TaskStatus");
+	if (taskStatusClazz == NULL) {
+		(*env)->ReleaseStringUTFChars(env, taskID, task);
+		throwJavaException(env, "java/lang/RuntimeException", "Could not find TaskStatus class!");
 		return NULL;
 	}
-	jmethodID constructor = (*env)->GetMethodID(env, doubleClazz, "<init>", "(Ljava/lang/String;)V");
+	jmethodID constructor = (*env)->GetMethodID(env, taskStatusClazz, "<init>", "(Ljava/lang/String;Ljava/lang/String;)V");
 	if (constructor == NULL) {
-		throwJavaException(env, "java/lang/RuntimeException", "Could not create Double object!");
+		(*env)->ReleaseStringUTFChars(env, taskID, task);
+		throwJavaException(env, "java/lang/RuntimeException", "Could not create TaskStatus object!");
+		return NULL;
+	}
+	jstring jfilename = (*env)->NewStringUTF(env, filename);
+	jstring jprogress = (*env)->NewStringUTF(env, progress);
+
+	jobject ret = (*env)->NewObject(env, taskStatusClazz, constructor, jfilename, jprogress);
+	if (ret == NULL) {
+		(*env)->ReleaseStringUTFChars(env, jprogress, progress);
+		(*env)->ReleaseStringUTFChars(env, jfilename, filename);
+
+		(*env)->ReleaseStringUTFChars(env, taskID, task);
+		throwJavaException(env, "java/lang/RuntimeException", "Could not create TaskStatus return object!");
 		return NULL;
 	}
 
-	// call constructor with return value
-	jobject ret = (*env)->NewObject(env, doubleClazz, constructor, (*env)->NewStringUTF(env, buff));
-	if (ret == NULL) {
-		throwJavaException(env, "java/lang/RuntimeException", "Could not create return object!");
-		return NULL;
-	}
+	// clean up
+	(*env)->ReleaseStringUTFChars(env, jprogress, progress);
+	(*env)->ReleaseStringUTFChars(env, jfilename, filename);
+	(*env)->ReleaseStringUTFChars(env, taskID, task);
 
 	return ret;
 }

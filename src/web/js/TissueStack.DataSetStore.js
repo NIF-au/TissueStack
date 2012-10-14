@@ -67,7 +67,7 @@ TissueStack.DataSetStore.prototype = {
 		if (!host) {
 			host = "localhost";
 		}
-		var url = (host == 'localhost' ? "" : "http://" + host) + "/backend/data";
+		var url = (host == 'localhost' ? "" : "http://" + host) + "/" + TissueStack.configuration['restful_service_proxy_path'].value + "/data";
 		if (!id && host == "localhost") {
 			url += "/list?include_plane_data=true";
 		} else if (!id && host != "localhost") {
@@ -94,6 +94,8 @@ TissueStack.DataSetStore.prototype = {
 					
 					if (data.response.noResults) {
 						alert("No data sets found in configuration database");
+						if (customSuccessHandler) customSuccessHandler();
+						
 						return;
 					}
 					
@@ -103,9 +105,7 @@ TissueStack.DataSetStore.prototype = {
 						_this.addDataSetToStore(dataSets[x], "localhost");
 					}
 
-					if (customSuccessHandler) {
-						customSuccessHandler();
-					}
+					if (customSuccessHandler) customSuccessHandler();
 				},
 				function(jqXHR, textStatus, errorThrown) {
 					alert("Error connecting to backend: " + textStatus + " " + errorThrown);

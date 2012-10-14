@@ -115,10 +115,8 @@ TissueStack.Events.prototype = {
 		
 		//DOUBLE TAP TO ENLARGE IMAGES
 		this.getCanvasElement().bind('doubletap', function(e) {
-			if(delta < 7){
-				delta = e.originalEvent.scale + delta;
-				_this.zoom(e, delta);
-			}
+			delta = e.originalEvent.scale + delta;
+			_this.zoom(e, delta);
 		});
 		
 	}, registerDesktopEvents: function() {
@@ -373,13 +371,27 @@ TissueStack.Events.prototype = {
 		} else if (delta > 1) {
 			delta = 1;
 		} 
-							
-		var newZoomLevel = this.canvas.getDataExtent().zoom_level + delta;
-		if (newZoomLevel == this.canvas.data_extent.zoom_level ||  newZoomLevel < 0 || newZoomLevel >= this.canvas.data_extent.zoom_levels.length) {
-			return;
-			}
 		
-		var now = new Date().getTime();
+		var now = new Date().getTime();					
+		var newZoomLevel = this.canvas.getDataExtent().zoom_level + delta;
+		
+		if (newZoomLevel == this.canvas.data_extent.zoom_level ||  newZoomLevel < 0 || newZoomLevel >= this.canvas.data_extent.zoom_levels.length) {
+			if(TissueStack.desktop || TissueStack.tablet){
+				return;
+			}
+			// purpose for "doubletap" function (applying for Android phone devices (no gesture).)
+			this.canvas.queue.addToQueue(
+					{	data_id : this.canvas.data_extent.data_id,
+						dataset_id : this.canvas.dataset_id,	 
+						timestamp : now,
+						action : "ZOOM",
+						plane: this.canvas.getDataExtent().plane,
+						zoom_level : 0,
+						slice : this.canvas.getDataExtent().slice							
+					});
+			e.stopPropagation();
+			return;
+		}
 		
 		this.canvas.queue.addToQueue(
 				{	data_id : this.canvas.data_extent.data_id,

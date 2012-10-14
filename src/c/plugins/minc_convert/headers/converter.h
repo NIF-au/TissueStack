@@ -23,13 +23,14 @@ unsigned int            get_slices_max(t_vol *volume);
 void			count_start_init(unsigned long		*start,
 					 long unsigned int	*count,
 					 t_vol			*volume);
-void			dim_loop(int		fd,
-				 int		dimensions_nb,
-				 t_vol		*volume,
-				 t_tissue_stack	*t,
-				 char		*id_percent);
+void		dim_loop(int fd, int dimensions_nb, t_vol *volume,
+			 t_tissue_stack *t, char *id_percent,
+			 int slice_resume, int dimension_resume);
+
 t_vol			*init_get_volume_from_minc_file(char *path);
 t_header		*create_header_from_minc_struct(t_vol *minc_volume);
 void			write_header_into_file(int fd, t_header *h);
+
+extern  t_log_plugin log_plugin;
 
 #endif /* __MINC_TOOL_CORE__ */

@@ -17,6 +17,7 @@ import au.edu.uq.cai.TissueStack.jni.TissueStack;
 import au.edu.uq.cai.TissueStack.rest.AbstractRestfulMetaInformation;
 import au.edu.uq.cai.TissueStack.rest.Description;
 import au.edu.uq.cai.TissueStack.rest.JSONBodyWriter;
+import au.edu.uq.cai.TissueStack.utils.ImageUtils;
 import au.edu.uq.cai.TissueStack.utils.StringUtils;
 
 @Path("/minc")
@@ -98,6 +99,11 @@ public final class MincResources extends AbstractRestfulMetaInformation {
 		// look for file
 		if (dataSet == null && mincFile != null && new File(mincFile).exists()) {
 			missingSource = false;
+			
+			// we only allow raw converted files any more....
+			if (!ImageUtils.isRawFormat(mincFile)) 
+				throw new RuntimeException("Given file is not in RAW format. Please convert first!");
+			
 			try {
 				dataSet = DataSetDataProvider.queryDataSetByFileName(mincFile);
 			} catch (Exception e) {
@@ -140,7 +146,7 @@ public final class MincResources extends AbstractRestfulMetaInformation {
 		
 		// check rest of params now
 		final String dims[] = StringUtils.convertCommaSeparatedQueryParamsIntoStringArray(dimensions, true);
-		int dimensionsArray[] = new int[] {-1,-1,-1,-1,-1,-1};
+		int dimensionsArray[] = new int[] {0,0,0,0,0,0};
 		// fill array with given values
 		if (dims != null) {
 			if (dims.length > 6) {
