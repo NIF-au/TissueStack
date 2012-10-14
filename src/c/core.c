@@ -166,8 +166,8 @@ void            init_prog(t_tissue_stack *t)
   t->log = malloc(sizeof(*t->log));
   t->log->state = ON;
   t->log->path = strdup(CONCAT_APP_PATH("logs/"));
-  t->log->debug = ON;
-  t->log->verbose = ON;
+  t->log->debug = OFF;
+  t->log->verbose = OFF;
   t->log->write_on_files = ON;
   t->log->write_on_plug_files = OFF;
   t->log->write_on_level_files = ON;
