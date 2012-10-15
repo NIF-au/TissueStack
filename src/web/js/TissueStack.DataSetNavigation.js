@@ -173,7 +173,7 @@ TissueStack.DataSetNavigation.prototype = {
 		   $("#" + dataset + "_right_side_view_canvas").addClass("hidden");
 		}
 	},
-	showDataSet : function(index) {
+	showDataSet : function(index, overlaid) {
 		if (typeof(index) != "number") {
 			return;
 		}
@@ -187,12 +187,22 @@ TissueStack.DataSetNavigation.prototype = {
 		$("#canvas_point_x,#canvas_point_y,#canvas_point_z").removeAttr("disabled");
 		$("#dataset_" + index).removeClass("hidden");
 		$('#dataset_' + index + '_center_point_in_canvas').closest('.ui-btn').show();
+		$("#dataset_" + index  + " .cross_overlay").removeClass("hidden");
+		$("#dataset_" + index  + " .side_canvas_cross_overlay").removeClass("hidden");
 		
 		var dataSet = 
 			TissueStack.dataSetStore.getDataSetById(
 					TissueStack.dataSetNavigation.selectedDataSets["dataset_" + index]);
-		if (dataSet && dataSet.data.length > 1) {
-			$("#dataset_" + index  + "_right_panel").removeClass("hidden");
+		
+		// we keep the slider and the cross-hair hidden for overlaid data sets
+		if (dataSet && dataSet.data.length > 1 && !(overlaid && index == 1)) $("#dataset_" + index  + "_right_panel").removeClass("hidden");
+		if (overlaid && index ==1) {
+			$("#dataset_" + index  + " .cross_overlay").addClass("hidden");
+			$("#dataset_" + index  + " .side_canvas_cross_overlay").addClass("hidden");
+		}
+		else if (overlaid && index ==2) 	{
+			$("#dataset_" + index  + "_left_side_view_canvas").removeClass("ui-bar-a");
+			$("#dataset_" + index  + "_right_side_view_canvas").removeClass("ui-bar-a");
 		}
 	},
 	buildDynaTree : function() {
@@ -276,7 +286,6 @@ TissueStack.DataSetNavigation.prototype = {
 	    			   return;
 	    		   }
 
-
 	    		   // display/hide data sets left / not left
 	    		   for (var n=0;n<selectedNodes.length;n++) {
 		    		   _this.addToOrReplaceSelectedDataSets(selectedNodes[n].data.key, n);
@@ -284,7 +293,7 @@ TissueStack.DataSetNavigation.prototype = {
 
 	    			// show everything again
 	    		   for (var n=0;n<selectedNodes.length;n++) {
-		    			_this.showDataSet(n + 1);
+		    			_this.showDataSet(n + 1, TissueStack.overlay_datasets && selectedNodes.length > 1);
 	    		   }
 
 	    			// re-initialize data set handed in
