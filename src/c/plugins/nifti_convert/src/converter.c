@@ -210,7 +210,7 @@ void  		*start(void *args)
   a->general_info->percent_init((sizes[0] + sizes[1] + sizes[2]), &id_percent, a->commands[0], "2", a->commands[1], NULL, a->general_info);
   if (a->box != NULL)
     {
-      if (write(*((int*)a->box), id_percent, 10) < 0)
+      if (write(*((int*)a->box), id_percent, 16) < 0)
 	ERROR("Open Error");
     }
   if ((fd = open(a->commands[1], O_CREAT | O_TRUNC | O_RDWR)) < 0)

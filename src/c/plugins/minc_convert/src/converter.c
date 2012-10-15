@@ -283,7 +283,7 @@ void  		*start(void *args)
 				    "1", a->commands[1], NULL, a->general_info);
       if (a->box != NULL)
 	{
-	  if (write(*((int*)a->box), id_percent, 10) < 0)
+	  if (write(*((int*)a->box), id_percent, 16) < 0)
 	    ERROR("Write Error");
 	}
       header = create_header_from_minc_struct(minc_volume);
