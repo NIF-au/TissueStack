@@ -192,7 +192,10 @@ void  		*start(void *args)
   t_header	*h;
   t_args_plug	*a;
   char		*id_percent;
-  short		cancel = 0;
+  int		cancel = 0;
+  unsigned int dimensions_resume = -1;
+  unsigned int slice_resume = -1;
+  unsigned long long off;
 
   prctl(PR_SET_NAME, "TS_NIFTI_CON");
 
@@ -207,25 +210,59 @@ void  		*start(void *args)
   sizes[1] = nim->dim[2];
   sizes[2] = nim->dim[3];
 
-  a->general_info->percent_init((sizes[0] + sizes[1] + sizes[2]), &id_percent, a->commands[0], "2", a->commands[1], NULL, a->general_info);
-  if (a->box != NULL)
-    {
-      if (write(*((int*)a->box), id_percent, 10) < 0)
-	ERROR("Open Error");
-    }
-  if ((fd = open(a->commands[1], O_CREAT | O_TRUNC | O_RDWR)) < 0)
-    {
-      perror("Open ");
-      return (NULL);
-    }
   h = create_header_from_nifti_struct(nim);
 
-  write_header_into_file(fd, h);
+  int flag = 1;
 
-  i = 1;
-  while (i <= nim->dim[0] + 1 && cancel == 0)
+  if (a->commands[2] != NULL && a->commands[3] != NULL && a->commands[4] != NULL)
     {
-      slice = 0;
+      flag = 0;
+      a->general_info->clean_cancel_queue(a->commands[4], a->general_info);
+      dimensions_resume = atoi(a->commands[2]);
+      slice_resume = atoi(a->commands[3]);
+      if ((fd = open(a->commands[1], (O_APPEND | O_RDWR))) == -1)
+	{
+	  ERROR("Open Failed");
+	  return (NULL);
+	}
+      i = 0;
+      while (i < dimensions_resume)
+	{
+	  off += h->dim_offset[i];
+	  i++;
+	}
+      if (slice_resume != 0)
+	off += h->slice_size[i] * (slice_resume - 1);
+      lseek(fd, off, SEEK_SET);
+      i = dimensions_resume + 1;
+      id_percent = a->commands[4];
+    }
+  else
+    {
+      a->general_info->percent_init((sizes[0] + sizes[1] + sizes[2]), &id_percent, a->commands[0], "2", a->commands[1], NULL, a->general_info);
+      if (a->box != NULL)
+	{
+	  if (write(*((int*)a->box), id_percent, 16) < 0)
+	    ERROR("Open Error");
+	}
+      if ((fd = open(a->commands[1], O_CREAT | O_TRUNC | O_RDWR)) < 0)
+	{
+	  perror("Open ");
+	  return (NULL);
+	}
+      write_header_into_file(fd, h);
+      i = 1;
+    }
+
+  while (i <= nim->dim[0] && cancel == 0)
+    {
+      if (slice_resume != -1)
+	{
+	  slice = slice_resume;
+	  slice_resume = -1;
+	}
+      else
+	slice = 0;
       nslices = sizes[i - 1];
       size_per_slice = h->slice_size[i - 1];
       while(slice < nslices && cancel == 0)
@@ -245,9 +282,11 @@ void  		*start(void *args)
 	    }
 	  free(data);
 	  slice++;
-	  DEBUG("Slice n %i on dimension %i", slice, i);
 	  a->general_info->percent_add(1, id_percent, a->general_info);
+	  if (i == 1 && slice == 150 && flag == 1)
+	    a->general_info->percent_cancel(id_percent, a->general_info);
 	  cancel = a->general_info->is_percent_cancel(id_percent, a->general_info);
+	  DEBUG("Slice n %i on dimension %i slicenb = %i -- cancel = %i", slice, (i - 1), nslices, cancel);
 	}
       dims[i] = -1;
       i++;
