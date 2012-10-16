@@ -279,33 +279,12 @@ TissueStack.BindDataSetDependentEvents = function () {
 		maxDataSets = datasets.length;
 	}
 
-	// SYNC AND OVERLAY DATA_SETS CHECKBOX CHANGE HANDLER
+	// SYNC DATA_SETS CHECKBOX CHANGE HANDLER
     if (TissueStack.desktop) {
-    		$('#sync_data_sets').unbind("change");
+    		$('#sync_data_sets').unbind("click");
             $('#sync_data_sets').bind("change", function() {
             	TissueStack.sync_datasets = $('#sync_data_sets')[0].checked;
-            	if (TissueStack.dataSetNavigation.selectedDataSets.count > 0) {
-            		var sel = TissueStack.dataSetNavigation.selectedDataSets["dataset_1"];
-            		TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(sel, false); 
-            		window.location.hash = '#data';
-            		setTimeout(function() {
-	   					TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(sel, true);
-            		}, 200);
-            	}
             });
-    		$('#overlay_data_sets').unbind("change");
-            $('#overlay_data_sets').bind("change", function() {
-            	TissueStack.overlay_datasets = $('#overlay_data_sets')[0].checked;
-            	if (TissueStack.dataSetNavigation.selectedDataSets.count > 0) {
-            		var sel = TissueStack.dataSetNavigation.selectedDataSets["dataset_1"];
-            		TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(sel, false); 
-            		window.location.hash = '#data';
-            		setTimeout(function() {
-	   					TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(sel, true);
-            		}, 250);
-            	}
-            });
-            
     }
 
 	// DRAWING INTERVAL CHANGE HANDLER

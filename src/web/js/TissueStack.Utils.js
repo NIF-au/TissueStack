@@ -178,8 +178,9 @@ TissueStack.Utils = {
 			datasets = 0;
 		}
 		
-		// clamp to max
-		if (datasets > 2) datasets = 2;
+		if (datasets > 2) {
+			datasets = 2;
+		}
 
 		// we hide everything if there are no data sets selected
 		if (datasets == 0) {
@@ -191,7 +192,7 @@ TissueStack.Utils = {
 		   $(".dataset, .right_panel").addClass("hidden");
 		   return;
 		}
-
+		
 		// get screen dimensions
 		var screenWidth = $(window).width();
 		var screenHeight = $(window).height();
@@ -207,33 +208,25 @@ TissueStack.Utils = {
 		var leftPanelHeight = screenHeight - menuHeight;
 		var rightPanelWidth = Math.floor(screenWidth * 0.05);
 		
-		TissueStack.canvasDimensions = {width: (screenWidth - leftPanelWidth - rightPanelWidth - widthTolerance), height: Math.floor(leftPanelHeight / (TissueStack.overlay_datasets ? 1 : datasets)) -  heightTolerance};
+		TissueStack.canvasDimensions = {width: (screenWidth - leftPanelWidth - rightPanelWidth - widthTolerance), height: Math.floor(leftPanelHeight / datasets) -  heightTolerance};
 		leftPanelHeight -=  heightTolerance;
 		
-		$('.left_panel').css({"left" : 0, "top" : menuHeight});
-		$('.left_panel').css({"width" : leftPanelWidth, "height": leftPanelHeight * 0.99});
-		$('#dataset_1_right_panel').css({"left" : TissueStack.canvasDimensions.width + leftPanelWidth + 20, "top" : menuHeight});
-		$('#dataset_1_right_panel').css({"width" : rightPanelWidth, "height": TissueStack.canvasDimensions.height  * 0.99});
-		if (TissueStack.overlay_datasets) {
-			$('#dataset_2_right_panel').css({"left" : TissueStack.canvasDimensions.width + leftPanelWidth + 20, "top" : menuHeight});
-			$('#dataset_2_right_panel').css({"width" : rightPanelWidth, "height": TissueStack.canvasDimensions.height  * 0.99});
-		}
-
+		$('.left_panel').css({"width" : leftPanelWidth, "height": leftPanelHeight});
+		$('.right_panel').css({"width" : rightPanelWidth, "height": TissueStack.canvasDimensions.height});
 		$(".ui-slider-vertical").height(TissueStack.canvasDimensions.height - heightTolerance);
 		$(".ui-slider-horizontal").height(TissueStack.canvasDimensions.height - heightTolerance);
 
-		$('#dataset_1').css({"left" : leftPanelWidth + 10, "top" : menuHeight});
-		if (TissueStack.overlay_datasets) $('#dataset_2').css({"left" : leftPanelWidth + 10, "top" : menuHeight});
+		if (TissueStack.desktop) {
+			var treeHeight = 
+				leftPanelHeight - 
+				$("#canvas_extent").height() - $("#canvas_point_x").height() * 8 - $("#dataset_1_center_point_in_canvas").height() * (datasets == 2 ? 5 : 4);
+			$("#treedataset").css({"height": treeHeight});
+		}
+
 		$('.dataset').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height * 0.99});
 		
 		for (var x=1;x<=datasets;x++) {
 			var contrast = null;
-
-			if (!TissueStack.overlay_datasets && x>1) { 
-				$('#dataset_' + x).css({"left" : leftPanelWidth + 10, "top" : menuHeight + 10 + TissueStack.canvasDimensions.height * 0.99});
-				$('#dataset_' + x + '_right_panel').css({"left" : TissueStack.canvasDimensions.width + leftPanelWidth + 20, "top" : menuHeight + 10 + TissueStack.canvasDimensions.height * 0.99});
-				$('#dataset_' + x + '_right_panel').css({"width" : rightPanelWidth, "height": TissueStack.canvasDimensions.height  * 0.99});
-			}
 			
 			$("#dataset_" + x + "_toolbox_canvas").css({"width" : TissueStack.canvasDimensions.width * 0.8, "height" : 75});
 			$("#dataset_" + x + "_contrast_box").css({"width" : TissueStack.canvasDimensions.width * 0.8, "height" : 55});
@@ -264,13 +257,6 @@ TissueStack.Utils = {
 		$('.left_side_view canvas').attr("height", sideCanvasDims.height);
 		$('.right_side_view canvas').attr("width", sideCanvasDims.width);
 		$('.right_side_view canvas').attr("height", sideCanvasDims.height);
-		
-		var treeHeight = $('.left_panel').height();
-		$('.left_panel').children().each(function() {
-			if ($(this).attr('id') != 'treedataset' && $(this).css('display') != 'none') 
-				treeHeight -= $(this).outerHeight();
-		});
-		$('#treedataset').css({"height": treeHeight - 35});
 	},
 	verifyUrlSyntax : function(url) {
 		if (typeof(url) != "string") {
