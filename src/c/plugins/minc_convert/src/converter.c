@@ -268,6 +268,7 @@ void  		*start(void *args)
 	}
       if (slice != 0)
 	off += header->slice_size[i] * (slice - 1);
+      lseek(fd, off, SEEK_SET);
       dim_loop(fd, minc_volume->dim_nb, minc_volume, a->general_info,
 	       a->commands[4], (slice - 1), dimension);
     }
