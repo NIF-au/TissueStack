@@ -90,7 +90,7 @@ void		percent_init_direct(int total_blocks, char **id, char *filename, char *kin
 
   gettimeofday(&tv,NULL);
   *id = malloc(17 * sizeof(**id));
-  memset(*id, 0, 17);
+  memset(*id, '0', 17);
   snprintf(*id, 17, "%i%i", (int)tv.tv_sec, (int)tv.tv_usec);
   if (t->percent->path)
     {
