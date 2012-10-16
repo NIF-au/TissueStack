@@ -14,6 +14,8 @@ TissueStack.Admin.prototype = {
 	session: null,
 	queue_handle : null,
 	processType: "",
+	progress_task_id: "",
+	pre_tile_task_add: "",
 	refreshQueryList : function () {
 		var _this = this;
 		
@@ -87,8 +89,8 @@ TissueStack.Admin.prototype = {
 	setCookie: function(c_name,value,exdays){
 		var exdate=new Date();
 		exdate.setDate(exdate.getDate() + exdays);
-		var c_value=escape(value) + ((exdays==null) ? "" : "; expires="+exdate.toUTCString());
-		document.cookie=c_name + "=" + c_value;
+		var c_value = escape(value) + ((exdays==null) ? "" : "; expires="+exdate.toUTCString());		
+		$.cookie(c_name,c_value, 1);
 	},
 	checkCookie: function (session, value){
 		var session_name=this.getCookie("session");
@@ -99,7 +101,56 @@ TissueStack.Admin.prototype = {
 		
 		if (session_name!=null && session_name !="")
 		  {
-		  	this.session = session_name;
+		  	this.session = session_name;		  	
+		  	
+		  	if($.cookie("CVT") != null){
+		  		var CVTcookie = document.cookie.split("; ");
+		  		for (i = 0 ; i < CVTcookie.length ; i++)
+		  		  {
+		  		  	if(CVTcookie[i].substr(0,CVTcookie[i].indexOf("=")) == "CVT"){
+		  		  		var convert_cookie = CVTcookie[i].substr(CVTcookie[i].indexOf("=")+1);
+		  		  	}
+		  		  }
+		  		  var cv_task, cv_file, cv_type, convert_table = convert_cookie.split(":");
+		  		  
+		  		  if(convert_table.length <=3)
+		  		  {
+		  		  	cv_task = convert_table[0].substr(convert_table[0].indexOf("=")+ 1);
+		  		  	cv_file = convert_table[1].substr(convert_table[1].indexOf("=")+ 1);
+		  		  	cv_type = convert_table[2].substr(convert_table[2].indexOf("=")+ 1);
+		  		  }
+		  		this.createTaskView(cv_task, cv_file, cv_type, null);
+		  	}
+		  	if($.cookie("PTL") != null){
+		  		var PTLcookie = document.cookie.split("; ");
+		  		for (i = 0 ; i < PTLcookie.length ; i++)
+		  		  {
+		  		  	if(PTLcookie[i].substr(0,PTLcookie[i].indexOf("=")) == "PTL"){
+		  		  		var pretile_cookie = PTLcookie[i].substr(PTLcookie[i].indexOf("=")+1);
+		  		  	}
+		  		  }
+		  		  var pt_task, pt_name, pt_file, pt_type, pretile_table = pretile_cookie.split(":");
+		  		  
+		  		  for( i = 0; i < pretile_table.length ; i ++)
+		  		  {	
+		  		  	pt_name = pretile_table[i].substr(0,pretile_table[i].indexOf("="));
+		  		  	if(pt_name == "pt_file"){
+		  		  		pt_file = pretile_table[i].substr(pretile_table[i].indexOf("=")+ 1);
+		  		  	}else if ( pt_name == "pt_type") {
+		  		  		pt_type = pretile_table[i].substr(pretile_table[i].indexOf("=")+ 1);
+		  		  	}
+		  		  }
+		  		  
+		  		  for( i = 0; i < pretile_table.length ; i ++)
+		  		  {	
+		  		    pt_name = pretile_table[i].substr(0,pretile_table[i].indexOf("="));
+		  		  	if( pt_name != "pt_file" && pt_name != "pt_type")
+		  		  	{
+		  		  		pt_task = pretile_table[i].substr(pretile_table[i].indexOf("=")+ 1);
+		  		  		this.createTaskView(pt_task, pt_file, pt_type, i);
+		  		  	}
+		  		  }
+		  	}
 		  	return;
 		  }
 		else 
@@ -327,8 +378,17 @@ TissueStack.Admin.prototype = {
 							_this.replaceErrorMessage("No Results!");
 							return false;
 						}
-							$(".file_radio_list input:radio[id^="+ "'check_" + $('input[name=radio_listFile]:checked').val() + "']:first").attr('disabled', true).checkboxradio("refresh");
-							_this.createTaskView(data.response);
+							var checked_listFile_Name = $('input[name=radio_listFile]:checked').val();
+							var checked_task_Name = $('input[name=radio_task]:checked').val();
+							
+							_this.progress_task_id = data.response;
+							$(".file_radio_list input:radio[id^="+ "'check_" + checked_listFile_Name + "']:first").attr('disabled', true).checkboxradio("refresh");
+							_this.createTaskView(_this.progress_task_id, checked_listFile_Name, checked_task_Name, null);
+							
+							//pass new cookie so that users won't lost task table after refresh!
+							document.cookie = "CVT=" + "cv_tk=" + _this.progress_task_id 
+													 + ":cv_file=" + checked_listFile_Name 
+													 + ":cv_type=" + checked_task_Name; 
 							return false;
 					},
 					function(jqXHR, textStatus, errorThrown) {
@@ -370,8 +430,19 @@ TissueStack.Admin.prototype = {
 									_this.replaceErrorMessage("No Results!");
 									return false;
 								}
-									$(".file_radio_list input:radio[id^="+ "'check_" + $('input[name=radio_listFile]:checked').val() + "']:first").attr('disabled', true).checkboxradio("refresh");
-									_this.createTaskView(data.response, i);
+									var checked_listFile_Name = $('input[name=radio_listFile]:checked').val();
+									var checked_task_Name = $('input[name=radio_task]:checked').val();
+									
+									_this.progress_task_id = data.response;
+									$(".file_radio_list input:radio[id^="+ "'check_" + checked_listFile_Name + "']:first").attr('disabled', true).checkboxradio("refresh");
+									_this.createTaskView(_this.progress_task_id, checked_listFile_Name, checked_task_Name, i);
+									
+									//pass new cookie so that users won't lost task table after refresh!
+									_this.pre_tile_task_add += "pt_tk_" + i + "=" + _this.progress_task_id + ":"; 
+									
+									document.cookie = "PTL=" + _this.pre_tile_task_add
+															 + "pt_file=" + checked_listFile_Name 
+														 	 + ":pt_type=" + checked_task_Name;																	
 									return false;
 							},
 							function(jqXHR, textStatus, errorThrown) {
@@ -384,7 +455,7 @@ TissueStack.Admin.prototype = {
 			}
 		});
 	},
-	createTaskView: function (process_task, zoom_level) {
+	createTaskView: function (process_task, process_file, process_type, zoom_level) {
 		var _this = this;
 		var nrCols = 5; //important! can't change!
 		var maxRows = 0;
@@ -405,11 +476,11 @@ TissueStack.Admin.prototype = {
 				}
 
 				if(j == 1){ // File Name
-					processBar = $('input[name=radio_listFile]:checked').val();
+					processBar = process_file;
 				}
 
 				if(j == 2){ // Type
-					processBar = $('input[name=radio_task]:checked').val();
+					processBar = process_type;
 				}
 				
 				if(j == 3){ // Action
@@ -428,34 +499,44 @@ TissueStack.Admin.prototype = {
 							function(data, textStatus, jqXHR) {
 								if (!data.response && !data.error) {
 									_this.replaceErrorMessage("No Data Set Updated!");
+									_this.stopQueue();
 									return false;
 								}
 								if (data.error) {
 									var message = "Error: " + (data.error.message ? data.error.message : " No DataSet Selected!");
-									_this.replaceErrorMessage(message);				
+									_this.replaceErrorMessage(message);
+									_this.stopQueue();				
 									return false;
 								}
 								if (data.response.noResults) {
 									_this.replaceErrorMessage("No Results!");
+									_this.stopQueue();
 									return false;
 								}
 	
 								var processTask = data.response;
-									content = '<span id="progess_in_zoom_level" style="text-align: left">ZOOM:'+ ' ' + zoom_level +'  </span >'
-											+ '<progress id="bar" value="'+ processTask.progress +'" max="100"></progress>'
-											+ '<span id="progess_in_process" style="text-align: left">'+ ' ' + processTask.progress.toFixed(2) +'%</span >'; 
+									if(zoom_level == null){
+										content = '<progress id="bar" value="'+ processTask.progress +'" max="100"></progress>'
+												+ '<span id="progess_in_process" style="text-align: left">'+ ' ' + processTask.progress.toFixed(2) +'%</span >'; 
+									}
+									else{
+										content = '<span id="progess_in_zoom_level" style="text-align: left">ZOOM:'+ ' ' + zoom_level +'  </span >'
+												+ '<progress id="bar" value="'+ processTask.progress +'" max="100"></progress>'
+												+ '<span id="progess_in_process" style="text-align: left">'+ ' ' + processTask.progress.toFixed(2) +'%</span >'; 
+									}
 									processBar = content;
 									$(cell).html(processBar);
 									$(row).append(cell);
 									
 									if(processTask.progress == "100"){
 										_this.displayUploadDirectory();
-										clearInterval(_this.queue_handle);
+										_this.stopQueue();
 									}
 									return false;
 							},
 							function(jqXHR, textStatus, errorThrown) {
 								_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
+								_this.stopQueue();
 								return false;
 							}
 						);  
@@ -467,5 +548,9 @@ TissueStack.Admin.prototype = {
 			$(tbody).append(row);
 		}	
 		tab.trigger("create");
-	}
+	},
+	stopQueue : function() {
+		clearInterval(this.queue_handle);
+		this.queue_handle = null;
+	},
 };
