@@ -19,6 +19,7 @@ import org.apache.log4j.Logger;
 import au.edu.uq.cai.TissueStack.dataobjects.Configuration;
 import au.edu.uq.cai.TissueStack.dataobjects.DataSet;
 import au.edu.uq.cai.TissueStack.dataobjects.Response;
+import au.edu.uq.cai.TissueStack.dataobjects.TaskAction;
 import au.edu.uq.cai.TissueStack.dataobjects.TaskStatus;
 import au.edu.uq.cai.TissueStack.dataprovider.ConfigurationDataProvider;
 import au.edu.uq.cai.TissueStack.dataprovider.DataSetDataProvider;
@@ -34,7 +35,6 @@ import au.edu.uq.cai.TissueStack.utils.ImageUtils;
 @Path("/admin")
 @Description("Tissue Stack Admin Resources")
 public final class AdminResources extends AbstractRestfulMetaInformation {
-	
 	final static Logger logger = Logger.getLogger(AdminResources.class);
 	
 	private final static String DEFAULT_UPLOAD_DIRECTORY = "/opt/tissuestack/upload";
@@ -389,18 +389,48 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 			@Description("Mandatory: Task Id")
 			@QueryParam("task_id")
 			String taskId){			
+		return this.doTaskStuff(taskId, TaskAction.PROGRESS);
+	}
+
+	@Path("/resume")
+	@Description("Resumes a stopped/cancelled task")
+	public RestfulResource resumeTask(
+			@Description("Mandatory: Task Id")
+			@QueryParam("task_id")
+			String taskId){
+		return this.doTaskStuff(taskId, TaskAction.RESUME);
+	}
+
+	@Path("/pause")
+	@Description("Pauses a running task")
+	public RestfulResource pauseTask(
+			@Description("Mandatory: Task Id")
+			@QueryParam("task_id")
+			String taskId){
+		return this.doTaskStuff(taskId, TaskAction.PAUSE);
+	}
+
+	@Path("/cancel")
+	@Description("Cancels a task")
+	public RestfulResource cancelTask(
+			@Description("Mandatory: Task Id")
+			@QueryParam("task_id")
+			String taskId){
+		return this.doTaskStuff(taskId, TaskAction.CANCEL);
+	}
+
+	private RestfulResource doTaskStuff(String taskId, TaskAction action) {
 		/*
 		 *  TODO: put back in once working
 		// check permissions
 		if (!SecurityResources.checkSession(session)) {
 			throw new RuntimeException("Invalid Session! Please Log In.");
 		}*/
-	    
-	    
-	    if (taskId == null || taskId.length() != 16)
+		
+		if (taskId == null || taskId.length() != 16)
 		throw new IllegalArgumentException("Task Id has to be a non-empty string of 16 alphanumeric characters!");
 	    
-		TaskStatus ret = new TissueStack().queryTaskProgress(taskId);
+		TaskStatus ret = new TissueStack().callTaskAction(taskId, (short)action.ordinal());
 		if (ret == null)  throw new RuntimeException("Task with id '" + taskId + "' does not exist!");
 		
 		// now let JNI do the rest
