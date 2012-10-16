@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Tue Oct  9 15:48:49 2012 Oliver Nicolini
+** Last update Tue Oct 16 14:25:09 2012 Oliver Nicolini
 */
 
 #include "core.h"
@@ -140,6 +140,7 @@ void            init_prog(t_tissue_stack *t)
   t->percent_add = percent_add_direct;
   t->percent_get = percent_get_direct;
   t->is_percent_cancel = is_percent_cancel;
+  t->clean_cancel_queue = clean_cancel_queue;
 
   t->percent_cancel = percent_cancel_direct;
   t->percent_resume = percent_resume_direct;
@@ -166,8 +167,8 @@ void            init_prog(t_tissue_stack *t)
   t->log = malloc(sizeof(*t->log));
   t->log->state = ON;
   t->log->path = strdup(CONCAT_APP_PATH("logs/"));
-  t->log->debug = OFF;
-  t->log->verbose = OFF;
+  t->log->debug = ON;
+  t->log->verbose = ON;
   t->log->write_on_files = ON;
   t->log->write_on_plug_files = OFF;
   t->log->write_on_level_files = ON;

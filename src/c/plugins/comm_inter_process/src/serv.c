@@ -142,7 +142,7 @@ void		serv_working_loop(t_serv_comm *s)
 		 NULL, NULL, NULL) == -1)
 	{
 	  ERROR("Select Error");
-	  s->state = FAIL;
+	  //>state = FAIL;
 	}
       check_modified_fd(s);
     }

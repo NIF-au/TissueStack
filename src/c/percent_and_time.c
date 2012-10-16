@@ -1,4 +1,5 @@
 #include "core.h"
+#include <nifti1_io.h>
 
 int		is_num(char *str)
 {
@@ -88,7 +89,9 @@ void		percent_init_direct(int total_blocks, char **id, char *filename, char *kin
   FILE		*f;
 
   gettimeofday(&tv,NULL);
-  asprintf(id, "%i", (int)tv.tv_sec);
+  *id = malloc(17 * sizeof(**id));
+  memset(*id, '0', 17);
+  snprintf(*id, 17, "%i%i", (int)tv.tv_sec, (int)tv.tv_usec);
   if (t->percent->path)
     {
       len_path = (strlen(*id) + strlen(t->percent->path));
@@ -217,7 +220,7 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
   int		blocks_done;
   int		i = 0;
   int		tiles_nb[3];
-  char		*dest;
+  char		*comm;
   int		dim_s_e[3][2];
   FILE		*f;
   int		width;
@@ -231,12 +234,16 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 
   if ((result = read_from_file_by_id(id, &f, t)) != NULL)
     {
+      DEBUG("hellow 1");
       if (strcmp(result[0], "100") != 0)
 	{
+	  DEBUG("hellow 2");
 	  if ((vol = t->get_volume(result[3], t)) != NULL)
 	    {
+	      DEBUG("hellow 3");
 	      if ((tmp = t->percent->cancel_first) != NULL)
 		{
+		  DEBUG("hellow 4");
 		  if (strcmp(id, tmp->id) == 0)
 		    {
 		      t->percent->cancel_first = tmp->next;
@@ -260,6 +267,7 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 			}
 		    }
 		}
+	      DEBUG("hellow 5")
 	      blocks_done = atoi(result[1]);
 	      if (result[4][0] == '0')
 		{
@@ -301,7 +309,7 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 		    }
 		  if ("full")
 		    {
-		      asprintf(&dest, "start image %s %i %i %i %i %i %i %.4f %i tiles JPEG 256 -1 -1 grey 0 0 10000 0 0 %s @tiling@ %s",
+		      asprintf(&comm, "start image %s %i %i %i %i %i %i %.4f %i tiles JPEG 256 -1 -1 grey 0 0 10000 0 0 %s @tiling@ %s",
 			       result[3],
 			       dim_s_e[0][0], dim_s_e[0][1],
 			       dim_s_e[1][0], dim_s_e[1][1],
@@ -313,7 +321,7 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 		    }
 		  else if ("preview")
 		    {
-		      asprintf(&dest, "start image %s %i %i %i %i %i %i %.4f %i full JPEG grey 0 0 10000 0 0 %s @tiling@ %s",
+		      asprintf(&comm, "start image %s %i %i %i %i %i %i %.4f %i full JPEG grey 0 0 10000 0 0 %s @tiling@ %s",
 			       result[3],
 			       dim_s_e[0][0], dim_s_e[0][1],
 			       dim_s_e[1][0], dim_s_e[1][1],
@@ -323,15 +331,80 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 			       result[5],
 			       id);
 		    }
-		  DEBUG("%s\n", dest);
-		  t->plug_actions(t, dest, NULL);
+		  DEBUG("%s\n", comm);
+		  t->plug_actions(t, comm, NULL);
 		}
-	      /*
 	      else if (result[4][0] == '1')
-		;// minc conv
-	      else if (result[4][0] == '2')
-		;// nifti conv
-	      */
+		{
+		  int		slice = 0;
+		  int		dimension = 0;
+		  t_vol		*vol;
+		  int		blocks_done;
+		  int		blocks_calculed;
+		  int		i = 0;
+
+		  if ((vol = get_volume(result[3], t)) == NULL)
+		    {
+		      add_volume(result[3], t);
+		      vol = get_volume(result[3], t);
+		    }
+		  blocks_done = atoi(result[1]);
+		  while (i < vol->dim_nb)
+		    {
+		      if (blocks_calculed + vol->size[i] < blocks_done)
+			blocks_calculed += vol->size[i];
+		      else
+			{
+			  slice = blocks_done - blocks_calculed;
+			  dimension = i;
+			  break;
+			}
+		      i++;
+		    }
+		  asprintf(&comm, "start minc_converter %s %s %i %i %s",
+			   result[3], result[5], dimension, (slice - 2), id);
+		  DEBUG("%s", comm);
+		  t->plug_actions(t, comm, NULL);
+		}
+	    }
+	  else if (result[4][0] == '2')
+	    {
+	      int		slice = 0;
+	      int		dimension = 0;
+	      int		blocks_done;
+	      int		blocks_calculed;
+	      int		i = 0;
+	      int		sizes[3];
+	      nifti_image	*nim;
+
+	      DEBUG("hellow 4");
+	      if ((nim = nifti_image_read(result[3], 0)) == NULL)
+		{
+		  ERROR("Error Nifti read");
+		  return;
+		}
+
+	      sizes[0] = nim->dim[1];
+	      sizes[1] = nim->dim[2];
+	      sizes[2] = nim->dim[3];
+
+	      blocks_done = atoi(result[1]);
+	      while (i < 3)
+		{
+		  if (blocks_calculed + sizes[i] < blocks_done)
+		    blocks_calculed += sizes[i];
+		  else
+		    {
+		      slice = blocks_done - blocks_calculed;
+		      dimension = i;
+		      break;
+		    }
+		  i++;
+		}
+	      asprintf(&comm, "start nifti_converter %s %s %i %i %s",
+		       result[3], result[5], dimension, (slice - 2), id);
+	      DEBUG("%s", comm);
+	      t->plug_actions(t, comm, NULL);
 	    }
 	}
     }
@@ -363,17 +436,24 @@ void		percent_cancel_direct(char *id, t_tissue_stack *t)
     }
 }
 
-void		clean_cancel_queue(t_cancel_queue *elem, t_tissue_stack *t)
+void		clean_cancel_queue(char *id, t_tissue_stack *t)
 {
   t_cancel_queue	*tmp;
   t_cancel_queue	*save;
 
-  if (elem && t)
+  if (id && t)
     {
       tmp = t->percent->cancel_first;
+      if (strcmp(tmp->id, id) == 0)
+	{
+	  t->percent->cancel_first = tmp->next;
+	  free(tmp->id);
+	  free(tmp);
+	  return;
+	}
       while (tmp)
 	{
-	  if (tmp->next && tmp->next == elem)
+	  if (tmp->next && strcmp(tmp->next->id, id) == 0)
 	    {
 	      save = tmp->next;
 	      tmp->next = tmp->next->next;

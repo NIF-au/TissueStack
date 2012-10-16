@@ -1,6 +1,14 @@
 #ifndef TISSUE_STACK_H
 	#define TISSUE_STACK_H
 
+	#define MINC_FORMAT 1
+	#define NIFTI_FORMAT 2
+
+	#define TASK_PROGRESS 0
+	#define TASK_RESUME 1
+	#define TASK_PAUSE 2
+	#define TASK_CANCEL 3
+
 	#include "minc_info.h"
 	#include "jni.h"
 	#include "client.h"
@@ -41,10 +49,10 @@
 
 		// convert nifti and mnc to raw
 		JNIEXPORT jstring Java_au_edu_uq_cai_TissueStack_jni_TissueStack_convertImageFormatToRaw(
-				JNIEnv *, jobject, jstring imageFile, jstring newRawFile, jshort  formatIdentifier);
+				JNIEnv *, jobject, jstring, jstring, jshort);
 
 		// per cent querying
-		JNIEXPORT jobject  Java_au_edu_uq_cai_TissueStack_jni_TissueStack_queryTaskProgress(JNIEnv *, jobject, jstring taskID);
+		JNIEXPORT jobject  Java_au_edu_uq_cai_TissueStack_jni_TissueStack_callTaskAction(JNIEnv *, jobject, jstring, jshort);
 
 	#ifdef __cplusplus
 	}

@@ -473,9 +473,9 @@ JNIEXPORT jstring JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMin
 	write(fileDescriptor, startTilingCommand->buffer, startTilingCommand->size);
 	free_t_string_buffer(startTilingCommand);
 
-	char * buff = malloc(11 * sizeof(*buff));
-	memset(buff, 0, 11);
-	read(fileDescriptor, buff, 10);
+	char * buff = malloc(17 * sizeof(*buff));
+	memset(buff, 0, 17);
+	read(fileDescriptor, buff, 16);
 
 	jstring ret = (*env)->NewStringUTF(env, buff);
 
@@ -511,7 +511,7 @@ JNIEXPORT jstring Java_au_edu_uq_cai_TissueStack_jni_TissueStack_convertImageFor
 		throwJavaException(env, "java/lang/RuntimeException", "Could not convert java to c string");
 		return NULL;
 	}
-	if (formatIdentifier != 1 && formatIdentifier != 2) {
+	if (formatIdentifier != MINC_FORMAT && formatIdentifier != NIFTI_FORMAT) {
 		throwJavaException(env, "java/lang/RuntimeException", "Image Format Identifier has to have 1 (MINC) or 2 (NIFTI) !");
 		return NULL;
 	}
@@ -527,7 +527,7 @@ JNIEXPORT jstring Java_au_edu_uq_cai_TissueStack_jni_TissueStack_convertImageFor
 	// load and start appropriate conversion plugin
 	t_string_buffer * startConversionCommand = NULL;
 	startConversionCommand = appendToBuffer(startConversionCommand, "start ");
-	startConversionCommand = appendToBuffer(startConversionCommand, formatIdentifier == 1 ? "minc_converter " : "nifti_converter ");
+	startConversionCommand = appendToBuffer(startConversionCommand, formatIdentifier == MINC_FORMAT ? "minc_converter " : "nifti_converter ");
 	startConversionCommand = appendToBuffer(startConversionCommand, (char *) in_file);
 	startConversionCommand = appendToBuffer(startConversionCommand, " ");
 	startConversionCommand = appendToBuffer(startConversionCommand, (char *) out_file);
@@ -536,9 +536,9 @@ JNIEXPORT jstring Java_au_edu_uq_cai_TissueStack_jni_TissueStack_convertImageFor
 	write(fileDescriptor, startConversionCommand->buffer, startConversionCommand->size);
 	free_t_string_buffer(startConversionCommand);
 
-	char * buff = malloc(11 * sizeof(*buff));
-	memset(buff, 0, 11);
-	read(fileDescriptor, buff, 10);
+	char * buff = malloc(17 * sizeof(*buff));
+	memset(buff, 0, 17);
+	read(fileDescriptor, buff, 16);
 
 	if (buff == NULL || strcmp(buff, "NULL") == 0 || strcmp(buff, "") == 0) {
 		(*env)->ReleaseStringUTFChars(env, imageFile, in_file);
@@ -557,13 +557,18 @@ JNIEXPORT jstring Java_au_edu_uq_cai_TissueStack_jni_TissueStack_convertImageFor
 	return ret;
 }
 
-JNIEXPORT jobject  Java_au_edu_uq_cai_TissueStack_jni_TissueStack_queryTaskProgress(
-		JNIEnv * env, jobject obj, jstring taskID) {
+JNIEXPORT jobject  Java_au_edu_uq_cai_TissueStack_jni_TissueStack_callTaskAction(
+		JNIEnv * env, jobject obj, jstring taskID, jshort action) {
 	i_am_jni = 1;
 
 	if (taskID == NULL)
 	{
 		throwJavaException(env, "java/lang/RuntimeException", "Task ID is null!");
+		return NULL;
+	}
+
+	if (action != TASK_PROGRESS && action != TASK_RESUME && action != TASK_PAUSE && action != TASK_CANCEL) {
+		throwJavaException(env, "java/lang/RuntimeException", "Action can only take on values: 0 (=PROGRESS), 1 (=RESUME), 2 (=PAUSE) or 3 (=CANCEL) !");
 		return NULL;
 	}
 
@@ -582,7 +587,31 @@ JNIEXPORT jobject  Java_au_edu_uq_cai_TissueStack_jni_TissueStack_queryTaskProgr
 
 	// load and start appropriate conversion plugin
 	t_string_buffer * startProgressCommand = NULL;
-	startProgressCommand = appendToBuffer(startProgressCommand, "start progress get ");
+
+	char * action_buffer = NULL;
+	switch ((short)action) {
+		case TASK_PROGRESS:
+			action_buffer = strdup(" get ");
+			break;
+		case TASK_RESUME:
+			action_buffer = strdup(" resume ");
+			break;
+		case TASK_PAUSE:
+			action_buffer = strdup(" pause ");
+			break;
+		case TASK_CANCEL:
+			action_buffer = strdup(" cancel ");
+			break;
+	}
+	if (action_buffer == NULL) {
+		(*env)->ReleaseStringUTFChars(env, taskID, task);
+		throwJavaException(env, "java/lang/RuntimeException", "Action could not be identified!");
+		return NULL;
+	}
+
+	startProgressCommand = appendToBuffer(startProgressCommand, "start progress");
+	startProgressCommand = appendToBuffer(startProgressCommand, action_buffer);
+	if (action_buffer != NULL) free(action_buffer);
 	startProgressCommand = appendToBuffer(startProgressCommand, (char *) task);
 
 	// send command to plugin

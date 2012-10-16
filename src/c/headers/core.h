@@ -206,6 +206,7 @@ struct			s_tissue_stack
   t_nc_action		*first_notification;
   t_prcnt_t		*percent;
   void			(*percent_cancel)(char *id, t_tissue_stack *t);
+  void			(*clean_cancel_queue)(char *id, t_tissue_stack *t);
   void			(*percent_resume)(char *id, t_tissue_stack *t);
   void			(*percent_get)(char **buff, char *id, t_tissue_stack *t);
   void			(*percent_add)(int blocks, char *id, t_tissue_stack *t);
@@ -342,6 +343,7 @@ void		clean_error_list(t_tissue_stack *general, int min);
 
 int		is_num(char *str);
 int		is_percent_cancel(char *id, t_tissue_stack *t);
+void		clean_cancel_queue(char *id, t_tissue_stack *t);
 void		percent_time_write(char *str, char **commands, void *box);
 void		percent_init_direct(int total_blocks, char **id, char *filename, char *kind, char *path, char *zoom_factor, t_tissue_stack *t);
 void		percent_add_direct(int blocks, char *id, t_tissue_stack *t);
