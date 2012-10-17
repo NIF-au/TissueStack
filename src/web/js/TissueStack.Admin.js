@@ -390,7 +390,11 @@ TissueStack.Admin.prototype = {
 							//pass new cookie so that users won't lost task table after refresh!
 							document.cookie = "CVT=" + "cv_tk=" + _this.progress_task_id 
 													 + ":cv_file=" + checked_listFile_Name 
-													 + ":cv_type=" + checked_task_Name; 
+													 + ":cv_type=" + checked_task_Name;
+							
+							_this.taskPasueHandler(_this.progress_task_id); 
+							_this.taskResumeHandler(_this.progress_task_id);
+							
 							return false;
 					},
 					function(jqXHR, textStatus, errorThrown) {
@@ -444,7 +448,11 @@ TissueStack.Admin.prototype = {
 									
 									document.cookie = "PTL=" + _this.pre_tile_task_add
 															 + "pt_file=" + checked_listFile_Name 
-														 	 + ":pt_type=" + checked_task_Name;																	
+														 	 + ":pt_type=" + checked_task_Name;
+														 	 
+									_this.taskPasueHandler(_this.progress_task_id); 
+									_this.taskResumeHandler(_this.progress_task_id);
+																										
 									return false;
 							},
 							function(jqXHR, textStatus, errorThrown) {
@@ -487,10 +495,10 @@ TissueStack.Admin.prototype = {
 				
 				if(j == 3){ // Action
 					processBar = '<div data-role="controlgroup" data-type="horizontal">'
-							   + '<a id=' + 'constart_' + i + ' data-role="button" data-theme="c" data-icon="arrow-r" data-iconpos="notext">Start</a>'
-							   + '<a id=' + 'conresume_' + i + ' data-role="button" data-theme="c" data-icon="refresh" data-iconpos="notext">Resume</a>'
-							   + '<a id=' + 'conpost_' + i + ' data-role="button" data-theme="c" data-icon="info" data-iconpos="notext">Pose</a>'
-							   + '<a id=' + 'constop_' + i + ' data-role="button" data-theme="c" data-icon="delete" data-iconpos="notext">Cancel</a>'
+							   + '<a id=' + 'constart_' + process_task + ' data-role="button" data-theme="c" data-icon="arrow-r" data-iconpos="notext">Start</a>'
+							   + '<a id=' + 'conresume_' + process_task + ' data-role="button" data-theme="c" data-icon="refresh" data-iconpos="notext">Resume</a>'
+							   + '<a id=' + 'conpause_' + process_task + ' data-role="button" data-theme="c" data-icon="info" data-iconpos="notext">Pasue</a>'
+							   + '<a id=' + 'constop_' + process_task + ' data-role="button" data-theme="c" data-icon="delete" data-iconpos="notext">Cancel</a>'
 							   + '</div>';
 				}
 				
@@ -556,4 +564,69 @@ TissueStack.Admin.prototype = {
 		clearInterval(this.queue_handle);
 		this.queue_handle = null;
 	},
+	taskPasueHandler : function (process_task) {
+		var _this = this;
+		$('#conpause_' + process_task).click(function(){
+		   TissueStack.Utils.sendAjaxRequest(
+				"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/pause/json?task_id="
+					+ process_task,
+				'GET', true,
+				function(data, textStatus, jqXHR) {
+					if (!data.response && !data.error) {
+						_this.replaceErrorMessage("No Task ID Applied");
+						return false;
+					}
+					if (data.error) {
+						var message = "Error: " + (data.error.message ? data.error.message : " No Task ID Applied");
+						_this.replaceErrorMessage(message);				
+						return false;
+					}
+					if (data.response.noResults) {
+						_this.replaceErrorMessage("No Results!");
+						return false;
+					}
+						//Do something here !!
+						return false;
+				},
+				function(jqXHR, textStatus, errorThrown) {
+					_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
+					return false;
+				}
+			);
+		});
+	},
+	taskResumeHandler : function (process_task) {
+		var _this = this;
+		$('#conresume_' + process_task).click(function(){
+		   TissueStack.Utils.sendAjaxRequest(
+				"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/resume/json?task_id="
+					+ process_task,
+				'GET', true,
+				function(data, textStatus, jqXHR) {
+					if (!data.response && !data.error) {
+						_this.replaceErrorMessage("No Task ID Applied");
+						return false;
+					}
+					if (data.error) {
+						var message = "Error: " + (data.error.message ? data.error.message : " No Task ID Applied");
+						_this.replaceErrorMessage(message);				
+						return false;
+					}
+					if (data.response.noResults) {
+						_this.replaceErrorMessage("No Results!");
+						return false;
+					}
+						//Do something here !!
+						return false;
+				},
+				function(jqXHR, textStatus, errorThrown) {
+					_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
+					return false;
+				}
+			);
+		});
+	},
+	taskCancelHandler : function () {
+	
+	}
 };
