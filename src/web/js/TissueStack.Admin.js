@@ -362,7 +362,9 @@ TissueStack.Admin.prototype = {
 		$("#bt_process").click(function(){
 			if($('input[name=radio_task]:checked').val() == "Convert") {
 			   TissueStack.Utils.sendAjaxRequest(
-					"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/convert/json?file=/opt/tissuestack/upload/" + $('input[name=radio_listFile]:checked').val(),
+					"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/convert/json?file="
+						+ TissueStack.configuration['upload_directory'].value + "/" 
+						+ $('input[name=radio_listFile]:checked').val(),
 					'GET', true,
 					function(data, textStatus, jqXHR) {
 						if (!data.response && !data.error) {
@@ -486,7 +488,8 @@ TissueStack.Admin.prototype = {
 				if(j == 3){ // Action
 					processBar = '<div data-role="controlgroup" data-type="horizontal">'
 							   + '<a id=' + 'constart_' + i + ' data-role="button" data-theme="c" data-icon="arrow-r" data-iconpos="notext">Start</a>'
-							   + '<a id=' + 'conrefresh_' + i + ' data-role="button" data-theme="c" data-icon="refresh" data-iconpos="notext">Resume</a>'
+							   + '<a id=' + 'conresume_' + i + ' data-role="button" data-theme="c" data-icon="refresh" data-iconpos="notext">Resume</a>'
+							   + '<a id=' + 'conpost_' + i + ' data-role="button" data-theme="c" data-icon="info" data-iconpos="notext">Pose</a>'
 							   + '<a id=' + 'constop_' + i + ' data-role="button" data-theme="c" data-icon="delete" data-iconpos="notext">Cancel</a>'
 							   + '</div>';
 				}
