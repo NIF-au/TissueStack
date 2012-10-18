@@ -64,8 +64,8 @@ void		dim_loop(int fd, int dimensions_nb, t_vol *volume,
 	  this_slice++;
 	  t->percent_add(1, id_percent, t);
 	  //if (this_slice == 200)
-	  //  t->percent_cancel(id_percent, t);
-	  cancel = t->is_percent_cancel(id_percent, t);
+	  //  t->percent_pause(id_percent, t);
+	  cancel = t->is_percent_paused_cancel(id_percent, t);
 	}
       start[dim] = 0;
       count[dim] = volume->size[dim];
