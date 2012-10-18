@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.OutputStreamWriter;
 
 import javax.servlet.http.HttpServletResponse;
@@ -14,7 +15,12 @@ public final class ServiceUtils {
 			String contentType,
 			String charSet,
 			String content) {
-		if (httpResponse == null || content == null || content.trim().isEmpty()) return;
+		if (httpResponse == null) return;
+		
+		if (content == null || content.trim().isEmpty()) {
+			httpResponse.setContentLength(0);
+			return;
+		}
 
 		try {
 			if (contentType != null && !contentType.trim().isEmpty()) 
@@ -38,9 +44,14 @@ public final class ServiceUtils {
 			HttpServletResponse httpResponse,
 			String contentType,
 			String charSet,
-			File content) {
-		if (httpResponse == null || content == null || !content.exists()) return;
+			File content) throws IOException {
+		if (httpResponse == null) return;
 
+		if (content == null || !content.exists()) {
+			httpResponse.sendError(404);
+			return;
+		}
+		
 		// read the entire file which won't be too big
 		StringBuffer buffer = new StringBuffer((int)content.length());
 		DataInputStream reader = null;
@@ -56,6 +67,7 @@ public final class ServiceUtils {
 			
 			// delegate rest of work
 			ServiceUtils.streamString(httpResponse, contentType, charSet, buffer.toString());
+			throw new RuntimeException("test");
 		} catch (Exception e) {
 			// propagate
 			throw new RuntimeException("Failed to read file", e);

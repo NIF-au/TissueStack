@@ -1,5 +1,7 @@
 package au.edu.uq.cai.TissueStack.resources;
 
+import java.io.IOException;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
@@ -66,10 +68,20 @@ public final class AndsResources extends AbstractRestfulMetaInformation {
 			@Description("Internal parameter")
 			@Context HttpServletResponse response) {
 		
-		ServiceUtils.streamFileContent(
-				response,
-				MediaType.APPLICATION_XML,
-				"charset=utf-8",
-				AndsDataSetRegistration.getAndsDataSetXML());
+		try {
+			ServiceUtils.streamFileContent(
+					response,
+					MediaType.APPLICATION_XML,
+					"charset=utf-8",
+					AndsDataSetRegistration.getAndsDataSetXML());
+		} catch (IOException e) {
+			// can be ignored
+		} catch (RuntimeException e) {
+			try {
+				response.sendError(500, "Failed to stream xml!");
+			} catch (IOException e1) {
+				// we don't care
+			}
+		}
 	}
 }

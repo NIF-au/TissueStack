@@ -307,18 +307,23 @@ TissueStack.Admin.prototype = {
 		}
 		if(TissueStack.phone) alert(message);	
 	},
+	registerDataSetWithAnds : function() {
+		var reply = confirm("Do you want to register your data set?");
+		if (reply) {
+			var popup_handle = window.open('/ands_dataset_registration.html', 'Registration', 'height=350,width=250,location=no');
+			var closePopup = function() {
+				popup_handle.close();
+			};
+			popup_handle.closeMe = closePopup;
+		}
+	},
 	registerAddToDataSetHandler : function () {
 		var _this = this;
 		$("#bt_process").click(function(){
 			if($('input[name=radio_task]:checked').val() == "rad_addDataSet") {
-					var reply = confirm("Do you want to register your data set?");
-					if (reply) {
-						var popup_handle = window.open('/ands_dataset_registration.html', 'Registration', 'height=350,width=250,location=no');
-						var closePopup = function() {
-							popup_handle.close();
-						};
-						popup_handle.closeMe = closePopup;
-					}
+					// TODO: This is only here for easier testing
+					// once finished => move the following line into the success handler (called AFTER successful ds addition)
+					_this.registerDataSetWithAnds();
 						
 				  	$.each($('.uploaded_file'), function(i, uploaded_file) {
 	 					if (uploaded_file.checked) {
