@@ -149,7 +149,7 @@ void		percent_add_direct(int blocks, char *id, t_tissue_stack *t)
   pthread_mutex_lock(&t->percent->mutex);
   if ((result = read_from_file_by_id(id, &f, t)) != NULL)
     {
-      if (strcmp(result[0], "100") != 0)
+      if (result[0] && strcmp(result[0], "100") != 0)
 	{
 	  blocks_done = atof(result[1]);
 	  blocks_done += blocks;
@@ -234,16 +234,16 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 
   if ((result = read_from_file_by_id(id, &f, t)) != NULL)
     {
-      DEBUG("hellow 1");
+      FATAL("Hey baby");
       if (strcmp(result[0], "100") != 0)
 	{
-	  DEBUG("hellow 2");
-	  if ((vol = t->get_volume(result[3], t)) != NULL)
+	  FATAL("Hey baby 1");
+	  if ((vol = t->check_volume(result[3], t)) != NULL)
 	    {
-	      DEBUG("hellow 3");
+	      FATAL("Hey baby 2");
 	      if ((tmp = t->percent->cancel_first) != NULL)
 		{
-		  DEBUG("hellow 4");
+		  FATAL("Hey baby 3");
 		  if (strcmp(id, tmp->id) == 0)
 		    {
 		      t->percent->cancel_first = tmp->next;
@@ -267,7 +267,6 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 			}
 		    }
 		}
-	      DEBUG("hellow 5")
 	      blocks_done = atoi(result[1]);
 	      if (result[4][0] == '0')
 		{
@@ -343,11 +342,7 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 		  int		blocks_calculed = 0;
 		  int		i = 0;
 
-		  if ((vol = get_volume(result[3], t)) == NULL)
-		    {
-		      add_volume(result[3], t);
-		      vol = get_volume(result[3], t);
-		    }
+		  vol = t->check_volume(result[3], t);
 		  blocks_done = atoi(result[1]);
 		  while (i < 3)
 		    {
@@ -377,7 +372,6 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 	      int		sizes[3];
 	      nifti_image	*nim;
 
-	      DEBUG("hellow 4");
 	      if ((nim = nifti_image_read(result[3], 0)) == NULL)
 		{
 		  ERROR("Error Nifti read");

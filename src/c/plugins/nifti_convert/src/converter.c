@@ -214,7 +214,6 @@ void  		*start(void *args)
 
   if (a->commands[2] != NULL && a->commands[3] != NULL && a->commands[4] != NULL)
     {
-      a->general_info->clean_pause_queue(a->commands[4], a->general_info);
       dimensions_resume = atoi(a->commands[2]);
       slice_resume = atoi(a->commands[3]);
       if ((fd = open(a->commands[1], (O_APPEND | O_RDWR))) == -1)
@@ -244,13 +243,14 @@ void  		*start(void *args)
 	}
       if ((fd = open(a->commands[1], O_CREAT | O_TRUNC | O_RDWR)) < 0)
 	{
-	  perror("Open ");
+	  ERROR("Open error");
 	  return (NULL);
 	}
+      if (chmod(a->commands[1], 0644) == -1)
+	ERROR("Chmod Error");
       write_header_into_file(fd, h);
       i = 1;
     }
-
   while (i <= nim->dim[0] && cancel == 0)
     {
       if (slice_resume != -1)
@@ -280,8 +280,6 @@ void  		*start(void *args)
 	  free(data);
 	  slice++;
 	  a->general_info->percent_add(1, id_percent, a->general_info);
-	  //	  if (i == 1 && slice == 150 && flag == 1)
-	  //   a->general_info->percent_pause(id_percent, a->general_info);
 	  cancel = a->general_info->is_percent_paused_cancel(id_percent, a->general_info);
 	  DEBUG("Slice n %i on dimension %i slicenb = %i -- cancel = %i", slice, (i - 1), nslices, cancel);
 	}
@@ -292,12 +290,9 @@ void  		*start(void *args)
     INFO("Conversion: NIFTI: %s to RAW: %s ==> DONE", a->commands[0], a->commands[1]);
   if (close(fd) == -1)
     {
-      perror("Close ");
+      ERROR("Close Error");
       return (NULL);
     }
-  if (chmod(a->commands[1], 0644) == -1)
-    perror("Chmod ");
-
   a->destroy(a);
 
   return (NULL);
