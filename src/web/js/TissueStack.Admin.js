@@ -120,6 +120,8 @@ TissueStack.Admin.prototype = {
 		  		  	cv_type = convert_table[2].substr(convert_table[2].indexOf("=")+ 1);
 		  		  }
 		  		this.createTaskView(cv_task, cv_file, cv_type, null);
+		  		this.taskPasueHandler(cv_task); 
+		  		this.taskResumeHandler(cv_task);
 		  	}
 		  	if($.cookie("PTL") != null){
 		  		var PTLcookie = document.cookie.split("; "); //"; " space required after ";". Don't remove it. 
@@ -148,6 +150,8 @@ TissueStack.Admin.prototype = {
 		  		  	{
 		  		  		pt_task = pretile_table[i].substr(pretile_table[i].indexOf("=")+ 1);
 		  		  		this.createTaskView(pt_task, pt_file, pt_type, i);
+		  		  		this.taskPasueHandler(pt_task); 
+		  		  		this.taskResumeHandler(pt_task);
 		  		  	}
 		  		  }
 		  	}
@@ -542,6 +546,9 @@ TissueStack.Admin.prototype = {
 									processBar = content;
 									$(cell).html(processBar);
 									$(row).append(cell);
+									
+									//_this.taskPasueHandler(process_task); 
+									//_this.taskResumeHandler(process_task);
 									
 									if(processTask.progress == "100"){
 										_this.displayUploadDirectory();
