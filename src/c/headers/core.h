@@ -54,19 +54,19 @@ typedef	struct		s_time_tps	t_time_tps;
 typedef struct		s_func_prcnt_t	t_func_prcnt_t;
 */
 
-typedef	struct		s_cancel_queue	t_cancel_queue;
+typedef	struct		s_pause_cancel_queue	t_pause_cancel_queue;
 
-struct			s_cancel_queue
+struct			s_pause_cancel_queue
 {
   char			*id;
-  t_cancel_queue	*next;
+  t_pause_cancel_queue	*next;
 };
 
 
 struct			s_prcnt_t
 {
   pthread_mutex_t	mutex;
-  t_cancel_queue	*cancel_first;
+  t_pause_cancel_queue	*cancel_first;
   char			*path;
 };
 
@@ -205,13 +205,13 @@ struct			s_tissue_stack
   t_memory_mapping 	*memory_mappings;
   t_nc_action		*first_notification;
   t_prcnt_t		*percent;
-  void			(*percent_cancel)(char *id, t_tissue_stack *t);
-  void			(*clean_cancel_queue)(char *id, t_tissue_stack *t);
+  void			(*percent_pause)(char *id, t_tissue_stack *t);
+  void			(*clean_pause_queue)(char *id, t_tissue_stack *t);
   void			(*percent_resume)(char *id, t_tissue_stack *t);
   void			(*percent_get)(char **buff, char *id, t_tissue_stack *t);
   void			(*percent_add)(int blocks, char *id, t_tissue_stack *t);
   void			(*percent_init)(int total_blocks, char **id, char *filename, char *kind, char *path, char *zoom_factor, t_tissue_stack *t);
-  int			(*is_percent_cancel)(char *id, t_tissue_stack *);
+  int			(*is_percent_paused_cancel)(char *id, t_tissue_stack *);
   t_vol			*(*get_volume)(char *path, t_tissue_stack *general);
   t_vol			*(*check_volume)(char *path, t_tissue_stack *general);
   void			(*plug_actions)(t_tissue_stack *general, char *commands, void *box);
@@ -342,13 +342,13 @@ void		clean_error_list(t_tissue_stack *general, int min);
 /*		percent_and_time		*/
 
 int		is_num(char *str);
-int		is_percent_cancel(char *id, t_tissue_stack *t);
-void		clean_cancel_queue(char *id, t_tissue_stack *t);
+int		is_percent_paused_cancel(char *id, t_tissue_stack *t);
+void		clean_pause_queue(char *id, t_tissue_stack *t);
 void		percent_time_write(char *str, char **commands, void *box);
 void		percent_init_direct(int total_blocks, char **id, char *filename, char *kind, char *path, char *zoom_factor, t_tissue_stack *t);
 void		percent_add_direct(int blocks, char *id, t_tissue_stack *t);
 void		percent_get_direct(char **buff, char *id, t_tissue_stack *t);
-void		percent_cancel_direct(char *id, t_tissue_stack *t);
+void		percent_pause_direct(char *id, t_tissue_stack *t);
 void		percent_resume_direct(char *id, t_tissue_stack *t);
 void		percent_destroy(char **commands, void *box, t_tissue_stack *t);
 void		init_percent_time(t_tissue_stack *t, char *path);
@@ -401,7 +401,10 @@ t_log_plugin		log_plugin;
   									\
     asprintf(&tmp, message, ## args);					\
     if (log_plugin.tss->log->debug == ON) {				\
-      asprintf(&tmp2, "%s | %s | %d", tmp, __FILE__, __LINE__);		\
+      if (strcmp(level_name, "log_fatal") == 0)				\
+	asprintf(&tmp2, "\033[1;31m%s | %s | %d\033[0m", tmp, __FILE__, __LINE__); \
+      else								\
+	asprintf(&tmp2, "%s | %s | %d", tmp, __FILE__, __LINE__); \
       free(tmp);							\
       log_plugin.tss->raise(log_plugin.id, level_name, (char*)tmp2, NULL, log_plugin.tss); \
     }									\

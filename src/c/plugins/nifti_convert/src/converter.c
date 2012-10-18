@@ -212,12 +212,9 @@ void  		*start(void *args)
 
   h = create_header_from_nifti_struct(nim);
 
-  int flag = 1;
-
   if (a->commands[2] != NULL && a->commands[3] != NULL && a->commands[4] != NULL)
     {
-      flag = 0;
-      a->general_info->clean_cancel_queue(a->commands[4], a->general_info);
+      a->general_info->clean_pause_queue(a->commands[4], a->general_info);
       dimensions_resume = atoi(a->commands[2]);
       slice_resume = atoi(a->commands[3]);
       if ((fd = open(a->commands[1], (O_APPEND | O_RDWR))) == -1)
@@ -283,9 +280,9 @@ void  		*start(void *args)
 	  free(data);
 	  slice++;
 	  a->general_info->percent_add(1, id_percent, a->general_info);
-	  if (i == 1 && slice == 150 && flag == 1)
-	    a->general_info->percent_cancel(id_percent, a->general_info);
-	  cancel = a->general_info->is_percent_cancel(id_percent, a->general_info);
+	  //	  if (i == 1 && slice == 150 && flag == 1)
+	  //   a->general_info->percent_pause(id_percent, a->general_info);
+	  cancel = a->general_info->is_percent_paused_cancel(id_percent, a->general_info);
 	  DEBUG("Slice n %i on dimension %i slicenb = %i -- cancel = %i", slice, (i - 1), nslices, cancel);
 	}
       dims[i] = -1;

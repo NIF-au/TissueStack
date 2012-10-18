@@ -229,8 +229,8 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
   int		h_tiles;
   float		scale;
   int		tiles_per_slice[3];
-  t_cancel_queue *tmp;
-  t_cancel_queue *tmp2;
+  t_pause_cancel_queue *tmp;
+  t_pause_cancel_queue *tmp2;
 
   if ((result = read_from_file_by_id(id, &f, t)) != NULL)
     {
@@ -340,7 +340,7 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 		  int		dimension = 0;
 		  t_vol		*vol;
 		  int		blocks_done;
-		  int		blocks_calculed;
+		  int		blocks_calculed = 0;
 		  int		i = 0;
 
 		  if ((vol = get_volume(result[3], t)) == NULL)
@@ -349,7 +349,7 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 		      vol = get_volume(result[3], t);
 		    }
 		  blocks_done = atoi(result[1]);
-		  while (i < vol->dim_nb)
+		  while (i < 3)
 		    {
 		      if (blocks_calculed + vol->size[i] < blocks_done)
 			blocks_calculed += vol->size[i];
@@ -372,7 +372,7 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 	      int		slice = 0;
 	      int		dimension = 0;
 	      int		blocks_done;
-	      int		blocks_calculed;
+	      int		blocks_calculed = 0;
 	      int		i = 0;
 	      int		sizes[3];
 	      nifti_image	*nim;
@@ -411,9 +411,9 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
   fclose(f);
 }
 
-void		percent_cancel_direct(char *id, t_tissue_stack *t)
+void		percent_pause_direct(char *id, t_tissue_stack *t)
 {
-  t_cancel_queue	*tmp;
+  t_pause_cancel_queue	*tmp;
 
   if (t && id)
     {
@@ -436,10 +436,10 @@ void		percent_cancel_direct(char *id, t_tissue_stack *t)
     }
 }
 
-void		clean_cancel_queue(char *id, t_tissue_stack *t)
+void		clean_pause_queue(char *id, t_tissue_stack *t)
 {
-  t_cancel_queue	*tmp;
-  t_cancel_queue	*save;
+  t_pause_cancel_queue	*tmp;
+  t_pause_cancel_queue	*save;
 
   if (id && t)
     {
@@ -466,9 +466,9 @@ void		clean_cancel_queue(char *id, t_tissue_stack *t)
     }
 }
 
-int		is_percent_cancel(char *id, t_tissue_stack *t)
+int		is_percent_paused_cancel(char *id, t_tissue_stack *t)
 {
-  t_cancel_queue	*tmp;
+  t_pause_cancel_queue	*tmp;
 
   if (t && id)
     {
