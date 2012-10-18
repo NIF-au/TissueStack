@@ -243,9 +243,11 @@ void  		*start(void *args)
 	}
       if ((fd = open(a->commands[1], O_CREAT | O_TRUNC | O_RDWR)) < 0)
 	{
-	  perror("Open ");
+	  ERROR("Open error");
 	  return (NULL);
 	}
+      if (chmod(a->commands[1], 0644) == -1)
+	ERROR("Chmod Error");
       write_header_into_file(fd, h);
       i = 1;
     }
@@ -288,12 +290,9 @@ void  		*start(void *args)
     INFO("Conversion: NIFTI: %s to RAW: %s ==> DONE", a->commands[0], a->commands[1]);
   if (close(fd) == -1)
     {
-      perror("Close ");
+      ERROR("Close Error");
       return (NULL);
     }
-  if (chmod(a->commands[1], 0644) == -1)
-    perror("Chmod ");
-
   a->destroy(a);
 
   return (NULL);

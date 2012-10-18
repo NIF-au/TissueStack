@@ -279,6 +279,8 @@ void  		*start(void *args)
 	  ERROR("Open Failed");
 	  return (NULL);
 	}
+      if (chmod(a->commands[1], 0644) == -1)
+	ERROR("Chmod failed");
       minc_volume = init_get_volume_from_minc_file(a->commands[0]);
       a->general_info->percent_init(get_nb_total_slices_to_do(minc_volume), &id_percent, a->commands[0],
 				    "1", a->commands[1], NULL, a->general_info);
@@ -299,9 +301,6 @@ void  		*start(void *args)
 	  return (NULL);
 	}
     }
-  if (chmod(a->commands[1], 0644) == -1)
-    ERROR("Chmod failed");
-
   return (NULL);
 }
 
