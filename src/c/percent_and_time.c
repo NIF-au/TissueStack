@@ -149,7 +149,7 @@ void		percent_add_direct(int blocks, char *id, t_tissue_stack *t)
   pthread_mutex_lock(&t->percent->mutex);
   if ((result = read_from_file_by_id(id, &f, t)) != NULL)
     {
-      if (strcmp(result[0], "100") != 0)
+      if (result[0] && strcmp(result[0], "100") != 0)
 	{
 	  blocks_done = atof(result[1]);
 	  blocks_done += blocks;
@@ -229,21 +229,21 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
   int		h_tiles;
   float		scale;
   int		tiles_per_slice[3];
-  t_cancel_queue *tmp;
-  t_cancel_queue *tmp2;
+  t_pause_cancel_queue *tmp;
+  t_pause_cancel_queue *tmp2;
 
   if ((result = read_from_file_by_id(id, &f, t)) != NULL)
     {
-      DEBUG("hellow 1");
+      FATAL("Hey baby");
       if (strcmp(result[0], "100") != 0)
 	{
-	  DEBUG("hellow 2");
-	  if ((vol = t->get_volume(result[3], t)) != NULL)
+	  FATAL("Hey baby 1");
+	  if ((vol = t->check_volume(result[3], t)) != NULL)
 	    {
-	      DEBUG("hellow 3");
+	      FATAL("Hey baby 2");
 	      if ((tmp = t->percent->cancel_first) != NULL)
 		{
-		  DEBUG("hellow 4");
+		  FATAL("Hey baby 3");
 		  if (strcmp(id, tmp->id) == 0)
 		    {
 		      t->percent->cancel_first = tmp->next;
@@ -267,7 +267,6 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 			}
 		    }
 		}
-	      DEBUG("hellow 5")
 	      blocks_done = atoi(result[1]);
 	      if (result[4][0] == '0')
 		{
@@ -340,16 +339,12 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 		  int		dimension = 0;
 		  t_vol		*vol;
 		  int		blocks_done;
-		  int		blocks_calculed;
+		  int		blocks_calculed = 0;
 		  int		i = 0;
 
-		  if ((vol = get_volume(result[3], t)) == NULL)
-		    {
-		      add_volume(result[3], t);
-		      vol = get_volume(result[3], t);
-		    }
+		  vol = t->check_volume(result[3], t);
 		  blocks_done = atoi(result[1]);
-		  while (i < vol->dim_nb)
+		  while (i < 3)
 		    {
 		      if (blocks_calculed + vol->size[i] < blocks_done)
 			blocks_calculed += vol->size[i];
@@ -372,12 +367,11 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 	      int		slice = 0;
 	      int		dimension = 0;
 	      int		blocks_done;
-	      int		blocks_calculed;
+	      int		blocks_calculed = 0;
 	      int		i = 0;
 	      int		sizes[3];
 	      nifti_image	*nim;
 
-	      DEBUG("hellow 4");
 	      if ((nim = nifti_image_read(result[3], 0)) == NULL)
 		{
 		  ERROR("Error Nifti read");
@@ -411,9 +405,9 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
   fclose(f);
 }
 
-void		percent_cancel_direct(char *id, t_tissue_stack *t)
+void		percent_pause_direct(char *id, t_tissue_stack *t)
 {
-  t_cancel_queue	*tmp;
+  t_pause_cancel_queue	*tmp;
 
   if (t && id)
     {
@@ -436,10 +430,10 @@ void		percent_cancel_direct(char *id, t_tissue_stack *t)
     }
 }
 
-void		clean_cancel_queue(char *id, t_tissue_stack *t)
+void		clean_pause_queue(char *id, t_tissue_stack *t)
 {
-  t_cancel_queue	*tmp;
-  t_cancel_queue	*save;
+  t_pause_cancel_queue	*tmp;
+  t_pause_cancel_queue	*save;
 
   if (id && t)
     {
@@ -466,9 +460,9 @@ void		clean_cancel_queue(char *id, t_tissue_stack *t)
     }
 }
 
-int		is_percent_cancel(char *id, t_tissue_stack *t)
+int		is_percent_paused_cancel(char *id, t_tissue_stack *t)
 {
-  t_cancel_queue	*tmp;
+  t_pause_cancel_queue	*tmp;
 
   if (t && id)
     {

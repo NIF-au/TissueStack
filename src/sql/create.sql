@@ -24,6 +24,7 @@ INSERT INTO configuration VALUES('tile_directory', 'tiles', 'tile directory (rel
 INSERT INTO configuration VALUES('server_tile_directory', '/opt/tissuestack/tiles', 'server side tile directory for pre-tiling');
 INSERT INTO configuration VALUES('upload_directory', '/opt/tissuestack/upload', 'upload directory (absolute system path on server)');
 INSERT INTO configuration VALUES('data_directory', '/opt/tissuestack/data', 'data directory (absolute system path on server)');
+INSERT INTO configuration VALUES('ands_dataset_xml', '/opt/tissuestack/ands/datasets.xml', 'ands data set xml');
 INSERT INTO configuration VALUES('max_upload_size', '1073741824', 'the maximum number of bytes allowed to upload in one go. A gig by default');
 INSERT INTO configuration VALUES('default_drawing_interval', '250', 'default drawing interval');
 INSERT INTO configuration VALUES('default_zoom_levels', '[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75]', 'default zoom levels');

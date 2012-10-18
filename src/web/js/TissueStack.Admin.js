@@ -120,9 +120,11 @@ TissueStack.Admin.prototype = {
 		  		  	cv_type = convert_table[2].substr(convert_table[2].indexOf("=")+ 1);
 		  		  }
 		  		this.createTaskView(cv_task, cv_file, cv_type, null);
+		  		this.taskPasueHandler(cv_task); 
+		  		this.taskResumeHandler(cv_task);
 		  	}
 		  	if($.cookie("PTL") != null){
-		  		var PTLcookie = document.cookie.split("; ");
+		  		var PTLcookie = document.cookie.split("; "); //"; " space required after ";". Don't remove it. 
 		  		for (i = 0 ; i < PTLcookie.length ; i++)
 		  		  {
 		  		  	if(PTLcookie[i].substr(0,PTLcookie[i].indexOf("=")) == "PTL"){
@@ -148,6 +150,8 @@ TissueStack.Admin.prototype = {
 		  		  	{
 		  		  		pt_task = pretile_table[i].substr(pretile_table[i].indexOf("=")+ 1);
 		  		  		this.createTaskView(pt_task, pt_file, pt_type, i);
+		  		  		this.taskPasueHandler(pt_task); 
+		  		  		this.taskResumeHandler(pt_task);
 		  		  	}
 		  		  }
 		  	}
@@ -373,7 +377,7 @@ TissueStack.Admin.prototype = {
 			   TissueStack.Utils.sendAjaxRequest(
 					"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/convert/json?" +
 					"session=" + _this.session +
-					"file=/opt/tissuestack/upload/" +
+					"&file=/opt/tissuestack/upload/" +
 					$('input[name=radio_listFile]:checked').val(),
 					'GET', true,
 					function(data, textStatus, jqXHR) {
@@ -400,7 +404,11 @@ TissueStack.Admin.prototype = {
 							//pass new cookie so that users won't lost task table after refresh!
 							document.cookie = "CVT=" + "cv_tk=" + _this.progress_task_id 
 													 + ":cv_file=" + checked_listFile_Name 
-													 + ":cv_type=" + checked_task_Name; 
+													 + ":cv_type=" + checked_task_Name;
+							
+							_this.taskPasueHandler(_this.progress_task_id); 
+							_this.taskResumeHandler(_this.progress_task_id);
+							
 							return false;
 					},
 					function(jqXHR, textStatus, errorThrown) {
@@ -421,7 +429,7 @@ TissueStack.Admin.prototype = {
 					   TissueStack.Utils.sendAjaxRequest(
 							"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/tile/json?"
 								+ "session=" + _this.session
-								+ "file=" + TissueStack.configuration['upload_directory'].value + "/" 
+								+ "&file=" + TissueStack.configuration['upload_directory'].value + "/" 
 								+ $('input[name=radio_listFile]:checked').val()
 								+ "&tile_dir=" + TissueStack.configuration['server_tile_directory'].value
 								+ "&dimensions=0,0,0,0,0,0" 
@@ -455,7 +463,11 @@ TissueStack.Admin.prototype = {
 									
 									document.cookie = "PTL=" + _this.pre_tile_task_add
 															 + "pt_file=" + checked_listFile_Name 
-														 	 + ":pt_type=" + checked_task_Name;																	
+														 	 + ":pt_type=" + checked_task_Name;
+														 	 
+									_this.taskPasueHandler(_this.progress_task_id); 
+									_this.taskResumeHandler(_this.progress_task_id);
+																										
 									return false;
 							},
 							function(jqXHR, textStatus, errorThrown) {
@@ -498,9 +510,14 @@ TissueStack.Admin.prototype = {
 				
 				if(j == 3){ // Action
 					processBar = '<div data-role="controlgroup" data-type="horizontal">'
-							   + '<a id=' + 'constart_' + i + ' data-role="button" data-theme="c" data-icon="arrow-r" data-iconpos="notext">Start</a>'
-							   + '<a id=' + 'conrefresh_' + i + ' data-role="button" data-theme="c" data-icon="refresh" data-iconpos="notext">Resume</a>'
-							   + '<a id=' + 'constop_' + i + ' data-role="button" data-theme="c" data-icon="delete" data-iconpos="notext">Cancel</a>'
+							   + '<a id=' + 'constart_' + process_task 
+							   + ' data-role="button" data-theme="c" data-icon="arrow-r" data-iconpos="notext" class="ui-disable ui-disabled">Start</a>'
+							   + '<a id=' + 'conresume_' + process_task 
+							   + ' data-role="button" data-theme="c" data-icon="refresh" data-iconpos="notext" class="ui-disable ui-disabled">Resume</a>'
+							   + '<a id=' + 'conpause_' + process_task 
+							   + ' data-role="button" data-theme="c" data-icon="info" data-iconpos="notext">Pasue</a>'
+							   + '<a id=' + 'constop_' + process_task 
+							   + ' data-role="button" data-theme="c" data-icon="delete" data-iconpos="notext" class="ui-disable ui-disabled">Cancel</a>'
 							   + '</div>';
 				}
 				
@@ -533,13 +550,16 @@ TissueStack.Admin.prototype = {
 												+ '<span id="progess_in_process" style="text-align: left">'+ ' ' + processTask.progress.toFixed(2) +'%</span >'; 
 									}
 									else{
-										content = '<span id="progess_in_zoom_level" style="text-align: left">ZOOM:'+ ' ' + zoom_level +'  </span >'
-												+ '<progress id="bar" value="'+ processTask.progress +'" max="100"></progress>'
-												+ '<span id="progess_in_process" style="text-align: left">'+ ' ' + processTask.progress.toFixed(2) +'%</span >'; 
+										content = '<progress id="bar" value="'+ processTask.progress +'" max="100"></progress>'
+												+ '<span id="progess_in_process" style="text-align: left">'+ ' ' + processTask.progress.toFixed(2) +'%</span >'
+												+ '<span id="progess_in_zoom_level" style="text-align: left">  ( ZOOM: '+ ' ' + zoom_level +' ) </span >'; 
 									}
 									processBar = content;
 									$(cell).html(processBar);
 									$(row).append(cell);
+									
+									//_this.taskPasueHandler(process_task); 
+									//_this.taskResumeHandler(process_task);
 									
 									if(processTask.progress == "100"){
 										_this.displayUploadDirectory();
@@ -565,5 +585,76 @@ TissueStack.Admin.prototype = {
 	stopQueue : function() {
 		clearInterval(this.queue_handle);
 		this.queue_handle = null;
+	},
+	taskPasueHandler : function (process_task) {
+		var _this = this;
+		$('#conpause_' + process_task).click(function(){
+		   TissueStack.Utils.sendAjaxRequest(
+				"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/pause/json?" +
+				"session=" + _this.session +
+				"&task_id=" + process_task,
+				'GET', true,
+				function(data, textStatus, jqXHR) {
+					if (!data.response && !data.error) {
+						_this.replaceErrorMessage("No Task ID Applied");
+						return false;
+					}
+					if (data.error) {
+						var message = "Error: " + (data.error.message ? data.error.message : " No Task ID Applied");
+						_this.replaceErrorMessage(message);				
+						return false;
+					}
+					if (data.response.noResults) {
+						_this.replaceErrorMessage("No Results!");
+						return false;
+					}
+						//Do something here !!
+						$('#conresume_' + process_task).removeClass('ui-disabled');
+						$('#conpause_' + process_task).addClass('ui-disabled');
+						return false;
+				},
+				function(jqXHR, textStatus, errorThrown) {
+					_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
+					return false;
+				}
+			);
+		});
+	},
+	taskResumeHandler : function (process_task) {
+		var _this = this;
+		$('#conresume_' + process_task).click(function(){
+		   TissueStack.Utils.sendAjaxRequest(
+				"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/resume/json?" +
+				"session=" + _this.session +
+				"&task_id=" + process_task,
+				'GET', true,
+				function(data, textStatus, jqXHR) {
+					if (!data.response && !data.error) {
+						_this.replaceErrorMessage("No Task ID Applied");
+						return false;
+					}
+					if (data.error) {
+						var message = "Error: " + (data.error.message ? data.error.message : " No Task ID Applied");
+						_this.replaceErrorMessage(message);				
+						return false;
+					}
+					if (data.response.noResults) {
+						_this.replaceErrorMessage("No Results!");
+						return false;
+					}
+						//Do something here !!
+						$('#conpause_' + process_task).removeClass('ui-disabled');
+						$('#conresume_' + process_task).addClass('ui-disabled');
+						return false;
+				},
+				function(jqXHR, textStatus, errorThrown) {
+					_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
+					return false;
+				}
+			);
+		});
+	},
+	taskCancelHandler : function () {
+	
 	},
 };
