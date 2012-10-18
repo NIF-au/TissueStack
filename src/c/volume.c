@@ -397,8 +397,8 @@ void		*file_actions(void *args)
 
 void		add_volume(char *path, t_tissue_stack *t)
 {
-  t_vol		*tmp;
-  t_vol		*save;
+  t_vol		*tmp = NULL;
+  t_vol		*save = NULL;
 
   tmp = t->volume_first;
   while (tmp != NULL)
@@ -411,7 +411,7 @@ void		add_volume(char *path, t_tissue_stack *t)
     {
       if (t->volume_first == NULL)
 	t->volume_first = tmp;
-      else
+      else if (save)
 	save->next = tmp;
     }
   else

@@ -356,7 +356,6 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 			}
 		      i++;
 		    }
-		  FATAL("yopiyop je suis la mais ca va bientot seg....");
 		  asprintf(&comm, "start minc_converter %s %s %i %i %s",
 			   result[3], result[5], dimension, (slice - 2), id);
 		  DEBUG("%s", comm);
