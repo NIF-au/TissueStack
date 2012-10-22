@@ -155,7 +155,7 @@ void		percent_add_direct(int blocks, char *id, t_tissue_stack *t)
 	  blocks_done += blocks;
 	  percent_tmp = (float)((float)((float)blocks_done / (float)atof(result[2])) * 100.0);
 
-	  fprintf(f, "%f\n%f\n%s\n%s\n%s\n%s\n%s\n", percent_tmp, blocks_done, result[2], result[3], result[4], result[5], result[6]);
+	  fprintf(f, "%f\n%f\n%s\n%s\n%s\n%s\n", percent_tmp, blocks_done, result[2], result[3], result[4], result[5]);
 	  fclose(f);
 	}
     }
@@ -475,6 +475,40 @@ int		is_percent_paused_cancel(char *id, t_tissue_stack *t)
 	}
     }
   return (0);
+}
+
+void		percent_cancel_direct(char *id, t_tissue_stack *t)
+{
+  char		*complete_path = NULL;
+  struct stat	info;
+  char		buff[4096];
+  char		**result = NULL;
+  int		i = 0;
+  FILE		*f;
+
+  if (t && id)
+    {
+      clean_pause_queue(id, t);
+      complete_path = malloc((strlen(id) + strlen(t->percent->path) + 1) * sizeof(*complete_path));
+      complete_path = strcpy(complete_path, t->percent->path);
+      complete_path = strcat(complete_path, id);
+      if (!stat(complete_path, &info))
+	{
+	  f = fopen(complete_path, "r+");
+	  if (fread(buff, 1, 4096, f) > 0)
+	    result = percent_str_to_wordtab(buff, '\n');
+	  if (!stat(result[5], &info))
+	    unlink(result[5]);
+	  fclose(f);
+	  unlink(complete_path);
+	  if (result != NULL)
+	    {
+	      while (result[i] != NULL)
+		free(result[i++]);
+	    }
+	}
+      free(complete_path);
+   }
 }
 
 /*
