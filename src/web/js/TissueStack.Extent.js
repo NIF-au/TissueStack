@@ -171,22 +171,18 @@ TissueStack.Extent.prototype = {
 	}, getCenter : function () {
 		return TissueStack.Utils.getCenter(this.x,this.y);
 	}, getWorldCoordinatesForPixel : function(pixelCoords) {
-		
-		if (pixelCoords.x < 0 || pixelCoords.x > this.x - 1 
-				|| pixelCoords.y < 0 || pixelCoords.y > this.y - 1 
-				|| this.slice < 0 || this.slice > this.max_slices) {
-			return null;
-		}
-
-		// check optional z aka slices
-		if (typeof(pixelCoords.z) !== 'undefined') {
-			if (pixelCoords.z < 0 || pixelCoords.z > this.max_slices) {
-				return;
-			}
-		} else {
+		// min & max clamps
+		if (pixelCoords.x < 0)
+			pixelCoords.x = (this.x-1) - pixelCoords.x;
+		else if (pixelCoords.x > this.x-1)
+			pixelCoords.x = (this.x-1) - pixelCoords.x;
+		//pixelCoords.y = pixelCoords.y < 0 ? 0 : pixelCoords.y;  
+		//pixelCoords.y = pixelCoords.y > this.y-1 ? this.y-1 : pixelCoords.y;
+		if (typeof(pixelCoords.z) == 'undefined') 	// check optional z aka slices
 			pixelCoords.z = this.slice;
-		}
-
+		pixelCoords.z = pixelCoords.z < 0 ? 0 : pixelCoords.z;  
+		pixelCoords.z = pixelCoords.z > this.max_slices ? this.max_slices : pixelCoords.z; 
+		
 		// now we'll have to correct x and y according to their zoom level to get the 1:1 pixel Coordinates which can then be transformed
 		if (this.zoom_level == 1) {
 			pixelCoords.x = Math.floor(pixelCoords.x * (this.one_to_one_x / this.x));
@@ -200,13 +196,10 @@ TissueStack.Extent.prototype = {
 				[pixelCoords.x, this.one_to_one_y - pixelCoords.y, pixelCoords.z, 1], 
 				this.worldCoordinatesTransformationMatrix);
 
-		if (!pixelCoords) {
-			return null;
-		}
+		if (!pixelCoords) return null;
 		
 		// return world coordinates
 		return {x: pixelCoords[0], y: pixelCoords[1], z: pixelCoords[2]};
-
 	},
 	getPixelForWorldCoordinates : function(worldCoords) {
 		if (worldCoords == null) {
@@ -234,7 +227,8 @@ TissueStack.Extent.prototype = {
 		}
 		
 		// because of rounding inaccuracies it can happen that exceed the image's pixel dimensions by 1,
-		// not to mention that we could have been handed in extreme coordinates that exceeded the world coordinates to begin with 
+		// not to mention that we could have been handed in extreme coordinates that exceeded the world coordinates to begin with
+		/*
 		if (pixelCoords.x < 0) {
 			pixelCoords.x = 0;
 		} else if (pixelCoords.x >= this.x) {
@@ -249,7 +243,7 @@ TissueStack.Extent.prototype = {
 			pixelCoords.z = 0;
 		} else if (pixelCoords.z >= this.max_slices) {
 			pixelCoords.z = this.max_slices - 1;
-		}
+		}*/
 		
 		// return pixel coordinates
 		return pixelCoords;

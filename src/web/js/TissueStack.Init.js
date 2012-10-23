@@ -82,6 +82,13 @@ TissueStack.InitUserInterface = function (initOpts) {
 		if (TissueStack.phone){
 			contrast = new TissueStack.ContrastCanvas("dataset_1_toolbox_canvas_phone");
 		}
+
+		var dsUnderlying = null;
+		// if we have overlays of data sets on we remember the data set that underlies the top overlay
+		// that way we can later link canvases between the 2 
+		if (TissueStack.desktop && maxDataSets > 1 && x==(maxDataSets-1)) {
+			dsUnderlying = datasets[x-1];
+		}
 		
 		// loop over all planes in the data, create canvas and extent objects, then display them
 		for (var i=0; i < dataSet.data.length; i++) {
@@ -115,6 +122,16 @@ TissueStack.InitUserInterface = function (initOpts) {
 			// create canvas
 			var canvasElementSelector = "dataset_" + (x+1); 
 			var plane = new TissueStack.Canvas(extent, "canvas_" + planeId + "_plane", canvasElementSelector);
+			
+			// link overlaid canvas with its undelying counterpart 
+			if (TissueStack.desktop && dsUnderlying && dsUnderlying.planes) {
+				var dsUnderlyingPlane = dsUnderlying.planes[extent.plane];
+				if (dsUnderlyingPlane) {
+					plane.underlying_canvas = dsUnderlyingPlane;
+					dsUnderlyingPlane.overlay_canvas = plane;
+				}
+			}
+			
 			// set bidirectional relationship for contrast
 			plane.contrast = contrast;
 			if (contrast) contrast.canvas = plane;
@@ -128,7 +145,7 @@ TissueStack.InitUserInterface = function (initOpts) {
 			
 			// store plane  
 			dataSet.planes[planeId] = plane;
-
+			
 			// get the real world coordinates 
 			dataSet.realWorldCoords[planeId] = plane.getDataExtent().getExtentCoordinates();
 			
@@ -279,14 +296,38 @@ TissueStack.BindDataSetDependentEvents = function () {
 		maxDataSets = datasets.length;
 	}
 
-	// SYNC DATA_SETS CHECKBOX CHANGE HANDLER
+	var transitionToDataSetView =  function() {
+    	if (TissueStack.dataSetNavigation.selectedDataSets.count > 0) {
+    		var sel = TissueStack.dataSetNavigation.selectedDataSets["dataset_1"];
+    		TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(sel, false); 
+    		window.location.hash = '#data';
+    		setTimeout(function() {
+					TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(sel, true);
+    		}, 200);
+    	}
+	};
+	
+	// SYNC AND OVERLAY DATA_SETS CHECKBOX CHANGE HANDLER
     if (TissueStack.desktop) {
-    		$('#sync_data_sets').unbind("click");
-            $('#sync_data_sets').bind("change", function() {
-            	TissueStack.sync_datasets = $('#sync_data_sets')[0].checked;
-            });
+   		$('#sync_data_sets').unbind("change");
+        $('#sync_data_sets').bind("change", function() {
+        	TissueStack.sync_datasets = $('#sync_data_sets')[0].checked;
+        	transitionToDataSetView();
+        });
+		$('#overlay_data_sets').unbind("change");
+        $('#overlay_data_sets').bind("change", function() {
+        	TissueStack.overlay_datasets = $('#overlay_data_sets')[0].checked;
+        	if (TissueStack.overlay_datasets) {
+	        	$('#sync_data_sets').attr("checked", "checked").checkboxradio("refresh");
+	        	TissueStack.sync_datasets = true;
+        	} else {
+	        	$('#sync_data_sets').removeAttr("checked").checkboxradio("refresh");
+	        	TissueStack.sync_datasets = false;
+        	}
+        	transitionToDataSetView();
+        });
     }
-
+    
 	// DRAWING INTERVAL CHANGE HANDLER
 	// avoid potential double binding by un-binding at this stage
 	$('#drawing_interval_button').unbind("click");
@@ -447,6 +488,8 @@ TissueStack.BindDataSetDependentEvents = function () {
 					return;
 				}
 				sideCanvasChildren.detach();
+				
+				TissueStack.Utils.swapOverlayAndUnderlyingCanvasPlanes(event.data[0].actualDataSet, mainViewPlaneId, sideViewPlaneId);
 				
 				// swap dimensions
 				var sideCanvasRelativeCross = event.data[0].actualDataSet.planes[sideViewPlaneId].getRelativeCrossCoordinates();

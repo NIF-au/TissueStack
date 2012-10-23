@@ -112,9 +112,10 @@ TissueStack.DataSetNavigation.prototype = {
 		if (!dataSet) {
 			return;
 		}
-		
 		// for all canvases, unbind the events
 		for (var plane in dataSet.planes) {
+			if (dataSet.planes[plane].underlying_canvas) dataSet.planes[plane].underlying_canvas = null; 
+			if (dataSet.planes[plane].overlay_canvas) dataSet.planes[plane].overlay_canvas = null;
 			dataSet.planes[plane].queue.latestDrawRequestTimestamp = -1;
 			dataSet.planes[plane].queue.stopQueue();
 			dataSet.planes[plane].events.unbindAllEvents();
@@ -276,7 +277,6 @@ TissueStack.DataSetNavigation.prototype = {
 	    			   return;
 	    		   }
 
-
 	    		   // display/hide data sets left / not left
 	    		   for (var n=0;n<selectedNodes.length;n++) {
 		    		   _this.addToOrReplaceSelectedDataSets(selectedNodes[n].data.key, n);
@@ -396,7 +396,7 @@ TissueStack.DataSetNavigation.prototype = {
 
 		document.addEventListener('touchmove', function (e) { e.preventDefault(); }, false);
 	}, 
-	syncDataSetCoordinates : function(canvas) {
+	syncDataSetCoordinates : function(canvas, eraseCanvas) {
 		// basic checks whether the sync flag for desktop was set && we have more than 1 data sets selected 
 		// && we have been handed in a canvas with all the properties we need to go on 
 		if (!(
@@ -435,24 +435,31 @@ TissueStack.DataSetNavigation.prototype = {
 		var pixel_coords_for_other_plane = other_plane.getDataExtent().getPixelForWorldCoordinates(real_world_coords_for_handed_in_plane);
 
 		// THIS IS VITAL TO AVOID an infinite sync chain!!!
+		//other_plane.has_been_synced = true;
+		//other_plane.last_sync_timestamp = -1;
 		for (var p in other_ds.planes) {
 			other_ds.planes[p].has_been_synced = true;
 			other_ds.planes[p].queue.last_sync_timestamp = -1;
 		}
 
-		other_plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(pixel_coords_for_other_plane, false);
-		other_plane.queue.drawLowResolutionPreview(sync_time);
-		other_plane.queue.drawRequestAfterLowResolutionPreview(null, sync_time);
-		other_plane.queue.tidyUp();
+		if (eraseCanvas)
+			other_plane.eraseCanvasContent();
+		else {
+			other_plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(pixel_coords_for_other_plane, false, sync_time);
+			other_plane.queue.drawLowResolutionPreview(sync_time);
+			other_plane.queue.drawRequestAfterLowResolutionPreview(null, sync_time);
 
-		if (other_plane.is_main_view) {
-			var slider = $("#" + (other_plane.dataset_id == "" ? "" : other_plane.dataset_id + "_") + "canvas_main_slider");
-			if (slider) {
-				slider.val(pixel_coords_for_other_plane.z);
-				slider.blur();
+			if (other_plane.is_main_view) {
+				var slider = $("#" + (other_plane.dataset_id == "" ? "" : other_plane.dataset_id + "_") + "canvas_main_slider");
+				if (slider) {
+					slider.val(pixel_coords_for_other_plane.z);
+					slider.blur();
+				}
 			}
+			setTimeout(function() {other_plane.queue.tidyUp();}, 250);
 		}
 		
 		canvas.queue.last_sync_timestamp = -1; // reset 
+		//canvas.queue.has_been_synced = true; // reset
 	}
 };		

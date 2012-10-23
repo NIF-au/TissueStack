@@ -81,13 +81,8 @@ TissueStack.Queue.prototype = {
 			
 			// work with a deep copy
 			if (this.prepareDrawRequest(deepCopyOfRequest)) {
-				var _this = this;
-				if (deepCopyOfRequest.action == 'ZOOM') {
-					//_this.canvas.eraseCanvasContent();
-				}	
-
-				_this.drawLowResolutionPreview(deepCopyOfRequest.timestamp);
-				_this.drawRequestAfterLowResolutionPreview(deepCopyOfRequest, deepCopyOfRequest.timestamp);
+				this.drawLowResolutionPreview(deepCopyOfRequest.timestamp);
+				this.drawRequestAfterLowResolutionPreview(deepCopyOfRequest, deepCopyOfRequest.timestamp);
 			}
 
 			return;

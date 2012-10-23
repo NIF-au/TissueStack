@@ -483,5 +483,46 @@ TissueStack.Utils = {
 		}
 
 		return ((newRes - Math.floor(newRes) > 0.00001) ? newRes.toFixed(3) : newRes) + '&nbsp;' + unit_lookup[unit_step];
+	}, swapOverlayAndUnderlyingCanvasPlanes : function(dataset, plane1, plane2, recursive_call) {
+		// only for sync but not in combination with overlay
+		if ((!TissueStack.sync_datasets || TissueStack.overlay_datasets)) return;
+			
+		// prelim checks of existence
+		if (typeof(dataset) != 'object' || !dataset.planes || typeof(plane1) != 'string' || typeof(plane2) != 'string') return;
+		
+		var plane1Found = dataset.planes[plane1];
+		var plane2Found = dataset.planes[plane2];
+		
+		// both planes need to be found in the dataset
+		if (!plane1Found || !plane2Found) return;
+
+		// neither underlying canvas nor overlay exists => nothing to do => exit 
+		if (!plane1Found.underlying_canvas && !plane1Found.overlay_canvas
+				&& !plane2Found.underlying_canvas && !plane2Found.overlay_canvas) return;
+		
+		var whichEverCanvas1 = plane1Found.underlying_canvas ? plane1Found.underlying_canvas : plane1Found.overlay_canvas;
+		var whichEverCanvas2 = plane2Found.underlying_canvas ? plane2Found.underlying_canvas : plane2Found.overlay_canvas;
+		
+		// swap the 2 
+		var tmp = whichEverCanvas1;
+		whichEverCanvas1 = whichEverCanvas2;
+		whichEverCanvas2 = tmp;
+		
+		if (plane1Found.underlying_canvas) {
+			plane1Found.underlying_canvas = whichEverCanvas1;
+			plane2Found.underlying_canvas = whichEverCanvas2;
+		} else {
+			plane1Found.overlay_canvas = whichEverCanvas1;
+			plane2Found.overlay_canvas = whichEverCanvas2;
+		}
+
+		// so that we don't enter into an infinite recursion after our explicit second call (see below)
+		if (recursive_call) return;
+
+		// call ourselves one more time for the other bidirectional end (overlay/underlying)
+		TissueStack.Utils.swapOverlayAndUnderlyingCanvasPlanes(
+				TissueStack.dataSetStore.getDataSetById(
+						TissueStack.dataSetNavigation.selectedDataSets[whichEverCanvas1.dataset_id]),
+				plane1, plane2, true);
 	}
 };

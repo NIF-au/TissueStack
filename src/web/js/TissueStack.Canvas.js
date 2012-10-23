@@ -18,6 +18,8 @@ TissueStack.Canvas = function(data_extent, canvas_id, dataset_id, include_cross_
 };
 
 TissueStack.Canvas.prototype = {
+	underlying_canvas: null, // if this is not null we are an overlay
+	overlay_canvas: null,
 	is_main_view: false,
 	data_extent: null,
 	dataset_id: "",
@@ -219,12 +221,19 @@ TissueStack.Canvas.prototype = {
 		// this stops any still running draw requests 
 		var now = typeof(timestamp) == 'number' ? timestamp : new Date().getTime(); 
 		
+		var crossHairPosition = this.getCenter();
+		if (TissueStack.overlay_datasets && this.underlying_canvas) 
+			crossHairPosition = {x: this.underlying_canvas.cross_x, y: this.underlying_canvas.cross_y};
+		else if (TissueStack.overlay_datasets && this.overlay_canvas)
+			crossHairPosition = {x: this.overlay_canvas.cross_x, y: this.overlay_canvas.cross_y};
+			
 		// make sure crosshair is centered:
-		this.drawCoordinateCross(this.getCenter());
+		this.drawCoordinateCross(crossHairPosition);
 		
 		this.setUpperLeftCorner(
-				Math.floor(this.dim_x / 2) - coords.x,
-				Math.floor(this.dim_y / 2) + coords.y);
+				crossHairPosition.x - coords.x,
+				(this.dim_y - crossHairPosition.y) + coords.y
+		);
 
 		if (coords.z) {
 			this.data_extent.slice = coords.z;
@@ -338,6 +347,7 @@ TissueStack.Canvas.prototype = {
 		// preliminary check if we are within the slice range
 		var slice = this.getDataExtent().slice;
 		if (slice < 0 || slice > this.getDataExtent().max_slices) {
+			this.syncDataSetCoordinates(this, true);
 			return;
 		}
 		
@@ -348,6 +358,7 @@ TissueStack.Canvas.prototype = {
 		if (this.upper_left_x < 0 && (this.upper_left_x + this.getDataExtent().x) <=0
 				|| this.upper_left_x > 0 && this.upper_left_x > this.dim_x
 				|| this.upper_left_y <=0 || (this.upper_left_y - this.getDataExtent().y) >= this.dim_y) {
+			this.syncDataSetCoordinates(this, true);
 			return;
 		} 
 
@@ -517,9 +528,7 @@ TissueStack.Canvas.prototype = {
 						}
 						
 						if (typeof(TissueStack.dataSetNavigation) === 'object' && counter == 0) {
-							TissueStack.dataSetNavigation.syncDataSetCoordinates(_this);
-							_this.has_been_synced = false; // reset flag to accept syncing forwards again
-							_this.queue.last_sync_timestamp = -1; // reset last sync timestamp
+							_this.syncDataSetCoordinates(_this);
 						}
 					};
 				})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, this.getDataExtent().tile_size, rowIndex, colIndex);
@@ -531,6 +540,12 @@ TissueStack.Canvas.prototype = {
 			// increment canvasX
 			canvasX += width;
 		};
+	},
+	syncDataSetCoordinates : function(_this, eraseCanvas) {
+		if (typeof(eraseCanvase) != 'boolean') eraseCanvase = false;
+		TissueStack.dataSetNavigation.syncDataSetCoordinates(_this, eraseCanvas);
+		_this.has_been_synced = false; // reset flag to accept syncing forwards again
+		_this.queue.last_sync_timestamp = -1; // reset last sync timestamp
 	},
 	updateExtentInfo : function(realWorldCoords) {
 		var log = (TissueStack.desktop || TissueStack.tablet) ? $('#canvas_extent') : $('#canvas_' + this.getDataExtent().plane + '_extent');
