@@ -16,6 +16,7 @@ TissueStack.Admin.prototype = {
 	processType: "",
 	progress_task_id: "",
 	pre_tile_task_add: "",
+	detect_cookie_type: "",
 	refreshQueryList : function () {
 		var _this = this;
 		
@@ -90,7 +91,8 @@ TissueStack.Admin.prototype = {
 		var exdate=new Date();
 		exdate.setDate(exdate.getDate() + exdays);
 		var c_value = escape(value) + ((exdays==null) ? "" : "; expires="+exdate.toUTCString());		
-		$.cookie(c_name,c_value, 1);
+		document.cookie=c_name + "=" + c_value;
+		//$.cookie(c_name,c_value, 1);
 	},
 	checkCookie: function (session, value){
 		var session_name=this.getCookie("session");
@@ -104,6 +106,7 @@ TissueStack.Admin.prototype = {
 		  	this.session = session_name;		  	
 		  	
 		  	if($.cookie("CVT") != null){
+		  		this.detect_cookie_type = "CVT"; 
 		  		var CVTcookie = document.cookie.split("; ");
 		  		for (i = 0 ; i < CVTcookie.length ; i++)
 		  		  {
@@ -122,8 +125,10 @@ TissueStack.Admin.prototype = {
 		  		this.createTaskView(cv_task, cv_file, cv_type, null);
 		  		this.taskPasueHandler(cv_task); 
 		  		this.taskResumeHandler(cv_task);
+		  		this.taskCancelHandler(cv_task);
 		  	}
 		  	if($.cookie("PTL") != null){
+		  		this.detect_cookie_type = "PTL";
 		  		var PTLcookie = document.cookie.split("; "); //"; " space required after ";". Don't remove it. 
 		  		for (i = 0 ; i < PTLcookie.length ; i++)
 		  		  {
@@ -152,6 +157,7 @@ TissueStack.Admin.prototype = {
 		  		  		this.createTaskView(pt_task, pt_file, pt_type, i);
 		  		  		this.taskPasueHandler(pt_task); 
 		  		  		this.taskResumeHandler(pt_task);
+		  		  		this.taskCancelHandler(pt_task);
 		  		  	}
 		  		  }
 		  	}
@@ -407,13 +413,18 @@ TissueStack.Admin.prototype = {
 							_this.createTaskView(_this.progress_task_id, checked_listFile_Name, checked_task_Name, null);
 							
 							//pass new cookie so that users won't lost task table after refresh!
+							var exdate=new Date();
+							exdate.setDate(exdate.getDate() + 1);
+							
+							_this.detect_Cookie_type = "CVT";
 							document.cookie = "CVT=" + "cv_tk=" + _this.progress_task_id 
 													 + ":cv_file=" + checked_listFile_Name 
-													 + ":cv_type=" + checked_task_Name;
+													 + ":cv_type=" + checked_task_Name
+													 + "; expires="+ exdate.toUTCString();
 							
 							_this.taskPasueHandler(_this.progress_task_id); 
 							_this.taskResumeHandler(_this.progress_task_id);
-							
+							_this.taskCancelHandler(_this.progress_task_id);
 							return false;
 					},
 					function(jqXHR, textStatus, errorThrown) {
@@ -464,14 +475,23 @@ TissueStack.Admin.prototype = {
 									_this.createTaskView(_this.progress_task_id, checked_listFile_Name, checked_task_Name, i);
 									
 									//pass new cookie so that users won't lost task table after refresh!
+									var exdate=new Date();
+									exdate.setDate(exdate.getDate() + 1);	
+									
 									_this.pre_tile_task_add += "pt_tk_" + i + "=" + _this.progress_task_id + ":"; 
+									_this.detect_Cookie_type = "PTL";
+									
+									
 									
 									document.cookie = "PTL=" + _this.pre_tile_task_add
 															 + "pt_file=" + checked_listFile_Name 
-														 	 + ":pt_type=" + checked_task_Name;
+														 	 + ":pt_type=" + checked_task_Name
+														 	 + "; expires="+ exdate.toUTCString();
+									
 														 	 
 									_this.taskPasueHandler(_this.progress_task_id); 
 									_this.taskResumeHandler(_this.progress_task_id);
+									_this.taskCancelHandler(_this.progress_task_id);
 																										
 									return false;
 							},
@@ -521,8 +541,8 @@ TissueStack.Admin.prototype = {
 							   + ' data-role="button" data-theme="c" data-icon="refresh" data-iconpos="notext" class="ui-disable ui-disabled">Resume</a>'
 							   + '<a id=' + 'conpause_' + process_task 
 							   + ' data-role="button" data-theme="c" data-icon="info" data-iconpos="notext">Pasue</a>'
-							   + '<a id=' + 'constop_' + process_task 
-							   + ' data-role="button" data-theme="c" data-icon="delete" data-iconpos="notext" class="ui-disable ui-disabled">Cancel</a>'
+							   + '<a id=' + 'concancel_' + process_task 
+							   + ' data-role="button" data-theme="c" data-icon="delete" data-iconpos="notext">Cancel</a>'
 							   + '</div>';
 				}
 				
@@ -551,23 +571,27 @@ TissueStack.Admin.prototype = {
 	
 								var processTask = data.response;
 									if(zoom_level == null){
-										content = '<progress id="bar" value="'+ processTask.progress +'" max="100"></progress>'
-												+ '<span id="progess_in_process" style="text-align: left">'+ ' ' + processTask.progress.toFixed(2) +'%</span >'; 
+										content = '<div id="progress_bar_' + process_task + '"><progress id="bar" value="'+ processTask.progress +'" max="100"></progress>'
+												+ '<span id="progess_in_process" style="text-align: left">'+ ' ' + processTask.progress.toFixed(2) +'%</span ></div>'; 
 									}
 									else{
-										content = '<progress id="bar" value="'+ processTask.progress +'" max="100"></progress>'
+										content = '<div id="progress_bar_' + process_task + '"><progress id="bar" value="'+ processTask.progress +'" max="100"></progress>'
 												+ '<span id="progess_in_process" style="text-align: left">'+ ' ' + processTask.progress.toFixed(2) +'%</span >'
-												+ '<span id="progess_in_zoom_level" style="text-align: left">  ( ZOOM: '+ ' ' + zoom_level +' ) </span >'; 
+												+ '<span id="progess_in_zoom_level" style="text-align: left">  ( ZOOM: '+ ' ' + zoom_level +' ) </span ></div>'; 
 									}
 									processBar = content;
 									$(cell).html(processBar);
 									$(row).append(cell);
-									
-									//_this.taskPasueHandler(process_task); 
-									//_this.taskResumeHandler(process_task);
-									
+																		
 									if(processTask.progress == "100"){
 										_this.displayUploadDirectory();
+										
+										if(_this.detect_cookie_type == "PTL"){
+											$.cookie("PTL", null);
+										}
+										else if (_this.detect_cookie_type == "CVT"){
+											$.cookie("CVT", null);
+										}
 										_this.stopQueue();
 									}
 									return false;
@@ -659,7 +683,41 @@ TissueStack.Admin.prototype = {
 			);
 		});
 	},
-	taskCancelHandler : function () {
-	
+	taskCancelHandler : function (process_task) {
+		var _this = this;
+		$('#conresume_' + process_task).click(function(){
+		   TissueStack.Utils.sendAjaxRequest(
+				"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/cancel/json?" +
+				"session=" + _this.session +
+				"&task_id=" + process_task,
+				'GET', true,
+				function(data, textStatus, jqXHR) {
+					if (!data.response && !data.error) {
+						_this.replaceErrorMessage("No Task ID Applied");
+						return false;
+					}
+					if (data.error) {
+						var message = "Error: " + (data.error.message ? data.error.message : " No Task ID Applied");
+						_this.replaceErrorMessage(message);				
+						return false;
+					}
+					if (data.response.noResults) {
+						_this.replaceErrorMessage("No Results!");
+						return false;
+					}
+						//Do something here !!
+						$('#conpause_' + process_task).addClass('ui-disabled');
+						$('#conresume_' + process_task).addClass('ui-disabled');
+						$('#concancel_' + process_task).addClass('ui-disabled');
+						$('#constart_' + process_task).addClass('ui-disabled');
+						
+						return false;
+				},
+				function(jqXHR, textStatus, errorThrown) {
+					_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
+					return false;
+				}
+			);
+		});
 	},
 };
