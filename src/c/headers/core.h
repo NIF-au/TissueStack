@@ -210,6 +210,7 @@ struct			s_tissue_stack
   void			(*percent_resume)(char *id, t_tissue_stack *t);
   void			(*percent_get)(char **buff, char *id, t_tissue_stack *t);
   void			(*percent_add)(int blocks, char *id, t_tissue_stack *t);
+  void			(*percent_cancel)(char *id, t_tissue_stack *t);
   void			(*percent_init)(int total_blocks, char **id, char *filename, char *kind, char *path, char *zoom_factor, t_tissue_stack *t);
   int			(*is_percent_paused_cancel)(char *id, t_tissue_stack *);
   t_vol			*(*get_volume)(char *path, t_tissue_stack *general);
@@ -346,6 +347,7 @@ int		is_percent_paused_cancel(char *id, t_tissue_stack *t);
 void		clean_pause_queue(char *id, t_tissue_stack *t);
 void		percent_time_write(char *str, char **commands, void *box);
 void		percent_init_direct(int total_blocks, char **id, char *filename, char *kind, char *path, char *zoom_factor, t_tissue_stack *t);
+void		percent_cancel_direct(char *id, t_tissue_stack *t);
 void		percent_add_direct(int blocks, char *id, t_tissue_stack *t);
 void		percent_get_direct(char **buff, char *id, t_tissue_stack *t);
 void		percent_pause_direct(char *id, t_tissue_stack *t);

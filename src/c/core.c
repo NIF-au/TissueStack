@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Thu Oct 18 12:07:34 2012 Oliver Nicolini
+** Last update Mon Oct 22 11:58:32 2012 Oliver Nicolini
 */
 
 #include "core.h"
@@ -139,6 +139,7 @@ void            init_prog(t_tissue_stack *t)
   t->percent_init = percent_init_direct;
   t->percent_add = percent_add_direct;
   t->percent_get = percent_get_direct;
+  t->percent_cancel = percent_cancel_direct;
   t->is_percent_paused_cancel = is_percent_paused_cancel;
   t->clean_pause_queue = clean_pause_queue;
 
