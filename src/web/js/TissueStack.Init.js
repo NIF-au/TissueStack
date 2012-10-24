@@ -538,7 +538,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 				
 				// redraw and change the zoom level as well
 				var now = new Date().getTime();
-				
+
 				event.data[0].actualDataSet.planes[sideViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(sideCanvasRelativeCross, false, now);
 				event.data[0].actualDataSet.planes[mainViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(mainCanvasRelativeCross, false, now);
 				event.data[0].actualDataSet.planes[sideViewPlaneId].events.changeSliceForPlane(event.data[0].actualDataSet.planes[sideViewPlaneId].data_extent.slice);
@@ -547,6 +547,20 @@ TissueStack.BindDataSetDependentEvents = function () {
 				$("#dataset_" + (x+1) + "_canvas_main_slider").blur();
 				
 				event.data[0].actualDataSet.planes[sideViewPlaneId].updateExtentInfo(event.data[0].actualDataSet.planes[sideViewPlaneId].getDataExtent().getExtentCoordinates());
+				
+				// Given TissueStack.overlay_datasets => trigger swap event for other dataset if exists
+				if (!TissueStack.planes_swapped && TissueStack.overlay_datasets && TissueStack.dataSetNavigation.selectedDataSets.count > 1) {
+					var elementIdForMaximizingOtherDataSet = event.target.id;
+					var thisHereDataSet = elementIdForMaximizingOtherDataSet.substring(0, "dataset_x".length);
+					var thisOtherDataSet = "dataset_2";
+					if (thisHereDataSet == 'dataset_2')
+						thisOtherDataSet = "dataset_1";
+					elementIdForMaximizingOtherDataSet = elementIdForMaximizingOtherDataSet.replace(thisHereDataSet, thisOtherDataSet);
+					// set to swapped so that we avoid cycle
+					TissueStack.planes_swapped = true;
+					setTimeout(function() {$('#' + elementIdForMaximizingOtherDataSet).click();}, 150);
+				} else 
+					TissueStack.planes_swapped = false;
 			});
 		}	
 	

@@ -485,7 +485,7 @@ TissueStack.Utils = {
 		return ((newRes - Math.floor(newRes) > 0.00001) ? newRes.toFixed(3) : newRes) + '&nbsp;' + unit_lookup[unit_step];
 	}, swapOverlayAndUnderlyingCanvasPlanes : function(dataset, plane1, plane2, recursive_call) {
 		// only for sync but not in combination with overlay
-		if ((!TissueStack.sync_datasets || TissueStack.overlay_datasets)) return;
+		if (!TissueStack.sync_datasets) return;
 			
 		// prelim checks of existence
 		if (typeof(dataset) != 'object' || !dataset.planes || typeof(plane1) != 'string' || typeof(plane2) != 'string') return;
