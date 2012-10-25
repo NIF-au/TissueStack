@@ -1,6 +1,5 @@
 package au.edu.uq.cai.TissueStack.dataprovider;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -16,6 +15,7 @@ import au.edu.uq.cai.TissueStack.dataobjects.DataSetPlanes;
 
 public final class DataSetDataProvider {
 	final static Logger logger = Logger.getLogger(DataSetDataProvider.class); 
+
 	public static DataSet queryDataSetByFileName (String fileName){
 		if (fileName == null || fileName.trim().isEmpty()) {
 			return null;
@@ -48,7 +48,8 @@ public final class DataSetDataProvider {
 			
 			em = JPAUtils.instance().getEntityManager();
 			
-			Query query = em.createQuery("SELECT DISTINCT dataset FROM DataSet dataset LEFT JOIN FETCH dataset.planes WHERE dataset.id = :id");	
+			Query query = em.createQuery("" +
+					"SELECT DISTINCT dataset FROM DataSet dataset LEFT JOIN FETCH dataset.planes WHERE dataset.id = :id");	
 			query.setParameter("id", id);
 			
 			@SuppressWarnings("unchecked")
@@ -160,7 +161,8 @@ public final class DataSetDataProvider {
 			
 			// avoid lazy loading exceptions when marshaller does its dirty deed. NOTE: don't remove this code!!!
 			for (DataSet dataSet : result) {
-				dataSet.setPlanes(new ArrayList<DataSetPlanes>());
+				dataSet.setPlanes(null);
+				dataSet.setLookupValues(null);
 			}
 			
 			return result;	

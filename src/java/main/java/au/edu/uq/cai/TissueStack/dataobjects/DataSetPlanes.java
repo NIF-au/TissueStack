@@ -28,6 +28,8 @@ public class DataSetPlanes{
 	  private int oneToOneZoomLevel; 
 	  private String transformationMatrix;
 	  private BigDecimal resolutionMm;
+	  private BigDecimal valueRangeMin;
+	  private BigDecimal valueRangeMax;
 
 	@Id	@GeneratedValue(strategy = GenerationType.IDENTITY)
  	@Column(name="id")
@@ -147,6 +149,26 @@ public class DataSetPlanes{
 	
 	public void setResolutionMm(BigDecimal resolutionMm) {
 		this.resolutionMm = resolutionMm;
+	}
+	
+	@Column(name="value_range_min")
+	@XmlElement(name="ValueRangeMinimum", namespace=IGlobalConstants.XML_NAMESPACE)	
+	public BigDecimal getValueRangeMin() {
+		return this.valueRangeMin;
+	}
+	
+	public void setValueRangeMin(BigDecimal valueRangeMin) {
+		this.valueRangeMin = valueRangeMin;
+	}
+	
+	@Column(name="value_range_max")
+	@XmlElement(name="ValueRangeMaximum", namespace=IGlobalConstants.XML_NAMESPACE)	
+	public BigDecimal getValueRangeMax() {
+		return this.valueRangeMax;
+	}
+	
+	public void setValueRangeMax(BigDecimal valueRangeMax) {
+		this.valueRangeMax = valueRangeMax;
 	}
 }
 

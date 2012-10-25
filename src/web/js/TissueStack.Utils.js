@@ -212,22 +212,12 @@ TissueStack.Utils = {
 		leftPanelHeight -=  heightTolerance;
 		
 		$('.left_panel').css({"width" : leftPanelWidth, "height": leftPanelHeight});
-		$('.right_panel').css({"width" : rightPanelWidth, "height": TissueStack.canvasDimensions.height});
 		$(".ui-slider-vertical").height(TissueStack.canvasDimensions.height - heightTolerance);
 		$(".ui-slider-horizontal").height(TissueStack.canvasDimensions.height - heightTolerance);
-
-		if (TissueStack.desktop) {
-			var treeHeight = 
-				leftPanelHeight - 
-				$("#canvas_extent").height() - $("#canvas_point_x").height() * 8 - $("#dataset_1_center_point_in_canvas").height() * (datasets == 2 ? 5 : 4);
-			$("#treedataset").css({"height": treeHeight});
-		}
 
 		$('.dataset').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height * 0.99});
 		
 		for (var x=1;x<=datasets;x++) {
-			var contrast = null;
-			
 			$("#dataset_" + x + "_toolbox_canvas").css({"width" : TissueStack.canvasDimensions.width * 0.8, "height" : 75});
 			$("#dataset_" + x + "_contrast_box").css({"width" : TissueStack.canvasDimensions.width * 0.8, "height" : 55});
 			$("#dataset_" + x + "_toolbox_canvas").attr("width", TissueStack.canvasDimensions.width * 0.8);
@@ -257,6 +247,13 @@ TissueStack.Utils = {
 		$('.left_side_view canvas').attr("height", sideCanvasDims.height);
 		$('.right_side_view canvas').attr("width", sideCanvasDims.width);
 		$('.right_side_view canvas').attr("height", sideCanvasDims.height);
+		
+		var treeHeight = $('.left_panel').height();
+		$('.left_panel').children().each(function() {
+	      if ($(this).attr('id') != 'treedataset' && $(this).css('display') != 'none') 
+	      treeHeight -= $(this).outerHeight();
+	    });
+		$('#treedataset').css({"height": treeHeight - 50});
 	},
 	verifyUrlSyntax : function(url) {
 		if (typeof(url) != "string") {

@@ -13,6 +13,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Id;
 import javax.persistence.Transient;
@@ -30,8 +31,8 @@ public class DataSet {
 	private long id; 
 	private String filename; 
 	private String description;
-	
 	private List<DataSetPlanes> planes;
+	private DataSetValuesLookupTable lookupValues;
 
 	@Id
 	@Column(name="id")
@@ -72,6 +73,15 @@ public class DataSet {
 	}
 	public void setPlanes(List<DataSetPlanes> planes) {
 		this.planes = planes;
+	}
+
+	@OneToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name="id")
+	public DataSetValuesLookupTable getLookupValues() {
+		return this.lookupValues;
+	}
+	public void setLookupValues(DataSetValuesLookupTable lookupValues) {
+		this.lookupValues = lookupValues;
 	}
 	
 	@Transient

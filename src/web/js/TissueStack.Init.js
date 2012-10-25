@@ -122,6 +122,8 @@ TissueStack.InitUserInterface = function (initOpts) {
 			// create canvas
 			var canvasElementSelector = "dataset_" + (x+1); 
 			var plane = new TissueStack.Canvas(extent, "canvas_" + planeId + "_plane", canvasElementSelector);
+			// set original value range 
+			plane.setValueRange(dataForPlane.valueRangeMin, dataForPlane.valueRangeMax);
 			
 			// link overlaid canvas with its undelying counterpart 
 			if (TissueStack.desktop && dsUnderlying && dsUnderlying.planes) {
@@ -438,7 +440,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 				}
 			});
 
-			// if we have only one plane, we don't need to register maximize or slider 
+			// if we have only one plangetDataSetByIndexe, we don't need to register maximize or slider 
 			if (dataSet.data.length == 1) {
 				continue;
 			}

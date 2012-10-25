@@ -9,6 +9,7 @@
       <class>au.edu.uq.cai.TissueStack.dataobjects.Configuration</class>
       <class>au.edu.uq.cai.TissueStack.dataobjects.DataSet</class>
       <class>au.edu.uq.cai.TissueStack.dataobjects.DataSetPlanes</class>
+      <class>au.edu.uq.cai.TissueStack.dataobjects.DataSetValuesLookupTable</class>
       
       <properties>
          <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>

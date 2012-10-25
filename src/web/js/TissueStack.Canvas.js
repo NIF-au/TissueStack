@@ -39,6 +39,8 @@ TissueStack.Canvas.prototype = {
 	queue : null,
 	color_map : "grey",
 	has_been_synced: false,
+	value_range_min: 0,
+	value_range_max: 255,
 	updateScaleBar : function() {
 		// update scale bar if main view
 		if (this.is_main_view) this.getDataExtent().adjustScaleBar(100);
@@ -75,6 +77,37 @@ TissueStack.Canvas.prototype = {
 	},
 	getDataExtent : function() {
 		return this.data_extent;
+	},
+	setValueRange : function(min, max) {
+		if (typeof(min) != 'number' || typeof(max) != 'number') return;
+		if (min > max) return;
+		
+		this.value_range_min = min;
+		this.value_range_max = max;
+	},
+	getCanvasPixelValue : function(coords) {
+		if (!this.getCanvasElement() || this.getCanvasElement().length == 0 || !coords) return;
+		
+		var ctx = this.getCanvasContext();
+		var dataForPixel = ctx.getImageData(coords.x, coords.y, 1, 1);
+		if (!dataForPixel || !dataForPixel.data) return;
+		
+		// return rgb and transparency value
+		return {r: dataForPixel.data[0], g: dataForPixel.data[1], b: dataForPixel.data[2], t: dataForPixel.data[3]};
+	},
+	getOriginalPixelValue : function(coords) {
+		// delegate
+		var value = this.getCanvasPixelValue(coords);
+		if (typeof(value) != 'object') return;
+		
+		// map back to original value range (easy since we always have a positive 0-255 range in the canvas)
+		var originalRange = Math.abs(this.value_range_max) - Math.abs(this.value_range_min); 
+		
+		for(var rgbVal in value)
+			if (rgbVal != 't')
+				value[rgbVal] = this.value_range_min + (value[rgbVal] * (originalRange / 255));
+		
+		return value;
 	},
 	changeToZoomLevel : function(zoom_level) {
 		if (typeof(zoom_level) != 'number') {
@@ -563,14 +596,13 @@ TissueStack.Canvas.prototype = {
 		}
 	},
 	updateCoordinateInfo : function(mouseCoords, pixelCoords, worldCoords) {
-		var log;
-		
 		pixelCoords = this.getXYCoordinatesWithRespectToZoomLevel(pixelCoords);
 		// outside of extent check
 		if (!pixelCoords || pixelCoords.x < 0 || pixelCoords.x > this.data_extent.x -1 ||  pixelCoords.y < 0 || pixelCoords.y > this.data_extent.y -1) {
-			log = $("#canvas_point_x").val("");
-			log = $("#canvas_point_y").val("");
-			log = $("#canvas_point_z").val("");
+			$("#canvas_point_x").val("");
+			$("#canvas_point_y").val("");
+			$("#canvas_point_z").val("");
+			$("#canvas_point_value").val("");
 			
 			return;
 		}
@@ -581,16 +613,29 @@ TissueStack.Canvas.prototype = {
 			var y = worldCoords ? worldCoords.y : pixelCoords.y;
 			var z = worldCoords ? worldCoords.z : pixelCoords.z;
 
-			log = $("#canvas_point_x").val(Math.round(x *1000) / 1000);
-			log = $("#canvas_point_y").val(Math.round(y *1000) / 1000);
+			$("#canvas_point_x").val(Math.round(x *1000) / 1000);
+			$("#canvas_point_y").val(Math.round(y *1000) / 1000);
 			if (this.data_extent.max_slices > 1) {
-				log = $("#canvas_point_z").val(Math.round(z *1000) / 1000);
+				$("#canvas_point_z").val(Math.round(z *1000) / 1000);
 			} else {
-				log = $("#canvas_point_z").val("");
+				$("#canvas_point_z").val("");
 			}
 			
-			var dataSet = TissueStack.dataSetStore.getDataSetById(this.getDataExtent().data_id);
+			// display pixel value
+			var pixelVal = this.getOriginalPixelValue({x: this.cross_x, y: this.cross_y});
+			if (typeof(pixelVal) === 'object')
+				if (pixelVal.r === pixelVal.g && pixelVal.g === pixelVal.b) // happens with grayscale
+					$("#canvas_point_value").val((Math.round(pixelVal.r) *1000) / 1000); // display redundant pixel value 
+				else  // display r/g/b
+					$("#canvas_point_value").val(
+							(Math.round(pixelVal.r) *1000) / 1000
+							+ "/"
+							+ (Math.round(pixelVal.g) *1000) / 1000
+							+ "/"
+							+ (Math.round(pixelVal.b) *1000) / 1000
+					); // display redundant pixel value
 			
+			var dataSet = TissueStack.dataSetStore.getDataSetById(this.getDataExtent().data_id);
 			this.updateExtentInfo(dataSet.realWorldCoords[this.data_extent.plane]);
 			
 			// update url link info
@@ -598,7 +643,9 @@ TissueStack.Canvas.prototype = {
 			
 			return;
 		}
-		
+
+		var log;
+
 		// for everything else...
 		if (mouseCoords) {
 			log = $('.coords');

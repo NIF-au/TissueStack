@@ -1,7 +1,12 @@
 package au.edu.uq.cai.TissueStack.dataobjects;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement(name="Response", namespace=IGlobalConstants.XML_NAMESPACE)
 public class Response implements IResponse {
 
+	@XmlElement(name="ApplicationError", namespace=IGlobalConstants.XML_NAMESPACE)
 	private ApplicationError applicationError;
 	private Object response = new NoResults();
 
