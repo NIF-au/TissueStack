@@ -363,10 +363,14 @@ TissueStack.Canvas.prototype = {
     		tempCtx = null;
     	} 	else ctx.putImageData(myImageData, xStart, yStart); 
 	}, hasColorMapOrContrastSetting : function() {
-		if ((!this.color_map || this.color_map == "grey") &&
+		if (!this.isColorMapOn() &&
 				(!this.contrast || (this.contrast.getMinimum() == this.contrast.dataset_min && this.contrast.getMaximum() == this.contrast.dataset_max)) ) {
 			return false;
 		}
+		
+		return true;
+	}, isColorMapOn : function() {
+		if (!this.color_map || this.color_map == "grey") return false;
 		
 		return true;
 	}, drawMe : function(timestamp) {
@@ -624,7 +628,7 @@ TissueStack.Canvas.prototype = {
 			// display pixel value
 			var pixelVal = this.getOriginalPixelValue({x: this.cross_x, y: this.cross_y});
 			if (typeof(pixelVal) === 'object')
-				if (pixelVal.r === pixelVal.g && pixelVal.g === pixelVal.b) // happens with grayscale
+				if (!this.isColorMapOn()) // grayscale
 					$("#canvas_point_value").val((Math.round(pixelVal.r) *1000) / 1000); // display redundant pixel value 
 				else  // display r/g/b
 					$("#canvas_point_value").val(
