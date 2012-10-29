@@ -185,7 +185,7 @@ TissueStack.Utils = {
 		// we hide everything if there are no data sets selected
 		if (datasets == 0) {
 		   // clear input fields
-		   $("#canvas_point_x,#canvas_point_y,#canvas_point_z").attr("value", "");
+		   $("#canvas_point_x,#canvas_point_y,#canvas_point_z,#canvas_point_value").attr("value", "");
 		   $("#canvas_point_x,#canvas_point_y,#canvas_point_z").attr("disabled", "disabled");
 		   // hide everything
 		   $('#dataset_1_center_point_in_canvas, #dataset_2_center_point_in_canvas').closest('.ui-btn').hide();

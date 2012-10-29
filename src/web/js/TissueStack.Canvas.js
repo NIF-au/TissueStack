@@ -101,7 +101,7 @@ TissueStack.Canvas.prototype = {
 		if (typeof(value) != 'object') return;
 		
 		// map back to original value range (easy since we always have a positive 0-255 range in the canvas)
-		var originalRange = Math.abs(this.value_range_max) - Math.abs(this.value_range_min); 
+		var originalRange = Math.abs(this.value_range_max) - this.value_range_min; 
 		
 		for(var rgbVal in value)
 			if (rgbVal != 't')
