@@ -631,11 +631,11 @@ TissueStack.Canvas.prototype = {
 				if (!this.isColorMapOn()) // grayscale
 					$("#canvas_point_value").val((Math.round(pixelVal.r) *1000) / 1000); // display redundant pixel value 
 				else  // display r/g/b
-					$("#canvas_point_value").val(
-							(Math.round(pixelVal.r) *1000) / 1000
-							+ "/"
+					$("#canvas_point_value").val("r: "
+							+ (Math.round(pixelVal.r) *1000) / 1000
+							+ " g: "
 							+ (Math.round(pixelVal.g) *1000) / 1000
-							+ "/"
+							+ " b: "
 							+ (Math.round(pixelVal.b) *1000) / 1000
 					); // display redundant pixel value
 			
