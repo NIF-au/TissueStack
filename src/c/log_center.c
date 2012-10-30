@@ -65,7 +65,7 @@ void		lc_write_on_plug_fd(t_plugin *plugin, char *command, int log_level, t_tiss
 	complete_path = concat_path(log->path, "core", ".plugin.log");
       else
 	complete_path = concat_path(log->path, plugin->name, ".plugin.log");
-      if ((tmp->fd = open(complete_path, (O_RDWR | O_CREAT | O_TRUNC))) == -1)
+      if ((tmp->fd = open(complete_path, (O_RDWR | O_CREAT | O_TRUNC), 0666)) == -1)
 	{
 	  ERROR("open %s failed", complete_path);
 	  return;
@@ -101,7 +101,7 @@ void		lc_write_on_plug_fd(t_plugin *plugin, char *command, int log_level, t_tiss
 	    complete_path = concat_path(log->path, "core", ".plugin.log");
 	  else
 	    complete_path = concat_path(log->path, plugin->name, ".plugin.log");
-	  if ((tmp->fd = open(complete_path, (O_RDWR | O_CREAT | O_TRUNC))) == -1)
+	  if ((tmp->fd = open(complete_path, (O_RDWR | O_CREAT | O_TRUNC), 0666)) == -1)
 	    {
 	      ERROR("open %s failed", complete_path);
 	      return;
@@ -120,20 +120,22 @@ void		lc_write_on_plug_fd(t_plugin *plugin, char *command, int log_level, t_tiss
 
 void		lc_write_on_level_fd(t_plugin *plugin, char *command, int log_level, t_tissue_stack *t)
 {
-  t_log_level_fd *tmp;
-  t_log		*log;
-  char		*complete_path;
+  t_log_level_fd *tmp = NULL;
+  t_log		*log = NULL;
+  char		*complete_path = NULL;
+
+  if (t == NULL || t->log == NULL) return;
 
   log = t->log;
-  if (!log->path)
-    return;
+  if (!log->path) return;
+
   if ((tmp = log->first_level_fd) == NULL)
     {
       log->first_level_fd = malloc(sizeof(*log->first_level_fd));
       tmp = log->first_level_fd;
       tmp->level = log_level;
       complete_path = concat_path(log->path, _log_levels[log_level], ".level.log");
-      if ((tmp->fd = open(complete_path, (O_RDWR | O_CREAT | O_TRUNC))) == -1)
+      if ((tmp->fd = open(complete_path, (O_RDWR | O_CREAT | O_TRUNC), 0666)) == -1)
 	{
 	  ERROR("open %s failed", complete_path);
 	  return;
@@ -158,7 +160,7 @@ void		lc_write_on_level_fd(t_plugin *plugin, char *command, int log_level, t_tis
 	  tmp = malloc(sizeof(*tmp));
 	  tmp->level = log_level;
 	  complete_path = concat_path(log->path, _log_levels[log_level], ".level.log");
-	  if ((tmp->fd = open(complete_path, (O_RDWR | O_CREAT | O_TRUNC))) == -1)
+	  if ((tmp->fd = open(complete_path, (O_RDWR | O_CREAT | O_TRUNC), 0666)) == -1)
 	    {
 	      ERROR("open %s failed", complete_path);
 	      return;

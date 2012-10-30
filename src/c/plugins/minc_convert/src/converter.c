@@ -25,7 +25,7 @@ void		dim_loop(int fd, int dimensions_nb, t_vol *volume,
   int		i;
   unsigned long		*start;
   long unsigned int	*count;
-  short			cancel;
+  short			cancel = 0;
 
   DEBUG("dim_loop");
 
@@ -244,7 +244,7 @@ void  		*start(void *args)
   char		*id_percent;
   unsigned int	dimension;
   unsigned int	slice;
-  unsigned long long off;
+  unsigned long long off = 0L;
   int		i = 0;
 
   a = (t_args_plug *)args;
@@ -274,7 +274,7 @@ void  		*start(void *args)
     }
   else
     {
-      if ((fd = open(a->commands[1], (O_CREAT | O_TRUNC | O_RDWR))) == -1)
+      if ((fd = open(a->commands[1], (O_CREAT | O_TRUNC | O_RDWR), 0666)) == -1)
 	{
 	  ERROR("Open Failed");
 	  return (NULL);

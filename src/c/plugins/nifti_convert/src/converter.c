@@ -195,7 +195,7 @@ void  		*start(void *args)
   int		cancel = 0;
   unsigned int dimensions_resume = -1;
   unsigned int slice_resume = -1;
-  unsigned long long off;
+  unsigned long long off = 0L;
 
   prctl(PR_SET_NAME, "TS_NIFTI_CON");
 
@@ -241,7 +241,7 @@ void  		*start(void *args)
 	  if (write(*((int*)a->box), id_percent, 16) < 0)
 	    ERROR("Open Error");
 	}
-      if ((fd = open(a->commands[1], O_CREAT | O_TRUNC | O_RDWR)) < 0)
+      if ((fd = open(a->commands[1], O_CREAT | O_TRUNC | O_RDWR, 0666)) < 0)
 	{
 	  ERROR("Open error");
 	  return (NULL);

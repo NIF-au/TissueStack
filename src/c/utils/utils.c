@@ -1,7 +1,7 @@
 #include "utils.h"
 
 inline short appendCharacterToTempTokenBuffer(
-		char ** tempTokenBuffer,
+		char * tempTokenBuffer,
 		int * tempTokenBufferSize,
 		int * tempTokenBufferCapacity,
 		char character) {
@@ -11,18 +11,18 @@ inline short appendCharacterToTempTokenBuffer(
 
 	// add space for 25 more characters to the buffer
 	if ((*tempTokenBufferSize) == *tempTokenBufferCapacity) {
-		char *tmp = (char *) realloc(*tempTokenBuffer, ((*tempTokenBufferCapacity) + 25) * sizeof(char *));
+		char *tmp = (char *) realloc(tempTokenBuffer, ((*tempTokenBufferCapacity) + 25) * sizeof(char *));
 
 		if (tmp == NULL) {
 			free(tempTokenBuffer);
 			return 0;
 		}
-		*tempTokenBuffer = tmp;
+		tempTokenBuffer = tmp;
 		(*tempTokenBufferCapacity) += 25;
 	}
 
 	// add the character
-	(*tempTokenBuffer)[*tempTokenBufferSize] = character;
+	(tempTokenBuffer)[*tempTokenBufferSize] = character;
 	// increment the buffer size
 	(*tempTokenBufferSize)++;
 
@@ -105,7 +105,7 @@ char ** tokenizeString(char *buffer, char delimiter, char escape)
 	  // if we have an escaped delimiter => skip over it
 	  if (charAtI == escape && buffer[i+1] == delimiter) {
 		  // add delimiter
-		  if (!appendCharacterToTempTokenBuffer(&tempTokenBuffer, &tempTokenBufferSize, &tempTokenBufferCapacity, delimiter)) break;
+		  if (!appendCharacterToTempTokenBuffer(tempTokenBuffer, &tempTokenBufferSize, &tempTokenBufferCapacity, delimiter)) break;
 		  i += 2;
 		  ++tokenLength;
 
@@ -118,7 +118,7 @@ char ** tokenizeString(char *buffer, char delimiter, char escape)
 		  // copy temp token buffer contents over into destination
 		  if (tokenLength>0) {
 			  // add '\0' to temp buffer to indicate end
-			  if (!appendCharacterToTempTokenBuffer(&tempTokenBuffer, &tempTokenBufferSize, &tempTokenBufferCapacity, '\0')) break;
+			  if (!appendCharacterToTempTokenBuffer(tempTokenBuffer, &tempTokenBufferSize, &tempTokenBufferCapacity, '\0')) break;
 			  dest[j] = strdup(tempTokenBuffer);
 			  j++;
 		  }
@@ -127,7 +127,7 @@ char ** tokenizeString(char *buffer, char delimiter, char escape)
 		  tempTokenBufferSize = 0;
 	  } else {
 		  // add character
-		  if (!appendCharacterToTempTokenBuffer(&tempTokenBuffer, &tempTokenBufferSize, &tempTokenBufferCapacity, charAtI)) break;
+		  if (!appendCharacterToTempTokenBuffer(tempTokenBuffer, &tempTokenBufferSize, &tempTokenBufferCapacity, charAtI)) break;
 		  // increment token length counter
 		  tokenLength++;
 	  }
@@ -139,7 +139,7 @@ char ** tokenizeString(char *buffer, char delimiter, char escape)
   // potential token leftover before end => copy over as well
   if (tokenLength > 0) {
 	  // add '\0' to temp buffer to indicate end
-	  if (!appendCharacterToTempTokenBuffer(&tempTokenBuffer, &tempTokenBufferSize, &tempTokenBufferCapacity, '\0')) return NULL;
+	  if (!appendCharacterToTempTokenBuffer(tempTokenBuffer, &tempTokenBufferSize, &tempTokenBufferCapacity, '\0')) return NULL;
 	  // copy temp token buffer contents over into destination
 	  dest[j] = strdup(tempTokenBuffer);
 	  ++j;

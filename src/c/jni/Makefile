@@ -9,7 +9,7 @@ LIB_PATH	=	-L/usr/local/lib
 NAME		=	libTissueStack.so
 BIN_NAME	=	TissueStack
 
-FLAGS		=	-g3 -Wall -Werror
+FLAGS		=	-ggdb -O2 -Wall -Werror -Wno-unused-result
 
 PLUGIN_INSTALL_DIR = /usr/local/lib
 

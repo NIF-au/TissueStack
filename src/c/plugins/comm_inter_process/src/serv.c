@@ -113,6 +113,8 @@ void		check_modified_fd(t_serv_comm *s)
 
 void		reset_set_fd_to_monitor(t_serv_comm *s)
 {
+	if (s == NULL) return;
+
   t_serv_clients *c = NULL;
 
   s->bigger_fd = 0;

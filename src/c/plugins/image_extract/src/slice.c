@@ -142,7 +142,7 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
   unsigned int	max;
   int		width;
   int		height;
-  char	        *hyperslab;
+  char	        *hyperslab = NULL;
   int		w_max_iteration;
   int		h_max_iteration;
   int		save_h_position = a->info->h_position;

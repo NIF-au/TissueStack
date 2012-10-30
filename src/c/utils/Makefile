@@ -8,7 +8,7 @@ LIB_PATH	=
 
 NAME		=	utils
 
-FLAGS		=	-g3 -Wall -Werror
+FLAGS		=	-g3 -O3 -Wall -Werror
 
 all: compile
 
