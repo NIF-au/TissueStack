@@ -101,7 +101,7 @@
 
 /* sliding panel */
 #toppanel {
-    position: relative;   /*Panel will overlap  content */
+    position: absolute;   /*Panel will overlap  content */
     /*position: relative;*/   /*Panel will "push" the content down */
     margin-top: -30px;
     

@@ -517,6 +517,7 @@ TissueStack.Admin.prototype = {
 		var row, cell;
 		for(var i = 0; i < nrRows; i++){
 			row=document.createElement('tr');
+			$('tr').attr({"height" : 20});			
 			for(var j = 0; j < nrCols; j++){
 				var processBar = "" ;
 				cell=document.createElement('td');
@@ -608,6 +609,13 @@ TissueStack.Admin.prototype = {
 				$(row).append(cell);
 			}
 			$(tbody).append(row);
+			$("#task_table").css({"height" : nrRows * 20 + 15});
+			// script to hide table ID column 
+			/*if(TissueStack.tablet){
+				for(var i = 1; i < nrRows; i++){
+					document.getElementById('task_table').getElementsByTagName('tr')[i].getElementsByTagName('td')[0].style.display = 'none';
+				}
+			}*/
 		}	
 		tab.trigger("create");
 	},
