@@ -2,8 +2,8 @@
 
 void		free_all_plugins(t_tissue_stack *t)
 {
-  t_plugin	*p;
-  t_plugin	*save;
+  t_plugin	*p = NULL;
+  t_plugin	*save = NULL;
 
   p = t->first;
   while (p != NULL)
@@ -12,15 +12,16 @@ void		free_all_plugins(t_tissue_stack *t)
       dlclose(p->handle);
       if (p->name != NULL) free(p->name);
       if (p->path != NULL) free(p->path);
-      if (p->stock != NULL) free(p->stock);
+      //if (p->stock != NULL) free(p->stock);
       p = p->next;
       free(save);
+      save = NULL;
     }
 }
 
 void		list_plugins(t_tissue_stack *t, char *command)
 {
-  t_plugin	*tmp;
+  t_plugin	*tmp = NULL;
 
   tmp = t->first;
   if (tmp != NULL)

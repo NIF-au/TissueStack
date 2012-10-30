@@ -476,8 +476,8 @@ t_vol		*get_volume(char *path, t_tissue_stack *t)
 
 void		remove_volume(char *path, t_tissue_stack *t)
 {
-  t_vol		*tmp;
-  t_vol		*save;
+  t_vol		*tmp = NULL;
+  t_vol		*save = NULL;
 
   tmp = t->volume_first;
   while (tmp != NULL)

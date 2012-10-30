@@ -727,6 +727,7 @@ void		*unload(void *args)
 	  free(a->name);
 	  free(a->path);
 	  free(a);
+	  a = NULL;
   }
 
   return (NULL);

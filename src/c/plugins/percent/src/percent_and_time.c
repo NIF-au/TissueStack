@@ -92,9 +92,9 @@ char		**percent_str_to_wordtab(char *buff, char c)
 
 char		**read_from_file_by_id(char *id, FILE **f, t_tissue_stack *t)
 {
-  char		*complete_path;
+  char		*complete_path = NULL;
   struct stat	info;
-  char		**result;
+  char		**result = NULL;
   char		buff[4096];
 
   *f = NULL;
@@ -118,8 +118,8 @@ char		**read_from_file_by_id(char *id, FILE **f, t_tissue_stack *t)
 void		percent_get(char *id, void *box, t_tissue_stack *t)
 {
   char		pc[4096];
-  char		**result;
-  FILE		*f;
+  char		**result = NULL;
+  FILE		*f = NULL;
 
   if (t->percent == NULL)
     return;

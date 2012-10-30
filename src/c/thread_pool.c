@@ -10,11 +10,12 @@ void		*worker_start(void *pool)
     {
       task = NULL;
       // lock mutex to avoid concurrent access
-      pthread_mutex_lock(&p->lock);
+      if (p != NULL) pthread_mutex_lock(&p->lock);
+
       if (p->tasks_to_do == 0)
 	{
 	  prctl(PR_SET_NAME, "TS_CORE");
-	  pthread_cond_wait(&(p->condvar), &(p->lock));
+	  if (p != NULL) pthread_cond_wait(&(p->condvar), &(p->lock));
 	}
       // get the task and delete the task from the queue
       if (p->first != NULL)
@@ -31,12 +32,13 @@ void		*worker_start(void *pool)
 	    }
 	}
       // unlock the mutex locked before
-      pthread_mutex_unlock(&(p->lock));
+      if (p != NULL) pthread_mutex_unlock(&(p->lock));
       if (task != NULL)
 	{
 	  task->function(task->argument);
 	  //free(task->argument);
 	  free(task);
+	  task = NULL;
 	}
     }
   return (NULL);
@@ -108,7 +110,8 @@ void		thread_pool_init(t_thread_pool *p, unsigned int nb_threads)
 
 void		thread_pool_destroy(t_thread_pool *p)
 {
-  int		i;
+	p->loop = 0;
+	int		i;
 
   i = 0;
   // wake up all threads
@@ -141,7 +144,9 @@ void		thread_pool_destroy(t_thread_pool *p)
 
 void		thread_pool_free(t_thread_pool *p)
 {
-  t_queue	*tmp;
+  if (p == NULL) return;
+
+	t_queue	*tmp;
 
   tmp = p->first;
   // free queue
@@ -150,6 +155,7 @@ void		thread_pool_free(t_thread_pool *p)
       tmp = p->first;
       p->first = p->first->next;
       free(tmp);
+      tmp = NULL;
     }
   // free threads
   free(p->threads);

@@ -327,9 +327,9 @@ TissueStack.Admin.prototype = {
 		var _this = this;
 		$("#bt_process").click(function(){
 			if($('input[name=radio_task]:checked').val() == "rad_addDataSet") {
-					// TODO: This is only here for easier testing
-					// once finished => move the following line into the success handler (called AFTER successful ds addition)
-					_this.registerDataSetWithAnds();
+					// disabled for now until finished
+					// TODO: move the following line into the success handler (called AFTER successful ds addition)
+					//_this.registerDataSetWithAnds();
 						
 				  	$.each($('.uploaded_file'), function(i, uploaded_file) {
 	 					if (uploaded_file.checked) {

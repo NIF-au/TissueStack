@@ -112,9 +112,9 @@ void		percent_init_direct(int total_blocks, char **id, char *filename, char *kin
 
 char		**read_from_file_by_id(char *id, FILE **f, t_tissue_stack *t)
 {
-  char		*complete_path;
+  char		*complete_path = NULL;
   struct stat	info;
-  char		**result;
+  char		**result = NULL;
   char		buff[4096];
 
   *f = NULL;
