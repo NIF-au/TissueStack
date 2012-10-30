@@ -23,7 +23,7 @@ public class DataSetPlanes{
 	  private String name;
 	  private int maxX; 
 	  private int maxY; 
-	  private int maxSclices; 
+	  private int maxSlices; 
 	  private String zoomLevels; 
 	  private int oneToOneZoomLevel; 
 	  private String transformationMatrix;
@@ -101,14 +101,14 @@ public class DataSetPlanes{
 		this.maxY = maxY;
 	}
 	
-	@Column(name="max_sclices")
+	@Column(name="max_slices")
 	@XmlElement(name="MaxSlices", namespace=IGlobalConstants.XML_NAMESPACE)	
-	public int getMaxSclices() {
-		return maxSclices;
+	public int getMaxSlices() {
+		return maxSlices;
 	}
 	
-	public void setMaxSclices(int maxSclices) {
-		this.maxSclices = maxSclices;
+	public void setMaxSlices(int maxSlices) {
+		this.maxSlices = maxSlices;
 	}
 	
 	@Column(name="zoom_levels")

@@ -160,9 +160,9 @@ public class DataSet {
 				if (indexOfY != null) p.setMaxX(info.getSizes()[indexOfY]);
 				if (indexOfZ != null) p.setMaxY(info.getSizes()[indexOfZ]);
 				if (numberOfDimensions == 1) {
-					p.setMaxSclices(0);
+					p.setMaxSlices(0);
 				} else {
-					p.setMaxSclices(info.getSizes()[indexOfX] - 1);
+					p.setMaxSlices(info.getSizes()[indexOfX] - 1);
 				}
 				
 				// set transformation matrix
@@ -235,9 +235,9 @@ public class DataSet {
 				if (indexOfX != null) p.setMaxX(info.getSizes()[indexOfX]);
 				if (indexOfZ != null) p.setMaxY(info.getSizes()[indexOfZ]);
 				if (numberOfDimensions == 1) {
-					p.setMaxSclices(0);
+					p.setMaxSlices(0);
 				} else {
-					p.setMaxSclices(info.getSizes()[indexOfY] - 1);
+					p.setMaxSlices(info.getSizes()[indexOfY] - 1);
 				}
 				
 				// set transformation matrix
@@ -310,9 +310,9 @@ public class DataSet {
 				if (indexOfX != null) p.setMaxX(info.getSizes()[indexOfX]);
 				if (indexOfY != null) p.setMaxY(info.getSizes()[indexOfY]);
 				if (numberOfDimensions == 1) {
-					p.setMaxSclices(0);
+					p.setMaxSlices(0);
 				} else {
-					p.setMaxSclices(info.getSizes()[indexOfZ] - 1);
+					p.setMaxSlices(info.getSizes()[indexOfZ] - 1);
 				}
 				
 				// set transformation matrix

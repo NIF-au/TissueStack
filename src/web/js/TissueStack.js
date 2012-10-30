@@ -18,3 +18,5 @@ TissueStack.indexed_color_maps = {
 	"hot" : null,
 	"spectral" : null
 };
+TissueStack.tasks = {};
+TissueStack.cookie_lock = false;
