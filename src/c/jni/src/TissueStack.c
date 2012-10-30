@@ -468,7 +468,7 @@ JNIEXPORT jstring JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMin
 
 	startTilingCommand = appendToBuffer(startTilingCommand, "0 0 ");
 	startTilingCommand = appendToBuffer(startTilingCommand, (char *) dir);
-	startTilingCommand = appendToBuffer(startTilingCommand, " @tiling@");
+	startTilingCommand = appendToBuffer(startTilingCommand, " @tasks@");
 
 	write(fileDescriptor, startTilingCommand->buffer, startTilingCommand->size);
 	free_t_string_buffer(startTilingCommand);
@@ -531,7 +531,7 @@ JNIEXPORT jstring Java_au_edu_uq_cai_TissueStack_jni_TissueStack_convertImageFor
 	startConversionCommand = appendToBuffer(startConversionCommand, (char *) in_file);
 	startConversionCommand = appendToBuffer(startConversionCommand, " ");
 	startConversionCommand = appendToBuffer(startConversionCommand, (char *) out_file);
-
+	startConversionCommand = appendToBuffer(startConversionCommand, " @tasks@");
 	// send command to plugin
 	write(fileDescriptor, startConversionCommand->buffer, startConversionCommand->size);
 	free_t_string_buffer(startConversionCommand);

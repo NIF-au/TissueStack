@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Mon Oct 22 11:58:32 2012 Oliver Nicolini
+** Last update Tue Oct 30 18:16:21 2012 Oliver Nicolini
 */
 
 #include "core.h"
@@ -146,6 +146,16 @@ void            init_prog(t_tissue_stack *t)
   t->percent_pause = percent_pause_direct;
   t->percent_resume = percent_resume_direct;
 
+  t->tasks = malloc(sizeof(*t->tasks));
+  t->tasks->f = NULL;
+  t->tasks->add_to_queue = task_add_queue;
+  t->tasks->path = strdup(CONCAT_APP_PATH("tasks/general"));
+  t->tasks->path_tmp = strdup(CONCAT_APP_PATH("tasks/general.tmp"));
+  t->tasks->is_running = FALSE;
+  pthread_mutex_init(&t->tasks->mutex, NULL);
+  pthread_mutex_init(&t->tasks->queue_mutex, NULL);
+
+
   t->tile_requests = malloc(sizeof(*t->tile_requests));
   init_tile_requests(t->tile_requests);
   t->memory_mappings = malloc(sizeof(*t->memory_mappings));
@@ -168,8 +178,8 @@ void            init_prog(t_tissue_stack *t)
   t->log = malloc(sizeof(*t->log));
   t->log->state = ON;
   t->log->path = strdup(CONCAT_APP_PATH("logs/"));
-  t->log->debug = ON;
-  t->log->verbose = ON;
+  t->log->debug = OFF;
+  t->log->verbose = OFF;
   t->log->write_on_files = ON;
   t->log->write_on_plug_files = OFF;
   t->log->write_on_level_files = ON;

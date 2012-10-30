@@ -212,35 +212,32 @@ void  		*start(void *args)
 
   h = create_header_from_nifti_struct(nim);
 
-  if (a->commands[2] != NULL && a->commands[3] != NULL && a->commands[4] != NULL)
+  if (a->commands[3] != NULL && a->commands[4] != NULL && a->commands[5] != NULL)
     {
-      dimensions_resume = atoi(a->commands[2]);
-      slice_resume = atoi(a->commands[3]);
-      if ((fd = open(a->commands[1], (O_APPEND | O_RDWR))) == -1)
+      if (a->commands[2] != NULL)
 	{
-	  ERROR("Open Failed");
-	  return (NULL);
+	  dimensions_resume = atoi(a->commands[2]);
+	  slice_resume = atoi(a->commands[3]);
+	  if ((fd = open(a->commands[1], (O_CREAT | O_APPEND | O_RDWR))) == -1)
+	    {
+	      ERROR("Open Failed");
+	      return (NULL);
+	    }
+	  i = 0;
+	  while (i < dimensions_resume)
+	    {
+	      off += h->dim_offset[i];
+	      i++;
+	    }
+	  if (slice_resume != 0)
+	    off += h->slice_size[i] * (slice_resume - 1);
+	  lseek(fd, off, SEEK_SET);
+	  i = dimensions_resume + 1;
+	  id_percent = a->commands[5];
 	}
-      i = 0;
-      while (i < dimensions_resume)
-	{
-	  off += h->dim_offset[i];
-	  i++;
-	}
-      if (slice_resume != 0)
-	off += h->slice_size[i] * (slice_resume - 1);
-      lseek(fd, off, SEEK_SET);
-      i = dimensions_resume + 1;
-      id_percent = a->commands[4];
     }
   else
     {
-      a->general_info->percent_init((sizes[0] + sizes[1] + sizes[2]), &id_percent, a->commands[0], "2", a->commands[1], NULL, a->general_info);
-      if (a->box != NULL)
-	{
-	  if (write(*((int*)a->box), id_percent, 16) < 0)
-	    ERROR("Open Error");
-	}
       if ((fd = open(a->commands[1], O_CREAT | O_TRUNC | O_RDWR)) < 0)
 	{
 	  ERROR("Open error");
@@ -249,6 +246,17 @@ void  		*start(void *args)
       if (chmod(a->commands[1], 0644) == -1)
 	ERROR("Chmod Error");
       write_header_into_file(fd, h);
+      if (a->commands[2] != NULL && strcmp(a->commands[2], "@tasks@") == 0)
+	{
+	  a->general_info->percent_init((sizes[0] + sizes[1] + sizes[2]), &id_percent, a->commands[0], "2", a->commands[1], NULL, a->general_info);
+	  if (a->box != NULL)
+	    {
+	      if (write(*((int*)a->box), id_percent, 16) < 0)
+		ERROR("Open Error");
+	    }
+	  a->general_info->tasks->add_to_queue(id_percent, a->general_info);
+	  return (NULL);
+	}
       i = 1;
     }
   while (i <= nim->dim[0] && cancel == 0)
