@@ -14,7 +14,7 @@ LIBS		=	-lhdf5								\
 
 NAME		=	TissueStackPercent.so
 
-FLAGS		=	-ggdb -Wall -Werror -O2 -Wno-unused-result
+FLAGS		=	-ggdb -Wall -Werror -O3 -Wno-unused-result
 
 PLUGIN_INSTALL_DIR = /usr/local/plugins
 
