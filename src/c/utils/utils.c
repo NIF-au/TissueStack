@@ -433,6 +433,36 @@ void free_null_terminated_char_2D_array(char ** strings) {
 	free(strings);
 }
 
+char		*array_2D_to_array_1D(char **src)
+{
+  int		i = 0;
+  int		len = 0;
+  char		*str;
+  int		j;
+  int		k = 0;
+
+  while (src[i] != NULL)
+    {
+      len += strlen(src[i]);
+      i++;
+    }
+  str = malloc((len + i + 1) * sizeof(*str));
+  i = 0;
+  while (src[i] != NULL)
+    {
+      j = 0;
+      while (src[i][j] != '\0')
+	{
+	  str[k] = src[i][j];
+	  k++;
+	  j++;
+	}
+      str[k++] = ' ';
+      i++;
+    }
+  str[k] = '\0';
+  return (str);
+}
 
 /** TESTS **/
 /*

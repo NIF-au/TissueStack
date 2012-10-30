@@ -43,18 +43,22 @@ typedef struct		s_log_plug_fd	t_log_plug_fd;
 typedef struct		s_log_level_fd	t_log_level_fd;
 typedef struct		s_log_info_list	t_log_info_list;
 typedef struct		s_log_plugin	t_log_plugin;
-
-
+typedef struct		s_tasks		t_tasks;
 typedef	struct		s_prcnt_t	t_prcnt_t;
-
-/*
-typedef	struct		s_percent_elem	t_percent_elem;
-typedef	struct		s_time_elem	t_time_elem;
-typedef	struct		s_time_tps	t_time_tps;
-typedef struct		s_func_prcnt_t	t_func_prcnt_t;
-*/
-
 typedef	struct		s_pause_cancel_queue	t_pause_cancel_queue;
+
+
+struct			s_tasks
+{
+  short			is_running;
+  char			*path;
+  char			*path_tmp;
+  FILE			*f;
+  char			*task_id;
+  pthread_mutex_t	mutex;
+  pthread_mutex_t	queue_mutex;
+  void			(*add_to_queue)(char *id_task, t_tissue_stack *t);
+};
 
 struct			s_pause_cancel_queue
 {
@@ -69,34 +73,6 @@ struct			s_prcnt_t
   t_pause_cancel_queue	*cancel_first;
   char			*path;
 };
-
-/*
-struct			s_percent_elem
-{
-  char			*id;
-  t_time_tps		*time;
-  int			total_blocks;
-  int			blocks_done;
-  float			percent;
-  char			*filename;
-  t_percent_elem	*next;
-};
-
-struct			s_time_tps
-{
-  time_t		start_time;
-  time_t		end_time;
-};
-
-struct			s_time_elem
-{
-  char			*id;
-  t_time_tps		*time;
-  t_time_elem		*next;
-};
-*/
-
-/////////////////////////////////////////////////////////////////
 
 struct			s_log_plugin
 {
@@ -205,6 +181,9 @@ struct			s_tissue_stack
   t_memory_mapping 	*memory_mappings;
   t_nc_action		*first_notification;
   t_prcnt_t		*percent;
+  t_tasks		*tasks;
+  void			(*task_finished)(char *task_id, t_tissue_stack *t);
+  void			(*task_add_to_queue)(char *task_id, t_tissue_stack *t);
   void			(*percent_pause)(char *id, t_tissue_stack *t);
   void			(*clean_pause_queue)(char *id, t_tissue_stack *t);
   void			(*percent_resume)(char *id, t_tissue_stack *t);
@@ -313,6 +292,13 @@ void 		destroy_t_plugin(t_plugin * this, t_tissue_stack * general);
 void		plugin_load_from_string(char *str, t_tissue_stack *t);
 void		plugin_start_from_string(char *str, t_tissue_stack *t);
 
+/*		tasks			*/
+
+void		task_lunch(t_tissue_stack *t);
+void		task_exec(char *task_id, t_tissue_stack *t);
+void		task_add_queue(char *task_id, t_tissue_stack *t);
+void		task_finished(char *task_id, t_tissue_stack *t);
+
 /*		volume.c		*/
 
 int		init_volume(t_memory_mapping * memory_mappings, t_vol *volume, char *path);
@@ -342,11 +328,12 @@ void		clean_error_list(t_tissue_stack *general, int min);
 
 /*		percent_and_time		*/
 
+char		**read_from_file_by_id(char *id, FILE **f, t_tissue_stack *t);
 int		is_num(char *str);
 int		is_percent_paused_cancel(char *id, t_tissue_stack *t);
 void		clean_pause_queue(char *id, t_tissue_stack *t);
 void		percent_time_write(char *str, char **commands, void *box);
-void		percent_init_direct(int total_blocks, char **id, char *filename, char *kind, char *path, char *zoom_factor, t_tissue_stack *t);
+void		percent_init_direct(int total_blocks, char **id, char *filename, char *kind, char *path, char *commmand_line, t_tissue_stack *t);
 void		percent_cancel_direct(char *id, t_tissue_stack *t);
 void		percent_add_direct(int blocks, char *id, t_tissue_stack *t);
 void		percent_get_direct(char **buff, char *id, t_tissue_stack *t);
@@ -383,6 +370,8 @@ void            lc_fatal(char *name, t_plugin *plugin, char *command, void *data
 // GLOBAL APPLICATION PATH
 #define APPLICATION_PATH "/opt/tissuestack"
 #define CONCAT_APP_PATH(PATH_TO_BE_ADDED) APPLICATION_PATH "/" PATH_TO_BE_ADDED
+// NOTE: Should not exceed 108 characters !!!
+#define UNIX_SOCKET_PATH "/tmp/tissue_stack_communication"
 
 #define X 0
 #define Y 1
@@ -390,6 +379,9 @@ void            lc_fatal(char *name, t_plugin *plugin, char *command, void *data
 
 #define ON 1
 #define OFF 0
+
+#define TRUE 1
+#define FALSE 0
 
 t_log_plugin		log_plugin;
 
@@ -447,11 +439,5 @@ t_log_plugin		log_plugin;
     else if (level == 4)						\
       FATAL(message, ## args);						\
   }
-
-#define ERROR_MAX 5
-#define CLEANING_ERROR_TIME 30
-
-// NOTE: Should not exceed 108 characters !!!
-#define UNIX_SOCKET_PATH "/tmp/tissue_stack_communication"
 
 #endif /* __TISSUE_STACK_CORE__ */

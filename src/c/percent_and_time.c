@@ -80,7 +80,7 @@ char		**percent_str_to_wordtab(char *buff, char c)
   return (dest);
 }
 
-void		percent_init_direct(int total_blocks, char **id, char *filename, char *kind, char *path, char *zoom_factor, t_tissue_stack *t)
+void		percent_init_direct(int total_blocks, char **id, char *filename, char *kind, char *path, char *command_line, t_tissue_stack *t)
 {
   char		*str_log;
   struct timeval tv;
@@ -99,14 +99,12 @@ void		percent_init_direct(int total_blocks, char **id, char *filename, char *kin
       complete_path = strcpy(complete_path, t->percent->path);
       complete_path = strcat(complete_path, *id);
       f = fopen(complete_path, "w+");
-      if (zoom_factor != NULL)
-	fprintf(f, "0\n%i\n%i\n%s\n%s\n%s\n%s\n", 0, total_blocks, filename, kind, path, zoom_factor);
-      else
-	fprintf(f, "0\n%i\n%i\n%s\n%s\n%s\n", 0, total_blocks, filename, kind, path);
+      fprintf(f, "0\n%i\n%i\n%s\n%s\n%s\n%s\n", 0, total_blocks, filename, kind, path, command_line);
       fclose(f);
       free(complete_path);
       str_log = *id;
       INFO("Percentage: %s Initialized", str_log);
+      task_add_queue(*id, t);
     }
 }
 
@@ -161,7 +159,10 @@ void		percent_add_direct(int blocks, char *id, t_tissue_stack *t)
     }
   pthread_mutex_unlock(&t->percent->mutex);
   if (percent_tmp >= 100)
-    INFO("Percentage: %s ==> 100%%", id);
+    {
+      task_finished(id, t);
+      INFO("Percentage: %s ==> 100%%", id);
+    }
 }
 
 void		percent_get_direct(char **buff, char *id, t_tissue_stack *t)
@@ -234,16 +235,12 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 
   if ((result = read_from_file_by_id(id, &f, t)) != NULL)
     {
-      FATAL("Hey baby");
       if (strcmp(result[0], "100") != 0)
 	{
-	  FATAL("Hey baby 1");
 	  if ((vol = t->check_volume(result[3], t)) != NULL)
 	    {
-	      FATAL("Hey baby 2");
 	      if ((tmp = t->percent->cancel_first) != NULL)
 		{
-		  FATAL("Hey baby 3");
 		  if (strcmp(id, tmp->id) == 0)
 		    {
 		      t->percent->cancel_first = tmp->next;
@@ -308,7 +305,7 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 		    }
 		  if ("full")
 		    {
-		      asprintf(&comm, "start image %s %i %i %i %i %i %i %.4f %i tiles JPEG 256 -1 -1 grey 0 0 10000 0 0 %s @tiling@ %s",
+		      asprintf(&comm, "start image %s %i %i %i %i %i %i %.4f %i tiles JPEG 256 -1 -1 grey 0 0 10000 0 0 %s @tasks@ %s",
 			       result[3],
 			       dim_s_e[0][0], dim_s_e[0][1],
 			       dim_s_e[1][0], dim_s_e[1][1],
@@ -320,7 +317,7 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 		    }
 		  else if ("preview")
 		    {
-		      asprintf(&comm, "start image %s %i %i %i %i %i %i %.4f %i full JPEG grey 0 0 10000 0 0 %s @tiling@ %s",
+		      asprintf(&comm, "start image %s %i %i %i %i %i %i %.4f %i full JPEG grey 0 0 10000 0 0 %s @tasks@ %s",
 			       result[3],
 			       dim_s_e[0][0], dim_s_e[0][1],
 			       dim_s_e[1][0], dim_s_e[1][1],
@@ -356,7 +353,7 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 			}
 		      i++;
 		    }
-		  asprintf(&comm, "start minc_converter %s %s %i %i %s",
+		  asprintf(&comm, "start minc_converter %s %s %i %i @tasks@ %s",
 			   result[3], result[5], dimension, (slice - 2), id);
 		  DEBUG("%s", comm);
 		  t->plug_actions(t, comm, NULL);
@@ -395,7 +392,7 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 		    }
 		  i++;
 		}
-	      asprintf(&comm, "start nifti_converter %s %s %i %i %s",
+	      asprintf(&comm, "start nifti_converter %s %s %i %i @tasks@ %s",
 		       result[3], result[5], dimension, (slice - 2), id);
 	      DEBUG("%s", comm);
 	      t->plug_actions(t, comm, NULL);

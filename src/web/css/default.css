@@ -133,20 +133,29 @@
 	float: left;
 	width: 45%	
 }
-
+.settings-tablet-left-column {
+	text-align: center;
+	float: left;
+	width: 30%	
+}
 .settings-right-column {
 	text-align: center;
 	margin: 10px;
 	float: right;
 	width: 45%	
 }
-
+.settings-tablet-right-column {
+	text-align: center;
+	float: left;
+	width: 70%	
+}
 .setting-buttom-column{
 	width: 98%;
-	position: absolute;
 	bottom:0px;
-	margin: 10px 10px 10px 10px;
-	z-index: 50;
+	margin: 10px;
+	position:fixed;
+	z-index:999;
+	padding:0px;
 }
 
 /* VERTICAL SLIDER CSS*/

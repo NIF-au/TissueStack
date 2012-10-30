@@ -1,6 +1,7 @@
 DIRSRC		=	./src/
 
-SRCS		=	$(DIRSRC)converter.c
+SRCS		=	$(DIRSRC)converter.c			\
+			$(DIRSRC)../../../utils/utils.c
 
 INCLUDE		=	-I./headers -I./../../headers -I./../../utils
 

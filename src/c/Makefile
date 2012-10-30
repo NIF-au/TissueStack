@@ -11,6 +11,7 @@ SRCS		=	$(DIRSRC)core.c							\
 			$(DIRSRC)utils/utils.c						\
 			$(DIRSRC)tile_requests.c					\
 			$(DIRSRC)percent_and_time.c					\
+			$(DIRSRC)tasks.c						\
 			$(DIRSRC)memory_mapping.c					\
 
 INCLUDE		=	-I./headers -I./utils -I/usr/include/nifti
@@ -96,6 +97,12 @@ clean:
 
 recompile: clean compile
 
-re: clean all
+tomcatstop:
+	/opt/apache-tomcat-7.0.27/bin/shutdown.sh
+
+tomcatstart:
+	/opt/apache-tomcat-7.0.27/bin/startup.sh
+
+re: tomcatstop clean all tomcatstart
 
 .PHONY: all compile install clean re recompile
