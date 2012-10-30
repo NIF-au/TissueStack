@@ -129,7 +129,7 @@ void		destroy_command_args(char ** args)
 
 t_args_plug	*create_copy_args(t_args_plug *args)
 {
-  t_args_plug	*a;
+  t_args_plug	*a = NULL;
 
   if (args != NULL)
   a = malloc(sizeof(*a));

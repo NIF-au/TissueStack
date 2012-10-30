@@ -185,8 +185,8 @@ void  		*start(void *args)
   int		ret;
   nifti_image	*nim;
   int		nslices;
-  int		i;
-  int		fd;
+  int		i = 0;
+  int		fd = 0;
   char		*data_char;
   unsigned int	size_per_slice;
   t_header	*h;
@@ -195,7 +195,7 @@ void  		*start(void *args)
   int		cancel = 0;
   unsigned int dimensions_resume = -1;
   unsigned int slice_resume = -1;
-  unsigned long long off;
+  unsigned long long off = 0L;
 
   prctl(PR_SET_NAME, "TS_NIFTI_CON");
 
@@ -218,7 +218,7 @@ void  		*start(void *args)
 	{
 	  dimensions_resume = atoi(a->commands[2]);
 	  slice_resume = atoi(a->commands[3]);
-	  if ((fd = open(a->commands[1], (O_CREAT | O_APPEND | O_RDWR))) == -1)
+	  if ((fd = open(a->commands[1], (O_CREAT | O_APPEND | O_RDWR), 0666)) == -1)
 	    {
 	      ERROR("Open Failed");
 	      return (NULL);
@@ -238,7 +238,13 @@ void  		*start(void *args)
     }
   else
     {
-      if ((fd = open(a->commands[1], O_CREAT | O_TRUNC | O_RDWR)) < 0)
+      a->general_info->percent_init((sizes[0] + sizes[1] + sizes[2]), &id_percent, a->commands[0], "2", a->commands[1], NULL, a->general_info);
+      if (a->box != NULL)
+	{
+	  if (write(*((int*)a->box), id_percent, 16) < 0)
+	    ERROR("Open Error");
+	}
+      if ((fd = open(a->commands[1], O_CREAT | O_TRUNC | O_RDWR, 0666)) < 0)
 	{
 	  ERROR("Open error");
 	  return (NULL);

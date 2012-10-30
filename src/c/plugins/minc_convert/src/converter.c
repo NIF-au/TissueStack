@@ -25,7 +25,7 @@ void		dim_loop(int fd, int dimensions_nb, t_vol *volume,
   int		i;
   unsigned long		*start;
   long unsigned int	*count;
-  short			cancel;
+  short			cancel = 0;
 
   if (dimension_resume > -1)
     dim = dimension_resume;
@@ -240,19 +240,11 @@ void  		*start(void *args)
   char		*id_percent;
   unsigned int	dimension;
   unsigned int	slice;
-  unsigned long long off;
+  unsigned long long off = 0L;
   int		i = 0;
   char		*command_line;
 
   a = (t_args_plug *)args;
-
-  while (a->commands[i] != NULL)
-    {
-      FATAL("[%i] %s", i, a->commands[i]);
-      i++;
-    }
-  FATAL("===================");
-  i = 0;
 
   prctl(PR_SET_NAME, "TS_MINC_CON");
   if ((a->commands[3] != NULL && a->commands[4] != NULL && a->commands[5] != NULL) ||
@@ -264,7 +256,7 @@ void  		*start(void *args)
 	  FATAL("==> ICI");
 	  dimension = atoi(a->commands[2]);
 	  slice = atoi(a->commands[3]);
-	  if ((fd = open(a->commands[1], (O_CREAT | O_APPEND | O_RDWR))) == -1)
+	  if ((fd = open(a->commands[1], (O_CREAT | O_APPEND | O_RDWR), 0666)) == -1)
 	    {
 	      ERROR("Open Failed");
 	      return (NULL);
@@ -292,8 +284,7 @@ void  		*start(void *args)
     }
   else
     {
-      FATAL("==> here");
-      if ((fd = open(a->commands[1], (O_CREAT | O_TRUNC | O_RDWR))) == -1)
+      if ((fd = open(a->commands[1], (O_CREAT | O_TRUNC | O_RDWR), 0666)) == -1)
 	{
 	  ERROR("Open Failed");
 	  return (NULL);
