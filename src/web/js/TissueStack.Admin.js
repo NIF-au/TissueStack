@@ -414,13 +414,25 @@ TissueStack.Admin.prototype = {
 							
 							//pass new cookie so that users won't lost task table after refresh!
 							var exdate=new Date();
-							exdate.setDate(exdate.getDate() + 1);
+							exdate.setDate(exdate.getDate() + 10);
 							
 							_this.detect_Cookie_type = "CVT";
+							
 							document.cookie = "CVT=" + "cv_tk=" + _this.progress_task_id 
 													 + ":cv_file=" + checked_listFile_Name 
 													 + ":cv_type=" + checked_task_Name
 													 + "; expires="+ exdate.toUTCString();
+							
+							/*
+							document.cookie = "task=" + "[" + _this.progress_task_id + "," 
+													  +	"{task_file:" + checked_listFile_Name + "," 
+													  +	" task_type:" + checked_task_Name + ","
+													  +	" task_zoom:" + "none" + ","
+													  +	" task_status:" +  + ","
+													  +	" task_process:" + 
+													  + "},]" 
+													  + "; expires="+ exdate.toUTCString();
+							*/
 							
 							_this.taskPasueHandler(_this.progress_task_id); 
 							_this.taskResumeHandler(_this.progress_task_id);
@@ -478,16 +490,29 @@ TissueStack.Admin.prototype = {
 									var exdate=new Date();
 									exdate.setDate(exdate.getDate() + 1);	
 									
-									_this.pre_tile_task_add += "pt_tk_" + i + "=" + _this.progress_task_id + ":"; 
-									_this.detect_Cookie_type = "PTL";
-									
-									
+									_this.pre_tile_task_add += "pt_tk_" + i + "=" + _this.progress_task_id + ":";
+									 
+									_this.detect_Cookie_type = "PTL";							
 									
 									document.cookie = "PTL=" + _this.pre_tile_task_add
 															 + "pt_file=" + checked_listFile_Name 
 														 	 + ":pt_type=" + checked_task_Name
 														 	 + "; expires="+ exdate.toUTCString();
 									
+									/*					 	 
+									_this.pre_tile_task_add  +=  _this.progress_task_id + "," 
+															  +	"{task_file:" + checked_listFile_Name + "," 
+															  +	" task_type:" + checked_task_Name + ","
+															  +	" task_zoom:" + i + ","
+															  +	" task_status:" +  + ","
+															  +	" task_process:" + 
+															  + "}," ;
+														 	 
+									
+									document.cookie = "task=" + "[" + _this.pre_tile_task_add + "]"
+															  + "; expires="+ exdate.toUTCString();
+									
+									*/
 														 	 
 									_this.taskPasueHandler(_this.progress_task_id); 
 									_this.taskResumeHandler(_this.progress_task_id);
