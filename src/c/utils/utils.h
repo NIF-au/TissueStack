@@ -38,6 +38,7 @@ inline char * appendCharacterToTempTokenBuffer(char * tempTokenBuffer,
 					      char character);
 char* strupper( char* s );
 char* strlower( char* s );
+char		*array_2D_to_array_1D(char **str);
 
 #endif /* !__UTILS_H__ */
 

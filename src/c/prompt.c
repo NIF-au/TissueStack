@@ -190,7 +190,6 @@ void		prompt_exec(char **commands, t_tissue_stack *general, void *box)
 
 
   prog = commands[0];
-
   if (strcmp(commands[0], "resume") == 0)
     {
       general->percent_resume(commands[1], general);
@@ -216,7 +215,8 @@ void		prompt_exec(char **commands, t_tissue_stack *general, void *box)
 		   (strcmp(prog, "start") == 0 || strcmp(prog, "unload") == 0))
 	    {
 	      ERROR("%s - %p: Unknown Plugin", args->name, p);
-	      fclose((FILE*)box);
+	      if (box)
+		fclose((FILE*)box);
 	    }
 	  else
 	    thread_pool_add_task(general->functions[i].ptr, args, general->tp);

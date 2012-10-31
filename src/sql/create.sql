@@ -84,7 +84,7 @@ CREATE TABLE dataset_planes
   name CHAR(1) NOT NULL,
   max_x INTEGER NOT NULL,
   max_y INTEGER NOT NULL,
-  max_sclices INTEGER NOT NULL,
+  max_slices INTEGER NOT NULL,
   zoom_levels TEXT NOT NULL,
   one_to_one_zoom_level INTEGER NOT NULL,
   transformation_matrix TEXT,

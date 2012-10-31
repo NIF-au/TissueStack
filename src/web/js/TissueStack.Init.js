@@ -105,7 +105,7 @@ TissueStack.InitUserInterface = function (initOpts) {
 					dataForPlane.isTiled,
 					dataForPlane.oneToOneZoomLevel,
 					planeId,
-					dataForPlane.maxSclices,
+					dataForPlane.maxSlices,
 					dataForPlane.maxX,
 					dataForPlane.maxY,
 					zoomLevels,
