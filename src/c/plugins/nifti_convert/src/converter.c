@@ -250,11 +250,6 @@ void  		*start(void *args)
     }
   else
     {
-      if (a->box != NULL)
-	{
-	  if (write(*((int*)a->box), id_percent, 16) < 0)
-	    ERROR("Open Error");
-	}
       if ((fd = open(a->commands[1], O_CREAT | O_TRUNC | O_RDWR, 0666)) < 0)
 	{
 	  ERROR("Open error");

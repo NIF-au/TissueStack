@@ -92,6 +92,7 @@ void		percent_init_direct(int total_blocks, char **id, char *filename, char *kin
   *id = malloc(17 * sizeof(**id));
   memset(*id, '0', 17);
   snprintf(*id, 17, "%i%06i", (int)tv.tv_sec, (int)tv.tv_usec);
+  FATAL("%s", *id);
   if (t->percent->path)
     {
       len_path = (strlen(*id) + strlen(t->percent->path));
