@@ -37,7 +37,7 @@ int		percent_letter_count(char *buff, int position, char c)
   int		i;
 
   i = 0;
-  while (buff[position + i] != c && buff[position + i] != '\0')
+  while (buff && buff[position + i] != c && buff[position + i] != '\0')
     i++;
   return (i);
 }
@@ -566,4 +566,23 @@ void		init_percent_time(t_tissue_stack *t, char *path)
     t->percent->path = NULL;
   t->percent->cancel_first = NULL;
   INFO("Percent initialized");
+}
+
+void		free_all_percent(t_tissue_stack *t)
+{
+  t_pause_cancel_queue *tmp;
+  t_pause_cancel_queue *tmp2;
+
+  if (t->percent)
+    {
+      free(t->percent->path);
+      tmp = t->percent->cancel_first;
+      while (tmp)
+	{
+	  tmp2 = tmp;
+	  tmp = tmp->next;
+	  free(tmp2);
+	}
+      free(t->percent);
+    }
 }

@@ -54,13 +54,9 @@ void		task_exec(char *task_id, t_tissue_stack *t)
   char		*dest;
 
   result = read_from_file_by_id(task_id, &f, t);
-
   asprintf(&dest, "start %s %s %s", (result[4][0] == '0' ? "image" :
 				     (result[4][0] == '1' ? "minc_converter" : "nifti_converter")),
 	   result[6], task_id);
-
-  FATAL("====================> called");
-
   t->plug_actions(t, dest, NULL);
   i = 0;
   while (i < 7)
@@ -89,4 +85,20 @@ void		task_lunch(t_tissue_stack *t)
 	}
     }
   pthread_mutex_unlock(&t->tasks->mutex);
+}
+
+void		free_all_tasks(t_tissue_stack *t)
+{
+  if (t->tasks != NULL)
+    {
+      if (t->tasks->path)
+	free(t->tasks->path);
+      if (t->tasks->path_tmp)
+	free(t->tasks->path_tmp);
+      if (t->tasks->task_id)
+	free(t->tasks->task_id);
+      if (t->tasks->f)
+	fclose(t->tasks->f);
+      free(t->tasks);
+    }
 }

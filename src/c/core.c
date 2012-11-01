@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Tue Oct 30 18:16:21 2012 Oliver Nicolini
+** Last update Thu Nov  1 15:19:23 2012 Oliver Nicolini
 */
 
 #include "core.h"
@@ -147,6 +147,7 @@ void            init_prog(t_tissue_stack *t)
   t->percent_resume = percent_resume_direct;
 
   t->tasks = malloc(sizeof(*t->tasks));
+
   t->tasks->f = NULL;
   t->tasks->add_to_queue = task_add_queue;
   t->tasks->path = strdup(CONCAT_APP_PATH("tasks/general"));
@@ -228,11 +229,18 @@ void		free_core_struct(t_tissue_stack *t)
 
   INFO("Freeing Allocated Resources...");
   free_all_volumes(t);
-  free_all_plugins(t);
   free_all_history(t);
+  free_all_plugins(t);
   free_all_prompt(t);
+  free_all_notifications(t);
+  free_all_percent(t);
+  free_all_tasks(t);
+  free_all_log(t);
   if (t->tile_requests != NULL) t->tile_requests->destroy(t->tile_requests);
-  if (t->memory_mappings != NULL) destroy_memory_mapping(t->memory_mappings);
+  if (t->memory_mappings != NULL) {
+    destroy_memory_mapping(t->memory_mappings);
+    free(t->memory_mappings);
+  }
   free(t->functions);
   free(t);
 }
@@ -275,6 +283,8 @@ int		main(int argc, char **argv)
 
   // These are the plugins that should be loaded by default.
   // Please no rash name changes since JNI asks for the predefined names!
+
+
   plugin_load_from_string("load image /usr/local/plugins/TissueStackImageExtract.so", t);
   plugin_load_from_string("load serv /usr/local/plugins/TissueStackCommunicator.so", t);
   plugin_load_from_string("load comm /usr/local/plugins/TissueStackProcessCommunicator.so", t);

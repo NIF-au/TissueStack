@@ -3,6 +3,8 @@
 
 #include "core.h"
 
+#include "utils.h"
+
 #include <nifti1_io.h>
 #include <fcntl.h>
 #include <limits.h>
