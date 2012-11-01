@@ -376,13 +376,12 @@ TissueStack.Admin.prototype = {
 		var task = {id: parseInt(response), file: file, type: type, status: status};
 		if (typeof(zoom) == 'number') task.zoom = zoom;
 		
-		if (_this.addTask(task)) {
-			_this.replaceErrorMessage("Action Has Been Added To The Queue!");
-			$('.error_message').css("background", "#32CD32");
-		} else {
+		if (!_this.addTask(task)) {
 			_this.replaceErrorMessage("Failed To Add Action To The Queue!");
+		} else {
+			var handle = 
+				setInterval(function() {if (TissueStack.Tasks.writeToCookie()) clearInterval(handle);}, 500);
 		}
-			
 	},
 	addTask: function (task) {
 		// add task to dom representation first, if the function calls works (does not return null) go ahead and create the html table
@@ -416,52 +415,14 @@ TissueStack.Admin.prototype = {
 					break;
 				
 				case 3: // Status
+					cell.id = "task_status_" + task.id;
 					processBar = TissueStack.Tasks.getStatusAsString(task.status);
 					break;
 				
 				case 4: // Progress
 					processBar = 
-						'<div class="progress_bar_div" id="progress_bar_' + task.id + '"><progress class="progress_bar" id="progress_bar' + task.id + '" value="0" max="100"></progress>'
+						'<div class="progress_bar_div"><progress class="progress_bar" id="progress_bar_' + task.id + '" value="0" max="100"></progress>'
 						+ '<span class="progress_bar_text" id="progress_text_' + task.id + '">0%</span ></div>';
-					_this.queue_handles[task.id] = setInterval(function () {
-						TissueStack.Utils.sendAjaxRequest(
-							"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/progress/json?task_id="+ task.id,
-							'GET', true,
-							function(data, textStatus, jqXHR) {
-								if (!data.response && !data.error) {
-									_this.replaceErrorMessage("No Data Set Updated!");
-									_this.stopTaskProgressCheck(task.id);
-									return false;
-								}
-								if (data.error) {
-									var message = "Error: " + (data.error.message ? data.error.message : " No DataSet Selected!");
-									_this.replaceErrorMessage(message);
-									_this.stopTaskProgressCheck(task.id);				
-									return false;
-								}
-								if (data.response.noResults) {
-									_this.replaceErrorMessage("No Results!");
-									_this.stopTaskProgressCheck(task.id);
-									return false;
-								}
-	
-								var processTask = data.response;
-					
-								$("#" + "progress_bar_" + task.id).val(processTask.progress);
-								$("#" + "progress_text_" + task.id).val(processTask.progress);
-								
-								if(processTask.progress == "100"){
-									_this.displayUploadDirectory();
-									_this.stopTaskProgressCheck(task.id);
-								}
-							},
-							function(jqXHR, textStatus, errorThrown) {
-								_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
-								_this.stopTaskProgressCheck(task.id);
-								return false;
-							}
-						);  
-					}, 25000);
 				break;
 				
 				case 5: // Cancel Column
@@ -471,130 +432,125 @@ TissueStack.Admin.prototype = {
 			$(cell).append(processBar);	
 			$(row).append(cell);
 		}
-		
+
 		// add row to table
 		$(tbody).append(row);
 		//$("#task_table").css({"height" : nrRows * 20 + 15});
 		// refresh
 		tab.trigger("create");
-		
+
+		// register cancel event and launch task progress checkers
+		_this.startProgressChecker(task.id);
+		_this.registerTaskCancelHandler(task.id, task.file);
+
 		return true;
-	},
-	removeTask : function(id) {
-		if (typeof(id) != 'number') return;
-		$("#" + id).remove();
-		// $('#task_table').tri
 	},
 	stopTaskProgressCheck : function(id) {
 		clearInterval(this.queue_handles[id]);
 		this.queue_handles[id] = null;
 	},
-	registerTaskActionHandler : function() {
+	registerTaskCancelHandler : function (id, file) {
+		if (typeof(id) != 'number' && typeof(file) != 'string') return;
+		
 		var _this = this;
-	},
-	taskPasueHandler : function (process_task) {
-		var _this = this;
-		$('#conpause_' + process_task).click(function(){
-		   TissueStack.Utils.sendAjaxRequest(
-				"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/pause/json?" +
-				"session=" + _this.session +
-				"&task_id=" + process_task,
-				'GET', true,
-				function(data, textStatus, jqXHR) {
-					if (!data.response && !data.error) {
-						_this.replaceErrorMessage("No Task ID Applied");
-						return false;
-					}
-					if (data.error) {
-						var message = "Error: " + (data.error.message ? data.error.message : " No Task ID Applied");
-						_this.replaceErrorMessage(message);				
-						return false;
-					}
-					if (data.response.noResults) {
-						_this.replaceErrorMessage("No Results!");
-						return false;
-					}
-						//Do something here !!
-						$('#conresume_' + process_task).removeClass('ui-disabled');
-						$('#conpause_' + process_task).addClass('ui-disabled');
-						return false;
-				},
-				function(jqXHR, textStatus, errorThrown) {
-					_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
-					return false;
-				}
-			);
-		});
-	},
-	taskResumeHandler : function (process_task) {
-		var _this = this;
-		$('#conresume_' + process_task).click(function(){
-		   TissueStack.Utils.sendAjaxRequest(
-				"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/resume/json?" +
-				"session=" + _this.session +
-				"&task_id=" + process_task,
-				'GET', true,
-				function(data, textStatus, jqXHR) {
-					if (!data.response && !data.error) {
-						_this.replaceErrorMessage("No Task ID Applied");
-						return false;
-					}
-					if (data.error) {
-						var message = "Error: " + (data.error.message ? data.error.message : " No Task ID Applied");
-						_this.replaceErrorMessage(message);				
-						return false;
-					}
-					if (data.response.noResults) {
-						_this.replaceErrorMessage("No Results!");
-						return false;
-					}
-						//Do something here !!
-						$('#conpause_' + process_task).removeClass('ui-disabled');
-						$('#conresume_' + process_task).addClass('ui-disabled');
-						return false;
-				},
-				function(jqXHR, textStatus, errorThrown) {
-					_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
-					return false;
-				}
-			);
-		});
-	},
-	taskCancelHandler : function (process_task) {
-		var _this = this;
-		$('#conresume_' + process_task).click(function(){
+		$('#cancel_' + id).click(function() {
 		   TissueStack.Utils.sendAjaxRequest(
 				"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/cancel/json?" +
 				"session=" + _this.session +
-				"&task_id=" + process_task,
+				"&task_id=" + id,
 				'GET', true,
 				function(data, textStatus, jqXHR) {
 					if (!data.response && !data.error) {
 						_this.replaceErrorMessage("No Task ID Applied");
-						return false;
+						return;
 					}
 					if (data.error) {
 						var message = "Error: " + (data.error.message ? data.error.message : " No Task ID Applied");
 						_this.replaceErrorMessage(message);				
-						return false;
+						return;
 					}
 					if (data.response.noResults) {
 						_this.replaceErrorMessage("No Results!");
-						return false;
+						return;
 					}
-						//Do something here !!
-						$('#conpause_' + process_task).addClass('ui-disabled');
-						$('#conresume_' + process_task).addClass('ui-disabled');
-						$('#concancel_' + process_task).addClass('ui-disabled');
-						$('#constart_' + process_task).addClass('ui-disabled');
-						
-						return false;
+					
+					if (data.response.filename && data.response.filename.indexOf(file) >= 0) {
+						 // set status to canceled
+						TissueStack.tasks[id].status = 3;
+						// reflect new status in UI
+						$('#task_status_' + id).html(TissueStack.Tasks.getStatusAsString(TissueStack.tasks[id].status));
+						// disable cancel
+						$('#cancel_' + id).addClass('ui-disabled');
+						_this.displayUploadDirectory();
+						// write back to cookie
+						if (TissueStack.Tasks.writeToCookie())
+							_this.stopTaskProgressCheck(id);
+					}
 				},
 				function(jqXHR, textStatus, errorThrown) {
 					_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
-					return false;
+					return;
 				}
 			);
 		});
 	},
+	startProgressChecker : function(id) {
+		if (typeof(id) != 'number') return;
+		
+		var _this = this;
+		
+		this.queue_handles[id] = setInterval(function () {
+			TissueStack.Utils.sendAjaxRequest(
+				"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/progress/json?task_id="+ id,
+				'GET', true,
+				function(data, textStatus, jqXHR) {
+					if (!data.response && !data.error) {
+						_this.replaceErrorMessage("No Data Set Updated!");
+						_this.stopTaskProgressCheck(id);
+						return false;
+					}
+					if (data.error) {
+						var message = "Error: " + (data.error.message ? data.error.message : " No DataSet Selected!");
+						_this.replaceErrorMessage(message);
+						_this.stopTaskProgressCheck(id);				
+						return false;
+					}
+					if (data.response.noResults) {
+						_this.replaceErrorMessage("No Results!");
+						_this.stopTaskProgressCheck(id);
+						return false;
+					}
+
+					var processTask = data.response;
+		
+					//  set to running from initial 'Queued' state (if we are not canceled or finished that is)
+					if (processTask.progress >= 0 && TissueStack.tasks[id].status != 2 && TissueStack.tasks[id].status != 3) {
+						TissueStack.tasks[id].status = 1; 
+						$('#task_status_' + id).html(TissueStack.Tasks.getStatusAsString(TissueStack.tasks[id].status));
+					}
+					
+					$("#" + "progress_bar_" + id).val(processTask.progress);
+					$("#" + "progress_text_" + id).html(processTask.progress + "%");
+					
+					if(processTask.progress == "100") {
+						 // set status to finished
+						TissueStack.tasks[id].status = 2;
+						// reflect new status in UI
+						$('#task_status_' + id).html(TissueStack.Tasks.getStatusAsString(TissueStack.tasks[id].status));
+						// disable cancel
+						$('#cancel_' + id).addClass('ui-disabled');
+						_this.displayUploadDirectory();
+						// write back to cookie
+						if (TissueStack.Tasks.writeToCookie())
+							_this.stopTaskProgressCheck(id);
+					}
+				},
+				function(jqXHR, textStatus, errorThrown) {
+					_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
+					_this.stopTaskProgressCheck(id);
+					return false;
+				}
+			);  
+		}, 2500);
+	}
 };

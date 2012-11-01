@@ -1,8 +1,8 @@
 TissueStack.Tasks = {
 	TypeLookupTable   : ["Tiling", "Conversion"],
 	ReverseTypeLookupTable   : {"Tiling" : 1, "Conversion" : 2},
-	StatusLookupTable : ["Running", "Paused", "Canceled", "Queued"],
-	ReverseStatusLookupTable : {"Running" : 1, "Paused": 2, "Canceled": 3, "Queued": 4},	
+	StatusLookupTable : ["Running", "Finished", "Canceled", "Queued"],
+	ReverseStatusLookupTable : {"Running" : 1, "Finished": 2, "Canceled": 3, "Queued": 4},	
 	getStatusAsString : function(status_as_number) {
 		if (typeof(status_as_number) !== 'number' || status_as_number < 1
 				|| status_as_number > TissueStack.Tasks.StatusLookupTable.length) return;
@@ -46,7 +46,7 @@ TissueStack.Tasks = {
 		var content = "";
 		// loop through all tasks
 		for (var t in TissueStack.tasks) {
-			if (TissueStack.tasks[t].status == TissueStack.Tasks.StatusLookupTable["Canceled"]) continue; // don't persist
+			if (TissueStack.tasks[t].status == 2 || TissueStack.tasks[t].status == 3) continue; // don't persist Finished and Canceled
 			
 			content += (TissueStack.tasks[t].id + "=");
 			for (var p in TissueStack.tasks[t]) {
@@ -55,8 +55,6 @@ TissueStack.Tasks = {
 			}
 			content += ",";
 		}
-
-		if (content == "") return true;
 
 		// check lock
 		if (typeof(TissueStack.cookie_lock) != 'boolean' && TissueStack.cookie_lock) return false;
@@ -68,9 +66,11 @@ TissueStack.Tasks = {
 		
 		$.cookie("tasks", content, { expires: exdate });
 		TissueStack.cookie_lock = false;
+		
+		return true;
 	}, readFromCookie : function() {
 		var content = $.cookie("tasks");
-		if (typeof(content) != 'string') return;
+		if (typeof(content) != 'string' || content == "") return;
 		
 		var tasks = content.split(',');
 		if (!tasks || tasks.length == 0) return;
