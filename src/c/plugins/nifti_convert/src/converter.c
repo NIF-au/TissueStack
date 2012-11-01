@@ -267,7 +267,6 @@ void  		*start(void *args)
 	      if (write(*((int*)a->box), id_percent, 16) < 0)
 		ERROR("Open Error");
 	    }
-	  a->general_info->tasks->add_to_queue(id_percent, a->general_info);
 	  return (NULL);
 	}
       i = 1;
