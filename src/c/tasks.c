@@ -4,7 +4,7 @@ void		task_finished(char *task_id, t_tissue_stack *t)
 {
   FILE		*fi;
   int		i = 1;
-  char		buff[17];
+  char		buff[18];
   int		j = 0;
 
   if (t && t->tasks && t->tasks->f != NULL)
@@ -15,8 +15,9 @@ void		task_finished(char *task_id, t_tissue_stack *t)
       fi = fopen(t->tasks->path_tmp, "w+");
       while (i > 0)
 	{
-	  memset(buff, 0, 17);
+	  memset(buff, 0, 18);
 	  i = fread(buff, 1, 17, t->tasks->f);
+	  buff[i] = '\0';
 	  FATAL("%i /\\/\\/\\/\\/\\/\\ %s", i, buff);
 	  if (j > 0)
 	    fwrite(buff, 1, i, fi);
@@ -33,7 +34,7 @@ void		task_finished(char *task_id, t_tissue_stack *t)
 void		task_add_queue(char *task_id, t_tissue_stack *t)
 {
   pthread_mutex_lock(&t->tasks->queue_mutex);
-  if (t != NULL && t->tasks != NULL && t->tasks->f == NULL)
+  if (t != NULL && t->tasks != NULL)
     t->tasks->f = fopen(t->tasks->path, "w+");
   if (t && t->tasks && t->tasks->f != NULL)
     {
@@ -53,10 +54,12 @@ void		task_exec(char *task_id, t_tissue_stack *t)
   int		i;
   char		*dest;
 
+  FATAL("YOP 2 ");
   result = read_from_file_by_id(task_id, &f, t);
   asprintf(&dest, "start %s %s %s", (result[4][0] == '0' ? "image" :
 				     (result[4][0] == '1' ? "minc_converter" : "nifti_converter")),
 	   result[6], task_id);
+  t->tasks->is_running = TRUE;
   t->plug_actions(t, dest, NULL);
   i = 0;
   while (i < 7)
@@ -72,10 +75,11 @@ void		task_lunch(t_tissue_stack *t)
   char		buff[4096];
   int		len = 0;
 
+  FATAL("%i", t->tasks->is_running);
   pthread_mutex_lock(&t->tasks->mutex);
-  if (t && t->tasks && t->tasks->f != NULL && t->tasks->is_running == FALSE)
+  if (t && t->tasks && t->tasks->is_running == FALSE)
     {
-      t->tasks->is_running = TRUE;
+      t->tasks->f = fopen(t->tasks->path, "r+");
       fseek(t->tasks->f, SEEK_SET, 0);
       len = fread(buff, 1, 16, t->tasks->f);
       if (len > 0)
