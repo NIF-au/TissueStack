@@ -1,23 +1,24 @@
 TissueStack.Admin = function () {
-	this.registerCreateSessionHandler();
 	this.checkCookie();
+	this.initTaskView();
+	// register all the event handlers for login, file upload and task actions
 	this.registerLoginHandler();
-	this.registerFileUpload();
-	this.registerAddToDataSetHandler();
-	this.refreshQueryList();
+	this.registerCreateSessionHandler();
+	this.registerFileUploadHandler();
+	this.registerQueryListRefreshHandler();
+	this.registerTaskHandler();
+	// make sure the upload directory displays the up-to-date contents
 	this.displayUploadDirectory();
-	this.registerConvertHandler();
-	this.registerPreTileHandler();
 };
 
 TissueStack.Admin.prototype = {
 	session: null,
-	queue_handle : null,
+	queue_handles : {},
 	processType: "",
 	progress_task_id: "",
 	pre_tile_task_add: "",
 	detect_cookie_type: "",
-	refreshQueryList : function () {
+	registerQueryListRefreshHandler : function () {
 		var _this = this;
 		
 		$("#radio_task input:radio[id^='bt_convert']:first").attr('disabled', true).checkboxradio("refresh");
@@ -102,69 +103,8 @@ TissueStack.Admin.prototype = {
 		}
 		
 		if (session_name!=null && session_name !="")
-		  {
 		  	this.session = session_name;		  	
-		  	
-		  	if($.cookie("CVT") != null){
-		  		this.detect_cookie_type = "CVT"; 
-		  		var CVTcookie = document.cookie.split("; ");
-		  		for (i = 0 ; i < CVTcookie.length ; i++)
-		  		  {
-		  		  	if(CVTcookie[i].substr(0,CVTcookie[i].indexOf("=")) == "CVT"){
-		  		  		var convert_cookie = CVTcookie[i].substr(CVTcookie[i].indexOf("=")+1);
-		  		  	}
-		  		  }
-		  		  var cv_task, cv_file, cv_type, convert_table = convert_cookie.split(":");
-		  		  
-		  		  if(convert_table.length <=3)
-		  		  {
-		  		  	cv_task = convert_table[0].substr(convert_table[0].indexOf("=")+ 1);
-		  		  	cv_file = convert_table[1].substr(convert_table[1].indexOf("=")+ 1);
-		  		  	cv_type = convert_table[2].substr(convert_table[2].indexOf("=")+ 1);
-		  		  }
-		  		this.createTaskView(cv_task, cv_file, cv_type, null);
-		  		this.taskPasueHandler(cv_task); 
-		  		this.taskResumeHandler(cv_task);
-		  		this.taskCancelHandler(cv_task);
-		  	}
-		  	if($.cookie("PTL") != null){
-		  		this.detect_cookie_type = "PTL";
-		  		var PTLcookie = document.cookie.split("; "); //"; " space required after ";". Don't remove it. 
-		  		for (i = 0 ; i < PTLcookie.length ; i++)
-		  		  {
-		  		  	if(PTLcookie[i].substr(0,PTLcookie[i].indexOf("=")) == "PTL"){
-		  		  		var pretile_cookie = PTLcookie[i].substr(PTLcookie[i].indexOf("=")+1);
-		  		  	}
-		  		  }
-		  		  var pt_task, pt_name, pt_file, pt_type, pretile_table = pretile_cookie.split(":");
-		  		  
-		  		  for( i = 0; i < pretile_table.length ; i ++)
-		  		  {	
-		  		  	pt_name = pretile_table[i].substr(0,pretile_table[i].indexOf("="));
-		  		  	if(pt_name == "pt_file"){
-		  		  		pt_file = pretile_table[i].substr(pretile_table[i].indexOf("=")+ 1);
-		  		  	}else if ( pt_name == "pt_type") {
-		  		  		pt_type = pretile_table[i].substr(pretile_table[i].indexOf("=")+ 1);
-		  		  	}
-		  		  }
-		  		  
-		  		  for( i = 0; i < pretile_table.length ; i ++)
-		  		  {	
-		  		    pt_name = pretile_table[i].substr(0,pretile_table[i].indexOf("="));
-		  		  	if( pt_name != "pt_file" && pt_name != "pt_type")
-		  		  	{
-		  		  		pt_task = pretile_table[i].substr(pretile_table[i].indexOf("=")+ 1);
-		  		  		this.createTaskView(pt_task, pt_file, pt_type, i);
-		  		  		this.taskPasueHandler(pt_task); 
-		  		  		this.taskResumeHandler(pt_task);
-		  		  		this.taskCancelHandler(pt_task);
-		  		  	}
-		  		  }
-		  	}
-		  	return;
-		  }
-		else 
-		  {
+		else { 
 		  session_name = session;
 		  if (session_name!=null && session_name!="")
 		    {
@@ -172,6 +112,17 @@ TissueStack.Admin.prototype = {
 		   		return;
 		    }
 		  }
+	},
+	initTaskView : function() {
+	  	if($.cookie("tasks") == null) return;
+	  	
+	  	// read cookie and build local dom representation
+	  	TissueStack.Tasks.readFromCookie();
+	  	
+	  	if (TissueStack.tasks == null) return;
+	  	// loop through all tasks
+	  	for (var t in TissueStack.tasks) 
+	  		this.addTask(TissueStack.tasks[t]);
 	},
 	registerLoginHandler : function () {
 	   	$("#open").click(function(){
@@ -227,7 +178,7 @@ TissueStack.Admin.prototype = {
 			}
 		});
 	},
-	registerFileUpload : function () {
+	registerFileUploadHandler : function () {
 		var _this = this;
 		_this.uploadProgress();
 		 $("#uploadForm").submit(function(){
@@ -323,305 +274,223 @@ TissueStack.Admin.prototype = {
 			popup_handle.closeMe = closePopup;
 		}
 	},
-	registerAddToDataSetHandler : function () {
+	registerTaskHandler : function() {
 		var _this = this;
-		$("#bt_process").click(function(){
-			if($('input[name=radio_task]:checked').val() == "rad_addDataSet") {
-					// disabled for now until finished
-					// TODO: move the following line into the success handler (called AFTER successful ds addition)
-					//_this.registerDataSetWithAnds();
+		$("#bt_process").click(function() {
+			var action = $('input[name=radio_task]:checked').val();
+			var actonType = null;
+			var actionStatus = TissueStack.Tasks.ReverseStatusLookupTable["Queued"];
+			var fileSelected = false;
+			
+			var task_zoom_level = eval(TissueStack.configuration.default_zoom_levels.value).length;
+			
+			// the url to contact (will be completed by whatever action we want to carry out
+			var url = "/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/";
+			var successHandler = null;
+			
+			// the common code part for all actions
+		  	$.each($('.uploaded_file'), function(i, uploaded_file) {
+		  		if (uploaded_file.checked) { // only if a file was selected
+		  			fileSelected = true;
+					if (!action) { // check whether action was selected
+						_this.replaceErrorMessage("Please choose an action!");
+						return;
+					}			
 						
-				  	$.each($('.uploaded_file'), function(i, uploaded_file) {
-	 					if (uploaded_file.checked) {
+			  		// don't be confused by the outer loop, it will only apply for pre-tile
+			  		for(var i = 0; i < task_zoom_level ; i++) {
+			  			if (action != "PreTile" && i > 0) break;
+
+						// set the individual bits for the selected action 
+						if(action == "rad_addDataSet") {
+							// we have an additional description existence check here
 	 						var msgDescription = $('#txtDesc').val();
 	 						if (msgDescription == ""){
 	 							_this.replaceErrorMessage("Please Add Description Before Adding New Data Set!");
-	 							return false;
+	 							return;
 	 						}
-	 						// send backend request
-	 				 		TissueStack.Utils.sendAjaxRequest(
-	 							"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/add_dataset/json?session=" + _this.session + "&filename=" + uploaded_file.value + "&description=" + msgDescription,
-	 							'GET', true,
-	 							function(data, textStatus, jqXHR) {
-	 								if (!data.response && !data.error) {
-	 									_this.replaceErrorMessage("No Data Set Updated!");
-	 									return false;
-	 								}
-	 								if (data.error) {
-	 									var message = "Error: " + (data.error.message ? data.error.message : " No Data Set Updated!");
-	 									_this.replaceErrorMessage(message);				
-	 									return false;
-	 								}
-	 								if (data.response.noResults) {
-	 									_this.replaceErrorMessage("No Results!");
-	 									return false;
-	 								}
-	
-	 								var dataSet = data.response;
-									var addedDataSet = TissueStack.dataSetStore.addDataSetToStore(dataSet, "localhost");
-	 								if (addedDataSet) {
-	 									if(TissueStack.desktop)	TissueStack.dataSetNavigation.addDataSetToDynaTree(addedDataSet);
-		 								if (TissueStack.tablet) TissueStack.dataSetNavigation.addDataSetToTabletTree(addedDataSet);
-		 								_this.displayUploadDirectory();
-		 								_this.replaceErrorMessage("Data Set Has Been Added Successfully!");
-		 								$('.error_message').css("background", "#32CD32");
-		 								return false;
-	 								}
-	 							},
-	 							function(jqXHR, textStatus, errorThrown) {
-	 								_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
-	 								return false;
-	 							}
-	 						);
-	 				 		return false;
-				   		}
-	 				// we only come here if no file was selected	
-	 				_this.replaceErrorMessage("Please check a file that you want to add!");
-			  	});
-			}
-		});
-	},
-	registerConvertHandler : function () {
-		var _this = this;
-		$("#bt_process").click(function(){
-			if($('input[name=radio_task]:checked').val() == "Convert") {
-			   TissueStack.Utils.sendAjaxRequest(
-					"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/convert/json?" +
-					"session=" + _this.session +
-					"&file=/opt/tissuestack/upload/" +
-					$('input[name=radio_listFile]:checked').val(),
-					'GET', true,
-					function(data, textStatus, jqXHR) {
-						if (!data.response && !data.error) {
-							_this.replaceErrorMessage("No Data Set Updated!");
-							return false;
+							
+							url += ("add_dataset/json?session=" + _this.session + "&filename=" + uploaded_file.value + "&description=" + msgDescription);
+							successHandler = _this.addDataSetSuccessHandler;
+						} else if(action == "Convert") {
+							url += ("convert/json?session=" + _this.session + "&file=/opt/tissuestack/upload/" + uploaded_file.value);
+							actonType = TissueStack.Tasks.ReverseTypeLookupTable["Conversion"];
+							successHandler = _this.conversionAndPreTileSuccessHandler;
+						} else if(action == "PreTile") {
+							url += ("tile/json?session=" + _this.session	+ "&file=" + TissueStack.configuration['upload_directory'].value + "/" 
+									+ uploaded_file.value
+									+ "&tile_dir=" + TissueStack.configuration['server_tile_directory'].value
+									+ "&dimensions=0,0,0,0,0,0"	+ "&zoom=" + i + "&preview=true"); //+ "&store_data_set=true"
+							actonType = TissueStack.Tasks.ReverseTypeLookupTable["Tiling"];
+							successHandler = _this.conversionAndPreTileSuccessHandler;
 						}
-						if (data.error) {
-							var message = "Error: " + (data.error.message ? data.error.message : " No Data Set Updated!");
-							_this.replaceErrorMessage(message);				
-							return false;
-						}
-						if (data.response.noResults) {
-							_this.replaceErrorMessage("No Results!");
-							return false;
-						}
-							var checked_listFile_Name = $('input[name=radio_listFile]:checked').val();
-							var checked_task_Name = $('input[name=radio_task]:checked').val();
-							
-							_this.progress_task_id = data.response;
-							$(".file_radio_list input:radio[id^="+ "'check_" + checked_listFile_Name + "']:first").attr('disabled', true).checkboxradio("refresh");
-							_this.createTaskView(_this.progress_task_id, checked_listFile_Name, checked_task_Name, null);
-							
-							//pass new cookie so that users won't lost task table after refresh!
-							var exdate=new Date();
-							exdate.setDate(exdate.getDate() + 1);
-							
-							_this.detect_Cookie_type = "CVT";
-							document.cookie = "CVT=" + "cv_tk=" + _this.progress_task_id 
-													 + ":cv_file=" + checked_listFile_Name 
-													 + ":cv_type=" + checked_task_Name
-													 + "; expires="+ exdate.toUTCString();
-							
-							_this.taskPasueHandler(_this.progress_task_id); 
-							_this.taskResumeHandler(_this.progress_task_id);
-							_this.taskCancelHandler(_this.progress_task_id);
-							return false;
-					},
-					function(jqXHR, textStatus, errorThrown) {
-						_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
-						return false;
-					}
-				);
-			}
-		});
-	},
-	registerPreTileHandler : function () {
-		var _this = this;
-		var task_zoom_level = eval(TissueStack.configuration.default_zoom_levels.value).length;
-		$("#bt_process").click(function(){
-			if($('input[name=radio_task]:checked').val() == "PreTile") {
-			   for(var i = 0; i < task_zoom_level ; i++){
-				   (function (i) {
-					   TissueStack.Utils.sendAjaxRequest(
-							"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/tile/json?"
-								+ "session=" + _this.session
-								+ "&file=" + TissueStack.configuration['upload_directory'].value + "/" 
-								+ $('input[name=radio_listFile]:checked').val()
-								+ "&tile_dir=" + TissueStack.configuration['server_tile_directory'].value
-								+ "&dimensions=0,0,0,0,0,0" 
-								+ "&zoom=" + i 
-								+ "&preview=true",
-								//+ "&store_data_set=true",
-							'GET', true,
+
+				  		// send ajax request
+				 		TissueStack.Utils.sendAjaxRequest(url, 'GET', true,
 							function(data, textStatus, jqXHR) {
 								if (!data.response && !data.error) {
-									_this.replaceErrorMessage("No Data Set To Be Tiled!");
-									return false;
-								} 
+									_this.replaceErrorMessage("No Response Data Returned!");
+									return;
+								}
 								if (data.error) {
-									var message = "Error: " + (data.error.message ? data.error.message : " No Data Set To Be Tiled!");
+									var message = "Error: " + (data.error.message ? data.error.message : " Action wasn't performed!");
 									_this.replaceErrorMessage(message);				
-									return false;
+									return;
 								}
 								if (data.response.noResults) {
 									_this.replaceErrorMessage("No Results!");
-									return false;
+									return;
 								}
-									var checked_listFile_Name = $('input[name=radio_listFile]:checked').val();
-									var checked_task_Name = $('input[name=radio_task]:checked').val();
-									
-									_this.progress_task_id = data.response;
-									$(".file_radio_list input:radio[id^="+ "'check_" + checked_listFile_Name + "']:first").attr('disabled', true).checkboxradio("refresh");
-									_this.createTaskView(_this.progress_task_id, checked_listFile_Name, checked_task_Name, i);
-									
-									//pass new cookie so that users won't lost task table after refresh!
-									var exdate=new Date();
-									exdate.setDate(exdate.getDate() + 1);	
-									
-									_this.pre_tile_task_add += "pt_tk_" + i + "=" + _this.progress_task_id + ":"; 
-									_this.detect_Cookie_type = "PTL";
-									
-									
-									
-									document.cookie = "PTL=" + _this.pre_tile_task_add
-															 + "pt_file=" + checked_listFile_Name 
-														 	 + ":pt_type=" + checked_task_Name
-														 	 + "; expires="+ exdate.toUTCString();
-									
-														 	 
-									_this.taskPasueHandler(_this.progress_task_id); 
-									_this.taskResumeHandler(_this.progress_task_id);
-									_this.taskCancelHandler(_this.progress_task_id);
-																										
-									return false;
+		
+								if (successHandler)
+									successHandler(_this, data.response, uploaded_file.value, actonType, actionStatus, i);
 							},
 							function(jqXHR, textStatus, errorThrown) {
 								_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
-								return false;
+								return;
 							}
 						);
-					})(i);
-				}
-			}
+				 		
+				 		return;
+			  		}
+		  		}
+		  	});
+		  	if (!fileSelected) _this.replaceErrorMessage("Please select a file first!");
 		});
 	},
-	createTaskView: function (process_task, process_file, process_type, zoom_level) {
+	addDataSetSuccessHandler : function(_this, response) {
+		var dataSet = response;
+		var addedDataSet = TissueStack.dataSetStore.addDataSetToStore(dataSet, "localhost");
+		if (addedDataSet) {
+			if(TissueStack.desktop)	TissueStack.dataSetNavigation.addDataSetToDynaTree(addedDataSet);
+			if (TissueStack.tablet) TissueStack.dataSetNavigation.addDataSetToTabletTree(addedDataSet);
+			_this.displayUploadDirectory();
+			_this.replaceErrorMessage("Data Set Has Been Added Successfully!");
+			$('.error_message').css("background", "#32CD32");
+			
+			_this.registerDataSetWithAnds();
+		}
+	},
+	conversionAndPreTileSuccessHandler : function(_this, response, file, type, status, zoom) {
+		$(".file_radio_list input:radio[id^="+ "'check_" + file + "']:first").attr('disabled', true).checkboxradio("refresh");
+		var task = {id: parseInt(response), file: file, type: type, status: status};
+		if (typeof(zoom) == 'number') task.zoom = zoom;
+		
+		if (_this.addTask(task)) {
+			_this.replaceErrorMessage("Action Has Been Added To The Queue!");
+			$('.error_message').css("background", "#32CD32");
+		} else {
+			_this.replaceErrorMessage("Failed To Add Action To The Queue!");
+		}
+			
+	},
+	addTask: function (task) {
+		// add task to dom representation first, if the function calls works (does not return null) go ahead and create the html table
+		if (!TissueStack.Tasks.addOrUpdateTask(task)) return false;
+		
 		var _this = this;
-		var nrCols = 5; //important! can't change!
-		var maxRows = 0;
-		var nrRows = maxRows+1;
+		var nrCols = 6; 
 		
 		var tab = $('#task_table');
 		var tbody = ('#task_table tbody');
 		
-		var row, cell;
-		for(var i = 0; i < nrRows; i++){
-			row=document.createElement('tr');
-			$('tr').attr({"height" : 20});			
-			for(var j = 0; j < nrCols; j++){
-				var processBar = "" ;
-				cell=document.createElement('td');
-				
-				if(j == 0){ // ID
-					processBar = process_task;
-				}
+		var row = document.createElement('tr');
+		row.height = 20;
+		row.id = "task_" + task.id;
+		//$('tr').attr({"height" : 20});			
+		for(var j = 0; j < nrCols; j++){
+			var processBar = "" ;
+			var cell = document.createElement('td');
+			
+			switch(j) {
+				case 0: // Task id
+					processBar = task.id;
+					break;
 
-				if(j == 1){ // File Name
-					processBar = process_file;
-				}
-
-				if(j == 2){ // Type
-					processBar = process_type;
-				}
+				case 1: // File
+					processBar = task.file;
+					break;
+					
+				case 2: // Type
+					processBar = TissueStack.Tasks.getTypeAsString(task.type);
+					break;
 				
-				if(j == 3){ // Action
-					processBar = '<div data-role="controlgroup" data-type="horizontal">'
-							   + '<a id=' + 'constart_' + process_task 
-							   + ' data-role="button" data-theme="c" data-icon="arrow-r" data-iconpos="notext" class="ui-disable ui-disabled">Start</a>'
-							   + '<a id=' + 'conresume_' + process_task 
-							   + ' data-role="button" data-theme="c" data-icon="refresh" data-iconpos="notext" class="ui-disable ui-disabled">Resume</a>'
-							   + '<a id=' + 'conpause_' + process_task 
-							   + ' data-role="button" data-theme="c" data-icon="info" data-iconpos="notext">Pasue</a>'
-							   + '<a id=' + 'concancel_' + process_task 
-							   + ' data-role="button" data-theme="c" data-icon="delete" data-iconpos="notext">Cancel</a>'
-							   + '</div>';
-				}
+				case 3: // Status
+					processBar = TissueStack.Tasks.getStatusAsString(task.status);
+					break;
 				
-				if(j == 4){ // Progress
-					_this.queue_handle = setInterval(function () {
+				case 4: // Progress
+					processBar = 
+						'<div class="progress_bar_div" id="progress_bar_' + task.id + '"><progress class="progress_bar" id="progress_bar' + task.id + '" value="0" max="100"></progress>'
+						+ '<span class="progress_bar_text" id="progress_text_' + task.id + '">0%</span ></div>';
+					_this.queue_handles[task.id] = setInterval(function () {
 						TissueStack.Utils.sendAjaxRequest(
-							"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/progress/json?task_id="+ process_task,
+							"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/progress/json?task_id="+ task.id,
 							'GET', true,
 							function(data, textStatus, jqXHR) {
 								if (!data.response && !data.error) {
 									_this.replaceErrorMessage("No Data Set Updated!");
-									_this.stopQueue();
+									_this.stopTaskProgressCheck(task.id);
 									return false;
 								}
 								if (data.error) {
 									var message = "Error: " + (data.error.message ? data.error.message : " No DataSet Selected!");
 									_this.replaceErrorMessage(message);
-									_this.stopQueue();				
+									_this.stopTaskProgressCheck(task.id);				
 									return false;
 								}
 								if (data.response.noResults) {
 									_this.replaceErrorMessage("No Results!");
-									_this.stopQueue();
+									_this.stopTaskProgressCheck(task.id);
 									return false;
 								}
 	
 								var processTask = data.response;
-									if(zoom_level == null){
-										content = '<div id="progress_bar_' + process_task + '"><progress id="bar" value="'+ processTask.progress +'" max="100"></progress>'
-												+ '<span id="progess_in_process" style="text-align: left">'+ ' ' + processTask.progress.toFixed(2) +'%</span ></div>'; 
-									}
-									else{
-										content = '<div id="progress_bar_' + process_task + '"><progress id="bar" value="'+ processTask.progress +'" max="100"></progress>'
-												+ '<span id="progess_in_process" style="text-align: left">'+ ' ' + processTask.progress.toFixed(2) +'%</span >'
-												+ '<span id="progess_in_zoom_level" style="text-align: left">  ( ZOOM: '+ ' ' + zoom_level +' ) </span ></div>'; 
-									}
-									processBar = content;
-									$(cell).html(processBar);
-									$(row).append(cell);
-																		
-									if(processTask.progress == "100"){
-										_this.displayUploadDirectory();
-										
-										if(_this.detect_cookie_type == "PTL"){
-											$.cookie("PTL", null);
-										}
-										else if (_this.detect_cookie_type == "CVT"){
-											$.cookie("CVT", null);
-										}
-										_this.stopQueue();
-									}
-									return false;
+					
+								$("#" + "progress_bar_" + task.id).val(processTask.progress);
+								$("#" + "progress_text_" + task.id).val(processTask.progress);
+								
+								if(processTask.progress == "100"){
+									_this.displayUploadDirectory();
+									_this.stopTaskProgressCheck(task.id);
+								}
 							},
 							function(jqXHR, textStatus, errorThrown) {
 								_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
-								_this.stopQueue();
+								_this.stopTaskProgressCheck(task.id);
 								return false;
 							}
 						);  
-					}, 2500);
-				}
-				$(cell).append(processBar);
-				$(row).append(cell);
+					}, 25000);
+				break;
+				
+				case 5: // Cancel Column
+					processBar	= '<a id="cancel_' + task.id  + '" data-role="button" data-theme="c" data-icon="delete" data-iconpos="notext">Cancel</a>';
+					break;
 			}
-			$(tbody).append(row);
-			$("#task_table").css({"height" : nrRows * 20 + 15});
-			// script to hide table ID column 
-			/*if(TissueStack.tablet){
-				for(var i = 1; i < nrRows; i++){
-					document.getElementById('task_table').getElementsByTagName('tr')[i].getElementsByTagName('td')[0].style.display = 'none';
-				}
-			}*/
-		}	
+			$(cell).append(processBar);	
+			$(row).append(cell);
+		}
+		
+		// add row to table
+		$(tbody).append(row);
+		//$("#task_table").css({"height" : nrRows * 20 + 15});
+		// refresh
 		tab.trigger("create");
+		
+		return true;
 	},
-	stopQueue : function() {
-		clearInterval(this.queue_handle);
-		this.queue_handle = null;
+	removeTask : function(id) {
+		if (typeof(id) != 'number') return;
+		$("#" + id).remove();
+		// $('#task_table').tri
+	},
+	stopTaskProgressCheck : function(id) {
+		clearInterval(this.queue_handles[id]);
+		this.queue_handles[id] = null;
+	},
+	registerTaskActionHandler : function() {
+		var _this = this;
 	},
 	taskPasueHandler : function (process_task) {
 		var _this = this;

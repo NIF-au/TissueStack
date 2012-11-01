@@ -239,7 +239,6 @@ void		free_core_struct(t_tissue_stack *t)
   if (t->tile_requests != NULL) t->tile_requests->destroy(t->tile_requests);
   if (t->memory_mappings != NULL) {
     destroy_memory_mapping(t->memory_mappings);
-    free(t->memory_mappings);
   }
   free(t->functions);
   free(t);
