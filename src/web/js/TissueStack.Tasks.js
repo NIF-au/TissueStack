@@ -98,11 +98,13 @@ TissueStack.Tasks = {
 				else {
 					// convert numbers if they are numbers, otherwise leave them alone
 					var value = keyValuePair[1];
-					try {
-					  value = parseInt(value);
-					  if (isNaN(value)) value = keyValuePair[1];
-					} catch(noNumber) {
-						value = keyValuePair[1];
+					if (keyValuePair[0] != "file") { 
+						try {
+						  value = parseInt(value);
+						  if (isNaN(value)) value = keyValuePair[1];
+						} catch(noNumber) {
+							value = keyValuePair[1];
+						}
 					}
 					taskObject[keyValuePair[0]] = value; // add property
 				}
