@@ -507,18 +507,21 @@ TissueStack.Admin.prototype = {
 					if (!data.response && !data.error) {
 						_this.replaceErrorMessage("No Data Set Updated!");
 						_this.stopTaskProgressCheck(id);
-						return false;
+						$('#task_status_' + id).html("Back End Error. Retry later (Refresh Page)!");
+						return;
 					}
 					if (data.error) {
 						var message = "Error: " + (data.error.message ? data.error.message : " No DataSet Selected!");
 						_this.replaceErrorMessage(message);
-						_this.stopTaskProgressCheck(id);				
-						return false;
+						_this.stopTaskProgressCheck(id);
+						$('#task_status_' + id).html("Back End Error. Retry later (Refresh Page)!");
+						return;
 					}
 					if (data.response.noResults) {
 						_this.replaceErrorMessage("No Results!");
 						_this.stopTaskProgressCheck(id);
-						return false;
+						$('#task_status_' + id).html("Back End Error. Retry later (Refresh Page)!");
+						return;
 					}
 
 					var processTask = data.response;
@@ -548,7 +551,8 @@ TissueStack.Admin.prototype = {
 				function(jqXHR, textStatus, errorThrown) {
 					_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
 					_this.stopTaskProgressCheck(id);
-					return false;
+					$('#task_status_' + id).html("Back End Error. Retry later (Refresh Page)!");
+					return;
 				}
 			);  
 		}, 2500);
