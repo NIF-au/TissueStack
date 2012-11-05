@@ -20,13 +20,11 @@ TissueStack.Admin.prototype = {
 	detect_cookie_type: "",
 	registerQueryListRefreshHandler : function () {
 		var _this = this;
-		
-		$("#radio_task input:radio[id^='bt_convert']:first").attr('disabled', true).checkboxradio("refresh");
-		$("#radio_task input:radio[id^='bt_preTile']:first").attr('disabled', true).checkboxradio("refresh");
-		$("#radio_task input:radio[id^='bt_AddDataSet']:first").attr('disabled', true).checkboxradio("refresh");
-		
 		//top tabs check for refreshing upload directory list
 		$('#tab_admin_data, #tab_admin_setting').click(function(){
+			_this.displayUploadDirectory();
+		});
+		$('#radio_task').change(function(){
 			_this.displayUploadDirectory();
 		});
 	},
@@ -136,9 +134,20 @@ TissueStack.Admin.prototype = {
    		});	
 	},
 	displayUploadDirectory : function (){
-		var _this = this;  
+		//var _this = this;  
 	     $(".file_radio_list").show(function(){
-	      	"/" + TissueStack.Utils.sendAjaxRequest(TissueStack.configuration['restful_service_proxy_path'].value + "/admin/upload_directory/json", "GET", true,function(result) {
+	    	 var url = "/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/";
+	    	 var action = $('input[name=radio_task]:checked').val();
+	    	 if (typeof(action) == 'string' && action === 'PreTile')
+	    		 url += "data_set_raw_files";
+	    	 else 
+	    		 url += "upload_directory";
+	    	// complete url
+	    	url += ("/json"); 
+
+	    	$("#directory_name").html((typeof(action) == 'string' && action === 'PreTile') ? "Data Sets" : "Upload Directory");
+	    	
+	      	TissueStack.Utils.sendAjaxRequest(url, "GET", true,function(result) {
 		    	if (!result || !result.response || result.response.length == 0) {
 		    		return;
 		    	}
@@ -152,31 +161,11 @@ TissueStack.Admin.prototype = {
 	            $('.file_radio_list').fadeIn(1500, function() {  
 	             	 $('.file_radio_list').html(listOfFileName)
 	             	 	.trigger( "create" );
-	             	 	_this.identifyFileType(); 
+	             	 	//_this.identifyFileType(); 
 	             	 $('.file_radio_list').controlgroup('refresh', true);
 		        });
 	      	});	    
 	     });
-	},
-	identifyFileType: function () {
-		$("input[name=radio_listFile]").change(function() {
-			if($(this).val().split('.').pop() == "raw") {
-				$('#radio_task').fadeOut(250, function() {  
-				 	 $("#radio_task input:radio[id^='bt_convert']:first").attr('disabled', true).checkboxradio("refresh");
-				 	 $("#radio_task input:radio[id^='bt_AddDataSet']:first").attr('disabled', false).checkboxradio("refresh");
-				 	 $("#radio_task input:radio[id^='bt_preTile']:first").attr('disabled', false).checkboxradio("refresh");
-				 	 $('#radio_task').fadeIn();
-				});
-			}
-			if($(this).val().split('.').pop() == "mnc" || $(this).val().split('.').pop() == "nii" ) {
-				$('#radio_task').fadeOut(250, function() {  
-				 	 $("#radio_task input:radio[id^='bt_convert']:first").attr('disabled', false).checkboxradio("refresh");
-				 	 $("#radio_task input:radio[id^='bt_AddDataSet']:first").attr('disabled', true).checkboxradio("refresh");
-				 	 $("#radio_task input:radio[id^='bt_preTile']:first").attr('disabled', true).checkboxradio("refresh");
-				 	 $('#radio_task').fadeIn();
-				});
-			}
-		});
 	},
 	registerFileUploadHandler : function () {
 		var _this = this;
@@ -283,9 +272,8 @@ TissueStack.Admin.prototype = {
 			var fileSelected = false;
 			
 			var task_zoom_level = eval(TissueStack.configuration.default_zoom_levels.value).length;
+			var preview = [true, false];
 			
-			// the url to contact (will be completed by whatever action we want to carry out
-			var url = "/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/";
 			var successHandler = null;
 			
 			// the common code part for all actions
@@ -295,61 +283,81 @@ TissueStack.Admin.prototype = {
 					if (!action) { // check whether action was selected
 						_this.replaceErrorMessage("Please choose an action!");
 						return;
-					}			
+					}		
+					
+					// quick preliminary for file type: data set additions and tiling are only allowed for raw,
+					// conversions should be nifti or minc
+					if ((uploaded_file.value.lastIndexOf(".nii") > 0 || uploaded_file.value.lastIndexOf(".mnc") > 0)
+							&& action != "Convert") {
+						_this.replaceErrorMessage("Formats .nii and .mnc need to be converted to .raw first!");				
+						return;
+					} else if (uploaded_file.value.lastIndexOf(".raw") > 0
+							&& (action != "PreTile" && action != "AddDataSet") ) {
+						_this.replaceErrorMessage("Conversion needs a .nii or .mnc file as input!");				
+						return;
+					}
 						
-			  		// don't be confused by the outer loop, it will only apply for pre-tile
 			  		for(var i = 0; i < task_zoom_level ; i++) {
+				  		// don't be confused by the outer loop, it will only apply for pre-tile
 			  			if (action != "PreTile" && i > 0) break;
-
-						// set the individual bits for the selected action 
-						if(action == "rad_addDataSet") {
-							// we have an additional description existence check here
-	 						var msgDescription = $('#txtDesc').val();
-	 						if (msgDescription == ""){
-	 							_this.replaceErrorMessage("Please Add Description Before Adding New Data Set!");
-	 							return;
-	 						}
-							
-							url += ("add_dataset/json?session=" + _this.session + "&filename=" + uploaded_file.value + "&description=" + msgDescription);
-							successHandler = _this.addDataSetSuccessHandler;
-						} else if(action == "Convert") {
-							url += ("convert/json?session=" + _this.session + "&file=/opt/tissuestack/upload/" + uploaded_file.value);
-							actonType = TissueStack.Tasks.ReverseTypeLookupTable["Conversion"];
-							successHandler = _this.conversionAndPreTileSuccessHandler;
-						} else if(action == "PreTile") {
-							url += ("tile/json?session=" + _this.session	+ "&file=" + TissueStack.configuration['upload_directory'].value + "/" 
-									+ uploaded_file.value
-									+ "&tile_dir=" + TissueStack.configuration['server_tile_directory'].value
-									+ "&dimensions=0,0,0,0,0,0"	+ "&zoom=" + i + "&preview=true"); //+ "&store_data_set=true"
-							actonType = TissueStack.Tasks.ReverseTypeLookupTable["Tiling"];
-							successHandler = _this.conversionAndPreTileSuccessHandler;
-						}
-
-				  		// send ajax request
-				 		TissueStack.Utils.sendAjaxRequest(url, 'GET', true,
-							function(data, textStatus, jqXHR) {
-								if (!data.response && !data.error) {
-									_this.replaceErrorMessage("No Response Data Returned!");
-									return;
-								}
-								if (data.error) {
-									var message = "Error: " + (data.error.message ? data.error.message : " Action wasn't performed!");
-									_this.replaceErrorMessage(message);				
-									return;
-								}
-								if (data.response.noResults) {
-									_this.replaceErrorMessage("No Results!");
-									return;
-								}
+			  			
+			  			for (var j=0;j<preview.length;j++) {
+							// the url to contact (will be completed by whatever action we want to carry out
+							var url = "/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/";
 		
-								if (successHandler)
-									successHandler(_this, data.response, uploaded_file.value, actonType, actionStatus, i);
-							},
-							function(jqXHR, textStatus, errorThrown) {
-								_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
-								return;
+					  		// don't be confused by the outer loop, it will only apply for pre-tile
+				  			if (action != "PreTile" && !preview[j]) break;
+		
+							// set the individual bits for the selected action 
+							if(action == "AddDataSet") {
+								// we have an additional description existence check here
+		 						var msgDescription = $('#txtDesc').val();
+		 						if (msgDescription == ""){
+		 							_this.replaceErrorMessage("Please Add Description Before Adding New Data Set!");
+		 							return;
+		 						}
+								
+								url += ("add_dataset/json?session=" + _this.session + "&filename=" + uploaded_file.value + "&description=" + msgDescription);
+								successHandler = _this.addDataSetSuccessHandler;
+							} else if(action == "Convert") {
+								url += ("convert/json?session=" + _this.session + "&file=" + TissueStack.configuration['upload_directory'].value + "/" + uploaded_file.value);
+								actonType = TissueStack.Tasks.ReverseTypeLookupTable["Conversion"];
+								successHandler = _this.conversionAndPreTileSuccessHandler;
+							} else if(action == "PreTile") {
+								url += ("tile/json?session=" + _this.session	+ "&file=" + TissueStack.configuration['data_directory'].value + "/" 
+										+ uploaded_file.value
+										+ "&tile_dir=" + TissueStack.configuration['server_tile_directory'].value
+										+ "&dimensions=0,0,0,0,0,0"	+ "&zoom=" + i + "&preview=" + preview[j]);
+								actonType = TissueStack.Tasks.ReverseTypeLookupTable["Tiling"];
+								successHandler = _this.conversionAndPreTileSuccessHandler;
 							}
-						);
+		
+					  		// send ajax request
+					 		TissueStack.Utils.sendAjaxRequest(url, 'GET', true,
+								function(data, textStatus, jqXHR) {
+									if (!data.response && !data.error) {
+										_this.replaceErrorMessage("No Response Data Returned!");
+										return;
+									}
+									if (data.error) {
+										var message = "Error: " + (data.error.message ? data.error.message : " Action wasn't performed!");
+										_this.replaceErrorMessage(message);				
+										return;
+									}
+									if (data.response.noResults) {
+										_this.replaceErrorMessage("No Results!");
+										return;
+									}
+			
+									if (successHandler)
+										successHandler(_this, data.response, uploaded_file.value, actonType, actionStatus, i);
+								},
+								function(jqXHR, textStatus, errorThrown) {
+									_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
+									return;
+								}
+							);
+			  			}
 			  		}
 		  		}
 		  	});
@@ -450,6 +458,19 @@ TissueStack.Admin.prototype = {
 	registerTaskCancelHandler : function (id, file) {
 		if (typeof(id) != 'number' && typeof(file) != 'string') return;
 		
+		var markTaskAsCanceledAndStopChecking = function(_this, id) {
+			 // set status to canceled
+			TissueStack.tasks[id].status = 3;
+			// reflect new status in UI
+			$('#task_status_' + id).html(TissueStack.Tasks.getStatusAsString(TissueStack.tasks[id].status));
+			// disable cancel
+			$('#cancel_' + id).addClass('ui-disabled');
+			_this.displayUploadDirectory();
+			// write back to cookie
+			if (TissueStack.Tasks.writeToCookie())
+				_this.stopTaskProgressCheck(id);
+		};
+		
 		var _this = this;
 		$('#cancel_' + id).click(function() {
 		   TissueStack.Utils.sendAjaxRequest(
@@ -464,7 +485,11 @@ TissueStack.Admin.prototype = {
 					}
 					if (data.error) {
 						var message = "Error: " + (data.error.message ? data.error.message : " No Task ID Applied");
-						_this.replaceErrorMessage(message);				
+						// no task id message
+						if (message.indexOf(id) > 0)
+							markTaskAsCanceledAndStopChecking(_this, id);
+						else
+							_this.replaceErrorMessage(message);				
 						return;
 					}
 					if (data.response.noResults) {
@@ -472,18 +497,8 @@ TissueStack.Admin.prototype = {
 						return;
 					}
 					
-					if (data.response.filename && data.response.filename.indexOf(file) >= 0) {
-						 // set status to canceled
-						TissueStack.tasks[id].status = 3;
-						// reflect new status in UI
-						$('#task_status_' + id).html(TissueStack.Tasks.getStatusAsString(TissueStack.tasks[id].status));
-						// disable cancel
-						$('#cancel_' + id).addClass('ui-disabled');
-						_this.displayUploadDirectory();
-						// write back to cookie
-						if (TissueStack.Tasks.writeToCookie())
-							_this.stopTaskProgressCheck(id);
-					}
+					if (data.response.filename && data.response.filename.indexOf(file) >= 0) 
+						markTaskAsCanceledAndStopChecking(_this, id);
 				},
 				function(jqXHR, textStatus, errorThrown) {
 					_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
@@ -530,8 +545,10 @@ TissueStack.Admin.prototype = {
 						$('#task_status_' + id).html(TissueStack.Tasks.getStatusAsString(TissueStack.tasks[id].status));
 					}
 					
+					if (processTask.progress >= 0)
+						$("#" + "progress_text_" + id).html(processTask.progress + "%");
 					$("#" + "progress_bar_" + id).val(processTask.progress);
-					$("#" + "progress_text_" + id).html(processTask.progress + "%");
+
 					
 					if(processTask.progress == "100") {
 						 // set status to finished
@@ -547,6 +564,9 @@ TissueStack.Admin.prototype = {
 					}
 				},
 				function(jqXHR, textStatus, errorThrown) {
+					if (typeof(textStatus) == 'string' && (textStatus == 'parsererror' || textStatus == 'error'))
+						return;
+					
 					_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
 					_this.stopTaskProgressCheck(id);
 					$('#task_status_' + id).html("Back End Error. Retry later (Refresh Page)!");

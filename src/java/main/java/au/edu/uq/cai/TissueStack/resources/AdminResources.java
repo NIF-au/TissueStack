@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Path;
@@ -210,8 +211,8 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 	}
 	
 	@Path("/upload_directory")
-	@Description("Displays contents of upload directory")
-	public RestfulResource readFile() {
+	@Description("Displays contents of the upload directory")
+	public RestfulResource getContentsOfUploadDirectory() {
 		final File fileDirectory = AdminResources.getUploadDirectory();
 		
 		File[] listOfFiles = fileDirectory.listFiles(new FilenameFilter() {
@@ -232,7 +233,22 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 
  		return new RestfulResource(new Response(fileNames));
 	}
-	
+
+	@Path("/data_set_raw_files")
+	@Description("Displays raw files for the registered data sets")
+	public RestfulResource getRawFilesOfDataSets() {
+		final List<DataSet> dataSetsConfigured = DataSetDataProvider.getDataSets(0, 1000, null, false);
+		
+		String fileNames[] = new String[dataSetsConfigured.size()];
+		int i = 0;
+		while (i<fileNames.length) {
+			fileNames[i] = new File(dataSetsConfigured.get(i).getFilename()).getName();
+			i++;
+		}
+
+ 		return new RestfulResource(new Response(fileNames));
+	}
+
 	@Path("/add_dataset")
 	@Description("add uploaded dataset to the configuration database")
 	public RestfulResource updateDataSet(
@@ -285,7 +301,7 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 		// double check if file exists already
 		if (destination.exists()) {
 			throw new RuntimeException(
-					"File cannot be moved to the data directory since another file exists with the same name: "
+					"Data Set could not be added since another configuration exists with the same input file: "
 							+ destination.getAbsolutePath());
 		}
 		

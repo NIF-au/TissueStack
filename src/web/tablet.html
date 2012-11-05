@@ -35,6 +35,7 @@
         <script src="js/TissueStack.DataSetNavigation.js"></script>
         <script src="js/TissueStack.ContrastCanvas.js"></script>
         <script src="js/TissueStack.Admin.js"></script>
+        <script src="js/TissueStack.Tasks.js"></script>
 		<script src="js/TissueStack.Init.js"></script>
 		
 		<script type="text/javascript">
@@ -241,7 +242,7 @@
  	    </div> <!-- /login -->	
  	   <!--END OF ADMIN LOGIN-->
  	    	<div class="settings-tablet-left-column">
- 	    		<h2>Exist Files:</h2>
+ 	    		<h2 id="directory_name">Upload Directory</h2>
  	    		<hr/>
  	    		<div id="file_group" data-role="fieldcontain" style="overflow: auto; height: 250px;">
  	    			<fieldset class="file_radio_list" data-role="controlgroup" data-mini="true" >
@@ -253,9 +254,9 @@
  	    		    <fieldset id="radio_task" data-role="controlgroup" data-type="horizontal" data-mini="true" >
     		         	<input type="radio" name="radio_task" id="bt_convert" value="Convert" />
     		         	<label for="bt_convert">Convert</label>
-    		         	<input type="radio" name="radio_task" id="bt_preTile" value="PreTile" disabled="true"/>
+    		         	<input type="radio" name="radio_task" id="bt_preTile" value="PreTile" />
     		         	<label for="bt_preTile">Tiling</label>
-    		         	<input type="radio" name="radio_task" id="bt_AddDataSet" value="rad_addDataSet"  />
+    		         	<input type="radio" name="radio_task" id="bt_AddDataSet" value="AddDataSet"  />
     		         	<label for="bt_AddDataSet">Add</label>
  	    		    </fieldset>
  	    		</div>
