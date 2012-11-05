@@ -350,8 +350,6 @@ TissueStack.Admin.prototype = {
 								return;
 							}
 						);
-				 		
-				 		return;
 			  		}
 		  		}
 		  	});
