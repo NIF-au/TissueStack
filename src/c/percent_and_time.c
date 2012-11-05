@@ -437,12 +437,13 @@ void		clean_pause_queue(char *id, t_tissue_stack *t)
     {
       if (t->percent->cancel_first && strcmp(t->percent->cancel_first->id, id) == 0)
 	{
-      tmp = t->percent->cancel_first;
+	  tmp = t->percent->cancel_first;
 	  t->percent->cancel_first = tmp->next;
 	  free(tmp->id);
 	  free(tmp);
 	  return;
 	}
+      tmp = t->percent->cancel_first;
       while (tmp)
 	{
 	  if (tmp->next && strcmp(tmp->next->id, id) == 0)
@@ -476,6 +477,49 @@ int		is_percent_paused_cancel(char *id, t_tissue_stack *t)
   return (0);
 }
 
+int		remove_directory(const char *path)
+{
+  DIR		*d = opendir(path);
+  size_t	path_len = strlen(path);
+  int		r = -1;
+  int		r2 = -1;
+  char		*buf;
+  size_t	len;
+  struct dirent *p;
+  struct stat	statbuf;
+
+  if (d)
+    {
+      r = 0;
+      while (!r && (p = readdir(d)))
+	{
+          if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))
+	    {
+	      continue;
+	    }
+          len = path_len + strlen(p->d_name) + 2;
+          buf = malloc(len);
+          if (buf)
+	    {
+	      snprintf(buf, len, "%s/%s", path, p->d_name);
+	      if (!stat(buf, &statbuf))
+		{
+		  if (S_ISDIR(statbuf.st_mode))
+		    r2 = remove_directory(buf);
+		  else
+		    r2 = unlink(buf);
+		}
+	      free(buf);
+	    }
+          r = r2;
+	}
+      closedir(d);
+    }
+  if (!r)
+    r = rmdir(path);
+  return r;
+}
+
 void		percent_cancel_direct(char *id, t_tissue_stack *t)
 {
   char		*complete_path = NULL;
@@ -488,25 +532,30 @@ void		percent_cancel_direct(char *id, t_tissue_stack *t)
   if (t && id)
     {
       clean_pause_queue(id, t);
-      complete_path = malloc((strlen(id) + strlen(t->percent->path) + 1) * sizeof(*complete_path));
-      complete_path = strcpy(complete_path, t->percent->path);
-      complete_path = strcat(complete_path, id);
-      if (!stat(complete_path, &info))
+      if (t->percent->path)
 	{
-	  f = fopen(complete_path, "r+");
-	  if (fread(buff, 1, 4096, f) > 0)
-	    result = percent_str_to_wordtab(buff, '\n');
-	  if (!stat(result[5], &info))
-	    unlink(result[5]);
-	  fclose(f);
-	  unlink(complete_path);
-	  if (result != NULL)
+	  asprintf(&complete_path, "%s/%s", t->percent->path, id);
+	  if ((f = fopen(complete_path, "r+")) != NULL)
 	    {
-	      while (result[i] != NULL)
-		free(result[i++]);
+	      if (fread(buff, 1, 4096, f) > 0)
+		result = percent_str_to_wordtab(buff, '\n');
+	      if (!stat(result[5], &info))
+		{
+		  if (result[4][0] == '0')
+		    remove_directory(result[5]);
+		  else
+		    unlink(result[5]);
+		}
+	      fclose(f);
+	      unlink(complete_path);
+	      if (result != NULL)
+		{
+		  while (result[i] != NULL)
+		    free(result[i++]);
+		}
 	    }
+	  free(complete_path);
 	}
-      free(complete_path);
    }
 }
 

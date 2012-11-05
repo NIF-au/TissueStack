@@ -136,6 +136,8 @@ void		percent_get(char *id, void *box, t_tissue_stack *t)
 void		percent_cancel(char *id, void *box, t_tissue_stack *t)
 {
   percent_get(id, box, t);
+  t->percent_pause(id, t);
+  sleep(1);
   t->percent_cancel(id, t);
 }
 

@@ -65,6 +65,19 @@ int		get_nb_blocks_percent(t_image_extract *a, t_vol *volume)
   return (count);
 }
 
+void		my_time_diff(int fd, char *name, int dimension, int slice, struct timeval start, struct timeval end)
+{
+  char		*output;
+  int		len;
+
+  len = asprintf(&output, "%s - %i - %i ||| time start = [%is - %ims] | time end = [%is - %ims] | time diff = [%is - %ims]\n",
+		 name, dimension, slice,
+		 (int)start.tv_sec, (int)start.tv_usec,
+		 (int)end.tv_sec, (int)end.tv_usec,
+		 (int)((int)end.tv_sec - (int)start.tv_sec), (int)((int)end.tv_usec - (int)start.tv_usec));
+  write(fd, output, len);
+}
+
 void            *get_all_slices_of_all_dimensions(void *args)
 {
   t_vol		*volume;
@@ -76,6 +89,7 @@ void            *get_all_slices_of_all_dimensions(void *args)
 
   a = (t_image_args *)args;
   volume = a->volume;
+
   i = 0;
   if (a->info->percentage == 1)
     prctl(PR_SET_NAME, "TS_TILING");
@@ -91,6 +105,7 @@ void            *get_all_slices_of_all_dimensions(void *args)
   start = malloc(volume->dim_nb * sizeof(*start));
   start[X] = start[Y] = start[Z] = 0; // start to 0 = first slice
   // loop all dimensions
+
   i = 0;
   while (i < volume->dim_nb && exit == 0)
     {
@@ -173,9 +188,9 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
 	{
 	  free_hyperslab = 1;
 	  // allocation of a hyperslab (portion of the file, can be 1 slice or 1 demension...)
+
 	  hyperslab =  malloc(volume->slices_max * sizeof(*hyperslab));
 	  memset(hyperslab, 0, (volume->slices_max * sizeof(*hyperslab)));
-
 	  pthread_mutex_lock(&(a->p->lock));
 	  miget_real_value_hyperslab(volume->minc_volume, MI_TYPE_UBYTE, start, count, hyperslab);
 	  pthread_mutex_unlock(&(a->p->lock));

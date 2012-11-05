@@ -17,7 +17,7 @@
 #include <termios.h>
 #include <sys/ioctl.h>
 #include <minc2.h>
-
+#include <dirent.h>
 #include <sys/prctl.h>
 
 
