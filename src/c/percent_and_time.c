@@ -88,6 +88,7 @@ void		percent_init_direct(int total_blocks, char **id, char *filename, char *kin
   int		len_path;
   FILE		*f;
 
+  pthread_mutex_lock(&t->percent->mutex_init);
   gettimeofday(&tv,NULL);
   *id = malloc(17 * sizeof(**id));
   memset(*id, '0', 17);
@@ -100,13 +101,14 @@ void		percent_init_direct(int total_blocks, char **id, char *filename, char *kin
       complete_path = strcpy(complete_path, t->percent->path);
       complete_path = strcat(complete_path, *id);
       f = fopen(complete_path, "w+");
-      fprintf(f, "0\n%i\n%i\n%s\n%s\n%s\n%s\n", 0, total_blocks, filename, kind, path, command_line);
+      fprintf(f, "-1\n%i\n%i\n%s\n%s\n%s\n%s\n", 0, total_blocks, filename, kind, path, command_line);
       fclose(f);
       free(complete_path);
       str_log = *id;
       INFO("Percentage: %s Initialized", str_log);
       task_add_queue(*id, t);
     }
+  pthread_mutex_unlock(&t->percent->mutex_init);
 }
 
 char		**read_from_file_by_id(char *id, FILE **f, t_tissue_stack *t)
@@ -119,11 +121,10 @@ char		**read_from_file_by_id(char *id, FILE **f, t_tissue_stack *t)
   *f = NULL;
   if (t->percent->path)
     {
-      complete_path = malloc((strlen(id) + strlen(t->percent->path) + 1) * sizeof(*complete_path));
-      complete_path = strcpy(complete_path, t->percent->path);
-      complete_path = strcat(complete_path, id);
+      asprintf(&complete_path, "%s/%s", t->percent->path, id);
       if (!stat(complete_path, &info))
 	{
+	  memset(buff, '\0', 4095);
 	  *f = fopen(complete_path, "r+");
 	  if (fread(buff, 1, 4096, *f) > 0)
 	    result = percent_str_to_wordtab(buff, '\n');
@@ -153,8 +154,7 @@ void		percent_add_direct(int blocks, char *id, t_tissue_stack *t)
 	  blocks_done = atof(result[1]);
 	  blocks_done += blocks;
 	  percent_tmp = (float)((float)((float)blocks_done / (float)atof(result[2])) * 100.0);
-
-	  fprintf(f, "%f\n%f\n%s\n%s\n%s\n%s\n", percent_tmp, blocks_done, result[2], result[3], result[4], result[5]);
+	  fprintf(f, "%f\n%f\n%s\n%s\n%s\n%s\n%s\n", percent_tmp, blocks_done, result[2], result[3], result[4], result[5], result[6]);
 	  fclose(f);
 	}
     }
@@ -605,6 +605,7 @@ void		init_percent_time(t_tissue_stack *t, char *path)
   if (path != NULL)
     {
       pthread_mutex_init(&t->percent->mutex, NULL);
+      pthread_mutex_init(&t->percent->mutex_init, NULL);
       t->percent->path = strdup(path);
       actualPath = createDirectory(path, 0766);
       if (actualPath == NULL) {

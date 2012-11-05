@@ -70,6 +70,7 @@ struct			s_pause_cancel_queue
 struct			s_prcnt_t
 {
   pthread_mutex_t	mutex;
+  pthread_mutex_t	mutex_init;
   t_pause_cancel_queue	*cancel_first;
   char			*path;
 };
