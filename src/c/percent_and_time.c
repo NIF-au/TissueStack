@@ -405,7 +405,7 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 
 void		percent_pause_direct(char *id, t_tissue_stack *t)
 {
-  t_pause_cancel_queue	*tmp;
+  t_pause_cancel_queue	*tmp = NULL;
 
   if (t && id)
     {
@@ -430,14 +430,14 @@ void		percent_pause_direct(char *id, t_tissue_stack *t)
 
 void		clean_pause_queue(char *id, t_tissue_stack *t)
 {
-  t_pause_cancel_queue	*tmp;
-  t_pause_cancel_queue	*save;
+  t_pause_cancel_queue	*tmp = NULL;
+  t_pause_cancel_queue	*save = NULL;
 
   if (id && t)
     {
-      tmp = t->percent->cancel_first;
-      if (strcmp(tmp->id, id) == 0)
+      if (t->percent->cancel_first && strcmp(t->percent->cancel_first->id, id) == 0)
 	{
+      tmp = t->percent->cancel_first;
 	  t->percent->cancel_first = tmp->next;
 	  free(tmp->id);
 	  free(tmp);
@@ -451,6 +451,7 @@ void		clean_pause_queue(char *id, t_tissue_stack *t)
 	      tmp->next = tmp->next->next;
 	      free(save->id);
 	      free(save);
+	      save = NULL;
 	      return;
 	    }
 	  tmp = tmp->next;
@@ -460,7 +461,7 @@ void		clean_pause_queue(char *id, t_tissue_stack *t)
 
 int		is_percent_paused_cancel(char *id, t_tissue_stack *t)
 {
-  t_pause_cancel_queue	*tmp;
+  t_pause_cancel_queue	*tmp = NULL;
 
   if (t && id)
     {
