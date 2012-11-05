@@ -14,11 +14,13 @@ void		nc_create_notification(char *name,
   else
     {
       tmp = t->first_notification;
-      if (tmp == NULL) printf("hsdkjvsdhkjghjk\n");
-      while (tmp->next != NULL)
+      while (tmp && tmp->next != NULL)
 	tmp = tmp->next;
-      tmp->next = malloc(sizeof(*tmp->next));
-      tmp = tmp->next;
+      if (tmp)
+	{
+	  tmp->next = malloc(sizeof(*tmp->next));
+	  tmp = tmp->next;
+	}
     }
   tmp->next = NULL;
   tmp->name = strdup(name);
@@ -126,19 +128,29 @@ void		nc_list(t_tissue_stack *t)
     }
 }
 
+void		free_all_notifications(t_tissue_stack *t)
+{
+  t_nc_action	*tmp;
+  t_nc_action	*tmp2;
+  t_nc_func	*tmp_func;
+  t_nc_func	*tmp_func2;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  if (t->first_notification != NULL)
+    {
+      tmp = t->first_notification;
+      while (tmp)
+	{
+	  tmp_func = tmp->first_func;
+	  while (tmp_func)
+	    {
+	      tmp_func2 = tmp_func;
+	      tmp_func = tmp_func->next;
+	      free(tmp_func2);
+	    }
+	  free(tmp->name);
+	  tmp2 = tmp;
+	  tmp = tmp->next;
+	  free(tmp2);
+	}
+    }
+}

@@ -700,10 +700,12 @@ void		free_all_history(t_tissue_stack *t)
   t_hist_prompt	*c = NULL;
   t_hist_prompt	*save = NULL;
 
-  c = t->hist_first;
-  if (c != NULL && c->next == t->hist_first)
+  if (t)
+    c = t->hist_first;
+  if (t && c != NULL && c->next && c->next == t->hist_first)
     {
-      free(t->hist_first->commands);
+      if (t->hist_first->commands)
+	free(t->hist_first->commands);
       free(t->hist_first);
     }
   else if (c != NULL)

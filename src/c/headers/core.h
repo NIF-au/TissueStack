@@ -17,7 +17,7 @@
 #include <termios.h>
 #include <sys/ioctl.h>
 #include <minc2.h>
-
+#include <dirent.h>
 #include <sys/prctl.h>
 
 
@@ -298,6 +298,7 @@ void		task_lunch(t_tissue_stack *t);
 void		task_exec(char *task_id, t_tissue_stack *t);
 void		task_add_queue(char *task_id, t_tissue_stack *t);
 void		task_finished(char *task_id, t_tissue_stack *t);
+void		free_all_tasks(t_tissue_stack *t);
 
 /*		volume.c		*/
 
@@ -341,7 +342,7 @@ void		percent_pause_direct(char *id, t_tissue_stack *t);
 void		percent_resume_direct(char *id, t_tissue_stack *t);
 void		percent_destroy(char **commands, void *box, t_tissue_stack *t);
 void		init_percent_time(t_tissue_stack *t, char *path);
-
+void		free_all_percent(t_tissue_stack *t);
 
 /*		notification_center.c		*/
 
@@ -353,6 +354,7 @@ int		nc_raise(int id, char *name, char *command, void *data, t_tissue_stack *t);
 int		nc_subscribe(char *name, void (*action)(char *name, t_plugin *plugin, char *command, void *data, t_tissue_stack *t),
 			     t_tissue_stack *t);
 void		nc_list(t_tissue_stack *t);
+void		free_all_notifications(t_tissue_stack *t);
 
 /*		log_center.c			*/
 
@@ -366,6 +368,7 @@ void            lc_info(char *name, t_plugin *plugin, char *command, void *data,
 void            lc_warning(char *name, t_plugin *plugin, char *command, void *data, t_tissue_stack *t);
 void            lc_error(char *name, t_plugin *plugin, char *command, void *data, t_tissue_stack *t);
 void            lc_fatal(char *name, t_plugin *plugin, char *command, void *data, t_tissue_stack *t);
+void		free_all_log(t_tissue_stack *t);
 
 // GLOBAL APPLICATION PATH
 #define APPLICATION_PATH "/opt/tissuestack"

@@ -546,20 +546,34 @@ a.ui-slider-handle-horizontal{
 }
 /*Progress Bar for Task*/
 /* Firefox - value portion of progress bar */
-progress#bar::-moz-progress-bar {
+.progress_bar::-moz-progress-bar {
 background-color:  #70e0b4;
 }
 
 /* Chrome, Safari - value portion of progress bar */
-progress#bar::-webkit-progress-value {
+.progress_bar::-webkit-progress-value {
 background-color:  #70e0b4;
 }
 
 /* All other attributes */
-progress#bar {
+.progress_bar {
 background-color: #F0F0F0;
 border:  2px solid #686868;
 border-radius: 3px;
 padding: 1px;
 height: 25px;
+width: 100%;
+}
+
+.progress_bar_div {
+	position: relative;
+}
+
+.progress_bar_text {
+	position: absolute;
+	font-weight: bold;
+	color: white;
+	top: 20%;
+	left: 50%;
+	text-align: center;
 }
