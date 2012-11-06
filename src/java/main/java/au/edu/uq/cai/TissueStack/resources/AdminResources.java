@@ -5,7 +5,9 @@ import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Path;
@@ -34,6 +36,7 @@ import au.edu.uq.cai.TissueStack.rest.Description;
 import au.edu.uq.cai.TissueStack.rest.JSONBodyWriter;
 import au.edu.uq.cai.TissueStack.utils.ImageUtils;
 import au.edu.uq.cai.TissueStack.utils.StringUtils;
+import au.edu.uq.cai.TissueStack.utils.TaskUtils;
 
 /*
  * !!!!!!! IMPORTANT : always call SecurityResources.checkSession(session) to check for session validity !!!!!!
@@ -215,10 +218,12 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 	public RestfulResource getContentsOfUploadDirectory() {
 		final File fileDirectory = AdminResources.getUploadDirectory();
 		
+		final Map<String, Long> queuedTasks = TaskUtils.getMapOfFilesPresentlyInTaskQueue();
+		
 		File[] listOfFiles = fileDirectory.listFiles(new FilenameFilter() {
 			public boolean accept(File path, String fileOrDir) {
 				final File full = new File(path, fileOrDir);
-				if (full.isDirectory()) {
+				if (full.isDirectory() || (queuedTasks != null && queuedTasks.containsKey(full.getAbsolutePath()))) {
 					return false;
 				}
 				return true;
@@ -239,14 +244,16 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 	public RestfulResource getRawFilesOfDataSets() {
 		final List<DataSet> dataSetsConfigured = DataSetDataProvider.getDataSets(0, 1000, null, false);
 		
-		String fileNames[] = new String[dataSetsConfigured.size()];
-		int i = 0;
-		while (i<fileNames.length) {
-			fileNames[i] = new File(dataSetsConfigured.get(i).getFilename()).getName();
-			i++;
+		final Map<String, Long> queuedTasks = TaskUtils.getMapOfFilesPresentlyInTaskQueue();
+
+		final List<String> fileNames = new ArrayList<String>(dataSetsConfigured.size());
+		for (DataSet d : dataSetsConfigured) {
+			final File file = new File(d.getFilename());
+			if (queuedTasks == null || (queuedTasks != null && !queuedTasks.containsKey(file.getAbsolutePath())))
+				fileNames.add(file.getName());
 		}
 
- 		return new RestfulResource(new Response(fileNames));
+ 		return new RestfulResource(new Response(fileNames.toArray(new String[]{})));
 	}
 
 	@Path("/add_dataset")
