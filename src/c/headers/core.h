@@ -299,6 +299,7 @@ void		task_lunch(t_tissue_stack *t);
 void		task_exec(char *task_id, t_tissue_stack *t);
 void		task_add_queue(char *task_id, t_tissue_stack *t);
 void		task_finished(char *task_id, t_tissue_stack *t);
+void		task_clean_up(t_tissue_stack *t);
 void		free_all_tasks(t_tissue_stack *t);
 
 /*		volume.c		*/

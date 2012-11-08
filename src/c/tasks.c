@@ -4,9 +4,8 @@ void		task_finished(char *task_id, t_tissue_stack *t)
 {
   int		fi;
   int		i = 1;
-  char		buff[18];
-  int		j = 0;
-  char		*path_task_id = NULL;
+  int		count = 0;
+  char		*buff;
   int		fd;
 
   if (t && t->tasks)
@@ -15,22 +14,32 @@ void		task_finished(char *task_id, t_tissue_stack *t)
 	{
 	  if ((fi = open(t->tasks->path_tmp, (O_CREAT | O_RDWR | O_TRUNC), 0666)) > 0)
 	    {
+	      buff = malloc(17 * sizeof(*buff));
 	      while (i > 0)
 		{
-		  memset(buff, 0, 18);
-		  i = read(fd, buff, 17);
-		  buff[i] = '\0';
-		  FATAL("%i /\\/\\/\\/\\/\\/\\ %s", i, buff);
-		  if (j > 0)
-		    write(fi, buff, i);
-		  j++;
+		  memset(buff, '\0', 17);
+		  lseek(fd, count, SEEK_SET);
+		  i = read(fd, buff, 16);
+		  if (i > 0)
+		    {
+		      buff[i] = '\0';
+		      FATAL("**** |%s| = |%s|", buff, task_id);
+		      if (strncmp(buff, task_id, 16) != 0)
+			{
+			  write(fi, buff, 16);
+			  write(fi, "\n", 1);
+			}
+		    }
+		  count += 17;
 		}
+	      free(buff);
 	      close(fd);
 	      rename(t->tasks->path_tmp, t->tasks->path);
-	      t->tasks->is_running = FALSE;
-	      asprintf(&path_task_id, "%s/%s", t->percent->path, task_id);
-	      if (path_task_id)
-		free(path_task_id);
+	      if (strncmp(task_id, t->tasks->task_id, 16) == 0)
+		{
+		  FATAL("Inside here !!!!! %s - %s", task_id, t->tasks->task_id);
+		  t->tasks->is_running = FALSE;
+		}
 	      task_lunch(t);
 	    }
 	}
@@ -47,7 +56,6 @@ void		task_add_queue(char *task_id, t_tissue_stack *t)
     fd = open(t->tasks->path, (O_RDWR | O_CREAT | O_APPEND), 0666);
   if (t && t->tasks && fd > 0)
     {
-      FATAL("####### %i", i);
       i++;
       lseek(fd, 0, SEEK_SET);
       write(fd, task_id, strlen(task_id));
@@ -71,6 +79,7 @@ void		task_exec(char *task_id, t_tissue_stack *t)
 					 (result[4][0] == '1' ? "minc_converter" : "nifti_converter")),
 	       result[6], task_id);
       t->tasks->is_running = TRUE;
+      t->tasks->task_id = strdup(task_id);
       t->plug_actions(t, dest, NULL);
       i = 0;
       while (i < 7)
@@ -80,11 +89,17 @@ void		task_exec(char *task_id, t_tissue_stack *t)
 	}
       free(result);
     }
+  else
+    {
+      t->tasks->is_running = FALSE;
+      FATAL("--------------------]> %s <[-------------------", task_id);
+      task_finished(task_id, t);
+    }
 }
 
 void		task_lunch(t_tissue_stack *t)
 {
-  char		buff[4096];
+  char		*buff;
   int		len = 0;
   int		fd = 0;
 
@@ -92,20 +107,69 @@ void		task_lunch(t_tissue_stack *t)
   pthread_mutex_lock(&t->tasks->mutex);
   if (t && t->tasks && t->tasks->is_running == FALSE)
     {
-      FATAL("=====================> inside lunch <=================");
       if ((fd = open(t->tasks->path, O_RDWR)) > 0)
 	{
+	  buff = malloc(16 * sizeof(*buff));
+	  memset(buff, '\0', 16);
 	  lseek(fd, SEEK_SET, 0);
-	  len = read(fd, buff, 16);
-	  if (len > 0)
+	  if ((len = read(fd, buff, 16)) > 0)
 	    {
 	      buff[16] = '\0';
+	      FATAL(">>> |%s| <<<", buff);
 	      task_exec(buff, t);
 	    }
 	  close(fd);
+	  free(buff);
 	}
     }
   pthread_mutex_unlock(&t->tasks->mutex);
+}
+
+void		task_clean_up(t_tissue_stack *t)
+{
+  char		**result;
+  FILE		*f;
+  int		fd = 0;
+  int		fi = 0;
+  int		i = 1;
+  char		*buff;
+  int		count = 0;
+
+
+  if (t && t->tasks && t->tasks->path)
+    {
+      if ((fd = open(t->tasks->path, O_RDWR)) > 0)
+	{
+	  if ((fi = open(t->tasks->path_tmp, (O_CREAT | O_RDWR | O_TRUNC), 0666)) > 0)
+	    {
+
+	      buff = malloc(17 * sizeof(*buff));
+	      while (i > 0)
+		{
+		  memset(buff, '\0', 17);
+		  lseek(fd, count, SEEK_SET);
+		  i = read(fd, buff, 16);
+		  if (i > 0)
+		    {
+		      buff[i] = '\0';
+		      if ((result = read_from_file_by_id(buff, &f, t)) != NULL)
+			{
+			  if (strcmp(result[0], "100") != 0)
+			    {
+			      write(fi, buff, i);
+			      write(fi, "\n", 1);
+			    }
+			  fclose(f);
+			}
+		    }
+		  count += 17;
+		}
+	      free(buff);
+	      close(fd);
+	      rename(t->tasks->path_tmp, t->tasks->path);
+	    }
+	}
+    }
 }
 
 void		free_all_tasks(t_tissue_stack *t)

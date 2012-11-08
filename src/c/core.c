@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Thu Nov  1 16:04:21 2012 Oliver Nicolini
+** Last update Thu Nov  8 11:31:50 2012 Oliver Nicolini
 */
 
 #include "core.h"
@@ -156,7 +156,6 @@ void            init_prog(t_tissue_stack *t)
   pthread_mutex_init(&t->tasks->mutex, NULL);
   pthread_mutex_init(&t->tasks->queue_mutex, NULL);
 
-
   t->tile_requests = malloc(sizeof(*t->tile_requests));
   init_tile_requests(t->tile_requests);
   t->memory_mappings = malloc(sizeof(*t->memory_mappings));
@@ -298,6 +297,9 @@ int		main(int argc, char **argv)
   // start plugins
   (t->plug_actions)(t, serv_command, NULL);
   (t->plug_actions)(t, "start comm", NULL);
+
+  task_clean_up(t);
+  task_lunch(t);
 
   signal_manager(t);
 

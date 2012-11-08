@@ -119,16 +119,18 @@ char		**read_from_file_by_id(char *id, FILE **f, t_tissue_stack *t)
   char		buff[4096];
 
   *f = NULL;
-  if (t->percent->path)
+  if (t->percent->path && id)
     {
       asprintf(&complete_path, "%s/%s", t->percent->path, id);
       if (!stat(complete_path, &info))
 	{
 	  memset(buff, '\0', 4095);
-	  *f = fopen(complete_path, "r+");
-	  if (fread(buff, 1, 4096, *f) > 0)
-	    result = percent_str_to_wordtab(buff, '\n');
-	  fseek(*f, 0, SEEK_SET);
+	  if ((*f = fopen(complete_path, "r+")) != NULL)
+	    {
+	      if (fread(buff, 1, 4096, *f) > 0)
+		result = percent_str_to_wordtab(buff, '\n');
+	      fseek(*f, 0, SEEK_SET);
+	    }
 	  free(complete_path);
 	  return (result);
 	}
@@ -532,6 +534,7 @@ void		percent_cancel_direct(char *id, t_tissue_stack *t)
   if (t && id)
     {
       clean_pause_queue(id, t);
+      task_finished(id, t);
       if (t->percent->path)
 	{
 	  asprintf(&complete_path, "%s/%s", t->percent->path, id);
