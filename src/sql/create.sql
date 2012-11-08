@@ -18,7 +18,7 @@ CREATE TABLE configuration
 ALTER TABLE configuration OWNER TO tissuestack;
 
 -- GENERAL INSTANCE CONFIGURATION - some default values
-INSERT INTO configuration VALUES('version', '0.8', 'version');
+INSERT INTO configuration VALUES('version', '0.9', 'version');
 INSERT INTO configuration VALUES('image_service_proxy_path', 'image_service', 'image service proxy path (relative to the application''s web root directory)');
 INSERT INTO configuration VALUES('tile_directory', 'tiles', 'tile directory (relative to the application''s web root directory)');
 INSERT INTO configuration VALUES('server_tile_directory', '/opt/tissuestack/tiles', 'server side tile directory for pre-tiling');
