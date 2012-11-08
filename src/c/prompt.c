@@ -129,7 +129,7 @@ void		destroy_command_args(char ** args)
 
 t_args_plug	*create_copy_args(t_args_plug *args)
 {
-  t_args_plug	*a;
+  t_args_plug	*a = NULL;
 
   if (args != NULL)
   a = malloc(sizeof(*a));
@@ -190,7 +190,6 @@ void		prompt_exec(char **commands, t_tissue_stack *general, void *box)
 
 
   prog = commands[0];
-
   if (strcmp(commands[0], "resume") == 0)
     {
       general->percent_resume(commands[1], general);
@@ -216,7 +215,8 @@ void		prompt_exec(char **commands, t_tissue_stack *general, void *box)
 		   (strcmp(prog, "start") == 0 || strcmp(prog, "unload") == 0))
 	    {
 	      ERROR("%s - %p: Unknown Plugin", args->name, p);
-	      fclose((FILE*)box);
+	      if (box)
+		fclose((FILE*)box);
 	    }
 	  else
 	    thread_pool_add_task(general->functions[i].ptr, args, general->tp);
@@ -700,10 +700,12 @@ void		free_all_history(t_tissue_stack *t)
   t_hist_prompt	*c = NULL;
   t_hist_prompt	*save = NULL;
 
-  c = t->hist_first;
-  if (c != NULL && c->next == t->hist_first)
+  if (t)
+    c = t->hist_first;
+  if (t && c != NULL && c->next && c->next == t->hist_first)
     {
-      free(t->hist_first->commands);
+      if (t->hist_first->commands)
+	free(t->hist_first->commands);
       free(t->hist_first);
     }
   else if (c != NULL)

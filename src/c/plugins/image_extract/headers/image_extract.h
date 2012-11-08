@@ -48,6 +48,7 @@ typedef	struct	s_image_extract
   int		percent_fd;
   pthread_cond_t	cond;
   pthread_mutex_t	mut;
+  pthread_mutex_t	percent_mut;
 }		t_image_extract;
 
 typedef struct  s_image_args

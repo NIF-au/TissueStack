@@ -207,7 +207,6 @@ TissueStack.Events.prototype = {
 		this.updateCoordinateDisplay(coords);
 
 		if (this.canvas.mouse_down) {
-			
 			this.canvas.isDragging = true;
 			var dX = coords.x - this.canvas.mouse_x;
 			var dY = coords.y - this.canvas.mouse_y;

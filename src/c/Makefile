@@ -11,9 +11,10 @@ SRCS		=	$(DIRSRC)core.c							\
 			$(DIRSRC)utils/utils.c						\
 			$(DIRSRC)tile_requests.c					\
 			$(DIRSRC)percent_and_time.c					\
+			$(DIRSRC)tasks.c						\
 			$(DIRSRC)memory_mapping.c					\
 
-INCLUDE		=	-I./headers -I./utils
+INCLUDE		=	-I./headers -I./utils -I/usr/include/nifti
 
 LIB_PATH	=	
 
@@ -22,11 +23,14 @@ LIBS		=	-lhdf5								\
 			-lminc2								\
 			-lpthread							\
 			-lniftiio							\
-			-ldl
+			-ldl								\
+			-lniftiio							\
+			-lznz								\
+			-lz
 
 NAME		=	TissueStackImageServer
 
-FLAGS		=	-Wall -Werror -g3 #-D_GNU_SOURCE
+FLAGS		=	-Wall -Werror -ggdb -O3 -Wno-unused-result #-D_GNU_SOURCE
 
 OBJS		=	$(SRCS:%.c=%.o)
 
@@ -93,6 +97,12 @@ clean:
 
 recompile: clean compile
 
-re: clean all
+tomcatstop:
+	/opt/apache-tomcat-7.0.27/bin/shutdown.sh
+
+tomcatstart:
+	/opt/apache-tomcat-7.0.27/bin/startup.sh
+
+re: tomcatstop clean all tomcatstart
 
 .PHONY: all compile install clean re recompile

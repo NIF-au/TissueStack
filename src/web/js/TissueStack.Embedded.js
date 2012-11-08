@@ -253,7 +253,7 @@ TissueStack.Embedded.prototype = {
 					!use_image_service,
 					dataForPlane.oneToOneZoomLevel,
 					planeId,
-					dataForPlane.maxSclices,
+					dataForPlane.maxSlices,
 					dataForPlane.maxX,
 					dataForPlane.maxY,
 					zoomLevels,

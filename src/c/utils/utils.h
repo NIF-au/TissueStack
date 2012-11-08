@@ -32,12 +32,13 @@ t_string_buffer * createDirectory(char * path, mode_t mode);
 void		write_http_header(FILE * socket, char * status, char * image_type);
 
 void free_null_terminated_char_2D_array(char ** strings);
-inline short appendCharacterToTempTokenBuffer(char ** tempTokenBuffer,
+inline char * appendCharacterToTempTokenBuffer(char * tempTokenBuffer,
 		int * tempTokenBufferSize,
 		int * tempTokenBufferCapacity,
 					      char character);
 char* strupper( char* s );
 char* strlower( char* s );
+char		*array_2D_to_array_1D(char **str);
 
 #endif /* !__UTILS_H__ */
 

@@ -1,6 +1,7 @@
 DIRSRC		=	./src/
 
-SRCS		=	$(DIRSRC)converter.c
+SRCS		=	$(DIRSRC)converter.c			\
+			$(DIRSRC)../../../utils/utils.c
 
 INCLUDE		=	-I./headers -I./../../headers -I./../../utils
 
@@ -14,7 +15,7 @@ LIBS		=	-lhdf5								\
 
 NAME		=	TissueStackMincConverter.so
 
-FLAGS		=	-Wall -Werror -g3
+FLAGS		=	-Wall -Werror -ggdb -O3 -Wno-unused-result
 
 PLUGIN_INSTALL_DIR = /usr/local/plugins
 

@@ -23,11 +23,13 @@ public class DataSetPlanes{
 	  private String name;
 	  private int maxX; 
 	  private int maxY; 
-	  private int maxSclices; 
+	  private int maxSlices; 
 	  private String zoomLevels; 
 	  private int oneToOneZoomLevel; 
 	  private String transformationMatrix;
 	  private BigDecimal resolutionMm;
+	  private BigDecimal valueRangeMin;
+	  private BigDecimal valueRangeMax;
 
 	@Id	@GeneratedValue(strategy = GenerationType.IDENTITY)
  	@Column(name="id")
@@ -99,14 +101,14 @@ public class DataSetPlanes{
 		this.maxY = maxY;
 	}
 	
-	@Column(name="max_sclices")
+	@Column(name="max_slices")
 	@XmlElement(name="MaxSlices", namespace=IGlobalConstants.XML_NAMESPACE)	
-	public int getMaxSclices() {
-		return maxSclices;
+	public int getMaxSlices() {
+		return maxSlices;
 	}
 	
-	public void setMaxSclices(int maxSclices) {
-		this.maxSclices = maxSclices;
+	public void setMaxSlices(int maxSlices) {
+		this.maxSlices = maxSlices;
 	}
 	
 	@Column(name="zoom_levels")
@@ -147,6 +149,26 @@ public class DataSetPlanes{
 	
 	public void setResolutionMm(BigDecimal resolutionMm) {
 		this.resolutionMm = resolutionMm;
+	}
+	
+	@Column(name="value_range_min")
+	@XmlElement(name="ValueRangeMinimum", namespace=IGlobalConstants.XML_NAMESPACE)	
+	public BigDecimal getValueRangeMin() {
+		return this.valueRangeMin;
+	}
+	
+	public void setValueRangeMin(BigDecimal valueRangeMin) {
+		this.valueRangeMin = valueRangeMin;
+	}
+	
+	@Column(name="value_range_max")
+	@XmlElement(name="ValueRangeMaximum", namespace=IGlobalConstants.XML_NAMESPACE)	
+	public BigDecimal getValueRangeMax() {
+		return this.valueRangeMax;
+	}
+	
+	public void setValueRangeMax(BigDecimal valueRangeMax) {
+		this.valueRangeMax = valueRangeMax;
 	}
 }
 

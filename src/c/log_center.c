@@ -51,7 +51,7 @@ void		lc_write_on_plug_fd(t_plugin *plugin, char *command, int log_level, t_tiss
 {
   t_log_plug_fd	*tmp;
   t_log		*log;
-  char		*complete_path;
+  char		*complete_path = NULL;
 
   log = t->log;
   if (!log->path)
@@ -65,7 +65,7 @@ void		lc_write_on_plug_fd(t_plugin *plugin, char *command, int log_level, t_tiss
 	complete_path = concat_path(log->path, "core", ".plugin.log");
       else
 	complete_path = concat_path(log->path, plugin->name, ".plugin.log");
-      if ((tmp->fd = open(complete_path, (O_RDWR | O_CREAT | O_TRUNC))) == -1)
+      if ((tmp->fd = open(complete_path, (O_RDWR | O_CREAT | O_TRUNC), 0666)) == -1)
 	{
 	  ERROR("open %s failed", complete_path);
 	  return;
@@ -101,7 +101,7 @@ void		lc_write_on_plug_fd(t_plugin *plugin, char *command, int log_level, t_tiss
 	    complete_path = concat_path(log->path, "core", ".plugin.log");
 	  else
 	    complete_path = concat_path(log->path, plugin->name, ".plugin.log");
-	  if ((tmp->fd = open(complete_path, (O_RDWR | O_CREAT | O_TRUNC))) == -1)
+	  if ((tmp->fd = open(complete_path, (O_RDWR | O_CREAT | O_TRUNC), 0666)) == -1)
 	    {
 	      ERROR("open %s failed", complete_path);
 	      return;
@@ -115,25 +115,29 @@ void		lc_write_on_plug_fd(t_plugin *plugin, char *command, int log_level, t_tiss
 	  log->first_plug_fd = tmp;
 	}
     }
+  if (complete_path != NULL)
+    free(complete_path);
   create_string_and_write(plugin, command, log_level, log, tmp->fd);
 }
 
 void		lc_write_on_level_fd(t_plugin *plugin, char *command, int log_level, t_tissue_stack *t)
 {
-  t_log_level_fd *tmp;
-  t_log		*log;
-  char		*complete_path;
+  t_log_level_fd *tmp = NULL;
+  t_log		*log = NULL;
+  char		*complete_path = NULL;
+
+  if (t == NULL || t->log == NULL) return;
 
   log = t->log;
-  if (!log->path)
-    return;
+  if (!log->path) return;
+
   if ((tmp = log->first_level_fd) == NULL)
     {
       log->first_level_fd = malloc(sizeof(*log->first_level_fd));
       tmp = log->first_level_fd;
       tmp->level = log_level;
       complete_path = concat_path(log->path, _log_levels[log_level], ".level.log");
-      if ((tmp->fd = open(complete_path, (O_RDWR | O_CREAT | O_TRUNC))) == -1)
+      if ((tmp->fd = open(complete_path, (O_RDWR | O_CREAT | O_TRUNC), 0666)) == -1)
 	{
 	  ERROR("open %s failed", complete_path);
 	  return;
@@ -158,7 +162,7 @@ void		lc_write_on_level_fd(t_plugin *plugin, char *command, int log_level, t_tis
 	  tmp = malloc(sizeof(*tmp));
 	  tmp->level = log_level;
 	  complete_path = concat_path(log->path, _log_levels[log_level], ".level.log");
-	  if ((tmp->fd = open(complete_path, (O_RDWR | O_CREAT | O_TRUNC))) == -1)
+	  if ((tmp->fd = open(complete_path, (O_RDWR | O_CREAT | O_TRUNC), 0666)) == -1)
 	    {
 	      ERROR("open %s failed", complete_path);
 	      return;
@@ -172,6 +176,8 @@ void		lc_write_on_level_fd(t_plugin *plugin, char *command, int log_level, t_tis
 	  log->first_level_fd = tmp;
 	}
     }
+  if (complete_path != NULL)
+    free(complete_path);
   create_string_and_write(plugin, command, log_level, log, tmp->fd);
 }
 
@@ -286,14 +292,29 @@ void		lc_fatal(char *name, t_plugin *plugin, char *command, void *data, t_tissue
 }
 
 
+void		free_all_log(t_tissue_stack *t)
+{
+  t_log_plug_fd	*tmp_plug;
+  t_log_level_fd *tmp_level;
+  t_log_plug_fd	*tmp_plug2;
+  t_log_level_fd *tmp_level2;
 
-
-
-
-
-
-
-
-
-
-
+  free(t->log->path);
+  tmp_level = t->log->first_level_fd;
+  tmp_plug = t->log->first_plug_fd;
+  while (tmp_plug)
+    {
+      close(tmp_plug->fd);
+      tmp_plug2 = tmp_plug;
+      tmp_plug = tmp_plug->next;
+      free(tmp_plug2);
+    }
+  while (tmp_level)
+    {
+      close(tmp_level->fd);
+      tmp_level2 = tmp_level;
+      tmp_level = tmp_level->next;
+      free(tmp_level2);
+    }
+  free(t->log);
+}

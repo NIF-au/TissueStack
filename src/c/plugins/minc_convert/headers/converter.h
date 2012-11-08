@@ -2,6 +2,7 @@
 #define __MINC_TOOL_CORE__
 
 #include "core.h"
+#include "utils.h"
 
 #include <sys/stat.h>
 

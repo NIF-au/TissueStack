@@ -1,32 +1,32 @@
 #include "utils.h"
 
-inline short appendCharacterToTempTokenBuffer(
-		char ** tempTokenBuffer,
+inline char * appendCharacterToTempTokenBuffer(
+		char * tempTokenBuffer,
 		int * tempTokenBufferSize,
 		int * tempTokenBufferCapacity,
 		char character) {
 	if (tempTokenBuffer == NULL) {
-		return 0;
+		return NULL;
 	}
 
 	// add space for 25 more characters to the buffer
 	if ((*tempTokenBufferSize) == *tempTokenBufferCapacity) {
-		char *tmp = (char *) realloc(*tempTokenBuffer, ((*tempTokenBufferCapacity) + 25) * sizeof(char *));
+		char *tmp = (char *) realloc(tempTokenBuffer, ((*tempTokenBufferCapacity) + 25) * sizeof(char *));
 
 		if (tmp == NULL) {
 			free(tempTokenBuffer);
-			return 0;
+			return NULL;
 		}
-		*tempTokenBuffer = tmp;
+		tempTokenBuffer = tmp;
 		(*tempTokenBufferCapacity) += 25;
 	}
 
 	// add the character
-	(*tempTokenBuffer)[*tempTokenBufferSize] = character;
+	(tempTokenBuffer)[*tempTokenBufferSize] = character;
 	// increment the buffer size
 	(*tempTokenBufferSize)++;
 
-	return 1;
+	return tempTokenBuffer;
 }
 
 int countTokens(char *buffer, char delimiter, char escape)
@@ -105,7 +105,7 @@ char ** tokenizeString(char *buffer, char delimiter, char escape)
 	  // if we have an escaped delimiter => skip over it
 	  if (charAtI == escape && buffer[i+1] == delimiter) {
 		  // add delimiter
-		  if (!appendCharacterToTempTokenBuffer(&tempTokenBuffer, &tempTokenBufferSize, &tempTokenBufferCapacity, delimiter)) break;
+		  if ((tempTokenBuffer = appendCharacterToTempTokenBuffer(tempTokenBuffer, &tempTokenBufferSize, &tempTokenBufferCapacity, delimiter)) == NULL) break;
 		  i += 2;
 		  ++tokenLength;
 
@@ -118,7 +118,7 @@ char ** tokenizeString(char *buffer, char delimiter, char escape)
 		  // copy temp token buffer contents over into destination
 		  if (tokenLength>0) {
 			  // add '\0' to temp buffer to indicate end
-			  if (!appendCharacterToTempTokenBuffer(&tempTokenBuffer, &tempTokenBufferSize, &tempTokenBufferCapacity, '\0')) break;
+			  if ((tempTokenBuffer = appendCharacterToTempTokenBuffer(tempTokenBuffer, &tempTokenBufferSize, &tempTokenBufferCapacity, '\0')) == NULL) break;
 			  dest[j] = strdup(tempTokenBuffer);
 			  j++;
 		  }
@@ -127,7 +127,7 @@ char ** tokenizeString(char *buffer, char delimiter, char escape)
 		  tempTokenBufferSize = 0;
 	  } else {
 		  // add character
-		  if (!appendCharacterToTempTokenBuffer(&tempTokenBuffer, &tempTokenBufferSize, &tempTokenBufferCapacity, charAtI)) break;
+		  if ((tempTokenBuffer = appendCharacterToTempTokenBuffer(tempTokenBuffer, &tempTokenBufferSize, &tempTokenBufferCapacity, charAtI)) == NULL) break;
 		  // increment token length counter
 		  tokenLength++;
 	  }
@@ -139,7 +139,7 @@ char ** tokenizeString(char *buffer, char delimiter, char escape)
   // potential token leftover before end => copy over as well
   if (tokenLength > 0) {
 	  // add '\0' to temp buffer to indicate end
-	  if (!appendCharacterToTempTokenBuffer(&tempTokenBuffer, &tempTokenBufferSize, &tempTokenBufferCapacity, '\0')) return NULL;
+	  if ((tempTokenBuffer = appendCharacterToTempTokenBuffer(tempTokenBuffer, &tempTokenBufferSize, &tempTokenBufferCapacity, '\0')) == NULL) return NULL;
 	  // copy temp token buffer contents over into destination
 	  dest[j] = strdup(tempTokenBuffer);
 	  ++j;
@@ -275,31 +275,34 @@ char* strlower( char* s )
 
 void		write_http_header(FILE * socket, char * status, char * image_type)
 {
-	t_string_buffer * header = appendToBuffer(NULL, "HTTP/1.1 ");
-	header = appendToBuffer(header, status); // HTTP STATUS
-	header = appendToBuffer(header, "\r\nDate: Thu, 20 May 2004 21:12:11 GMT\r\n"); // Date (in the past)
-	header = appendToBuffer(header, "Connection: close\r\n"); // Connection header (close)
-	header = appendToBuffer(header, "Server: Tissue Stack Image Server\r\n"); // Server header
-	header = appendToBuffer(header, "Accept-Ranges: bytes\r\n"); // Accept-Ranges header
-	/*
+  if (socket != NULL)
+    {
+      t_string_buffer * header = appendToBuffer(NULL, "HTTP/1.1 ");
+      header = appendToBuffer(header, status); // HTTP STATUS
+      header = appendToBuffer(header, "\r\nDate: Thu, 20 May 2004 21:12:11 GMT\r\n"); // Date (in the past)
+      header = appendToBuffer(header, "Connection: close\r\n"); // Connection header (close)
+      header = appendToBuffer(header, "Server: Tissue Stack Image Server\r\n"); // Server header
+      header = appendToBuffer(header, "Accept-Ranges: bytes\r\n"); // Accept-Ranges header
+      /*
 	char contLen[150];
 	sprintf(contLen, "Content-Length: %lu\r\n", content_length);
 	//header = appendToBuffer(header, contLen); // Content-Length header
-	 */
-	if (image_type != NULL)
+	*/
+      if (image_type != NULL)
 	{
-		header = appendToBuffer(header, "Content-Type: image/"); // Content-Type header
-		header = appendToBuffer(header, image_type); // image type
+	  header = appendToBuffer(header, "Content-Type: image/"); // Content-Type header
+	  header = appendToBuffer(header, image_type); // image type
 	} else {
-		header = appendToBuffer(header, "Content-Type: text/html");
-	}
-	header = appendToBuffer(header, "\r\nAccess-Control-Allow-Origin: *\r\n"); // allow cross origin requests
-	header = appendToBuffer(header, "Last-Modified: Thu, 20 May 2004 21:12:11 GMT\r\n\r\n"); // last modified header in the past
+	header = appendToBuffer(header, "Content-Type: text/html");
+      }
+      header = appendToBuffer(header, "\r\nAccess-Control-Allow-Origin: *\r\n"); // allow cross origin requests
+      header = appendToBuffer(header, "Last-Modified: Thu, 20 May 2004 21:12:11 GMT\r\n\r\n"); // last modified header in the past
 
-	write(fileno(socket), header->buffer, header->size);
+      write(fileno(socket), header->buffer, header->size);
 
-	free(header->buffer);
-	free(header);
+      free(header->buffer);
+      free(header);
+    }
 }
 
 short testBufferAppend() {
@@ -431,6 +434,37 @@ void free_null_terminated_char_2D_array(char ** strings) {
 		i++;
 	}
 	free(strings);
+}
+
+char		*array_2D_to_array_1D(char **src)
+{
+  int		i = 0;
+  int		len = 0;
+  char		*str;
+  int		j;
+  int		k = 0;
+
+  while (src[i] != NULL)
+    {
+      len += strlen(src[i]);
+      i++;
+    }
+  str = malloc((len + i + 1) * sizeof(*str));
+  i = 0;
+  while (src[i] != NULL)
+    {
+      j = 0;
+      while (src[i][j] != '\0')
+	{
+	  str[k] = src[i][j];
+	  k++;
+	  j++;
+	}
+      str[k++] = ' ';
+      i++;
+    }
+  str[k - 1] = '\0';
+  return (str);
 }
 
 /** TESTS **/

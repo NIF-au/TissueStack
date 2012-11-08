@@ -5,7 +5,7 @@
 ** E-Mail   o.nicolini@uq.edu.au
 **
 ** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Thu Oct 11 16:59:04 2012 Oliver Nicolini
+** Last update Thu Nov  8 11:31:50 2012 Oliver Nicolini
 */
 
 #include "core.h"
@@ -139,10 +139,22 @@ void            init_prog(t_tissue_stack *t)
   t->percent_init = percent_init_direct;
   t->percent_add = percent_add_direct;
   t->percent_get = percent_get_direct;
-  t->is_percent_cancel = is_percent_cancel;
-
   t->percent_cancel = percent_cancel_direct;
+  t->is_percent_paused_cancel = is_percent_paused_cancel;
+  t->clean_pause_queue = clean_pause_queue;
+
+  t->percent_pause = percent_pause_direct;
   t->percent_resume = percent_resume_direct;
+
+  t->tasks = malloc(sizeof(*t->tasks));
+
+  t->tasks->f = NULL;
+  t->tasks->add_to_queue = task_add_queue;
+  t->tasks->path = strdup(CONCAT_APP_PATH("tasks/general"));
+  t->tasks->path_tmp = strdup(CONCAT_APP_PATH("tasks/general.tmp"));
+  t->tasks->is_running = FALSE;
+  pthread_mutex_init(&t->tasks->mutex, NULL);
+  pthread_mutex_init(&t->tasks->queue_mutex, NULL);
 
   t->tile_requests = malloc(sizeof(*t->tile_requests));
   init_tile_requests(t->tile_requests);
@@ -216,11 +228,17 @@ void		free_core_struct(t_tissue_stack *t)
 
   INFO("Freeing Allocated Resources...");
   free_all_volumes(t);
-  free_all_plugins(t);
   free_all_history(t);
+  free_all_plugins(t);
   free_all_prompt(t);
+  free_all_notifications(t);
+  free_all_percent(t);
+  free_all_tasks(t);
+  free_all_log(t);
   if (t->tile_requests != NULL) t->tile_requests->destroy(t->tile_requests);
-  if (t->memory_mappings != NULL) destroy_memory_mapping(t->memory_mappings);
+  if (t->memory_mappings != NULL) {
+    destroy_memory_mapping(t->memory_mappings);
+  }
   free(t->functions);
   free(t);
 }
@@ -263,6 +281,8 @@ int		main(int argc, char **argv)
 
   // These are the plugins that should be loaded by default.
   // Please no rash name changes since JNI asks for the predefined names!
+
+
   plugin_load_from_string("load image /usr/local/plugins/TissueStackImageExtract.so", t);
   plugin_load_from_string("load serv /usr/local/plugins/TissueStackCommunicator.so", t);
   plugin_load_from_string("load comm /usr/local/plugins/TissueStackProcessCommunicator.so", t);
@@ -277,6 +297,9 @@ int		main(int argc, char **argv)
   // start plugins
   (t->plug_actions)(t, serv_command, NULL);
   (t->plug_actions)(t, "start comm", NULL);
+
+  task_clean_up(t);
+  task_lunch(t);
 
   signal_manager(t);
 

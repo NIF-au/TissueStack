@@ -16,7 +16,7 @@ public class TissueStack {
     public native String tileMincVolume(
     		String fileName, String baseDirectory, int dimensions[], int tileSize, double zoomFactor, String imageType, boolean preview);
     public native String convertImageFormatToRaw(String imageFile, String newRawFile, short formatIdentifier);
-    public native TaskStatus queryTaskProgress(String taskID);
+    public native TaskStatus callTaskAction(String taskID, short action);
     
     // main method was for testing only
     public static void main(String[] args) {

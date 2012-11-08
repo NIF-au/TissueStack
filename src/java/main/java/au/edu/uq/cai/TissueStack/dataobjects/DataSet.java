@@ -13,6 +13,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Id;
 import javax.persistence.Transient;
@@ -30,8 +31,8 @@ public class DataSet {
 	private long id; 
 	private String filename; 
 	private String description;
-	
 	private List<DataSetPlanes> planes;
+	private DataSetValuesLookupTable lookupValues;
 
 	@Id
 	@Column(name="id")
@@ -72,6 +73,15 @@ public class DataSet {
 	}
 	public void setPlanes(List<DataSetPlanes> planes) {
 		this.planes = planes;
+	}
+
+	@OneToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name="id")
+	public DataSetValuesLookupTable getLookupValues() {
+		return this.lookupValues;
+	}
+	public void setLookupValues(DataSetValuesLookupTable lookupValues) {
+		this.lookupValues = lookupValues;
 	}
 	
 	@Transient
@@ -150,9 +160,9 @@ public class DataSet {
 				if (indexOfY != null) p.setMaxX(info.getSizes()[indexOfY]);
 				if (indexOfZ != null) p.setMaxY(info.getSizes()[indexOfZ]);
 				if (numberOfDimensions == 1) {
-					p.setMaxSclices(0);
+					p.setMaxSlices(0);
 				} else {
-					p.setMaxSclices(info.getSizes()[indexOfX] - 1);
+					p.setMaxSlices(info.getSizes()[indexOfX] - 1);
 				}
 				
 				// set transformation matrix
@@ -225,9 +235,9 @@ public class DataSet {
 				if (indexOfX != null) p.setMaxX(info.getSizes()[indexOfX]);
 				if (indexOfZ != null) p.setMaxY(info.getSizes()[indexOfZ]);
 				if (numberOfDimensions == 1) {
-					p.setMaxSclices(0);
+					p.setMaxSlices(0);
 				} else {
-					p.setMaxSclices(info.getSizes()[indexOfY] - 1);
+					p.setMaxSlices(info.getSizes()[indexOfY] - 1);
 				}
 				
 				// set transformation matrix
@@ -300,9 +310,9 @@ public class DataSet {
 				if (indexOfX != null) p.setMaxX(info.getSizes()[indexOfX]);
 				if (indexOfY != null) p.setMaxY(info.getSizes()[indexOfY]);
 				if (numberOfDimensions == 1) {
-					p.setMaxSclices(0);
+					p.setMaxSlices(0);
 				} else {
-					p.setMaxSclices(info.getSizes()[indexOfZ] - 1);
+					p.setMaxSlices(info.getSizes()[indexOfZ] - 1);
 				}
 				
 				// set transformation matrix

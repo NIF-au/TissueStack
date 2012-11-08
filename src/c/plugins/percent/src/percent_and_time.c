@@ -92,9 +92,9 @@ char		**percent_str_to_wordtab(char *buff, char c)
 
 char		**read_from_file_by_id(char *id, FILE **f, t_tissue_stack *t)
 {
-  char		*complete_path;
+  char		*complete_path = NULL;
   struct stat	info;
-  char		**result;
+  char		**result = NULL;
   char		buff[4096];
 
   *f = NULL;
@@ -115,12 +115,11 @@ char		**read_from_file_by_id(char *id, FILE **f, t_tissue_stack *t)
   return (NULL);
 }
 
-
 void		percent_get(char *id, void *box, t_tissue_stack *t)
 {
   char		pc[4096];
-  char		**result;
-  FILE		*f;
+  char		**result = NULL;
+  FILE		*f = NULL;
 
   if (t->percent == NULL)
     return;
@@ -134,103 +133,24 @@ void		percent_get(char *id, void *box, t_tissue_stack *t)
   percent_time_write_plug(pc, box);
 }
 
-void		percent_cancel(char *id, t_tissue_stack *t)
+void		percent_cancel(char *id, void *box, t_tissue_stack *t)
 {
-  t_cancel_queue	*tmp;
-
-  if (t && id)
-    {
-      if ((tmp = t->percent->cancel_first) != NULL)
-	{
-	  while (tmp->next)
-	    tmp = tmp->next;
-	  tmp->next = malloc(sizeof(*tmp->next));
-	  tmp = tmp->next;
-	  tmp->id = strdup(id);
-	  tmp->next = NULL;
-	}
-      else
-	{
-	  tmp = malloc(sizeof(*tmp));
-	  tmp->next = NULL;
-	  tmp->id = strdup(id);
-	  t->percent->cancel_first = tmp;
-	}
-    }
+  percent_get(id, box, t);
+  t->percent_pause(id, t);
+  sleep(1);
+  t->percent_cancel(id, t);
 }
 
-void		percent_resume(char *id, t_tissue_stack *t)
+void		percent_pause(char *id, void *box, t_tissue_stack *t)
 {
-  char		**result;
-  t_vol		*vol;
-  int		blocks_done;
-  int		i = 0;
-  int		count = 0;
-  int		dim_size = 0;
-  char		*dest;
-  int		dim_s_e[3][2];
-  FILE		*f;
+  t->percent_pause(id, t);
+  percent_get(id, box, t);
+}
 
-  if ((result = read_from_file_by_id(id, &f, t)) != NULL)
-    {
-      if (strcmp(result[0], "100") != 0)
-	{
-	  if ((vol = t->get_volume(result[3], t)) != NULL)
-	    {
-	      blocks_done = atoi(result[2]) - 1;
-	      if (result[4][0] == '0')
-		{
-		  while (i < vol->dim_nb)
-		    {
-		      dim_size = vol->size[i];
-		      if ((count + dim_size) > blocks_done)
-			{
-			  dim_s_e[i][0] = blocks_done;
-			  dim_s_e[i][1] = 0;
-			}
-		      if (count > blocks_done)
-			{
-			  dim_s_e[i][0] = 0;
-			  dim_s_e[i][1] = 0;
-			}
-		      if ((count + dim_size) < blocks_done)
-			{
-			  dim_s_e[i][0] = -1;
-			  dim_s_e[i][1] = -1;
-			}
-		      if ("full")
-			asprintf(&dest, "start image %i %i %i %i %i %i %.4f %i tiles JPEG 256 -1 -1 grey 0 0 1000 0 0 %s @tiling@ %s",
-				 dim_s_e[0][0], dim_s_e[0][1],
-				 dim_s_e[1][0], dim_s_e[1][1],
-				 dim_s_e[2][0], dim_s_e[2][1],
-				 atof(result[5]),
-				 1,
-				 result[6],
-				 id);
-		      else if ("preview")
-			asprintf(&dest, "start image %i %i %i %i %i %i %.4f %i full JPEG grey 0 0 1000 0 0 %s @tiling@ %s",
-				 dim_s_e[0][0], dim_s_e[0][1],
-				 dim_s_e[1][0], dim_s_e[1][1],
-				 dim_s_e[2][0], dim_s_e[2][1],
-				 atof(result[5]),
-				 6,
-				 result[6],
-				 id);
-		      t->plug_actions(t, dest, NULL);
-		      break;
-		      i++;
-		    }
-		}
-	      /*
-	      else if (result[4][0] == '1')
-		;// minc conv
-	      else if (result[4][0] == '2')
-		;// nifti conv
-	      */
-	    }
-	}
-    }
-  fclose(f);
+void		percent_resume(char *id, void *box, t_tissue_stack *t)
+{
+  t->percent_resume(id, t);
+  percent_get(id, box, t);
 }
 
 void		*init(void *args)
@@ -253,11 +173,11 @@ void		*start(void *args)
   if (strcmp(a->commands[0], "get") == 0)
     percent_get(a->commands[1], a->box, a->general_info);
   else if (strcmp(a->commands[0], "cancel") == 0)
-    percent_cancel(a->commands[1], a->general_info);
+    percent_cancel(a->commands[1], a->box, a->general_info);
   else if (strcmp(a->commands[0], "pause") == 0)
-    percent_cancel(a->commands[1], a->general_info);
-  else if (strcmp(a->commands[0], "pause") == 0)
-    percent_resume(a->commands[1], a->general_info);
+    percent_pause(a->commands[1], a->box, a->general_info);
+  else if (strcmp(a->commands[0], "resume") == 0)
+    percent_resume(a->commands[1], a->box, a->general_info);
   return (NULL);
 }
 

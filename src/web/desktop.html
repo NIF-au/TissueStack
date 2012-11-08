@@ -37,6 +37,7 @@
 		<script src="js/TissueStack.DataSetStore.js"></script>
 		<script src="js/TissueStack.DataSetNavigation.js"></script>
 		<script src="js/TissueStack.Admin.js"></script>
+		<script src="js/TissueStack.Tasks.js"></script>
 		<script src="js/TissueStack.ContrastCanvas.js"></script>
 		<script src="js/TissueStack.Init.js"></script>
 		
@@ -67,6 +68,7 @@
      	    		<input data-mini="true" size="8" maxlength="10" type="text" id="canvas_point_x" value="0"/>
      	    		<input data-mini="true" size="8" maxlength="10" type="text" id="canvas_point_y" value="0"/>
      	    		<input data-mini="true" size="8" maxlength="10" type="text" id="canvas_point_z" value="0"/>
+     	    		<input data-mini="true" disabled="disabled" style="background-color: gray;" size="8" maxlength="10" type="text" id="canvas_point_value" value="0"/>
      	    		<button type="button" id="dataset_1_center_point_in_canvas" data-mini="true">Center Data Set 1</button>
      	    		<button type="button" id="dataset_2_center_point_in_canvas" data-mini="true">Center Data Set 2</button>
      	    		
@@ -243,7 +245,7 @@
 				<input type="checkbox" id="sync_data_sets" />
                 <label for="sync_data_sets">Synchronize Data Sets</label>
                 <input type="checkbox" id="overlay_data_sets" />
-                <label for="overlay_data_sets">Overlay Second Data Set With First</label>
+                <label for="overlay_data_sets">Overlay Second Data Set With First (Not functional yet!)</label>
 				
 				<a href="desktop.html#data" data-role="button" id="drawing_interval_button">Apply</a>
 			</div>
@@ -314,7 +316,7 @@
 	 		<!--END OF ADMIN LOGIN-->
 	     	
 	     	<div id="div_file_upload" class="settings-left-column">
-				<h1>File Upload</h1>
+				<h2>File Upload</h2>
 				<hr/>
 				<div id="file_uploaded_message" ></div>
 				<div id="file_status_message" class="hidden"></div>		 
@@ -332,9 +334,9 @@
 	     	</div>
 	     	
 	     	<div class="settings-right-column">
-				<h1>Upload Directory</h1>
+				<h2 id="directory_name">Upload Directory</h2>
 				<hr/>
-				<div id="file_group" data-role="fieldcontain">
+				<div id="file_group" data-role="fieldcontain" style="overflow: auto; height: 130px;">
 					<fieldset class="file_radio_list" data-role="controlgroup">
 					</fieldset>
 				</div>
@@ -345,9 +347,9 @@
 				    <fieldset id="radio_task" data-role="controlgroup" data-type="horizontal">
 				         	<input type="radio" name="radio_task" id="bt_convert" value="Convert" />
 				         	<label for="bt_convert">Convert</label>
-				         	<input type="radio" name="radio_task" id="bt_preTile" value="PreTile" disabled="true"/>
+				         	<input type="radio" name="radio_task" id="bt_preTile" value="PreTile"/>
 				         	<label for="bt_preTile">Pre Tile</label>
-				         	<input type="radio" name="radio_task" id="bt_AddDataSet" value="rad_addDataSet"  />
+				         	<input type="radio" name="radio_task" id="bt_AddDataSet" value="AddDataSet"  />
 				         	<label for="bt_AddDataSet">Add Data Set</label>
 				    </fieldset>
 				</div>
@@ -355,15 +357,15 @@
 			</div>
 			
 			<div class="setting-buttom-column">
-				<h1 style="text-align: center;">Tasks</h1> <hr/>
 				<div id="task_list">
 				    <table id="task_table" class="conversion-table">
 				        <thead><tr>
-				                <th scope="col">ID</th>
-				                <th scope="col">File Name</th>
-				                <th scope="col">Type</th>
-                                <th scope="col">Action</th>
+				                <th scope="col">Task Id</th>
+				                <th scope="col">File</th>
+				                <th scope="col">Task</th>
+                                <th scope="col">Status</th>
                                 <th scope="col">Progress (%)</th>
+                                <th scope="col">&nbsp;</th>
                             </tr>
                         </thead>
                         <tbody>

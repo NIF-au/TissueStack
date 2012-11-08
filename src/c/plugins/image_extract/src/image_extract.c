@@ -357,6 +357,23 @@ void		lunch_percent_display(t_tissue_stack *t, t_vol *vol, t_image_extract *imag
   (*t->tp->add)(percentage, (void *)args, t->tp);
 }
 
+void		lunch_pct_and_add_task(t_tissue_stack *t, t_vol *vol, t_image_extract *image_general, int fd, char **commands)
+{
+  char		*command_line;
+  char		*id_percent;
+
+  pthread_mutex_lock(&image_general->percent_mut);
+  if (image_general->percentage && image_general->id_percent == NULL)
+    {
+      command_line = array_2D_to_array_1D(commands);
+      t->percent_init(get_nb_blocks_percent(image_general, vol), &id_percent, vol->path, "0", image_general->root_path, command_line, t);
+      if (write(fd, id_percent, 16) < 0)
+	ERROR("Open Error");
+      image_general->id_percent = id_percent;
+    }
+  pthread_mutex_unlock(&image_general->percent_mut);
+}
+
 void		image_creation_lunch(t_tissue_stack *t, t_vol *vol, int step, t_image_extract *image_general, FILE *sock)
 {
   t_image_args	*args;
@@ -364,8 +381,6 @@ void		image_creation_lunch(t_tissue_stack *t, t_vol *vol, int step, t_image_extr
   unsigned int	j;
   unsigned int	nb_slices = 0;
   int		**dim_start_end;
-  char		*id_percent = NULL;
-  char		*zoom_f;
 
   // infinite loop paranoia
   if (step <= 0) {
@@ -374,16 +389,6 @@ void		image_creation_lunch(t_tissue_stack *t, t_vol *vol, int step, t_image_extr
 
   dim_start_end = image_general->dim_start_end;
 
-  if (image_general->percentage && image_general->id_percent == NULL)
-    {
-      asprintf(&zoom_f, "%f", image_general->scale);
-      t->percent_init(get_nb_blocks_percent(image_general, vol), &id_percent, vol->path, "0", image_general->root_path, zoom_f, t);
-      FATAL("======> %s <==========", id_percent);
-      if (write(image_general->percent_fd, id_percent, 16) < 0)
-	ERROR("Open Error");
-      image_general->id_percent = id_percent;
-      free(zoom_f);
-    }
   if (image_general->percentage)
     {
       // One thread only for each volume and all its dimentions
@@ -524,6 +529,7 @@ void		*init(void *args)
   image_args->request_id = NULL;
   image_args->request_time = NULL;
   pthread_mutex_init(&image_args->mut, NULL);
+  pthread_mutex_init(&image_args->percent_mut, NULL);
   pthread_cond_init(&image_args->cond, NULL);
   InitializeMagick("./");
   colormap_init(image_args);
@@ -617,17 +623,20 @@ void			*start(void *args)
       if (a->commands[20] != NULL)
 	{
 	  image_args->root_path = strdup(a->commands[20]);
-	  if (a->commands[21] != NULL && strcmp(a->commands[21], "@tiling@") == 0)
+	  if (a->commands[21] != NULL && strcmp(a->commands[21], "@tasks@") == 0)
 	    {
 	      image_args->percentage = 1;
 	      if (a->commands[22] != NULL)
 		{
 		  image_args->id_percent = strdup(a->commands[22]);
+		  FATAL("Task id = %s\n", a->commands[22]);
 		  image_args->percent_fd = 1;
 		}
 	      else
-		image_args->percent_fd = *((int*)a->box);
-
+		{
+		  lunch_pct_and_add_task(a->general_info, volume, image_args, *((int*)a->box), a->commands);
+		  return (NULL);
+		}
 	    }
 	}
     }
@@ -660,9 +669,9 @@ void			*start(void *args)
 	  if (a->commands[17] != NULL)
 	    {
 	      image_args->root_path = strdup(a->commands[17]);
-	      if (a->commands[18] != NULL && strcmp(a->commands[18], "@tiling@") == 0)
+	      if (a->commands[18] != NULL && strcmp(a->commands[18], "@tasks@") == 0)
 		{
-          prctl(PR_SET_NAME, "TS_TILING");
+		  prctl(PR_SET_NAME, "TS_TILING");
 		  image_args->percentage = 1;
 		  if (a->commands[19] != NULL)
 		    {
@@ -670,7 +679,10 @@ void			*start(void *args)
 		      image_args->percent_fd = 1;
 		    }
 		  else
-		    image_args->percent_fd = *((int*)a->box);
+		    {
+		      lunch_pct_and_add_task(a->general_info, volume, image_args, *((int*)a->box), a->commands);
+		      return (NULL);
+		    }
 		}
 	    }
 	}
@@ -727,6 +739,7 @@ void		*unload(void *args)
 	  free(a->name);
 	  free(a->path);
 	  free(a);
+	  a = NULL;
   }
 
   return (NULL);

@@ -185,7 +185,7 @@ TissueStack.Utils = {
 		// we hide everything if there are no data sets selected
 		if (datasets == 0) {
 		   // clear input fields
-		   $("#canvas_point_x,#canvas_point_y,#canvas_point_z").attr("value", "");
+		   $("#canvas_point_x,#canvas_point_y,#canvas_point_z,#canvas_point_value").attr("value", "");
 		   $("#canvas_point_x,#canvas_point_y,#canvas_point_z").attr("disabled", "disabled");
 		   // hide everything
 		   $('#dataset_1_center_point_in_canvas, #dataset_2_center_point_in_canvas').closest('.ui-btn').hide();
@@ -212,22 +212,12 @@ TissueStack.Utils = {
 		leftPanelHeight -=  heightTolerance;
 		
 		$('.left_panel').css({"width" : leftPanelWidth, "height": leftPanelHeight});
-		$('.right_panel').css({"width" : rightPanelWidth, "height": TissueStack.canvasDimensions.height});
 		$(".ui-slider-vertical").height(TissueStack.canvasDimensions.height - heightTolerance);
 		$(".ui-slider-horizontal").height(TissueStack.canvasDimensions.height - heightTolerance);
-
-		if (TissueStack.desktop) {
-			var treeHeight = 
-				leftPanelHeight - 
-				$("#canvas_extent").height() - $("#canvas_point_x").height() * 8 - $("#dataset_1_center_point_in_canvas").height() * (datasets == 2 ? 5 : 4);
-			$("#treedataset").css({"height": treeHeight});
-		}
 
 		$('.dataset').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height * 0.99});
 		
 		for (var x=1;x<=datasets;x++) {
-			var contrast = null;
-			
 			$("#dataset_" + x + "_toolbox_canvas").css({"width" : TissueStack.canvasDimensions.width * 0.8, "height" : 75});
 			$("#dataset_" + x + "_contrast_box").css({"width" : TissueStack.canvasDimensions.width * 0.8, "height" : 55});
 			$("#dataset_" + x + "_toolbox_canvas").attr("width", TissueStack.canvasDimensions.width * 0.8);
@@ -257,6 +247,13 @@ TissueStack.Utils = {
 		$('.left_side_view canvas').attr("height", sideCanvasDims.height);
 		$('.right_side_view canvas').attr("width", sideCanvasDims.width);
 		$('.right_side_view canvas').attr("height", sideCanvasDims.height);
+		
+		var treeHeight = $('.left_panel').height();
+		$('.left_panel').children().each(function() {
+	      if ($(this).attr('id') != 'treedataset' && $(this).css('display') != 'none') 
+	      treeHeight -= $(this).outerHeight();
+	    });
+		$('#treedataset').css({"height": treeHeight - 50});
 	},
 	verifyUrlSyntax : function(url) {
 		if (typeof(url) != "string") {
@@ -483,5 +480,46 @@ TissueStack.Utils = {
 		}
 
 		return ((newRes - Math.floor(newRes) > 0.00001) ? newRes.toFixed(3) : newRes) + '&nbsp;' + unit_lookup[unit_step];
+	}, swapOverlayAndUnderlyingCanvasPlanes : function(dataset, plane1, plane2, recursive_call) {
+		// only for sync but not in combination with overlay
+		if (!TissueStack.sync_datasets) return;
+			
+		// prelim checks of existence
+		if (typeof(dataset) != 'object' || !dataset.planes || typeof(plane1) != 'string' || typeof(plane2) != 'string') return;
+		
+		var plane1Found = dataset.planes[plane1];
+		var plane2Found = dataset.planes[plane2];
+		
+		// both planes need to be found in the dataset
+		if (!plane1Found || !plane2Found) return;
+
+		// neither underlying canvas nor overlay exists => nothing to do => exit 
+		if (!plane1Found.underlying_canvas && !plane1Found.overlay_canvas
+				&& !plane2Found.underlying_canvas && !plane2Found.overlay_canvas) return;
+		
+		var whichEverCanvas1 = plane1Found.underlying_canvas ? plane1Found.underlying_canvas : plane1Found.overlay_canvas;
+		var whichEverCanvas2 = plane2Found.underlying_canvas ? plane2Found.underlying_canvas : plane2Found.overlay_canvas;
+		
+		// swap the 2 
+		var tmp = whichEverCanvas1;
+		whichEverCanvas1 = whichEverCanvas2;
+		whichEverCanvas2 = tmp;
+		
+		if (plane1Found.underlying_canvas) {
+			plane1Found.underlying_canvas = whichEverCanvas1;
+			plane2Found.underlying_canvas = whichEverCanvas2;
+		} else {
+			plane1Found.overlay_canvas = whichEverCanvas1;
+			plane2Found.overlay_canvas = whichEverCanvas2;
+		}
+
+		// so that we don't enter into an infinite recursion after our explicit second call (see below)
+		if (recursive_call) return;
+
+		// call ourselves one more time for the other bidirectional end (overlay/underlying)
+		TissueStack.Utils.swapOverlayAndUnderlyingCanvasPlanes(
+				TissueStack.dataSetStore.getDataSetById(
+						TissueStack.dataSetNavigation.selectedDataSets[whichEverCanvas1.dataset_id]),
+				plane1, plane2, true);
 	}
 };
