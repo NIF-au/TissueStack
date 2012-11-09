@@ -275,31 +275,34 @@ char* strlower( char* s )
 
 void		write_http_header(FILE * socket, char * status, char * image_type)
 {
-	t_string_buffer * header = appendToBuffer(NULL, "HTTP/1.1 ");
-	header = appendToBuffer(header, status); // HTTP STATUS
-	header = appendToBuffer(header, "\r\nDate: Thu, 20 May 2004 21:12:11 GMT\r\n"); // Date (in the past)
-	header = appendToBuffer(header, "Connection: close\r\n"); // Connection header (close)
-	header = appendToBuffer(header, "Server: Tissue Stack Image Server\r\n"); // Server header
-	header = appendToBuffer(header, "Accept-Ranges: bytes\r\n"); // Accept-Ranges header
-	/*
+  if (socket != NULL)
+    {
+      t_string_buffer * header = appendToBuffer(NULL, "HTTP/1.1 ");
+      header = appendToBuffer(header, status); // HTTP STATUS
+      header = appendToBuffer(header, "\r\nDate: Thu, 20 May 2004 21:12:11 GMT\r\n"); // Date (in the past)
+      header = appendToBuffer(header, "Connection: close\r\n"); // Connection header (close)
+      header = appendToBuffer(header, "Server: Tissue Stack Image Server\r\n"); // Server header
+      header = appendToBuffer(header, "Accept-Ranges: bytes\r\n"); // Accept-Ranges header
+      /*
 	char contLen[150];
 	sprintf(contLen, "Content-Length: %lu\r\n", content_length);
 	//header = appendToBuffer(header, contLen); // Content-Length header
-	 */
-	if (image_type != NULL)
+	*/
+      if (image_type != NULL)
 	{
-		header = appendToBuffer(header, "Content-Type: image/"); // Content-Type header
-		header = appendToBuffer(header, image_type); // image type
+	  header = appendToBuffer(header, "Content-Type: image/"); // Content-Type header
+	  header = appendToBuffer(header, image_type); // image type
 	} else {
-		header = appendToBuffer(header, "Content-Type: text/html");
-	}
-	header = appendToBuffer(header, "\r\nAccess-Control-Allow-Origin: *\r\n"); // allow cross origin requests
-	header = appendToBuffer(header, "Last-Modified: Thu, 20 May 2004 21:12:11 GMT\r\n\r\n"); // last modified header in the past
+	header = appendToBuffer(header, "Content-Type: text/html");
+      }
+      header = appendToBuffer(header, "\r\nAccess-Control-Allow-Origin: *\r\n"); // allow cross origin requests
+      header = appendToBuffer(header, "Last-Modified: Thu, 20 May 2004 21:12:11 GMT\r\n\r\n"); // last modified header in the past
 
-	write(fileno(socket), header->buffer, header->size);
+      write(fileno(socket), header->buffer, header->size);
 
-	free(header->buffer);
-	free(header);
+      free(header->buffer);
+      free(header);
+    }
 }
 
 short testBufferAppend() {
@@ -460,7 +463,7 @@ char		*array_2D_to_array_1D(char **src)
       str[k++] = ' ';
       i++;
     }
-  str[k] = '\0';
+  str[k - 1] = '\0';
   return (str);
 }
 

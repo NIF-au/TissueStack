@@ -65,19 +65,6 @@ int		get_nb_blocks_percent(t_image_extract *a, t_vol *volume)
   return (count);
 }
 
-void		my_time_diff(int fd, char *name, int dimension, int slice, struct timeval start, struct timeval end)
-{
-  char		*output;
-  int		len;
-
-  len = asprintf(&output, "%s - %i - %i ||| time start = [%is - %ims] | time end = [%is - %ims] | time diff = [%is - %ims]\n",
-		 name, dimension, slice,
-		 (int)start.tv_sec, (int)start.tv_usec,
-		 (int)end.tv_sec, (int)end.tv_usec,
-		 (int)((int)end.tv_sec - (int)start.tv_sec), (int)((int)end.tv_usec - (int)start.tv_usec));
-  write(fd, output, len);
-}
-
 void            *get_all_slices_of_all_dimensions(void *args)
 {
   t_vol		*volume;

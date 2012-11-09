@@ -5,6 +5,9 @@ import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Path;
@@ -33,6 +36,7 @@ import au.edu.uq.cai.TissueStack.rest.Description;
 import au.edu.uq.cai.TissueStack.rest.JSONBodyWriter;
 import au.edu.uq.cai.TissueStack.utils.ImageUtils;
 import au.edu.uq.cai.TissueStack.utils.StringUtils;
+import au.edu.uq.cai.TissueStack.utils.TaskUtils;
 
 /*
  * !!!!!!! IMPORTANT : always call SecurityResources.checkSession(session) to check for session validity !!!!!!
@@ -210,14 +214,16 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 	}
 	
 	@Path("/upload_directory")
-	@Description("Displays contents of upload directory")
-	public RestfulResource readFile() {
+	@Description("Displays contents of the upload directory")
+	public RestfulResource getContentsOfUploadDirectory() {
 		final File fileDirectory = AdminResources.getUploadDirectory();
+		
+		final Map<String, Long> queuedTasks = TaskUtils.getMapOfFilesPresentlyInTaskQueue();
 		
 		File[] listOfFiles = fileDirectory.listFiles(new FilenameFilter() {
 			public boolean accept(File path, String fileOrDir) {
 				final File full = new File(path, fileOrDir);
-				if (full.isDirectory()) {
+				if (full.isDirectory() || (queuedTasks != null && queuedTasks.containsKey(full.getAbsolutePath()))) {
 					return false;
 				}
 				return true;
@@ -232,7 +238,24 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 
  		return new RestfulResource(new Response(fileNames));
 	}
-	
+
+	@Path("/data_set_raw_files")
+	@Description("Displays raw files for the registered data sets")
+	public RestfulResource getRawFilesOfDataSets() {
+		final List<DataSet> dataSetsConfigured = DataSetDataProvider.getDataSets(0, 1000, null, false);
+		
+		final Map<String, Long> queuedTasks = TaskUtils.getMapOfFilesPresentlyInTaskQueue();
+
+		final List<String> fileNames = new ArrayList<String>(dataSetsConfigured.size());
+		for (DataSet d : dataSetsConfigured) {
+			final File file = new File(d.getFilename());
+			if (queuedTasks == null || (queuedTasks != null && !queuedTasks.containsKey(file.getAbsolutePath())))
+				fileNames.add(file.getName());
+		}
+
+ 		return new RestfulResource(new Response(fileNames.toArray(new String[]{})));
+	}
+
 	@Path("/add_dataset")
 	@Description("add uploaded dataset to the configuration database")
 	public RestfulResource updateDataSet(
@@ -285,7 +308,7 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 		// double check if file exists already
 		if (destination.exists()) {
 			throw new RuntimeException(
-					"File cannot be moved to the data directory since another file exists with the same name: "
+					"Data Set could not be added since another configuration exists with the same input file: "
 							+ destination.getAbsolutePath());
 		}
 		
