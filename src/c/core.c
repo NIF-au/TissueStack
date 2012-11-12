@@ -1,13 +1,19 @@
 /*
-** core.c for hello in /home/oliver/workspace/TissueStack/src/c
-**
-** Made by Oliver Nicolini
-** E-Mail   o.nicolini@uq.edu.au
-**
-** Started on  Mon May 21 13:05:15 2012 Oliver Nicolini
-** Last update Thu Nov  8 11:31:50 2012 Oliver Nicolini
-*/
-
+ * This file is part of TissueStack.
+ *
+ * TissueStack is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * TissueStack is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with TissueStack.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #include "core.h"
 
 static t_tissue_stack	*t_global;
