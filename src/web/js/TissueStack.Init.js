@@ -41,15 +41,20 @@ TissueStack.Init = function (afterLoadingRoutine) {
 		} 
 		
 		var dataSetCount = TissueStack.dataSetNavigation.selectedDataSets.count;
+		var now = new Date().getTime();
+		TissueStack.lastWindowResizing = now;
 		
-		TissueStack.Utils.adjustScreenContentToActualScreenSize(dataSetCount);
-		// set new canvas dimensions
-		for (var i=0;i<dataSetCount;i++) {
-			var dataSet = TissueStack.dataSetStore.getDataSetById(TissueStack.dataSetNavigation.selectedDataSets["dataset_" + (i+1)]);
-			for (var plane in dataSet.planes) {
-				dataSet.planes[plane].resizeCanvas();
+		setTimeout(function() {
+			if (now < TissueStack.lastWindowResizing) return;
+			TissueStack.Utils.adjustScreenContentToActualScreenSize(dataSetCount);
+			// set new canvas dimensions
+			for (var i=0;i<dataSetCount;i++) {
+				var dataSet = TissueStack.dataSetStore.getDataSetById(TissueStack.dataSetNavigation.selectedDataSets["dataset_" + (i+1)]);
+				for (var plane in dataSet.planes) {
+					dataSet.planes[plane].resizeCanvas(TissueStack.lastWindowResizing);
+				}
 			}
-		}
+		}, 250);
 	});
 };
 
