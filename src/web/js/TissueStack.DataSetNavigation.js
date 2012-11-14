@@ -1,3 +1,19 @@
+/*
+ * This file is part of TissueStack.
+ *
+ * TissueStack is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * TissueStack is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with TissueStack.  If not, see <http://www.gnu.org/licenses/>.
+ */
 TissueStack.DataSetNavigation = function() {
 	if (TissueStack.phone || TissueStack.tablet) {
 		this.buildTabletMenu();
@@ -174,7 +190,7 @@ TissueStack.DataSetNavigation.prototype = {
 		   $("#" + dataset + "_right_side_view_canvas").addClass("hidden");
 		}
 	},
-	showDataSet : function(index) {
+	showDataSet : function(index, overlaid) {
 		if (typeof(index) != "number") {
 			return;
 		}
@@ -188,12 +204,26 @@ TissueStack.DataSetNavigation.prototype = {
 		$("#canvas_point_x,#canvas_point_y,#canvas_point_z").removeAttr("disabled");
 		$("#dataset_" + index).removeClass("hidden");
 		$('#dataset_' + index + '_center_point_in_canvas').closest('.ui-btn').show();
+		$("#dataset_" + index  + " .cross_overlay").removeClass("hidden");
+		$("#dataset_" + index  + " .side_canvas_cross_overlay").removeClass("hidden");		
 		
 		var dataSet = 
 			TissueStack.dataSetStore.getDataSetById(
 					TissueStack.dataSetNavigation.selectedDataSets["dataset_" + index]);
-		if (dataSet && dataSet.data.length > 1) {
+		
+		//if (dataSet && dataSet.data.length > 1) {
+		//	$("#dataset_" + index  + "_right_panel").removeClass("hidden");
+		//}
+		// we keep the slider and the cross-hair hidden for overlaid data sets
+		if (dataSet && dataSet.data.length > 1 && !(overlaid && index == 1))
 			$("#dataset_" + index  + "_right_panel").removeClass("hidden");
+
+		if (overlaid && index ==1) {
+			$("#dataset_" + index  + " .cross_overlay").addClass("hidden");
+			$("#dataset_" + index  + " .side_canvas_cross_overlay").addClass("hidden");
+		} else if (overlaid && index ==2)   {
+			$("#dataset_" + index  + "_left_side_view_canvas").removeClass("ui-bar-a");
+			$("#dataset_" + index  + "_right_side_view_canvas").removeClass("ui-bar-a");
 		}
 	},
 	buildDynaTree : function() {
@@ -284,7 +314,7 @@ TissueStack.DataSetNavigation.prototype = {
 
 	    			// show everything again
 	    		   for (var n=0;n<selectedNodes.length;n++) {
-		    			_this.showDataSet(n + 1);
+		    			_this.showDataSet(n + 1, TissueStack.overlay_datasets && selectedNodes.length > 1);
 	    		   }
 
 	    			// re-initialize data set handed in
@@ -435,17 +465,15 @@ TissueStack.DataSetNavigation.prototype = {
 		var pixel_coords_for_other_plane = other_plane.getDataExtent().getPixelForWorldCoordinates(real_world_coords_for_handed_in_plane);
 
 		// THIS IS VITAL TO AVOID an infinite sync chain!!!
-		//other_plane.has_been_synced = true;
-		//other_plane.last_sync_timestamp = -1;
-		for (var p in other_ds.planes) {
-			other_ds.planes[p].has_been_synced = true;
-			other_ds.planes[p].queue.last_sync_timestamp = -1;
-		}
+		other_plane.has_been_synced = true;
+		other_plane.last_sync_timestamp = -1;
 
 		if (eraseCanvas)
 			other_plane.eraseCanvasContent();
 		else {
 			other_plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(pixel_coords_for_other_plane, false, sync_time);
+			if (TissueStack.overlay_datasets && canvas.getDataExtent().zoom_level != other_plane.getDataExtent().zoom_level)
+				other_plane.changeToZoomLevel(canvas.getDataExtent().zoom_level);
 			other_plane.queue.drawLowResolutionPreview(sync_time);
 			other_plane.queue.drawRequestAfterLowResolutionPreview(null, sync_time);
 
@@ -456,10 +484,11 @@ TissueStack.DataSetNavigation.prototype = {
 					slider.blur();
 				}
 			}
-			setTimeout(function() {other_plane.queue.tidyUp();}, 250);
+			setTimeout(function() {
+				other_plane.queue.tidyUp();
+			}, 250);
 		}
 		
 		canvas.queue.last_sync_timestamp = -1; // reset 
-		//canvas.queue.has_been_synced = true; // reset
 	}
 };		

@@ -1,3 +1,19 @@
+/*
+ * This file is part of TissueStack.
+ *
+ * TissueStack is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * TissueStack is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with TissueStack.  If not, see <http://www.gnu.org/licenses/>.
+ */
 TissueStack.Canvas = function(data_extent, canvas_id, dataset_id, include_cross_hair) {
 	// assemble data set id
 	this.dataset_id = typeof(dataset_id) != "string" ? "" : dataset_id;
@@ -158,12 +174,12 @@ TissueStack.Canvas.prototype = {
 		}
 		this.dim_y = y;
 	},
-	resizeCanvas : function() {
+	resizeCanvas : function(time) {
 		var tmpCanvasElement = this.getCanvasElement()[0];
 		this.setDimensions(tmpCanvasElement.width, tmpCanvasElement.height);
 		this.centerUpperLeftCorner();
 		this.drawCoordinateCross(this.getCenter());
-		this.drawMe(new Date().getTime());
+		this.drawMe(typeof(time) === 'number' ? time : new Date().getTime());
 	},
 	getCenter : function () {
 		return TissueStack.Utils.getCenter(this.dim_x,this.dim_y);
@@ -254,6 +270,9 @@ TissueStack.Canvas.prototype = {
 		// this stops any still running draw requests 
 		var now = typeof(timestamp) == 'number' ? timestamp : new Date().getTime(); 
 		
+		//if (TissueStack.overlay_datasets && this.underlying_canvas)
+		//	this.eraseCanvasContent();
+		
 		var crossHairPosition = this.getCenter();
 		if (TissueStack.overlay_datasets && this.underlying_canvas) 
 			crossHairPosition = {x: this.underlying_canvas.cross_x, y: this.underlying_canvas.cross_y};
@@ -300,7 +319,7 @@ TissueStack.Canvas.prototype = {
     	var myImageData = ctx.getImageData(0, 0, this.dim_x, this.dim_y);
     	for ( var x = 0; x < this.dim_x * this.dim_y * 4; x += 4) {
     		myImageData.data[x] = myImageData.data[x + 1] = myImageData.data[x + 2] = 255;
-    		myImageData.data[x + 3] = 0;
+   			myImageData.data[x + 3] = 0;
     	}
     	ctx.putImageData(myImageData, 0, 0);
 	},
@@ -313,13 +332,10 @@ TissueStack.Canvas.prototype = {
     	var myImageData = ctx.getImageData(x, y, w, h);
     	for ( var i = 0; i < w * h * 4; i += 4) {
     		myImageData.data[i] = myImageData.data[i + 1] = myImageData.data[i + 2] = 255;
-    		myImageData.data[i + 3] = 0;
+   			myImageData.data[i + 3] = 0;
     	}
     	ctx.putImageData(myImageData, x, y);
 	}, applyContrastAndColorMapToCanvasContent: function(tempCtx) {
-		// no need to neither set a color map or contrast
-		if (!this.hasColorMapOrContrastSetting()) return;
-    	
 	  	if (this.upper_left_x > this.dim_x || this.upper_left_x + this.data_extent.x < 0 || this.upper_left_y < 0 || this.upper_left_y - this.data_extent.y > this.dim_y) {
     		return;
     	}
@@ -338,21 +354,23 @@ TissueStack.Canvas.prototype = {
     	for ( var x = 0; x < myImageData.data.length; x += 4) {
     		var val = myImageData.data[x];
 
-    		// apply contrast settings first
-    		if (this.contrast && (this.contrast.getMinimum() != this.contrast.dataset_min || this.contrast.getMaximum() != this.contrast.dataset_max)) {
-        		var factor = (this.contrast.getMaximum() - this.contrast.getMinimum()) / (this.contrast.dataset_max - this.contrast.dataset_min);
-        		val = this.contrast.getMinimum() + Math.round(val * factor);
-        		myImageData.data[x] = myImageData.data[x+1] = myImageData.data[x+2] = val; 
-    		}
-    		
-    		// apply color map
-    		if (this.color_map && this.color_map != "grey") {
-				// set new red value
-				myImageData.data[x] = TissueStack.indexed_color_maps[this.color_map][val][0];
-				// set new green value
-				myImageData.data[x + 1] = TissueStack.indexed_color_maps[this.color_map][val][1];			
-				// set new blue value
-				myImageData.data[x + 2] = TissueStack.indexed_color_maps[this.color_map][val][2];
+    		if (this.hasColorMapOrContrastSetting()) {
+				// apply contrast settings first
+				if (this.contrast && (this.contrast.getMinimum() != this.contrast.dataset_min || this.contrast.getMaximum() != this.contrast.dataset_max)) {
+		    		var factor = (this.contrast.getMaximum() - this.contrast.getMinimum()) / (this.contrast.dataset_max - this.contrast.dataset_min);
+		    		val = this.contrast.getMinimum() + Math.round(val * factor);
+		    		myImageData.data[x] = myImageData.data[x+1] = myImageData.data[x+2] = val; 
+				}
+				
+				// apply color map
+				if (this.color_map && this.color_map != "grey") {
+					// set new red value
+					myImageData.data[x] = TissueStack.indexed_color_maps[this.color_map][val][0];
+					// set new green value
+					myImageData.data[x + 1] = TissueStack.indexed_color_maps[this.color_map][val][1];			
+					// set new blue value
+					myImageData.data[x + 2] = TissueStack.indexed_color_maps[this.color_map][val][2];
+				}
     		}
     	}
     	
@@ -435,7 +453,8 @@ TissueStack.Canvas.prototype = {
 		var copyOfCanvasY = canvasY;
 
 		//create a temporary Canvas to avoid the flickering for contrast and colormaps
-		if (this.getDataExtent().getIsTiled() && this.hasColorMapOrContrastSetting()) {
+		if ((this.getDataExtent().getIsTiled() && this.hasColorMapOrContrastSetting())
+				|| (TissueStack.overlay_datasets && (this.overlay_canvas || this.underlying_canvas))) {
 			tempCanvas = document.createElement("canvas");
 			tempCanvas.width = this.dim_x;
 			tempCanvas.height = this.dim_y;
@@ -443,6 +462,11 @@ TissueStack.Canvas.prototype = {
 			ctx = tempCanvas.getContext("2d");
 		}
 
+		if (TissueStack.overlay_datasets && this.underlying_canvas) {
+			this.eraseCanvasContent();
+			ctx.globalAlpha = 0.5;
+		}
+		
 		// loop over rows
 		for (var tileX = startTileX  ; tileX < endTileX ; tileX++) {			
 			var tileOffsetX = startTileX * this.getDataExtent().tile_size;
@@ -547,7 +571,7 @@ TissueStack.Canvas.prototype = {
 						}
 
 						counter--;
-
+						
 						// damn you async loads
 						if (_this.queue.latestDrawRequestTimestamp < 0 ||
 								(timestamp && timestamp < _this.queue.latestDrawRequestTimestamp)) {
@@ -560,13 +584,31 @@ TissueStack.Canvas.prototype = {
 								imageOffsetX, imageOffsetY, width, height, // tile dimensions
 								canvasX, canvasY, width, height); // canvas dimensions
 
-						if (counter == 0 && _this.getDataExtent().getIsTiled() && _this.hasColorMapOrContrastSetting()) {
+						if (_this.queue.latestDrawRequestTimestamp < 0 ||
+								(timestamp && timestamp < _this.queue.latestDrawRequestTimestamp)) {
+							//console.info('Abort for ' + _this.getDataExtent().data_id + '[' + _this.getDataExtent().getOriginalPlane() + ']: R: ' + row + ' C: ' + col + ' t: ' + timestamp + ' qt: ' + _this.queue.latestDrawRequestTimestamp);
+							return;
+						}
+
+						if (counter == 0 &&
+								((_this.getDataExtent().getIsTiled() && _this.hasColorMapOrContrastSetting())
+								|| (TissueStack.overlay_datasets && (_this.overlay_canvas || _this.underlying_canvas)))) {
 							_this.applyContrastAndColorMapToCanvasContent(ctx);
 						}
-						
+
+						if (TissueStack.overlay_datasets && (_this.overlay_canvas || _this.underlying_canvas))
+							_this.getCanvasElement().show();
+
+						if (_this.queue.latestDrawRequestTimestamp < 0 ||
+								(timestamp && timestamp < _this.queue.latestDrawRequestTimestamp)) {
+							//console.info('Abort for ' + _this.getDataExtent().data_id + '[' + _this.getDataExtent().getOriginalPlane() + ']: R: ' + row + ' C: ' + col + ' t: ' + timestamp + ' qt: ' + _this.queue.latestDrawRequestTimestamp);
+							return;
+						}
+
 						if (typeof(TissueStack.dataSetNavigation) === 'object' && counter == 0) {
 							_this.syncDataSetCoordinates(_this);
 						}
+
 					};
 				})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, this.getDataExtent().tile_size, rowIndex, colIndex);
 				

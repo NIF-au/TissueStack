@@ -1,3 +1,19 @@
+/*
+ * This file is part of TissueStack.
+ *
+ * TissueStack is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * TissueStack is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with TissueStack.  If not, see <http://www.gnu.org/licenses/>.
+ */
 TissueStack.Utils = {
 		supportsCanvas : function() {
 			var elem = document.createElement('canvas');
@@ -178,9 +194,8 @@ TissueStack.Utils = {
 			datasets = 0;
 		}
 		
-		if (datasets > 2) {
-			datasets = 2;
-		}
+		// clamp to max
+		if (datasets > 2) datasets = 2;
 
 		// we hide everything if there are no data sets selected
 		if (datasets == 0) {
@@ -200,24 +215,40 @@ TissueStack.Utils = {
 		// get the height of the menu header
 		var menuHeight = $('#menu_header').height();
 		// define some tolerance span
-		var widthTolerance = Math.floor(screenWidth * 0.05);
-		var heightTolerance = Math.floor(screenWidth * 0.0175);
+		var widthTolerance = Math.floor(screenWidth * 0.01);
+		var heightTolerance = Math.floor(screenHeight * 0.01);
 		
 		// get the width of the left panel 
 		var leftPanelWidth = Math.floor(screenWidth * 0.15);
 		var leftPanelHeight = screenHeight - menuHeight;
 		var rightPanelWidth = Math.floor(screenWidth * 0.05);
 		
-		TissueStack.canvasDimensions = {width: (screenWidth - leftPanelWidth - rightPanelWidth - widthTolerance), height: Math.floor(leftPanelHeight / datasets) -  heightTolerance};
-		leftPanelHeight -=  heightTolerance;
+		TissueStack.canvasDimensions = {width: (screenWidth - leftPanelWidth - rightPanelWidth - widthTolerance), height: Math.floor(leftPanelHeight / (TissueStack.overlay_datasets ? 1 : datasets)) -  heightTolerance};		
+		//leftPanelHeight -=  heightTolerance;
 		
-		$('.left_panel').css({"width" : leftPanelWidth, "height": leftPanelHeight});
-		$(".ui-slider-vertical").height(TissueStack.canvasDimensions.height - heightTolerance);
-		$(".ui-slider-horizontal").height(TissueStack.canvasDimensions.height - heightTolerance);
+		//$('.left_panel').css({"width" : leftPanelWidth, "height": leftPanelHeight});
+		$('.left_panel').css({"left" : 0, "top" : menuHeight,"width" : leftPanelWidth, "height": leftPanelHeight * 0.99});
+		$('#dataset_1_right_panel').css({"left" : TissueStack.canvasDimensions.width + leftPanelWidth + 20, "top" : menuHeight});
+		$('#dataset_1_right_panel').css({"width" : rightPanelWidth, "height": TissueStack.canvasDimensions.height  * 0.99});
+		if (TissueStack.overlay_datasets) {
+			$('#dataset_2_right_panel').css({"left" : TissueStack.canvasDimensions.width + leftPanelWidth + 20, "top" : menuHeight});
+			$('#dataset_2_right_panel').css({"width" : rightPanelWidth, "height": TissueStack.canvasDimensions.height  * 0.99});
+		}		
+		var sliderLength = (TissueStack.canvasDimensions.height - $('.canvasslider').outerHeight()) * 0.99;
+		$(".ui-slider-vertical").height(sliderLength);
+		$(".ui-slider-horizontal").height(sliderLength);
 
+		$('#dataset_1').css({"left" : leftPanelWidth + 10, "top" : menuHeight});
+		if (TissueStack.overlay_datasets)
+			$('#dataset_2').css({"left" : leftPanelWidth + 10, "top" : menuHeight});
 		$('.dataset').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height * 0.99});
 		
 		for (var x=1;x<=datasets;x++) {
+			if (!TissueStack.overlay_datasets && x>1) { 
+				$('#dataset_' + x).css({"left" : leftPanelWidth + 10, "top" : menuHeight + 10 + TissueStack.canvasDimensions.height * 0.99});
+				$('#dataset_' + x + '_right_panel').css({"left" : TissueStack.canvasDimensions.width + leftPanelWidth + 20, "top" : menuHeight + 10 + TissueStack.canvasDimensions.height * 0.99});
+			}
+			$('#dataset_' + x + '_right_panel').css({"width" : rightPanelWidth, "height": sliderLength});
 			$("#dataset_" + x + "_toolbox_canvas").css({"width" : TissueStack.canvasDimensions.width * 0.8, "height" : 75});
 			$("#dataset_" + x + "_contrast_box").css({"width" : TissueStack.canvasDimensions.width * 0.8, "height" : 55});
 			$("#dataset_" + x + "_toolbox_canvas").attr("width", TissueStack.canvasDimensions.width * 0.8);

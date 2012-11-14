@@ -1,3 +1,19 @@
+/*
+ * This file is part of TissueStack.
+ *
+ * TissueStack is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * TissueStack is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with TissueStack.  If not, see <http://www.gnu.org/licenses/>.
+ */
 TissueStack.Queue = function (canvas) {
 	this.canvas = canvas;
 };
@@ -119,8 +135,7 @@ TissueStack.Queue.prototype = {
 
 		if (this.latestDrawRequestTimestamp < 0 || timestamp < this.latestDrawRequestTimestamp) {
 			//console.info('Drawing preview for ' + this.canvas.getDataExtent().data_id + '[' + this.canvas.getDataExtent().getOriginalPlane() +  ']: ' + timestamp);
-
-			//this.lowResolutionPreviewDrawn = true;
+			this.lowResolutionPreviewDrawn = true;
 			return;
 		}
 
@@ -204,13 +219,21 @@ TissueStack.Queue.prototype = {
 			src += ("&timestamp=" + timestamp);
 		}
 		imageTile.src = src; 
-		
 
+		if (TissueStack.overlay_datasets) {
+			if (this.canvas.overlay_canvas || this.canvas.underlying_canvas) this.canvas.getCanvasElement().hide();
+			if (this.canvas.underlying_canvas) {
+				//this.canvas.getCanvasElement().hide();
+				this.canvas.eraseCanvasContent();
+				ctx.globalAlpha = 0.5;
+			}
+		}
+		
 		(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height) {
 			imageTile.onload = function() {
 			
 				if (_this.latestDrawRequestTimestamp < 0 || timestamp < _this.latestDrawRequestTimestamp) {
-					//_this.lowResolutionPreviewDrawn = true;
+					_this.lowResolutionPreviewDrawn = true;
 					//console.info('Aborting preview for ' + _this.canvas.getDataExtent().data_id + '[' +_this.canvas.getDataExtent().getOriginalPlane() +  ']: ' + timestamp);
 					return;
 				}
@@ -224,13 +247,19 @@ TissueStack.Queue.prototype = {
 				}
 
 				//console.info('Drawing preview for ' +  _this.canvas.getDataExtent().data_id + '[' +_this.canvas.getDataExtent().getOriginalPlane() +  ']: ' + timestamp);
-				if (_this.canvas.getDataExtent().getIsTiled() && _this.canvas.hasColorMapOrContrastSetting()) _this.canvas.getCanvasElement().hide();
+				if (_this.canvas.getDataExtent().getIsTiled() && _this.canvas.hasColorMapOrContrastSetting())
+					_this.canvas.getCanvasElement().hide();
+
 				ctx.drawImage(this, imageOffsetX, imageOffsetY, width, height, canvasX, canvasY, width, height);
+				
+				if (_this.latestDrawRequestTimestamp < 0 || timestamp < _this.latestDrawRequestTimestamp) {
+					_this.lowResolutionPreviewDrawn = true;
+					return;
+				}
+				
 				if (_this.canvas.getDataExtent().getIsTiled() && _this.canvas.hasColorMapOrContrastSetting()) {
 					_this.canvas.applyContrastAndColorMapToCanvasContent();
-					_this.canvas.getCanvasElement().show();
-				}
-
+				} 
 				_this.lowResolutionPreviewDrawn = true;
 			};
 		})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height);
@@ -419,11 +448,11 @@ TissueStack.Queue.prototype = {
 		
 		return true;
 	}, drawRequest : function(draw_request) {
-
 		// redraw 
 		this.canvas.drawMe(draw_request.timestamp);
 
-		this.tidyUp();
+		if (!TissueStack.overlay_datasets || !this.canvas.underlying_canvas) 
+			this.tidyUp();
 	}, tidyUp : function() {
 		if (this.canvas.getDataExtent().slice < 0 || this.canvas.getDataExtent().slice > this.canvas.getDataExtent().max_slices 
 				|| this.canvas.upper_left_x > this.canvas.dim_x || this.canvas.upper_left_x + this.canvas.data_extent.x < 0
