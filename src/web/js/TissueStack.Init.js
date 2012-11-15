@@ -82,6 +82,10 @@ TissueStack.InitUserInterface = function (initOpts) {
 		TissueStack.Utils.adjustBorderColorWhenMouseOver();	
 	}
 	
+	// initialize the color map chooser for desktop and tablet
+	if(TissueStack.desktop || TissueStack.tablet)
+		TissueStack.Utils.updateColorMapChooser();
+	
 	for (var x=0;x<maxDataSets;x++) {
 		var dataSet = datasets[x];
 		
@@ -364,7 +368,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 		if (val < 10 || val > 1000) {
 			alert("Please enter a number in between 10ms and 1000ms (=1s)");
 			$('#drawing_interval').val(oldVal);
-			return;
+			return false;
 		}
 				
 		for (var x=0;x<maxDataSets;x++) {
@@ -378,26 +382,39 @@ TissueStack.BindDataSetDependentEvents = function () {
 	
 	// COLOR MAP CHANGE HANDLER
 	// avoid potential double binding by un-binding at this stage
-	$('input[name="color_map"]').unbind("click");
-	// rebind
-	$('input[name="color_map"]').bind("click", function(e) {
-		for (var x=0;x<maxDataSets;x++) {
-			var dataSet = datasets[x];
-			var now = new Date().getTime();
-			for (var id in dataSet.planes) {	
-				dataSet.planes[id].color_map = e.target.value;
-				dataSet.planes[id].drawMe(now);
-				if (dataSet.planes[id].getDataExtent().getIsTiled() && dataSet.planes[id].hasColorMapOrContrastSetting())
-					dataSet.planes[id].applyContrastAndColorMapToCanvasContent();
+	if (TissueStack.phone) { // we use this one only for the phone
+		$('input[name="color_map"]').unbind("click");
+		// rebind
+		$('input[name="color_map"]').bind("click", function(e) {
+			for (var x=0;x<maxDataSets;x++) {
+				var dataSet = datasets[x];
+				var now = new Date().getTime();
+				for (var id in dataSet.planes) {	
+					dataSet.planes[id].color_map = e.target.value;
+					dataSet.planes[id].drawMe(now);
+				}
 			}
-		}
-	});
+		});
+	}
 	
 	// now let's bind events that are intimately linked to their own data set
 	for (var y=0;y<maxDataSets;y++) {
 		var dataSet = datasets[y];
 
 		if (TissueStack.desktop || TissueStack.tablet) {
+			// COLOR MAP PER DATA SET
+			// avoid potential double binding by un-binding at this stage
+			$('#dataset_' + (y+1) + '_color_map').unbind("change");
+			// rebind
+			$('#dataset_' + (y+1) + '_color_map').bind("change", [{actualDataSet: dataSet}], function(event) {
+				var now = new Date().getTime();
+				var ds = event.data[0].actualDataSet;
+				for (var id in ds.planes) {	
+					ds.planes[id].color_map = event.target.value;
+					ds.planes[id].drawMe(now);
+				}
+			});
+			
 			// COORDINATE CENTER FUNCTIONALITY FOR DESKTOP
 			// avoid potential double binding by un-binding at this stage
 			$('#dataset_' + (y+1) + '_center_point_in_canvas').unbind("click");
@@ -561,27 +578,29 @@ TissueStack.BindDataSetDependentEvents = function () {
 				
 				// redraw and change the zoom level as well
 				var now = new Date().getTime();
-
+				
 				event.data[0].actualDataSet.planes[sideViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(sideCanvasRelativeCross, false, now);
 				event.data[0].actualDataSet.planes[mainViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(mainCanvasRelativeCross, false, now);
 				event.data[0].actualDataSet.planes[sideViewPlaneId].events.changeSliceForPlane(event.data[0].actualDataSet.planes[sideViewPlaneId].data_extent.slice);
 				event.data[0].actualDataSet.planes[sideViewPlaneId].changeToZoomLevel(event.data[0].actualDataSet.planes[mainViewPlaneId].getDataExtent().zoom_level);
 				event.data[0].actualDataSet.planes[mainViewPlaneId].changeToZoomLevel(zoomLevelSideView);
 				$("#dataset_" + (x+1) + "_canvas_main_slider").blur();
-				
+
 				event.data[0].actualDataSet.planes[sideViewPlaneId].updateExtentInfo(event.data[0].actualDataSet.planes[sideViewPlaneId].getDataExtent().getExtentCoordinates());
 				
 				// Given TissueStack.overlay_datasets => trigger swap event for other dataset if exists
 				if (!TissueStack.planes_swapped && TissueStack.overlay_datasets && TissueStack.dataSetNavigation.selectedDataSets.count > 1) {
 					var elementIdForMaximizingOtherDataSet = event.target.id;
 					var thisHereDataSet = elementIdForMaximizingOtherDataSet.substring(0, "dataset_x".length);
+
 					var thisOtherDataSet = "dataset_2";
 					if (thisHereDataSet == 'dataset_2')
 						thisOtherDataSet = "dataset_1";
 					elementIdForMaximizingOtherDataSet = elementIdForMaximizingOtherDataSet.replace(thisHereDataSet, thisOtherDataSet);
 					// set to swapped so that we avoid cycle
 					TissueStack.planes_swapped = true;
-					setTimeout(function() {$('#' + elementIdForMaximizingOtherDataSet).click();}, 150);
+				
+					setTimeout(function() {$('#' + elementIdForMaximizingOtherDataSet).click();}, 200);
 				} else 
 					TissueStack.planes_swapped = false;
 			});

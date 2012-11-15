@@ -182,6 +182,16 @@ TissueStack.Utils = {
 			// no data: 255
 			TissueStack.indexed_color_maps[map][255] = [255, 255, 255];
 		}
+	}, updateColorMapChooser : function() {
+		if (typeof(TissueStack.indexed_color_maps) != 'object')
+			$(".color_map_select").html("<option>N/A</option>");
+
+		var html = "";
+		for (var c in TissueStack.indexed_color_maps)
+			html += ("<option>" + c + "</option>");
+		
+		$(".color_map_select").html(html);
+		$(".color_map_select").selectmenu("refresh");
 	},adjustScreenContentToActualScreenSize : function (datasets){	
 		if (TissueStack.phone) {
 			$('#canvasBox').css({"width" : 300, "height" : 300});
