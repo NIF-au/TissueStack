@@ -452,6 +452,16 @@ a.ui-slider-handle-horizontal{
 	font-family: Arial, sans-serif; 
 	font-size: 11px;
 }
+.color_map_main {
+    height: 26px; 
+    z-index: 2400; 
+    position: absolute;
+    right: 10px;
+    top: 40px; 
+    color: white; 
+    font-family: Arial, sans-serif; 
+    font-size: 11px;
+}
 .contrast_box{
 	display: none;
 	z-index: 2400;

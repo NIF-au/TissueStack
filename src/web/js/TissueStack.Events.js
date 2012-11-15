@@ -329,7 +329,8 @@ TissueStack.Events.prototype = {
 
 		this.canvas.drawCoordinateCross(cross_coords);
 
-		this.canvas.drawMe(now);
+		this.canvas.queue.drawLowResolutionPreview(now);
+		this.canvas.queue.drawRequestAfterLowResolutionPreview(null, now);
 		
 		// update coordinate info displayed
 		this.updateCoordinateDisplay(coords);
@@ -405,7 +406,7 @@ TissueStack.Events.prototype = {
 					slice : this.canvas.getDataExtent().slice
 					
 				});
-		e.stopPropagation();
+		//e.stopPropagation();
 	}, sync_zoom : function(e, data_id, dataset_id, timestamp, action, plane, zoom_level, slice) {
 		// ignore one's own events
 		var thisHerePlane = this.canvas.getDataExtent().plane;

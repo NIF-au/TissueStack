@@ -270,9 +270,6 @@ TissueStack.Canvas.prototype = {
 		// this stops any still running draw requests 
 		var now = typeof(timestamp) == 'number' ? timestamp : new Date().getTime(); 
 		
-		//if (TissueStack.overlay_datasets && this.underlying_canvas)
-		//	this.eraseCanvasContent();
-		
 		var crossHairPosition = this.getCenter();
 		if (TissueStack.overlay_datasets && this.underlying_canvas) 
 			crossHairPosition = {x: this.underlying_canvas.cross_x, y: this.underlying_canvas.cross_y};
@@ -296,7 +293,7 @@ TissueStack.Canvas.prototype = {
 		if (!canvas || !canvas[0]) {
 			canvas = this.getCanvasElement();
 		}
-		
+
 		if (typeof(sync) == 'boolean' && !sync) return;
 		
 		// send message out to others that they need to redraw as well
@@ -351,27 +348,29 @@ TissueStack.Canvas.prototype = {
     	
     	var myImageData = ctx.getImageData(xStart, yStart, width, height);
     	
-    	for ( var x = 0; x < myImageData.data.length; x += 4) {
-    		var val = myImageData.data[x];
-
-    		if (this.hasColorMapOrContrastSetting()) {
-				// apply contrast settings first
-				if (this.contrast && (this.contrast.getMinimum() != this.contrast.dataset_min || this.contrast.getMaximum() != this.contrast.dataset_max)) {
-		    		var factor = (this.contrast.getMaximum() - this.contrast.getMinimum()) / (this.contrast.dataset_max - this.contrast.dataset_min);
-		    		val = this.contrast.getMinimum() + Math.round(val * factor);
-		    		myImageData.data[x] = myImageData.data[x+1] = myImageData.data[x+2] = val; 
-				}
-				
-				// apply color map
-				if (this.color_map && this.color_map != "grey") {
-					// set new red value
-					myImageData.data[x] = TissueStack.indexed_color_maps[this.color_map][val][0];
-					// set new green value
-					myImageData.data[x + 1] = TissueStack.indexed_color_maps[this.color_map][val][1];			
-					// set new blue value
-					myImageData.data[x + 2] = TissueStack.indexed_color_maps[this.color_map][val][2];
-				}
-    		}
+    	if (this.getDataExtent().getIsTiled()) {
+	    	for ( var x = 0; x < myImageData.data.length; x += 4) {
+	    		var val = myImageData.data[x];
+	
+	    		if (this.hasColorMapOrContrastSetting()) {
+					// apply contrast settings first
+					if (this.contrast && (this.contrast.getMinimum() != this.contrast.dataset_min || this.contrast.getMaximum() != this.contrast.dataset_max)) {
+			    		var factor = (this.contrast.getMaximum() - this.contrast.getMinimum()) / (this.contrast.dataset_max - this.contrast.dataset_min);
+			    		val = this.contrast.getMinimum() + Math.round(val * factor);
+			    		myImageData.data[x] = myImageData.data[x+1] = myImageData.data[x+2] = val; 
+					}
+					
+					// apply color map
+					if (this.color_map && this.color_map != "grey") {
+						// set new red value
+						myImageData.data[x] = TissueStack.indexed_color_maps[this.color_map][val][0];
+						// set new green value
+						myImageData.data[x + 1] = TissueStack.indexed_color_maps[this.color_map][val][1];			
+						// set new blue value
+						myImageData.data[x + 2] = TissueStack.indexed_color_maps[this.color_map][val][2];
+					}
+	    		}
+	    	}
     	}
     	
     	// put altered data back into canvas
@@ -584,6 +583,7 @@ TissueStack.Canvas.prototype = {
 								imageOffsetX, imageOffsetY, width, height, // tile dimensions
 								canvasX, canvasY, width, height); // canvas dimensions
 
+						// damn you async loads
 						if (_this.queue.latestDrawRequestTimestamp < 0 ||
 								(timestamp && timestamp < _this.queue.latestDrawRequestTimestamp)) {
 							//console.info('Abort for ' + _this.getDataExtent().data_id + '[' + _this.getDataExtent().getOriginalPlane() + ']: R: ' + row + ' C: ' + col + ' t: ' + timestamp + ' qt: ' + _this.queue.latestDrawRequestTimestamp);
@@ -599,14 +599,8 @@ TissueStack.Canvas.prototype = {
 						if (TissueStack.overlay_datasets && (_this.overlay_canvas || _this.underlying_canvas))
 							_this.getCanvasElement().show();
 
-						if (_this.queue.latestDrawRequestTimestamp < 0 ||
-								(timestamp && timestamp < _this.queue.latestDrawRequestTimestamp)) {
-							//console.info('Abort for ' + _this.getDataExtent().data_id + '[' + _this.getDataExtent().getOriginalPlane() + ']: R: ' + row + ' C: ' + col + ' t: ' + timestamp + ' qt: ' + _this.queue.latestDrawRequestTimestamp);
-							return;
-						}
-
 						if (typeof(TissueStack.dataSetNavigation) === 'object' && counter == 0) {
-							_this.syncDataSetCoordinates(_this);
+							_this.syncDataSetCoordinates(_this, false);
 						}
 
 					};
@@ -621,6 +615,13 @@ TissueStack.Canvas.prototype = {
 		};
 	},
 	syncDataSetCoordinates : function(_this, eraseCanvas) {
+		if ((!TissueStack.sync_datasets && !TissueStack.overlay_datasets)
+				&& !(TissueStack.overlay_datasets && (this.overlay_canvas || this.underlying_canvas)))
+			return;
+
+		if (TissueStack.overlay_datasets && !this.underlying_canvas)
+			return;
+		
 		if (typeof(eraseCanvase) != 'boolean') eraseCanvase = false;
 		TissueStack.dataSetNavigation.syncDataSetCoordinates(_this, eraseCanvas);
 		_this.has_been_synced = false; // reset flag to accept syncing forwards again

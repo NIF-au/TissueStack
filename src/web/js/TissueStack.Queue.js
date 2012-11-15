@@ -223,7 +223,6 @@ TissueStack.Queue.prototype = {
 		if (TissueStack.overlay_datasets) {
 			if (this.canvas.overlay_canvas || this.canvas.underlying_canvas) this.canvas.getCanvasElement().hide();
 			if (this.canvas.underlying_canvas) {
-				//this.canvas.getCanvasElement().hide();
 				this.canvas.eraseCanvasContent();
 				ctx.globalAlpha = 0.5;
 			}
@@ -259,7 +258,10 @@ TissueStack.Queue.prototype = {
 				
 				if (_this.canvas.getDataExtent().getIsTiled() && _this.canvas.hasColorMapOrContrastSetting()) {
 					_this.canvas.applyContrastAndColorMapToCanvasContent();
+					if (!TissueStack.overlay_datasets || !(_this.canvas.underlying_canvas && _this.canvas.overlay_canvas))
+						_this.canvas.getCanvasElement().show();		
 				} 
+				
 				_this.lowResolutionPreviewDrawn = true;
 			};
 		})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height);
@@ -450,9 +452,7 @@ TissueStack.Queue.prototype = {
 	}, drawRequest : function(draw_request) {
 		// redraw 
 		this.canvas.drawMe(draw_request.timestamp);
-
-		if (!TissueStack.overlay_datasets || !this.canvas.underlying_canvas) 
-			this.tidyUp();
+		this.tidyUp();
 	}, tidyUp : function() {
 		if (this.canvas.getDataExtent().slice < 0 || this.canvas.getDataExtent().slice > this.canvas.getDataExtent().max_slices 
 				|| this.canvas.upper_left_x > this.canvas.dim_x || this.canvas.upper_left_x + this.canvas.data_extent.x < 0

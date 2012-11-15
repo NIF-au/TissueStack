@@ -157,15 +157,17 @@ TissueStack.DataSetNavigation.prototype = {
 				});
 		}
 
-		// restore some settings 
-		try {
-			$("#colormap_choice input").removeAttr("checked").checkboxradio("refresh");
-			$("#colormap_grey").attr("checked", "checked").checkboxradio("refresh");
-		} catch (e) {
-			// we don't care, stupid jquery mobile ...
-			$("#colormap_grey").attr("checked", "checked");
+		// restore some settings for the phone 
+		if (TissueStack.phone) {
+			try {
+				$("#colormap_choice input").removeAttr("checked").checkboxradio("refresh");
+				$("#colormap_grey").attr("checked", "checked").checkboxradio("refresh");
+			} catch (e) {
+				// we don't care, stupid jquery mobile ...
+				$("#colormap_grey").attr("checked", "checked");
+			}
 		}
-		
+	
 		//reset contrast box
 		$("#dataset_1_url_box, #dataset_1_contrast_box").hide("fast");
 		$("#dataset_2_url_box, #dataset_2_contrast_box").hide("fast");
@@ -186,6 +188,7 @@ TissueStack.DataSetNavigation.prototype = {
 			// finally hide everything
 		   $('#' + dataset + '_center_point_in_canvas').closest('.ui-btn').hide();
 		   $("#" + dataset + ", #" + dataset + "_right_panel").addClass("hidden");
+		   $("#" + dataset + ", #" + dataset + "_color_map").addClass("hidden");
 		   $("#" + dataset + "_left_side_view_canvas").addClass("hidden");
 		   $("#" + dataset + "_right_side_view_canvas").addClass("hidden");
 		}
@@ -215,9 +218,11 @@ TissueStack.DataSetNavigation.prototype = {
 		//	$("#dataset_" + index  + "_right_panel").removeClass("hidden");
 		//}
 		// we keep the slider and the cross-hair hidden for overlaid data sets
-		if (dataSet && dataSet.data.length > 1 && !(overlaid && index == 1))
+		if (dataSet && dataSet.data.length > 1 && !(overlaid && index == 1)) {
 			$("#dataset_" + index  + "_right_panel").removeClass("hidden");
-
+			$("#dataset_" + index  + "_color_map").removeClass("hidden");
+		}
+		
 		if (overlaid && index ==1) {
 			$("#dataset_" + index  + " .cross_overlay").addClass("hidden");
 			$("#dataset_" + index  + " .side_canvas_cross_overlay").addClass("hidden");
@@ -465,9 +470,11 @@ TissueStack.DataSetNavigation.prototype = {
 		var pixel_coords_for_other_plane = other_plane.getDataExtent().getPixelForWorldCoordinates(real_world_coords_for_handed_in_plane);
 
 		// THIS IS VITAL TO AVOID an infinite sync chain!!!
-		other_plane.has_been_synced = true;
-		other_plane.last_sync_timestamp = -1;
-
+		for (var p in other_ds.planes) {
+			other_ds.planes[p].has_been_synced = true;
+			other_ds.planes[p].queue.last_sync_timestamp = -1;
+		}
+		
 		if (eraseCanvas)
 			other_plane.eraseCanvasContent();
 		else {
@@ -488,7 +495,6 @@ TissueStack.DataSetNavigation.prototype = {
 				other_plane.queue.tidyUp();
 			}, 250);
 		}
-		
 		canvas.queue.last_sync_timestamp = -1; // reset 
 	}
 };		

@@ -56,7 +56,6 @@
          	  	     <div data-role="navbar">
 						<ul>
 							<li><a href="#data" data-icon="plus" data-prefetch="true"  class="ui-btn-active ui-state-persist">Data</a></li>
-							<li><a href="#setting" data-icon="minus" data-prefetch="true" >Settings</a></li>
 							<li><a id="tab_admin_data" href="#admin" data-icon="minus" data-prefetch="true" >Admin</a></li>							
 						</ul>
 			  		 </div>
@@ -125,6 +124,13 @@
 	     	    			</div>
 	     	    		</div>
 	     	    	<!--END OF CONTRAST CONTROL-->	
+                    <!--COLOR MAP-->
+                        <div id="dataset_1_color_map" class="color_map_main hidden">
+                            <select class="color_map_select" data-mini="true">
+                                <option>Uninitialized</option>
+                            </select>
+                        </div>
+                    <!--END OF COLOR MAP-->
 	     	    		<div id="dataset_1_main_view_canvas" class="canvasview canvas_y" >		     	    		
 	     	    			<canvas id="dataset_1_canvas_y_plane" class="plane"></canvas>
 	     	    			<canvas id="dataset_1_canvas_y_plane_cross_overlay" class="cross_overlay"></canvas>
@@ -176,7 +182,7 @@
 	                 			<div id="dataset_2_link_message" class="url_link_message"></div>
 	                 		</div>
 	                 	</div>
-	                 <!--END OF URL LINK-->			
+	                 <!--END OF URL LINK-->	
 	                 <!--CONTRAST CONTROL-->
 						<div class="contrast_main">
 							<a id="dataset_2_toolbox_canvas_button" class="top_right_button" style="color: white;" href="#">CONTRAST</a>
@@ -187,6 +193,13 @@
 							</div>
 						</div>
 	                 <!--END OF CONTRAST CONTROL-->  
+                    <!--COLOR MAP-->
+                        <div id="dataset_2_color_map" class="color_map_main hidden">
+                           <select class="color_map_select" data-mini="true">
+                                <option>Uninitialized</option>
+                            </select>
+                        </div>
+                    <!--END OF COLOR MAP-->
 						<div id="dataset_2_main_view_canvas" class="canvasview canvas_y" >
 						   <canvas id="dataset_2_canvas_y_plane" class="plane"></canvas> 
 						   <canvas id="dataset_2_canvas_y_plane_cross_overlay" class="cross_overlay"></canvas>
@@ -211,46 +224,6 @@
      	    </div>
      </div>  
     <!-- END OF TILE PAGE -->     
-	<!-- SETTING PAGE --> 
-      <div data-role="page" data-theme="a" id="setting" data-id="Head1"  >
-            <div data-role="content">
-   				<div data-theme="a" data-role="header" data-position="fixed">
-        	  	     <div data-role="navbar">
-						<ul>
-							<li><a href="#data" data-icon="minus" data-prefetch="true" >Data</a></li>
-							<li><a href="#setting" data-icon="plus" data-prefetch="true" class="ui-btn-active ui-state-persist">Settings</a></li>
-							<li><a id="tab_admin_setting" href="#admin" data-icon="minus" data-prefetch="true" >Admin</a></li>
-						</ul>
-			  		 </div>
-                </div>
-     	    </div>
-     	
-	     	<div class="settings-left-column">
-	     		Color Mapping:
-	     		<fieldset id="colormap_choice" data-role="controlgroup">	    
-     				<input type="radio" name="color_map" id="colormap_grey" value="grey" checked="checked" />
-     	         	<label for="colormap_grey">Grey</label>
-     	
-     	         	<input type="radio" name="color_map" id="colormap_hot" value="hot"  />
-     	         	<label for="colormap_hot">Hot</label>
-     	
-     	         	<input type="radio" name="color_map" id="colormap_spectral" value="spectral"  />
-     	         	<label for="colormap_spectral">Spectral</label>
-	     		</fieldset>
-	     	</div>
-     	
-	     	<div class="settings-right-column">
-				<label for="drawing_interval">Drawing Interval (in millis): </label>
-				<input id="drawing_interval" type="text" value="150" >
-				<input type="checkbox" id="sync_data_sets" />
-                <label for="sync_data_sets">Synchronize Data Sets</label>
-                <input type="checkbox" id="overlay_data_sets" />
-                <label for="overlay_data_sets">Overlay Second Data Set With First (Not functional yet!)</label>
-				
-				<a href="desktop.html#data" data-role="button" id="drawing_interval_button">Apply</a>
-			</div>
-      </div>
-	<!--    END SETTING PAGE       -->
 	<!-- ADMIN PAGE --> 
 	  <div data-role="page" data-theme="a" id="admin" data-id="Head1"  >
 	        <div data-role="content">
@@ -258,7 +231,6 @@
 	    	  	     <div data-role="navbar">
 						<ul>
 							<li><a href="#data" data-icon="minus" data-prefetch="true" >Data</a></li>
-							<li><a href="#setting" data-icon="minus" data-prefetch="true" >Settings</a></li>
 							<li><a id="tab_admin_admin" href="#admin" data-icon="plus" data-prefetch="true" class="ui-btn-active ui-state-persist">Admin</a></li>
 						</ul>
 			  		 </div>
@@ -314,8 +286,11 @@
 	 		   	</div> <!-- / top -->
 	 		 </div> <!-- /login -->	
 	 		<!--END OF ADMIN LOGIN-->
-	     	
 	     	<div id="div_file_upload" class="settings-left-column">
+                <input id="drawing_interval" type="text" value="150" >
+                <a href="desktop.html#data" data-role="button" id="drawing_interval_button">Set Drawing Interval (in ms)</a>
+                <hr/>
+                
 				<h2>File Upload</h2>
 				<hr/>
 				<div id="file_uploaded_message" ></div>
@@ -334,6 +309,12 @@
 	     	</div>
 	     	
 	     	<div class="settings-right-column">
+	     	    <input type="checkbox" id="sync_data_sets" />
+                <label for="sync_data_sets">Synchronize Data Sets</label>
+                <input type="checkbox" id="overlay_data_sets" />
+                <label for="overlay_data_sets">Overlay Second Data Set With First (Not functional yet!)</label>
+	     	    <hr/>
+	     	    
 				<h2 id="directory_name">Upload Directory</h2>
 				<hr/>
 				<div id="file_group" data-role="fieldcontain" style="overflow: auto; height: 130px;">
