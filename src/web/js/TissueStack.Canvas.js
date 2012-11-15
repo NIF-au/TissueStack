@@ -758,7 +758,11 @@ TissueStack.Canvas.prototype = {
 			// show and hide events for contrast slider
 			$('#'+ _this.dataset_id + '_toolbox_canvas_button').unbind('click').click(function(){ 
 				$('#'+ _this.dataset_id + '_contrast_box').toggle();		
-			});	
+			});
+			// show and hide events for colormap box
+			$('#'+ _this.dataset_id + '_colormap_button').unbind('click').click(function(){ 
+				$('#'+ _this.dataset_id + '_colormap_box').toggle();		
+			});		
 		}
 	}
 };

@@ -192,6 +192,10 @@ TissueStack.Utils = {
 		
 		$(".color_map_select").html(html);
 		$(".color_map_select").selectmenu("refresh");
+		
+		//$(".color_map_select").append("<ul data-role='listview'>"+ html +"</ul>" ).listview().trigger("create");
+		
+		
 	},adjustScreenContentToActualScreenSize : function (datasets){	
 		if (TissueStack.phone) {
 			$('#canvasBox').css({"width" : 300, "height" : 300});
@@ -295,6 +299,8 @@ TissueStack.Utils = {
 	      treeHeight -= $(this).outerHeight();
 	    });
 		$('#treedataset').css({"height": treeHeight - 50});
+		// apply scroll screen for admin upload direcory
+		$('.settings-right-column, .settings-left-column').css({"height": screenHeight/1.7});
 	},
 	verifyUrlSyntax : function(url) {
 		if (typeof(url) != "string") {

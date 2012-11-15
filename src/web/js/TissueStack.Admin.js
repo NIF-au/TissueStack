@@ -458,13 +458,12 @@ TissueStack.Admin.prototype = {
 		// add row to table
 		$(tbody).append(row);
 		//$("#task_table").css({"height" : nrRows * 20 + 15});
+		
 		// refresh
 		tab.trigger("create");
-
 		// register cancel event and launch task progress checkers
 		_this.startProgressChecker(task.id);
 		_this.registerTaskCancelHandler(task.id, task.file);
-
 		return true;
 	},
 	stopTaskProgressCheck : function(id) {
@@ -562,7 +561,7 @@ TissueStack.Admin.prototype = {
 					}
 					
 					if (processTask.progress >= 0)
-						$("#" + "progress_text_" + id).html(processTask.progress + "%");
+						$("#" + "progress_text_" + id).html(processTask.progress.toFixed(2) + "%");
 					$("#" + "progress_bar_" + id).val(processTask.progress);
 
 					
