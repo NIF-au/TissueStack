@@ -37,3 +37,4 @@ TissueStack.indexed_color_maps = {
 TissueStack.tasks = {};
 TissueStack.cookie_lock = false;
 TissueStack.lastWindowResizing = new Date().getTime();
+TissueStack.transparency = 0.5;

@@ -291,14 +291,12 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
 		  (contrast_min == NULL ? "0" : contrast_min), (contrast_max == NULL ? "0" : contrast_max),
 		  id != NULL ? id : "0", time != NULL ? time : "0");
 	}
-
-      s->general->tile_requests->add(s->general->tile_requests, id, time);
-
       if (s->general->tile_requests->is_expired(s->general->tile_requests, id, time)) {
-          write_http_header(file, "408 Request Timeout", image_type);
+    	  write_http_header(file, "408 Request Timeout", image_type);
     	  close(fileno(file));
     	  return;
       }
+	  s->general->tile_requests->add(s->general->tile_requests, id, time);
 
       s->general->plug_actions(s->general, comm, file);
     } else {

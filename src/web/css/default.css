@@ -587,3 +587,10 @@ width: 100%;
 	left: 50%;
 	text-align: center;
 }
+
+.transparency_knob_div {
+	z-index: 1590;
+	position: absolute;
+	top:50px;
+	left:10px;
+}

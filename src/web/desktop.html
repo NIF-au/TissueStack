@@ -19,6 +19,7 @@
         <script src="js/libs/jquery/jquery-1.7.1.min.js"></script>
         <script src="js/libs/jquery/jquery.mobile-1.1.1.min.js"></script>
         <script src="js/libs/jquery/jquery.form.js"></script>
+        <script src="js/libs/jquery/jquery.knob.js"></script>
         <script src="js/TissueStack.Slider.js"></script>
 		<script src="js/libs/sylvester/sylvester.js"></script>
 		
@@ -83,9 +84,9 @@
      	    	</div>
      	    	
      	    	<div>
-	     	    	<div id="dataset_1" class="dataset hidden">
+	     	    	<div id="dataset_1" class="dataset">
 	     	    	<!--DISTANCE SCALE-->
-	     	    		<div class="scalecontrol_main">
+	     	    		<div id="dataset_1_scalecontrol" class="scalecontrol_main">
      	    				<div id="dataset_1_scale_middle" class="scalecontrol_middle">
      	    					<div class="dataset_1_scalecontrol_image" style="left: 0px; top: -424px; width: 89px;"></div>
      	    				</div>
@@ -173,6 +174,11 @@
 	                  		<div id="dataset_2_scale_text_up" class="scalecontrol_text_up"></div>
 	                  	</div>
 	                 <!--END OF DISTANCE SCALE-->
+	                 <!-- TRANSPARENCY WHEEL -->
+	                 <div class="transparency_knob_div hidden">
+                        <input  id="transparency_knob" type="text" data-width="75" data-height="75" data-fgColor="#ffec03" data-min="0" data-max="100" data-thickness=".2" value="50">
+                    </div>
+	                 <!-- END OF TRANSPARENCY WHEEL -->
 	                 <!--URL LINK-->
 	                 	<div class="url_link_main">
 	                 		<a id="dataset_2_url_button" class="top_right_button" style="color: white;" href="#">URL</a>

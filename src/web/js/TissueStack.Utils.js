@@ -395,6 +395,9 @@ TissueStack.Utils = {
 		var url = (host != "" ? (protocol + "://" + host.replace(/[_]/g,".")) : "");
 		var path = isTiled ? TissueStack.configuration['tile_directory'].value : TissueStack.configuration['image_service_proxy_path'].value;
 
+		if (zoom == 1) slice = Math.floor(slice);
+		else slice = Math.ceil(slice);
+		
 		if (isTiled) {
 			url += ("/" + path + "/" + dataset_id + "/" + zoom + "/" + plane + "/" + slice + "/");
 

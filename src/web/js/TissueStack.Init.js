@@ -86,6 +86,39 @@ TissueStack.InitUserInterface = function (initOpts) {
 	if(TissueStack.desktop || TissueStack.tablet)
 		TissueStack.Utils.updateColorMapChooser();
 	
+	// particular settings for data set overlay
+	if (TissueStack.desktop && TissueStack.overlay_datasets && TissueStack.dataSetNavigation.selectedDataSets.count == 2) {
+		// hide scale bar for first data set
+		$("#dataset_1_scalecontrol").hide();
+		// transparency knob
+		TissueStack.transparency = 0.5; // reset
+		$("#transparency_knob").knob({
+            'change' : function (v) { 
+            	TissueStack.transparency = (parseInt(v) / 100);
+            	if (TissueStack.overlay_datasets && TissueStack.dataSetNavigation && TissueStack.dataSetNavigation.selectedDataSets
+            			&& TissueStack.dataSetNavigation.selectedDataSets.count == 2) {
+            		var ds = TissueStack.dataSetNavigation.selectedDataSets["dataset_2"];
+            		if (!ds) return;
+            		var actualDs = TissueStack.dataSetStore.getDataSetById(ds);
+            		if (actualDs && actualDs.planes)
+            			var sync_time = new Date().getTime();
+            			for (var p in actualDs.planes) {
+            				(function(pl) {
+                				actualDs.planes[pl].has_been_synced = true;
+            					actualDs.planes[pl].queue.latestDrawRequestTimestamp = sync_time;            					
+            					setTimeout(function() {
+            						actualDs.planes[pl].queue.drawLowResolutionPreview(sync_time);
+	            					actualDs.planes[pl].queue.drawRequestAfterLowResolutionPreview(null, sync_time);
+            					},actualDs.planes[pl].queue.drawingIntervalInMillis);
+            				})(p);
+            			}
+            	}
+            }
+        });
+		$("#transparency_knob").val(TissueStack.transparency * 100).trigger('change');
+		$(".transparency_knob_div").show();
+	}
+	
 	for (var x=0;x<maxDataSets;x++) {
 		var dataSet = datasets[x];
 		
@@ -339,6 +372,10 @@ TissueStack.BindDataSetDependentEvents = function () {
    		$('#sync_data_sets').unbind("change");
         $('#sync_data_sets').bind("change", function() {
         	TissueStack.sync_datasets = $('#sync_data_sets')[0].checked;
+        	if (!TissueStack.sync_datasets && TissueStack.overlay_datasets) {
+        		TissueStack.overlay_datasets = false;
+        		$('#overlay_data_sets').removeAttr("checked").checkboxradio("refresh");
+        	}
         	transitionToDataSetView();
         });
 		$('#overlay_data_sets').unbind("change");
@@ -453,6 +490,16 @@ TissueStack.BindDataSetDependentEvents = function () {
 					givenCoords = plane.getDataExtent().getPixelForWorldCoordinates(givenCoords);
 				}
 
+				if (plane.getDataExtent().zoom_level == 1) {
+					givenCoords.x = Math.floor(givenCoords.x);
+					givenCoords.y = Math.floor(givenCoords.y);
+					givenCoords.z = Math.floor(givenCoords.z);
+				} else {
+					givenCoords.x = Math.ceil(givenCoords.x);
+					givenCoords.y = Math.ceil(givenCoords.y);
+					givenCoords.z = Math.ceil(givenCoords.z);
+				}
+				
 				if ((event.data[0].actualDataSet.planes[planeId] && (givenCoords.x < 0
 						|| givenCoords.x > event.data[0].actualDataSet.planes[planeId].data_extent.x)) 
 						|| (event.data[0].actualDataSet.planes[planeId] && (givenCoords.y < 0
@@ -463,8 +510,8 @@ TissueStack.BindDataSetDependentEvents = function () {
 					return;
 				}
 				
-				
-				plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, true, new Date().getTime());
+				var now = new Date().getTime();
+				plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, true, now);
 
 				if (event.data[0].actualDataSet.data.length > 1) {
 					var slider = $("#" + (plane.dataset_id == "" ? "" : plane.dataset_id + "_") + "canvas_main_slider");
@@ -822,7 +869,7 @@ $(document).ready(function() {
 				TissueStack.dataSetNavigation.getDynaTreeObject().selectKey("localhost_" + TissueStack.configuration['initOpts']['ds']);
 			else
 				TissueStack.dataSetNavigation.addDataSet(TissueStack.dataSetStore.getDataSetById('localhost_' + TissueStack.configuration['initOpts']['ds']).id, 0);
-		} else if (TissueStack.dataSetStore && TissueStack.dataSetStore.datasetCount && TissueStack.dataSetStore.datasetCount > 1){
+		} else if (TissueStack.dataSetStore && TissueStack.dataSetStore.datasetCount && TissueStack.dataSetStore.datasetCount > 0){
 			var ds = TissueStack.dataSetStore.getDataSetByIndex(0);
 			if (TissueStack.desktop) TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(ds.id); 
 			else TissueStack.dataSetNavigation.addDataSet(ds.id, 0);
