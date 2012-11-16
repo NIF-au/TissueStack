@@ -196,7 +196,7 @@ float		get_float(char *src, int start, int end, int len)
       if ((src[start] >= '0' && src[start] <= '9') || src[start] == '.')
 	tmp[index] = src[start];
       else
-	tmp[index] = 0;
+	tmp[index] = '0';
       start++;
       index++;
     }
