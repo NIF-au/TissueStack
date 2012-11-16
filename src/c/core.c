@@ -14,9 +14,16 @@
  * You should have received a copy of the GNU General Public License
  * along with TissueStack.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 #include "core.h"
 
 static t_tissue_stack	*t_global;
+
+/* -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+
+
+/* ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 char			*from_array_to_string(char **array)
 {
@@ -138,8 +145,6 @@ void		clean_quit(t_tissue_stack *t)
 
 void            init_prog(t_tissue_stack *t)
 {
-  //char		*path = NULL;
-
   t->plug_actions = plug_actions_from_external_plugin;
 
   t->percent_init = percent_init_direct;
@@ -184,8 +189,8 @@ void            init_prog(t_tissue_stack *t)
   t->log = malloc(sizeof(*t->log));
   t->log->state = ON;
   t->log->path = strdup(CONCAT_APP_PATH("logs/"));
-  t->log->debug = OFF;
-  t->log->verbose = OFF;
+  t->log->debug = ON;
+  t->log->verbose = ON;
   t->log->write_on_files = ON;
   t->log->write_on_plug_files = OFF;
   t->log->write_on_level_files = ON;
