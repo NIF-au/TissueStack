@@ -266,14 +266,17 @@ TissueStack.Canvas.prototype = {
 
 		return {x: newX, y: newY};
 	},
-	redrawWithCenterAndCrossAtGivenPixelCoordinates: function(coords, sync, timestamp) {
+	redrawWithCenterAndCrossAtGivenPixelCoordinates: function(coords, sync, timestamp, center) {
 		// this stops any still running draw requests 
 		var now = typeof(timestamp) == 'number' ? timestamp : new Date().getTime(); 
 		
+		if (typeof(center) != 'boolean')
+			center = false;
+		
 		var crossHairPosition = this.getCenter();
-		if (TissueStack.overlay_datasets && this.underlying_canvas) 
+		if (!center && TissueStack.overlay_datasets && this.underlying_canvas) 
 			crossHairPosition = {x: this.underlying_canvas.cross_x, y: this.underlying_canvas.cross_y};
-		else if (TissueStack.overlay_datasets && this.overlay_canvas)
+		else if (!center && TissueStack.overlay_datasets && this.overlay_canvas)
 			crossHairPosition = {x: this.overlay_canvas.cross_x, y: this.overlay_canvas.cross_y};
 			
 		// make sure crosshair is centered:

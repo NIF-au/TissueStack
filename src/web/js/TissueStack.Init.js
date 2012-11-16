@@ -511,7 +511,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 				}
 				
 				var now = new Date().getTime();
-				plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, true, now);
+				plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, true, now, true);
 
 				if (event.data[0].actualDataSet.data.length > 1) {
 					var slider = $("#" + (plane.dataset_id == "" ? "" : plane.dataset_id + "_") + "canvas_main_slider");
