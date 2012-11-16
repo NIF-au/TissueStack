@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with TissueStack.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 #include "image_extract.h"
 
 float		colormapa[4][25][4] = {{{0, 0, 0, 0},
@@ -151,15 +152,23 @@ void		alloc_and_init_colormap_space_from_src(float **new_colormap, float **sourc
       start_blue	= source[j - 1][3];
       end_blue		= source[j][3];
 
-      red_delta = round((end_red - start_red) / delta);
-      green_delta = round((end_green - start_green) / delta);
-      blue_delta = round((end_blue - start_blue) / delta);
+      if (delta == 255)
+	{
+	  red_delta = round((end_red - start_red)) * 255;
+	  green_delta = round((end_green - start_green)) * 255;
+	  blue_delta = round((end_blue - start_blue)) * 255;
+	}
+      else
+	{
+	  red_delta = round((end_red - start_red) / delta);
+	  green_delta = round((end_green - start_green) / delta);
+	  blue_delta = round((end_blue - start_blue) / delta);
+	}
 
       end_loop = i + delta;
       while (i < end_loop)
 	{
 	  new_colormap[i] = malloc(3 * sizeof(*new_colormap[i]));
-
 	  new_colormap[i][0] = round((i * start_red) + ((end_red - i) * red_delta));
 	  new_colormap[i][1] = round((i * start_green) + ((end_green - i) * green_delta));
 	  new_colormap[i][2] = round((i * start_blue) + ((end_blue - i) * blue_delta));
@@ -169,11 +178,223 @@ void		alloc_and_init_colormap_space_from_src(float **new_colormap, float **sourc
     }
 }
 
+
+
+
+
+float		get_float(char *src, int start, int end, int len)
+{
+  char		*tmp;
+  int		index = 0;
+  float		result = 0;
+
+  tmp = malloc(((end - start) + 1) * sizeof(*tmp));
+  while (start <= end && start < len)
+    {
+      if (src[start] == ' ' || src[start] == '\t' || src[start] == '\n')
+	break;
+      if ((src[start] >= '0' && src[start] <= '9') || src[start] == '.')
+	tmp[index] = src[start];
+      else
+	tmp[index] = '0';
+      start++;
+      index++;
+    }
+  tmp[index] = '\0';
+  result = atof(tmp);
+  free(tmp);
+  return (result);
+}
+
+float		**get_colormap_from_file(char *path)
+{
+  int		fd = 0;
+  int		len = 1;
+  char		*buff = NULL;
+  float		**color = NULL;
+  float		colormap_tmp[255][4];
+  int		c_row_index = 0;
+  int		c_column_index = 0;
+  int		j = 0;
+  int		k = -1;
+  int		flag = 0;
+
+  fd = open(path, O_RDWR);
+
+  buff = malloc(4096 * sizeof(*buff));
+  while (len > 0)
+    {
+      flag = 0;
+      memset(buff, '\0', 4096);
+      if ((len = read(fd, buff, 4096)) > 0)
+	{
+	  buff[len] = '\0';
+	  while (j < len && buff[j] != '\0')
+	    {
+	      if (buff[j] != ' ' && buff[j] != '\t' && buff[j] != '\n')
+		{
+		  if (k == -1)
+		    k = j;
+		}
+	      else if (buff[j] == ' ' || buff[j] == '\t')
+		{
+		  colormap_tmp[c_row_index][c_column_index] = get_float(buff, k, j, len);
+		  c_column_index++;
+		  k = -1;
+		}
+	      else if (buff[j] == '\n')
+		{
+		  flag = 1;
+		  colormap_tmp[c_row_index][c_column_index] = get_float(buff, k, j, len);
+		  c_row_index++;
+		  c_column_index = 0;
+		  k = -1;
+		}
+	      j++;
+	    }
+	}
+    }
+  free(buff);
+
+  j = 0;
+  if (c_row_index == 0)
+    {
+      color = malloc(3 * sizeof(*color));
+      while (j < 3)
+	{
+	  color[j] = malloc(4 * sizeof(*color[j]));
+	  j++;
+	}
+      color[0][0] = 0;
+      color[0][1] = 0;
+      color[0][2] = 0;
+      color[0][3] = 0;
+
+      color[1][0] = 1;
+      color[1][1] = 1;
+      color[1][2] = 1;
+      color[1][3] = 1;
+
+      color[2][0] = 99;
+      color[2][1] = 0;
+      color[2][2] = 0;
+      color[2][3] = 0;
+      return (color);
+    }
+
+  if (!flag)
+    c_row_index++;
+  colormap_tmp[c_row_index][0] = 99;
+
+  color = malloc((c_row_index + 1) * sizeof(*color));
+  while (colormap_tmp[j][0] != 99)
+    {
+      color[j] = malloc(4 * sizeof(*color[j]));
+      color[j][0] = colormap_tmp[j][0];
+      color[j][1] = colormap_tmp[j][1];
+      color[j][2] = colormap_tmp[j][2];
+      color[j][3] = colormap_tmp[j][3];
+      j++;
+    }
+  color[j] = malloc(1 * sizeof(*color[j]));
+  color[j][0] = 99;
+  return (color);
+}
+
+int		count_files_presents_into_directory(char *path)
+{
+  DIR		*d = opendir(path);
+  int		count = 0;
+  char		*buf;
+  struct dirent *p;
+  struct stat	statbuf;
+
+  if (d)
+    {
+      while ((p = readdir(d)))
+	{
+          if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))
+	    {
+	      continue;
+	    }
+	  asprintf(&buf, "%s/%s", path, p->d_name);
+	  if (!stat(buf, &statbuf))
+	    {
+	      if (!S_ISDIR(statbuf.st_mode))
+		count++;
+	    }
+	  free(buf);
+	}
+      closedir(d);
+    }
+  return (count);
+}
+
+void		display_colormap(float **colormap, char *name)
+{
+  int		i = 0;
+
+  FATAL("\n\n Colormap Name = |%s|", name);
+  while (colormap[i][0] != 99)
+    {
+      FATAL("%f %f %f %f", colormap[i][0], colormap[i][1], colormap[i][2], colormap[i][3])
+      i++;
+    }
+}
+
+void		load_colormaps_from_directory(char *path, t_image_extract *image_args)
+{
+  DIR		*d = opendir(path);
+  char		*buf;
+  struct dirent *p;
+  struct stat	statbuf;
+  int		i = 0;
+  int		count_files = 0;
+  float		**colormap_extracted = NULL;
+
+  count_files = count_files_presents_into_directory(path);
+  image_args->premapped_colormap = malloc((count_files + 1) * sizeof(*image_args->premapped_colormap));
+  i = 0;
+  image_args->colormap_name = malloc((count_files + 1) * sizeof(*image_args->colormap_name));
+  if (d)
+    {
+      while ((p = readdir(d)))
+	{
+          if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))
+	    continue;
+	  asprintf(&buf, "%s/%s", path, p->d_name);
+	  if (!stat(buf, &statbuf))
+	    {
+	      if (!S_ISDIR(statbuf.st_mode))
+		{
+		  colormap_extracted = get_colormap_from_file(buf);
+		  image_args->premapped_colormap[i] = malloc((255 + 1) * sizeof(*image_args->premapped_colormap[i]));
+		  alloc_and_init_colormap_space_from_src(image_args->premapped_colormap[i], colormap_extracted);
+		  asprintf(&image_args->colormap_name[i], "%s", p->d_name);
+		  image_args->colormap_name[i] = strdup(p->d_name);
+		  i++;
+		}
+	    }
+	  free(buf);
+	}
+      closedir(d);
+    }
+  image_args->premapped_colormap[i] = NULL;
+  image_args->colormap_name[i] = NULL;
+}
+
+
+
+
+
 void		colormap_init(t_image_extract *image_args)
 {
-  int		i;
-  int		clormp_nb;
+  //  int		i;
+  // int		clormp_nb;
 
+  load_colormaps_from_directory("/opt/tissuestack/colormap", image_args);
+
+  /*
   clormp_nb = 2;
   image_args->premapped_colormap = malloc((clormp_nb + 1) * sizeof(*image_args->premapped_colormap));
   i = 0;
@@ -185,6 +406,7 @@ void		colormap_init(t_image_extract *image_args)
     }
   image_args->colormap_name = colormapa_name;
   image_args->premapped_colormap[clormp_nb] = NULL;
+  */
 }
 
 void		get_percent(FILE *file, t_image_extract *a)
@@ -446,15 +668,18 @@ void		image_creation_lunch(t_tissue_stack *t, t_vol *vol, int step, t_image_extr
     }
 }
 
-int		check_colormap_name(char *str)
+int		check_colormap_name(char *str, t_image_extract *a)
 {
   int		i;
 
   i = 0;
-  while (colormapa_name[i] != NULL)
+  while (a->colormap_name[i] != NULL)
     {
-      if (strcmp(str, colormapa_name[i]) == 0)
-	return (0);
+      if (strncmp(str, a->colormap_name[i], strlen(str)) == 0)
+	{
+	  if (strlen(str) == strlen(a->colormap_name[i]))
+	    return (0);
+	}
       i++;
     }
   return (1);
@@ -587,6 +812,7 @@ void			*start(void *args)
   image_args = create_image_struct();
   image_args->dim_nb = volume->dim_nb;
   image_args->premapped_colormap = image_args_tmp->premapped_colormap;
+  image_args->colormap_name = image_args_tmp->colormap_name;
 
   if (strcmp(a->commands[1], "percent") == 0)
     {
@@ -707,15 +933,15 @@ void			*start(void *args)
 
   i = 0;
   colormap = (strcmp(image_args->service, "tiles") == 0 ? strdup(a->commands[14]) : (strcmp(image_args->service, "full") == 0 ? strdup(a->commands[11]) : strdup(a->commands[15])));
-  if (check_colormap_name(colormap))
+  if (check_colormap_name(colormap, image_args))
     ERROR("Warning : colormap '%s' does not exist", colormap);
-  while (colormapa_name[i] != NULL)
+  while (image_args->colormap_name[i] != NULL)
     {
-      if (strcmp(colormap, colormapa_name[i]) == 0)
+      if (strncmp(colormap, image_args->colormap_name[i], strlen(colormap)) == 0 && strlen(image_args->colormap_name[i]) == strlen(colormap))
 	break;
       i++;
     }
-  if (colormapa_name[i] != NULL && strcmp(colormapa_name[i], "gray") != 0 && strcmp(colormapa_name[i], "grey") != 0)
+  if (image_args->colormap_name[i] != NULL && strcmp(image_args->colormap_name[i], "gray") != 0 && strcmp(image_args->colormap_name[i], "grey") != 0)
     image_args->colormap_id = i;
   else
     image_args->colormap_id = -1;

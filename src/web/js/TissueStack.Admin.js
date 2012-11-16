@@ -25,6 +25,7 @@ TissueStack.Admin = function () {
 	this.registerTaskHandler();
 	// make sure the upload directory displays the up-to-date contents
 	this.displayUploadDirectory();
+	this.cloneTableHeader();
 };
 
 TissueStack.Admin.prototype = {
@@ -37,7 +38,7 @@ TissueStack.Admin.prototype = {
 	registerQueryListRefreshHandler : function () {
 		var _this = this;
 		//top tabs check for refreshing upload directory list
-		$('#tab_admin_data, #tab_admin_setting').click(function(){
+		$('#tab_admin_data').click(function(){
 			_this.displayUploadDirectory();
 		});
 		$('#radio_task').change(function(){
@@ -458,13 +459,12 @@ TissueStack.Admin.prototype = {
 		// add row to table
 		$(tbody).append(row);
 		//$("#task_table").css({"height" : nrRows * 20 + 15});
+		
 		// refresh
 		tab.trigger("create");
-
 		// register cancel event and launch task progress checkers
 		_this.startProgressChecker(task.id);
 		_this.registerTaskCancelHandler(task.id, task.file);
-
 		return true;
 	},
 	stopTaskProgressCheck : function(id) {
@@ -562,7 +562,7 @@ TissueStack.Admin.prototype = {
 					}
 					
 					if (processTask.progress >= 0)
-						$("#" + "progress_text_" + id).html(processTask.progress + "%");
+						$("#" + "progress_text_" + id).html(processTask.progress.toFixed(2) + "%");
 					$("#" + "progress_bar_" + id).val(processTask.progress);
 
 					
@@ -590,5 +590,45 @@ TissueStack.Admin.prototype = {
 				}
 			);  
 		}, 2500);
+	},
+	updateTableHeaders: function () {
+        $("#task_list").each(function() {
+            var originalHeaderRow = $(".original_table_header", this);
+            var floatingHeaderRow = $(".new_table_header", this);
+            var scrollTop = $("#task_list").scrollTop();
+            
+            floatingHeaderRow.css("top", scrollTop + "px");
+			if(scrollTop !=0)
+				floatingHeaderRow.css("visibility", "visible");
+            // Copy cell widths from original header
+            $("th", floatingHeaderRow).each(function(index) {
+                var cellWidth = $("th", originalHeaderRow).eq(index).css('width');
+                $(this).css('width', cellWidth);
+            });
+
+            // Copy row width from whole table
+            floatingHeaderRow.css("width", $(this).css("width"));
+        });
+	},
+	cloneTableHeader: function () {
+        $("#task_table").each(function() {
+            $(this).wrap("<div class='task_list' style='position:relative'></div>");
+
+            var originalHeaderRow = $("tr:first", this)
+            originalHeaderRow.before(originalHeaderRow.clone());
+            var clonedHeaderRow = $("tr:first", this)
+
+            clonedHeaderRow.addClass("new_table_header");
+            clonedHeaderRow.css("position", "absolute");
+            clonedHeaderRow.css("top", "0px");
+            clonedHeaderRow.css("z-index", "2000");
+            clonedHeaderRow.css("left", $(this).css("margin-left"));
+			clonedHeaderRow.css("visibility", "hidden");
+            originalHeaderRow.addClass("original_table_header");
+        });
+        this.updateTableHeaders();
+        
+        $("#task_list").scroll(this.updateTableHeaders);
+        $("#task_list").resize(this.updateTableHeaders);
 	}
 };

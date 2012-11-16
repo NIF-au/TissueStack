@@ -22,7 +22,6 @@
         <script src="js/libs/jquery/jquery.knob.js"></script>
         <script src="js/TissueStack.Slider.js"></script>
 		<script src="js/libs/sylvester/sylvester.js"></script>
-		
 		<!--TREE DATA SETS-->
 	    <script src="js/libs/jquery/jquery.cookie.js"></script>
 	    <script src="js/libs/jquery/jquery.dynatree.js"></script>
@@ -124,13 +123,21 @@
 	     	    				<canvas id="dataset_1_toolbox_canvas" class="contrast_slider "></canvas>
 	     	    			</div>
 	     	    		</div>
-	     	    	<!--END OF CONTRAST CONTROL-->	
-                    <!--COLOR MAP-->
-                        <div id="dataset_1_color_map" class="color_map_main hidden">
-                            <select class="color_map_select" data-mini="true">
-                                <option>Uninitialized</option>
-                            </select>
-                        </div>
+	     	    	<!--END OF CONTRAST CONTROL-->
+	     	    	<!--COLORMAP CONTROL-->
+	     	    		<div class="colormap_main">
+	     	    			<a id="dataset_1_colormap_button" class="top_right_button" style="color: white;" href="#">COLORMAP</a>
+	     	    			<div id="dataset_1_colormap_box" class="colormap_box">	
+	     	    				<div class='url_arrow'></div>
+	     	    				<div class='url_arrow-border'></div>
+	     	    				<div id="dataset_1_color_map">
+		     	    				<select class="color_map_select" data-mini="true" data-theme="c">
+		     	    				    <option>Uninitialized</option>
+		     	    				</select>
+	     	    				</div>
+	     	    			</div>
+	     	    		</div>
+	     	    	<!--END OF COLORMAP CONTROL-->		
                     <!--END OF COLOR MAP-->
 	     	    		<div id="dataset_1_main_view_canvas" class="canvasview canvas_y" >		     	    		
 	     	    			<canvas id="dataset_1_canvas_y_plane" class="plane"></canvas>
@@ -198,14 +205,21 @@
 								<canvas id="dataset_2_toolbox_canvas" class="contrast_slider "></canvas>
 							</div>
 						</div>
-	                 <!--END OF CONTRAST CONTROL-->  
-                    <!--COLOR MAP-->
-                        <div id="dataset_2_color_map" class="color_map_main hidden">
-                           <select class="color_map_select" data-mini="true">
-                                <option>Uninitialized</option>
-                            </select>
-                        </div>
-                    <!--END OF COLOR MAP-->
+	                 <!--END OF CONTRAST CONTROL-->
+	                 <!--COLORMAP CONTROL-->
+	                 	<div class="colormap_main">
+	                 		<a id="dataset_2_colormap_button" class="top_right_button" style="color: white;" href="#">COLORMAP</a>
+	                 		<div id="dataset_2_colormap_box" class="colormap_box">	
+	                 			<div class='url_arrow'></div>
+	                 			<div class='url_arrow-border'></div>
+	                 			<div id="dataset_2_color_map">
+	                 				<select class="color_map_select" data-mini="true" data-theme="c">
+	                 				    <option>Uninitialized</option>
+	                 				</select>
+	                 			</div>
+	                 		</div>
+	                 	</div>
+	                 <!--END OF COLORMAP CONTROL-->	  
 						<div id="dataset_2_main_view_canvas" class="canvasview canvas_y" >
 						   <canvas id="dataset_2_canvas_y_plane" class="plane"></canvas> 
 						   <canvas id="dataset_2_canvas_y_plane_cross_overlay" class="cross_overlay"></canvas>
@@ -292,11 +306,23 @@
 	 		   	</div> <!-- / top -->
 	 		 </div> <!-- /login -->	
 	 		<!--END OF ADMIN LOGIN-->
+	 		<!--ADMIN LEFT COLUMN-->
 	     	<div id="div_file_upload" class="settings-left-column">
-                <input id="drawing_interval" type="text" value="150" >
-                <a href="desktop.html#data" data-role="button" id="drawing_interval_button">Set Drawing Interval (in ms)</a>
                 <hr/>
-                
+                <h2>Setting</h2>
+                <hr/>
+                <div data-role="fieldcontain">
+	                <input id="drawing_interval" type="text" value="150" style="width: 90px;">
+	                <a href="desktop.html#data" data-role="button" data-inline="true" id="drawing_interval_button" data-mini="true">Set Drawing Interval (ms)</a>
+                </div>
+                <fieldset data-role="controlgroup">
+                	<input type="checkbox" id="sync_data_sets" />
+                    <label for="sync_data_sets">Synchronize Data Sets</label>
+                    <input type="checkbox" id="overlay_data_sets" />
+                    <label for="overlay_data_sets">Overlay Second Data Set With First (Not functional yet!)</label>
+                </fieldset>
+                <br/>
+                <hr/>
 				<h2>File Upload</h2>
 				<hr/>
 				<div id="file_uploaded_message" ></div>
@@ -311,16 +337,12 @@
 		                <div class="bar"></div >
 		                <div class="percent">0%</div >
 			        </div>
-			    </fieldset>
+			    </fieldset>   
 	     	</div>
-	     	
+	 		<!--END OF ADMIN LEFT COLUMN-->
+	 		<!--ADMIN RIGHT COLUMN-->	     	
 	     	<div class="settings-right-column">
-	     	    <input type="checkbox" id="sync_data_sets" />
-                <label for="sync_data_sets">Synchronize Data Sets</label>
-                <input type="checkbox" id="overlay_data_sets" />
-                <label for="overlay_data_sets">Overlay Second Data Set With First (Not functional yet!)</label>
 	     	    <hr/>
-	     	    
 				<h2 id="directory_name">Upload Directory</h2>
 				<hr/>
 				<div id="file_group" data-role="fieldcontain" style="overflow: auto; height: 130px;">
@@ -340,16 +362,18 @@
 				         	<label for="bt_AddDataSet">Add Data Set</label>
 				    </fieldset>
 				</div>
-					<a href="" id="bt_process" data-role="button" data-inline="true" data-theme="e" data-icon="check">Process</a>
+				<a href="" id="bt_process" data-role="button" data-inline="true" data-theme="e" data-icon="check">Process</a>
 			</div>
-			
-			<div class="setting-buttom-column">
+			<!--END OF ADMIN RIGHT COLUMN-->
+			<!--ADMIN BUTTOM COLUMN-->
+			<div data-role="footer" class="setting-buttom-column">
 				<div id="task_list">
 				    <table id="task_table" class="conversion-table">
-				        <thead><tr>
-				                <th scope="col">Task Id</th>
-				                <th scope="col">File</th>
-				                <th scope="col">Task</th>
+				        <thead>
+                            <tr>
+                                <th scope="col">Task Id</th>
+                                <th scope="col">File</th>
+                                <th scope="col">Task</th>
                                 <th scope="col">Status</th>
                                 <th scope="col">Progress (%)</th>
                                 <th scope="col">&nbsp;</th>
@@ -358,8 +382,9 @@
                         <tbody>
                         </tbody>
 				    </table>
-				</div>
+				</div>				
 			</div>
+			<!--END OF ADMIN BUTTOM COLUMN-->
 	  </div>
 	  <!--END OF ADMIN PAGE-->
     </body>    

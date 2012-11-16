@@ -171,7 +171,6 @@ void		apply_colormap(PixelPacket *px, PixelPacket *px_final, float **premapped_c
 	{
 	  pixel_value = px[(width * i) + j].red;
 	  pixel_value = (pixel_value >= 255 ? 254 : pixel_value);
-
 	  px_final[(width * i) + j].red = (unsigned short)(premapped_colormap[pixel_value][0]);
 	  px_final[(width * i) + j].green = (unsigned short)(premapped_colormap[pixel_value][1]);
 	  px_final[(width * i) + j].blue = (unsigned short)(premapped_colormap[pixel_value][2]);
