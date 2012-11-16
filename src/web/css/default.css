@@ -478,37 +478,12 @@ a.ui-slider-handle-horizontal{
 	z-index: 2400;	
 }
 /*ColorMap CSS*/
-.colormap_main{
-	height: 26px; 
-	z-index: 2400; 
-	position: absolute;
-	right: 141px;
-	top: 10px; 
-	color: white; 
-	font-family: Arial, sans-serif; 
-	font-size: 11px;
-}
-.colormap_box{
-	display: none;
-	z-index: 2400;
-	background:#DDD;
-	border:solid 1px #FFF;
-	border-radius:1px;
-	box-shadow: 0 0 5px #000000;
-	background:-webkit-gradient(linear,left top,left bottom,from(#f4f4f4),to(#e8e8e8));
-	background:-moz-linear-gradient(top,#f4f4f4,#e8e8e8);
-	background:linear-gradient(top,#f4f4f4,#e8e8e8);
-	padding:8px;
-	position:absolute;
-	top: 40px;
-	right: 15px;;
-}
 .color_map_main {
     height: 26px; 
     z-index: 2400; 
     position: absolute;
-    right: 10px;
-    top: 40px; 
+    right: 150px;
+    top: 6px; 
     color: white; 
     font-family: Arial, sans-serif; 
     font-size: 11px;

@@ -211,15 +211,19 @@ TissueStack.DataSetNavigation.prototype = {
 
 		$("#canvas_point_x,#canvas_point_y,#canvas_point_z").removeAttr("disabled");
 		$("#dataset_" + index).removeClass("hidden");
-		if (!overlaid || (overlaid && index != 1))
+		$("#dataset_" + index  + "_left_side_view_canvas").addClass("ui-bar-a");
+		$("#dataset_" + index  + "_right_side_view_canvas").addClass("ui-bar-a");
+
+		if (!overlaid || (overlaid && index != 1)) {
 			$('#dataset_' + index + '_center_point_in_canvas').closest('.ui-btn').show();
+			$("#dataset_" + index  + "_color_map").removeClass("hidden");
+		}
 		$("#dataset_" + index  + " .cross_overlay").removeClass("hidden");
 		$("#dataset_" + index  + " .side_canvas_cross_overlay").removeClass("hidden");		
 		
 		// we keep the slider and the cross-hair hidden for overlaid data sets
 		if (TissueStack.dataSetNavigation.selectedDataSets.count > 1 && !(overlaid && index == 1)) {
 			$("#dataset_" + index  + "_right_panel").removeClass("hidden");
-			$("#dataset_" + index  + "_color_map").removeClass("hidden");
 		} 
 		
 		if (overlaid && index ==1) {
