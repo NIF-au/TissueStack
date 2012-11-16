@@ -191,9 +191,12 @@ float		get_float(char *src, int start, int end, int len)
   tmp = malloc(((end - start) + 1) * sizeof(*tmp));
   while (start <= end && start < len)
     {
-      tmp[index] = src[start];
       if (src[start] == ' ' || src[start] == '\t' || src[start] == '\n')
 	break;
+      if ((src[start] >= '0' && src[start] <= '9') || src[start] == '.')
+	tmp[index] = src[start];
+      else
+	tmp[index] = 0;
       start++;
       index++;
     }
