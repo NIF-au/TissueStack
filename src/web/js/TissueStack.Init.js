@@ -128,8 +128,7 @@ TissueStack.InitUserInterface = function (initOpts) {
 			}
 		);
 		$(".overlay_swapper").show();
-	} else 
-		TissueStack.reverseOverlayOrder = false;
+	}
 	
 	for (var x=0;x<maxDataSets;x++) {
 		var dataSet = datasets[x];

@@ -603,7 +603,7 @@ TissueStack.Utils = {
 				plane1, plane2, true);
 	},transitionToDataSetView :  function(reverseDataSetOrder) {
 		var reverseOrder =
-			typeof(reverseDataSetOrder) == 'boolean' && TissueStack.dataSetNavigation.selectedDataSets.count == 2
+			typeof(reverseDataSetOrder) == 'boolean' && TissueStack.dataSetNavigation.selectedDataSets.count != 1
 					? reverseDataSetOrder : false; 
 		TissueStack.reverseOverlayOrder = reverseOrder;
 		
