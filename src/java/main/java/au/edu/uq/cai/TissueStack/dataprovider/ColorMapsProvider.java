@@ -124,7 +124,7 @@ public final class ColorMapsProvider {
 								json.append(columns[2]);
 								json.append(",");
 								json.append(columns[3]);
-								json.append("]");
+								json.append("],");
 						}
 						tokenIndex++;
 					} catch(NoSuchElementException noMoreTokens) {
@@ -135,6 +135,9 @@ public final class ColorMapsProvider {
 				}
 				lineNumber++;
 			}
+			if (json.charAt(json.length()-1) == ',')
+				json.deleteCharAt(json.length()-1);
+			
 			json.append("]");
 			colorMap.setJson(json.toString());
 			
