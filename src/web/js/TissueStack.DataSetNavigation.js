@@ -222,9 +222,9 @@ TissueStack.DataSetNavigation.prototype = {
 		$("#dataset_" + index  + " .side_canvas_cross_overlay").removeClass("hidden");		
 		
 		// we keep the slider and the cross-hair hidden for overlaid data sets
-		if (TissueStack.dataSetNavigation.selectedDataSets.count > 1 && !(overlaid && index == 1)) {
-			$("#dataset_" + index  + "_right_panel").removeClass("hidden");
-		} 
+		$("#dataset_" + index  + "_right_panel").removeClass("hidden");
+		if (overlaid && index == 1) 
+			$("#dataset_" + index  + "_right_panel").addClass("hidden");
 		
 		if (overlaid && index ==1) {
 			$("#dataset_" + index  + " .cross_overlay").addClass("hidden");
