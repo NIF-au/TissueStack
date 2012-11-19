@@ -601,5 +601,19 @@ TissueStack.Utils = {
 				TissueStack.dataSetStore.getDataSetById(
 						TissueStack.dataSetNavigation.selectedDataSets[whichEverCanvas1.dataset_id]),
 				plane1, plane2, true);
+	},transitionToDataSetView :  function(reverseDataSetOrder) {
+		var reverseOrder =
+			typeof(reverseDataSetOrder) == 'boolean' && TissueStack.dataSetNavigation.selectedDataSets.count == 2
+					? reverseDataSetOrder : false; 
+		TissueStack.reverseOverlayOrder = reverseOrder;
+		
+    	if (TissueStack.dataSetNavigation.selectedDataSets.count > 0) {
+    		var sel = TissueStack.dataSetNavigation.selectedDataSets["dataset_1"];
+    		TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(sel, false); 
+    		setTimeout(function() {
+					TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(sel, true);
+    		}, 200);
+    	}
+    	window.location.hash = '#data';
 	}
 };

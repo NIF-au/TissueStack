@@ -117,7 +117,19 @@ TissueStack.InitUserInterface = function (initOpts) {
         });
 		$("#transparency_knob").val(TissueStack.transparency * 100).trigger('change');
 		$(".transparency_knob_div").show();
-	}
+		// data set swap
+		$(".overlay_swapper").unbind("click");
+		$(".overlay_swapper").bind("click",
+			function() {
+	        	if (TissueStack.overlay_datasets && TissueStack.dataSetNavigation && TissueStack.dataSetNavigation.selectedDataSets
+	        			&& TissueStack.dataSetNavigation.selectedDataSets.count == 2) {
+	        		TissueStack.Utils.transitionToDataSetView(TissueStack.reverseOverlayOrder ? false : true);
+	        	}
+			}
+		);
+		$(".overlay_swapper").show();
+	} else 
+		TissueStack.reverseOverlayOrder = false;
 	
 	for (var x=0;x<maxDataSets;x++) {
 		var dataSet = datasets[x];
@@ -356,17 +368,6 @@ TissueStack.BindDataSetDependentEvents = function () {
 		maxDataSets = datasets.length;
 	}
 
-	var transitionToDataSetView =  function() {
-    	if (TissueStack.dataSetNavigation.selectedDataSets.count > 0) {
-    		var sel = TissueStack.dataSetNavigation.selectedDataSets["dataset_1"];
-    		TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(sel, false); 
-    		window.location.hash = '#data';
-    		setTimeout(function() {
-					TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(sel, true);
-    		}, 200);
-    	}
-	};
-	
 	// SYNC AND OVERLAY DATA_SETS CHECKBOX CHANGE HANDLER
     if (TissueStack.desktop) {
    		$('#sync_data_sets').unbind("change");
@@ -376,7 +377,7 @@ TissueStack.BindDataSetDependentEvents = function () {
         		TissueStack.overlay_datasets = false;
         		$('#overlay_data_sets').removeAttr("checked").checkboxradio("refresh");
         	}
-        	transitionToDataSetView();
+        	TissueStack.Utils.transitionToDataSetView();
         });
 		$('#overlay_data_sets').unbind("change");
         $('#overlay_data_sets').bind("change", function() {
@@ -388,7 +389,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 	        	$('#sync_data_sets').removeAttr("checked").checkboxradio("refresh");
 	        	TissueStack.sync_datasets = false;
         	}
-        	transitionToDataSetView();
+        	TissueStack.Utils.transitionToDataSetView();
         });
     }
     

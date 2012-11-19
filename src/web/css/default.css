@@ -599,3 +599,10 @@ width: 100%;
 	top:50px;
 	left:10px;
 }
+
+.overlay_swapper {
+	z-index: 2400;
+	position: absolute;
+	right: 10px;
+	top: 50px;
+}

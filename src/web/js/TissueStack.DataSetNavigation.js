@@ -195,6 +195,7 @@ TissueStack.DataSetNavigation.prototype = {
 		   if (TissueStack.desktop) {
 			   $("#dataset_1_scalecontrol").show();
 			   $(".transparency_knob_div").hide();
+			   $(".overlay_swapper").hide();
 		   }
 		}
 	},
@@ -293,6 +294,8 @@ TissueStack.DataSetNavigation.prototype = {
 		    	   }
 
 	    		   var selectedNodes = this.getSelectedNodes(true);
+	    		   if (TissueStack.reverseOverlayOrder)
+	    			   selectedNodes.reverse();
 	    		   // brief check
 	    		   if (selectedNodes.length > 2) {
 	    			   // we cannot display more than 2 data sets ... let the user know
