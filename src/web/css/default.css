@@ -133,7 +133,7 @@
 	float: left;
 	width: 45%;	
 	height: 400px;
-	overflow-y: scroll;	
+	overflow-y: auto;	
 }
 .settings-tablet-left-column {
 	text-align: center;
@@ -146,12 +146,12 @@
 	float: right;
 	width: 45%;
 	height: 400px;
-	overflow-y: scroll;	
+	overflow-y: auto;	
 }
 .settings-tablet-right-column {
 	text-align: center;
-	float: left;
-	width: 70%	
+	float: right;
+	width: 68%;	
 }
 .setting-buttom-column{
 	width: 98.5%;
@@ -587,12 +587,18 @@ width: 100%;
 .progress_bar_text {
 	position: absolute;
 	font-weight: bold;
-	color: white;
 	top: 20%;
 	left: 50%;
 	text-align: center;
 }
-
+/*Take out all process bar function for tablet becasue it doesn't work in tablet*/
+.progress_bar_text_tablet {
+	position: absolute;
+	color: #669;
+	margin-top: -8.5px;
+	left: 20%;
+	text-align: left;
+}
 .transparency_knob_div {
 	z-index: 1590;
 	position: absolute;
