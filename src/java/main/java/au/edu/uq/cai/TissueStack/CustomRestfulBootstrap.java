@@ -24,6 +24,7 @@ import javax.servlet.ServletContextEvent;
 import org.apache.log4j.Logger;
 import org.jboss.resteasy.plugins.server.servlet.ResteasyBootstrap;
 
+import au.edu.uq.cai.TissueStack.dataprovider.ColorMapsProvider;
 import au.edu.uq.cai.TissueStack.dataprovider.SessionDataProvider;
 
 public class CustomRestfulBootstrap extends ResteasyBootstrap {
@@ -68,7 +69,14 @@ public class CustomRestfulBootstrap extends ResteasyBootstrap {
 					DATABASE_SESSION_CLEANER_INTERVAL);
 		} catch (Exception any) {
 			logger.error("Failed to start the session cleaner thread!", any);
-		}		
+		}
+		
+		try {
+			ColorMapsProvider.instance();
+		} catch (Exception any) {
+			logger.error("Failed to load colormaps!", any);
+		}
+		
 	}
 	
 	public void contextDestroyed(ServletContextEvent event) {

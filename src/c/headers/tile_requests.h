@@ -33,6 +33,7 @@ struct			s_tile_requests
 	void 		(*add) (t_tile_requests * this, char * id, char * timestamp);
 	short		(*is_expired) (t_tile_requests * this, char * id, char * timestamp);
 	void 		(*destroy) (t_tile_requests * this);
+	short 		locked;
 };
 
 void init_tile_requests(t_tile_requests * this);
@@ -41,6 +42,6 @@ short is_expired_tile_request(t_tile_requests * this, char * id, char * timestam
 void destroy_tile_requests(t_tile_requests * this);
 
 inline int convertRequestIdAndTimeIntoNumericDifference(char * id, char * timestamp);
-inline void empty_hash_if_above_threshold(t_tile_requests * this);
+void empty_hash_if_above_threshold(t_tile_requests * this);
 
 #endif	/* __TILE_REQUESTS__ */

@@ -457,7 +457,7 @@ TissueStack.Embedded.prototype = {
 					TissueStack.configuration[configuration[x].name].description = configuration[x].description ? configuration[x].description : "";
 				};
 				
-				TissueStack.Utils.indexColorMaps();
+				TissueStack.Utils.loadColorMaps();
 			},
 			function(jqXHR, textStatus, errorThrown) {
 				alert("Error connecting to backend: " + textStatus + " " + errorThrown);

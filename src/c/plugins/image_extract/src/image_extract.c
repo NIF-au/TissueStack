@@ -391,7 +391,7 @@ void		colormap_init(t_image_extract *image_args)
   //  int		i;
   // int		clormp_nb;
 
-  load_colormaps_from_directory("/opt/tissuestack/colormap", image_args);
+  load_colormaps_from_directory("/opt/tissuestack/colormaps", image_args);
 
   /*
   clormp_nb = 2;

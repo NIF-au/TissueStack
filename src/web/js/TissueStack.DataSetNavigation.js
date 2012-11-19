@@ -191,6 +191,11 @@ TissueStack.DataSetNavigation.prototype = {
 		   $("#" + dataset + ", #" + dataset + "_color_map").addClass("hidden");
 		   $("#" + dataset + "_left_side_view_canvas").addClass("hidden");
 		   $("#" + dataset + "_right_side_view_canvas").addClass("hidden");
+		   
+		   if (TissueStack.desktop) {
+			   $("#dataset_1_scalecontrol").show();
+			   $(".transparency_knob_div").hide();
+		   }
 		}
 	},
 	showDataSet : function(index, overlaid) {
@@ -206,22 +211,20 @@ TissueStack.DataSetNavigation.prototype = {
 
 		$("#canvas_point_x,#canvas_point_y,#canvas_point_z").removeAttr("disabled");
 		$("#dataset_" + index).removeClass("hidden");
-		$('#dataset_' + index + '_center_point_in_canvas').closest('.ui-btn').show();
+		$("#dataset_" + index  + "_left_side_view_canvas").addClass("ui-bar-a");
+		$("#dataset_" + index  + "_right_side_view_canvas").addClass("ui-bar-a");
+
+		if (!overlaid || (overlaid && index != 1)) {
+			$('#dataset_' + index + '_center_point_in_canvas').closest('.ui-btn').show();
+			$("#dataset_" + index  + "_color_map").removeClass("hidden");
+		}
 		$("#dataset_" + index  + " .cross_overlay").removeClass("hidden");
 		$("#dataset_" + index  + " .side_canvas_cross_overlay").removeClass("hidden");		
 		
-		var dataSet = 
-			TissueStack.dataSetStore.getDataSetById(
-					TissueStack.dataSetNavigation.selectedDataSets["dataset_" + index]);
-		
-		//if (dataSet && dataSet.data.length > 1) {
-		//	$("#dataset_" + index  + "_right_panel").removeClass("hidden");
-		//}
 		// we keep the slider and the cross-hair hidden for overlaid data sets
-		if (dataSet && dataSet.data.length > 1 && !(overlaid && index == 1)) {
+		if (TissueStack.dataSetNavigation.selectedDataSets.count > 1 && !(overlaid && index == 1)) {
 			$("#dataset_" + index  + "_right_panel").removeClass("hidden");
-			$("#dataset_" + index  + "_color_map").removeClass("hidden");
-		}
+		} 
 		
 		if (overlaid && index ==1) {
 			$("#dataset_" + index  + " .cross_overlay").addClass("hidden");
@@ -431,7 +434,7 @@ TissueStack.DataSetNavigation.prototype = {
 
 		document.addEventListener('touchmove', function (e) { e.preventDefault(); }, false);
 	}, 
-	syncDataSetCoordinates : function(canvas, eraseCanvas) {
+	syncDataSetCoordinates : function(canvas, timestamp, eraseCanvas) {
 		// basic checks whether the sync flag for desktop was set && we have more than 1 data sets selected 
 		// && we have been handed in a canvas with all the properties we need to go on 
 		if (!(
@@ -478,11 +481,11 @@ TissueStack.DataSetNavigation.prototype = {
 		if (eraseCanvas)
 			other_plane.eraseCanvasContent();
 		else {
-			other_plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(pixel_coords_for_other_plane, false, sync_time);
+			other_plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(pixel_coords_for_other_plane, false, timestamp);
 			if (TissueStack.overlay_datasets && canvas.getDataExtent().zoom_level != other_plane.getDataExtent().zoom_level)
 				other_plane.changeToZoomLevel(canvas.getDataExtent().zoom_level);
-			other_plane.queue.drawLowResolutionPreview(sync_time);
-			other_plane.queue.drawRequestAfterLowResolutionPreview(null, sync_time);
+			other_plane.queue.drawLowResolutionPreview(timestamp);
+			other_plane.queue.drawRequestAfterLowResolutionPreview(null, timestamp);
 
 			if (other_plane.is_main_view) {
 				var slider = $("#" + (other_plane.dataset_id == "" ? "" : other_plane.dataset_id + "_") + "canvas_main_slider");

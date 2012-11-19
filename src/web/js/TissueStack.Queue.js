@@ -163,6 +163,12 @@ TissueStack.Queue.prototype = {
 			return;
 		}
 		
+		if (TissueStack.overlay_datasets && (this.canvas.overlay_canvas || this.canvas.underlying_canvas)) {
+			this.canvas.getCanvasElement().hide();
+			this.lowResolutionPreviewDrawn = true;
+			return;
+		}
+
 		var canvasX = 0;
 		var imageOffsetX = 0;
 		var width = this.canvas.getDataExtent().x;
@@ -220,17 +226,12 @@ TissueStack.Queue.prototype = {
 		}
 		imageTile.src = src; 
 
-		if (TissueStack.overlay_datasets) {
-			if (this.canvas.overlay_canvas || this.canvas.underlying_canvas) this.canvas.getCanvasElement().hide();
-			if (this.canvas.underlying_canvas) {
-				this.canvas.eraseCanvasContent();
-				ctx.globalAlpha = 0.5;
-			}
-		}
-		
 		(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height) {
+			imageTile.onerror = function() {
+				_this.lowResolutionPreviewDrawn = true;
+				return;
+			};
 			imageTile.onload = function() {
-			
 				if (_this.latestDrawRequestTimestamp < 0 || timestamp < _this.latestDrawRequestTimestamp) {
 					_this.lowResolutionPreviewDrawn = true;
 					//console.info('Aborting preview for ' + _this.canvas.getDataExtent().data_id + '[' +_this.canvas.getDataExtent().getOriginalPlane() +  ']: ' + timestamp);
@@ -258,7 +259,7 @@ TissueStack.Queue.prototype = {
 				
 				if (_this.canvas.getDataExtent().getIsTiled() && _this.canvas.hasColorMapOrContrastSetting()) {
 					_this.canvas.applyContrastAndColorMapToCanvasContent();
-					if (!TissueStack.overlay_datasets || !(_this.canvas.underlying_canvas && _this.canvas.overlay_canvas))
+					if (!TissueStack.overlay_datasets || (!_this.canvas.underlying_canvas && !_this.canvas.overlay_canvas))
 						_this.canvas.getCanvasElement().show();		
 				} 
 				

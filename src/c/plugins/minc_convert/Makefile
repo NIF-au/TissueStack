@@ -15,7 +15,7 @@ LIBS		=	-lhdf5								\
 
 NAME		=	TissueStackMincConverter.so
 
-FLAGS		=	-Wall -Werror -ggdb -O3 -Wno-unused-result
+FLAGS		=	-Wall -Werror -ggdb -O2 -Wno-unused-result
 
 PLUGIN_INSTALL_DIR = /usr/local/plugins
 

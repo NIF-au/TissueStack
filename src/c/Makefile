@@ -30,7 +30,7 @@ LIBS		=	-lhdf5								\
 
 NAME		=	TissueStackImageServer
 
-FLAGS		=	-Wall -Werror -ggdb -O3 -Wno-unused-result #-D_GNU_SOURCE
+FLAGS		=	-Wall -Werror -ggdb -O2 -Wno-unused-result #-D_GNU_SOURCE
 
 OBJS		=	$(SRCS:%.c=%.o)
 
