@@ -23,7 +23,7 @@ TissueStack.Init = function (afterLoadingRoutine) {
 	}
 
 	// prepare color maps
-	TissueStack.Utils.indexColorMaps();
+	TissueStack.Utils.loadColorMaps();
 
 	// add phone menu for page navigation
 	if (TissueStack.phone) {
