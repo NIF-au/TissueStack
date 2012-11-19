@@ -747,7 +747,7 @@ TissueStack.Canvas.prototype = {
 				hostPart + "?ds=" + ds + "&plane=" + this.data_extent.plane
 					+ "&x=" + x_link + "&y=" + y_link + "&z=" + z_link + "&zoom=" + zoom;
 		}
-		if (typeof(this.color_map) == 'string' && (this.color_map == 'hot' || this.color_map == 'spectral') ) {
+		if (typeof(this.color_map) == 'string' && this.color_map != 'grey') {
 			url_link_message += ("&color=" + this.color_map); 
 		}
 		if (this.contrast && this.contrast.isMinOrMaxDifferentFromDataSetMinOrMax()) {

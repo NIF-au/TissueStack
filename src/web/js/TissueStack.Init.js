@@ -780,18 +780,22 @@ TissueStack.applyUserParameters = function() {
 			plane.changeToZoomLevel(initOpts['zoom']); 
 		}
 
-		if (initOpts['color'] &&
-				(initOpts['color'] == 'grey' || initOpts['color'] == 'hot' || initOpts['color'] == 'spectral')) {
+		if (initOpts['color'] && initOpts['color'] != 'grey' && TissueStack.indexed_color_maps[initOpts['color']]) {
 			// change color map collectively for all planes
 			for (var id in dataSet.planes) dataSet.planes[id].color_map = initOpts['color'];
 
 			// set right radio button
-			try {
-				$("#colormap_choice input").removeAttr("checked").checkboxradio("refresh");
-				$("#colormap_" + initOpts['color']).attr("checked", "checked").checkboxradio("refresh");
-			} catch (e) {
-				// we don't care, stupid jquery mobile ...
-				$("#colormap_" + initOpts['color']).attr("checked", "checked");
+			if (TissueStack.phone) {
+				try {
+					$("#colormap_choice input").removeAttr("checked").checkboxradio("refresh");
+					$("#colormap_" + initOpts['color']).attr("checked", "checked").checkboxradio("refresh");
+				} catch (e) {
+					// we don't care, stupid jquery mobile ...
+					$("#colormap_" + initOpts['color']).attr("checked", "checked");
+				}
+			} else {
+				$(".color_map_select").val(initOpts['color']);
+				$(".color_map_select").selectmenu("refresh");
 			}
 		}
 		if (typeof(initOpts['min']) === 'number' &&  typeof(initOpts['max']) === 'number') {
