@@ -417,9 +417,9 @@ TissueStack.Admin.prototype = {
 		var tbody = ('#task_table tbody');
 		
 		var row = document.createElement('tr');
-		row.height = 20;
-		row.id = "task_" + task.id;
-		//$('tr').attr({"height" : 20});			
+		//row.height = "10px";
+		row.style ="height:20px";	
+		row.id = "task_" + task.id;			
 		for(var j = 0; j < nrCols; j++){
 			var processBar = "" ;
 			var cell = document.createElement('td');
@@ -443,9 +443,15 @@ TissueStack.Admin.prototype = {
 					break;
 				
 				case 4: // Progress
-					processBar = 
-						'<div class="progress_bar_div"><progress class="progress_bar" id="progress_bar_' + task.id + '" value="0" max="100"></progress>'
-						+ '<span class="progress_bar_text" id="progress_text_' + task.id + '">0%</span ></div>';
+					//no process bar in tablet version (iPad limitation : non display of process bar)
+					if (TissueStack.tablet){
+						processBar = '<div class="progress_bar_div">' + '<span class="progress_bar_text_tablet" id="progress_text_' + task.id + '">0%</span ></div>';
+					}
+					else{	
+						processBar = 
+							'<div class="progress_bar_div"><progress class="progress_bar" id="progress_bar_' + task.id + '" value="0" max="100"></progress>'
+							+ '<span class="progress_bar_text" id="progress_text_' + task.id + '">0%</span ></div>';
+					}
 				break;
 				
 				case 5: // Cancel Column
@@ -458,13 +464,12 @@ TissueStack.Admin.prototype = {
 
 		// add row to table
 		$(tbody).append(row);
-		//$("#task_table").css({"height" : nrRows * 20 + 15});
-		
 		// refresh
 		tab.trigger("create");
 		// register cancel event and launch task progress checkers
 		_this.startProgressChecker(task.id);
 		_this.registerTaskCancelHandler(task.id, task.file);
+		
 		return true;
 	},
 	stopTaskProgressCheck : function(id) {
