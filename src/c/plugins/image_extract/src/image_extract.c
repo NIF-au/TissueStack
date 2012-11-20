@@ -600,6 +600,7 @@ void		lunch_pct_and_add_task(t_tissue_stack *t, t_vol *vol, t_image_extract *ima
   char		*command_line;
   char		*id_percent;
 
+  if (&image_general->percent_mut == NULL) printf("BAD BAD !!!\n");
   pthread_mutex_lock(&image_general->percent_mut);
   if (image_general->percentage && image_general->id_percent == NULL)
     {
@@ -813,6 +814,7 @@ void			*start(void *args)
   image_args->dim_nb = volume->dim_nb;
   image_args->premapped_colormap = image_args_tmp->premapped_colormap;
   image_args->colormap_name = image_args_tmp->colormap_name;
+  image_args->percent_mut = image_args_tmp->percent_mut;
 
   if (strcmp(a->commands[1], "percent") == 0)
     {
