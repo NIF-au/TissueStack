@@ -122,7 +122,7 @@ char		**read_from_file_by_id(char *id, FILE **f, t_tissue_stack *t)
       if (!stat(complete_path, &info))
 	{
 	  *f = fopen(complete_path, "r+");
-	  if (fread(buff, 1, 4096, *f) > 0)
+	  if (f && fread(buff, 1, 4096, *f) > 0)
 	    result = percent_str_to_wordtab(buff, '\n');
 	  free(complete_path);
 	  return (result);

@@ -235,13 +235,13 @@ float		**get_colormap_from_file(char *path)
 		  if (k == -1)
 		    k = j;
 		}
-	      else if (buff[j] == ' ' || buff[j] == '\t')
+	      else if ((buff[j] == ' ' || buff[j] == '\t')  && k > -1)
 		{
 		  colormap_tmp[c_row_index][c_column_index] = get_float(buff, k, j, len);
 		  c_column_index++;
 		  k = -1;
 		}
-	      else if (buff[j] == '\n')
+	      else if (buff[j] == '\n' && k > -1)
 		{
 		  flag = 1;
 		  colormap_tmp[c_row_index][c_column_index] = get_float(buff, k, j, len);
@@ -333,10 +333,10 @@ void		display_colormap(float **colormap, char *name)
 {
   int		i = 0;
 
-  FATAL("\n\n Colormap Name = |%s|", name);
+  DEBUG("\n\n Colormap Name = |%s|", name);
   while (colormap[i][0] != 99)
     {
-      FATAL("%f %f %f %f", colormap[i][0], colormap[i][1], colormap[i][2], colormap[i][3])
+      DEBUG("%f %f %f %f", colormap[i][0], colormap[i][1], colormap[i][2], colormap[i][3])
       i++;
     }
 }
@@ -599,6 +599,7 @@ void		lunch_pct_and_add_task(t_tissue_stack *t, t_vol *vol, t_image_extract *ima
   char		*command_line;
   char		*id_percent;
 
+  if (&image_general->percent_mut == NULL) printf("BAD BAD !!!\n");
   pthread_mutex_lock(&image_general->percent_mut);
   if (image_general->percentage && image_general->id_percent == NULL)
     {
@@ -812,6 +813,7 @@ void			*start(void *args)
   image_args->dim_nb = volume->dim_nb;
   image_args->premapped_colormap = image_args_tmp->premapped_colormap;
   image_args->colormap_name = image_args_tmp->colormap_name;
+  image_args->percent_mut = image_args_tmp->percent_mut;
 
   if (strcmp(a->commands[1], "percent") == 0)
     {
@@ -870,7 +872,6 @@ void			*start(void *args)
 	      if (a->commands[22] != NULL)
 		{
 		  image_args->id_percent = strdup(a->commands[22]);
-		  FATAL("Task id = %s\n", a->commands[22]);
 		  image_args->percent_fd = 1;
 		}
 	      else
@@ -933,7 +934,7 @@ void			*start(void *args)
   i = 0;
   colormap = (strcmp(image_args->service, "tiles") == 0 ? strdup(a->commands[14]) : (strcmp(image_args->service, "full") == 0 ? strdup(a->commands[11]) : strdup(a->commands[15])));
   if (check_colormap_name(colormap, image_args))
-    ERROR("Warning : colormap '%s' does not exist", colormap);
+    WARNING("Warning : colormap '%s' does not exist", colormap);
   while (image_args->colormap_name[i] != NULL)
     {
       if (strncmp(colormap, image_args->colormap_name[i], strlen(colormap)) == 0 && strlen(image_args->colormap_name[i]) == strlen(colormap))

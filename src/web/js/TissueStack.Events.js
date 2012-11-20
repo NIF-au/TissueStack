@@ -392,10 +392,10 @@ TissueStack.Events.prototype = {
 		var now = new Date().getTime();					
 		var newZoomLevel = this.canvas.getDataExtent().zoom_level + delta;
 		
-		if ((TissueStack.desktop || TissueStack.tablet) 
-				&& (newZoomLevel == this.canvas.data_extent.zoom_level ||  newZoomLevel < 0
-						|| newZoomLevel >= this.canvas.data_extent.zoom_levels.length)) 
-			return;
+		if ((TissueStack.tablet || TissueStack.phone)
+				&& (newZoomLevel == this.canvas.data_extent.zoom_level ||  newZoomLevel < 0 || newZoomLevel >= this.canvas.data_extent.zoom_levels.length)) {
+			newZoomLevel = 0;
+		}
 
 		this.canvas.queue.addToQueue(
 				{	data_id : this.canvas.data_extent.data_id,

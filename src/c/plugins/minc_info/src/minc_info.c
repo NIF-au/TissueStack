@@ -17,8 +17,9 @@
 #include "minc_info.h"
 
 void *init(void *args) {
-  // nothing to do
-  return NULL;
+	t_args_plug *a = (t_args_plug *)args;
+	LOG_INIT(a);
+	return NULL;
 }
 
 void *start(void *args) {

@@ -56,7 +56,7 @@ public final class ColorMapsProvider {
 		this.colorMaps = new HashMap<String, ColorMap>(colorMapFIles.length);
 		for (String file : colorMapFIles) {
 			final ColorMap map = this.readColorMapFromFile(colorMapsDirectory.getAbsolutePath(), file);
-			this.colorMaps.put(map.getName(), map);
+			if (map != null) this.colorMaps.put(map.getName(), map);
 		}
 	}
 
@@ -178,7 +178,6 @@ public final class ColorMapsProvider {
 		if (ColorMapsProvider.myself == null)
 			ColorMapsProvider.myself = new ColorMapsProvider();
 		
-		System.out.println(ColorMapsProvider.myself.getColorMapsAsJson());
 		return ColorMapsProvider.myself;
 	}
 }

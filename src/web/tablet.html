@@ -213,13 +213,17 @@
  	      	</div> <!-- / top -->
  	    </div> <!-- /login -->	
  	   <!--END OF ADMIN LOGIN-->
- 	    	<div class="settings-tablet-left-column">
-                <input id="drawing_interval" type="text" value="150" >
-                <a href="tablet.html#data" data-role="button" id="drawing_interval_button">Set Drawing Interval (in ms)</a>
+ 	    	<div class="settings-tablet-left-column">  
+                <h3 id="setting_name">Settings</h3>
                 <hr/>
- 	    		<h2 id="directory_name">Upload Directory</h2>
+                <div data-role="fieldcontain">
+                    <input id="drawing_interval" type="text" value="150" style="width: 90px;">
+                    <a href="tablet.html#data" data-role="button" data-inline="true" id="drawing_interval_button" data-mini="true">Set Drawing Interval (ms)</a>
+                </div>
+                <hr/>
+ 	    		<h3 id="directory_name">Upload Directory</h3>
  	    		<hr/>
- 	    		<div id="file_group" data-role="fieldcontain" style="overflow: auto; height: 250px;">
+ 	    		<div id="file_group" data-role="fieldcontain" style="overflow: auto; height: 150px;">
  	    			<fieldset class="file_radio_list" data-role="controlgroup" data-mini="true" >
  	    			</fieldset>
  	    		</div>
@@ -237,21 +241,25 @@
  	    		</div>
  	    		<a href="" id="bt_process" data-role="button" data-inline="true" data-theme="e" data-icon="check">Process</a>
  	    	</div>
- 	    	<div class="setting-tablet-right-column">
- 	    		<h2 style="text-align: center;">Tasks</h2><hr/>
- 	    		<div id="tablettransition" style="height: 480px; position:relative; overflow:auto;">
- 	    		    <table id="task_table" class="conversion-table" style="height: 800px">
- 	    		        <thead><tr>
- 	    		                <th scope="col">ID</th>
- 	    		                <th scope="col">File Name</th>
- 	    		                <th scope="col">Type</th>
- 	    	                    <th scope="col">Action</th>	
- 	    	                    <th scope="col">Progress (%)</th>
- 	    	                </tr>
- 	    	            </thead>
- 	    	            <tbody>
- 	    	            </tbody>
- 	    		    </table>
+ 	    	<div class="settings-tablet-right-column">
+ 	    		<h3 style="text-align: center;">Tasks</h3><hr/>
+ 	    		<div style="height: 480px; position:relative; overflow:auto;">
+ 	    		    <div id="tablettransition">
+	 	    		    <table id="task_table" class="conversion-table">
+	 	    		        <thead>
+	 	    		            <tr>
+	 	    		                <th scope="col">Task Id</th>
+	 	    		                <th scope="col">File</th>
+	 	    		                <th scope="col">Task</th>
+	 	    		                <th scope="col">Status</th>
+	 	    		                <th scope="col">Progress (%)</th>
+	 	    		                <th scope="col">&nbsp;</th>
+	 	    		            </tr>
+	 	    		        </thead>
+	 	    		        <tbody>
+	 	    		        </tbody>
+	 	    		    </table>
+ 	    		    </div>
  	    		</div>
  	    	</div>
  	    	<div id="file_uploaded_message" ></div>

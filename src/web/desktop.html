@@ -105,7 +105,7 @@
 	     	    		</div>
 	     	    	<!--END OF DISTANCE SCALE-->
 	     	    	<!--URL LINK-->
-	     	    		<div class="url_link_main">
+	     	    		<div class="url_link_main" title="Show URL For Data Set">
 	     	    			<a id="dataset_1_url_button" class="top_right_button" style="color: white;" href="#">URL</a>
 	     	    			<div id="dataset_1_url_box" class='url_box'>
 		     	    			<div class='url_arrow'></div>
@@ -115,7 +115,7 @@
 	     	    		</div>
 	     	    	<!--END OF URL LINK-->
 	     	    	<!--CONTRAST CONTROL-->
-	     	    		<div class="contrast_main">
+	     	    		<div class="contrast_main" title="Change Contrast For Data Set">
 	     	    			<a id="dataset_1_toolbox_canvas_button" class="top_right_button" style="color: white;" href="#">CONTRAST</a>
 	     	    			<div id="dataset_1_contrast_box" class="contrast_box">	
 	     	    				<div class='url_arrow'></div>
@@ -125,7 +125,7 @@
 	     	    		</div>
 	     	    	<!--END OF CONTRAST CONTROL-->
 	     	    	<!--COLORMAP CONTROL-->
-                        <div id="dataset_1_color_map" class="color_map_main hidden">
+                        <div id="dataset_1_color_map" class="color_map_main hidden" title="Choose color For Data Set">
                             <select class="color_map_select" data-mini="true">
                                 <option>Uninitialized</option>
                          	</select>
@@ -137,12 +137,12 @@
 	     	    			<canvas id="dataset_1_canvas_y_plane_cross_overlay" class="cross_overlay"></canvas>
 						</div>
 						<div id="dataset_1_left_side_view_canvas" class="left_side_view ui-bar-a hidden">     	    			
-							<img id="dataset_1_left_side_view_maximize" class="canvas_x maximize_view_icon" src="images/maximize.png" alt="Maximize View" />
+							<img id="dataset_1_left_side_view_maximize" class="canvas_x maximize_view_icon" src="images/maximize.png" alt="Maximize View" title="Maximize View"/>
 							<canvas id="dataset_1_canvas_x_plane" class="side_canvas"></canvas>
 							<canvas id="dataset_1_canvas_x_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>
 						</div>
 			     	  	<div id="dataset_1_right_side_view_canvas" class="right_side_view ui-bar-a hidden">
-							<img id="dataset_1_right_side_view_maximize" class="canvas_z maximize_view_icon" src="images/maximize.png" alt="Maximize View" />
+							<img id="dataset_1_right_side_view_maximize" class="canvas_z maximize_view_icon" src="images/maximize.png" alt="Maximize View" title="Maximize View"/>
 							<canvas id="dataset_1_canvas_z_plane" class="side_canvas"></canvas>
 							<canvas id="dataset_1_canvas_z_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>
 						</div>						     	    			
@@ -175,12 +175,12 @@
 	                  	</div>
 	                 <!--END OF DISTANCE SCALE-->
 	                 <!-- TRANSPARENCY WHEEL -->
-	                 <div class="transparency_knob_div hidden">
+	                 <div class="transparency_knob_div hidden" title="Adjust Transparency of Overlay">
                         <input  id="transparency_knob" type="text" data-width="75" data-height="75" data-fgColor="#ffec03" data-min="0" data-max="100" data-thickness=".2" value="50">
                     </div>
 	                 <!-- END OF TRANSPARENCY WHEEL -->
 	                 <!--URL LINK-->
-	                 	<div class="url_link_main">
+	                 	<div class="url_link_main" title="Show URL For Data Set">
 	                 		<a id="dataset_2_url_button" class="top_right_button" style="color: white;" href="#">URL</a>
 	                 		<div id="dataset_2_url_box" class='url_box'>
 	                 			<div class='url_arrow'></div>
@@ -190,7 +190,7 @@
 	                 	</div>
 	                 <!--END OF URL LINK-->	
 	                 <!--CONTRAST CONTROL-->
-						<div class="contrast_main">
+						<div class="contrast_main" title="Change Contrast For Data Set">
 							<a id="dataset_2_toolbox_canvas_button" class="top_right_button" style="color: white;" href="#">CONTRAST</a>
 							<div id="dataset_2_contrast_box" class="contrast_box">	
 								<div class='url_arrow'></div>
@@ -200,23 +200,26 @@
 						</div>
 	                 <!--END OF CONTRAST CONTROL-->
 	                 <!--COLORMAP CONTROL-->
-                        <div id="dataset_2_color_map" class="color_map_main hidden">
+                        <div id="dataset_2_color_map" class="color_map_main hidden" title="Choose color For Data Set">
                             <select class="color_map_select" data-mini="true">
                                 <option>Uninitialized</option>
                          	</select>
                         </div>
-	                 <!--END OF COLORMAP CONTROL-->	  
+	                 <!--END OF COLORMAP CONTROL-->
+	                 <div class="overlay_swapper hidden" title="Swap Data Sets">
+	                   <img  alt="Swap Data Sets" src="images/swap.png" >
+	                 </div>	  
 						<div id="dataset_2_main_view_canvas" class="canvasview canvas_y" >
 						   <canvas id="dataset_2_canvas_y_plane" class="plane"></canvas> 
 						   <canvas id="dataset_2_canvas_y_plane_cross_overlay" class="cross_overlay"></canvas>
 						</div>
 						<div  id="dataset_2_left_side_view_canvas" class="left_side_view ui-bar-a hidden">                       
-						   <img id="dataset_2_left_side_view_maximize" class="canvas_x maximize_view_icon" src="images/maximize.png" alt="Maximize View" />
+						   <img id="dataset_2_left_side_view_maximize" class="canvas_x maximize_view_icon" src="images/maximize.png" alt="Maximize View" title="Maximize View"/>
 						   <canvas id="dataset_2_canvas_x_plane" class="side_canvas"></canvas>
 						   <canvas id="dataset_2_canvas_x_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>
 						</div>
 						<div id="dataset_2_right_side_view_canvas" class="right_side_view ui-bar-a hidden">
-						   <img id="dataset_2_right_side_view_maximize" class="canvas_z maximize_view_icon" src="images/maximize.png" alt="Maximize View" />
+						   <img id="dataset_2_right_side_view_maximize" class="canvas_z maximize_view_icon" src="images/maximize.png" alt="Maximize View" title="Maximize View"/>
 						   <canvas id="dataset_2_canvas_z_plane" class="side_canvas"></canvas>
 						   <canvas id="dataset_2_canvas_z_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>
 						</div>                                          
@@ -295,7 +298,7 @@
 	 		<!--ADMIN LEFT COLUMN-->
 	     	<div id="div_file_upload" class="settings-left-column">
                 <hr/>
-                <h2>Setting</h2>
+                <h2>Settings</h2>
                 <hr/>
                 <div data-role="fieldcontain">
 	                <input id="drawing_interval" type="text" value="150" style="width: 90px;">
@@ -305,7 +308,7 @@
                 	<input type="checkbox" id="sync_data_sets" />
                     <label for="sync_data_sets">Synchronize Data Sets</label>
                     <input type="checkbox" id="overlay_data_sets" />
-                    <label for="overlay_data_sets">Overlay Second Data Set With First (Not functional yet!)</label>
+                    <label for="overlay_data_sets">Overlay Second Data Set With First</label>
                 </fieldset>
                 <br/>
                 <hr/>
@@ -354,9 +357,9 @@
 			<!--ADMIN BUTTOM COLUMN-->
 			<div data-role="footer" class="setting-buttom-column">
 				<div id="task_list">
-				    <table id="task_table" class="conversion-table">
-				        <thead>
-                            <tr>
+				    <table id="task_table" style="height:40px" class="conversion-table">
+				        <thead style="height:40px">
+                            <tr style="height:40px">
                                 <th scope="col">Task Id</th>
                                 <th scope="col">File</th>
                                 <th scope="col">Task</th>

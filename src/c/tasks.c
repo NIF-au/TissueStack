@@ -39,7 +39,6 @@ void		task_finished(char *task_id, t_tissue_stack *t)
 		  if (i > 0)
 		    {
 		      buff[i] = '\0';
-		      FATAL("**** |%s| = |%s|", buff, task_id);
 		      if (strncmp(buff, task_id, 16) != 0)
 			{
 			  write(fi, buff, 16);
@@ -51,9 +50,8 @@ void		task_finished(char *task_id, t_tissue_stack *t)
 	      free(buff);
 	      close(fd);
 	      rename(t->tasks->path_tmp, t->tasks->path);
-	      if (strncmp(task_id, t->tasks->task_id, 16) == 0)
+	      if (t->tasks && t->tasks->task_id && strncmp(task_id, t->tasks->task_id, 16) == 0)
 		{
-		  FATAL("Inside here !!!!! %s - %s", task_id, t->tasks->task_id);
 		  t->tasks->is_running = FALSE;
 		}
 	      task_lunch(t);
@@ -108,7 +106,6 @@ void		task_exec(char *task_id, t_tissue_stack *t)
   else
     {
       t->tasks->is_running = FALSE;
-      FATAL("--------------------]> %s <[-------------------", task_id);
       task_finished(task_id, t);
     }
 }
@@ -119,19 +116,17 @@ void		task_lunch(t_tissue_stack *t)
   int		len = 0;
   int		fd = 0;
 
-  FATAL("%i", t->tasks->is_running);
   pthread_mutex_lock(&t->tasks->mutex);
   if (t && t->tasks && t->tasks->is_running == FALSE)
     {
       if ((fd = open(t->tasks->path, O_RDWR)) > 0)
 	{
-	  buff = malloc(16 * sizeof(*buff));
-	  memset(buff, '\0', 16);
+	  buff = malloc(17 * sizeof(*buff));
+	  memset(buff, '\0', 17);
 	  lseek(fd, SEEK_SET, 0);
 	  if ((len = read(fd, buff, 16)) > 0)
 	    {
 	      buff[16] = '\0';
-	      FATAL(">>> |%s| <<<", buff);
 	      task_exec(buff, t);
 	    }
 	  close(fd);

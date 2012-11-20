@@ -217,14 +217,22 @@ TissueStack.Utils = {
 			$(".color_map_select").html("<option>N/A</option>");
 
 		var html = "";
-		for (var c in TissueStack.indexed_color_maps)
-			html += ("<option>" + c + "</option>");
+			
+		if(TissueStack.desktop || TissueStack.tablet){
+			for (var c in TissueStack.indexed_color_maps)
+				html += ("<option>" + c + "</option>");		
+		}
+		
+		if(TissueStack.phone){
+			for (var c in TissueStack.indexed_color_maps)
+				html += ('<input type="radio" name="color_map" id="colormap_'+ c + '" value="'+ c +'"/>'
+					 +  '<label for="colormap_' + c +'">' + c + '</label>');
+			$(".color_map_select").html(html);
+			return;
+		}
 		
 		$(".color_map_select").html(html);
-		$(".color_map_select").selectmenu("refresh");
-		
-		//$(".color_map_select").append("<ul data-role='listview'>"+ html +"</ul>" ).listview().trigger("create");
-		
+		$(".color_map_select").selectmenu("refresh");	
 		
 	},adjustScreenContentToActualScreenSize : function (datasets){	
 		if (TissueStack.phone) {
@@ -601,5 +609,19 @@ TissueStack.Utils = {
 				TissueStack.dataSetStore.getDataSetById(
 						TissueStack.dataSetNavigation.selectedDataSets[whichEverCanvas1.dataset_id]),
 				plane1, plane2, true);
+	},transitionToDataSetView :  function(reverseDataSetOrder) {
+		var reverseOrder =
+			typeof(reverseDataSetOrder) == 'boolean' && TissueStack.dataSetNavigation.selectedDataSets.count != 1
+					? reverseDataSetOrder : false; 
+		TissueStack.reverseOverlayOrder = reverseOrder;
+		
+    	if (TissueStack.dataSetNavigation.selectedDataSets.count > 0) {
+    		var sel = TissueStack.dataSetNavigation.selectedDataSets["dataset_1"];
+    		TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(sel, false); 
+    		setTimeout(function() {
+					TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(sel, true);
+    		}, 200);
+    	}
+    	window.location.hash = '#data';
 	}
 };

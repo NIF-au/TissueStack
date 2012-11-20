@@ -84,7 +84,6 @@ void		dim_loop(int fd, int dimensions_nb, t_vol *volume,
       dim++;
       free(hyperslab);
     }
-  FATAL("OUT of dim loop");
 }
 
 t_vol		*init_get_volume_from_minc_file(char *path)
@@ -311,7 +310,6 @@ void  		*start(void *args)
       write_header_into_file(fd, header);
       if (a->commands[2] != NULL && strcmp(a->commands[2], "@tasks@") == 0)
 	{
-	  FATAL("==> here deep");
 	  command_line = array_2D_to_array_1D(a->commands);
 	  a->general_info->percent_init(get_nb_total_slices_to_do(minc_volume), &id_percent, a->commands[0], "1", a->commands[1], command_line, a->general_info);
 	  if (a->box != NULL)

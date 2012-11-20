@@ -60,14 +60,9 @@
 			<h3>Dashboard</h3>
 		</div>
 		<ul>
-			<li><a href="#home" class="contentLink" data-transition="slide">Settings<span class="icon"></span></a></li>
+			<li><a id="setting_menu_control" href="#home" class="contentLink" data-transition="slide">Settings<span class="icon"></span></a></li>
 			<li><a href="#contrast" class="contentLink" data-transition="slide">Contrast<span class="icon"></span></a></li>
 			<li class="active"><a href="#dataserver" class="contentLink" data-transition="slide">Data Server<span class="icon"></span></a></li>
-			<li><a href="#admin" class="contentLink" data-transition="slide">Admin Page<span class="icon"></span></a></li>
-		<div id="memberDetails" style="text-align: center;">
-			<h3>Status</h3>
-		</div>
-			<li><a href="#convert" class="contentLink" data-transition="slide">Data Conversion<span class="icon"></span></a></li>
 		</ul>
 	</div>
 </div>
@@ -94,22 +89,16 @@
 	<div data-role="page" class="pages" id="home" data-theme="a" data-content-theme="b">
 		<div data-role="header" class="headers" style="overflow: hidden;">
 			<a href="#" class="showMenu menuBtn">Menu</a>
-			<h1>Setting</h1>
+			<h1>Settings</h1>
 		</div><!-- /header -->
-		<div data-role="content" style="height: 390px;">
-				<div style="text-align: center;" data-role="fieldcontain">
-				    <fieldset id="colormap_choice" data-role="controlgroup">		
-						<input type="radio" name="color_map" id="colormap_grey" value="colormap_grey" checked="checked"/>
-			         	<label for="colormap_grey">Grey</label>
-			
-			         	<input type="radio" name="color_map" id="colormap_hot" value="hot"/>
-			         	<label for="colormap_hot">Hot</label>
-			
-			         	<input type="radio" name="color_map" id="colormap_spectral" value="spectral"/>
-			         	<label for="colormap_spectral">Spectral</label>
-					</fieldset>
+		<div data-role="content">
+				<div id="phone_color_map" style="height: 240px; display: block; overflow:auto; position:relative; z-index:1;">	
+					<div id="phone_colormap_transition" data-role="fieldcontain" style="height: 100%;">
+					    <fieldset id="colormap_choice" data-role="controlgroup">			         	
+				         	<div class="color_map_select"></div>
+						</fieldset>
+					</div>
 				</div>
-				
 				<div style="text-align: center;" >
 					<p>Drawing Interval (in millis):</p>
 						<input id="drawing_interval" type="text" value="150" style="font-size: 16px;">
@@ -208,43 +197,5 @@
 			</div>
 		</div><!-- /content -->
 	</div><!-- /page -->
-	
-	<!-- Adding New Data Set -->
-	<div data-role="page" class="pages" id="admin" data-theme="a"  data-content-theme="b">
-		<div data-role="header" class="headers" style="overflow: hidden;">
-			<a href="#" class="showMenu menuBtn">Menu</a>
-			<h1>Add New Data Set</h1>
-		</div><!-- /header -->
-		<div data-role="content" style="height: 390px;">
-	        <div id="phone_login">
-	          User:<input type="text" size="15" name="username" id="username" disabled="disabled" value="Admin"/>
-	          Password:<input type="password" size="15" name="password" id="password" /><br/>
-	          <input type="button" accesskey="l" class="login_btn_check" id="login_btn" name="login" value="Login" />
-	        </div>
-			<div id="phone_addDataSet" class="hidden">
-				<div id="file_group" data-role="fieldcontain">
-					<fieldset class="file_radio_list">
-					</fieldset>
-				</div>
-				<label for="txtDesc" style="text-align: left;">&nbsp;&nbsp;Description:</label>
-				<input type="text" name="name" id="txtDesc" data-mini="true" />
-				<a href="" id="bt_add_dataset" data-role="button" data-inline="true" data-theme="e" data-icon="check">Add Data Set</a>
-				<br/><br/>
-				<div style="text-align: center;">UPLOAD FUNCTION HAS BEEN DISABLED!</div>
-			</div>
-		</div><!-- /content -->
-	</div><!-- /page -->
-	
-	<!-- Data Conversion -->
-	<div data-role="page" class="pages" id="convert" data-theme="a"  data-content-theme="b">
-		<div data-role="header" class="headers" style="overflow: hidden;">
-			<a href="#" class="showMenu menuBtn">Menu</a>
-			<h1>Contrast Control</h1>
-		</div><!-- /header -->
-		<div data-role="content" style="height: 390px;">			
-			<div style="text-align: center";>Under Development !!</div>	
-		</div><!-- /content -->
-	</div><!-- /page -->
-	
 </body>
 </html>

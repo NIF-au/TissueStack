@@ -195,6 +195,7 @@ TissueStack.DataSetNavigation.prototype = {
 		   if (TissueStack.desktop) {
 			   $("#dataset_1_scalecontrol").show();
 			   $(".transparency_knob_div").hide();
+			   $(".overlay_swapper").hide();
 		   }
 		}
 	},
@@ -293,6 +294,8 @@ TissueStack.DataSetNavigation.prototype = {
 		    	   }
 
 	    		   var selectedNodes = this.getSelectedNodes(true);
+	    		   if (TissueStack.reverseOverlayOrder)
+	    			   selectedNodes.reverse();
 	    		   // brief check
 	    		   if (selectedNodes.length > 2) {
 	    			   // we cannot display more than 2 data sets ... let the user know
@@ -426,11 +429,12 @@ TissueStack.DataSetNavigation.prototype = {
 	},
 	loadScrollMenu : function () {
 		//add touch transition for phone menu and dataset menu so that it can scroll over and see contents.
-		var LeftMenu, DataSetMenu, TableMenu;
+		var LeftMenu, DataSetMenu, TableMenu, PhoneColorMapMenu;
 		
 		LeftMenu = new iScroll('menutransition', { useTransition:true });
 		if(TissueStack.phone) DataSetMenu = new iScroll('phonetransition', { useTransition:true });
 		if(TissueStack.tablet) TableMenu = new iScroll('tablettransition', { useTransition:true }); //For tablet version (Haven't apply yet)
+		if(TissueStack.phone) PhoneColorMapMenu = new iScroll('phone_colormap_transition', { checkDOMChanges: true, bounceLock: false }); 
 
 		document.addEventListener('touchmove', function (e) { e.preventDefault(); }, false);
 	}, 

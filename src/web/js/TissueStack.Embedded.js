@@ -328,8 +328,7 @@ TissueStack.Embedded.prototype = {
 			plane.changeToZoomLevel(_this.initOpts['zoom']); 
 		}
 
-		if (_this.initOpts['color'] &&
-				(_this.initOpts['color'] == 'grey' || _this.initOpts['color'] == 'hot' || _this.initOpts['color'] == 'spectral')) {
+		if (_this.initOpts['color'] && _this.initOpts['color'] != 'grey') {
 			// change color map collectively for all planes
 			for (var id in dataSet.planes) dataSet.planes[id].color_map = _this.initOpts['color']; 
 		}

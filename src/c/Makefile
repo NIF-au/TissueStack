@@ -75,6 +75,7 @@ pluginsCompile:
 install:
 	@echo "\n============= Installing Binaries ================="
 	mkdir -p /usr/local/bin/
+	rm -rf /usr/local/bin/$(NAME)
 	cp $(NAME) /usr/local/bin/
 	make -C ./plugins/communicator/ install 
 	make -C ./plugins/image_extract/ install
@@ -89,6 +90,7 @@ clean:
 	@echo "\n==================== Cleaning $(NAME) ====================="
 	rm -rf *~ \#*\# $(NAME) ./png/* core hs_err_pid*
 	rm -rf $(DIRSRC)*.o
+	make -C ./utils/ clean
 	make -C ./plugins/communicator/ clean
 	make -C ./plugins/image_extract/ clean
 	make -C ./plugins/comm_inter_process/ clean

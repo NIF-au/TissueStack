@@ -82,9 +82,9 @@ TissueStack.InitUserInterface = function (initOpts) {
 		TissueStack.Utils.adjustBorderColorWhenMouseOver();	
 	}
 	
-	// initialize the color map chooser for desktop and tablet
-	if(TissueStack.desktop || TissueStack.tablet)
-		TissueStack.Utils.updateColorMapChooser();
+	// initialize the color map chooser for desktop and tablet and (now in phone version)
+	//if(TissueStack.desktop || TissueStack.tablet || TissueStack.phone)
+	TissueStack.Utils.updateColorMapChooser();
 	
 	// particular settings for data set overlay
 	if (TissueStack.desktop && TissueStack.overlay_datasets && TissueStack.dataSetNavigation.selectedDataSets.count == 2) {
@@ -117,6 +117,17 @@ TissueStack.InitUserInterface = function (initOpts) {
         });
 		$("#transparency_knob").val(TissueStack.transparency * 100).trigger('change');
 		$(".transparency_knob_div").show();
+		// data set swap
+		$(".overlay_swapper").unbind("click");
+		$(".overlay_swapper").bind("click",
+			function() {
+	        	if (TissueStack.overlay_datasets && TissueStack.dataSetNavigation && TissueStack.dataSetNavigation.selectedDataSets
+	        			&& TissueStack.dataSetNavigation.selectedDataSets.count == 2) {
+	        		TissueStack.Utils.transitionToDataSetView(TissueStack.reverseOverlayOrder ? false : true);
+	        	}
+			}
+		);
+		$(".overlay_swapper").show();
 	}
 	
 	for (var x=0;x<maxDataSets;x++) {
@@ -356,17 +367,6 @@ TissueStack.BindDataSetDependentEvents = function () {
 		maxDataSets = datasets.length;
 	}
 
-	var transitionToDataSetView =  function() {
-    	if (TissueStack.dataSetNavigation.selectedDataSets.count > 0) {
-    		var sel = TissueStack.dataSetNavigation.selectedDataSets["dataset_1"];
-    		TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(sel, false); 
-    		window.location.hash = '#data';
-    		setTimeout(function() {
-					TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(sel, true);
-    		}, 200);
-    	}
-	};
-	
 	// SYNC AND OVERLAY DATA_SETS CHECKBOX CHANGE HANDLER
     if (TissueStack.desktop) {
    		$('#sync_data_sets').unbind("change");
@@ -376,7 +376,7 @@ TissueStack.BindDataSetDependentEvents = function () {
         		TissueStack.overlay_datasets = false;
         		$('#overlay_data_sets').removeAttr("checked").checkboxradio("refresh");
         	}
-        	transitionToDataSetView();
+        	TissueStack.Utils.transitionToDataSetView();
         });
 		$('#overlay_data_sets').unbind("change");
         $('#overlay_data_sets').bind("change", function() {
@@ -388,7 +388,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 	        	$('#sync_data_sets').removeAttr("checked").checkboxradio("refresh");
 	        	TissueStack.sync_datasets = false;
         	}
-        	transitionToDataSetView();
+        	TissueStack.Utils.transitionToDataSetView();
         });
     }
     
@@ -780,18 +780,22 @@ TissueStack.applyUserParameters = function() {
 			plane.changeToZoomLevel(initOpts['zoom']); 
 		}
 
-		if (initOpts['color'] &&
-				(initOpts['color'] == 'grey' || initOpts['color'] == 'hot' || initOpts['color'] == 'spectral')) {
+		if (initOpts['color'] && initOpts['color'] != 'grey' && TissueStack.indexed_color_maps[initOpts['color']]) {
 			// change color map collectively for all planes
 			for (var id in dataSet.planes) dataSet.planes[id].color_map = initOpts['color'];
 
 			// set right radio button
-			try {
-				$("#colormap_choice input").removeAttr("checked").checkboxradio("refresh");
-				$("#colormap_" + initOpts['color']).attr("checked", "checked").checkboxradio("refresh");
-			} catch (e) {
-				// we don't care, stupid jquery mobile ...
-				$("#colormap_" + initOpts['color']).attr("checked", "checked");
+			if (TissueStack.phone) {
+				try {
+					$("#colormap_choice input").removeAttr("checked").checkboxradio("refresh");
+					$("#colormap_" + initOpts['color']).attr("checked", "checked").checkboxradio("refresh");
+				} catch (e) {
+					// we don't care, stupid jquery mobile ...
+					$("#colormap_" + initOpts['color']).attr("checked", "checked");
+				}
+			} else {
+				$(".color_map_select").val(initOpts['color']);
+				$(".color_map_select").selectmenu("refresh");
 			}
 		}
 		if (typeof(initOpts['min']) === 'number' &&  typeof(initOpts['max']) === 'number') {
