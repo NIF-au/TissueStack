@@ -269,7 +269,6 @@ void  		*start(void *args)
     {
       if (a->commands[2] != NULL)
 	{
-	  FATAL("==> ICI");
 	  dimension = atoi(a->commands[2]);
 	  slice = atoi(a->commands[3]);
 	  if ((fd = open(a->commands[1], (O_CREAT | O_APPEND | O_RDWR), 0666)) == -1)
