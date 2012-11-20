@@ -933,7 +933,7 @@ void			*start(void *args)
   i = 0;
   colormap = (strcmp(image_args->service, "tiles") == 0 ? strdup(a->commands[14]) : (strcmp(image_args->service, "full") == 0 ? strdup(a->commands[11]) : strdup(a->commands[15])));
   if (check_colormap_name(colormap, image_args))
-    ERROR("Warning : colormap '%s' does not exist", colormap);
+    WARNING("Warning : colormap '%s' does not exist", colormap);
   while (image_args->colormap_name[i] != NULL)
     {
       if (strncmp(colormap, image_args->colormap_name[i], strlen(colormap)) == 0 && strlen(image_args->colormap_name[i]) == strlen(colormap))
