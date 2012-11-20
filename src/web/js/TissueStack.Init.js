@@ -82,9 +82,9 @@ TissueStack.InitUserInterface = function (initOpts) {
 		TissueStack.Utils.adjustBorderColorWhenMouseOver();	
 	}
 	
-	// initialize the color map chooser for desktop and tablet
-	if(TissueStack.desktop || TissueStack.tablet)
-		TissueStack.Utils.updateColorMapChooser();
+	// initialize the color map chooser for desktop and tablet and (now in phone version)
+	//if(TissueStack.desktop || TissueStack.tablet || TissueStack.phone)
+	TissueStack.Utils.updateColorMapChooser();
 	
 	// particular settings for data set overlay
 	if (TissueStack.desktop && TissueStack.overlay_datasets && TissueStack.dataSetNavigation.selectedDataSets.count == 2) {

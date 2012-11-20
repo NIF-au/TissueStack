@@ -217,14 +217,22 @@ TissueStack.Utils = {
 			$(".color_map_select").html("<option>N/A</option>");
 
 		var html = "";
-		for (var c in TissueStack.indexed_color_maps)
-			html += ("<option>" + c + "</option>");
+			
+		if(TissueStack.desktop || TissueStack.tablet){
+			for (var c in TissueStack.indexed_color_maps)
+				html += ("<option>" + c + "</option>");		
+		}
+		
+		if(TissueStack.phone){
+			for (var c in TissueStack.indexed_color_maps)
+				html += ('<input type="radio" name="color_map" id="colormap_'+ c + '" value="'+ c +'"/>'
+					 +  '<label for="colormap_' + c +'">' + c + '</label>');
+			$(".color_map_select").html(html);
+			return;
+		}
 		
 		$(".color_map_select").html(html);
-		$(".color_map_select").selectmenu("refresh");
-		
-		//$(".color_map_select").append("<ul data-role='listview'>"+ html +"</ul>" ).listview().trigger("create");
-		
+		$(".color_map_select").selectmenu("refresh");	
 		
 	},adjustScreenContentToActualScreenSize : function (datasets){	
 		if (TissueStack.phone) {

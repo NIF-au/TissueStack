@@ -429,11 +429,12 @@ TissueStack.DataSetNavigation.prototype = {
 	},
 	loadScrollMenu : function () {
 		//add touch transition for phone menu and dataset menu so that it can scroll over and see contents.
-		var LeftMenu, DataSetMenu, TableMenu;
+		var LeftMenu, DataSetMenu, TableMenu, PhoneColorMapMenu;
 		
 		LeftMenu = new iScroll('menutransition', { useTransition:true });
 		if(TissueStack.phone) DataSetMenu = new iScroll('phonetransition', { useTransition:true });
 		if(TissueStack.tablet) TableMenu = new iScroll('tablettransition', { useTransition:true }); //For tablet version (Haven't apply yet)
+		if(TissueStack.phone) PhoneColorMapMenu = new iScroll('phone_colormap_transition', { useTransition:true }); 
 
 		document.addEventListener('touchmove', function (e) { e.preventDefault(); }, false);
 	}, 

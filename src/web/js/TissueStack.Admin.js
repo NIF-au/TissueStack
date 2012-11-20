@@ -44,6 +44,12 @@ TissueStack.Admin.prototype = {
 		$('#radio_task').change(function(){
 			_this.displayUploadDirectory();
 		});
+		//refresh jquery mobile list view in colormap menu phone version
+		$('#setting_menu_control').click(function(){
+			$('#phone_color_map').fadeOut(50).fadeIn(50, function() {
+				$('#phone_color_map').trigger( "create" );
+			});
+		});
 	},
 	registerCreateSessionHandler : function () {
 	 	var _this = this;
