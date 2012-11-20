@@ -599,7 +599,6 @@ void		lunch_pct_and_add_task(t_tissue_stack *t, t_vol *vol, t_image_extract *ima
   char		*command_line;
   char		*id_percent;
 
-  if (&image_general->percent_mut == NULL) printf("BAD BAD !!!\n");
   pthread_mutex_lock(&image_general->percent_mut);
   if (image_general->percentage && image_general->id_percent == NULL)
     {
