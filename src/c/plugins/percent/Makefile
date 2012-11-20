@@ -31,6 +31,7 @@ compile: $(OBJS)
 
 install:
 	mkdir -p $(PLUGIN_INSTALL_DIR)
+	rm -rf $(PLUGIN_INSTALL_DIR)/$(NAME)
 	cp $(NAME) $(PLUGIN_INSTALL_DIR)/$(NAME)
 
 clean:

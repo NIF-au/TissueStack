@@ -189,7 +189,9 @@ void		write_header_into_file(int fd, t_header *h)
 
 void		*init(void *args)
 {
-  return (NULL);
+	t_args_plug *a = (t_args_plug *)args;
+	LOG_INIT(a);
+	return (NULL);
 }
 
 void  		*start(void *args)

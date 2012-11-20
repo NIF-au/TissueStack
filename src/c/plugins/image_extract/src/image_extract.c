@@ -236,13 +236,13 @@ float		**get_colormap_from_file(char *path)
 		  if (k == -1)
 		    k = j;
 		}
-	      else if (buff[j] == ' ' || buff[j] == '\t')
+	      else if ((buff[j] == ' ' || buff[j] == '\t')  && k > -1)
 		{
 		  colormap_tmp[c_row_index][c_column_index] = get_float(buff, k, j, len);
 		  c_column_index++;
 		  k = -1;
 		}
-	      else if (buff[j] == '\n')
+	      else if (buff[j] == '\n' && k > -1)
 		{
 		  flag = 1;
 		  colormap_tmp[c_row_index][c_column_index] = get_float(buff, k, j, len);

@@ -19,3 +19,5 @@ compile:
 clean:
 	@echo "\n==================== Cleaning $(NAME) ====================="
 	rm -rf *~ \#*\# $(NAME)
+	rm -rf $(NAME).o
+	rm -rf *.so

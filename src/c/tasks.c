@@ -125,8 +125,8 @@ void		task_lunch(t_tissue_stack *t)
     {
       if ((fd = open(t->tasks->path, O_RDWR)) > 0)
 	{
-	  buff = malloc(16 * sizeof(*buff));
-	  memset(buff, '\0', 16);
+	  buff = malloc(17 * sizeof(*buff));
+	  memset(buff, '\0', 17);
 	  lseek(fd, SEEK_SET, 0);
 	  if ((len = read(fd, buff, 16)) > 0)
 	    {
