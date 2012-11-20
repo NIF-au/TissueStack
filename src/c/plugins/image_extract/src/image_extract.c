@@ -334,10 +334,10 @@ void		display_colormap(float **colormap, char *name)
 {
   int		i = 0;
 
-  FATAL("\n\n Colormap Name = |%s|", name);
+  DEBUG("\n\n Colormap Name = |%s|", name);
   while (colormap[i][0] != 99)
     {
-      FATAL("%f %f %f %f", colormap[i][0], colormap[i][1], colormap[i][2], colormap[i][3])
+      DEBUG("%f %f %f %f", colormap[i][0], colormap[i][1], colormap[i][2], colormap[i][3])
       i++;
     }
 }
@@ -871,7 +871,6 @@ void			*start(void *args)
 	      if (a->commands[22] != NULL)
 		{
 		  image_args->id_percent = strdup(a->commands[22]);
-		  FATAL("Task id = %s\n", a->commands[22]);
 		  image_args->percent_fd = 1;
 		}
 	      else
