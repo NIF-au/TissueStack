@@ -482,11 +482,34 @@ a.ui-slider-handle-horizontal{
     height: 26px; 
     z-index: 2400; 
     position: absolute;
-    right: 150px;
-    top: 6px; 
+    right: 141px;
+    top: 10px; 
     color: white; 
     font-family: Arial, sans-serif; 
     font-size: 11px;
+}
+.color_map_select{
+	display: inline-block;
+	width: 100px;
+	height: 29px;
+	overflow: hidden;
+	background: url('../images/select.png') no-repeat right #5383e2;;
+	-webkit-border-radius: 3px;
+	-webkit-appearance: none;
+	-moz-border-radius: 3px;
+	border-radius: 3px;
+	text-shadow: 0px 1px 0px #3373A5 ;
+	padding: 7px 10px;
+	border-color: #1e6d6f;
+	border-width: 1px;
+	border-style: solid;
+	font-family: Helvetica;
+	font-size: 12px;
+	font-weight: bold;
+	font-style: normal;
+	text-decoration: none;
+	color: #ffffff;
+	text-shadow: 0px 1px 0px #185f60;
 }
 /*Top Right Button Style*/
 .top_right_button {
@@ -602,8 +625,8 @@ width: 100%;
 .transparency_knob_div {
 	z-index: 1590;
 	position: absolute;
-	top:50px;
-	left:10px;
+	top:35px;
+	left:22px;
 }
 
 .overlay_swapper {
