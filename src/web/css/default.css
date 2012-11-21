@@ -498,18 +498,22 @@ a.ui-slider-handle-horizontal{
 	-webkit-appearance: none;
 	-moz-border-radius: 3px;
 	border-radius: 3px;
-	text-shadow: 0px 1px 0px #3373A5 ;
+	text-shadow: 0px 1px 0px #3373A5;
+	text-transform: uppercase;
 	padding: 7px 10px;
 	border-color: #1e6d6f;
 	border-width: 1px;
 	border-style: solid;
 	font-family: Helvetica;
-	font-size: 12px;
+	font-size: 11px;
 	font-weight: bold;
 	font-style: normal;
 	text-decoration: none;
 	color: #ffffff;
 	text-shadow: 0px 1px 0px #185f60;
+}
+.color_map_select select{
+	color: #6492c6;
 }
 /*Top Right Button Style*/
 .top_right_button {
