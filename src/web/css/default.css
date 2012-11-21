@@ -488,7 +488,7 @@ a.ui-slider-handle-horizontal{
     font-family: Arial, sans-serif; 
     font-size: 11px;
 }
-.color_map_select{
+#color_map_style{
 	display: inline-block;
 	width: 100px;
 	height: 29px;
@@ -512,7 +512,7 @@ a.ui-slider-handle-horizontal{
 	color: #ffffff;
 	text-shadow: 0px 1px 0px #185f60;
 }
-.color_map_select:focus{
+#color_map_style:focus{
 	color: #000000;
 }
 /*Top Right Button Style*/
