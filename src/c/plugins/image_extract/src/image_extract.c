@@ -164,7 +164,6 @@ void		alloc_and_init_colormap_space_from_src(float **new_colormap, float **sourc
 	  green_delta = round((end_green - start_green) / delta);
 	  blue_delta = round((end_blue - start_blue) / delta);
 	}
-
       end_loop = i + delta;
       while (i < end_loop)
 	{
@@ -716,16 +715,16 @@ int		check_num_input(char **in, int start, int end)
 
 int		check_range(int **d, t_vol *v)
 {
-  if (v == NULL) ERROR("Volume is NULL");
-
   int		i;
 
+  if (v == NULL)
+    ERROR("Volume is NULL");
   i = 0;
-  while (i < v->dim_nb)
+  while (v && i < v->dim_nb)
     {
-      if (d[i][0] != -1 || d[i][1] != -1)
+      if (d && d[i] && (d[i][0] != -1 || d[i][1] != -1))
 	{
-      if (d[i][0] > v->size[i] || d[i][1] > v->size[i] || d[i][0] < 0 || d[i][1] < 0)
+	  if (d[i][0] > v->size[i] || d[i][1] > v->size[i] || d[i][0] < 0 || d[i][1] < 0)
 	    return (1);
 	}
       i++;
@@ -813,6 +812,7 @@ void			*start(void *args)
   image_args->dim_nb = volume->dim_nb;
   image_args->premapped_colormap = image_args_tmp->premapped_colormap;
   image_args->colormap_name = image_args_tmp->colormap_name;
+  image_args->percent_mut = image_args_tmp->percent_mut;
 
   if (strcmp(a->commands[1], "percent") == 0)
     {

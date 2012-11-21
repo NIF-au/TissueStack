@@ -50,7 +50,7 @@ void		task_finished(char *task_id, t_tissue_stack *t)
 	      free(buff);
 	      close(fd);
 	      rename(t->tasks->path_tmp, t->tasks->path);
-	      if (strncmp(task_id, t->tasks->task_id, 16) == 0)
+	      if (t->tasks && t->tasks->task_id && strncmp(task_id, t->tasks->task_id, 16) == 0)
 		{
 		  t->tasks->is_running = FALSE;
 		}

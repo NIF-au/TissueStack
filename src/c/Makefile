@@ -30,7 +30,8 @@ LIBS		=	-lhdf5								\
 
 NAME		=	TissueStackImageServer
 
-FLAGS		=	-Wall -Werror -ggdb -O2 -Wno-unused-result #-D_GNU_SOURCE
+
+FLAGS		=	-Wall -Werror -ggdb -O2 -Wno-unused-result
 
 OBJS		=	$(SRCS:%.c=%.o)
 
@@ -41,33 +42,35 @@ CC		=	gcc
 
 all: compile install
 
-compile: $(OBJS)
-	@echo "\n================== Compile $(NAME) ===================="
-	$(CC) $(OBJS) -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) `pkg-config --cflags --libs gtk+-2.0`
-	rm -rf volume.o
-	rm -rf utils/utils.o
-	make -C ./plugins/communicator/ compile 
-	rm -rf volume.o
-	rm -rf utils/utils.o	
-	make -C ./plugins/image_extract/ compile
-	rm -rf volume.o
-	rm -rf utils/utils.o	
-	make -C ./plugins/comm_inter_process/ compile
-	rm -rf volume.o
-	rm -rf utils/utils.o	
-	make -C ./plugins/minc_info/ compile
-	rm -rf volume.o
-	rm -rf utils/utils.o	
-	make -C ./plugins/minc_convert/ compile
-	rm -rf volume.o
-	rm -rf utils/utils.o	
-	make -C ./plugins/nifti_convert/ compile
-	rm -rf volume.o
-	rm -rf utils/utils.o
-	make -C ./plugins/percent/ compile
-	rm -rf volume.o
-	rm -rf utils/utils.o
-	make -C ./jni/ compile
+coreCompile:	$(OBJS)
+		@echo "\n================== Compile $(NAME) ===================="
+		$(CC) $(OBJS) -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) `pkg-config --cflags --libs gtk+-2.0`
+
+pluginsCompile:
+		rm -rf volume.o
+		rm -rf utils/utils.o
+		make -C ./plugins/communicator/ compile 
+		rm -rf volume.o
+		rm -rf utils/utils.o	
+		make -C ./plugins/image_extract/ compile
+		rm -rf volume.o
+		rm -rf utils/utils.o	
+		make -C ./plugins/comm_inter_process/ compile
+		rm -rf volume.o
+		rm -rf utils/utils.o	
+		make -C ./plugins/minc_info/ compile
+		rm -rf volume.o
+		rm -rf utils/utils.o	
+		make -C ./plugins/minc_convert/ compile
+		rm -rf volume.o
+		rm -rf utils/utils.o	
+		make -C ./plugins/nifti_convert/ compile
+		rm -rf volume.o
+		rm -rf utils/utils.o
+		make -C ./plugins/percent/ compile
+		rm -rf volume.o
+		rm -rf utils/utils.o
+		make -C ./jni/ compile
 
 install:
 	@echo "\n============= Installing Binaries ================="
@@ -97,6 +100,12 @@ clean:
 	make -C ./plugins/percent/ clean
 	make -C ./jni/ clean
 
+debug: FLAGS += -D_TSS_DEBUG_
+
+debug: coreCompile pluginsCompile
+
+compile: coreCompile pluginsCompile
+
 recompile: clean compile
 
 tomcatstop:
@@ -105,6 +114,6 @@ tomcatstop:
 tomcatstart:
 	/opt/apache-tomcat-7.0.27/bin/startup.sh
 
-re: tomcatstop clean all tomcatstart
+re: tomcatstop clean debug install tomcatstart
 
 .PHONY: all compile install clean re recompile
