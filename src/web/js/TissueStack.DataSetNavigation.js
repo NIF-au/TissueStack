@@ -432,8 +432,8 @@ TissueStack.DataSetNavigation.prototype = {
 		var LeftMenu, DataSetMenu, TableMenu, PhoneColorMapMenu;
 		
 		LeftMenu = new iScroll('menutransition', { useTransition:true });
-		if(TissueStack.phone) DataSetMenu = new iScroll('phonetransition', { useTransition:true });
-		if(TissueStack.tablet) TableMenu = new iScroll('tablettransition', { useTransition:true }); //For tablet version (Haven't apply yet)
+		if(TissueStack.phone) DataSetMenu = new iScroll('phonetransition', { checkDOMChanges: true, useTransition:true });
+		if(TissueStack.tablet) TableMenu = new iScroll('tablettransition', { checkDOMChanges: true, useTransition:true }); //For tablet version (Haven't apply yet)
 		if(TissueStack.phone) PhoneColorMapMenu = new iScroll('phone_colormap_transition', { checkDOMChanges: true, bounceLock: false }); 
 
 		document.addEventListener('touchmove', function (e) { e.preventDefault(); }, false);
