@@ -314,6 +314,7 @@ float		**get_colormap_from_file(char *path)
 	      if (buff[j] != ' ' && (buff[j] < '0' || buff[j] > '9') &&
 		  buff[j] != '.' && buff[j] != '\n')
 		buff[j] = ' ';
+	      j++;
 	    }
 	  lines = img_str_to_wordtab(buff, '\n');
 	  c_row_index = 0;
