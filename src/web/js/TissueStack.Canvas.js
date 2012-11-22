@@ -470,6 +470,8 @@ TissueStack.Canvas.prototype = {
 			ctx.globalAlpha = TissueStack.transparency;
 		}
 		
+		var totalOfTiles = 0;
+		
 		// loop over rows
 		for (var tileX = startTileX  ; tileX < endTileX ; tileX++) {			
 			var tileOffsetX = startTileX * this.getDataExtent().tile_size;
@@ -549,18 +551,22 @@ TissueStack.Canvas.prototype = {
 				// damn you async loads
 				if (this.queue.latestDrawRequestTimestamp < 0 ||
 						(timestamp && timestamp < this.queue.latestDrawRequestTimestamp)) {
-					//console.info('Abort for ' + this.getDataExtent().data_id + '[' + this.getDataExtent().getOriginalPlane() + ']: R: ' + rowIndex + ' C: ' + colIndex  + ' t: ' + timestamp + ' qt: ' + this.queue.latestDrawRequestTimestamp);	
+					//console.info('Abort for ' + this.getDataExtent().data_id + '[' + this.getDataExtent().getOriginalPlane() + ']: R: ' + rowIndex + ' C: ' + colIndex  + ' t: ' + timestamp + ' qt: ' + this.queue.latestDrawRequestTimestamp);
+					this.displayLoadingProgress(0, totalOfTiles, true);
 					return;
 				}
 
+				totalOfTiles++;
 				counter++;
 				imageTile.src = src; 
 				
 				(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, tile_size, row, col) {
 					imageTile.onerror = function() {
 						counter--;
+						_this.displayLoadingProgress(totalOfTiles - counter, totalOfTiles);						
 					};
 					imageTile.onload = function() {
+
 						// check with actual image dimensions ...
 						if (canvasX == 0 && width != tile_size && deltaStartTileXAndUpperLeftCornerX !=0) {
 							imageOffsetX = (tile_size - deltaStartTileXAndUpperLeftCornerX);
@@ -582,9 +588,10 @@ TissueStack.Canvas.prototype = {
 						if (_this.queue.latestDrawRequestTimestamp < 0 ||
 								(timestamp && timestamp < _this.queue.latestDrawRequestTimestamp)) {
 							//console.info('Abort for ' + _this.getDataExtent().data_id + '[' + _this.getDataExtent().getOriginalPlane() + ']: R: ' + row + ' C: ' + col + ' t: ' + timestamp + ' qt: ' + _this.queue.latestDrawRequestTimestamp);
+							_this.displayLoadingProgress(0, totalOfTiles, true);
 							return;
 						}
-						
+
 						//console.info('Drawing [' + _this.getDataExtent().data_id + ']: ' + timestamp + ' (' + _this.getDataExtent().getOriginalPlane()  + ') R => ' + row + ' C => ' + col + ' Left: ' + counter);
 						ctx.drawImage(this,
 								imageOffsetX, imageOffsetY, width, height, // tile dimensions
@@ -594,6 +601,7 @@ TissueStack.Canvas.prototype = {
 						if (_this.queue.latestDrawRequestTimestamp < 0 ||
 								(timestamp && timestamp < _this.queue.latestDrawRequestTimestamp)) {
 							//console.info('Abort for ' + _this.getDataExtent().data_id + '[' + _this.getDataExtent().getOriginalPlane() + ']: R: ' + row + ' C: ' + col + ' t: ' + timestamp + ' qt: ' + _this.queue.latestDrawRequestTimestamp);
+							_this.displayLoadingProgress(0, totalOfTiles, true);
 							return;
 						}
 
@@ -603,7 +611,9 @@ TissueStack.Canvas.prototype = {
 							_this.applyContrastAndColorMapToCanvasContent(ctx);
 							_this.getCanvasElement().show();
 						}
-						
+
+						_this.displayLoadingProgress(totalOfTiles - counter, totalOfTiles);
+
 						if (typeof(TissueStack.dataSetNavigation) === 'object' && counter == 0) {
 							_this.syncDataSetCoordinates(_this, timestamp, false);
 						}
@@ -695,20 +705,21 @@ TissueStack.Canvas.prototype = {
 			return;
 		}
 
+		// phone
 		var log;
 
-		// for everything else...
+		/*
 		if (mouseCoords) {
 			log = $('.coords');
 			log.html("Canvas > X: " + mouseCoords.x + ", Y: " + mouseCoords.y);
-		}
-		log = $('.pixel_coords');
-		log.html("Pixels > X: " + pixelCoords.x + ", Y: " + pixelCoords.y);
+		}*/
 		if (worldCoords) {
-			log = $('.world_coords');
+			log = $('.coords');
 			log.html("World > X: " +  Math.round(worldCoords.x * 1000) / 1000 + ", Y: " +  Math.round(worldCoords.y * 1000) / 1000);
+		} else { 
+			log = $('.coords');
+			log.html("Pixels > X: " + pixelCoords.x + ", Y: " + pixelCoords.y);
 		}
-		
 	}, getXYCoordinatesWithRespectToZoomLevel : function(coords) {
 		if (this.upper_left_y < this.dim_y - this.cross_y || this.upper_left_y - (this.data_extent.y - 1) > this.dim_y - this.cross_y) {
 			return;
@@ -767,5 +778,26 @@ TissueStack.Canvas.prototype = {
 				$('#'+ _this.dataset_id + '_contrast_box').toggle();		
 			});
 		}
+	}, displayLoadingProgress : function(fraction, total, reset) {
+		if (typeof(fraction) != 'number' || typeof(total) != 'number') return;
+		
+		if (typeof(reset) == 'boolean' && reset) {
+			$("#" + this.dataset_id + " .tile_count_div progress").val(0);
+			$("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).html("0%");
+			$("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).hide();
+		}
+		
+		// 100 percent => set to 100 and hide
+		if (fraction == total) {
+			$("#" + this.dataset_id + " .tile_count_div progress").val(100);
+			$("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).html("100%");
+			//$("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).hide();
+			return;
+		}
+
+		var perCent = Math.round((fraction / total) * 100);
+		$("#" + this.dataset_id + " .tile_count_div progress").val(Math.round(perCent));
+		$("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).html(perCent + "%");
+		$("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).show();
 	}
 };

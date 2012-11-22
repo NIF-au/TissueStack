@@ -618,6 +618,13 @@ TissueStack.BindDataSetDependentEvents = function () {
 				// swap slice dimension values
 				$("#dataset_" + (x+1) + "_canvas_main_slider").attr("value", event.data[0].actualDataSet.planes[sideViewPlaneId].data_extent.slice);
 				$("#dataset_" + (x+1) + "_canvas_main_slider").attr("max", event.data[0].actualDataSet.planes[sideViewPlaneId].data_extent.max_slices);
+				// swap progress display
+				var disp1 = $("#dataset_" + (x+1) + " .tile_count_div span." + mainViewPlaneId);
+				var disp2 = $("#dataset_" + (x+1) + " .tile_count_div span." + sideViewPlaneId);
+				disp1.removeClass(mainViewPlaneId);
+				disp1.addClass(sideViewPlaneId);
+				disp2.removeClass(sideViewPlaneId);
+				disp2.addClass(mainViewPlaneId);
 				
 				// swap main view
 				event.data[0].actualDataSet.planes[mainViewPlaneId].is_main_view = false;

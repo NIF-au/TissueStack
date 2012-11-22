@@ -35,10 +35,10 @@
     left: 0px;  
     border: 0px;  
 }  
-.boxcaption{  
+.boxcaption{
     position: absolute;  
     background: #000;  
-    height: 100px;  
+    height: 50px;  
     width: 100%;  
     opacity: .7;  
     /* For IE 5-7 */  
@@ -248,6 +248,41 @@ a.ui-slider-handle-horizontal{
 }
 
 /*CANVAS VIEW*/
+
+.tile_count_div {
+	border: 1px solid #fff;
+    z-index: 5000;
+    position: absolute; left: 45%; bottom: 10px;
+    height: 25px;
+    width: 150px;
+    background-color: #7AA7B6;
+    opacity:0.7;
+    filter:alpha(opacity=70); /* For IE8 and earlier */    
+}
+.tile_count_div span.plane_1 {
+    background-color: transparent;
+    position: absolute;
+    font-weight: bold;
+    top: 15%;
+    left: 5px;
+    text-align: center;
+}
+.tile_count_div span.plane_2 {
+    background-color: transparent;
+    position: absolute;
+    font-weight: bold;
+    top: 15%;
+    left: 50px;
+    text-align: center;
+}
+.tile_count_div span.plane_3 {
+    background-color: transparent;
+    position: absolute;
+    font-weight: bold;
+    top: 15%;
+    left: 100px;
+    text-align: center;
+}
 
 .left_side_view {
 	z-index: 2390;
@@ -585,6 +620,7 @@ width: 100%;
 }
 
 .progress_bar_text {
+	background-color: transparent;
 	position: absolute;
 	font-weight: bold;
 	top: 20%;
@@ -593,6 +629,7 @@ width: 100%;
 }
 /*Take out all process bar function for tablet becasue it doesn't work in tablet*/
 .progress_bar_text_tablet {
+	background-color: transparent;
 	position: absolute;
 	color: #669;
 	margin-top: -8.5px;

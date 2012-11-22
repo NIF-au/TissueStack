@@ -226,6 +226,8 @@ TissueStack.Queue.prototype = {
 		}
 		imageTile.src = src; 
 
+		this.canvas.displayLoadingProgress(0, 1, true);
+		
 		(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height) {
 			imageTile.onerror = function() {
 				_this.lowResolutionPreviewDrawn = true;

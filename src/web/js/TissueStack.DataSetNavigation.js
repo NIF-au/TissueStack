@@ -156,6 +156,10 @@ TissueStack.DataSetNavigation.prototype = {
 				    $(this).attr("id", id.replace(/canvas_[x|y|z]_plane/, selectors[i][1]));
 				});
 		}
+		$("#" + dataset + " .tile_count_div").css("bottom", "10px");
+		$("#" + dataset + " .tile_count_div span.plane_1").attr("class", "plane_1 x");			
+		$("#" + dataset + " .tile_count_div span.plane_2").attr("class", "plane_2 y");
+		$("#" + dataset + " .tile_count_div span.plane_3").attr("class", "plane_3 z");
 
 		// restore some settings for the phone 
 		if (TissueStack.phone) {
@@ -224,13 +228,12 @@ TissueStack.DataSetNavigation.prototype = {
 		
 		// we keep the slider and the cross-hair hidden for overlaid data sets
 		$("#dataset_" + index  + "_right_panel").removeClass("hidden");
-		if (overlaid && index == 1) 
+		if (overlaid && index == 1) {
 			$("#dataset_" + index  + "_right_panel").addClass("hidden");
-		
-		if (overlaid && index ==1) {
 			$("#dataset_" + index  + " .cross_overlay").addClass("hidden");
 			$("#dataset_" + index  + " .side_canvas_cross_overlay").addClass("hidden");
 		} else if (overlaid && index ==2)   {
+			$("#dataset_" + index  + " .tile_count_div").css("bottom", "40px");
 			$("#dataset_" + index  + "_left_side_view_canvas").removeClass("ui-bar-a");
 			$("#dataset_" + index  + "_right_side_view_canvas").removeClass("ui-bar-a");
 		}
