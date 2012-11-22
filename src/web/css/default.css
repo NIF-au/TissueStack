@@ -419,7 +419,7 @@ a.ui-slider-handle-horizontal{
 
 /*URL Link*/
 .url_link_main{
-	height: 26px; 
+	height: 30px; 
 	z-index: 2400; 
 	position: absolute;
 	right: 10px;
@@ -482,7 +482,7 @@ a.ui-slider-handle-horizontal{
 }
 /*Contrast CSS*/
 .contrast_main{
-	height: 26px; 
+	height: 30px; 
 	z-index: 2400; 
 	position: absolute;
 	right: 56px;
@@ -514,7 +514,7 @@ a.ui-slider-handle-horizontal{
 }
 /*ColorMap CSS*/
 .color_map_main {
-    height: 26px; 
+    height: 30px; 
     z-index: 2400; 
     position: absolute;
     right: 141px;
@@ -523,12 +523,11 @@ a.ui-slider-handle-horizontal{
     font-family: Arial, sans-serif; 
     font-size: 11px;
 }
-#color_map_style{
+.color_map_style{
 	-webkit-appearance: none;
-	-moz-appearance: none;
 	appearance: none;
 	width: 110px;
-	height: 29px;
+	height: 30px;
 	background: #5383e2;
 	-webkit-border-radius: 3px;
 	-webkit-appearance: none;
@@ -545,17 +544,8 @@ a.ui-slider-handle-horizontal{
 	text-shadow: 0px 1px 0px #185f60;
 	font: normal bold 11px Helvetica;	
 }
-#color_map_style:focus{
+.color_map_style:focus{
 	color: #000000;
-}
-.arrow_hidden{
-    height:23px;
-    width: 17px;
-    background: url('../images/select_bk.png') no-repeat right #5383e2;
-    top: 3px;
-    right: 9px;
-    position: absolute;
-    
 }
 /*Top Right Button Style*/
 .top_right_button {
