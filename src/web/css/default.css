@@ -524,11 +524,12 @@ a.ui-slider-handle-horizontal{
     font-size: 11px;
 }
 #color_map_style{
-	display: inline-block;
-	width: 100px;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	width: 110px;
 	height: 29px;
-	overflow: hidden;
-	background: url('../images/select.png') no-repeat right #5383e2;;
+	background: #5383e2;
 	-webkit-border-radius: 3px;
 	-webkit-appearance: none;
 	-moz-border-radius: 3px;
@@ -539,16 +540,22 @@ a.ui-slider-handle-horizontal{
 	border-color: #1e6d6f;
 	border-width: 1px;
 	border-style: solid;
-	font-family: Helvetica;
-	font-size: 11px;
-	font-weight: bold;
-	font-style: normal;
 	text-decoration: none;
 	color: #ffffff;
 	text-shadow: 0px 1px 0px #185f60;
+	font: normal bold 11px Helvetica;	
 }
 #color_map_style:focus{
 	color: #000000;
+}
+.arrow_hidden{
+    height:23px;
+    width: 17px;
+    background: url('../images/select_bk.png') no-repeat right #5383e2;
+    top: 3px;
+    right: 9px;
+    position: absolute;
+    
 }
 /*Top Right Button Style*/
 .top_right_button {
