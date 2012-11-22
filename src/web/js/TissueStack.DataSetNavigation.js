@@ -256,7 +256,7 @@ TissueStack.DataSetNavigation.prototype = {
 				// add children
 				// TODO: later we add the overlays, for now, the only children are the base layers
 				treeData[counter].children = {
-						title: dataSet.filename,
+						title: 	this.stripFileNameOfDataDirectory(dataSet.filename),
 						isBaseLayer : true,
 						key: dataSet.id + "_base_layer",
 						tooltip: (dataSet.description ? dataSet.description : ""),
@@ -265,7 +265,6 @@ TissueStack.DataSetNavigation.prototype = {
 				};
 				counter++;
 			}
-			
 		}
 
 		// for closures
@@ -378,8 +377,9 @@ TissueStack.DataSetNavigation.prototype = {
 		});
 		// add children
 		// TODO: later we add the overlays, for now, the only children are the base layers
+		
 		newNode.addChild({
-				title: dataSet.filename,
+				title: this.stripFileNameOfDataDirectory(dataSet.filename),
 				isBaseLayer : true,
 				key: dataSet.id + "_base_layer",
 				tooltip: (dataSet.description ? dataSet.description : ""),
@@ -393,11 +393,13 @@ TissueStack.DataSetNavigation.prototype = {
 		$('#tablet_tree').unbind("expand");
 		var htmlString ="";
 
+		
 		for (var dataSetKey in TissueStack.dataSetStore.datasets) {
 			var dataSet = TissueStack.dataSetStore.datasets[dataSetKey];
-			  htmlString += '<div data-role="collapsible"'+' id="tabletTreeDiv-'+ dataSet.local_id + dataSet.host + '"' 
+
+			htmlString += '<div data-role="collapsible"'+' id="tabletTreeDiv-'+ dataSet.local_id + dataSet.host + '"' 
 			  			 + 'data-transition="slide"'+'>' + '<h3>'+ dataSet.local_id + ' in ' + dataSet.host +'</h3>'
-  			  			 + '<p>'+ dataSet.description +'<br>'+ 'Location: '+ dataSet.filename +'</p>'
+  			  			 + '<p>'+ dataSet.description +'<br>'+ 'Location: '+ this.stripFileNameOfDataDirectory(dataSet.filename) +'</p>'
   			  			 + '<fieldset data-role="controlgroup" data-mini="true">'
   			  			 + '<input type="radio" name="radio-' + dataSet.local_id + '"'+' id="radio-'+ dataSet.local_id +'"'+' value="on" />'
   			  			 + '<label for="radio-'+ dataSet.local_id +'"'+'>Overlay ON</label>'
@@ -518,5 +520,19 @@ TissueStack.DataSetNavigation.prototype = {
 			}, 250);
 		}
 		canvas.queue.last_sync_timestamp = -1; // reset 
+	},
+	stripFileNameOfDataDirectory : function(filename) {
+		if (!filename) return null;
+		
+		var file = 	filename;
+		if (typeof(TissueStack.configuration['data_directory']) == 'object' 
+				&& typeof(TissueStack.configuration['data_directory'].value) == 'string') {
+			var pos = file.indexOf(TissueStack.configuration['data_directory'].value);
+			if (pos >=0)
+				file = file.substring(TissueStack.configuration['data_directory'].value.length);
+			if (file[0] == '/')
+				file = file.substring(1);
+		}
+		return file;
 	}
 };		
