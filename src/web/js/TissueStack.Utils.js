@@ -617,11 +617,11 @@ TissueStack.Utils = {
 		
     	if (TissueStack.dataSetNavigation.selectedDataSets.count > 0) {
     		var sel = TissueStack.dataSetNavigation.selectedDataSets["dataset_1"];
+    		window.location.hash = '#data';
     		TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(sel, false); 
     		setTimeout(function() {
-					TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(sel, true);
-    		}, 200);
+    			TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(sel, true);
+    		}, 250);
     	}
-    	window.location.hash = '#data';
 	}
 };
