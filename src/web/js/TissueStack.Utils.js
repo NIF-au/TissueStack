@@ -458,7 +458,7 @@ TissueStack.Utils = {
 				return null;
 			}
 
-			return url + row + '_' + col + "." + image_extension;
+			return url + row + '_' + col + "." + image_extension + "?" + new Date().getTime();
 		} else {
 			// seems to work for server so why not use it
 		    url = url + "/" + path + "/?volume=" + filename + "&image_type=JPEG&scale=" + zoom + "&dimension="
