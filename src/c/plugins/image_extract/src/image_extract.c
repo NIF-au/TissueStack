@@ -177,8 +177,87 @@ void		alloc_and_init_colormap_space_from_src(float **new_colormap, float **sourc
     }
 }
 
+char		*str_n_cpy(char *str, int position, int len)
+{
+  char		*dest;
+  int		i;
 
+  i = 0;
+  dest = malloc((len + 1) * sizeof(*dest));
+  while (i < len)
+    {
+      dest[i] = str[i + position];
+      i++;
+    }
+  dest[i] = '\0';
+  return (dest);
+}
 
+int		img_word_count(char *buff, char c)
+{
+  int		i;
+  int		count;
+
+  i = 0;
+  count = 0;
+  if (buff[0] != c && buff[0] != '\0')
+    count++;
+  while (buff[i] != '\0')
+    {
+      if ((buff[i] == c && buff[i + 1] != c ) && buff[i + 1] != '\0')
+	count++;
+      i++;
+    }
+  return (count);
+}
+
+int		img_letter_count(char *buff, int position, char c)
+{
+  int		i;
+
+  i = 0;
+  while (buff[position + i] != c && buff[position + i] != '\0')
+    i++;
+  return (i);
+}
+
+char		**img_str_to_wordtab(char *buff, char c)
+{
+  int		i = 0;
+  int		j = 0;
+  int wordCount = 0;
+  char		**dest = NULL;
+
+  // preliminary checks
+  if (buff == NULL) {
+	  return NULL;
+  }
+
+  // if word count is 0 => good bye
+  wordCount = img_word_count(buff, c);
+  if (wordCount == 0) {
+	  return NULL;
+  }
+
+  dest = malloc((wordCount + 1) * sizeof(*dest));
+
+  while (buff[i] != '\0')
+    {
+      if (buff[i] != c && buff[i] != '\0')
+	{
+	  dest[j] = str_n_cpy(buff, i, img_letter_count(buff, i, c));
+	  j++;
+	  i += img_letter_count(buff, i, c);
+	}
+      if (buff[i] != '\0')
+	i++;
+    }
+
+  // terminate 2D array with NULL
+  dest[j] = NULL;
+
+  return (dest);
+}
 
 
 float		get_float(char *src, int start, int end, int len)
@@ -215,8 +294,10 @@ float		**get_colormap_from_file(char *path)
   int		c_row_index = 0;
   int		c_column_index = 0;
   int		j = 0;
-  int		k = -1;
+  //  int		k = -1;
   int		flag = 0;
+  char		**lines;
+  char		**values;
 
   fd = open(path, O_RDWR);
 
@@ -230,16 +311,37 @@ float		**get_colormap_from_file(char *path)
 	  buff[len] = '\0';
 	  while (j < len && buff[j] != '\0')
 	    {
-	      if (buff[j] != ' ' && buff[j] != '\t' && buff[j] != '\n')
+	      if (buff[j] != ' ' && (buff[j] < '0' || buff[j] > '9') &&
+		  buff[j] != '.' && buff[j] != '\n')
+		buff[j] = ' ';
+	      j++;
+	    }
+	  lines = img_str_to_wordtab(buff, '\n');
+	  c_row_index = 0;
+	  while (lines[c_row_index] != NULL)
+	    {
+	      values = img_str_to_wordtab(lines[c_row_index], ' ');
+	      c_column_index = 0;
+	      while (values[c_column_index] != NULL)
 		{
-		  if (k == -1)
-		    k = j;
+		  colormap_tmp[c_row_index][c_column_index] = atof(values[c_column_index]);
+		  c_column_index++;
 		}
-	      else if ((buff[j] == ' ' || buff[j] == '\t')  && k > -1)
+	      c_row_index++;
+	    }
+	  /*
+	  while (j < len && buff[j] != '\0')
+	    {
+	      if (buff[j] != ' ' && buff[j] != '\t' && buff[j] != '\n' && k == -1)
+		k = j;
+	      else if ((buff[j] == ' ' || buff[j] == '\t')  && k != -1)
 		{
 		  colormap_tmp[c_row_index][c_column_index] = get_float(buff, k, j, len);
 		  c_column_index++;
 		  k = -1;
+		  //printf("%s ==> %i - %i\n", buff, k, j);
+		  printf("vallll = %f\n", colormap_tmp[c_row_index][c_column_index]);
+		  // DEBUG("vallll = %f", colormap_tmp[c_row_index][c_column_index]);
 		}
 	      else if (buff[j] == '\n' && k > -1)
 		{
@@ -248,9 +350,11 @@ float		**get_colormap_from_file(char *path)
 		  c_row_index++;
 		  c_column_index = 0;
 		  k = -1;
+		  //		  DEBUG("vannnn = %f", colormap_tmp[c_row_index][c_column_index]);
 		}
 	      j++;
 	    }
+	  */
 	}
     }
   free(buff);

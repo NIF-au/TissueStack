@@ -232,7 +232,7 @@ TissueStack.Utils = {
 		}
 		
 		$(".color_map_select").html(html);
-		$(".color_map_select").selectmenu("refresh");	
+		//$(".color_map_select").selectmenu("refresh");	
 		
 	},adjustScreenContentToActualScreenSize : function (datasets){	
 		if (TissueStack.phone) {
