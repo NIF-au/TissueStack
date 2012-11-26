@@ -25,6 +25,7 @@ import org.apache.log4j.Logger;
 import org.jboss.resteasy.plugins.server.servlet.ResteasyBootstrap;
 
 import au.edu.uq.cai.TissueStack.dataprovider.ColorMapsProvider;
+import au.edu.uq.cai.TissueStack.dataprovider.DataSetValuesLookupProvider;
 import au.edu.uq.cai.TissueStack.dataprovider.SessionDataProvider;
 
 public class CustomRestfulBootstrap extends ResteasyBootstrap {
@@ -76,7 +77,12 @@ public class CustomRestfulBootstrap extends ResteasyBootstrap {
 		} catch (Exception any) {
 			logger.error("Failed to load colormaps!", any);
 		}
-		
+
+		try {
+			DataSetValuesLookupProvider.initDataBase();
+		} catch (Exception any) {
+			logger.error("Failed to initialize index file lookup table!", any);
+		}
 	}
 	
 	public void contextDestroyed(ServletContextEvent event) {

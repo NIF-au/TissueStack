@@ -18,6 +18,8 @@ package au.edu.uq.cai.TissueStack.dataobjects;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlElement;
@@ -34,7 +36,8 @@ public class DataSetValuesLookupTable {
 	  
 
 	@Id
- 	@Column(name="id")
+	@Column(name="id")
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@XmlTransient
 	public long getId() {
 		return id;

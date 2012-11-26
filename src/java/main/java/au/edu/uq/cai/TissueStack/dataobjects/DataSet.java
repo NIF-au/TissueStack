@@ -91,8 +91,8 @@ public class DataSet {
 		this.planes = planes;
 	}
 
-	@OneToOne(fetch=FetchType.LAZY)
-	@JoinColumn(name="id")
+	@OneToOne
+	@JoinColumn(name="lookup_id")
 	public DataSetValuesLookupTable getLookupValues() {
 		return this.lookupValues;
 	}

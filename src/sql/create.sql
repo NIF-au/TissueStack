@@ -67,7 +67,9 @@ CREATE TABLE dataset
   id bigserial NOT NULL,
   filename VARCHAR(250) NOT NULL,
   description TEXT,
+  lookup_id bigint REFERENCES dataset_values_lookup (id),
   CONSTRAINT dataset_pk PRIMARY KEY (id),
+  CONSTRAINT dataset_lookup_fk FOREIGN KEY (lookup_id) REFERENCES dataset (id),
   CONSTRAINT dataset_filename_unique UNIQUE (filename)
 );
 ALTER TABLE dataset OWNER TO tissuestack;
@@ -103,13 +105,18 @@ ALTER TABLE dataset_planes OWNER TO tissuestack;
 -- DATASET VALUES LOOKUP TABLE 
 CREATE TABLE dataset_values_lookup
 (
-  id bigint NOT NULL PRIMARY KEY,
+  id bigserial NOT NULL,
   filename VARCHAR(250) NOT NULL,
-  content TEXT NOT NULL,
-  CONSTRAINT dataset_values_lookup_fk FOREIGN KEY (id)
-      REFERENCES dataset (id) ON DELETE CASCADE ON UPDATE CASCADE
+  content TEXT,
+  CONSTRAINT dataset_values_lookup_pk PRIMARY KEY (id),
+  CONSTRAINT dataset_values_lookup_unique UNIQUE (filename)
 );
 ALTER TABLE dataset_values_lookup OWNER TO tissuestack;
+
+CREATE INDEX idx_dataset_values_lookup_filename
+  ON dataset_values_lookup
+  USING btree
+  (filename);
 
 -- INSERT SOME TEST DATA
 --INSERT INTO dataset VALUES (1, '/opt/data/00-normal-model-nonsym-tiled.mnc', 'Tiled Version');

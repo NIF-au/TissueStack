@@ -27,11 +27,9 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import au.edu.uq.cai.TissueStack.JPAUtils;
-import au.edu.uq.cai.TissueStack.dataobjects.Configuration;
 import au.edu.uq.cai.TissueStack.dataobjects.DataSetValuesLookupTable;
 import au.edu.uq.cai.TissueStack.dataobjects.NoResults;
 import au.edu.uq.cai.TissueStack.dataobjects.Response;
-import au.edu.uq.cai.TissueStack.dataprovider.ConfigurationDataProvider;
 import au.edu.uq.cai.TissueStack.dataprovider.DataSetValuesLookupProvider;
 import au.edu.uq.cai.TissueStack.rest.AbstractRestfulMetaInformation;
 import au.edu.uq.cai.TissueStack.rest.Description;
@@ -39,13 +37,6 @@ import au.edu.uq.cai.TissueStack.rest.Description;
 @Path("/lookup")
 @Description("DataSet Lookup Tables")
 public final class LookupResources extends AbstractRestfulMetaInformation {
-	private static final String DEFAULT_LOOKUP_TABLES_DIRECTORY = "/opt/tissuestack/lookup";	
-	
-	private File getLookupTablesDirectory() {
-		final Configuration lookupTablesDir = ConfigurationDataProvider.queryConfigurationById("lookup_tables_directory");
-		return new File(lookupTablesDir == null || lookupTablesDir.getValue() == null ? DEFAULT_LOOKUP_TABLES_DIRECTORY : lookupTablesDir.getValue());
-	}
-
 	@Path("/")
 	public RestfulResource getDefault() {
 		return this.getLookupResourcesMetaInfo();
