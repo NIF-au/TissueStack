@@ -210,6 +210,8 @@ TissueStack.Extent.prototype = {
 				[pixelCoords.x, this.one_to_one_y - pixelCoords.y, pixelCoords.z, 1], 
 				this.worldCoordinatesTransformationMatrix);
 
+		if (!pixelCoords) return null;
+
 		if (this.zoom_level == 1) {
 			pixelCoords.x = Math.floor(pixelCoords.x);
 			pixelCoords.y = Math.floor(pixelCoords.y);
@@ -217,8 +219,6 @@ TissueStack.Extent.prototype = {
 			pixelCoords.x = Math.ceil(pixelCoords.x);
 			pixelCoords.y = Math.ceil(pixelCoords.y);
 		}
-		
-		if (!pixelCoords) return null;
 		
 		// return world coordinates
 		return {x: pixelCoords[0], y: pixelCoords[1], z: pixelCoords[2]};

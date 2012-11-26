@@ -432,6 +432,13 @@ TissueStack.Events.prototype = {
 				});
 		
 	}, updateCoordinateDisplay : function(mouse_coords) {
+		if (mouse_coords == null) {// reset
+			$("#canvas_point_x").val("");
+			$("#canvas_point_y").val("");
+			$("#canvas_point_z").val("");
+			$("#canvas_point_value").val("");
+		}
+		
 		var relCrossCoords = this.canvas.getRelativeCrossCoordinates();
 		relCrossCoords.z = this.canvas.data_extent.slice;
 		var worldCoordinates = this.canvas.getDataExtent().getWorldCoordinatesForPixel(relCrossCoords);

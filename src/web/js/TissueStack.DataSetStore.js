@@ -70,6 +70,9 @@ TissueStack.DataSetStore.prototype = {
 		this.datasets[id].local_id = dataSet.id;
 		this.datasets[id].description = dataSet.description ? dataSet.description : "";
 		this.datasets[id].filename = dataSet.filename ? dataSet.filename : "";
+		this.datasets[id].lookupValues = 
+			(dataSet.lookupValues && dataSet.lookupValues.content) ? 
+					$.parseJSON(dataSet.lookupValues.content) : {};
 		// this is the data for initialization
 		this.datasets[id].data = dataSet.planes;
 		// this is the map node where we store the actual runtime canvases which won't be set until we decide to display the data set

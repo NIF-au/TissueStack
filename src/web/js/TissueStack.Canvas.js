@@ -107,9 +107,15 @@ TissueStack.Canvas.prototype = {
 		var ctx = this.getCanvasContext();
 		var dataForPixel = ctx.getImageData(coords.x, coords.y, 1, 1);
 		if (!dataForPixel || !dataForPixel.data) return;
+
+		// set rgb values, transparency and lookup value (if exists)
+		var value = {r: dataForPixel.data[0], g: dataForPixel.data[1], b: dataForPixel.data[2], t: dataForPixel.data[3], l: null};
+		var label = TissueStack.dataSetStore.datasets[this.data_extent.data_id].
+						lookupValues["" + value.r + "/" + value.g + "/" + value.b];
+		if (typeof(label) != 'undefined')
+			value['l'] = label;
 		
-		// return rgb and transparency value
-		return {r: dataForPixel.data[0], g: dataForPixel.data[1], b: dataForPixel.data[2], t: dataForPixel.data[3]};
+		return value;
 	},
 	getOriginalPixelValue : function(coords) {
 		// delegate
@@ -120,7 +126,7 @@ TissueStack.Canvas.prototype = {
 		var originalRange = Math.abs(this.value_range_max) - this.value_range_min; 
 		
 		for(var rgbVal in value)
-			if (rgbVal != 't')
+			if (rgbVal != 't' && rgbVal != 'l')
 				value[rgbVal] = this.value_range_min + (value[rgbVal] * (originalRange / 255));
 		
 		return value;
@@ -685,9 +691,11 @@ TissueStack.Canvas.prototype = {
 			// display pixel value
 			var pixelVal = this.getOriginalPixelValue({x: this.cross_x, y: this.cross_y});
 			if (typeof(pixelVal) === 'object')
-				if (!this.isColorMapOn()) // grayscale
+				if (pixelVal.l)
+					$("#canvas_point_value").val(pixelVal.l);
+				else if (!this.isColorMapOn()) // grayscale
 					$("#canvas_point_value").val((Math.round(pixelVal.r) *1000) / 1000); // display redundant pixel value 
-				else  // display r/g/b
+				else // display r/g/b triples
 					$("#canvas_point_value").val("r: "
 							+ (Math.round(pixelVal.r) *1000) / 1000
 							+ " g: "

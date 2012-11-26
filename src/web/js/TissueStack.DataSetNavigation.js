@@ -134,6 +134,7 @@ TissueStack.DataSetNavigation.prototype = {
 			if (dataSet.planes[plane].overlay_canvas) dataSet.planes[plane].overlay_canvas = null;
 			dataSet.planes[plane].queue.latestDrawRequestTimestamp = -1;
 			dataSet.planes[plane].queue.stopQueue();
+			if (dataSet.planes[plane].is_main_view) dataSet.planes[plane].events.updateCoordinateDisplay(null);
 			dataSet.planes[plane].events.unbindAllEvents();
 			if (dataSet.planes[plane].contrast) dataSet.planes[plane].contrast.unregisterListeners();
 		}
