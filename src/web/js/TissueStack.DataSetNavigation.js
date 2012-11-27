@@ -401,12 +401,16 @@ TissueStack.DataSetNavigation.prototype = {
 			htmlString += '<div data-role="collapsible"'+' id="tabletTreeDiv-'+ dataSet.local_id + dataSet.host + '"' 
 			  			 + 'data-transition="slide"'+'>' + '<h3>'+ dataSet.local_id + ' in ' + dataSet.host +'</h3>'
   			  			 + '<p>'+ dataSet.description +'<br>'+ 'Location: '+ this.stripFileNameOfDataDirectory(dataSet.filename) +'</p>'
+  			  			 + '</div>';
+  			  			 // For future used (Overlay Redio Button in DataSet selection)
+  			  			 /* 
   			  			 + '<fieldset data-role="controlgroup" data-mini="true">'
   			  			 + '<input type="radio" name="radio-' + dataSet.local_id + '"'+' id="radio-'+ dataSet.local_id +'"'+' value="on" />'
   			  			 + '<label for="radio-'+ dataSet.local_id +'"'+'>Overlay ON</label>'
   			  			 + '<input type="radio" name="radio-' + dataSet.local_id + '"'+' id="radio-off-'+ dataSet.local_id +'"'
   			  			 + 'value="off" />' + '<label for="radio-off-'+ dataSet.local_id + '"'+'>Overlay OFF</label>'
-  			  			 + '</fieldset></div>';		
+  			  			 + '</fieldset></div>';
+  			  			 */	
 		}		
 		$('#tablet_tree').append(htmlString)
 		.trigger("create").controlgroup('refresh', true);
@@ -437,11 +441,15 @@ TissueStack.DataSetNavigation.prototype = {
 		//add touch transition for phone menu and dataset menu so that it can scroll over and see contents.
 		var LeftMenu, DataSetMenu, TableMenu, PhoneColorMapMenu;
 		
-		LeftMenu = new iScroll('menutransition', { useTransition:true });
-		if(TissueStack.phone) DataSetMenu = new iScroll('phonetransition', { useTransition:true });
-		if(TissueStack.tablet) TableMenu = new iScroll('tablettransition', { checkDOMChanges: true, useTransition:true }); //For tablet version (Haven't apply yet)
-		if(TissueStack.phone) PhoneColorMapMenu = new iScroll('phone_colormap_transition', { checkDOMChanges: true, bounceLock: false }); 
-
+		if(TissueStack.tablet) {
+			LeftMenu = new iScroll('menutransition', { checkDOMChanges: true, useTransition:true }); //dataset menu
+			TableMenu = new iScroll('tablettransition', { checkDOMChanges: true, useTransition:true }); //admin task menu
+		}
+		if(TissueStack.phone) {
+			PhoneColorMapMenu = new iScroll('phone_colormap_transition', { checkDOMChanges: true, bounceLock: false }); //colormap menu
+			DataSetMenu = new iScroll('phonetransition', { useTransition:true }); //setting menu
+		}
+		
 		document.addEventListener('touchmove', function (e) { e.preventDefault(); }, false);
 	}, 
 	syncDataSetCoordinates : function(canvas, timestamp, eraseCanvas) {
