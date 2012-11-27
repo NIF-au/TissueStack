@@ -123,7 +123,9 @@ TissueStack.InitUserInterface = function (initOpts) {
 			function() {
 	        	if (TissueStack.overlay_datasets && TissueStack.dataSetNavigation && TissueStack.dataSetNavigation.selectedDataSets
 	        			&& TissueStack.dataSetNavigation.selectedDataSets.count == 2) {
-	        		TissueStack.Utils.transitionToDataSetView(TissueStack.reverseOverlayOrder ? false : true);
+	        		TissueStack.reverseOverlayOrder = TissueStack.reverseOverlayOrder ? false : true;
+	        		TissueStack.swappedOverlayOrder = true;
+	        		TissueStack.Utils.transitionToDataSetView();
 	        	}
 			}
 		);

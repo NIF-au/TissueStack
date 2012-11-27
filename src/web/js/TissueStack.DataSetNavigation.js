@@ -173,10 +173,13 @@ TissueStack.DataSetNavigation.prototype = {
 			}
 		}
 	
+		// reset overlay over 
+		if (!TissueStack.overlay_datasets || (TissueStack.overlay_datasets && !TissueStack.swappedOverlayOrder))
+			TissueStack.reverseOverlayOrder = false;
+		
 		//reset contrast box
 		$("#dataset_1_url_box, #dataset_1_contrast_box").hide("fast");
 		$("#dataset_2_url_box, #dataset_2_contrast_box").hide("fast");
-		
 		
 		if(TissueStack.desktop || TissueStack.tablet){
 			// restore slider states
@@ -297,7 +300,7 @@ TissueStack.DataSetNavigation.prototype = {
 		    	   }
 
 	    		   var selectedNodes = this.getSelectedNodes(true);
-	    		   if (TissueStack.reverseOverlayOrder)
+	    		   if (TissueStack.overlay_datasets && selectedNodes && selectedNodes.length == 2 && TissueStack.reverseOverlayOrder)
 	    			   selectedNodes.reverse();
 	    		   // brief check
 	    		   if (selectedNodes.length > 2) {
