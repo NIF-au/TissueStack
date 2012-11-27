@@ -609,18 +609,14 @@ TissueStack.Utils = {
 				TissueStack.dataSetStore.getDataSetById(
 						TissueStack.dataSetNavigation.selectedDataSets[whichEverCanvas1.dataset_id]),
 				plane1, plane2, true);
-	},transitionToDataSetView :  function(reverseDataSetOrder) {
-		var reverseOrder =
-			typeof(reverseDataSetOrder) == 'boolean' && TissueStack.dataSetNavigation.selectedDataSets.count != 1
-					? reverseDataSetOrder : false; 
-		TissueStack.reverseOverlayOrder = reverseOrder;
-		
+	},transitionToDataSetView :  function() {
     	if (TissueStack.dataSetNavigation.selectedDataSets.count > 0) {
     		var sel = TissueStack.dataSetNavigation.selectedDataSets["dataset_1"];
     		window.location.hash = '#data';
     		TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(sel, false); 
     		setTimeout(function() {
     			TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(sel, true);
+        		TissueStack.swappedOverlayOrder = false;
     		}, 250);
     	}
 	}

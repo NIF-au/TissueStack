@@ -395,7 +395,8 @@ TissueStack.Events.prototype = {
 		if ((TissueStack.tablet || TissueStack.phone)
 				&& (newZoomLevel == this.canvas.data_extent.zoom_level ||  newZoomLevel < 0 || newZoomLevel >= this.canvas.data_extent.zoom_levels.length)) {
 			newZoomLevel = 0;
-		}
+		} else if (newZoomLevel < 0 || newZoomLevel >= this.canvas.data_extent.zoom_levels.length)
+			return;
 
 		this.canvas.queue.addToQueue(
 				{	data_id : this.canvas.data_extent.data_id,

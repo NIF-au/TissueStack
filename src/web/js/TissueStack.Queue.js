@@ -230,12 +230,10 @@ TissueStack.Queue.prototype = {
 		
 		(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height) {
 			imageTile.onerror = function() {
-				_this.lowResolutionPreviewDrawn = true;
 				return;
 			};
 			imageTile.onload = function() {
 				if (_this.latestDrawRequestTimestamp < 0 || timestamp < _this.latestDrawRequestTimestamp) {
-					_this.lowResolutionPreviewDrawn = true;
 					//console.info('Aborting preview for ' + _this.canvas.getDataExtent().data_id + '[' +_this.canvas.getDataExtent().getOriginalPlane() +  ']: ' + timestamp);
 					return;
 				}
