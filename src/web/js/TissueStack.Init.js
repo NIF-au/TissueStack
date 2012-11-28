@@ -805,7 +805,11 @@ TissueStack.applyUserParameters = function() {
 				}
 			} else {
 				$(".color_map_select").val(initOpts['color']);
-				$(".color_map_select").selectmenu("refresh");
+				try {
+					$(".color_map_select").selectmenu("refresh");
+				} catch (any){
+					// we don't care, stupid jquery mobile ...
+				}
 			}
 		}
 		if (typeof(initOpts['min']) === 'number' &&  typeof(initOpts['max']) === 'number') {
