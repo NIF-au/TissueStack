@@ -131,7 +131,12 @@ TissueStack.Events.prototype = {
 		
 		//DOUBLE TAP TO ENLARGE IMAGES
 		this.getCanvasElement().bind('doubletap', function(e) {
-			delta = e.originalEvent.scale + delta;
+			if(e.originalEvent.scale === undefined || delta == NaN){
+				delta = 1;
+			}
+			else{
+				delta = e.originalEvent.scale + delta;
+			}
 			_this.zoom(e, delta);
 		});
 		
