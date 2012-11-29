@@ -84,35 +84,38 @@ TissueStack.Events.prototype = {
 	}, registerMobileEvents: function() {
 		var _this = this;
 		var delta = 0;
+		var tmpTouches;
 
 		// TOUCH START
 		this.getCanvasElement().bind("touchstart", function(e) {
-			// android gestures compatibility
-		    if (e.originalEvent.touches.length > 1) {
-				delta = Math.sqrt(
-					(Math.pow(e.originalEvent.touches[1].pageX - e.originalEvent.touches[0].pageX),2) +
-					(Math.pow(e.originalEvent.touches[1].pageY - e.originalEvent.touches[0].pageY),2));
+            var touches = e.originalEvent.touches || e.originalEvent.changedTouches;
+            e.pageX = touches[0].pageX;
+            e.pageY = touches[0].pageY;
+			
+			// android gestures compatibility with GESTURES
+		    if (touches.length > 1) {
+				delta = 
+					Math.sqrt(
+						Math.pow(touches[1].pageX - touches[0].pageX,2) +
+						Math.pow(touches[1].pageY - touches[0].pageY,2));
 		    	return;
 			};
-		
-			var touches = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
-			e.pageX = touches.pageX;
-			e.pageY = touches.pageY;
 
-			// call pan start
+			// handle PAN
 			_this.panStart(e);
 		});			
 
 		// TOUCH MOVE
 		this.getCanvasElement().bind("touchmove", function(e) {
-		
-			if (e.originalEvent.touches.length > 1) {
-				return;
-			};
+            var touches = e.originalEvent.touches || e.originalEvent.changedTouches;
+            e.pageX = touches[0].pageX;
+            e.pageY = touches[0].pageY;
 			
-			var touches = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
-			e.pageX = touches.pageX;
-			e.pageY = touches.pageY;
+			// android gestures compatibility with GESTURES
+			if (touches.length > 1) {
+				tmpTouches = touches;
+		    	return;
+			};
 			
 			// call panAndMove
 			_this.panAndMove(e);
@@ -120,14 +123,16 @@ TissueStack.Events.prototype = {
 
 		// TOUCH END
 		this.getCanvasElement().bind("touchend", function(e) {
-			// android gestures compatibility
-		    if (e.originalEvent.touches.length > 1) {
-				delta -= Math.sqrt(
-					(Math.pow(e.originalEvent.touches[1].pageX - e.originalEvent.touches[0].pageX),2) +
-					(Math.pow(e.originalEvent.touches[1].pageY - e.originalEvent.touches[0].pageY),2));
+            var touches = e.originalEvent.touches || e.originalEvent.changedTouches;
 
-				if (delta > 0) delta = 1;
-				else delta = -1; 
+			// android gestures compatibility with GESTURES
+		    if (!_this.canvas.mouse_down && touches && tmpTouches && tmpTouches.length==2) {
+				if (delta > Math.sqrt(
+							Math.pow(tmpTouches[1].pageX - tmpTouches[0].pageX,2) +
+							Math.pow(tmpTouches[1].pageY - tmpTouches[0].pageY,2))) 
+					delta = -1;
+				else 
+					delta = 1;
 		    	
 				_this.zoom(e, delta);		    		
 		    	return;	
@@ -151,11 +156,9 @@ TissueStack.Events.prototype = {
 		});
 		
 		//DOUBLE TAP TO ENLARGE IMAGES
-		this.getCanvasElement().bind('doubletap', function(e) {
-			if(e.originalEvent.scale === undefined || isNaN(delta)) return
-
-			delta = e.originalEvent.scale + delta;
-			_this.zoom(e, delta);
+		if (TissueStack.phone)
+			this.getCanvasElement().bind('doubletap', function(e) {
+			_this.zoom(e, 1);
 		});
 	}, registerDesktopEvents: function() {
 		var _this = this;
@@ -415,7 +418,7 @@ TissueStack.Events.prototype = {
 		var now = new Date().getTime();					
 		var newZoomLevel = this.canvas.getDataExtent().zoom_level + delta;
 		
-		if ((TissueStack.tablet || TissueStack.phone)
+		if (TissueStack.phone
 				&& (newZoomLevel == this.canvas.data_extent.zoom_level ||  newZoomLevel < 0 || newZoomLevel >= this.canvas.data_extent.zoom_levels.length)) {
 			newZoomLevel = 0;
 		} else if (newZoomLevel < 0 || newZoomLevel >= this.canvas.data_extent.zoom_levels.length)
