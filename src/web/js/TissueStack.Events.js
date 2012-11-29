@@ -355,9 +355,11 @@ TissueStack.Events.prototype = {
 
 		this.canvas.drawCoordinateCross(cross_coords);
 
-		this.canvas.queue.latestDrawRequestTimestamp = now;
-		this.canvas.queue.drawLowResolutionPreview(now);
-		this.canvas.queue.drawRequestAfterLowResolutionPreview(null, now);
+		if (TissueStack.sync_datasets && !TissueStack.overlay_datasets && TissueStack.dataSetNavigation.selectedDataSets.count > 1) {
+			this.canvas.queue.latestDrawRequestTimestamp = now;
+			this.canvas.queue.drawLowResolutionPreview(now);
+			this.canvas.queue.drawRequestAfterLowResolutionPreview(null, now);
+		}
 		
 		// update coordinate info displayed
 		this.updateCoordinateDisplay(coords);
