@@ -121,15 +121,15 @@ TissueStack.Events.prototype = {
 		_this.gestures_handler = new Hammer(_this.canvas.getCanvasElement().get(0));
 		_this.gestures_handler.ontransformstart = function(e) {delta = e.originalEvent.scale;};
 		_this.gestures_handler.ontransformend = function(e) {delta = e.originalEvent.scale - delta;_this.zoom(e, delta);};
-		
+
 		/*
 		// GESTURE START
-		this.getCanvasElement().bind('gesturestart', function(e) {
+		this.getCanvasElement().bind('transformstart', function(e) {
 			delta = e.originalEvent.scale;
 		});
 		
 		// GESTURE END
-		this.getCanvasElement().bind('gestureend', function(e) {
+		this.getCanvasElement().bind('transformend', function(e) {
 			delta = e.originalEvent.scale - delta;
 			
 			// call zoom
