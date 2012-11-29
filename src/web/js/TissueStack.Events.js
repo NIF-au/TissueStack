@@ -27,6 +27,7 @@ TissueStack.Events = function(canvas, include_cross_hair) {
 };
 
 TissueStack.Events.prototype = {
+	gestures_handler : null,
 	include_cross_hair : true,	
 	setIncludeCrossHair : function(include_cross_hair) {
 		// include cross hair canvas or not
@@ -115,7 +116,13 @@ TissueStack.Events.prototype = {
 		});
 
 		var delta = 0;
+
+		// compatibility with android
+		_this.gestures_handler = new Hammer(_this.canvas.getCanvasElement().get(0));
+		_this.gestures_handler.ontransformstart = function(e) {delta = e.originalEvent.scale;};
+		_this.gestures_handler.ontransformend = function(e) {delta = e.originalEvent.scale - delta;_this.zoom(e, delta);};
 		
+		/*
 		// GESTURE START
 		this.getCanvasElement().bind('gesturestart', function(e) {
 			delta = e.originalEvent.scale;
@@ -128,6 +135,7 @@ TissueStack.Events.prototype = {
 			// call zoom
 			_this.zoom(e, delta);
 		});
+		*/
 		
 		//DOUBLE TAP TO ENLARGE IMAGES
 		this.getCanvasElement().bind('doubletap', function(e) {
@@ -139,7 +147,6 @@ TissueStack.Events.prototype = {
 			}
 			_this.zoom(e, delta);
 		});
-		
 	}, registerDesktopEvents: function() {
 		var _this = this;
 		
@@ -205,6 +212,7 @@ TissueStack.Events.prototype = {
 		this.getCanvasElement().unbind("mousemove");
 		this.getCanvasElement().unbind('mousewheel');
 
+		if (this.gestures_handler) this.gestures_handler.destroy();
 		this.getCanvasElement().unbind("touchstart");			
 		this.getCanvasElement().unbind("touchmove");
 		this.getCanvasElement().unbind('gesturestart');
