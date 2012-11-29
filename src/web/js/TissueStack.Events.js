@@ -49,7 +49,7 @@ TissueStack.Events.prototype = {
 		var _this = this;
 
 		// TOUCH END and MOUSE UP
-		this.getCanvasElement().bind("touchend mouseup", function(e) {
+		this.getCanvasElement().bind("mouseup", function(e) {
 			// call pan move
 			_this.panEnd();
 		});
@@ -83,12 +83,16 @@ TissueStack.Events.prototype = {
 				
 	}, registerMobileEvents: function() {
 		var _this = this;
-		
+		var delta = 0;
+
 		// TOUCH START
 		this.getCanvasElement().bind("touchstart", function(e) {
-		
+			// android gestures compatibility
 		    if (e.originalEvent.touches.length > 1) {
-				return;
+				delta = Math.sqrt(
+					(Math.pow(e.originalEvent.touches[1].pageX - e.originalEvent.touches[0].pageX),2) +
+					(Math.pow(e.originalEvent.touches[1].pageY - e.originalEvent.touches[0].pageY),2));
+		    	return;
 			};
 		
 			var touches = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
@@ -114,9 +118,25 @@ TissueStack.Events.prototype = {
 			_this.panAndMove(e);
 		});
 
-		var delta = 0;
+		// TOUCH END
+		this.getCanvasElement().bind("touchend", function(e) {
+			// android gestures compatibility
+		    if (e.originalEvent.touches.length > 1) {
+				delta -= Math.sqrt(
+					(Math.pow(e.originalEvent.touches[1].pageX - e.originalEvent.touches[0].pageX),2) +
+					(Math.pow(e.originalEvent.touches[1].pageY - e.originalEvent.touches[0].pageY),2));
 
-		// compatibility with android
+				if (delta > 0) delta = 1;
+				else delta = -1; 
+		    	
+				_this.zoom(e, delta);		    		
+		    	return;	
+			};
+		
+			// call pan move
+			_this.panEnd();
+		});
+		
 		// GESTURE START
 		this.getCanvasElement().bind('gesturestart', function(e) {
 			delta = e.originalEvent.scale;
