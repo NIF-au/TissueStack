@@ -302,7 +302,7 @@ a.ui-slider-handle-horizontal{
 
 .side_canvas {
 	position: absolute; left: 0px; top: 0px;
-	z-index: 2400;
+	z-index: 2390;
 }
 
 .side_canvas input {
