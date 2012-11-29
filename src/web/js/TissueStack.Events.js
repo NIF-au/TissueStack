@@ -27,7 +27,6 @@ TissueStack.Events = function(canvas, include_cross_hair) {
 };
 
 TissueStack.Events.prototype = {
-	gestures_handler : null,
 	include_cross_hair : true,	
 	setIncludeCrossHair : function(include_cross_hair) {
 		// include cross hair canvas or not
@@ -118,33 +117,24 @@ TissueStack.Events.prototype = {
 		var delta = 0;
 
 		// compatibility with android
-		_this.gestures_handler = new Hammer(_this.canvas.getCanvasElement().get(0));
-		_this.gestures_handler.ontransformstart = function(e) {delta = e.originalEvent.scale;};
-		_this.gestures_handler.ontransformend = function(e) {delta = e.originalEvent.scale - delta;_this.zoom(e, delta);};
-
-		/*
 		// GESTURE START
-		this.getCanvasElement().bind('transformstart', function(e) {
+		this.getCanvasElement().bind('gesturestart', function(e) {
 			delta = e.originalEvent.scale;
 		});
 		
 		// GESTURE END
-		this.getCanvasElement().bind('transformend', function(e) {
+		this.getCanvasElement().bind('gestureend', function(e) {
 			delta = e.originalEvent.scale - delta;
 			
 			// call zoom
 			_this.zoom(e, delta);
 		});
-		*/
 		
 		//DOUBLE TAP TO ENLARGE IMAGES
 		this.getCanvasElement().bind('doubletap', function(e) {
-			if(e.originalEvent.scale === undefined || delta == NaN){
-				delta = 1;
-			}
-			else{
-				delta = e.originalEvent.scale + delta;
-			}
+			if(e.originalEvent.scale === undefined || isNaN(delta)) return
+
+			delta = e.originalEvent.scale + delta;
 			_this.zoom(e, delta);
 		});
 	}, registerDesktopEvents: function() {
