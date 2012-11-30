@@ -324,7 +324,7 @@ TissueStack.Canvas.prototype = {
     	var ctx = this.getCanvasContext();
     	var myImageData = ctx.getImageData(0, 0, this.dim_x, this.dim_y);
     	for ( var x = 0; x < this.dim_x * this.dim_y * 4; x += 4) {
-    		myImageData.data[x] = myImageData.data[x + 1] = myImageData.data[x + 2] = 255;
+    		myImageData.data[x] = myImageData.data[x + 1] = myImageData.data[x + 2] = 0;
    			myImageData.data[x + 3] = 0;
     	}
     	ctx.putImageData(myImageData, 0, 0);
@@ -337,7 +337,7 @@ TissueStack.Canvas.prototype = {
     	var ctx = this.getCanvasContext();
     	var myImageData = ctx.getImageData(x, y, w, h);
     	for ( var i = 0; i < w * h * 4; i += 4) {
-    		myImageData.data[i] = myImageData.data[i + 1] = myImageData.data[i + 2] = 255;
+    		myImageData.data[i] = myImageData.data[i + 1] = myImageData.data[i + 2] = 0;
    			myImageData.data[i + 3] = 0;
     	}
     	ctx.putImageData(myImageData, x, y);
@@ -602,7 +602,7 @@ TissueStack.Canvas.prototype = {
 						ctx.drawImage(this,
 								imageOffsetX, imageOffsetY, width, height, // tile dimensions
 								canvasX, canvasY, width, height); // canvas dimensions
-
+						
 						// damn you async loads
 						if (_this.queue.latestDrawRequestTimestamp < 0 ||
 								(timestamp && timestamp < _this.queue.latestDrawRequestTimestamp)) {
