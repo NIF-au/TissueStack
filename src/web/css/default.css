@@ -98,7 +98,7 @@
 	position: absolute; 
 	left: 0px; 
 	top: 0px; 
-	z-index: 1490;
+	z-index: 750;
 }
 
 .left_panel{
@@ -242,7 +242,7 @@ a.ui-slider-handle-horizontal{
 
 .maximize_view_icon {
 	position: absolute;
-	z-index: 5000;
+	z-index: 2391;
 	right: 0px;
 	top: 0px;
 }
@@ -308,7 +308,12 @@ a.ui-slider-handle-horizontal{
 .side_canvas input {
 	width: 65px;
 }
-
+.side_canvas_cross_overlay{
+	position: absolute;
+	left: 0px; 
+	top: 0px; 
+	z-index: 2391;
+}
 .hidden {
     display:none; 
     visibility: false;
