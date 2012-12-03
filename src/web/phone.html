@@ -43,6 +43,11 @@
 
 	<script type="text/javascript">
 		TissueStack.phone = true;
+		
+        var user_agent = navigator.userAgent||navigator.vendor||window.opera;
+        if ((/.*android.*/i).test(user_agent) && screen.width >= 1200)
+        	if (confirm("Are you on a tablet? If so, there is a tablet version. Do you wish to be redirected to it?"))
+        	    document.location.pathname = "/tablet.html";    
 	</script>
 	
 </head> 
