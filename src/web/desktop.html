@@ -43,9 +43,9 @@
 		
 		<script type="text/javascript">
 		    TissueStack.desktop = true;
-			document.addEventListener('touchmove', function(event) {
-  			   event.preventDefault();
-			}, false);
+			
+			if (screen.width <= 1024 || screen.height <= 768)
+				document.location.pathname = "/tablet.html";	
 		</script>
   </head>
 <body>
