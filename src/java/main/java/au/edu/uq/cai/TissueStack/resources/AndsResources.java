@@ -23,8 +23,10 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
@@ -54,7 +56,9 @@ public final class AndsResources extends AbstractRestfulMetaInformation {
 			@Context HttpServletRequest request,
 			@Description("Mandatory: The data set id")
 			@FormParam("id") String id,
-			@FormParam("else") String somethingElse) {
+			@FormParam("name") String name,
+			@FormParam("location") String location,
+			@FormParam("description") String description) {
 		// TODO: adapt to real parameters coming in
 		
 		long idAdLong = -1;

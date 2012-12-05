@@ -41,8 +41,7 @@
             $.ajax({
                 async : true,
                 data : $("#ands_registration").serialize(),
-                dataType : "json",
-                url : "/backend/ands/add_data_set/json",
+                url : "/backend/ands/add_data_set",
                 type : "POST",
                 cache : false,
                 timeout : 30000,
@@ -60,11 +59,15 @@
 	    <h4 id="error"></h4>
     </div>
     <form id="ands_registration" action="#" method="POST">
-        Id:<br />
-        <input name="id" type="text" value="-1" />  
+        <input id="dataset_id" name="id" type="hidden" value="N/A" />
+        Location:<br />
+        <input readonly="readonly" id="dataset_location" name="location" type="text" value="N/A" />
+        <br /><br />  
+        Name:<br />
+        <input id="dataset_name" name="name" type="text" value="" />  
         <br /><br />
-        Something else:<br />
-        <input name="else" type="text" value="something else" />
+        Description:<br />
+        <textarea id="dataset_description" name="description"></textarea>
         <br /><br />
         <input id="ands_submit" type="submit" onclick="afterSubmission();return false;" />
         <br /><br />

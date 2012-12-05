@@ -276,7 +276,9 @@ TissueStack.Admin.prototype = {
 		}
 		if(TissueStack.phone) alert(message);	
 	},
-	registerDataSetWithAnds : function() {
+	registerDataSetWithAnds : function(id) {
+		if (typeof(id) != 'number') return;
+		
 		var reply = confirm("Do you want to register your data set?");
 		if (reply) {
 			var popup_handle = window.open('/ands_dataset_registration.html', 'Registration', 'height=350,width=250,location=no');
@@ -284,6 +286,15 @@ TissueStack.Admin.prototype = {
 				popup_handle.close();
 			};
 			popup_handle.closeMe = closePopup;
+
+			// pre-fill a few values after creation
+			var hostPart = document.location.href.split('?')[0];
+			var potentialHash = hostPart.indexOf('#');
+			if (potentialHash > 0) hostPart = hostPart.substring(0,potentialHash);
+			setTimeout(function() {
+				$("#dataset_id", popup_handle.document).attr("value",id);
+				$("#dataset_location", popup_handle.document).attr("value", hostPart + "?ds=" + id);
+			},100);
 		}
 	},
 	registerTaskHandler : function() {
@@ -397,7 +408,7 @@ TissueStack.Admin.prototype = {
 			_this.replaceErrorMessage("Data Set Has Been Added Successfully!");
 			$('.error_message').css("background", "#32CD32");
 			
-			_this.registerDataSetWithAnds();
+			_this.registerDataSetWithAnds(dataSet.id);
 		}
 	},
 	conversionAndPreTileSuccessHandler : function(_this, response, file, type, status, zoom) {
