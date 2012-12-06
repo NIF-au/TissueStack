@@ -92,7 +92,7 @@ TissueStack.Events.prototype = {
             e.pageX = touches[0].pageX;
             e.pageY = touches[0].pageY;
 			
-			// android gestures compatibility with GESTURES
+			// tablet zoom 
 		    if (touches.length > 1) {
 				delta = 
 					Math.sqrt(
@@ -111,7 +111,7 @@ TissueStack.Events.prototype = {
             e.pageX = touches[0].pageX;
             e.pageY = touches[0].pageY;
 			
-			// android gestures compatibility with GESTURES
+			// zoom for tablets
 			if (touches.length > 1) {
 				tmpTouches = touches;
 		    	return;
@@ -125,7 +125,7 @@ TissueStack.Events.prototype = {
 		this.getCanvasElement().bind("touchend", function(e) {
             var touches = e.originalEvent.touches || e.originalEvent.changedTouches;
 
-			// android gestures compatibility with GESTURES
+			// zoom for tablets
 		    if (!_this.canvas.mouse_down && touches && tmpTouches && tmpTouches.length==2) {
 				if (delta > Math.sqrt(
 							Math.pow(tmpTouches[1].pageX - tmpTouches[0].pageX,2) +
@@ -140,19 +140,6 @@ TissueStack.Events.prototype = {
 		
 			// call pan move
 			_this.panEnd();
-		});
-		
-		// GESTURE START
-		this.getCanvasElement().bind('gesturestart', function(e) {
-			delta = e.originalEvent.scale;
-		});
-		
-		// GESTURE END
-		this.getCanvasElement().bind('gestureend', function(e) {
-			tmpTouches = e.originalEvent.scale - delta;
-			
-			// call zoom
-			_this.zoom(e, tmpTouches > delta ? 1 : -1);
 		});
 		
 		//DOUBLE TAP TO ENLARGE IMAGES
@@ -225,11 +212,8 @@ TissueStack.Events.prototype = {
 		this.getCanvasElement().unbind("mousemove");
 		this.getCanvasElement().unbind('mousewheel');
 
-		if (this.gestures_handler) this.gestures_handler.destroy();
 		this.getCanvasElement().unbind("touchstart");			
 		this.getCanvasElement().unbind("touchmove");
-		this.getCanvasElement().unbind('gesturestart');
-		this.getCanvasElement().unbind('gestureend');
 		this.getCanvasElement().unbind('doubletap');
 	},panStart : function(e) {
 		var coords = TissueStack.Utils.getRelativeMouseCoords(e);
@@ -243,7 +227,9 @@ TissueStack.Events.prototype = {
 		var now =new Date().getTime(); 
 
 		var dataSet = TissueStack.dataSetStore.getDataSetById(this.canvas.getDataExtent().data_id);
-		this.canvas.updateExtentInfo(dataSet.realWorldCoords[this.canvas.data_extent.plane]);
+		
+		if (this.canvas.is_main_view)
+			this.canvas.updateExtentInfo(dataSet.realWorldCoords[this.canvas.data_extent.plane]);
 
 		var coords = TissueStack.Utils.getRelativeMouseCoords(e);
 		var relCoordinates = this.canvas.getDataCoordinates(coords);
