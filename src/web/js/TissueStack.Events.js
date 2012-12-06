@@ -149,10 +149,10 @@ TissueStack.Events.prototype = {
 		
 		// GESTURE END
 		this.getCanvasElement().bind('gestureend', function(e) {
-			delta = e.originalEvent.scale - delta;
+			tmpTouches = e.originalEvent.scale - delta;
 			
 			// call zoom
-			_this.zoom(e, delta);
+			_this.zoom(e, tmpTouches > delta ? 1 : -1);
 		});
 		
 		//DOUBLE TAP TO ENLARGE IMAGES
