@@ -223,7 +223,8 @@ TissueStack.InitUserInterface = function (initOpts) {
 			dataSet.realWorldCoords[planeId] = plane.getDataExtent().getExtentCoordinates();
 			
 			// display data extent info on page
-			plane.updateExtentInfo(dataSet.realWorldCoords[planeId]);
+			if (plane.is_main_view)
+				plane.updateExtentInfo(dataSet.realWorldCoords[planeId]);
 
 			// for desktop version show 2 small canvases
 			if (TissueStack.phone || ((TissueStack.desktop || TissueStack.tablet) && planeId != 'y')) {
