@@ -689,6 +689,7 @@ TissueStack.Canvas.prototype = {
 			}
 			
 			// display pixel value
+			console.info(this.cross_x + ":" +this.cross_y);
 			var pixelVal = this.getOriginalPixelValue({x: this.cross_x, y: this.cross_y});
 			if (typeof(pixelVal) === 'object')
 				if (pixelVal.l)
