@@ -154,6 +154,7 @@ TissueStack.ContrastCanvas.prototype = {
 			this.getCanvasElement().bind("mouseup", function(e) {
 				_this.mouse_down = false;
 				_this.canvas.events.changeSliceForPlane(_this.canvas.getDataExtent().slice);
+				_this.canvas.events.updateCoordinateDisplay(_this.canvas.getRelativeCrossCoordinates());
 			});
 			// MOUSE DOWN
 			this.getCanvasElement().bind("mousedown", function(e) {
@@ -177,6 +178,7 @@ TissueStack.ContrastCanvas.prototype = {
 				_this.mouse_down = false;
 				if(TissueStack.tablet || TissueStack.debug){
 					_this.canvas.events.changeSliceForPlane(_this.canvas.getDataExtent().slice);
+					_this.canvas.events.updateCoordinateDisplay(_this.canvas.getRelativeCrossCoordinates());
 				}
 			});
 			// TOUCH START 			
