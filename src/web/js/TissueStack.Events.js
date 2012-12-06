@@ -473,6 +473,9 @@ TissueStack.Events.prototype = {
 		var worldCoordinates = this.canvas.getDataExtent().getWorldCoordinatesForPixel(relCrossCoords);
 		
 		// update coordinate info displayed
-		this.canvas.updateCoordinateInfo(mouse_coords, relCrossCoords, worldCoordinates);
+		var _this = this;
+		setTimeout(function() {
+			_this.canvas.updateCoordinateInfo(mouse_coords, relCrossCoords, worldCoordinates);}
+		, 200);
 	}
 };
