@@ -616,6 +616,7 @@ TissueStack.Canvas.prototype = {
 								|| (TissueStack.overlay_datasets && (_this.overlay_canvas || _this.underlying_canvas)))) {
 							_this.applyContrastAndColorMapToCanvasContent(ctx);
 							_this.getCanvasElement().show();
+							_this.events.updateCoordinateDisplay({x: _this.cross_x, y: _this.cross_y});
 						}
 
 						_this.displayLoadingProgress(totalOfTiles - counter, totalOfTiles);
@@ -663,6 +664,7 @@ TissueStack.Canvas.prototype = {
 		}
 	},
 	updateCoordinateInfo : function(mouseCoords, pixelCoords, worldCoords) {
+		if (TissueStack.tablet && !this.is_main_view) return;
 		pixelCoords = this.getXYCoordinatesWithRespectToZoomLevel(pixelCoords);
 		// outside of extent check
 		if (!pixelCoords || pixelCoords.x < 0 || pixelCoords.x > this.data_extent.x -1 ||  pixelCoords.y < 0 || pixelCoords.y > this.data_extent.y -1) {
@@ -689,7 +691,6 @@ TissueStack.Canvas.prototype = {
 			}
 			
 			// display pixel value
-			console.info(this.cross_x + ":" +this.cross_y);
 			var pixelVal = this.getOriginalPixelValue({x: this.cross_x, y: this.cross_y});
 			if (typeof(pixelVal) === 'object')
 				if (pixelVal.l)
