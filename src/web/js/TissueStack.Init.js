@@ -162,6 +162,7 @@ TissueStack.InitUserInterface = function (initOpts) {
 		}
 		
 		// loop over all planes in the data, create canvas and extent objects, then display them
+		var main_view_plane = null;
 		for (var i=0; i < dataSet.data.length; i++) {
 			var dataForPlane = dataSet.data[i];
 			var planeId = dataForPlane.name;
@@ -213,7 +214,10 @@ TissueStack.InitUserInterface = function (initOpts) {
 			plane.sessionId = sessionId;
 
 			// for scalebar to know its parent
-			if (planeId == 'y') plane.is_main_view = true;
+			if (planeId == 'y') {
+				main_view_plane = plane;
+				plane.is_main_view = true;
+			}
 			plane.updateScaleBar();
 			
 			// store plane  
@@ -222,14 +226,13 @@ TissueStack.InitUserInterface = function (initOpts) {
 			// get the real world coordinates 
 			dataSet.realWorldCoords[planeId] = plane.getDataExtent().getExtentCoordinates();
 			
-			// display data extent info on page
-			if (plane.is_main_view)
-				plane.updateExtentInfo(dataSet.realWorldCoords[planeId]);
-
 			// for desktop version show 2 small canvases
 			if (TissueStack.phone || ((TissueStack.desktop || TissueStack.tablet) && planeId != 'y')) {
 				plane.changeToZoomLevel(0);
 			}
+			
+			if (main_view_plane)
+				main_view_plane.updateExtentInfo(main_view_plane.getDataExtent().getExtentCoordinates());
 			
 			plane.eraseCanvasContent();
 			
