@@ -611,12 +611,15 @@ TissueStack.Canvas.prototype = {
 							return;
 						}
 
+						// coordinate and label display update
+						if (counter == 0)
+							_this.events.updateCoordinateDisplay({x: _this.cross_x, y: _this.cross_y});
+						
 						if (counter == 0 &&
 								((_this.getDataExtent().getIsTiled() && _this.hasColorMapOrContrastSetting())
 								|| (TissueStack.overlay_datasets && (_this.overlay_canvas || _this.underlying_canvas)))) {
 							_this.applyContrastAndColorMapToCanvasContent(ctx);
 							_this.getCanvasElement().show();
-							_this.events.updateCoordinateDisplay({x: _this.cross_x, y: _this.cross_y});
 						}
 
 						_this.displayLoadingProgress(totalOfTiles - counter, totalOfTiles);
@@ -664,7 +667,8 @@ TissueStack.Canvas.prototype = {
 		}
 	},
 	updateCoordinateInfo : function(mouseCoords, pixelCoords, worldCoords) {
-		if (TissueStack.tablet && !this.is_main_view) return;
+		// we now display only the main canvases pixel values and coords
+		if (!this.is_main_view) return;
 		pixelCoords = this.getXYCoordinatesWithRespectToZoomLevel(pixelCoords);
 		// outside of extent check
 		if (!pixelCoords || pixelCoords.x < 0 || pixelCoords.x > this.data_extent.x -1 ||  pixelCoords.y < 0 || pixelCoords.y > this.data_extent.y -1) {
@@ -707,7 +711,6 @@ TissueStack.Canvas.prototype = {
 					); // display redundant pixel value
 			
 			var dataSet = TissueStack.dataSetStore.getDataSetById(this.getDataExtent().data_id);
-			this.updateExtentInfo(dataSet.realWorldCoords[this.data_extent.plane]);
 			
 			// update url link info
 			this.getUrlLinkString(dataSet.realWorldCoords[this.data_extent.plane]);

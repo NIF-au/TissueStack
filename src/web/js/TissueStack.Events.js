@@ -111,7 +111,7 @@ TissueStack.Events.prototype = {
             e.pageX = touches[0].pageX;
             e.pageY = touches[0].pageY;
 			
-		        // zoom for tablets
+			// android gestures compatibility with GESTURES
 			if (touches.length > 1) {
 				tmpTouches = touches;
 		    	return;
@@ -125,7 +125,7 @@ TissueStack.Events.prototype = {
 		this.getCanvasElement().bind("touchend", function(e) {
             var touches = e.originalEvent.touches || e.originalEvent.changedTouches;
 
-		    // zoom for tablets
+			// android gestures compatibility with GESTURES
 		    if (!_this.canvas.mouse_down && touches && tmpTouches && tmpTouches.length==2) {
 				if (delta > Math.sqrt(
 							Math.pow(tmpTouches[1].pageX - tmpTouches[0].pageX,2) +
@@ -133,6 +133,7 @@ TissueStack.Events.prototype = {
 					delta = -1;
 				else 
 					delta = 1;
+		    	
 				_this.zoom(e, delta);		    		
 		    	return;	
 			};
@@ -141,7 +142,20 @@ TissueStack.Events.prototype = {
 			_this.panEnd();
 		});
 		
-		//DOUBLE TAP FOR PHONES TO ZOOM
+		// GESTURE START
+		this.getCanvasElement().bind('gesturestart', function(e) {
+			delta = e.originalEvent.scale;
+		});
+		
+		// GESTURE END
+		this.getCanvasElement().bind('gestureend', function(e) {
+			tmpTouches = e.originalEvent.scale - delta;
+			
+			// call zoom
+			_this.zoom(e, tmpTouches > delta ? 1 : -1);
+		});
+		
+		//DOUBLE TAP TO ENLARGE IMAGES
 		if (TissueStack.phone)
 			this.getCanvasElement().bind('doubletap', function(e) {
 			_this.zoom(e, 1);
@@ -228,11 +242,14 @@ TissueStack.Events.prototype = {
 	}, panAndMove : function(e) {
 		var now =new Date().getTime(); 
 
+		var dataSet = TissueStack.dataSetStore.getDataSetById(this.canvas.getDataExtent().data_id);
+		this.canvas.updateExtentInfo(dataSet.realWorldCoords[this.canvas.data_extent.plane]);
+
 		var coords = TissueStack.Utils.getRelativeMouseCoords(e);
 		var relCoordinates = this.canvas.getDataCoordinates(coords);
 
 		// update coordinate info displayed
-		this.updateCoordinateDisplay(coords);
+		//this.updateCoordinateDisplay(coords);
 
 		if (this.canvas.mouse_down) {
 			this.canvas.isDragging = true;
@@ -409,9 +426,8 @@ TissueStack.Events.prototype = {
 		if (TissueStack.phone
 				&& (newZoomLevel == this.canvas.data_extent.zoom_level ||  newZoomLevel < 0 || newZoomLevel >= this.canvas.data_extent.zoom_levels.length)) {
 			newZoomLevel = 0;
-		} else if (newZoomLevel < 0 || newZoomLevel >= this.canvas.data_extent.zoom_levels.length) {
+		} else if (newZoomLevel < 0 || newZoomLevel >= this.canvas.data_extent.zoom_levels.length)
 			return;
-		}
 
 		this.canvas.queue.addToQueue(
 				{	data_id : this.canvas.data_extent.data_id,
@@ -436,8 +452,7 @@ TissueStack.Events.prototype = {
 		if (thisHereDataSet != dataset_id) {
 			return false;
 		}
-	
-			
+		
 		this.canvas.queue.addToQueue(
 				{	data_id : this.canvas.data_extent.data_id,
 					dataset_id : this.canvas.dataset_id,	 
