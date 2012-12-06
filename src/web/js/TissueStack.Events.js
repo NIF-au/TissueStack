@@ -228,7 +228,7 @@ TissueStack.Events.prototype = {
 
 		var dataSet = TissueStack.dataSetStore.getDataSetById(this.canvas.getDataExtent().data_id);
 		
-		if (this.canvas.is_main_view)
+		if (!TissueStack.tablet || this.canvas.is_main_view)
 			this.canvas.updateExtentInfo(dataSet.realWorldCoords[this.canvas.data_extent.plane]);
 
 		var coords = TissueStack.Utils.getRelativeMouseCoords(e);

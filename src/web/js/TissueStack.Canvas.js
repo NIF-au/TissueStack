@@ -147,7 +147,8 @@ TissueStack.Canvas.prototype = {
 		this.setUpperLeftCorner(centerAfterZoom.x, centerAfterZoom.y);
 		
 		// update displayed info
-		this.updateExtentInfo(this.getDataExtent().getExtentCoordinates());
+		if (!TissueStack.tablet || (TissueStack.tablet && this.is_main_view))
+			this.updateExtentInfo(this.getDataExtent().getExtentCoordinates());
 		
 	},
 	getDataCoordinates : function(relative_mouse_coords) {
