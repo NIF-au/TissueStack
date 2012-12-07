@@ -24,6 +24,7 @@ import javax.servlet.ServletContextEvent;
 import org.apache.log4j.Logger;
 import org.jboss.resteasy.plugins.server.servlet.ResteasyBootstrap;
 
+import au.edu.uq.cai.TissueStack.ands.AndsDataSetRegistration;
 import au.edu.uq.cai.TissueStack.dataprovider.ColorMapsProvider;
 import au.edu.uq.cai.TissueStack.dataprovider.DataSetValuesLookupProvider;
 import au.edu.uq.cai.TissueStack.dataprovider.SessionDataProvider;
@@ -82,6 +83,12 @@ public class CustomRestfulBootstrap extends ResteasyBootstrap {
 			DataSetValuesLookupProvider.initDataBase();
 		} catch (Exception any) {
 			logger.error("Failed to initialize index file lookup table!", any);
+		}
+
+		try {
+			AndsDataSetRegistration.instance();
+		} catch (Exception any) {
+			logger.error("Failed to create an instance of 'AndsDataSetRegistration'!", any);
 		}
 	}
 	

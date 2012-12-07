@@ -83,7 +83,6 @@ public final class ServiceUtils {
 			
 			// delegate rest of work
 			ServiceUtils.streamString(httpResponse, contentType, charSet, buffer.toString());
-			throw new RuntimeException("test");
 		} catch (Exception e) {
 			// propagate
 			throw new RuntimeException("Failed to read file", e);
