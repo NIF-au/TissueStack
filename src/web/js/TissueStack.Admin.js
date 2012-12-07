@@ -281,7 +281,7 @@ TissueStack.Admin.prototype = {
 		
 		var reply = confirm("Do you want to register your data set?");
 		if (reply) {
-			var popup_handle = window.open('/ands_dataset_registration.html', 'Registration', 'height=350,width=250,location=no');
+			var popup_handle = window.open('/ands_dataset_registration.html', 'Registration', 'height=550,width=400,location=no');
 			var closePopup = function() {
 				popup_handle.close();
 			};

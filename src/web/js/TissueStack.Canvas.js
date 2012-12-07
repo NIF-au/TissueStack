@@ -761,6 +761,8 @@ TissueStack.Canvas.prototype = {
 		}
 		else if (ds.length == 0){
 			url_link_message = "No Dataset Selected";
+			$('#'+this.dataset_id +'_link_message').html(url_link_message);
+			return;
 		}
 		
 		// Show Url Link info (solve the problem (used split ?) when user entering website by query string link)
@@ -779,7 +781,7 @@ TissueStack.Canvas.prototype = {
 			url_link_message += ("&min=" + this.contrast.getMinimum() + "&max=" + this.contrast.getMaximum()); 
 		}
 		
-		$('#'+this.dataset_id +'_link_message').html(url_link_message);
+		$('#'+this.dataset_id +'_link_message').html('<a href="' + url_link_message + '" target="_blank">' + url_link_message + '</a>');
 	}, bindControlEvents : function () {
 		var _this = this;
 		if(TissueStack.desktop || TissueStack.tablet){

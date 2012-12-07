@@ -41,7 +41,7 @@
             $.ajax({
                 async : true,
                 data : $("#ands_registration").serialize(),
-                url : "/backend/ands/add_data_set",
+                url : "/backend/ands/add_data_set/json",
                 type : "POST",
                 cache : false,
                 timeout : 30000,
@@ -54,26 +54,28 @@
   
   
   <body>
-    <h3>Data Set Information</h3>
+    <h3 style="text-align:center;">Data Set Registration</h3>
     <div id="error_div" style="color: red; display: none;">
 	    <h4 id="error"></h4>
     </div>
     <form id="ands_registration" action="#" method="POST">
         <input id="dataset_id" name="id" type="hidden" value="N/A" />
         Location:<br />
-        <input readonly="readonly" id="dataset_location" name="location" type="text" value="N/A" />
+        <input readonly="readonly" id="dataset_location" name="location" type="text" value="N/A" size="45" />
         <br /><br />  
+        Organization:<br />
+        <input id="dataset_group" name="group" type="text" value="" size="45" />  
+        <br /><br />
         Name:<br />
-        <input id="dataset_name" name="name" type="text" value="" />  
+        <input id="dataset_name" name="name" type="text" value="" size="45" />  
         <br /><br />
         Description:<br />
-        <textarea id="dataset_description" name="description"></textarea>
+        <textarea id="dataset_description" name="description" cols="43" rows="10" ></textarea>
         <br /><br />
-        <input id="ands_submit" type="submit" onclick="afterSubmission();return false;" />
-        <br /><br />
-        <a href="#" onclick="window.closeMe();return false;">Close Me</a>
+        <input style="float: left;"id="ands_submit" type="submit" onclick="afterSubmission();return false;" />
+        <a style="float: right;" href="#" onclick="window.closeMe();return false;">Close Me</a>
     </form>
     <br />
-    <h4 id="thanks" style="color: blue;display: none;">Thank you for your submission.</h4>
+    <h4 id="thanks" style="text-align:center; color: blue;display: none;">Thank you for your submission.</h4>
   </body>
 </html>

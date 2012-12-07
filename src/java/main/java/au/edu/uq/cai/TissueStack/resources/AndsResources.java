@@ -23,10 +23,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
@@ -57,10 +55,9 @@ public final class AndsResources extends AbstractRestfulMetaInformation {
 			@Description("Mandatory: The data set id")
 			@FormParam("id") String id,
 			@FormParam("name") String name,
+			@FormParam("group") String group,
 			@FormParam("location") String location,
 			@FormParam("description") String description) {
-		// TODO: adapt to real parameters coming in
-		
 		long idAdLong = -1;
 		
 		try {
@@ -69,7 +66,7 @@ public final class AndsResources extends AbstractRestfulMetaInformation {
 			throw new IllegalArgumentException("Given id is either null or non-numeric!");
 		}
 		
-		AndsDataSetRegistration.instance().registerDataSet(idAdLong);
+		AndsDataSetRegistration.instance().registerDataSet(idAdLong, name, group, location, description);
 		
 		return new RestfulResource(new Response("Data Set Added."));
 	}
