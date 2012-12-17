@@ -149,7 +149,9 @@ TissueStack.Canvas.prototype = {
 		// update displayed info
 		if (!TissueStack.tablet || (TissueStack.tablet && this.is_main_view))
 			this.updateExtentInfo(this.getDataExtent().getExtentCoordinates());
-		
+
+		if (this.is_main_view)
+			this.events.updateCoordinateDisplay();		
 	},
 	getDataCoordinates : function(relative_mouse_coords) {
 		var relDataX = -1;
@@ -612,10 +614,6 @@ TissueStack.Canvas.prototype = {
 							return;
 						}
 
-						// coordinate and label display update
-						if (counter == 0)
-							_this.events.updateCoordinateDisplay({x: _this.cross_x, y: _this.cross_y});
-						
 						if (counter == 0 &&
 								((_this.getDataExtent().getIsTiled() && _this.hasColorMapOrContrastSetting())
 								|| (TissueStack.overlay_datasets && (_this.overlay_canvas || _this.underlying_canvas)))) {
@@ -667,9 +665,7 @@ TissueStack.Canvas.prototype = {
 			log.html(text + "<hr />");
 		}
 	},
-	updateCoordinateInfo : function(mouseCoords, pixelCoords, worldCoords) {
-		// we now display only the main canvases pixel values and coords
-		if (!this.is_main_view) return;
+	updateCoordinateInfo : function(pixelCoords, worldCoords) {
 		pixelCoords = this.getXYCoordinatesWithRespectToZoomLevel(pixelCoords);
 		// outside of extent check
 		if (!pixelCoords || pixelCoords.x < 0 || pixelCoords.x > this.data_extent.x -1 ||  pixelCoords.y < 0 || pixelCoords.y > this.data_extent.y -1) {
@@ -722,11 +718,6 @@ TissueStack.Canvas.prototype = {
 		// phone
 		var log;
 
-		/*
-		if (mouseCoords) {
-			log = $('.coords');
-			log.html("Canvas > X: " + mouseCoords.x + ", Y: " + mouseCoords.y);
-		}*/
 		if (worldCoords) {
 			log = $('.coords');
 			log.html("World > X: " +  Math.round(worldCoords.x * 1000) / 1000 + ", Y: " +  Math.round(worldCoords.y * 1000) / 1000);

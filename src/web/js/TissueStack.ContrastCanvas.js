@@ -154,7 +154,7 @@ TissueStack.ContrastCanvas.prototype = {
 			this.getCanvasElement().bind("mouseup", function(e) {
 				_this.mouse_down = false;
 				_this.canvas.events.changeSliceForPlane(_this.canvas.getDataExtent().slice);
-				_this.canvas.events.updateCoordinateDisplay({x: _this.canvas.cross_x, y: _this.canvas.cross_y});
+				_this.canvas.events.updateCoordinateDisplay();
 			});
 			// MOUSE DOWN
 			this.getCanvasElement().bind("mousedown", function(e) {

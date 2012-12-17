@@ -231,13 +231,15 @@ TissueStack.InitUserInterface = function (initOpts) {
 				plane.changeToZoomLevel(0);
 			}
 			
-			if (main_view_plane)
-				main_view_plane.updateExtentInfo(main_view_plane.getDataExtent().getExtentCoordinates());
-			
 			plane.eraseCanvasContent();
 			
 			plane.queue.drawLowResolutionPreview(now);
 			plane.queue.drawRequestAfterLowResolutionPreview(null, now);
+
+			if (main_view_plane) {
+				main_view_plane.updateExtentInfo(main_view_plane.getDataExtent().getExtentCoordinates());
+				setTimeout(function() {main_view_plane.events.updateCoordinateDisplay(true);}, 500);
+			}
 		}
 	}
 };
@@ -455,6 +457,8 @@ TissueStack.BindDataSetDependentEvents = function () {
 				for (var id in ds.planes) {	
 					ds.planes[id].color_map = event.target.value;
 					ds.planes[id].drawMe(now);
+					if (ds.planes[id].is_main_view)
+						setTimeout(function(){ds.planes[id].events.updateCoordinateDisplay();}, 500);
 				}
 			});
 			
@@ -518,7 +522,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 				
 				var now = new Date().getTime();
 				plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, true, now, true);
-				plane.events.updateCoordinateDisplay(givenCoords);
+				setTimeout(function() {plane.events.updateCoordinateDisplay();},500);
 				
 				if (event.data[0].actualDataSet.data.length > 1) {
 					var slider = $("#" + (plane.dataset_id == "" ? "" : plane.dataset_id + "_") + "canvas_main_slider");
@@ -705,8 +709,8 @@ TissueStack.BindDataSetDependentEvents = function () {
 			if (slice < 0) slice = 0;
 			else if (slice > actualDataSet.planes[id].data_extent.max_slices) slice = actualDataSet.planes[id].data_extent.max_slices;
 			
-			actualDataSet.planes[id].events.updateCoordinateDisplay();
-			actualDataSet.planes[id].events.changeSliceForPlane(slice);			
+			actualDataSet.planes[id].events.changeSliceForPlane(slice);
+			setTimeout(function(){actualDataSet.planes[id].events.updateCoordinateDisplay();}, 500);
 		};
 		
 		(function(actualDataSet, x) {

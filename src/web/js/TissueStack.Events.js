@@ -189,6 +189,7 @@ TissueStack.Events.prototype = {
 			slider.blur();
 			
 			_this.changeSliceForPlane(_this.canvas.data_extent.slice);
+			setTimeout(function(){_this.updateCoordinateDisplay();}, 500);
 			e.stopPropagation();
 		});
 		
@@ -233,7 +234,7 @@ TissueStack.Events.prototype = {
 		// update coordinate info displayed
 		if (!TissueStack.tablet || this.canvas.is_main_view) {
 			this.canvas.updateExtentInfo(dataSet.realWorldCoords[this.canvas.data_extent.plane]);
-			this.updateCoordinateDisplay(coords);
+			this.updateCoordinateDisplay();
 		}
 		
 		if (this.canvas.mouse_down) {
@@ -350,7 +351,7 @@ TissueStack.Events.prototype = {
 		}
 		
 		// update coordinate info displayed
-		this.updateCoordinateDisplay(coords);
+		this.updateCoordinateDisplay();
 		
 		// send message out to others that they need to redraw as well
 		this.canvas.getCanvasElement().trigger("sync",
@@ -448,12 +449,14 @@ TissueStack.Events.prototype = {
 					slice : slice
 				});
 		
-	}, updateCoordinateDisplay : function(mouse_coords) {
-		if (mouse_coords == null) {// reset
+	}, updateCoordinateDisplay : function(clearTextInputs, exitAfterReset) {
+		if (clearTextInputs) {// reset
 			$("#canvas_point_x").val("");
 			$("#canvas_point_y").val("");
 			$("#canvas_point_z").val("");
 			$("#canvas_point_value").val("");
+			if (exitAfterReset)
+				return;
 		}
 		
 		var relCrossCoords = this.canvas.getRelativeCrossCoordinates();
@@ -463,7 +466,7 @@ TissueStack.Events.prototype = {
 		// update coordinate info displayed
 		var _this = this;
 		setTimeout(function() {
-			_this.canvas.updateCoordinateInfo(mouse_coords, relCrossCoords, worldCoordinates);}
+			_this.canvas.updateCoordinateInfo(relCrossCoords, worldCoordinates);}
 		, 200);
 	}
 };
