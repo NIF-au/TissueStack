@@ -34,19 +34,19 @@ public class SVGOverlay extends AbstractDataSetOverlay {
 
 	public final static String OVERLAY_TYPE = "SVG";	
 	
-	private String svg;
+	private String content;
 	
 	public SVGOverlay() {
 		super(OverlayType.valueOf(SVGOverlay.OVERLAY_TYPE));
 	}
 
-	@Column(name = "svg", table="dataset_svg_overlay")
-	@XmlElement(name = "SVG", namespace = IGlobalConstants.XML_NAMESPACE)
-	public String getSvg() {
-		return this.svg;
+	@Column(name = "content", table="dataset_svg_overlay")
+	@XmlElement(name = "Content", namespace = IGlobalConstants.XML_NAMESPACE)
+	public String getContent() {
+		return this.content;
 	}
 	
-	public void setSvg(String svg) {
-		this.svg = svg;
+	public void setContent(String content) {
+		this.content = content;
 	}
 }

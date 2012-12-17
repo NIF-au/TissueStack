@@ -102,6 +102,56 @@ CREATE TABLE dataset_planes
 );
 ALTER TABLE dataset_planes OWNER TO tissuestack;
 
+-- A CUSTOM OVERLAY SEQUENCE
+CREATE SEQUENCE dataset_overlays_custom_seq
+  INCREMENT 1
+  MINVALUE 1
+  MAXVALUE 9223372036854775807
+  START 1
+  CACHE 1;
+ALTER TABLE dataset_overlays_custom_seq OWNER TO tissuestack;
+
+-- GENERAL DATASET OVERLAY INFO (SHARED FOR VARIOUS MANIFESTATIONS OF OVERLAY - see below)
+CREATE TABLE dataset_overlays
+(
+  id bigserial NOT NULL,
+  dataset_overlay_id bigint NOT NULL,
+  dataset_planes_id bigint NOT NULL,
+  slice integer NOT NULL,
+  name VARCHAR(150),
+  type VARCHAR(10) NOT NULL DEFAULT 'CANVAS'::character varying,
+  CONSTRAINT dataset_overlays_pk PRIMARY KEY (id ),
+  CONSTRAINT dataset_overlays_fk FOREIGN KEY (dataset_planes_id)
+      REFERENCES dataset_planes (id) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT dataset_overlays_unique UNIQUE (dataset_overlay_id , dataset_planes_id , slice )
+);
+ALTER TABLE dataset_overlays OWNER TO tissuestack;
+
+-- CUSTOM CANVAS OVERLAY (stores info in internal format that the frontend can turn into canvas drawings)
+ CREATE TABLE dataset_canvas_overlay
+(
+  id bigint NOT NULL,
+  content text,
+  CONSTRAINT dataset_canvas_overlay_pk PRIMARY KEY (id ),
+  CONSTRAINT dataset_canvas_overlay_fk FOREIGN KEY (id)
+      REFERENCES dataset_overlays (id) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE CASCADE
+);
+ALTER TABLE dataset_canvas_overlay OWNER TO tissuestack;
+
+-- SVG OVERLAY (entire SVG is stored)
+CREATE TABLE dataset_svg_overlay
+(
+  id bigint NOT NULL,
+  content text,
+  CONSTRAINT dataset_svg_overlay_pk PRIMARY KEY (id ),
+  CONSTRAINT dataset_svg_overlay_fk FOREIGN KEY (id)
+      REFERENCES dataset_overlays (id) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE CASCADE
+);
+ALTER TABLE dataset_svg_overlay OWNER TO tissuestack;
+
 -- DATASET VALUES LOOKUP TABLE 
 CREATE TABLE dataset_values_lookup
 (

@@ -34,19 +34,19 @@ public class CanvasOverlay extends AbstractDataSetOverlay {
 
 	public final static String OVERLAY_TYPE = "CANVAS";	
 	
-	private String test;
+	private String content;
 	
 	public CanvasOverlay() {
 		super(OverlayType.valueOf(CanvasOverlay.OVERLAY_TYPE));
 	}
 
-	@Column(name = "test", table="dataset_canvas_overlay")
-	@XmlElement(name = "Test", namespace = IGlobalConstants.XML_NAMESPACE)
-	public String getTest() {
-		return this.test;
+	@Column(name = "content", table="dataset_canvas_overlay")
+	@XmlElement(name = "Content", namespace = IGlobalConstants.XML_NAMESPACE)
+	public String getContent() {
+		return this.content;
 	}
 	
-	public void setTest(String test) {
-		this.test = test;
+	public void setContent(String content) {
+		this.content = content;
 	}
 }

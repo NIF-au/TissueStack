@@ -40,7 +40,6 @@ import org.apache.log4j.Logger;
 @Table(name="dataset_overlays")
 @XmlRootElement(name="Overlay", namespace=IGlobalConstants.XML_NAMESPACE)
 @XmlSeeAlso({CanvasOverlay.class, SVGOverlay.class})
-
 public class AbstractDataSetOverlay implements IOverlays {
 
 	final Logger logger = Logger.getLogger(AbstractDataSetOverlay.class);
@@ -50,6 +49,7 @@ public class AbstractDataSetOverlay implements IOverlays {
 	private long dataSetPlaneId = 0;
 	private int slice = 0;
 	private OverlayType overlayType;
+	private String name;
 
 	public AbstractDataSetOverlay() {
 		this(OverlayType.CANVAS);
@@ -110,5 +110,15 @@ public class AbstractDataSetOverlay implements IOverlays {
 
 	public void setOverlayType(OverlayType overlayType) {
 		this.overlayType = overlayType;
+	}
+
+	@XmlElement(name = "Name", namespace = IGlobalConstants.XML_NAMESPACE)
+	@Column(name = "name")
+	public String getName() {
+		return this.name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 }
