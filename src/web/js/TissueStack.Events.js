@@ -227,16 +227,15 @@ TissueStack.Events.prototype = {
 		var now =new Date().getTime(); 
 
 		var dataSet = TissueStack.dataSetStore.getDataSetById(this.canvas.getDataExtent().data_id);
-		
-		if (!TissueStack.tablet || this.canvas.is_main_view)
-			this.canvas.updateExtentInfo(dataSet.realWorldCoords[this.canvas.data_extent.plane]);
-
 		var coords = TissueStack.Utils.getRelativeMouseCoords(e);
 		var relCoordinates = this.canvas.getDataCoordinates(coords);
 
 		// update coordinate info displayed
-		//this.updateCoordinateDisplay(coords);
-
+		if (!TissueStack.tablet || this.canvas.is_main_view) {
+			this.canvas.updateExtentInfo(dataSet.realWorldCoords[this.canvas.data_extent.plane]);
+			this.updateCoordinateDisplay(coords);
+		}
+		
 		if (this.canvas.mouse_down) {
 			this.canvas.isDragging = true;
 			var dX = coords.x - this.canvas.mouse_x;

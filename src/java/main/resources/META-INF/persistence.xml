@@ -9,6 +9,9 @@
       <class>au.edu.uq.cai.TissueStack.dataobjects.Configuration</class>
       <class>au.edu.uq.cai.TissueStack.dataobjects.DataSet</class>
       <class>au.edu.uq.cai.TissueStack.dataobjects.DataSetPlanes</class>
+      <class>au.edu.uq.cai.TissueStack.dataobjects.AbstractDataSetOverlay</class>
+      <class>au.edu.uq.cai.TissueStack.dataobjects.CanvasOverlay</class>
+      <class>au.edu.uq.cai.TissueStack.dataobjects.SVGOverlay</class>
       <class>au.edu.uq.cai.TissueStack.dataobjects.DataSetValuesLookupTable</class>
       
       <properties>
