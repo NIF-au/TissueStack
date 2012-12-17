@@ -457,8 +457,6 @@ TissueStack.BindDataSetDependentEvents = function () {
 				for (var id in ds.planes) {	
 					ds.planes[id].color_map = event.target.value;
 					ds.planes[id].drawMe(now);
-					if (ds.planes[id].is_main_view)
-						setTimeout(function(){ds.planes[id].events.updateCoordinateDisplay();}, 500);
 				}
 			});
 			
