@@ -126,7 +126,7 @@ TissueStack.Utils = {
 		return results;
 	}, loadColorMaps : function() {
 		TissueStack.Utils.sendAjaxRequest(
-				"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/colormaps/all/json", 'GET', true,
+				"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/colormaps/all", 'GET', true,
 				function(data, textStatus, jqXHR) {
 					if (!data) {
 						alert("Failed To Load Colormaps ....");
@@ -356,7 +356,7 @@ TissueStack.Utils = {
 		}
 		
 		// check
-	    var validUrlRules = /^(http:\/\/|https:\/\/|ftp:\/\/|www.){1}([0-9A-Za-z]+\.)/;
+	    var validUrlRules = /^(http:\/\/|https:\/\/|ftp:\/\/|www.){1}([0-9A-Za-z\-]+\.)/;
 	    if (validUrlRules.test(url) && url.substring(url.length-1) != ".") {
 	        return url;
 	    }

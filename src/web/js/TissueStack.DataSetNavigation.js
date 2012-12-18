@@ -255,18 +255,32 @@ TissueStack.DataSetNavigation.prototype = {
 						tooltip: (dataSet.description ? dataSet.description : ""),
 						select: false,
 						isFolder: true,
-						expand: true
+						expand: counter == 0 ? true : false
 					};
-				// add children
-				// TODO: later we add the overlays, for now, the only children are the base layers
-				treeData[counter].children = {
-						title: 	this.stripFileNameOfDataDirectory(dataSet.filename),
-						isBaseLayer : true,
-						key: dataSet.id + "_base_layer",
-						tooltip: (dataSet.description ? dataSet.description : ""),
-						select: false,
-						expand: false
-				};
+				var children = [];
+				children.push( // add base layer
+						{
+							title: 	this.stripFileNameOfDataDirectory(dataSet.filename),
+							isBaseLayer : true,
+							key: dataSet.id + "_base_layer",
+							tooltip: (dataSet.description ? dataSet.description : ""),
+							select: false,
+							expand: false
+						});
+				// add overlays (if exist)
+				if (dataSet.overlays)
+					for (var i=0;i<dataSet.overlays.length;i++)
+						children.push(
+								{
+									title: 	dataSet.overlays[i].name,
+									isOverlay : true,
+									key: dataSet.id + "_overlay" + i,
+									tooltip: dataSet.overlays[i].type,
+									select: false,
+									expand: false
+								}
+						);
+				treeData[counter].children = children;
 				counter++;
 			}
 		}
@@ -283,14 +297,19 @@ TissueStack.DataSetNavigation.prototype = {
 		    	   // if parent is selected, also select direct children. no deeper recursion needed so far.
 		    	   if (node.data.isFolder && node.childList) {
 		    		   for (var x=0;x<node.childList.length;x++) {
-		    			   node.childList[x].select(flag);
+		    			   if (flag && node.childList[x].data.isOverlay) // don't switch on overlays if baselayer or folder is selected
+		    				   continue;
+	    			   		node.childList[x].select(flag);
 		    		   }
 		    	   } else if (node.data.isBaseLayer) {
 		    		   // likewise if a base layer was selected/deselected, that results in the parent data set not being de/selected
 		    		   node.parent.select(flag);
 		    		   return;
+		    	   } else if (node.data.isOverlay) {
+		    		   if (flag) node.parent.select(flag); // we don't turn everything off overlay is deselected
+		    		   return;
 		    	   }
-
+		    	   
 		    	   // now as for the action we need to take, evaluate whether we have a check/uncheck of a data set
 		    	   // but before receive key from node 
 		    	   var key = node.data.isFolder ? node.data.key : node.data.key.substring(0, node.data.key.length - "_base_layer".length);
@@ -379,17 +398,38 @@ TissueStack.DataSetNavigation.prototype = {
 				isFolder: true,
 				expand: false
 		});
-		// add children
-		// TODO: later we add the overlays, for now, the only children are the base layers
-		
+		var children = [];
+		children.push( // add base layer
+				{
+					title: 	this.stripFileNameOfDataDirectory(dataSet.filename),
+					isBaseLayer : true,
+					key: dataSet.id + "_base_layer",
+					tooltip: (dataSet.description ? dataSet.description : ""),
+					select: false,
+					expand: false
+				});
 		newNode.addChild({
-				title: this.stripFileNameOfDataDirectory(dataSet.filename),
-				isBaseLayer : true,
-				key: dataSet.id + "_base_layer",
-				tooltip: (dataSet.description ? dataSet.description : ""),
-				select: false,
-				expand: false
+			title: this.stripFileNameOfDataDirectory(dataSet.filename),
+			isBaseLayer : true,
+			key: dataSet.id + "_base_layer",
+			tooltip: (dataSet.description ? dataSet.description : ""),
+			select: false,
+			expand: false
 		});
+
+		// add overlays (if exist)
+		if (dataSet.overlays)
+			for (var i=0;i<dataSet.overlays.length;i++)
+				newNode.addChild(
+						{
+							title: 	dataSet.overlays[i].name,
+							isOverlay : true,
+							key: dataSet.id + "_overlay" + i,
+							tooltip: dataSet.overlays[i].type,
+							select: false,
+							expand: false
+						}
+				);
 	},
 	addDataSetToTabletTree : function (dataSet) {
 		

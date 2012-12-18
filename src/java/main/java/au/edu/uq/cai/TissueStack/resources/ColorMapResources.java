@@ -19,6 +19,7 @@ package au.edu.uq.cai.TissueStack.resources;
 import java.io.IOException;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
@@ -41,8 +42,9 @@ public final class ColorMapResources extends AbstractRestfulMetaInformation {
 		return this.getColormapsResourcesMetaInfo();
 	}
 
-	@Path("/all/json")
+	@Path("/all")
 	@Description("Returns the all color maps as json")
+	@GET
 	public void getAllColorMapsAsJson(
 			@Description("Internal parameter")
 			@Context HttpServletResponse response) {
@@ -62,6 +64,7 @@ public final class ColorMapResources extends AbstractRestfulMetaInformation {
 
 	@Path("/{name}/json")
 	@Description("Returns a given color map as json")
+	@GET
 	public void getColorMapByIdName(
 			@Description("Internal parameter")
 			@Context HttpServletResponse response,			

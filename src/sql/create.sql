@@ -102,29 +102,23 @@ CREATE TABLE dataset_planes
 );
 ALTER TABLE dataset_planes OWNER TO tissuestack;
 
--- A CUSTOM OVERLAY SEQUENCE
-CREATE SEQUENCE dataset_overlays_custom_seq
-  INCREMENT 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  START 1
-  CACHE 1;
-ALTER TABLE dataset_overlays_custom_seq OWNER TO tissuestack;
-
 -- GENERAL DATASET OVERLAY INFO (SHARED FOR VARIOUS MANIFESTATIONS OF OVERLAY - see below)
 CREATE TABLE dataset_overlays
 (
   id bigserial NOT NULL,
-  dataset_overlay_id bigint NOT NULL,
+  dataset_id bigint NOT NULL,
   dataset_planes_id bigint NOT NULL,
   slice integer NOT NULL,
   name VARCHAR(150),
   type VARCHAR(10) NOT NULL DEFAULT 'CANVAS'::character varying,
   CONSTRAINT dataset_overlays_pk PRIMARY KEY (id ),
-  CONSTRAINT dataset_overlays_fk FOREIGN KEY (dataset_planes_id)
+  CONSTRAINT dataset_overlays_fk1 FOREIGN KEY (dataset_id)
+      REFERENCES dataset (id) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT dataset_overlays_fk2 FOREIGN KEY (dataset_planes_id)
       REFERENCES dataset_planes (id) MATCH SIMPLE
       ON UPDATE CASCADE ON DELETE CASCADE,
-  CONSTRAINT dataset_overlays_unique UNIQUE (dataset_overlay_id , dataset_planes_id , slice )
+  CONSTRAINT dataset_overlays_unique UNIQUE (dataset_id , dataset_planes_id , slice )
 );
 ALTER TABLE dataset_overlays OWNER TO tissuestack;
 
@@ -151,6 +145,11 @@ CREATE TABLE dataset_svg_overlay
       ON UPDATE CASCADE ON DELETE CASCADE
 );
 ALTER TABLE dataset_svg_overlay OWNER TO tissuestack;
+
+-- SEARCH INDICES
+CREATE INDEX dataset_overlays_idx1 ON dataset_overlays USING btree (dataset_id);
+CREATE INDEX dataset_overlays_idx2 ON dataset_overlays USING btree (dataset_id, type);
+CREATE INDEX dataset_overlays_idx3 ON dataset_overlays USING btree (dataset_id, dataset_planes_id, slice);
 
 -- DATASET VALUES LOOKUP TABLE 
 CREATE TABLE dataset_values_lookup

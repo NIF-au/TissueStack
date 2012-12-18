@@ -40,8 +40,8 @@ public class CanvasOverlay extends AbstractDataSetOverlay {
 		super(OverlayType.valueOf(CanvasOverlay.OVERLAY_TYPE));
 	}
 
-	@Column(name = "content", table="dataset_canvas_overlay")
 	@XmlElement(name = "Content", namespace = IGlobalConstants.XML_NAMESPACE)
+	@Column(name = "content", table="dataset_canvas_overlay")
 	public String getContent() {
 		return this.content;
 	}

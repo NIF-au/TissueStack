@@ -49,6 +49,7 @@ public class DataSet {
 	private String description;
 	private List<DataSetPlanes> planes;
 	private DataSetValuesLookupTable lookupValues;
+	private List<DataSetOverlay> overlays;
 
 	@Id
 	@Column(name="id")
@@ -100,6 +101,15 @@ public class DataSet {
 		this.lookupValues = lookupValues;
 	}
 	
+	@Transient
+	public List<DataSetOverlay> getOverlays() {
+		return overlays;
+	}
+	
+	public void setOverlays(List<DataSetOverlay> overlays) {
+		this.overlays = overlays;
+	}
+
 	@Transient
 	public static DataSet fromMincInfo(MincInfo info) {
 		if (info == null) {

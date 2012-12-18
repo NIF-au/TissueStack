@@ -89,7 +89,7 @@ public class CustomRestfulBootstrap extends ResteasyBootstrap {
 			AndsDataSetRegistration.instance();
 		} catch (Exception any) {
 			logger.error("Failed to create an instance of 'AndsDataSetRegistration'!", any);
-		}
+		}		
 	}
 	
 	public void contextDestroyed(ServletContextEvent event) {

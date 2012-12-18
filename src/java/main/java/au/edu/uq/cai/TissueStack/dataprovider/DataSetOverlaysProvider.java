@@ -16,7 +16,7 @@
  */
 package au.edu.uq.cai.TissueStack.dataprovider;
 
-import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -27,21 +27,57 @@ import org.apache.log4j.Logger;
 
 import au.edu.uq.cai.TissueStack.JPAUtils;
 import au.edu.uq.cai.TissueStack.dataobjects.AbstractDataSetOverlay;
+import au.edu.uq.cai.TissueStack.dataobjects.DataSetOverlay;
 import au.edu.uq.cai.TissueStack.dataobjects.IOverlays.OverlayType;
 
 public class DataSetOverlaysProvider {
 	final static Logger logger = Logger.getLogger(DataSetOverlaysProvider.class);
-	final static String OVERLAY_SEQUENCE_NAME = "dataset_overlays_custom_seq";
 
 	@SuppressWarnings("unchecked")
-	public static List<AbstractDataSetOverlay> findOverlayByType(OverlayType type) {
+	public static List<DataSetOverlay> findOverlaysInformationByDataSetId(long dataSetId) {
 		EntityManager em = null;
 		
 		try {
 			em = JPAUtils.instance().getEntityManager();
 			
-			final Query query = em.createQuery("SELECT overlay FROM AbstractDataSetOverlay overlay WHERE overlay.overlayType = :type");
-			query.setParameter("type", type);		
+			final Query query = em.createQuery(
+					"SELECT MIN(overlay.id) AS overlay_id, MIN(overlay.name), overlay.overlayType FROM AbstractDataSetOverlay overlay" 
+							+ " WHERE overlay.dataSetId = :dataSetId GROUP BY overlay.dataSetId,dataSetId.overlayType" 
+							+ " ORDER BY overlay_id");
+			query.setParameter("dataSetId", dataSetId);		
+			
+			final List<Object[]> results = query.getResultList();
+			final List<DataSetOverlay> returnObject = new ArrayList<DataSetOverlay>(results.size()); 
+			for (Object res[]: results) {
+				if (res.length != 3)
+					continue;
+				final DataSetOverlay ret = new DataSetOverlay();
+				if (res[1] instanceof String)
+					ret.setName((String)res[1]);
+				if (res[2] instanceof OverlayType)
+					ret.setType(((OverlayType)res[2]).name());
+				returnObject.add(ret);
+			}
+			
+			return returnObject;
+		} finally {
+			JPAUtils.instance().closeEntityManager(em);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public static List<AbstractDataSetOverlay> findOverlayByDataSetAndDataSetPlaneIdAsWellAsSlice(long dataSetId, long dataSetPlaneId, int slice) {
+		EntityManager em = null;
+		
+		try {
+			em = JPAUtils.instance().getEntityManager();
+			
+			final Query query = 
+					em.createQuery("SELECT overlay FROM AbstractDataSetOverlay overlay WHERE overlay.dataSetId = :dataSetId"
+							+ " AND overlay.dataSetPlaneId = :dataSetPlaneId AND dataSetPlaneId.slice = :slice");
+			query.setParameter("dataSetId", dataSetId);		
+			query.setParameter("dataSetPlaneId", dataSetPlaneId);
+			query.setParameter("slice", slice);
 			
 			return (List<AbstractDataSetOverlay>) query.getResultList();
 		} finally {
@@ -49,37 +85,7 @@ public class DataSetOverlaysProvider {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	public static List<AbstractDataSetOverlay> findOverlayByDataSetPlanesId(long planesId) {
-		EntityManager em = null;
-		
-		try {
-			em = JPAUtils.instance().getEntityManager();
-			
-			final Query query = em.createQuery("SELECT overlay FROM AbstractDataSetOverlay overlay WHERE overlay.dataSetPlaneId = :planesId");
-			query.setParameter("planesId", planesId);		
-			
-			return (List<AbstractDataSetOverlay>) query.getResultList();
-		} finally {
-			JPAUtils.instance().closeEntityManager(em);
-		}
-	}
-
-	public static long getNextOverlayIdSequenceNumber() {
-		EntityManager em = null;
-		
-		try {
-			em = JPAUtils.instance().getEntityManager();
-			
-			final Query query = em.createNativeQuery("SELECT nextval('" + OVERLAY_SEQUENCE_NAME + "');");
-			
-			return ((BigInteger) query.getResultList().get(0)).longValue();
-		} finally {
-			JPAUtils.instance().closeEntityManager(em);
-		}
-	}
 	
-
 	public static void insertOverlays(AbstractDataSetOverlay overlays[]) {
 		if (overlays == null || overlays.length == 0) return;
 		

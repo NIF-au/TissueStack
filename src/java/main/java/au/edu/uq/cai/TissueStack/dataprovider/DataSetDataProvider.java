@@ -27,6 +27,7 @@ import org.apache.log4j.Logger;
 
 import au.edu.uq.cai.TissueStack.JPAUtils;
 import au.edu.uq.cai.TissueStack.dataobjects.DataSet;
+import au.edu.uq.cai.TissueStack.dataobjects.DataSetOverlay;
 import au.edu.uq.cai.TissueStack.dataobjects.DataSetPlanes;
 
 public final class DataSetDataProvider {
@@ -172,6 +173,14 @@ public final class DataSetDataProvider {
 			final List<DataSet> result = query.getResultList();
 
 			if (includePlaneData) {
+				// we check if we have overlays for the data set
+				for (DataSet dataSet : result) {
+					final List<DataSetOverlay> overlays = 
+							DataSetOverlaysProvider.findOverlaysInformationByDataSetId(dataSet.getId());
+					if (overlays != null && !overlays.isEmpty())
+						dataSet.setOverlays(overlays);
+				}
+
 				return result;
 			}
 			

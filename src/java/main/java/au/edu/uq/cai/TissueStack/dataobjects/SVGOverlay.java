@@ -40,8 +40,8 @@ public class SVGOverlay extends AbstractDataSetOverlay {
 		super(OverlayType.valueOf(SVGOverlay.OVERLAY_TYPE));
 	}
 
-	@Column(name = "content", table="dataset_svg_overlay")
 	@XmlElement(name = "Content", namespace = IGlobalConstants.XML_NAMESPACE)
+	@Column(name = "content", table="dataset_svg_overlay")
 	public String getContent() {
 		return this.content;
 	}

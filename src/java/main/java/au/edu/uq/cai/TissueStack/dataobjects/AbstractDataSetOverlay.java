@@ -45,7 +45,7 @@ public class AbstractDataSetOverlay implements IOverlays {
 	final Logger logger = Logger.getLogger(AbstractDataSetOverlay.class);
 
 	private long id = 0;
-	private long overlayId = 0;
+	private long dataSetId = 0;
 	private long dataSetPlaneId = 0;
 	private int slice = 0;
 	private OverlayType overlayType;
@@ -71,14 +71,14 @@ public class AbstractDataSetOverlay implements IOverlays {
 		this.id = id;
 	}
 
-	@Column(name = "dataset_overlay_id")
-	@XmlElement(name = "OverlayId", namespace = IGlobalConstants.XML_NAMESPACE)
-	public long getOverlayId() {
-		return this.overlayId;
+	@Column(name = "dataset_id")
+	@XmlElement(name = "DataSetId", namespace = IGlobalConstants.XML_NAMESPACE)
+	public long getDataSetId() {
+		return this.dataSetId;
 	}
 
-	public void setOverlayId(long overlayId) {
-		this.overlayId = overlayId;
+	public void setDataSetId(long dataSetId) {
+		this.dataSetId = dataSetId;
 	}
 
 	@Column(name = "dataset_planes_id")
