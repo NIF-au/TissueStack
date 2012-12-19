@@ -49,7 +49,6 @@ public class DataSetPlanes{
 
 	@Id	@GeneratedValue(strategy = GenerationType.IDENTITY)
  	@Column(name="id")
-	@XmlTransient
 	public long getId() {
 		return id;
 	}

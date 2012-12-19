@@ -194,6 +194,22 @@ TissueStack.InitUserInterface = function (initOpts) {
 			// create canvas
 			var canvasElementSelector = "dataset_" + (x+1); 
 			var plane = new TissueStack.Canvas(extent, "canvas_" + planeId + "_plane", canvasElementSelector);
+
+			// set the internal db id
+			plane.id = dataForPlane.id;
+			
+			// query for overlays (if exist)
+			if (dataSet.overlays) {
+				plane.overlays = [];
+				for (var z=0;z<dataSet.overlays.length;z++) {
+					var type = dataSet.overlays[z].type;
+					if (type === 'CANVAS')
+						plane.overlays[z] = new TissueStack.CanvasOverlay(plane, "http", dataSet.host, dataSet.local_id, plane.id);
+					else if (type === 'SVG')
+						plane.overlays[z] = new TissueStack.SVGOverlay(plane, "http", dataSet.host, dataSet.local_id, plane.id);
+				}
+			}
+
 			// set original value range 
 			plane.setValueRange(dataForPlane.valueRangeMin, dataForPlane.valueRangeMax);
 			

@@ -148,8 +148,7 @@ ALTER TABLE dataset_svg_overlay OWNER TO tissuestack;
 
 -- SEARCH INDICES
 CREATE INDEX dataset_overlays_idx1 ON dataset_overlays USING btree (dataset_id);
-CREATE INDEX dataset_overlays_idx2 ON dataset_overlays USING btree (dataset_id, type);
-CREATE INDEX dataset_overlays_idx3 ON dataset_overlays USING btree (dataset_id, dataset_planes_id, slice);
+CREATE INDEX dataset_overlays_idx2 ON dataset_overlays USING btree (dataset_id, dataset_planes_id, type);
 
 -- DATASET VALUES LOOKUP TABLE 
 CREATE TABLE dataset_values_lookup

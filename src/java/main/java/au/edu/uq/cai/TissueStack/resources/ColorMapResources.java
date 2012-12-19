@@ -16,14 +16,11 @@
  */
 package au.edu.uq.cai.TissueStack.resources;
 
-import java.io.IOException;
-
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 
 import au.edu.uq.cai.TissueStack.dataobjects.ColorMap;
 import au.edu.uq.cai.TissueStack.dataobjects.Configuration;
@@ -59,7 +56,7 @@ public final class ColorMapResources extends AbstractRestfulMetaInformation {
 		} else {
 			resp = ColorMapsProvider.instance().getColorMapsAsJson();
 		}
-		this.streamResponse(response, resp);
+		ServiceUtils.streamResponse(response, resp);
 	}
 
 	@Path("/{name}/json")
@@ -77,23 +74,7 @@ public final class ColorMapResources extends AbstractRestfulMetaInformation {
 				throw new RuntimeException("Could not find color map in the database!");
 		
 		final ColorMap map = ColorMapsProvider.instance().getColorMap(name);
-		this.streamResponse(response, map.getJson());
-	}
-
-	private void streamResponse(HttpServletResponse response, String resp) {
-		try {
-			ServiceUtils.streamString(
-					response,
-					MediaType.APPLICATION_JSON,
-					"charset=utf-8",
-					resp);
-		} catch (RuntimeException e) {
-			try {
-				response.sendError(500, "Failed to stream json!");
-			} catch (IOException e1) {
-				// we don't care
-			}
-		}
+		ServiceUtils.streamResponse(response, map.getJson());
 	}
 	
 	@Path("/meta-info")

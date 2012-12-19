@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.MediaType;
 
 public final class ServiceUtils {
 	public static void streamString(
@@ -56,6 +57,22 @@ public final class ServiceUtils {
 		}
 	}
 	
+	public static void streamResponse(HttpServletResponse response, String resp) {
+		try {
+			ServiceUtils.streamString(
+					response,
+					MediaType.APPLICATION_JSON,
+					"charset=utf-8",
+					resp);
+		} catch (RuntimeException e) {
+			try {
+				response.sendError(500, "Failed to stream json!");
+			} catch (IOException e1) {
+				// we don't care
+			}
+		}
+	}
+
 	public static void streamFileContent(
 			HttpServletResponse httpResponse,
 			String contentType,

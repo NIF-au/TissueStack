@@ -27,8 +27,10 @@ import org.apache.log4j.Logger;
 
 import au.edu.uq.cai.TissueStack.JPAUtils;
 import au.edu.uq.cai.TissueStack.dataobjects.AbstractDataSetOverlay;
+import au.edu.uq.cai.TissueStack.dataobjects.CanvasOverlay;
 import au.edu.uq.cai.TissueStack.dataobjects.DataSetOverlay;
 import au.edu.uq.cai.TissueStack.dataobjects.IOverlays.OverlayType;
+import au.edu.uq.cai.TissueStack.dataobjects.SVGOverlay;
 
 public class DataSetOverlaysProvider {
 	final static Logger logger = Logger.getLogger(DataSetOverlaysProvider.class);
@@ -66,25 +68,50 @@ public class DataSetOverlaysProvider {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static List<AbstractDataSetOverlay> findOverlayByDataSetAndDataSetPlaneIdAsWellAsSlice(long dataSetId, long dataSetPlaneId, int slice) {
+	public static List<Object[]> findOverlayIdsForSlices(long dataSetId, long dataSetPlaneId, OverlayType type) {
 		EntityManager em = null;
 		
 		try {
 			em = JPAUtils.instance().getEntityManager();
 			
 			final Query query = 
-					em.createQuery("SELECT overlay FROM AbstractDataSetOverlay overlay WHERE overlay.dataSetId = :dataSetId"
-							+ " AND overlay.dataSetPlaneId = :dataSetPlaneId AND dataSetPlaneId.slice = :slice");
+					em.createQuery("SELECT overlay.slice, overlay.id FROM AbstractDataSetOverlay overlay "
+							+ " WHERE overlay.dataSetId = :dataSetId"
+							+ " AND overlay.dataSetPlaneId = :dataSetPlaneId AND overlay.overlayType = :type"
+							+ " ORDER BY overlay.slice");
 			query.setParameter("dataSetId", dataSetId);		
 			query.setParameter("dataSetPlaneId", dataSetPlaneId);
-			query.setParameter("slice", slice);
+			query.setParameter("type", type);
 			
-			return (List<AbstractDataSetOverlay>) query.getResultList();
+			return (List<Object[]>) query.getResultList();
 		} finally {
 			JPAUtils.instance().closeEntityManager(em);
 		}
 	}
 
+	@SuppressWarnings("unchecked")
+	public static List<AbstractDataSetOverlay> findOverlayById(long id, OverlayType type) {
+		EntityManager em = null;
+		
+		try {
+			em = JPAUtils.instance().getEntityManager();
+			
+			String overlayTable;
+			if (OverlayType.CANVAS.equals(type))
+				overlayTable = CanvasOverlay.class.getSimpleName();
+			else if (OverlayType.SVG.equals(type))
+				overlayTable = SVGOverlay.class.getSimpleName();
+			else 
+				return null;
+			
+			final Query query = em.createQuery(	"SELECT overlay FROM " + overlayTable + " overlay WHERE overlay.id = :id");
+			query.setParameter("id", id);		
+
+			return query.getResultList();
+		} finally {
+			JPAUtils.instance().closeEntityManager(em);
+		}
+	}
 	
 	public static void insertOverlays(AbstractDataSetOverlay overlays[]) {
 		if (overlays == null || overlays.length == 0) return;

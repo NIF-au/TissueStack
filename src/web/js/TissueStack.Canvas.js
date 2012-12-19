@@ -34,8 +34,18 @@ TissueStack.Canvas = function(data_extent, canvas_id, dataset_id, include_cross_
 };
 
 TissueStack.Canvas.prototype = {
+	id: null, // db plane id
 	underlying_canvas: null, // if this is not null we are an overlay
-	overlay_canvas: null,
+	overlay_canvas: null,	// if this is not null we are under something
+	/*
+	 *  these overlays are the 'true' overlays 
+	 *  whereas the 2 properties above are used to display 2 data sets on the same level on top of each other !
+	 *  Differences:
+	 *    -) contrary to the 2 objects above the overlay does usually not exist independently
+	 *    -) Tightly coupled with the above fact, these overlays have to have a matching reference system with their base layers
+	 *    -) They can come in 'non base dataset' formats such as svg or be an internal format for canvas drawing instructions
+	 */
+	overlays: null,  
 	is_main_view: false,
 	data_extent: null,
 	dataset_id: "",
@@ -624,6 +634,9 @@ TissueStack.Canvas.prototype = {
 						_this.displayLoadingProgress(totalOfTiles - counter, totalOfTiles);
 
 						if (typeof(TissueStack.dataSetNavigation) === 'object' && counter == 0) {
+							if (_this.overlays)
+								for (var z=0;z<_this.overlays.length;z++)
+									_this.overlays[z].drawMe();
 							_this.syncDataSetCoordinates(_this, timestamp, false);
 						}
 					};
