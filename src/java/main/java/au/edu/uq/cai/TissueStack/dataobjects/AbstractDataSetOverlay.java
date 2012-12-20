@@ -39,7 +39,7 @@ import org.apache.log4j.Logger;
 @DiscriminatorColumn(discriminatorType=DiscriminatorType.STRING,name="type")
 @Table(name="dataset_overlays")
 @XmlRootElement(name="Overlay", namespace=IGlobalConstants.XML_NAMESPACE)
-@XmlSeeAlso({CanvasOverlay.class, SVGOverlay.class})
+@XmlSeeAlso({CanvasOverlay.class, SVGOverlay.class, OtherDataSetOverlay.class})
 public class AbstractDataSetOverlay implements IOverlays {
 
 	final Logger logger = Logger.getLogger(AbstractDataSetOverlay.class);

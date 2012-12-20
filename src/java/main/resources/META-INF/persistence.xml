@@ -12,6 +12,7 @@
       <class>au.edu.uq.cai.TissueStack.dataobjects.AbstractDataSetOverlay</class>
       <class>au.edu.uq.cai.TissueStack.dataobjects.CanvasOverlay</class>
       <class>au.edu.uq.cai.TissueStack.dataobjects.SVGOverlay</class>
+      <class>au.edu.uq.cai.TissueStack.dataobjects.OtherDataSetOverlay</class>
       <class>au.edu.uq.cai.TissueStack.dataobjects.DataSetValuesLookupTable</class>
       
       <properties>

@@ -98,7 +98,12 @@
 	position: absolute; 
 	left: 0px; 
 	top: 0px; 
-	z-index: 750;
+	z-index: 850;
+}
+.overlay{
+    position: absolute; 
+    left: 0px; 
+    top: 0px;
 }
 
 .left_panel{

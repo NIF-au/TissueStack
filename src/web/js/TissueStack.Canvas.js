@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with TissueStack.  If not, see <http://www.gnu.org/licenses/>.
  */
-TissueStack.Canvas = function(data_extent, canvas_id, dataset_id, include_cross_hair) {
+TissueStack.Canvas = function(data_extent, canvas_id, dataset_id, include_cross_hair, is_linked_dataset) {
 	// assemble data set id
 	this.dataset_id = typeof(dataset_id) != "string" ? "" : dataset_id;
 	this.setDataExtent(data_extent);
@@ -25,12 +25,15 @@ TissueStack.Canvas = function(data_extent, canvas_id, dataset_id, include_cross_
 	this.centerUpperLeftCorner();
 	this.drawCoordinateCross(this.getCenter());
 	this.setIncludeCrossHair(include_cross_hair);
-	this.events = new TissueStack.Events(this, this.include_cross_hair);
-	this.bindControlEvents(); // ui events for show/hide of controls such as contrast slider and copyable url link 
+	if (typeof(is_linked_dataset) == 'boolean' && is_linked_dataset)
+		this.is_linked_dataset = true;
+	if (!this.is_linked_dataset) this.events = new TissueStack.Events(this, this.include_cross_hair);
+	if (!this.is_linked_dataset) this.bindControlEvents(); // ui events for show/hide of controls such as contrast slider and copyable url link 
 	this.queue = new TissueStack.Queue(this);
 	this.contrast = null; // a shared instance of a contrast slider
 	// make parent and ourselves visible
 	this.getCanvasElement().parent().removeClass("hidden");
+	this.sessionId = TissueStack.Utils.generateSessionId();
 };
 
 TissueStack.Canvas.prototype = {
@@ -46,6 +49,7 @@ TissueStack.Canvas.prototype = {
 	 *    -) They can come in 'non base dataset' formats such as svg or be an internal format for canvas drawing instructions
 	 */
 	overlays: null,  
+	is_linked_dataset: false,
 	is_main_view: false,
 	data_extent: null,
 	dataset_id: "",
@@ -67,6 +71,7 @@ TissueStack.Canvas.prototype = {
 	has_been_synced: false,
 	value_range_min: 0,
 	value_range_max: 255,
+	sessionId : 0,
 	updateScaleBar : function() {
 		// update scale bar if main view
 		if (this.is_main_view) this.getDataExtent().adjustScaleBar(100);
@@ -799,6 +804,9 @@ TissueStack.Canvas.prototype = {
 			});
 		}
 	}, displayLoadingProgress : function(fraction, total, reset) {
+		if (this.is_linked_dataset) // no display for overlay 
+			return;
+		
 		if (typeof(fraction) != 'number' || typeof(total) != 'number') return;
 		
 		if (typeof(reset) == 'boolean' && reset) {

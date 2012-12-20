@@ -194,6 +194,14 @@ TissueStack.DataSetNavigation.prototype = {
 			$("#" + dataset + "_left_side_view_maximize").attr("class", "maximize_view_icon canvas_x");
 			$("#" + dataset + "_right_side_view_maximize").attr("class", "maximize_view_icon canvas_z");
 			
+			// take away cross-hair canvas and all overlay canvases
+			$('#' + dataset + '_main_view_canvas .cross_overlay').remove();
+			$('#' + dataset + '_main_view_canvas .overlay').remove();
+			$('#' + dataset + '_left_side_view_canvas .side_canvas_cross_overlay').remove();
+			$('#' + dataset + '_left_side_view_canvas .overlay').remove();
+			$('#' + dataset + '_right_side_view_canvas .side_canvas_cross_overlay').remove();
+			$('#' + dataset + '_right_side_view_canvas .overlay').remove();
+			
 			// finally hide everything
 		   $('#' + dataset + '_center_point_in_canvas').closest('.ui-btn').hide();
 		   $("#" + dataset + ", #" + dataset + "_right_panel").addClass("hidden");
@@ -275,7 +283,7 @@ TissueStack.DataSetNavigation.prototype = {
 								{
 									title: 	dataSet.overlays[i].name,
 									isOverlay : true,
-									key: dataSet.id + "_overlay" + i,
+									key: dataSet.id + "_overlay_" + i,
 									tooltip: dataSet.overlays[i].type,
 									select: false,
 									expand: false
@@ -308,6 +316,19 @@ TissueStack.DataSetNavigation.prototype = {
 		    		   return;
 		    	   } else if (node.data.isOverlay) {
 		    		   if (flag) node.parent.select(flag); // we don't turn everything off overlay is deselected
+		    		   
+		    		   var dataSet = TissueStack.dataSetStore.getDataSetById(node.parent.data.key);
+		    		   var overlayNumber = parseInt(node.data.key.substring(node.data.key.lastIndexOf("_")+1));
+		    		   if (dataSet && dataSet.planes)
+		    			   for (var p in dataSet.planes)
+		    				   if (dataSet.planes[p].overlays)
+		    					   for (var y=0;y<dataSet.planes[p].overlays.length;y++) {
+		    						   if (y != overlayNumber) continue;
+		    						   if (flag)
+	    								   dataSet.planes[p].overlays[y].select();
+		    						   else 
+		    							   dataSet.planes[p].overlays[y].deselect();
+		    					   }
 		    		   return;
 		    	   }
 		    	   
@@ -425,7 +446,7 @@ TissueStack.DataSetNavigation.prototype = {
 						{
 							title: 	dataSet.overlays[i].name,
 							isOverlay : true,
-							key: dataSet.id + "_overlay" + i,
+							key: dataSet.id + "_overlay_" + i,
 							tooltip: dataSet.overlays[i].type,
 							select: false,
 							expand: false

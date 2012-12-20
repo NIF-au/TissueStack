@@ -146,7 +146,7 @@ public final class DataResources extends AbstractRestfulMetaInformation {
 			@QueryParam("include_plane_data") String includePlaneData) {
 		return this.getAllDataSetsPaginated(offset, maxRecords, description, includePlaneData);
 	}
-	
+
 	private List<DataSet> getAllDataSetsPaginated(String offset, String maxRecords, String description, String includePlaneData) {
 		int offsetAsInt = 0;
 		if (offset != null) {

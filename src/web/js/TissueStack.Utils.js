@@ -316,7 +316,18 @@ TissueStack.Utils = {
 						break;
 					}
 				}
-			}; 					
+			}; 
+			// add crosshair canvases programmatically (if it does not exist yet
+			var crosshairCanvas = $('#dataset_' + x + '_main_view_canvas .cross_overlay');
+			if (!crosshairCanvas || (crosshairCanvas && crosshairCanvas.length == 0))
+				$('#dataset_' + x + '_main_view_canvas').append('<canvas id="dataset_' + x + '_canvas_y_plane_cross_overlay" class="cross_overlay"></canvas>');
+			crosshairCanvas = $('#dataset_' + x + '_left_side_view_canvas .side_canvas_cross_overlay');
+			if (!crosshairCanvas || (crosshairCanvas && crosshairCanvas.length == 0))
+				$('#dataset_' + x + '_left_side_view_canvas').append('<canvas id="dataset_' + x + '_canvas_x_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>');
+			crosshairCanvas = $('#dataset_' + x + '_right_side_view_canvas .side_canvas_cross_overlay');
+			if (!crosshairCanvas || (crosshairCanvas && crosshairCanvas.length == 0))
+				$('#dataset_' + x + '_right_side_view_canvas').append('<canvas id="dataset_' + x + '_canvas_z_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>');
+				
 			$('#dataset_' + x + '_main_view_canvas').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height * 0.99});
 			$('#dataset_' + x + '_main_view_canvas canvas').attr("width", TissueStack.canvasDimensions.width);
 			$('#dataset_' + x + '_main_view_canvas canvas').attr("height", TissueStack.canvasDimensions.height * 0.99);

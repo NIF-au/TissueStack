@@ -30,6 +30,7 @@ import au.edu.uq.cai.TissueStack.dataobjects.AbstractDataSetOverlay;
 import au.edu.uq.cai.TissueStack.dataobjects.CanvasOverlay;
 import au.edu.uq.cai.TissueStack.dataobjects.DataSetOverlay;
 import au.edu.uq.cai.TissueStack.dataobjects.IOverlays.OverlayType;
+import au.edu.uq.cai.TissueStack.dataobjects.OtherDataSetOverlay;
 import au.edu.uq.cai.TissueStack.dataobjects.SVGOverlay;
 
 public class DataSetOverlaysProvider {
@@ -101,6 +102,8 @@ public class DataSetOverlaysProvider {
 				overlayTable = CanvasOverlay.class.getSimpleName();
 			else if (OverlayType.SVG.equals(type))
 				overlayTable = SVGOverlay.class.getSimpleName();
+			else if (OverlayType.DATASET.equals(type))
+				overlayTable = OtherDataSetOverlay.class.getSimpleName();
 			else 
 				return null;
 			

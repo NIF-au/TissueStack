@@ -140,9 +140,6 @@ TissueStack.InitUserInterface = function (initOpts) {
 			continue; 
 		}
 		
-		// we use that for the image service to be able to abort pending requests
-		var sessionId = TissueStack.Utils.generateSessionId();
-		
 		var now = new Date().getTime();
 		
 		// crate a contrast slider per data set
@@ -193,20 +190,22 @@ TissueStack.InitUserInterface = function (initOpts) {
 			
 			// create canvas
 			var canvasElementSelector = "dataset_" + (x+1); 
-			var plane = new TissueStack.Canvas(extent, "canvas_" + planeId + "_plane", canvasElementSelector);
+			var plane = new TissueStack.Canvas(extent, "canvas_" + planeId + "_plane", canvasElementSelector, true);
 
 			// set the internal db id
 			plane.id = dataForPlane.id;
 			
-			// query for overlays (if exist)
-			if (dataSet.overlays) {
+			// query for overlays (if exist) TODO: extend to tablet and phone
+			if (TissueStack.desktop && dataSet.overlays) {
 				plane.overlays = [];
 				for (var z=0;z<dataSet.overlays.length;z++) {
 					var type = dataSet.overlays[z].type;
 					if (type === 'CANVAS')
-						plane.overlays[z] = new TissueStack.CanvasOverlay(plane, "http", dataSet.host, dataSet.local_id, plane.id);
+						plane.overlays[z] = new TissueStack.CanvasOverlay(z, plane, "http", dataSet.host, dataSet.local_id, plane.id);
 					else if (type === 'SVG')
-						plane.overlays[z] = new TissueStack.SVGOverlay(plane, "http", dataSet.host, dataSet.local_id, plane.id);
+						plane.overlays[z] = new TissueStack.SVGOverlay(z, plane, "http", dataSet.host, dataSet.local_id, plane.id);
+					else if (type === 'DATASET')
+						plane.overlays[z] = new TissueStack.DataSetOverlay(z, plane, "http", dataSet.host, dataSet.local_id, plane.id);
 				}
 			}
 
@@ -226,9 +225,6 @@ TissueStack.InitUserInterface = function (initOpts) {
 			plane.contrast = contrast;
 			if (contrast) contrast.canvas = plane;
 			
-			// set session id
-			plane.sessionId = sessionId;
-
 			// for scalebar to know its parent
 			if (planeId == 'y') {
 				main_view_plane = plane;

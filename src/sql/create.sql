@@ -146,9 +146,27 @@ CREATE TABLE dataset_svg_overlay
 );
 ALTER TABLE dataset_svg_overlay OWNER TO tissuestack;
 
+-- DATASET OVERLAY (we link another data set plane via its unique data set and plane id)
+CREATE TABLE dataset_other_overlay
+(
+  id bigint NOT NULL,
+  linked_dataset_id bigint,
+  linked_dataset_planes_id bigint,
+  CONSTRAINT dataset_other_overlay_pk PRIMARY KEY (id ),
+  CONSTRAINT dataset_other_overlay_fk1 FOREIGN KEY (id)
+      REFERENCES dataset_overlays (id) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT dataset_other_overlay_fk2 FOREIGN KEY (linked_dataset_id)
+    REFERENCES dataset (id) MATCH SIMPLE,
+      CONSTRAINT dataset_other_overlay_fk3 FOREIGN KEY (linked_dataset_planes_id)
+    REFERENCES dataset_planes (id) MATCH SIMPLE
+);
+ALTER TABLE dataset_other_overlay OWNER TO tissuestack;
+
 -- SEARCH INDICES
 CREATE INDEX dataset_overlays_idx1 ON dataset_overlays USING btree (dataset_id);
-CREATE INDEX dataset_overlays_idx2 ON dataset_overlays USING btree (dataset_id, dataset_planes_id, type);
+CREATE INDEX dataset_overlays_idx2 ON dataset_overlays USING btree (id, type);
+CREATE INDEX dataset_overlays_idx3 ON dataset_overlays USING btree (dataset_id, dataset_planes_id, type);
 
 -- DATASET VALUES LOOKUP TABLE 
 CREATE TABLE dataset_values_lookup
