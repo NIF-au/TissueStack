@@ -307,7 +307,7 @@ a.ui-slider-handle-horizontal{
 
 .side_canvas {
 	position: absolute; left: 0px; top: 0px;
-	z-index: 2390;
+	z-index: 749;
 }
 
 .side_canvas input {
@@ -317,7 +317,7 @@ a.ui-slider-handle-horizontal{
 	position: absolute;
 	left: 0px; 
 	top: 0px; 
-	z-index: 2391;
+	z-index: 1000;
 }
 .hidden {
     display:none; 
@@ -344,7 +344,7 @@ a.ui-slider-handle-horizontal{
 	-moz-opacity: 0.95;
 	text-align:center;
 	left:0px;
-	z-index:9999999;
+	z-index:9999;
 	margin:0px;
 	padding:0px;
 	bottom:0px;

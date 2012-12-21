@@ -163,6 +163,11 @@ TissueStack.Queue.prototype = {
 			return;
 		}
 		
+		if (this.canvas.is_linked_dataset) {
+			this.eraseCanvasContent();
+			ctx.globalAlpha = TissueStack.transparency;
+		}
+		
 		if (TissueStack.overlay_datasets && (this.canvas.overlay_canvas || this.canvas.underlying_canvas)) {
 			this.canvas.getCanvasElement().hide();
 			this.lowResolutionPreviewDrawn = true;

@@ -102,25 +102,26 @@ TissueStack.CanvasOverlay.prototype = {
 		url += this.slices["" + slice];
 		url += ("/" + this.type + "/json");
 
-		TissueStack.Utils.sendAjaxRequest(
-				url, 'GET',	true,
-				function(data, textStatus, jqXHR) {
-					if (!data.response && !data.error) {
+		(function(__this) {
+			TissueStack.Utils.sendAjaxRequest(
+					url, 'GET',	true,
+					function(data, textStatus, jqXHR) {
+						if (!data.response && !data.error) {
+							// nothing we can do 
+							return;
+						}
+						if (data.error || data.response.noResults) {
+							// nothing we can do 
+							return;
+						}
+						
+						// execute success handler
+						if (handler) handler(__this,data.response); 
+					},
+					function(jqXHR, textStatus, errorThrown) {
 						// nothing we can do 
-						return;
-					}
-					if (data.error || data.response.noResults) {
-						// nothing we can do 
-						return;
-					}
-					
-					// execute success handler
-					if (handler) handler(); 
-				},
-				function(jqXHR, textStatus, errorThrown) {
-					// nothing we can do 
-				}				
-		);
+					}				
+		);})(this);
 	},
 	select : function() {
 		this.selected = true;
@@ -130,6 +131,15 @@ TissueStack.CanvasOverlay.prototype = {
 		this.selected = false;
 		this.getMyOwnCanvasElement().hide();
 	},
+	clearCanvas : function() {
+		if (this.getMyOwnCanvasElement() == null || this.getMyOwnCanvasElement().length == 0) return;
+		
+		var ctx = this.getMyOwnCanvasElement()[0].getContext("2d");
+		ctx.save();
+		ctx.setTransform(1, 0, 0, 1, 0, 0);
+		ctx.clearRect(0, 0, this.canvas.dim_x, this.canvas.dim_y);
+		ctx.restore();
+	},
 	drawMe : function() {
 		// only do work if we have been selected
 		if (!this.selected)
@@ -138,13 +148,18 @@ TissueStack.CanvasOverlay.prototype = {
 		if (!this.slices && this.error) // retry if we had an error 
 			this.queryOverlayMappingsForSlices();
 		
+		this.clearCanvas();
+		
 		if (!this.slices)
 			return;
 		
-		// TODO: implement me
-		var handler = function() {
+		var handler = function(__this, response) {
 			// draw me
+			if (__this.getMyOwnCanvasElement() == null || __this.getMyOwnCanvasElement().length == 0) return;
+			
+			var context = __this.getMyOwnCanvasElement()[0].getContext("2d");
+			eval(response.content);
 		};
-		this.fetchOverlayForSlice(1, handler);
+		this.fetchOverlayForSlice(this.canvas.data_extent.slice, handler);
 	}
 };

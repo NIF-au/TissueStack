@@ -118,7 +118,7 @@ CREATE TABLE dataset_overlays
   CONSTRAINT dataset_overlays_fk2 FOREIGN KEY (dataset_planes_id)
       REFERENCES dataset_planes (id) MATCH SIMPLE
       ON UPDATE CASCADE ON DELETE CASCADE,
-  CONSTRAINT dataset_overlays_unique UNIQUE (dataset_id , dataset_planes_id , slice )
+  CONSTRAINT dataset_overlays_unique UNIQUE (dataset_id , dataset_planes_id , slice, type )
 );
 ALTER TABLE dataset_overlays OWNER TO tissuestack;
 

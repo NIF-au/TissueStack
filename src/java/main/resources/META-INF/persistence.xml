@@ -24,4 +24,28 @@
          <!-- property name="hibernate.hbm2ddl.auto" value="validate"/-->
       </properties>
    </persistence-unit>
+   
+   <persistence-unit name="defaultJdbcEntityManager" transaction-type="RESOURCE_LOCAL">
+      <class>au.edu.uq.cai.TissueStack.dataobjects.Session</class>
+      <class>au.edu.uq.cai.TissueStack.dataobjects.Configuration</class>
+      <class>au.edu.uq.cai.TissueStack.dataobjects.DataSet</class>
+      <class>au.edu.uq.cai.TissueStack.dataobjects.DataSetPlanes</class>
+      <class>au.edu.uq.cai.TissueStack.dataobjects.AbstractDataSetOverlay</class>
+      <class>au.edu.uq.cai.TissueStack.dataobjects.CanvasOverlay</class>
+      <class>au.edu.uq.cai.TissueStack.dataobjects.SVGOverlay</class>
+      <class>au.edu.uq.cai.TissueStack.dataobjects.OtherDataSetOverlay</class>
+      <class>au.edu.uq.cai.TissueStack.dataobjects.DataSetValuesLookupTable</class>
+
+      <properties>
+         <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
+         <property name="javax.persistence.jdbc.user" value="tissuestack"/>
+         <property name="javax.persistence.jdbc.password" value="tissuestack"/>
+         <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/tissuestack"/>
+         <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
+         <property name="hibernate.show_sql" value="false"/>
+         <property name="hibernate.format_sql" value="false"/>
+         <property name="hibernate.use_sql_comments" value="false"/>
+         <property name="hibernate.archive.autodetection" value="class"/>
+      </properties>
+   </persistence-unit>
 </persistence>

@@ -1,6 +1,7 @@
 package au.edu.uq.cai.TissueStack.svg;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
 
@@ -9,69 +10,16 @@ import org.apache.batik.util.XMLResourceDescriptor;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.svg.SVGDocument;
 
+import au.edu.uq.cai.TissueStack.JPAUtils;
+import au.edu.uq.cai.TissueStack.dataobjects.AbstractDataSetOverlay;
+import au.edu.uq.cai.TissueStack.dataobjects.CanvasOverlay;
 import au.edu.uq.cai.TissueStack.dataobjects.DataSet;
+import au.edu.uq.cai.TissueStack.dataobjects.DataSetPlanes;
+import au.edu.uq.cai.TissueStack.dataobjects.SVGOverlay;
 import au.edu.uq.cai.TissueStack.dataprovider.DataSetDataProvider;
-
-
+import au.edu.uq.cai.TissueStack.dataprovider.DataSetOverlaysProvider;
 
 public class SVGImporter {
-	public static void importSvgsFromDirectoryAndLinkThemToADataSet(String dir, long dataSetId) {
-		// prelimiary existence checks
-		if (dir == null || dir.trim().isEmpty() || dataSetId <=0)
-			throw new IllegalArgumentException("A directory location and data set id are mandatory!");
-		
-		final File directory = new File(dir);
-		if (!directory.exists() || !directory.isDirectory() || !directory.canRead())
-			throw new RuntimeException("'" + directory.getAbsolutePath() + "' does not exist/is not a readable directory!");
-		
-		final DataSet dataSet = DataSetDataProvider.queryDataSetById(dataSetId);
-		if (dataSet == null)
-			throw new RuntimeException("Data Set with id '" + dataSetId + "' could not be found in the database!");
-		
-		// read content of directory, only svgs are being processed
-		File[] listOfSvgFiles = directory.listFiles(new FilenameFilter() {
-			public boolean accept(File path, String fileOrDir) {
-				if (!fileOrDir.toLowerCase().endsWith(".svg")) 
-					return true;
-				
-				return false;
-			}
-		});		
-
-		for (File f : listOfSvgFiles) {
-			final String absFile = f.getAbsolutePath();
-			try {
-				SVGImporter.importSvgAndLinkItToDataSet(absFile, dataSet);
-			} catch (Exception any) {
-				System.out.println("Failed to import file '" + absFile + "'!");
-				any.printStackTrace();
-			}
-		}
-	}
-
-		public static void importSvgAndLinkItToDataSet(String file, DataSet dataSet) {
-			// prelimiary existence checks
-			if (file == null || file.trim().isEmpty() || dataSet == null)
-				throw new IllegalArgumentException("An svg file and data set are mandatory!");
-			
-			final File svgFile = new File(file);
-			if (!svgFile.exists() || !svgFile.isFile() || !svgFile.canRead())
-				throw new RuntimeException("File '" + svgFile.getAbsolutePath() + "' does not exist/is not a readable file!");
-			
-			// read and parse the svg content
-			SVGDocument svgDocument = null;
-			try {
-				svgDocument = SVGImporter.openSVGFile(svgFile.getAbsolutePath());
-				//String svgContent = SVGImporter.processSVGDocument(svgDocument);
-				SVGImporter.processSVGDocument(svgDocument);
-				
-				// TODO: store SVG content in DB associated with a data set plane
-				// double check slice information
-			} catch (Exception any) {
-				throw new RuntimeException("Failed to open/parse/process SVG file!", any);
-			}
-		}
-
 		private static SVGDocument openSVGFile(String fileName) throws IOException {
 		    final SAXSVGDocumentFactory factory =
 		    		new SAXSVGDocumentFactory(XMLResourceDescriptor.getXMLParserClassName());
@@ -79,17 +27,31 @@ public class SVGImporter {
 			
 		}
 
-		private static String processSVGDocument(SVGDocument svgDocument) {
+		/*
+		 * SVG stuff is transalated into 1 long string of key/value pairs separated by: |
+		 *	Conversion Legend:
+		 *	FS .... fillStyle
+		 *  F  .... fill
+		 *	P  .... beginPath
+		 *	M  .... moveTo
+		 *  L  .... lineTo
+		 *  C  .... cubic bezier
+		 *  
+		 *  .... more to come ...
+		 *  
+		 *  With param 'convertIntoJs' TRUE the output will be copy & pasteable js,
+		 *  With param 'convertIntoJs' TRUE the output will correspond to the explanation and legend above
+		 */
+		private static String processSVGDocument(SVGDocument svgDocument, boolean convertIntoJs) {
 		    final NodeList list = svgDocument.getElementsByTagName("path");
 			
-		    // TODO: make this into a good format 
-			StringBuffer js = new StringBuffer(
-					"var canvas = document.getElementById(\"dataset_1_canvas_y_plane\");\n"
-					+ "var context = canvas.getContext(\"2d\");\n"
-			);
-			
-		    js.append("context.lineWidth = 1\n");
-		    js.append("context.strokeStyle = \"red\";\n");
+			StringBuffer js = new StringBuffer(500);
+
+			/*
+			if (convertIntoJs) {
+				js.append("var canvas = document.getElementById(\"dataset_1_canvas_y_plane\");\n");
+				js.append("var context = canvas.getContext(\"2d\");\n");
+			}*/
 
 			// traverse all path elements
 			for (int i=0;i<list.getLength(); i++) {
@@ -103,9 +65,17 @@ public class SVGImporter {
 					if (pair.startsWith("fill")) { // we are only interested in shapes that are filled
 						final String color[] = pair.split(":");
 						if (color.length >= 2 && !color[1].trim().equalsIgnoreCase("none")) {
-							js.append("context.fillStyle=\"");
+							if (convertIntoJs)
+								js.append("context.fillStyle=\"");
+							else 
+								js.append("FS=");
+							
 							js.append(color[1].trim());
-							js.append("\";\n");
+							
+							if (convertIntoJs)
+								js.append("\";\n");
+							else 
+								js.append("|");
 							continueMe = false;
 							break;
 						}
@@ -119,15 +89,16 @@ public class SVGImporter {
 				// extract the text content of the path element
 				String pathD = list.item(i).getAttributes().getNamedItem("d").getTextContent();
 
+				// BIG TODO: rewrite the following abomination of a code segment with nice separations bewtween the PATH types: C,M,L,Z,V,H, S, Q, T
+				
 				// split coordinates 
 				String tokens[] = pathD.split(" ");
 				double presentX = 0.0; 
 				double presentY = 0.0;
 
-				// TODO: refine that and make it stable
 				// we expect paths of a certain kind: bezier curves with M !
 				// first one is move to 
-				if (!tokens[0].equals("M")) {
+				if (!tokens[0].equalsIgnoreCase("M")) {
 					System.out.println("move to ommitted");
 				}
 				String xyCoords[] = tokens[1].split(",");
@@ -135,30 +106,60 @@ public class SVGImporter {
 				presentX = Double.parseDouble(xyCoords[0]);
 				presentY = Double.parseDouble(xyCoords[1]);
 				
-				js.append("context.beginPath();\n");
-				js.append("context.moveTo(");
-				js.append(presentX + "," + presentY);
-				js.append(");\n");
+				if (convertIntoJs) {
+					js.append("context.beginPath();\n");
+					js.append("context.moveTo(");
+					js.append(presentX + "," + presentY);
+					js.append(");\n");
+				} else {
+					js.append("P=|");
+					js.append("M=");
+					js.append(presentX + "," + presentY);
+					js.append("|");
+				}
 
-				// TODO: code for relative coords
-				if (!tokens[2].equals("C")) {
+				if (!tokens[2].equalsIgnoreCase("C")) {
 					System.out.println("c ommitted");
 				}
-				js.append("context.bezierCurveTo(");
+				
+				if (convertIntoJs) 
+					js.append("context.bezierCurveTo(");
+				else 
+					js.append("C=");
 				
 				int pointsPerCurve = 0;
 				
 				for (int x = 3; x<tokens.length; x++) {
-					if (pointsPerCurve != 0 && x != tokens.length-1 && (pointsPerCurve % 3) == 0) {
-						js.deleteCharAt(js.length()-1);
-						js.append(");\n");
-						js.append("context.bezierCurveTo(");
-					}
-					
 					String token = tokens[x];
 					
-					if (token.equals("z")) {
+					if (token.equalsIgnoreCase("Z")) {
 						continue;
+					} else if (token.equalsIgnoreCase("M")) {
+						js.deleteCharAt(js.length()-1);
+						if (convertIntoJs) {
+							js.append(");\n");
+							js.append("context.moveTo(");
+						} else
+							js.append("|M=");
+
+						token = tokens[++x];
+					} else if (token.equalsIgnoreCase("L")) {
+						js.deleteCharAt(js.length()-1);
+						if (convertIntoJs) {
+							js.append(");\n");
+							js.append("context.lineTo(");
+						} else
+							js.append("|L=");
+
+						token = tokens[++x];
+					} else	if (token.equalsIgnoreCase("C") ||
+							(pointsPerCurve != 0 && x != tokens.length-1 && (pointsPerCurve % 3) == 0)) {
+						js.deleteCharAt(js.length()-1);
+						if (convertIntoJs) {
+							js.append(");\n");
+							js.append("context.bezierCurveTo(");
+						} else 
+							js.append("|C=");
 					}
 					
 					xyCoords = token.split(",");
@@ -177,168 +178,147 @@ public class SVGImporter {
 				// get rid of trailing ','
 				if (js.charAt(js.length()-1) == ',') {
 					js.deleteCharAt(js.length()-1);
-					js.append(");\n");
+					if (convertIntoJs)
+						js.append(");\n");
+					else
+						js.append("|");
 				}
 
-				js.append("context.fill();\n");
+				if (convertIntoJs)
+					js.append("context.fill();\n");
+				else
+					js.append("F=|");
 			}
 		
 			return js.toString();
 		}
 
+		/*
+		 * This main method looks at the contents of a given directory and either imports them whole into the database
+		 * or converts it to an internal string that can then be used to draw via canvas methods
+		 * 
+		 * The first parameter is mandatory and determines whether the SVG should be imported ('IMPORT') or converted ('CONVERT') 
+		 * The second input parameter should be directory pointing towards svg files (optional). The current directory is the default. 
+		 * 
+		 * The necessary naming convention that needs to be adhered to is: "dsid-planeid-slicenr.svg", e.g. 1-y-0129.svg
+		 * Otherwise files will be ignored!
+		 */
 		public static void main(String args[]) {
-			try {
-				// open svg
-				final SVGDocument existingDoc = 
-						SVGImporter.openSVGFile("/home/harald/Downloads/2012-05-17_tracings_comb/coronal-0355.svg");
-						//SVGImporter.openSVGFile(args[0]);
-				System.out.println(SVGImporter.processSVGDocument(existingDoc));
-				
-			    /*
- 				NodeList list = existingDoc.getElementsByTagName("path");
-
-				// create new svg document
-				DOMImplementation impl = SVGDOMImplementation.getDOMImplementation();
-				String svgNS = SVGDOMImplementation.SVG_NAMESPACE_URI;
-				Document newDoc = impl.createDocument(svgNS, "svg", null);
-
-				// Get the root element (the 'svg' element).
-				Element svgRoot = newDoc.getDocumentElement();
-				Element image = newDoc.createElement("image");
-				image.setAttributeNS(null, "x", "0");
-				image.setAttributeNS(null, "y", "0");
-				image.setAttributeNS(null, "width", "680");
-				image.setAttributeNS(null, "height", "500");
-				
-				svgRoot.appendChild(image);
-				
-				StringBuffer js = new StringBuffer(
-						"var canvas = document.getElementById(\"dataset_1_canvas_y_plane\");\n"
-						+ "var context = canvas.getContext(\"2d\");\n"		
-				);
-
-			    js.append("context.lineWidth = 1\n");
-			    js.append("context.strokeStyle = \"red\";\n");
-
-				int moveToPoints = 0;
-
-				// append all paths with absolute coords
-				for (int i=0;i<list.getLength(); i++) {
-
-					boolean continueMe = false;
+			if (args.length == 0 || !(args[0].equalsIgnoreCase("IMPORT") || args[0].equalsIgnoreCase("CONVERT"))) {
+				System.out.println("Please determine the mode: 'IMPORT' for import, 'CONVERT' for conversion");
+				System.exit(-1);
+			}
+			final String mode = args[0];
+			
+			final File dir = new File(args.length > 1 ? args[1] : "./");
+			String svgFiles[] = null;
+			if (!dir.exists() || !dir.isDirectory() || !dir.canRead())
+				throw new IllegalArgumentException("Location '" + dir.getAbsolutePath() + "' does not exist/is not a directory/is not readable!");
+			
+			svgFiles = dir.list(new FilenameFilter() {
+				public boolean accept(File dir, String name) {
+					File f = new File(dir, name);
+					if (!name.endsWith(".svg") || !f.isFile() || !f.canRead())
+						return false;
 					
-					// create new path element 
-					Element path = newDoc.createElement("path");
-					// copy style and id
-					final String style = list.item(i).getAttributes().getNamedItem("style").getTextContent();
-					final String stylePairs[] = (style != null) ? style.split(";") : new String[0];
-					for (String pair: stylePairs)
-						if (pair.startsWith("fill")) {
-							final String color[] = pair.split(":");
-							if (color.length >= 2 && !color[1].trim().equalsIgnoreCase("none")) {
-								js.append("context.fillStyle=\"");
-								js.append(color[1].trim());
-								js.append("\";\n");
-								continueMe = false;
-								break;
-							}
-							continueMe = true;
-						}
-					
-					if (continueMe)
-						continue;
-					
-					path.setAttributeNS(null, "style", style);
-					path.setAttributeNS(null, "id", list.item(i).getAttributes().getNamedItem("id").getTextContent());
-
-					// alter coords then add
-					String pathD = list.item(i).getAttributes().getNamedItem("d").getTextContent();
-
-					StringBuffer absolutePathD = new StringBuffer(pathD.length());
-					String tokens[] = pathD.split(" ");
-					double presentX = 0.0; 
-					double presentY = 0.0;
-
-					moveToPoints++;
-					
-					// first one is move to 
-					if (!tokens[0].equals("M")) {
-						System.out.println("move to ommitted");
-					}
-					absolutePathD.append("M ");
-					absolutePathD.append(tokens[1]);
-					
-					String xyCoords[] = tokens[1].split(",");
-					
-					presentX = Double.parseDouble(xyCoords[0]);
-					presentY = Double.parseDouble(xyCoords[1]);
-					
-					js.append("context.beginPath();\n");
-					js.append("context.moveTo(");
-					js.append(presentX + "," + presentY);
-					js.append(");\n");
-					
-					if (!tokens[2].equals("C")) {
-						System.out.println("c ommitted");
-					}
-					absolutePathD.append(" C");
-					js.append("context.bezierCurveTo(");
-					
-					int pointsPerCurve = 0;
-					
-					for (int x = 3; x<tokens.length; x++) {
-						if (pointsPerCurve != 0 && x != tokens.length-1 && (pointsPerCurve % 3) == 0) {
-							js.deleteCharAt(js.length()-1);
-							js.append(");\n");
-							js.append("context.bezierCurveTo(");
-						}
-						
-						String token = tokens[x];
-						
-						if (token.equals("z")) {
-							absolutePathD.append(" Z");
-							continue;
-						}
-						
-						xyCoords = token.split(",");
-						if (xyCoords.length != 2) {
-							System.out.println("xy pair is not existant");
-						}
-						double xCoord = Double.parseDouble(xyCoords[0]);
-						double yCoord = Double.parseDouble(xyCoords[1]);
-						
-						pointsPerCurve++;
-
-						js.append(xCoord + "," + yCoord);
-						js.append(",");
-						
-						absolutePathD.append(" " + xCoord + "," + yCoord);
-					}
-					System.out.println("Points Per Curve: " + pointsPerCurve);
-					
-					if (js.charAt(js.length()-1) == ',') {
-						js.deleteCharAt(js.length()-1);
-						js.append(");\n");
-					}
-
-					js.append("context.fill();\n");
-
-					path.setAttributeNS(null, "d", absolutePathD.toString());
-					svgRoot.appendChild(path);
+					return true;
 				}
+			});
+			
+			if (svgFiles == null || svgFiles.length == 0) {
+				System.out.println("No suitable candidates for an svg import found");
+			}
+
+			// initialize JPAUtils for standalone jdbc connections
+			JPAUtils.standAloneInstance();
+			
+			for (String svgFile : svgFiles) {
+				// extract dataset id and, plane id and slice id from file name
+				long id = -1;
+				String plane =null;
+				int slice = -1;
+				DataSetPlanes dataSetPlaneFound = null;
 				
-				Transformer transformer = TransformerFactory.newInstance().newTransformer();
-				Result output = new StreamResult(new FileOutputStream(new File("/home/harald/Downloads/2012-05-17_tracings_comb/coronal-0347-changed.svg")));
-				Source input = new DOMSource(newDoc);
+				try {
+					String tokens[] = svgFile.split("-");
+					if (tokens.length != 3)
+						throw new IllegalAccessException("Name does not contain 3 hyphen separated values!");
+					
+					id = Long.parseLong(tokens[0]);
+					plane = tokens[1];
+					slice = Integer.parseInt(tokens[2].substring(0, tokens[2].indexOf(".svg")));
+					
+					// now check values against dataset in database
+					DataSet dataSetFound = DataSetDataProvider.queryDataSetById(id);
+					if (dataSetFound == null)
+						throw new IllegalArgumentException("No Data Set found for id: " + id);
+					
+					for (DataSetPlanes p : dataSetFound.getPlanes()) 
+						if (p.getName().equalsIgnoreCase(plane)) {
+							dataSetPlaneFound = p;
+							break;
+						}
+					
+					if (dataSetPlaneFound == null)
+						throw new IllegalArgumentException("No Data Set Plane found for id: " + plane);
+						
+					if (!(slice >= 0 && slice <= dataSetPlaneFound.getMaxSlices()))
+						throw new IllegalArgumentException("Slice " + slice + " does not lie within the bounds of the plane!");
 
-				transformer.transform(input, output);
+					AbstractDataSetOverlay overlay = null;
+					
+					if (mode.equalsIgnoreCase("CONVERT")) {
+						// open svg
+						final SVGDocument existingDoc = 
+								SVGImporter.openSVGFile(new File(dir, svgFile).getAbsolutePath());
+						String content = SVGImporter.processSVGDocument(existingDoc, true);
 
-				System.out.println("Move To Points: " + moveToPoints);
-		        
-				System.out.println(js.toString());
-				*/
-			} catch (IOException ex) {
-			    ex.printStackTrace();
+						if (content != null && !content.isEmpty()) {
+							CanvasOverlay canvasOverlay = new CanvasOverlay();
+							canvasOverlay.setDataSetId(dataSetPlaneFound.getDatasetId());
+							canvasOverlay.setDataSetPlaneId(dataSetPlaneFound.getId());
+							canvasOverlay.setSlice(slice);
+							canvasOverlay.setName("Canvas Overlay");
+							canvasOverlay.setContent(content);
+							overlay = canvasOverlay;
+						}
+					} else if (mode.equalsIgnoreCase("IMPORT")) {
+						FileReader reader = null;
+						char buffer[] = null;
+						
+						try {
+							// Note: it is assumed the files are fairly small => we read them in one go !
+							File fileToBeRead = new File(dir, svgFile);
+							reader = new FileReader(fileToBeRead);
+							buffer = new char[(int)fileToBeRead.length()]; 
+							reader.read(buffer);
+						} finally {
+							try {
+								reader.close();
+							} catch (Exception e) {
+								// nothing we can do here
+							}
+						}
+						
+						if (buffer != null) {
+							SVGOverlay svgOverlay = new SVGOverlay();
+							svgOverlay.setDataSetId(dataSetPlaneFound.getDatasetId());
+							svgOverlay.setDataSetPlaneId(dataSetPlaneFound.getId());
+							svgOverlay.setSlice(slice);
+							svgOverlay.setName("SVG Overlay");
+							svgOverlay.setContent(new String(buffer));
+							overlay = svgOverlay;
+						}
+					}
+					
+					// persist to data base
+					if (overlay != null)
+						DataSetOverlaysProvider.insertOverlay(overlay);
+				} catch (Exception e) {
+					System.out.println("Failed to process file: " + svgFile);
+					e.printStackTrace();
+					continue;
+				}
 			}
 		}
 }

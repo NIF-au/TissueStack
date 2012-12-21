@@ -489,7 +489,7 @@ TissueStack.Canvas.prototype = {
 		}
 
 		
-		if (TissueStack.overlay_datasets && this.underlying_canvas) {
+		if ((TissueStack.overlay_datasets && this.underlying_canvas) || this.is_linked_dataset) {
 			this.eraseCanvasContent();
 			ctx.globalAlpha = TissueStack.transparency;
 		}

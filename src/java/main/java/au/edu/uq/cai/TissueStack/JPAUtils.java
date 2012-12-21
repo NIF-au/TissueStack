@@ -31,15 +31,20 @@ public final class JPAUtils {
 	final Logger  logger = Logger.getLogger(JPAUtils.class);
 	
 	private static JPAUtils myself;
+	private String defaultManager = "default"; 
 	
 	private Map<String, EntityManagerFactory> entityManagerFactories = 
 			new HashMap<String, EntityManagerFactory>(5);
 	
 	private JPAUtils() {}
+	private JPAUtils(String defaultManager) {
+		if (defaultManager != null)
+			this.defaultManager = defaultManager;
+	}
 	
 	public EntityManagerFactory getEntityManagerFactory(String entityManager) {
 		if (entityManager == null || entityManager.trim().isEmpty()) {
-			entityManager = "default";
+			entityManager = this.defaultManager;
 		}
 		
 		EntityManagerFactory foundFactory = this.entityManagerFactories.get(entityManager); 
@@ -71,7 +76,7 @@ public final class JPAUtils {
 	}
 
 	public EntityManager getEntityManager() {
-		return this.getEntityManager(null);
+		return this.getEntityManager(this.defaultManager);
 	}
 
 	public EntityManager getEntityManager(String entityManager) {
@@ -97,6 +102,13 @@ public final class JPAUtils {
 	public static JPAUtils instance() {
 		if (JPAUtils.myself == null) {
 			JPAUtils.myself = new JPAUtils();
+		}
+		return JPAUtils.myself;
+	}
+
+	public static JPAUtils standAloneInstance() {
+		if (JPAUtils.myself == null) {
+			JPAUtils.myself = new JPAUtils("defaultJdbcEntityManager");
 		}
 		return JPAUtils.myself;
 	}

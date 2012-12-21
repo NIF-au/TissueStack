@@ -194,7 +194,7 @@ TissueStack.DataSetOverlay.prototype = {
 						var linkedCanvasId = 
 							__this.canvas.canvas_id.substring(__this.canvas.dataset_id.length+1, __this.canvas.canvas_id.length)
 							+ "_overlay_" + __this.pure_id;
-						__this.linkedCanvas = new TissueStack.Canvas(extent, linkedCanvasId, __this.canvas.dataset_id, true);
+						__this.linkedCanvas = new TissueStack.Canvas(extent, linkedCanvasId, __this.canvas.dataset_id, true, true);
 					},
 					function(jqXHR, textStatus, errorThrown) {
 						__this.error =  "Error connecting to backend: " + textStatus + " " + errorThrown;
