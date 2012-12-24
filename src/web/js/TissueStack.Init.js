@@ -209,7 +209,7 @@ TissueStack.InitUserInterface = function (initOpts) {
 					else if (type === 'SVG')
 						plane.overlays[z] = new TissueStack.SVGOverlay(z, plane, "http", localHost, dataSet.local_id, plane.id);
 					else if (type === 'DATASET')
-						plane.overlays[z] = new TissueStack.DataSetOverlay(z, plane, "http", localHost, dataSet.local_id, plane.id);
+						plane.overlays[z] = new TissueStack.DataSetOverlay(z, plane, "http", localHost, dataSet.local_id, plane.id, dataSet.host);
 				}
 			}
 

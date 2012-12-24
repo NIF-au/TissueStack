@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with TissueStack.  If not, see <http://www.gnu.org/licenses/>.
  */
-TissueStack.DataSetOverlay = function(id, canvas, protocol, host, dataset_id, dataset_plane_id) {
+TissueStack.DataSetOverlay = function(id, canvas, protocol, host, dataset_id, dataset_plane_id, dataSetHost) {
 	if (typeof(id) != 'number')
 		throw new Error("DataSetOverlay: argument id is not a number!");
 	
@@ -33,6 +33,7 @@ TissueStack.DataSetOverlay = function(id, canvas, protocol, host, dataset_id, da
 	this.dataset_id = dataset_id;
 	this.dataset_plane_id = dataset_plane_id;
 	this.host = host;
+	this.dataSetHost = dataSetHost;
 	this.mappingsUrl = protocol + "://" + host + "/" + TissueStack.configuration['restful_service_proxy_path'].value
 	+ "/overlays/id_mapping_for_slice/" + this.dataset_id + "/" + this.dataset_plane_id + "/" + this.type;
 	this.overlayUrl = 
@@ -49,6 +50,7 @@ TissueStack.DataSetOverlay = function(id, canvas, protocol, host, dataset_id, da
 
 TissueStack.DataSetOverlay.prototype = {
 	pure_id: null,
+	dataSetHost : null,
 	id: null,
 	type: "DATASET",
 	canvas: null,
@@ -180,7 +182,7 @@ TissueStack.DataSetOverlay.prototype = {
 						// create extent
 						var extent = 
 							new TissueStack.Extent(
-								__this.host + "_" + data.response.id,
+								__this.dataSetHost + "_" + data.response.id,
 								dataSetPlane.isTiled,
 								dataSetPlane.oneToOneZoomLevel,
 								planeId,
