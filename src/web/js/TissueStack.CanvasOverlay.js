@@ -97,9 +97,13 @@ TissueStack.CanvasOverlay.prototype = {
 		if (typeof(slice) != "number")
 			return;
 		
+		var sliceMap = this.slices[''+slice];
+		if (typeof(sliceMap) === 'undefined')
+			return;
+
 		// complete request url with overlay id
 		var url = this.overlayUrl;
-		url += this.slices["" + slice];
+		url += sliceMap;
 		url += ("/" + this.type + "/json");
 
 		(function(__this) {

@@ -98,8 +98,12 @@ TissueStack.SVGOverlay.prototype = {
 			return;
 		
 		// complete request url with overlay id
+		var sliceMap = this.slices[''+slice];
+		if (typeof(sliceMap) === 'undefined')
+			return;
+		
 		var url = this.overlayUrl;
-		url += this.slices["" + slice];
+		url += sliceMap;
 		url += ("/" + this.type + "/json");
 
 		TissueStack.Utils.sendAjaxRequest(
@@ -145,6 +149,6 @@ TissueStack.SVGOverlay.prototype = {
 		var handler = function() {
 			// draw me 
 		};
-		this.fetchOverlayForSlice(2, handler);
+		this.fetchOverlayForSlice(this.canvas.data_extent.slice, handler);
 	}
 };
