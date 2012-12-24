@@ -195,17 +195,21 @@ TissueStack.InitUserInterface = function (initOpts) {
 			// set the internal db id
 			plane.id = dataForPlane.id;
 			
+			var localHost = document.location.host;
+			if (localHost)
+				localHost = dataSet.host;
+			
 			// query for overlays (if exist) TODO: extend to tablet and phone
 			if (TissueStack.desktop && dataSet.overlays) {
 				plane.overlays = [];
 				for (var z=0;z<dataSet.overlays.length;z++) {
 					var type = dataSet.overlays[z].type;
 					if (type === 'CANVAS')
-						plane.overlays[z] = new TissueStack.CanvasOverlay(z, plane, "http", dataSet.host, dataSet.local_id, plane.id);
+						plane.overlays[z] = new TissueStack.CanvasOverlay(z, plane, "http", localHost, dataSet.local_id, plane.id);
 					else if (type === 'SVG')
-						plane.overlays[z] = new TissueStack.SVGOverlay(z, plane, "http", dataSet.host, dataSet.local_id, plane.id);
+						plane.overlays[z] = new TissueStack.SVGOverlay(z, plane, "http", localHost, dataSet.local_id, plane.id);
 					else if (type === 'DATASET')
-						plane.overlays[z] = new TissueStack.DataSetOverlay(z, plane, "http", dataSet.host, dataSet.local_id, plane.id);
+						plane.overlays[z] = new TissueStack.DataSetOverlay(z, plane, "http", localHost, dataSet.local_id, plane.id);
 				}
 			}
 
