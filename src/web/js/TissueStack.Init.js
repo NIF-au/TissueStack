@@ -196,7 +196,7 @@ TissueStack.InitUserInterface = function (initOpts) {
 			plane.id = dataForPlane.id;
 			
 			var localHost = document.location.host;
-			if (localHost)
+			if (!localHost)
 				localHost = dataSet.host;
 			
 			// query for overlays (if exist) TODO: extend to tablet and phone
