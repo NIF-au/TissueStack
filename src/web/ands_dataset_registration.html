@@ -4,7 +4,9 @@
         <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
         <title> Tissue Stack - ANDS Data Set Registration</title>
   
-        <script src="js/libs/jquery/jquery-1.7.1.min.js"></script>
+  		<link rel="stylesheet" href="css/jquery.mobile-1.1.1.min.css" />
+  		<script src="js/libs/jquery/jquery-1.7.1.min.js"></script>
+		<script src="js/libs/jquery/jquery.mobile-1.1.1.min.js"></script>
   
         <script type="text/javascript">
         var afterSubmission = function() {
@@ -52,30 +54,50 @@
         </script>
   </head>
   
-  
   <body>
-    <h3 style="text-align:center;">Data Set Registration</h3>
-    <div id="error_div" style="color: red; display: none;">
-	    <h4 id="error"></h4>
+  	<div data-role="page" data-theme="a" id="reg" data-id="reg1"  > 
+	  	<div data-role="content">
+		    <h3 style="text-align:center;">Data Set Registration</h3>
+		    <div id="error_div" style="color: red; display: none;">
+			    <h4 id="error"></h4>
+		    </div>
+		    <form id="ands_registration" action="#" method="POST">
+		        <input id="dataset_id" name="id" type="hidden" value="N/A" />
+		        <table border="0">
+			        <tr>
+				        <td style="text-align: right;">Location:</td>
+				        <td><input readonly="readonly" id="dataset_location" name="location" type="text" value="N/A"/></td>
+			        </tr>
+			        <tr>
+				        <td style="text-align: right;">Organization:</td>
+				        <td><input id="dataset_group" name="group" type="text" value="" size="45"/></td>
+			        </tr>
+			        <tr>
+				        <td style="text-align: right;">Name:</td>
+				        <td><input id="dataset_name" name="name" type="text" value="" size="45"/></td>
+			        </tr>
+			        <tr>
+				        <td style="text-align: right;">Description:</td>
+				        <td><textarea id="dataset_description" name="description" cols="43" rows="10"></textarea></td>
+			        </tr>
+			        <tr>
+				        <td></td>
+				        <td>
+				        	<fieldset class="ui-grid-a">
+					        	<div class="ui-block-a">
+					        		<input id="ands_submit" value="Submit" data-theme="c" type="submit" onclick="afterSubmission();return false;"/>
+					        	</div>
+					        	<div class="ui-block-b">
+					        		<a href="#" data-role="button" data-inline="true" data-theme="e" onclick="window.closeMe();return false;">Close Me</a>
+					        	</div>
+				        	</fieldset>
+				        </td>
+			        </tr>
+		        </table>
+		    </form>
+		    <br />
+	    	<h4 id="thanks" style="text-align:center; color: blue;display: none;">Thank you for your submission.</h4>
+	    </div>
     </div>
-    <form id="ands_registration" action="#" method="POST">
-        <input id="dataset_id" name="id" type="hidden" value="N/A" />
-        Location:<br />
-        <input readonly="readonly" id="dataset_location" name="location" type="text" value="N/A" size="45" />
-        <br /><br />  
-        Organization:<br />
-        <input id="dataset_group" name="group" type="text" value="" size="45" />  
-        <br /><br />
-        Name:<br />
-        <input id="dataset_name" name="name" type="text" value="" size="45" />  
-        <br /><br />
-        Description:<br />
-        <textarea id="dataset_description" name="description" cols="43" rows="10" ></textarea>
-        <br /><br />
-        <input style="float: left;"id="ands_submit" type="submit" onclick="afterSubmission();return false;" />
-        <a style="float: right;" href="#" onclick="window.closeMe();return false;">Close Me</a>
-    </form>
-    <br />
-    <h4 id="thanks" style="text-align:center; color: blue;display: none;">Thank you for your submission.</h4>
   </body>
 </html>
