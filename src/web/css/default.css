@@ -683,3 +683,9 @@ width: 100%;
 	right: 10px;
 	top: 50px;
 }
+/*About Message*/
+.about_message{
+	text-align: justify;
+	margin: 0px 100px 0px 100px;
+	font-size: 14px;
+}
