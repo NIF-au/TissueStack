@@ -14,7 +14,7 @@ SRCS		=	$(DIRSRC)core.c							\
 			$(DIRSRC)tasks.c						\
 			$(DIRSRC)memory_mapping.c					\
 
-INCLUDE		=	-I./headers -I./utils -I/usr/include/nifti
+INCLUDE		=	-I./headers -I./utils -I/usr/include/nifti -I/usr/local/bic/include
 
 LIB_PATH	=	
 
