@@ -2,7 +2,7 @@
 <html> 
 	<head> 
 	<title>Tissue Stack - Phone</title> 
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0;">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
 	<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="black" />
 	<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
@@ -56,8 +56,8 @@
 </head> 
 
 <body>
-<div id="menutransition" style=" height: 400px; position:relative; overflow:auto;"> 
-	<div id="menu" style=" height: 500px; ">
+<div id="menutransition" style="height: 500px; position:relative; overflow:auto;"> 
+	<div id="menu">
 		<div id="memberDetails" style="text-align: center;">
 			<h3>Tissue Stack</h3>
 		</div>
@@ -88,7 +88,7 @@
 			<a href="#" class="showMenu menuBtn">Menu</a>
 			<h1>Data Server</h1>
 		</div><!-- /header -->
-		<div data-role="content" style="height: 390px;">
+		<div data-role="content" id="phone_height">
 				<input style="font-size: 16px;" size="8" maxlength="50" type="text" id="server_search_input" value="http://"/>
 				<button type="button" id="server_search_button">Connect to TissueStack Server</button>
 				<div id="phonetransition" style="height: 290px; position:relative; overflow:auto;">			
@@ -107,7 +107,7 @@
 			<a href="#" class="showMenu menuBtn">Menu</a>
 			<h1>Settings</h1>
 		</div><!-- /header -->
-		<div data-role="content">
+		<div data-role="content" id="phone_height">
 				<div id="phone_color_map" style="height: 240px; display: block; overflow:auto; position:relative; z-index:1;">	
 					<div id="phone_colormap_transition" data-role="fieldcontain" style="height: 85%;">
 					    <fieldset id="colormap_choice" data-role="controlgroup">			         	
@@ -130,7 +130,7 @@
 			<h1>X Plane</h1>
 		</div><!-- /header -->
 	
-		<div data-role="content">
+		<div data-role="content" id="phone_height">
 			<div id="canvas_x_extent" class="canvasLevel"></div><br />				
 			<div class="boxgrid captionfull" style="text-align: center; margin: -5px;">
 					<div class="canvasBox">
@@ -150,7 +150,7 @@
 			<a href="#" class="showMenu menuBtn">Menu</a>
 			<h1>Y Plane</h1>
 		</div><!-- /header -->
-		<div data-role="content">	
+		<div data-role="content" id="phone_height">	
 			<div id="canvas_y_extent" class="canvasLevel"></div><br />
 			<div class="boxgrid captionfull" style="text-align: center;margin: -5px;">
 				<div class="canvasBox">
@@ -170,7 +170,7 @@
 			<a href="#" class="showMenu menuBtn">Menu</a>
 			<h1>Z Plane</h1>
 		</div><!-- /header -->
-		<div data-role="content">
+		<div data-role="content" id="phone_height">
 			<div id="canvas_z_extent" class="canvasLevel"></div><br />
 			<div class="boxgrid captionfull" style="text-align: center; margin: -5px;">  
 				<div class="canvasBox">
@@ -190,7 +190,7 @@
 			<a href="#" class="showMenu menuBtn">Menu</a>
 			<h1>Contrast Control</h1>
 		</div><!-- /header -->
-		<div data-role="content" style="height: 390px;">			
+		<div data-role="content" id="phone_height">			
 			<div class="phone_contrast_box">
 				<canvas id="dataset_1_toolbox_canvas_phone" class="phone_contrast_slider"></canvas>
 			</div>
@@ -208,7 +208,7 @@
 			<a href="#" class="showMenu menuBtn">About</a>
 			<h1>About Us</h1>
 		</div><!-- /header -->
-		<div data-role="content" style="height: 390px;">
+		<div data-role="content" id="phone_height">
 			<div style="text-align: left;">
 			    <p>This TissueStack project is supported by the <a style="text-decoration: none" href="http://www.ands.org.au/" target="_blank">Australian National Data Service</a>. ANDS is supported by the Australian Government through the National Collaborative Research Infrastructure Strategy Program and the Education Investment Fund (EIF) Super Science Initiative.</p>
 			    <hr/>
