@@ -2,7 +2,7 @@ DIRSRC		=	./src/
 
 SRCS		=	$(DIRSRC)percent_and_time.c	$(DIRSRC)../../../volume.c $(DIRSRC)../../../utils/utils.c
 
-INCLUDE		=	-I./headers -I../../headers -I./../../utils
+INCLUDE		=	-I./headers -I../../headers -I./../../utils -I/usr/local/bic/include
 
 LIB_PATH	=	
 

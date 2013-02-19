@@ -3,7 +3,7 @@ DIRSRC		=	./src/
 SRCS		=	$(DIRSRC)converter.c						\
 			$(DIRSRC)../../../utils/utils.c
 
-INCLUDE		=	-I/usr/include/nifti -I./headers -I./../../headers -I./../../utils
+INCLUDE		=	-I/usr/include/nifti -I./headers -I./../../headers -I./../../utils -I/usr/local/bic/include
 
 LIB_PATH	=	
 

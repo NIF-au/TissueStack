@@ -143,7 +143,7 @@ public final class ColorMapsProvider {
 			
 			return colorMap; 
 		} catch (Exception any) {
-			logger.error("Failed to read lookup file '" + colorMapFile.getAbsolutePath() + "'!", any);
+			logger.error("Failed to read color map file '" + colorMapFile.getAbsolutePath() + "'!", any);
 		}
 		
 		return null;
