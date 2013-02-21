@@ -68,7 +68,7 @@ body{
 						}	
 						
 						
-						#memberDetails{
+						.memberDetails{
 							font-size:14px;
 							font-family:arial;
 							padding:0 15px 5px 10px;
@@ -76,14 +76,13 @@ body{
 							text-shadow: 0px 1px 1px #000000;
 							width:110px;
 							}
-							#memberDetails h3{
+							.memberDetails h3{
 								font-weight:normal;
 								font-size:14px;
 							}
-							#memberDetails span{
+							.memberDetails span{
 								color:#fff;
 							}
-							
 							
 							.ui-btn-up-a {
 								border:none !important;
