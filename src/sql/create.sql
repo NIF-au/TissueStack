@@ -61,6 +61,22 @@ INSERT INTO configuration VALUES('color_maps',
 				   [1, 0.8, 0.8, 0.8]]
 		}', 'default color mapping: grey, hot and spectral');
 
+-- DATASET VALUES LOOKUP TABLE 
+CREATE TABLE dataset_values_lookup
+(
+  id bigserial NOT NULL,
+  filename VARCHAR(250) NOT NULL,
+  content TEXT,
+  CONSTRAINT dataset_values_lookup_pk PRIMARY KEY (id),
+  CONSTRAINT dataset_values_lookup_unique UNIQUE (filename)
+);
+ALTER TABLE dataset_values_lookup OWNER TO tissuestack;
+
+CREATE INDEX idx_dataset_values_lookup_filename
+  ON dataset_values_lookup
+  USING btree
+  (filename);		
+		
 -- DATASET LIST
 CREATE TABLE dataset
 (
@@ -167,22 +183,6 @@ ALTER TABLE dataset_other_overlay OWNER TO tissuestack;
 CREATE INDEX dataset_overlays_idx1 ON dataset_overlays USING btree (dataset_id);
 CREATE INDEX dataset_overlays_idx2 ON dataset_overlays USING btree (id, type);
 CREATE INDEX dataset_overlays_idx3 ON dataset_overlays USING btree (dataset_id, dataset_planes_id, type);
-
--- DATASET VALUES LOOKUP TABLE 
-CREATE TABLE dataset_values_lookup
-(
-  id bigserial NOT NULL,
-  filename VARCHAR(250) NOT NULL,
-  content TEXT,
-  CONSTRAINT dataset_values_lookup_pk PRIMARY KEY (id),
-  CONSTRAINT dataset_values_lookup_unique UNIQUE (filename)
-);
-ALTER TABLE dataset_values_lookup OWNER TO tissuestack;
-
-CREATE INDEX idx_dataset_values_lookup_filename
-  ON dataset_values_lookup
-  USING btree
-  (filename);
 
 -- INSERT SOME TEST DATA
 --INSERT INTO dataset VALUES (1, '/opt/data/00-normal-model-nonsym-tiled.mnc', 'Tiled Version');
