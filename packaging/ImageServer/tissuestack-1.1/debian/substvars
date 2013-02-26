@@ -1,1 +1,0 @@
-shlibs:Depends=libc6 (>= 2.14), libglib2.0-0 (>= 2.22.0), libminc2-1, libnifti2

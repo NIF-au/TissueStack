@@ -1,8 +1,0 @@
-In order to package the Tissue Stack Application with all of its components except the Image Server you usually have to do the following:
-
-If nothing has changed, just tar everything: tar cvfz tissuestack-X.X.tar.gz tissuestack
-
-If the configuration database has changed, don't forget to update the appropriate sql install files in tissustack/sql !
-If the java code changed, please rebuild using maven, then copy the resulting tissuestack.war file over into tissuestack/apache-tomcat-X.X.X/webapps !
-
-For any other changes, modify the appropriate files/directories.

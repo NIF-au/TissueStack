@@ -1,2 +1,0 @@
-shlibs:Depends=libc6 (>= 2.15), libglib2.0-0 (>= 2.22.0), libgraphicsmagick3 (>= 1.3.5), libminc2-1, libnifti2
-misc:Depends=
