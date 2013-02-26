@@ -24,3 +24,5 @@ Build (GNU)
 .autotools
 *.esproj
 TissueStackImageServer
+binaries
+packaging
