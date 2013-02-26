@@ -1,0 +1,5 @@
+tissuestack (1.1-1) unstable; urgency=low
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- Harald Waxenegger <harald.waxenegger@gmail.com>  Mon, 25 Feb 2013 10:41:33 +1000

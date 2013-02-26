@@ -1,0 +1,16 @@
+This section of the TissueStack project holds the sources for the ImageServer and the JNI glue needed to talk to the TissueStack 
+Configuration Services. 
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+In order to compile the Tissue Stack Image Server, call
+ 
+                "sudo make"
+
+from the command line.
+
+Note: 
+------
+sudo privileges are needed to install the compiled binaries (server & plugins) in the directories: /usr/local/lib, /usr/local/bin and /usr/local/plugins
+
+
+ATTENTION: This is a work in progress !                                                        
