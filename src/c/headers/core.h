@@ -389,7 +389,10 @@ void            lc_fatal(char *name, t_plugin *plugin, char *command, void *data
 void		free_all_log(t_tissue_stack *t);
 
 // GLOBAL APPLICATION PATH
-#define APPLICATION_PATH "/opt/tissuestack"
+#ifndef APPLICATION_PATH
+#define APPLICATION_PATH "/opt/tissuestack/1.1"
+#endif
+
 #define CONCAT_APP_PATH(PATH_TO_BE_ADDED) APPLICATION_PATH "/" PATH_TO_BE_ADDED
 // NOTE: Should not exceed 108 characters !!!
 #define UNIX_SOCKET_PATH "/tmp/tissue_stack_communication"

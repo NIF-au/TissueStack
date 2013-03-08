@@ -3,10 +3,10 @@ DIRSRC		=	./src/c
 all: compile install
 
 compile:	
-	make -C $(DIRSRC) compile
+	@make --no-print-directory -C $(DIRSRC) compile
 
 install:
-	make -C $(DIRSRC) install
+	@make --no-print-directory -C $(DIRSRC) install
 
 clean:
-	make -C $(DIRSRC) clean
+	@make --no-print-directory -C $(DIRSRC) clean

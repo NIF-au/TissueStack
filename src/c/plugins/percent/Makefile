@@ -16,30 +16,31 @@ NAME		=	TissueStackPercent.so
 
 FLAGS		=	-ggdb -Wall -Werror -O2 -Wno-unused-result
 
-PLUGIN_INSTALL_DIR = /usr/local/plugins
-
 OBJS		=	$(SRCS:%.c=%.o)
 
 %.o: %.c
-	gcc -c $(FLAGS) $(INCLUDE) `pkg-config --cflags gtk+-2.0` -fPIC -o $@ $<
+	@echo -e "\tCompiling $(@)."
+	@gcc -c $(FLAGS) $(INCLUDE) `pkg-config --cflags gtk+-2.0` -fPIC -o $@ $<
 
 all:	compile install
 
 compile: $(OBJS)
-	@echo "\n================== Compile $(NAME) ===================="
-	gcc $(OBJS) -o $(NAME) $(LIB_PATH) $(LIBS) $(FLAGS) -shared
+	@gcc $(OBJS) -o $(NAME) $(LIB_PATH) $(LIBS) $(FLAGS) -shared
+	@echo -e "\tFinished building $(NAME).\n"	
 
 install:
-	mkdir -p $(PLUGIN_INSTALL_DIR)
-	rm -rf $(PLUGIN_INSTALL_DIR)/$(NAME)
-	cp $(NAME) $(PLUGIN_INSTALL_DIR)/$(NAME)
+	@echo -e "\n\tInstalling shared library '$(NAME)' into: $(PLUGINS_PATH)."
+	@mkdir -p $(PLUGINS_PATH)
+	@cp $(NAME) $(PLUGINS_PATH)/$(NAME)
+	@echo -e "\tFinished installing shared library '$(NAME)'."
 
 clean:
-	@echo "\n==================== Cleaning $(NAME) ====================="
-	rm -rf *~ \#*\# $(NAME) ./png/*
-	rm -rf $(DIRSRC)*.o
-	rm -rf *.so
-	rm -rf core
+	@echo -e "\tCleaning $(NAME)..."
+	@rm -rf *~ \#*\# $(NAME) ./png/*
+	@rm -rf $(DIRSRC)*.o
+	@rm -rf *.so
+	@rm -rf core
+	@echo -e "\tFinished cleaning $(NAME).\n"
 
 re: clean all
 

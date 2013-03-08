@@ -30,81 +30,113 @@ LIBS		=	-lhdf5								\
 
 NAME		=	TissueStackImageServer
 
-
 FLAGS		=	-Wall -Werror -ggdb -O2 -Wno-unused-result
 
 OBJS		=	$(SRCS:%.c=%.o)
 
 CC		=	gcc
 
+# important configuration variables with defaults
+export VERSION
+export APPLICATION_PATH ?= /opt/tissuestack
+# the application path including the version
+export APPLICATION_ROOT	=	$(APPLICATION_PATH)/$(VERSION)
+# the destination for the binaries
+export BINS_PATH			=	$(APPLICATION_ROOT)/bin
+# the plugin path with its .so 
+export PLUGINS_PATH			=	$(APPLICATION_ROOT)/plugins
+# the jni shared library
+export JNI_LIB_PATH		=	/usr/local/lib
+
 %.o: %.c
-	$(CC) -c $(FLAGS) $(INCLUDE) `pkg-config --cflags gtk+-2.0` -o $@ $<
+	@echo -e "\tCompiling $(@)."
+	@$(CC) -DAPPLICATION_PATH='"$(APPLICATION_ROOT)"' -c $(FLAGS) $(INCLUDE) `pkg-config --cflags gtk+-2.0` -o $@ $<
 
-all: compile install
+all:	compile install
 
+prepare:
+# the version has to be set for a production build (not debug build)
+ifndef VERSION
+	$(error VERSION IS NOT SET !!!!!!!!!!!!! Please call make like this: make VERSION=X.X !!!!!)
+endif
+
+	@echo -e "\n###################### TISSUE STACK BUILD [Version: $(VERSION)] ###################"
+	@echo -e "    APPLICATION ROOT:   $(APPLICATION_ROOT)"
+	@echo -e "    PLUGINS PATH:       $(PLUGINS_PATH)"
+	@echo -e "    BINARIES PATH:      $(BINS_PATH)"
+	@echo -e "    JNI LIB PATH:       $(JNI_LIB_PATH)"
+	@echo -e "###################### TISSUE STACK BUILD [Version: $(VERSION)] ###################\n"
+	
 coreCompile:	$(OBJS)
-		@echo "\n================== Compile $(NAME) ===================="
-		$(CC) $(OBJS) -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) `pkg-config --cflags --libs gtk+-2.0`
+	@$(CC) $(OBJS) -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) `pkg-config --cflags --libs gtk+-2.0`
+	@echo -e "\tFinished compiling core components."
 
 pluginsCompile:
-		rm -rf volume.o
-		rm -rf utils/utils.o
-		make -C ./plugins/communicator/ compile 
-		rm -rf volume.o
-		rm -rf utils/utils.o	
-		make -C ./plugins/image_extract/ compile
-		rm -rf volume.o
-		rm -rf utils/utils.o	
-		make -C ./plugins/comm_inter_process/ compile
-		rm -rf volume.o
-		rm -rf utils/utils.o	
-		make -C ./plugins/minc_info/ compile
-		rm -rf volume.o
-		rm -rf utils/utils.o	
-		make -C ./plugins/minc_convert/ compile
-		rm -rf volume.o
-		rm -rf utils/utils.o	
-		make -C ./plugins/nifti_convert/ compile
-		rm -rf volume.o
-		rm -rf utils/utils.o
-		make -C ./plugins/percent/ compile
-		rm -rf volume.o
-		rm -rf utils/utils.o
-		make -C ./jni/ compile
+		@echo -e "\n\n\tCompiling plugins:"
+		@echo -e "\t-------------------\n"
+		@rm -rf volume.o
+		@rm -rf utils/utils.o
+		@make --no-print-directory -C ./plugins/communicator/ compile 
+		@rm -rf volume.o
+		@rm -rf utils/utils.o	
+		@make --no-print-directory -C ./plugins/image_extract/ compile
+		@rm -rf volume.o
+		@rm -rf utils/utils.o	
+		@make --no-print-directory -C ./plugins/comm_inter_process/ compile
+		@rm -rf volume.o
+		@rm -rf utils/utils.o	
+		@make --no-print-directory -C ./plugins/minc_info/ compile
+		@rm -rf volume.o
+		@rm -rf utils/utils.o	
+		@make --no-print-directory -C ./plugins/minc_convert/ compile
+		@rm -rf volume.o
+		@rm -rf utils/utils.o	
+		@make --no-print-directory -C ./plugins/nifti_convert/ compile
+		@rm -rf volume.o
+		@rm -rf utils/utils.o
+		@make --no-print-directory -C ./plugins/percent/ compile
+		@rm -rf volume.o
+		@rm -rf utils/utils.o
+		@make --no-print-directory -C ./jni/ compile
+		@echo -e "\n\tFinished compiling plugins."
 
-install:
-	@echo "\n============= Installing Binaries ================="
-	mkdir -p /usr/local/bin/
-	rm -rf /usr/local/bin/$(NAME)
-	cp $(NAME) /usr/local/bin/
-	make -C ./plugins/communicator/ install 
-	make -C ./plugins/image_extract/ install
-	make -C ./plugins/comm_inter_process/ install
-	make -C ./plugins/minc_convert/ install
-	make -C ./plugins/nifti_convert/ install
-	make -C ./plugins/minc_info/ install
-	make -C ./plugins/percent/ install
-	make -C ./jni/ install
+install: prepare
+	@echo -e "\n\tInstalling Binaries:"
+	@echo -e "\t---------------------\n"
+	@echo -e "\tInstalling '$(NAME)' executable into: $(BINS_PATH)."
+	@mkdir -p $(BINS_PATH)
+	@cp $(NAME) $(BINS_PATH)/$(NAME)
+	@echo -e "\tFinished installing '$(NAME)'."
+	@make --no-print-directory -C ./plugins/communicator/ install 
+	@make --no-print-directory -C ./plugins/image_extract/ install
+	@make --no-print-directory -C ./plugins/comm_inter_process/ install
+	@make --no-print-directory -C ./plugins/minc_convert/ install
+	@make --no-print-directory -C ./plugins/nifti_convert/ install
+	@make --no-print-directory -C ./plugins/minc_info/ install
+	@make --no-print-directory -C ./plugins/percent/ install
+	@make --no-print-directory -C ./jni/ install
+	@echo -e "\n\tFinished installing binaries.\n"	
 
 clean:
-	@echo "\n==================== Cleaning $(NAME) ====================="
-	rm -rf *~ \#*\# $(NAME) ./png/* core hs_err_pid*
-	rm -rf $(DIRSRC)*.o
-	make -C ./utils/ clean
-	make -C ./plugins/communicator/ clean
-	make -C ./plugins/image_extract/ clean
-	make -C ./plugins/comm_inter_process/ clean
-	make -C ./plugins/minc_info/ clean
-	make -C ./plugins/minc_convert/ clean
-	make -C ./plugins/nifti_convert/ clean
-	make -C ./plugins/percent/ clean
-	make -C ./jni/ clean
+	@echo -e "\n\tCleaning $(NAME)...\n"
+	@rm -rf *~ \#*\# $(NAME) ./png/* core hs_err_pid*
+	@rm -rf $(DIRSRC)*.o
+	@make --no-print-directory -C ./utils/ clean
+	@make --no-print-directory -C ./plugins/communicator/ clean
+	@make --no-print-directory -C ./plugins/image_extract/ clean
+	@make --no-print-directory -C ./plugins/comm_inter_process/ clean
+	@make --no-print-directory -C ./plugins/minc_info/ clean
+	@make --no-print-directory -C ./plugins/minc_convert/ clean
+	@make --no-print-directory -C ./plugins/nifti_convert/ clean
+	@make --no-print-directory -C ./plugins/percent/ clean
+	@make --no-print-directory -C ./jni/ clean
+	@echo -e "\tFinished cleaning $(NAME).\n"
 
 debug: FLAGS += -D_TSS_DEBUG_
 
 debug: coreCompile pluginsCompile
 
-compile: coreCompile pluginsCompile
+compile: prepare coreCompile pluginsCompile
 
 recompile: clean compile
 
@@ -116,4 +148,4 @@ tomcatstart:
 
 re: tomcatstop clean debug install tomcatstart
 
-.PHONY: all compile install clean re recompile
+.PHONY: all prepare compile install clean re recompile

@@ -299,7 +299,9 @@ int		main(int argc, char **argv)
 
   // These are the plugins that should be loaded by default.
   // Please no rash name changes since JNI asks for the predefined names!
-
+  // TODO: change location if APPLICATION_PATH is not /usr/local/....
+  // do the same in the Makefile and JNI !!
+  // strdup(CONCAT_APP_PATH("tasks/general"))
 
   plugin_load_from_string("load image /usr/local/plugins/TissueStackImageExtract.so", t);
   plugin_load_from_string("load serv /usr/local/plugins/TissueStackCommunicator.so", t);
