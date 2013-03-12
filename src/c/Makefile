@@ -196,6 +196,8 @@ dist: all
 	@cp $(BASE_DIR)data/colormaps/* $(BUILD_PATH)/src$(DATA_PATH)/colormaps
 	@cp -r $(BASE_DIR)src/web $(BUILD_PATH)/src$(DATA_PATH)
 	@ln -s $(DATA_PATH)/tiles $(BUILD_PATH)/src$(DATA_PATH)/web/tiles
+	@rm -rf $(BUILD_PATH)/logs
+	@mkdir -p $(BUILD_PATH)/logs
 	@echo -e "\tSwitching to 'packaging' branch to copy over java runtime..."
 	@echo -e "\t(any output is logged into: $(BUILD_PATH)/logs/tissuestack_copy.log)"
 	@cd $(BASE_DIR); git checkout packaging 2>$(BUILD_PATH)/logs/tissuestack_copy.log; \
