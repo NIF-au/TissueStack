@@ -203,13 +203,13 @@ dist: all
 	@cd $(BASE_DIR); git checkout packaging 2>$(BUILD_PATH)/logs/tissuestack_copy.log; \
 	cp -r TissueStack/tissuestack/jdk1.6.0_25 $(BUILD_PATH)/src$(DATA_PATH) >> $(BUILD_PATH)/logs/tissuestack_copy.log; \
 	git checkout $(CURRENT_BRANCH) >> $(BUILD_PATH)/logs/tissuestack_copy.log;
-	if [ -a $(BUILD_PATH)/logs/tissuestack_copy.log ] ; then $(error git error => check logs);fi;
+	@if [ -a $(BUILD_PATH)/logs/tissuestack_copy.log ] ; then echo "ERROR: git error => check logs !!!"; exit -1;fi;
 	@echo -e "\tSwitching to 'packaging' branch to copy over tomcat binaries..."
 	@echo -e "\t(any output is logged into: $(BUILD_PATH)/logs/tissuestack_copy.log)"
 	@cd $(BASE_DIR);git checkout packaging 2>$(BUILD_PATH)/logs/tissuestack_copy.log; \
 	cp -r TissueStack/tissuestack/apache-tomcat-7.0.35 $(BUILD_PATH)/src$(DATA_PATH) >> $(BUILD_PATH)/logs/tissuestack_copy.log; \
 	git checkout $(CURRENT_BRANCH) >> $(BUILD_PATH)/logs/tissuestack_copy.log;
-	if [ -a $(BUILD_PATH)/logs/tissuestack_copy.log ] ; then $(error git error => check logs);fi;
+	@if [ -a $(BUILD_PATH)/logs/tissuestack_copy.log ] ; then echo "ERROR: git error => check logs !!!"; exit -1;fi;
 	@echo -e "\tBuilding Tissue Stack Web Service (maven build). This may take a while, please be patient!"
 	@echo -e "\t(any output is logged into: $(BUILD_PATH)/logs/tissuestack_maven_build.log)"
 	@cd $(BASE_DIR);	mvn clean install > $(BUILD_PATH)/logs/tissuestack_maven_build.log
