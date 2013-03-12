@@ -221,8 +221,8 @@ dist: all
 #TODO: cp of bash scripts for start
 #TODO: create update sql with changed paths
 	
-	@echo -e "\tZipping up everything..."
-	@cd $(BUILD_PATH)/src; tar cvzf $(BUILD_PATH)/$(DIST_NAME) *
+	@echo -e "\tZipping up everything [log: $(BUILD_PATH)/logs/tissuestack_tar.log ]..."
+	@cd $(BUILD_PATH)/src; tar cvzf $(BUILD_PATH)/$(DIST_NAME) * &> $(BUILD_PATH)/logs/tissuestack_tar.log
 	
 	@echo -e "\n\tFinished creating binary archive:  $(BUILD_PATH)/$(DIST_NAME)"
 		
