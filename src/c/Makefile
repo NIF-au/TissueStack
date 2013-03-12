@@ -208,7 +208,6 @@ dist: all
 	(git checkout $(CURRENT_BRANCH) >> $(BUILD_PATH)/logs/tissuestack_copy.log && echo "ERROR: git error => check logs !!!" && exit -1);
 
 	@echo -e "\tSwitching to 'packaging' branch to copy over tomcat binaries [error logs: $(BUILD_PATH)/logs/*.log]..."
-	@echo -e "\t(any output is logged into: $(BUILD_PATH)/logs/tissuestack_copy.log)"
 	@cd $(BASE_DIR); git checkout packaging 2>$(BUILD_PATH)/logs/tissuestack_copy.log; sleep 1s; \
 	cp -r TissueStack/tissuestack/apache-tomcat-7.0.35 $(BUILD_PATH)/src$(DATA_PATH) >> $(BUILD_PATH)/logs/tissuestack_copy.log || \
 	(git checkout $(CURRENT_BRANCH) 2> $(BUILD_PATH)/logs/tissuestack_copy.log && echo "ERROR: git error => check logs !!!" && exit -1);
@@ -219,7 +218,12 @@ dist: all
 	@echo -e "\tCopying over war file into tomcat web application directory..."
 	@cp $(BASE_DIR)target/TissueStack.war $(BUILD_PATH)/src$(DATA_PATH)/apache-tomcat-7.0.35/webapps
 	
-	#TODO: cp of bash scripts for start
-	#TODO: create update sql with changed paths
+#TODO: cp of bash scripts for start
+#TODO: create update sql with changed paths
+	
+	@echo -e "\tZipping up everything..."
+	@cd $(BUILD_PATH)/src; tar cvzf $(BUILD_PATH)/$(DIST_NAME) *
+	
+	@echo -e "\n\tFinished creating binary archive:  $(BUILD_PATH)/$(DIST_NAME)"
 		
 .PHONY: all prepare compile install clean re recompile
