@@ -199,11 +199,13 @@ dist: all
 	@echo -e "\tSwitching to 'packaging' branch to copy over java runtime..."
 	@echo -e "\t(any output is logged into: $(BUILD_PATH)/logs/tissuestack_copy.log)"
 	@cd $(BASE_DIR); git checkout packaging &>$(BUILD_PATH)/logs/tissuestack_copy.log; \
-	cp -r TissueStack/tissuestack/jdk1.6.0_25 $(BUILD_PATH)/src$(DATA_PATH) >> $(BUILD_PATH)/logs/tissuestack_copy.log 
+	cp -r TissueStack/tissuestack/jdk1.6.0_25 $(BUILD_PATH)/src$(DATA_PATH) >> $(BUILD_PATH)/logs/tissuestack_copy.log; \
+	git checkout $(CURRENT_BRANCH) >> $(BUILD_PATH)/logs/tissuestack_copy.log;
 	@echo -e "\tSwitching to 'packaging' branch to copy over tomcat binaries..."
 	@echo -e "\t(any output is logged into: $(BUILD_PATH)/logs/tissuestack_copy.log)"
-	@cd $(BASE_DIR);git checkout packaging > $(BUILD_PATH)/logs/tissuestack_copy.log 2>&1; \
-	cp -r TissueStack/tissuestack/apache-tomcat-7.0.35 $(BUILD_PATH)/src$(DATA_PATH) > $(BUILD_PATH)/logs/tissuestack_copy.log 
+	@cd $(BASE_DIR);git checkout packaging >>$(BUILD_PATH)/logs/tissuestack_copy.log; \
+	cp -r TissueStack/tissuestack/apache-tomcat-7.0.35 $(BUILD_PATH)/src$(DATA_PATH) >> $(BUILD_PATH)/logs/tissuestack_copy.log; \
+	git checkout $(CURRENT_BRANCH) >> $(BUILD_PATH)/logs/tissuestack_copy.log;
 	@echo -e "\tBuilding Tissue Stack Web Service (maven build). This may take a while, please be patient!"
 	@echo -e "\t(any output is logged into: $(BUILD_PATH)/logs/tissuestack_maven_build.log)"
 	@cd $(BASE_DIR);	mvn clean install > $(BUILD_PATH)/logs/tissuestack_maven_build.log
