@@ -27,10 +27,10 @@ compile: $(OBJS)
 
 install:
 	@echo -e "\n\tInstalling shared library '$(NAME)' into: $(JNI_LIB_PATH)."
-	@mkdir -p $(JNI_LIB_PATH)
-	@cp $(NAME) $(JNI_LIB_PATH)/$(NAME).$(VERSION)
+	@sudo mkdir -p $(JNI_LIB_PATH)
+	@sudo cp $(NAME) $(JNI_LIB_PATH)/$(NAME).$(VERSION)
 	@echo -e "\tCreating symbolic link to it: $(SHARED_LIBS_DIR)/$(NAME) => $(JNI_LIB_PATH)/$(NAME).$(VERSION)"
-	@ln -sf $(JNI_LIB_PATH)/$(NAME).$(VERSION) $(SHARED_LIBS_DIR)/$(NAME)
+	@sudo ln -sf $(JNI_LIB_PATH)/$(NAME).$(VERSION) $(SHARED_LIBS_DIR)/$(NAME)
 	@echo -e "\tFinished installing shared library '$(NAME)'."
 
 clean:

@@ -119,11 +119,11 @@ pluginsCompile:
 		@echo -e "\n\tFinished compiling plugins."
 
 install: prepare
-	@echo -e "\n\tInstalling Binaries:"
-	@echo -e "\t---------------------\n"
+	@echo -e "\n\tInstalling Binaries (required super user priviledges):"
+	@echo -e "\t-----------------------------------------------\n"
 	@echo -e "\tInstalling '$(NAME)' executable into: $(BINS_PATH)."
-	@mkdir -p $(BINS_PATH)
-	@cp $(NAME) $(BINS_PATH)/$(NAME)
+	@sudo mkdir -p $(BINS_PATH)
+	@sudo cp $(NAME) $(BINS_PATH)/$(NAME)
 	@echo -e "\tFinished installing '$(NAME)'."
 	@make --no-print-directory -C ./plugins/communicator/ install 
 	@make --no-print-directory -C ./plugins/image_extract/ install
@@ -198,12 +198,15 @@ dist: all
 	@echo -e "\tSwitching to 'packaging' branch to copy over java runtime..."
 	@echo -e "\t(any output is logged into: $(BUILD_PATH)/logs/tissuestack_copy.log)"
 	@cd $(BASE_DIR);git checkout packaging > $(BUILD_PATH)/logs/tissuestack_copy.log 2>&1; \
-	cp -r TissueStack/tissuestack/apache-tomcat-7.0.35 $(BUILD_PATH)/src$(DATA_PATH) > $(BUILD_PATH)/logs/tissuestack_copy.log 
+	cp -r TissueStack/tissuestack/jdk1.6.0_25 $(BUILD_PATH)/src$(DATA_PATH) > $(BUILD_PATH)/logs/tissuestack_copy.log 
 	@echo -e "\tSwitching to 'packaging' branch to copy over tomcat binaries..."
+	@echo -e "\t(any output is logged into: $(BUILD_PATH)/logs/tissuestack_copy.log)"
+	@cd $(BASE_DIR);git checkout packaging > $(BUILD_PATH)/logs/tissuestack_copy.log 2>&1; \
+	cp -r TissueStack/tissuestack/apache-tomcat-7.0.35 $(BUILD_PATH)/src$(DATA_PATH) > $(BUILD_PATH)/logs/tissuestack_copy.log 
 	@echo -e "\tBuilding Tissue Stack Web Service (maven build). This may take a while, please be patient!"
 	@echo -e "\t(any output is logged into: $(BUILD_PATH)/logs/tissuestack_maven_build.log)"
 	@cd $(BASE_DIR);	mvn clean install > $(BUILD_PATH)/logs/tissuestack_maven_build.log
 	@echo -e "\tCopying over war file into tomcat web application directory..."
-	cp $(BASE_DIR)target/TissueStack.war $(BUILD_PATH)/logs
+	cp $(BASE_DIR)target/TissueStack.war $(BUILD_PATH)/src$(DATA_PATH)/apache-tomcat-7.0.35/webapps
 		
 .PHONY: all prepare compile install clean re recompile

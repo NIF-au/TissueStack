@@ -30,8 +30,8 @@ compile: $(OBJS)
 
 install:
 	@echo -e "\n\tInstalling shared library '$(NAME)' into: $(PLUGINS_PATH)."
-	@mkdir -p $(PLUGINS_PATH)
-	@cp $(NAME) $(PLUGINS_PATH)/$(NAME)
+	@sudo mkdir -p $(PLUGINS_PATH)
+	@sudo cp $(NAME) $(PLUGINS_PATH)/$(NAME)
 	@echo -e "\tFinished installing shared library '$(NAME)'."
 
 clean:
