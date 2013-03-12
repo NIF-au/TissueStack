@@ -172,6 +172,7 @@ re: tomcatstop clean debug install tomcatstart
 dist: all
 	@echo -e "\n\n\tBuilding binary archive: $(DIST_NAME):"
 	@echo -e "\t---------------------------------------------------"
+	
 	@echo -e "\n\tPreparing build directory..."
 	@rm -rf $(BUILD_PATH)
 	@mkdir -p $(BUILD_PATH)/logs
@@ -187,31 +188,33 @@ dist: all
 	@mkdir -p $(BUILD_PATH)/src$(DATA_PATH)/tasks
 	@mkdir -p $(BUILD_PATH)/src$(DATA_PATH)/tiles
 	@mkdir -p $(BUILD_PATH)/src$(DATA_PATH)/upload
+	
 	@echo -e "\tCopying over Tissue Stack Image Server executables and shared libraries..."
 	@cp $(BINS_PATH)/* $(BUILD_PATH)/src$(BINS_PATH)
 	@cp $(PLUGINS_PATH)/*.so $(BUILD_PATH)/src$(PLUGINS_PATH)
 	@cp $(JNI_LIB_PATH)/libTissueStack.so.$(VERSION) $(BUILD_PATH)/src$(JNI_LIB_PATH)
 	@ln -s $(JNI_LIB_PATH)/libTissueStack.so.$(VERSION) $(BUILD_PATH)/src$(JNI_LIB_PATH)/libTissueStack.so
+	
 	@echo -e "\tCopying over front-end resources and colormaps..."
 	@cp $(BASE_DIR)data/colormaps/* $(BUILD_PATH)/src$(DATA_PATH)/colormaps
 	@cp -r $(BASE_DIR)src/web $(BUILD_PATH)/src$(DATA_PATH)
 	@ln -s $(DATA_PATH)/tiles $(BUILD_PATH)/src$(DATA_PATH)/web/tiles
 	@rm -rf $(BUILD_PATH)/logs
 	@mkdir -p $(BUILD_PATH)/logs
-	@echo -e "\tSwitching to 'packaging' branch to copy over java runtime..."
+	
+	@echo -e "\tSwitching to 'packaging' branch to copy over java runtime [error log: $(BUILD_PATH)/logs/tissuestack_copy.log]..."
+	@cd $(BASE_DIR); git checkout packaging 2>$(BUILD_PATH)/logs/tissuestack_copy.log; sleep 1s; \
+	cp -r TissueStack/tissuestack/jdk1.6.0_25 $(BUILD_PATH)/src$(DATA_PATH) >> $(BUILD_PATH)/logs/tissuestack_copy.log || \
+	(git checkout $(CURRENT_BRANCH) >> $(BUILD_PATH)/logs/tissuestack_copy.log && echo "ERROR: git error => check logs !!!" && exit -1);
+
+	@echo -e "\tSwitching to 'packaging' branch to copy over tomcat binaries [error log: $(BUILD_PATH)/logs/tissuestack_copy.log]..."
 	@echo -e "\t(any output is logged into: $(BUILD_PATH)/logs/tissuestack_copy.log)"
-	@cd $(BASE_DIR); git checkout packaging 2>$(BUILD_PATH)/logs/tissuestack_copy.log; \
-	cp -r TissueStack/tissuestack/jdk1.6.0_25 $(BUILD_PATH)/src$(DATA_PATH) >> $(BUILD_PATH)/logs/tissuestack_copy.log; \
-	git checkout $(CURRENT_BRANCH) >> $(BUILD_PATH)/logs/tissuestack_copy.log;
-	@if [ -a $(BUILD_PATH)/logs/tissuestack_copy.log ] ; then echo "ERROR: git error => check logs !!!"; exit -1;fi;
-	@echo -e "\tSwitching to 'packaging' branch to copy over tomcat binaries..."
-	@echo -e "\t(any output is logged into: $(BUILD_PATH)/logs/tissuestack_copy.log)"
-	@cd $(BASE_DIR);git checkout packaging 2>$(BUILD_PATH)/logs/tissuestack_copy.log; \
-	cp -r TissueStack/tissuestack/apache-tomcat-7.0.35 $(BUILD_PATH)/src$(DATA_PATH) >> $(BUILD_PATH)/logs/tissuestack_copy.log; \
-	git checkout $(CURRENT_BRANCH) >> $(BUILD_PATH)/logs/tissuestack_copy.log;
-	@if [ -a $(BUILD_PATH)/logs/tissuestack_copy.log ] ; then echo "ERROR: git error => check logs !!!"; exit -1;fi;
-	@echo -e "\tBuilding Tissue Stack Web Service (maven build). This may take a while, please be patient!"
-	@echo -e "\t(any output is logged into: $(BUILD_PATH)/logs/tissuestack_maven_build.log)"
+	@cd $(BASE_DIR); git checkout packaging 2>$(BUILD_PATH)/logs/tissuestack_copy.log; sleep 1s; \
+	cp -r TissueStack/tissuestack/apache-tomcat-7.0.35 $(BUILD_PATH)/src$(DATA_PATH) >> $(BUILD_PATH)/logs/tissuestack_copy.log || \
+	(git checkout $(CURRENT_BRANCH) 2> $(BUILD_PATH)/logs/tissuestack_copy.log && echo "ERROR: git error => check logs !!!" && exit -1);
+
+	@echo -e "\tBuilding Tissue Stack Web Service (maven build). This may take a while, please be patient! [error log: $(BUILD_PATH)/logs/tissuestack_copy.log]..."
+	@cd $(BASE_DIR); git checkout $(CURRENT_BRANCH) &>$(BUILD_PATH)/logs/tissuestack_copy.log || (echo "ERROR: git error => check logs !!!" && exit -1)
 	@cd $(BASE_DIR);	mvn clean install > $(BUILD_PATH)/logs/tissuestack_maven_build.log
 	@echo -e "\tCopying over war file into tomcat web application directory..."
 	cp $(BASE_DIR)target/TissueStack.war $(BUILD_PATH)/src$(DATA_PATH)/apache-tomcat-7.0.35/webapps
