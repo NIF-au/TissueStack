@@ -388,12 +388,18 @@ void            lc_error(char *name, t_plugin *plugin, char *command, void *data
 void            lc_fatal(char *name, t_plugin *plugin, char *command, void *data, t_tissue_stack *t);
 void		free_all_log(t_tissue_stack *t);
 
-// GLOBAL APPLICATION PATH
+// GLOBAL APPLICATION (DATA) PATH
 #ifndef APPLICATION_PATH
-#define APPLICATION_PATH "/opt/tissuestack/1.1"
+#define APPLICATION_PATH "/usr/local/tissuestack/1.1"
+#endif
+// HELPS US TO ASSEMBLE SUB-DIRECTORIES BASED ON THE ROOT PATH
+#define CONCAT_APP_PATH(PATH_TO_BE_ADDED) APPLICATION_PATH "/" PATH_TO_BE_ADDED
+
+// PLUGINS PATH
+#ifndef PLUGINS_PATH
+#define PLUGINS_PATH CONCAT_APP_PATH("plugins")
 #endif
 
-#define CONCAT_APP_PATH(PATH_TO_BE_ADDED) APPLICATION_PATH "/" PATH_TO_BE_ADDED
 // NOTE: Should not exceed 108 characters !!!
 #define UNIX_SOCKET_PATH "/tmp/tissue_stack_communication"
 

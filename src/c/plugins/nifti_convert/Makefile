@@ -21,8 +21,6 @@ NAME		=	TissueStackNiftiConverter.so
 
 FLAGS		=	-Wall -Werror -ggdb -O2 -Wno-unused-result
 
-PLUGIN_INSTALL_DIR = /usr/local/plugins
-
 OBJS		=	$(SRCS:%.c=%.o)
 
 %.o: %.c

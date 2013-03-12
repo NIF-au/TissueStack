@@ -16,8 +16,6 @@ NAME		=	TissueStackCommunicator.so
 
 FLAGS		=	-ggdb -O2 -Wall -Werror -Wno-unused-result
 
-PLUGIN_INSTALL_DIR = /usr/local/plugins
-
 OBJS		=	$(SRCS:%.c=%.o)
 
 %.o: %.c
@@ -31,11 +29,10 @@ compile: $(OBJS)
 	@echo -e "\tFinished building $(NAME).\n"
 
 install:
-	@echo -e "\n\tInstalling $(NAME)..."
-	@mkdir -p $(PLUGIN_INSTALL_DIR)
-	@rm -rf $(PLUGIN_INSTALL_DIR)/$(NAME)
-	@cp $(NAME) $(PLUGIN_INSTALL_DIR)/$(NAME)
-	@echo -e "\tFinished installing $(NAME)."
+	@echo -e "\n\tInstalling shared library '$(NAME)' into: $(PLUGINS_PATH)."
+	@mkdir -p $(PLUGINS_PATH)
+	@cp $(NAME) $(PLUGINS_PATH)/$(NAME)
+	@echo -e "\tFinished installing shared library '$(NAME)'."
 
 clean:
 	@echo -e "\tCleaning $(NAME)..."

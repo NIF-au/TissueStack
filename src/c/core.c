@@ -169,8 +169,11 @@ void            init_prog(t_tissue_stack *t)
 
   t->tile_requests = malloc(sizeof(*t->tile_requests));
   init_tile_requests(t->tile_requests);
+  t->memory_mappings = NULL;
+  #ifdef USE_MM
   t->memory_mappings = malloc(sizeof(*t->memory_mappings));
   init_memory_mapping(t->memory_mappings);
+  #endif
   t->get_volume = get_volume;
   t->check_volume = check_volume;
   t->clean_quit = clean_quit;
@@ -261,11 +264,22 @@ void		free_core_struct(t_tissue_stack *t)
   free(t);
 }
 
+// PLEASE DO NOT CHANGE STRINGS HERE UNLESS YOU UPDATE THE CODE THAT REFERENCES THEM !!!!
+static char * PLUGINS[7][2] = {
+		{"image", "TissueStackImageExtract.so"},
+		{"serv", "TissueStackCommunicator.so"},
+		{"comm", "TissueStackProcessCommunicator.so"},
+		{"minc_info", "TissueStackMincInfo.so"},
+		{"minc_converter", "TissueStackMincConverter.so"},
+		{"nifti_converter", "TissueStackNiftiConverter.so"},
+		{"progress", "TissueStackPercent.so"},
+};
+
 int		main(int argc, char **argv)
 {
-  int			result;
+  int			result, nr_of_plugins, x;
   t_tissue_stack	*t;
-  char			serv_command[20];
+  char			serv_command[20], load_command[150];
 
   prctl(PR_SET_NAME, "TS_CORE");
 
@@ -297,20 +311,12 @@ int		main(int argc, char **argv)
   t->tp = malloc(sizeof(*t->tp));
   thread_pool_init(t->tp, 16);
 
-  // These are the plugins that should be loaded by default.
-  // Please no rash name changes since JNI asks for the predefined names!
-  // TODO: change location if APPLICATION_PATH is not /usr/local/....
-  // do the same in the Makefile and JNI !!
-  // strdup(CONCAT_APP_PATH("tasks/general"))
-
-  plugin_load_from_string("load image /usr/local/plugins/TissueStackImageExtract.so", t);
-  plugin_load_from_string("load serv /usr/local/plugins/TissueStackCommunicator.so", t);
-  plugin_load_from_string("load comm /usr/local/plugins/TissueStackProcessCommunicator.so", t);
-  plugin_load_from_string("load minc_info /usr/local/plugins/TissueStackMincInfo.so", t);
-  plugin_load_from_string("load minc_converter /usr/local/plugins/TissueStackMincConverter.so", t);
-  plugin_load_from_string("load nifti_converter /usr/local/plugins/TissueStackNiftiConverter.so", t);
-  plugin_load_from_string("load progress /usr/local/plugins/TissueStackPercent.so", t);
-
+  nr_of_plugins = sizeof(PLUGINS) / sizeof(PLUGINS[0]);
+  for (x=0;x<nr_of_plugins;x++)
+  {
+	  sprintf(load_command, "load %s %s/%s", PLUGINS[x][0], PLUGINS_PATH, PLUGINS[x][1]);
+	  plugin_load_from_string(load_command, t);
+  }
 
   sprintf(serv_command, "start serv %s", argv[1]);
 

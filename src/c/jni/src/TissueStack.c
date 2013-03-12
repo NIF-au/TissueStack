@@ -112,7 +112,9 @@ JNIEXPORT jobject JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_getMinc
 
 	// load and start minc info plugin
 	t_string_buffer * startMincInfoCommand = NULL;
-	startMincInfoCommand = appendToBuffer(startMincInfoCommand, "try_start minc_info /usr/local/plugins/TissueStackMincInfo.so ");
+	startMincInfoCommand = appendToBuffer(startMincInfoCommand, "try_start minc_info ");
+	startMincInfoCommand = appendToBuffer(startMincInfoCommand, PLUGINS_PATH);
+	startMincInfoCommand = appendToBuffer(startMincInfoCommand, "/TissueStackMincInfo.so ");
 	startMincInfoCommand = appendToBuffer(startMincInfoCommand, (char *) file);
 	write(fileDescriptor, startMincInfoCommand->buffer, startMincInfoCommand->size);
 	free(startMincInfoCommand->buffer);

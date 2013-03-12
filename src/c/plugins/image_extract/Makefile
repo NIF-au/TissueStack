@@ -20,8 +20,6 @@ NAME		=	TissueStackImageExtract.so
 
 FLAGS		=	-ggdb -O2 -Wall -Werror -Wno-unused-result
 
-PLUGIN_INSTALL_DIR = /usr/local/plugins
-
 OBJS		=	$(SRCS:%.c=%.o)
 
 %.o: %.c

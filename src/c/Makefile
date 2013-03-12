@@ -36,9 +36,13 @@ OBJS		=	$(SRCS:%.c=%.o)
 
 CC		=	gcc
 
+USE_MEMORY_MAPPING	=	no
+APP_FLAGS			=
+
 # important configuration variables with defaults
 export VERSION
-export APPLICATION_PATH ?= /opt/tissuestack
+export APPLICATION_PATH ?= /usr/local/tissuestack
+export DATA_PATH ?= /opt/tissuestack
 # the application path including the version
 export APPLICATION_ROOT	=	$(APPLICATION_PATH)/$(VERSION)
 # the destination for the binaries
@@ -47,10 +51,23 @@ export BINS_PATH			=	$(APPLICATION_ROOT)/bin
 export PLUGINS_PATH			=	$(APPLICATION_ROOT)/plugins
 # the jni shared library
 export JNI_LIB_PATH		=	/usr/local/lib
+# use memory mapping (turned off by default. did not really deliver gains in our case but can be turned on again with USE_MM=true)?
+ifdef USE_MM
+ifeq ($(USE_MM),true)
+APP_FLAGS=-DUSE_MM
+USE_MEMORY_MAPPING=yes
+endif
+endif
+
+#build path for binary distribution
+export BASE_DIR		= 	$(DIRSRC)../../
+export BUILD_PATH	=	/tmp/tissuestack_build
+export DIST_NAME	=	tissuestack-$(VERSION).tar.gz
 
 %.o: %.c
 	@echo -e "\tCompiling $(@)."
-	@$(CC) -DAPPLICATION_PATH='"$(APPLICATION_ROOT)"' -c $(FLAGS) $(INCLUDE) `pkg-config --cflags gtk+-2.0` -o $@ $<
+	@$(CC) -DAPPLICATION_PATH='"$(DATA_PATH)"' -DPLUGINS_PATH='"$(PLUGINS_PATH)"' $(APP_FLAGS) \
+		-c $(FLAGS) $(INCLUDE) `pkg-config --cflags gtk+-2.0` -o $@ $<
 
 all:	compile install
 
@@ -61,10 +78,11 @@ ifndef VERSION
 endif
 
 	@echo -e "\n###################### TISSUE STACK BUILD [Version: $(VERSION)] ###################"
-	@echo -e "    APPLICATION ROOT:   $(APPLICATION_ROOT)"
-	@echo -e "    PLUGINS PATH:       $(PLUGINS_PATH)"
-	@echo -e "    BINARIES PATH:      $(BINS_PATH)"
-	@echo -e "    JNI LIB PATH:       $(JNI_LIB_PATH)"
+	@echo -e "    APPLICATION DATA:      $(DATA_PATH)"
+	@echo -e "    PLUGINS PATH:          $(PLUGINS_PATH)"
+	@echo -e "    BINARIES PATH:         $(BINS_PATH)"
+	@echo -e "    JNI LIB PATH:          $(JNI_LIB_PATH)"
+	@echo -e "    USE MEMORY MAPPING:    $(USE_MEMORY_MAPPING)"
 	@echo -e "###################### TISSUE STACK BUILD [Version: $(VERSION)] ###################\n"
 	
 coreCompile:	$(OBJS)
@@ -148,4 +166,44 @@ tomcatstart:
 
 re: tomcatstop clean debug install tomcatstart
 
+# target for building a binary tar.gz (is then used for rpm build)
+# we depend on target 'all' and use a temporary build directory in /tmp/tissuestack_build
+dist: all
+	@echo -e "\n\n\tBuilding binary archive: $(DIST_NAME):"
+	@echo -e "\t---------------------------------------------------"
+	@echo -e "\n\tPreparing build directory..."
+	@rm -rf $(BUILD_PATH)
+	@mkdir -p $(BUILD_PATH)/logs
+	@mkdir -p $(BUILD_PATH)/src$(PLUGINS_PATH)
+	@mkdir -p $(BUILD_PATH)/src$(BINS_PATH)
+	@mkdir -p $(BUILD_PATH)/src$(JNI_LIB_PATH)
+	@mkdir -p $(BUILD_PATH)/src$(DATA_PATH)/ands
+	@mkdir -p $(BUILD_PATH)/src$(DATA_PATH)/bin
+	@mkdir -p $(BUILD_PATH)/src$(DATA_PATH)/colormaps
+	@mkdir -p $(BUILD_PATH)/src$(DATA_PATH)/data
+	@mkdir -p $(BUILD_PATH)/src$(DATA_PATH)/logs
+	@mkdir -p $(BUILD_PATH)/src$(DATA_PATH)/lookup
+	@mkdir -p $(BUILD_PATH)/src$(DATA_PATH)/tasks
+	@mkdir -p $(BUILD_PATH)/src$(DATA_PATH)/tiles
+	@mkdir -p $(BUILD_PATH)/src$(DATA_PATH)/upload
+	@echo -e "\tCopying over Tissue Stack Image Server executables and shared libraries..."
+	@cp $(BINS_PATH)/* $(BUILD_PATH)/src$(BINS_PATH)
+	@cp $(PLUGINS_PATH)/*.so $(BUILD_PATH)/src$(PLUGINS_PATH)
+	@cp $(JNI_LIB_PATH)/libTissueStack.so.$(VERSION) $(BUILD_PATH)/src$(JNI_LIB_PATH)
+	@ln -s $(JNI_LIB_PATH)/libTissueStack.so.$(VERSION) $(BUILD_PATH)/src$(JNI_LIB_PATH)/libTissueStack.so
+	@echo -e "\tCopying over front-end resources and colormaps..."
+	@cp $(BASE_DIR)data/colormaps/* $(BUILD_PATH)/src$(DATA_PATH)/colormaps
+	@cp -r $(BASE_DIR)src/web $(BUILD_PATH)/src$(DATA_PATH)
+	@ln -s $(DATA_PATH)/tiles $(BUILD_PATH)/src$(DATA_PATH)/web/tiles
+	@echo -e "\tSwitching to 'packaging' branch to copy over java runtime..."
+	@echo -e "\t(any output is logged into: $(BUILD_PATH)/logs/tissuestack_copy.log)"
+	@cd $(BASE_DIR);git checkout packaging > $(BUILD_PATH)/logs/tissuestack_copy.log 2>&1; \
+	cp -r TissueStack/tissuestack/apache-tomcat-7.0.35 $(BUILD_PATH)/src$(DATA_PATH) > $(BUILD_PATH)/logs/tissuestack_copy.log 
+	@echo -e "\tSwitching to 'packaging' branch to copy over tomcat binaries..."
+	@echo -e "\tBuilding Tissue Stack Web Service (maven build). This may take a while, please be patient!"
+	@echo -e "\t(any output is logged into: $(BUILD_PATH)/logs/tissuestack_maven_build.log)"
+	@cd $(BASE_DIR);	mvn clean install > $(BUILD_PATH)/logs/tissuestack_maven_build.log
+	@echo -e "\tCopying over war file into tomcat web application directory..."
+	cp $(BASE_DIR)target/TissueStack.war $(BUILD_PATH)/logs
+		
 .PHONY: all prepare compile install clean re recompile
