@@ -60,9 +60,10 @@ endif
 endif
 
 #build path for binary distribution
-export BASE_DIR		= 	$(DIRSRC)../../
-export BUILD_PATH	=	/tmp/tissuestack_build
-export DIST_NAME	=	tissuestack-$(VERSION).tar.gz
+export BASE_DIR			= 	$(DIRSRC)../../
+export BUILD_PATH		=	/tmp/tissuestack_build
+export DIST_NAME		=	tissuestack-$(VERSION).tar.gz
+export CURRENT_BRANCH	=	$(shell git branch | grep "*" | sed "s/* //";)
 
 %.o: %.c
 	@echo -e "\tCompiling $(@)."
@@ -197,8 +198,8 @@ dist: all
 	@ln -s $(DATA_PATH)/tiles $(BUILD_PATH)/src$(DATA_PATH)/web/tiles
 	@echo -e "\tSwitching to 'packaging' branch to copy over java runtime..."
 	@echo -e "\t(any output is logged into: $(BUILD_PATH)/logs/tissuestack_copy.log)"
-	@cd $(BASE_DIR);git checkout packaging > $(BUILD_PATH)/logs/tissuestack_copy.log 2>&1; \
-	cp -r TissueStack/tissuestack/jdk1.6.0_25 $(BUILD_PATH)/src$(DATA_PATH) > $(BUILD_PATH)/logs/tissuestack_copy.log 
+	@cd $(BASE_DIR); git checkout packaging &>$(BUILD_PATH)/logs/tissuestack_copy.log; \
+	cp -r TissueStack/tissuestack/jdk1.6.0_25 $(BUILD_PATH)/src$(DATA_PATH) >> $(BUILD_PATH)/logs/tissuestack_copy.log 
 	@echo -e "\tSwitching to 'packaging' branch to copy over tomcat binaries..."
 	@echo -e "\t(any output is logged into: $(BUILD_PATH)/logs/tissuestack_copy.log)"
 	@cd $(BASE_DIR);git checkout packaging > $(BUILD_PATH)/logs/tissuestack_copy.log 2>&1; \
