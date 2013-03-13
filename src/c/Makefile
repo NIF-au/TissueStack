@@ -217,7 +217,7 @@ dist: all
 
 	@echo -e "\tSwitching to 'packaging' branch to copy over tissue stack start script [error logs: $(BUILD_PATH)/logs/*.log]..."
 	@cd $(BASE_DIR); git checkout packaging 2>$(BUILD_PATH)/logs/tissuestack_copy.log; sleep 1s; \
-	cp -r TissueStack/tissuestack/bin/tissuestack.sh $(BUILD_SRC_PATH)$(BINS_PATH)/tissuestack >> $(BUILD_PATH)/logs/tissuestack_copy.log || \
+	cp -r TissueStack/tissuestack/bin/tissuestack_rpm.sh $(BUILD_SRC_PATH)$(BINS_PATH)/tissuestack >> $(BUILD_PATH)/logs/tissuestack_copy.log || \
 	(git checkout $(CURRENT_BRANCH) 2> $(BUILD_PATH)/logs/tissuestack_copy.log && echo "ERROR: git error => check logs !!!" && exit -1);
 	@chmod 755 $(BUILD_SRC_PATH)$(BINS_PATH)/tissuestack
 
@@ -237,8 +237,6 @@ dist: all
 	@echo -e "\tCopying over war file into tomcat web application directory..."
 	@cp $(BASE_DIR)target/TissueStack.war $(BUILD_SRC_PATH)$(DATA_PATH)/apache-tomcat-7.0.35/webapps
 	
-	
-#TODO: cp of bash scripts for start
 #TODO: create update sql with changed paths
 	
 	@echo -e "\tZipping up everything [log: $(BUILD_PATH)/logs/tissuestack_tar.log ]..."
