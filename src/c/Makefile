@@ -188,6 +188,7 @@ dist: all
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/data
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/logs
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/lookup
+	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/sql
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/tasks
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/tiles
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/upload
@@ -221,7 +222,13 @@ dist: all
 	(git checkout $(CURRENT_BRANCH) 2> $(BUILD_PATH)/logs/tissuestack_copy.log && echo "ERROR: git error => check logs !!!" && exit -1);
 	@chmod 755 $(BUILD_SRC_PATH)$(BINS_PATH)/tissuestack
 
-	@echo -e "\tCreating environament script containing the desired paths..."
+	@echo -e "\tBuilding Tissue Stack Web Service (maven build). This may take a while, please be patient! [error logs: $(BUILD_PATH)/logs/*.log]..."
+	@cd $(BASE_DIR); git checkout $(CURRENT_BRANCH) &>$(BUILD_PATH)/logs/tissuestack_copy.log || (echo "ERROR: git error => check logs !!!" && exit -1)
+	@cd $(BASE_DIR);	mvn clean install > $(BUILD_PATH)/logs/tissuestack_maven_build.log
+	@echo -e "\tCopying over war file into tomcat web application directory..."
+	@cp $(BASE_DIR)target/TissueStack.war $(BUILD_SRC_PATH)$(DATA_PATH)/apache-tomcat-7.0.35/webapps
+
+	@echo -e "\tCreating environment script containing the desired paths..."
 	@sudo sh -c "echo -e '#!/bin/bash\n\
 	TISSUE_STACK_HOME=$(DATA_PATH)\n\
 	IMAGE_SERVER_EXE=$(BINS_PATH)/$(NAME)\n\
@@ -230,14 +237,12 @@ dist: all
 	PATH=\$$PATH:$(BINS_PATH)\n\
 	export TISSUE_STACK_HOME IMAGE_SERVER_EXE JAVA_HOME CATALINA_HOME PATH' > $(BUILD_SRC_PATH)$(PROFILE_PATH)/tissuestack_env.sh";
 	@sudo chmod 644 $(BUILD_SRC_PATH)$(PROFILE_PATH)/tissuestack_env.sh
-
-	@echo -e "\tBuilding Tissue Stack Web Service (maven build). This may take a while, please be patient! [error logs: $(BUILD_PATH)/logs/*.log]..."
-	@cd $(BASE_DIR); git checkout $(CURRENT_BRANCH) &>$(BUILD_PATH)/logs/tissuestack_copy.log || (echo "ERROR: git error => check logs !!!" && exit -1)
-	@cd $(BASE_DIR);	mvn clean install > $(BUILD_PATH)/logs/tissuestack_maven_build.log
-	@echo -e "\tCopying over war file into tomcat web application directory..."
-	@cp $(BASE_DIR)target/TissueStack.war $(BUILD_SRC_PATH)$(DATA_PATH)/apache-tomcat-7.0.35/webapps
 	
 #TODO: create update sql with changed paths
+	@echo -e "\tCreating sql update script containing the desired paths..."
+	cp  $(BASE_DIR)/src/sql/*.sql $(BUILD_SRC_PATH)$(DATA_PATH)/sql
+	@sudo sh -c "echo -e '--THESE HAVE BEEN GENERATED AS PART OF THE MAKE PROCESS\n\
+	UPDATE configuration SET value=LALA WHERE key=BLALA' > $(BUILD_SRC_PATH)$(DATA_PATH)/sql/update_tissuestack_config.sql";
 	
 	@echo -e "\tZipping up everything [log: $(BUILD_PATH)/logs/tissuestack_tar.log ]..."
 	@cd $(BUILD_SRC_PATH); tar cvzf $(BUILD_PATH)/$(DIST_NAME) * &> $(BUILD_PATH)/logs/tissuestack_tar.log
