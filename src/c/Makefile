@@ -224,7 +224,7 @@ dist: all
 	@echo -e "\tCreating environament script containing the desired paths..."
 	@sudo sh -c "echo -e '#!/bin/bash\n\
 	TISSUE_STACK_HOME=$(DATA_PATH)\n\
-	IMAGE_SERVER_EXE= $(BINS_PATH)/$(NAME)\n\
+	IMAGE_SERVER_EXE=$(BINS_PATH)/$(NAME)\n\
 	JAVA_HOME=\$$TISSUE_STACK_HOME/jdk1.6.0_25\n\
 	CATALINA_HOME=\$$TISSUE_STACK_HOME/apache-tomcat-7.0.35\n\
 	PATH=\$$PATH:$(BINS_PATH)\n\
