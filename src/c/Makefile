@@ -218,6 +218,16 @@ dist: all
 	@echo -e "\tCopying over war file into tomcat web application directory..."
 	@cp $(BASE_DIR)target/TissueStack.war $(BUILD_PATH)/src$(DATA_PATH)/apache-tomcat-7.0.35/webapps
 	
+	@echo -e "\tCreating scripts containing the chosen paths..."
+	cat > /tmp/tissuestack.sh <<_EOF_ /
+	#!/bin/bash
+	TISSUE_STACK_HOME=$(DATA_PATH) /
+	JAVA_HOME=$TISSUE_STACK_HOME/jdk1.6.0_25 /
+	CATALINA_HOME=$TISSUE_STACK_HOME/apache-tomcat-7.0.35 /
+	export TISSUE_STACK_HOME JAVA_HOME MVN_HOME CATALINA_HOME /
+	_EOF /
+	;
+	
 #TODO: cp of bash scripts for start
 #TODO: create update sql with changed paths
 	
