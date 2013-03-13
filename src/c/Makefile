@@ -228,22 +228,27 @@ dist: all
 	@echo -e "\tCopying over war file into tomcat web application directory..."
 	@cp $(BASE_DIR)target/TissueStack.war $(BUILD_SRC_PATH)$(DATA_PATH)/apache-tomcat-7.0.35/webapps
 
+	@echo -e "\tCreating sql update script containing the desired paths..."
+	@cp  $(BASE_DIR)src/sql/*.sql $(BUILD_SRC_PATH)$(DATA_PATH)/sql
+	@ echo -e "--THESE HAVE BEEN GENERATED AS PART OF THE MAKE PROCESS\n\
+	UPDATE configuration SET value='$(DATA_PATH)/tiles' WHERE name='server_tile_directory';\n\
+	UPDATE configuration SET value='$(DATA_PATH)/upload' WHERE name='upload_directory';\n\
+	UPDATE configuration SET value='$(DATA_PATH)/lookup' WHERE name='lookup_tables_directory';\n\
+	UPDATE configuration SET value='$(DATA_PATH)/tasks/general' WHERE name='tasks_queue_file';\n\
+	UPDATE configuration SET value='$(DATA_PATH)/data' WHERE name='data_directory';\n\
+	UPDATE configuration SET value='$(DATA_PATH)/ands/datasets.xml' WHERE name='ands_dataset_xml';\n\
+	" > $(BUILD_SRC_PATH)$(DATA_PATH)/sql/update_tissuestack_config.sql;
+
 	@echo -e "\tCreating environment script containing the desired paths..."
-	@sudo sh -c "echo -e '#!/bin/bash\n\
+	@ echo -e "#!/bin/bash\n\
 	TISSUE_STACK_HOME=$(DATA_PATH)\n\
 	IMAGE_SERVER_EXE=$(BINS_PATH)/$(NAME)\n\
 	JAVA_HOME=\$$TISSUE_STACK_HOME/jdk1.6.0_25\n\
 	CATALINA_HOME=\$$TISSUE_STACK_HOME/apache-tomcat-7.0.35\n\
 	PATH=\$$PATH:$(BINS_PATH)\n\
-	export TISSUE_STACK_HOME IMAGE_SERVER_EXE JAVA_HOME CATALINA_HOME PATH' > $(BUILD_SRC_PATH)$(PROFILE_PATH)/tissuestack_env.sh";
+	export TISSUE_STACK_HOME IMAGE_SERVER_EXE JAVA_HOME CATALINA_HOME PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/tissuestack_env.sh;
 	@sudo chmod 644 $(BUILD_SRC_PATH)$(PROFILE_PATH)/tissuestack_env.sh
-	
-#TODO: create update sql with changed paths
-	@echo -e "\tCreating sql update script containing the desired paths..."
-	cp  $(BASE_DIR)/src/sql/*.sql $(BUILD_SRC_PATH)$(DATA_PATH)/sql
-	@sudo sh -c "echo -e '--THESE HAVE BEEN GENERATED AS PART OF THE MAKE PROCESS\n\
-	UPDATE configuration SET value=LALA WHERE key=BLALA' > $(BUILD_SRC_PATH)$(DATA_PATH)/sql/update_tissuestack_config.sql";
-	
+
 	@echo -e "\tZipping up everything [log: $(BUILD_PATH)/logs/tissuestack_tar.log ]..."
 	@cd $(BUILD_SRC_PATH); tar cvzf $(BUILD_PATH)/$(DIST_NAME) * &> $(BUILD_PATH)/logs/tissuestack_tar.log
 	
