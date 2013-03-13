@@ -215,19 +215,20 @@ dist: all
 	cp -r TissueStack/tissuestack/apache-tomcat-7.0.35 $(BUILD_SRC_PATH)$(DATA_PATH) >> $(BUILD_PATH)/logs/tissuestack_copy.log || \
 	(git checkout $(CURRENT_BRANCH) 2> $(BUILD_PATH)/logs/tissuestack_copy.log && echo "ERROR: git error => check logs !!!" && exit -1);
 
-	@echo -e "\tSwitching to 'packaging' branch to copy over tissue stack start scripts [error logs: $(BUILD_PATH)/logs/*.log]..."
+	@echo -e "\tSwitching to 'packaging' branch to copy over tissue stack start script [error logs: $(BUILD_PATH)/logs/*.log]..."
 	@cd $(BASE_DIR); git checkout packaging 2>$(BUILD_PATH)/logs/tissuestack_copy.log; sleep 1s; \
 	cp -r TissueStack/tissuestack/bin/tissuestack.sh $(BUILD_SRC_PATH)$(BINS_PATH)/tissuestack >> $(BUILD_PATH)/logs/tissuestack_copy.log || \
 	(git checkout $(CURRENT_BRANCH) 2> $(BUILD_PATH)/logs/tissuestack_copy.log && echo "ERROR: git error => check logs !!!" && exit -1);
-	chmod 755 $(BUILD_SRC_PATH)$(BINS_PATH)/tissuestack
+	@chmod 755 $(BUILD_SRC_PATH)$(BINS_PATH)/tissuestack
 
 	@echo -e "\tCreating environament script containing the desired paths..."
 	@sudo sh -c "echo -e '#!/bin/bash\n\
 	TISSUE_STACK_HOME=$(DATA_PATH)\n\
+	IMAGE_SERVER_EXE= $(BINS_PATH)/$(NAME)\n\
 	JAVA_HOME=\$$TISSUE_STACK_HOME/jdk1.6.0_25\n\
 	CATALINA_HOME=\$$TISSUE_STACK_HOME/apache-tomcat-7.0.35\n\
 	PATH=\$$PATH:$(BINS_PATH)\n\
-	export TISSUE_STACK_HOME JAVA_HOME CATALINA_HOME PATH' > $(BUILD_SRC_PATH)$(PROFILE_PATH)/tissuestack_env.sh";
+	export TISSUE_STACK_HOME IMAGE_SERVER_EXE JAVA_HOME CATALINA_HOME PATH' > $(BUILD_SRC_PATH)$(PROFILE_PATH)/tissuestack_env.sh";
 	@sudo chmod 644 $(BUILD_SRC_PATH)$(PROFILE_PATH)/tissuestack_env.sh
 
 	@echo -e "\tBuilding Tissue Stack Web Service (maven build). This may take a while, please be patient! [error logs: $(BUILD_PATH)/logs/*.log]..."
