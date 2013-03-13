@@ -228,7 +228,7 @@ dist: all
 	CATALINA_HOME=\$$TISSUE_STACK_HOME/apache-tomcat-7.0.35\n\
 	PATH=\$$PATH:$(BINS_PATH)\n\
 	export TISSUE_STACK_HOME JAVA_HOME CATALINA_HOME PATH' > $(BUILD_SRC_PATH)$(PROFILE_PATH)/tissuestack_env.sh";
-	@sudo chmod 644 $(BUILD_SRC_PATH)$(PROFILE_PATH)/tissuestack_env.sh;. $(BUILD_SRC_PATH)$(PROFILE_PATH)/tissuestack_env.sh
+	@sudo chmod 644 $(BUILD_SRC_PATH)$(PROFILE_PATH)/tissuestack_env.sh
 
 	@echo -e "\tBuilding Tissue Stack Web Service (maven build). This may take a while, please be patient! [error logs: $(BUILD_PATH)/logs/*.log]..."
 	@cd $(BASE_DIR); git checkout $(CURRENT_BRANCH) &>$(BUILD_PATH)/logs/tissuestack_copy.log || (echo "ERROR: git error => check logs !!!" && exit -1)
