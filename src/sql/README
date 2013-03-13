@@ -28,7 +28,8 @@ Should you despite the reasons mentioned above opt for a different database, her
 How to create the database: 
     
     1) Install the software
-    2) Run the create.sql script in this folder
+    2) Run the create_tissuestack_xxx.sql scripts in this folder in the following order:
+	_db => _tables => _config
     
     => this creates a database named 'tissuestack' with a user 'tissuestack' with password 'tissuestack'
 
