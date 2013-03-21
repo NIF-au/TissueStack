@@ -12,7 +12,7 @@ fi
 
 javac &> /dev/null
 if [ $? -ne 0 ]; then
-	echo -e "\nYou have to install a java sdk, version >= 1.6. e.g 'yum install java-1.6.0-openjdk' might do the job !!!\n"
+	echo -e "\nYou have to install a java sdk, version >= 1.6. e.g 'yum install java-1.6.0-openjdk-devel' might do the job !!!\n"
 	exit -1
 fi
 mvn -v &> /dev/null
