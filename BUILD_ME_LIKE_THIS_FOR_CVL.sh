@@ -1,0 +1,19 @@
+clear
+
+echo -e "\n\n*********************************************************************************************************"
+echo -e "!!! THIS BUILD OF TISSUE STACK BUILDS FOR THE PARTICULAR NEEDS OF CVL e.g MODULES AND README.TXT !!!"
+echo -e "*********************************************************************************************************\n\n"
+
+VERSION=1.1
+APPLICATION_PATH=/mnt/tissuestack
+
+echo -n "Cleaning..."
+make -f Makefile.centOS clean > /dev/null
+mvn clean > /dev/null
+echo -e "Finished Cleaning.\n"
+
+make -f Makefile.centOS dist VERSION=$VERSION APPLICATION_PATH=$APPLICATION_PATH
+
+echo -e "\n\n*******************************************************************"
+echo -e "\tNOW GO AHEAD AND CVL BUILD ME FROM THE TAR JUST CREATED"
+echo -e "*******************************************************************"
