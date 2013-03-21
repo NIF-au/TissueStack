@@ -1,0 +1,47 @@
+DIRSRC		=	./src/
+
+SRCS		=	$(DIRSRC)percent_and_time.c	$(DIRSRC)../../../volume.c $(DIRSRC)../../../utils/utils.c 
+
+INCLUDE		=	-I./headers -I../../headers -I./../../utils -I/usr/local/bic/include -I/usr/local/nifticlib/2.0.0/include -I/usr/local/minc/2.1.0/include
+
+LIB_PATH	=	-L/usr/local/minc/2.1.0/lib -L/usr/local/nifticlib/2.0.0/lib
+
+LIBS		=	-lhdf5								\
+			-lnetcdf 							\
+			-lminc2								\
+			-lpthread							\
+			-ldl
+
+NAME		=	TissueStackPercent.so
+
+FLAGS		=	-ggdb -Wall -Werror -O2 -Wno-unused-result
+
+OBJS		=	$(SRCS:%.c=%.o)
+
+%.o: %.c
+	@echo -e "\tCompiling $(@)."
+	@gcc -c $(FLAGS) $(INCLUDE) `pkg-config --cflags gtk+-2.0` -fPIC -o $@ $<
+
+all:	compile install
+
+compile: $(OBJS)
+	@gcc $(OBJS) -o $(NAME) $(LIB_PATH) $(LIBS) $(FLAGS) -shared
+	@echo -e "\tFinished building $(NAME).\n"	
+
+install:
+	@echo -e "\n\tInstalling shared library '$(NAME)' into: $(PLUGINS_PATH)."
+	@sudo mkdir -p $(PLUGINS_PATH)
+	@sudo cp $(NAME) $(PLUGINS_PATH)/$(NAME)
+	@echo -e "\tFinished installing shared library '$(NAME)'."
+
+clean:
+	@echo -e "\tCleaning $(NAME)..."
+	@rm -rf *~ \#*\# $(NAME) ./png/*
+	@rm -rf $(DIRSRC)*.o
+	@rm -rf *.so
+	@rm -rf core
+	@echo -e "\tFinished cleaning $(NAME).\n"
+
+re: clean all
+
+.PHONY: all compile install clean re
