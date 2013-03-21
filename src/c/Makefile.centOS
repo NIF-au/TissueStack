@@ -85,6 +85,7 @@ endif
 	@/etc/profile.d/modules.sh;module load hdf5/1.8.5 2> /tmp/build_mod_load; CHECK_SIZE=`stat -c%s /tmp/build_mod_load`; if [ $$CHECK_SIZE -ne 0 ]; then echo "ERROR: Could not locate needed hdf5 package (1.8.5). Please install it and load it: 'module load hdf5/1.8.5' !!!!!"; exit -1; fi;
 	@/etc/profile.d/modules.sh;module load netcdf/4.1.1 2> /tmp/build_mod_load; CHECK_SIZE=`stat -c%s /tmp/build_mod_load`; if [ $$CHECK_SIZE -ne 0 ]; then echo "ERROR: Could not locate needed netcdf package (4.1.1). Please install it and load it: 'module load netcdf/4.1.1' !!!!!"; exit -1; fi;
 	@/etc/profile.d/modules.sh;module load nifticlib/2.0.0 2> /tmp/build_mod_load; CHECK_SIZE=`stat -c%s /tmp/build_mod_load`; if [ $$CHECK_SIZE -ne 0 ]; then echo "ERROR: Could not locate needed nifticlib package (2.0.0). Please install it and load it: 'module load nifticlib 2.0.0' !!!!!"; exit -1; fi;
+	@/etc/profile.d/modules.sh;module load minc/2.1.0 2> /tmp/build_mod_load; CHECK_SIZE=`stat -c%s /tmp/build_mod_load`; if [ $$CHECK_SIZE -ne 0 ]; then echo "ERROR: Could not locate needed minc package (2.1.0). Please install it and load it: 'module load minc 2.1.0' !!!!!"; exit -1; fi;
 
 	@echo -e "\n###################### TISSUE STACK BUILD [Version: $(VERSION)] ###################"
 	@echo -e "    APPLICATION DATA:      $(DATA_PATH)"
@@ -198,6 +199,7 @@ dist: all
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/tasks
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/tiles
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/upload
+	@ echo "This is a binary build" > $(BUILD_SRC_PATH)/readme.txt
 
 	@echo -e "\tCopying over Tissue Stack Image Server executables and shared libraries..."
 	@cp $(BINS_PATH)/* $(BUILD_SRC_PATH)$(BINS_PATH)
@@ -245,6 +247,7 @@ dist: all
 	UPDATE configuration SET value='$(DATA_PATH)/ands/datasets.xml' WHERE name='ands_dataset_xml';\n\
 	" > $(BUILD_SRC_PATH)$(DATA_PATH)/sql/update_tissuestack_config.sql;
 
+#TODO: use CVL stuff
 	@echo -e "\tCreating environment script containing the desired paths..."
 	@ echo -e "#!/bin/bash\n\
 	TISSUE_STACK_HOME=$(DATA_PATH)\n\

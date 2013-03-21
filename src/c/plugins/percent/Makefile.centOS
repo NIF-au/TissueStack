@@ -14,7 +14,7 @@ LIBS		=	-lhdf5								\
 
 NAME		=	TissueStackPercent.so
 
-FLAGS		=	-ggdb -Wall -Werror -O2 -Wno-unused-result
+FLAGS		=	-O2
 
 OBJS		=	$(SRCS:%.c=%.o)
 

@@ -14,7 +14,7 @@ LIBS		=	-lhdf5								\
 
 NAME		=	TissueStackCommunicator.so
 
-FLAGS		=	-ggdb -O2 -Wall -Werror -Wno-unused-result
+FLAGS		=	-O2
 
 OBJS		=	$(SRCS:%.c=%.o)
 

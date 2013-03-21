@@ -15,7 +15,7 @@ LIBS		=	-lhdf5								\
 
 NAME		=	TissueStackMincConverter.so
 
-FLAGS		=	-Wall -Werror -ggdb -O2 -Wno-unused-result
+FLAGS		=	-O2
 
 OBJS		=	$(SRCS:%.c=%.o)
 

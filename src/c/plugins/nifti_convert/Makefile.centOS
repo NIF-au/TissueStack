@@ -19,7 +19,7 @@ LIBS		=	-lhdf5								\
 
 NAME		=	TissueStackNiftiConverter.so
 
-FLAGS		=	-Wall -Werror -ggdb -O2 -Wno-unused-result
+FLAGS		=	-O2
 
 OBJS		=	$(SRCS:%.c=%.o)
 
