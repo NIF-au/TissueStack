@@ -191,7 +191,6 @@ dist: all
 	@mkdir -p $(BUILD_SRC_PATH)$(JNI_LIB_PATH)
 	@mkdir -p $(BUILD_SRC_PATH)$(PROFILE_PATH)
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/ands
-	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/bin
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/colormaps
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/data
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/logs
