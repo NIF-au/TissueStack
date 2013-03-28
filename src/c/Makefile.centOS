@@ -61,7 +61,6 @@ endif
 endif
 
 #build path for binary distribution
-export PROFILE_PATH		= 	/etc/profile.d
 export BASE_DIR			= 	$(DIRSRC)../../
 export BUILD_PATH		=	/tmp/$(NAME)_build
 export BUILD_SRC_PATH		=	$(BUILD_PATH)/src
@@ -249,19 +248,15 @@ dist: all
 	UPDATE configuration SET value='$(DATA_PATH)/ands/datasets.xml' WHERE name='ands_dataset_xml';\n\
 	" > $(BUILD_SRC_PATH)$(DATA_PATH)/sql/update_$(NAME)_config.sql;
 
-	@echo -e "\tCreating post-install and environment script containing the desired paths..."
-	@ echo -e "#!/bin/bash\n\
-	mv /usr/local/$(NAME)/$(VERSION)/* /" > $(BUILD_SRC_PATH)/$(NAME)_post_install.sh;
-
-#TODO: use CVL stuff
+	@echo -e "\tCreating environment script containing the desired paths..."
 	@ echo -e "#!/bin/bash\n\
 	TISSUE_STACK_HOME=$(DATA_PATH)\n\
 	IMAGE_SERVER_EXE=$(BINS_PATH)/$(NAME)\n\
 	JAVA_HOME=\$$TISSUE_STACK_HOME/jdk1.6.0_25\n\
 	CATALINA_HOME=\$$TISSUE_STACK_HOME/apache-tomcat-7.0.35\n\
 	PATH=\$$PATH:$(BINS_PATH)\n\
-	export TISSUE_STACK_HOME IMAGE_SERVER_EXE JAVA_HOME CATALINA_HOME PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(NAME)_env.sh;
-	@sudo chmod 644 $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(NAME)_env.sh
+	export TISSUE_STACK_HOME IMAGE_SERVER_EXE JAVA_HOME CATALINA_HOME PATH" > $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME)_env.sh;
+	@sudo chmod 644 $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME)_env.sh
 
 	@echo -e "\tZipping up everything [log: $(BUILD_PATH)/logs/$(NAME)_tar.log ]..."
 	@cd $(BUILD_SRC_PATH); tar cvzf $(BUILD_PATH)/$(DIST_NAME) * &> $(BUILD_PATH)/logs/$(NAME)_tar.log
