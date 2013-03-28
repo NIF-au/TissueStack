@@ -251,7 +251,7 @@ dist: all
 
 	@echo -e "\tCreating post-install and environment script containing the desired paths..."
 	@ echo -e "#!/bin/bash\n\
-	mv /usr/local/\$$(NAME)/\$$(VERSION) /\n\;
+	mv /usr/local/\$$(NAME)/\$$(VERSION) / " > $(BUILD_SRC_PATH)$(PROFILE_PATH)/\$$(NAME)_post_install.sh;
 
 #TODO: use CVL stuff
 	@ echo -e "#!/bin/bash\n\
