@@ -251,7 +251,7 @@ dist: all
 
 	@echo -e "\tCreating post-install and environment script containing the desired paths..."
 	@ echo -e "#!/bin/bash\n\
-	mv /usr/local/\$$(NAME)/\$$(VERSION) / " > $(BUILD_SRC_PATH)$(PROFILE_PATH)/\$$(NAME)_post_install.sh;
+	mv /usr/local/$(NAME)/$(VERSION)/* /" > $(BUILD_SRC_PATH)/$(NAME)_post_install.sh;
 
 #TODO: use CVL stuff
 	@ echo -e "#!/bin/bash\n\
@@ -260,7 +260,7 @@ dist: all
 	JAVA_HOME=\$$TISSUE_STACK_HOME/jdk1.6.0_25\n\
 	CATALINA_HOME=\$$TISSUE_STACK_HOME/apache-tomcat-7.0.35\n\
 	PATH=\$$PATH:$(BINS_PATH)\n\
-	export TISSUE_STACK_HOME IMAGE_SERVER_EXE JAVA_HOME CATALINA_HOME PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/\$$(NAME)_env.sh;
+	export TISSUE_STACK_HOME IMAGE_SERVER_EXE JAVA_HOME CATALINA_HOME PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(NAME)_env.sh;
 	@sudo chmod 644 $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(NAME)_env.sh
 
 	@echo -e "\tZipping up everything [log: $(BUILD_PATH)/logs/$(NAME)_tar.log ]..."
