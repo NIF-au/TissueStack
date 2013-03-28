@@ -40,9 +40,10 @@ USE_MEMORY_MAPPING	=	no
 APP_FLAGS			=
 
 # important configuration variables with defaults
+export NAME	=	tissuestack
 export VERSION
-export APPLICATION_PATH ?= /usr/local/tissuestack
-export DATA_PATH ?= /opt/tissuestack
+export APPLICATION_PATH ?= /usr/local/$(NAME)
+export DATA_PATH ?= /opt/$(NAME)
 # the application path including the version
 export APPLICATION_ROOT	=	$(APPLICATION_PATH)/$(VERSION)
 # the destination for the binaries
@@ -62,9 +63,9 @@ endif
 #build path for binary distribution
 export PROFILE_PATH		= 	/etc/profile.d
 export BASE_DIR			= 	$(DIRSRC)../../
-export BUILD_PATH		=	/tmp/tissuestack_build
+export BUILD_PATH		=	/tmp/$(NAME)_build
 export BUILD_SRC_PATH		=	$(BUILD_PATH)/src
-export DIST_NAME		=	tissuestack-$(VERSION).tar.gz
+export DIST_NAME		=	$(NAME)-$(VERSION).tar.gz
 export CURRENT_BRANCH	=	$(shell git branch | grep "*" | sed "s/* //";)
 
 %.o: %.c
@@ -178,7 +179,7 @@ tomcatstart:
 re: tomcatstop clean debug install tomcatstart
 
 # target for building a binary tar.gz (is then used for rpm build)
-# we depend on target 'all' and use a temporary build directory in /tmp/tissuestack_build
+# we depend on target 'all' and use a temporary build directory in /tmp/$(NAME)_build
 dist: all
 	@echo -e "\n\n\tBuilding binary archive: $(DIST_NAME):"
 	@echo -e "\t---------------------------------------------------"
@@ -216,24 +217,24 @@ dist: all
 	@mkdir -p $(BUILD_PATH)/logs
 	
 	@echo -e "\tSwitching to 'packaging' branch to copy over java runtime [error logs: $(BUILD_PATH)/logs/*.log]..."
-	@cd $(BASE_DIR); git checkout packaging 2>$(BUILD_PATH)/logs/tissuestack_copy.log; sleep 1s; \
-	cp -r TissueStack/tissuestack/jdk1.6.0_25 $(BUILD_SRC_PATH)$(DATA_PATH) >> $(BUILD_PATH)/logs/tissuestack_copy.log || \
-	(git checkout $(CURRENT_BRANCH) >> $(BUILD_PATH)/logs/tissuestack_copy.log && echo "ERROR: git error => check logs !!!" && exit -1);
+	@cd $(BASE_DIR); git checkout packaging 2>$(BUILD_PATH)/logs/$(NAME)_copy.log; sleep 1s; \
+	cp -r TissueStack/$(NAME)/jdk1.6.0_25 $(BUILD_SRC_PATH)$(DATA_PATH) >> $(BUILD_PATH)/logs/$(NAME)_copy.log || \
+	(git checkout $(CURRENT_BRANCH) >> $(BUILD_PATH)/logs/$(NAME)_copy.log && echo "ERROR: git error => check logs !!!" && exit -1);
 
 	@echo -e "\tSwitching to 'packaging' branch to copy over tomcat binaries [error logs: $(BUILD_PATH)/logs/*.log]..."
-	@cd $(BASE_DIR); git checkout packaging 2>$(BUILD_PATH)/logs/tissuestack_copy.log; sleep 1s; \
-	cp -r TissueStack/tissuestack/apache-tomcat-7.0.35 $(BUILD_SRC_PATH)$(DATA_PATH) >> $(BUILD_PATH)/logs/tissuestack_copy.log || \
-	(git checkout $(CURRENT_BRANCH) 2> $(BUILD_PATH)/logs/tissuestack_copy.log && echo "ERROR: git error => check logs !!!" && exit -1);
+	@cd $(BASE_DIR); git checkout packaging 2>$(BUILD_PATH)/logs/$(NAME)_copy.log; sleep 1s; \
+	cp -r TissueStack/$(NAME)/apache-tomcat-7.0.35 $(BUILD_SRC_PATH)$(DATA_PATH) >> $(BUILD_PATH)/logs/$(NAME)_copy.log || \
+	(git checkout $(CURRENT_BRANCH) 2> $(BUILD_PATH)/logs/$(NAME)_copy.log && echo "ERROR: git error => check logs !!!" && exit -1);
 
 	@echo -e "\tSwitching to 'packaging' branch to copy over tissue stack start script [error logs: $(BUILD_PATH)/logs/*.log]..."
-	@cd $(BASE_DIR); git checkout packaging 2>$(BUILD_PATH)/logs/tissuestack_copy.log; sleep 1s; \
-	cp -r TissueStack/tissuestack/bin/tissuestack_rpm.sh $(BUILD_SRC_PATH)$(BINS_PATH)/tissuestack >> $(BUILD_PATH)/logs/tissuestack_copy.log || \
-	(git checkout $(CURRENT_BRANCH) 2> $(BUILD_PATH)/logs/tissuestack_copy.log && echo "ERROR: git error => check logs !!!" && exit -1);
-	@chmod 755 $(BUILD_SRC_PATH)$(BINS_PATH)/tissuestack
+	@cd $(BASE_DIR); git checkout packaging 2>$(BUILD_PATH)/logs/$(NAME)_copy.log; sleep 1s; \
+	cp -r TissueStack/$(NAME)/bin/$(NAME)_rpm.sh $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME) >> $(BUILD_PATH)/logs/$(NAME)_copy.log || \
+	(git checkout $(CURRENT_BRANCH) 2> $(BUILD_PATH)/logs/$(NAME)_copy.log && echo "ERROR: git error => check logs !!!" && exit -1);
+	@chmod 755 $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME)
 
 	@echo -e "\tBuilding Tissue Stack Web Service (maven build). This may take a while, please be patient! [error logs: $(BUILD_PATH)/logs/*.log]..."
-	@cd $(BASE_DIR); git checkout $(CURRENT_BRANCH) &>$(BUILD_PATH)/logs/tissuestack_copy.log || (echo "ERROR: git error => check logs !!!" && exit -1)
-	@cd $(BASE_DIR);	mvn clean install > $(BUILD_PATH)/logs/tissuestack_maven_build.log
+	@cd $(BASE_DIR); git checkout $(CURRENT_BRANCH) &>$(BUILD_PATH)/logs/$(NAME)_copy.log || (echo "ERROR: git error => check logs !!!" && exit -1)
+	@cd $(BASE_DIR);	mvn clean install > $(BUILD_PATH)/logs/$(NAME)_maven_build.log
 	@echo -e "\tCopying over war file into tomcat web application directory..."
 	@cp $(BASE_DIR)target/TissueStack.war $(BUILD_SRC_PATH)$(DATA_PATH)/apache-tomcat-7.0.35/webapps
 
@@ -246,21 +247,24 @@ dist: all
 	UPDATE configuration SET value='$(DATA_PATH)/tasks/general' WHERE name='tasks_queue_file';\n\
 	UPDATE configuration SET value='$(DATA_PATH)/data' WHERE name='data_directory';\n\
 	UPDATE configuration SET value='$(DATA_PATH)/ands/datasets.xml' WHERE name='ands_dataset_xml';\n\
-	" > $(BUILD_SRC_PATH)$(DATA_PATH)/sql/update_tissuestack_config.sql;
+	" > $(BUILD_SRC_PATH)$(DATA_PATH)/sql/update_$(NAME)_config.sql;
+
+	@echo -e "\tCreating post-install and environment script containing the desired paths..."
+	@ echo -e "#!/bin/bash\n\
+	mv /usr/local/\$$(NAME)/\$$(VERSION) /\n\;
 
 #TODO: use CVL stuff
-	@echo -e "\tCreating environment script containing the desired paths..."
 	@ echo -e "#!/bin/bash\n\
 	TISSUE_STACK_HOME=$(DATA_PATH)\n\
 	IMAGE_SERVER_EXE=$(BINS_PATH)/$(NAME)\n\
 	JAVA_HOME=\$$TISSUE_STACK_HOME/jdk1.6.0_25\n\
 	CATALINA_HOME=\$$TISSUE_STACK_HOME/apache-tomcat-7.0.35\n\
 	PATH=\$$PATH:$(BINS_PATH)\n\
-	export TISSUE_STACK_HOME IMAGE_SERVER_EXE JAVA_HOME CATALINA_HOME PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/tissuestack_env.sh;
-	@sudo chmod 644 $(BUILD_SRC_PATH)$(PROFILE_PATH)/tissuestack_env.sh
+	export TISSUE_STACK_HOME IMAGE_SERVER_EXE JAVA_HOME CATALINA_HOME PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/\$$(NAME)_env.sh;
+	@sudo chmod 644 $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(NAME)_env.sh
 
-	@echo -e "\tZipping up everything [log: $(BUILD_PATH)/logs/tissuestack_tar.log ]..."
-	@cd $(BUILD_SRC_PATH); tar cvzf $(BUILD_PATH)/$(DIST_NAME) * &> $(BUILD_PATH)/logs/tissuestack_tar.log
+	@echo -e "\tZipping up everything [log: $(BUILD_PATH)/logs/$(NAME)_tar.log ]..."
+	@cd $(BUILD_SRC_PATH); tar cvzf $(BUILD_PATH)/$(DIST_NAME) * &> $(BUILD_PATH)/logs/$(NAME)_tar.log
 	
 	@echo -e "\n\tFinished creating binary archive:  $(BUILD_PATH)/$(DIST_NAME)"
 		
