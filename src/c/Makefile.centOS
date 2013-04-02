@@ -28,7 +28,7 @@ LIBS		=	-lhdf5								\
 			-lznz								\
 			-lz
 
-NAME		=	TissueStackImageServer
+EXE_NAME		=	TissueStackImageServer
 
 FLAGS		=	-O2
 
@@ -97,7 +97,7 @@ endif
 	@echo -e "###################### TISSUE STACK BUILD [Version: $(VERSION)] ###################\n"
 	
 coreCompile:	$(OBJS)
-	@$(CC) $(OBJS) -o $(NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) `pkg-config --cflags --libs gtk+-2.0` > /dev/null
+	@$(CC) $(OBJS) -o $(EXE_NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) `pkg-config --cflags --libs gtk+-2.0` > /dev/null
 	@echo -e "\tFinished compiling core components."
 
 pluginsCompile:
@@ -130,12 +130,12 @@ pluginsCompile:
 	@echo -e "\n\tFinished compiling plugins."
 
 install: prepare
-	@echo -e "\n\tInstalling Binaries (required super user priviledges):"
+	@echo -e "\n\tInstalling Binaries (requires super user priviledges):"
 	@echo -e "\t-----------------------------------------------\n"
-	@echo -e "\tInstalling '$(NAME)' executable into: $(BINS_PATH)."
+	@echo -e "\tInstalling '$(EXE_NAME)' executable into: $(BINS_PATH)."
 	@sudo mkdir -p $(BINS_PATH)
-	@sudo cp $(NAME) $(BINS_PATH)/$(NAME)
-	@echo -e "\tFinished installing '$(NAME)'."
+	@sudo cp $(EXE_NAME) $(BINS_PATH)/$(EXE_NAME)
+	@echo -e "\tFinished installing '$(EXE_NAME)'."
 	@make -f Makefile.centOS --no-print-directory -C ./plugins/communicator/ install 
 	@make -f Makefile.centOS --no-print-directory -C ./plugins/image_extract/ install
 	@make -f Makefile.centOS --no-print-directory -C ./plugins/comm_inter_process/ install
@@ -250,7 +250,7 @@ dist: all
 	@echo -e "\tCreating environment script containing the desired paths..."
 	@ echo -e "#!/bin/bash\n\
 	TISSUE_STACK_HOME=$(DATA_PATH)\n\
-	IMAGE_SERVER_EXE=$(BINS_PATH)/$(NAME)\n\
+	IMAGE_SERVER_EXE=$(BINS_PATH)/$(EXE_NAME)\n\
 	JAVA_HOME=\$$TISSUE_STACK_HOME/jdk1.6.0_25\n\
 	CATALINA_HOME=\$$TISSUE_STACK_HOME/apache-tomcat-7.0.35\n\
 	PATH=\$$PATH:$(BINS_PATH)\n\
