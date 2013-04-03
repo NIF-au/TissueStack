@@ -247,7 +247,20 @@ dist: all
 	CATALINA_HOME=\$$TISSUE_STACK_HOME/apache-tomcat-7.0.35\n\
 	PATH=\$$PATH:$(BINS_PATH)\n\
 	export TISSUE_STACK_HOME IMAGE_SERVER_EXE JAVA_HOME CATALINA_HOME PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(NAME)_env.sh;
-	@sudo chmod 644 $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(NAME)_env.sh
+	@sudo chmod 755 $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(NAME)_env.sh
+
+	@echo -e "\tCreating post install script..."
+	@ echo -e "#!/bin/bash\n\
+	for dirs in \`find $(DATA_PATH)/ -name \"bin\"\`;do\n\
+	\tchmod -R 755 \$$dirs/*\n\
+	done\n\
+	su -c \"su postgres <<EOF\n\
+	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_db.sql\n\
+	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_tables.sql tissuestack\n\
+	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_config.sql tissuestack\n\
+	psql -U postgres -h localhost -f $(DATA_PATH)/sql/update_$(NAME)_config.sql tissuestack\n\
+	EOF\n\"" > $(BUILD_SRC_PATH)/post-install.sh
+	@sudo chmod 755 $(BUILD_SRC_PATH)/post-install.sh
 
 	@echo -e "\tZipping up everything [log: $(BUILD_PATH)/logs/$(NAME)_tar.log ]..."
 	@cd $(BUILD_SRC_PATH); tar cvzf $(BUILD_PATH)/$(DIST_NAME) * &> $(BUILD_PATH)/logs/$(NAME)_tar.log
