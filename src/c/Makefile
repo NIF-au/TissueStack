@@ -251,19 +251,21 @@ dist: all
 
 	@echo -e "\tCreating post install script..."
 	@ echo -e "#!/bin/bash\n\
+	rm -f /tmp/post-install.log\n\
 	for dirs in \`find $(DATA_PATH)/ -name \"bin\"\`;do\n\
-	\tchmod -R 755 \$$dirs/*\n\
+	\tchmod -R 755 \$$dirs/* &>> /tmp/post-install.log\n\
 	done\n\
 	su -c \"su - postgres <<EOF\n\
-	initdb\n\
+	initdb &>> /tmp/post-install.log\n\
 	EOF\n\"\n\
-	chkconfig postgresql on\n\
-	service postgresql start\n\
+	chkconfig postgresql on &>> /tmp/post-install.log\n\
+	service postgresql start &>> /tmp/post-install.log\n\
+	sleep 10s\n\
 	su -c \"su - postgres <<EOF\n\
-	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_db.sql\n\
-	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_tables.sql tissuestack\n\
-	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_config.sql tissuestack\n\
-	psql -U postgres -h localhost -f $(DATA_PATH)/sql/update_$(NAME)_config.sql tissuestack\n\
+	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_db.sql &>> /tmp/post-install.log\n\
+	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_tables.sql tissuestack &>> /tmp/post-install.log\n\
+	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
+	psql -U postgres -h localhost -f $(DATA_PATH)/sql/update_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
 	EOF\n\"" > $(BUILD_SRC_PATH)/post-install.sh
 	@sudo chmod 755 $(BUILD_SRC_PATH)/post-install.sh
 
