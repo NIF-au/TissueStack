@@ -256,7 +256,7 @@ dist: all
 	done\n\
 	su -c \"su - postgres <<EOF\n\
 	initdb\n\
-	EOF\n\"\
+	EOF\n\"\n\
 	chkconfig postgresql on\n\
 	service postgresql start\n\
 	su -c \"su - postgres <<EOF\n\
