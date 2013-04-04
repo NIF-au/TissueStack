@@ -51,7 +51,7 @@ export BINS_PATH			=	$(APPLICATION_ROOT)/bin
 # the plugin path with its .so 
 export PLUGINS_PATH			=	$(APPLICATION_ROOT)/plugins
 # the jni shared library
-export JNI_LIB_PATH		=	/usr/local/lib
+export JNI_LIB_PATH			=	$(APPLICATION_ROOT)/lib
 # use memory mapping (turned off by default. did not really deliver gains in our case but can be turned on again with USE_MM=true)?
 ifdef USE_MM
 ifeq ($(USE_MM),true)
@@ -239,6 +239,7 @@ dist: all
 	@echo -e "\tCreating sql update script containing the desired paths..."
 	@cp  $(BASE_DIR)src/sql/*.sql $(BUILD_SRC_PATH)$(DATA_PATH)/sql
 	@ echo -e "--THESE HAVE BEEN GENERATED AS PART OF THE MAKE PROCESS\n\
+	UPDATE configuration SET value='$(DATA_PATH)/colormaps' WHERE name='colormaps_directory';\n\
 	UPDATE configuration SET value='$(DATA_PATH)/tiles' WHERE name='server_tile_directory';\n\
 	UPDATE configuration SET value='$(DATA_PATH)/upload' WHERE name='upload_directory';\n\
 	UPDATE configuration SET value='$(DATA_PATH)/lookup' WHERE name='lookup_tables_directory';\n\
@@ -250,11 +251,12 @@ dist: all
 	@echo -e "\tCreating environment script containing the desired paths..."
 	@ echo -e "#!/bin/bash\n\
 	TISSUE_STACK_HOME=$(DATA_PATH)\n\
+	TISSUE_STACK_JNI_LIB_PATH=$(JNI_LIB_PATH)\n\
 	IMAGE_SERVER_EXE=$(BINS_PATH)/$(EXE_NAME)\n\
 	JAVA_HOME=\$$TISSUE_STACK_HOME/jdk1.6.0_25\n\
 	CATALINA_HOME=\$$TISSUE_STACK_HOME/apache-tomcat-7.0.35\n\
 	PATH=\$$PATH:$(BINS_PATH)\n\
-	export TISSUE_STACK_HOME IMAGE_SERVER_EXE JAVA_HOME CATALINA_HOME PATH" > $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME)_env.sh;
+	export TISSUE_STACK_HOME TISSUE_STACK_JNI_LIB_PATH IMAGE_SERVER_EXE JAVA_HOME CATALINA_HOME PATH" > $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME)_env.sh;
 	@sudo chmod 755 $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME)_env.sh
 
 	@echo -e "\tCreating post install script..."
