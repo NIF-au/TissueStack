@@ -254,7 +254,12 @@ dist: all
 	for dirs in \`find $(DATA_PATH)/ -name \"bin\"\`;do\n\
 	\tchmod -R 755 \$$dirs/*\n\
 	done\n\
-	su -c \"su postgres <<EOF\n\
+	su -c \"su - postgres <<EOF\n\
+	initdb\n\
+	EOF\n\"\
+	chkconfig postgresql on\n\
+	service postgresql start\n\
+	su -c \"su - postgres <<EOF\n\
 	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_db.sql\n\
 	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_tables.sql tissuestack\n\
 	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_config.sql tissuestack\n\
