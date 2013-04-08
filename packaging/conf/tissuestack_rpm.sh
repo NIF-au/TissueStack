@@ -11,7 +11,6 @@ else
 		exit -1
 	fi
 fi
-echo $TISSUE_STACK_HOME
 
 # actual script
 SHUTDOWN_TRIES=10

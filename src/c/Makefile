@@ -53,12 +53,14 @@ export PLUGINS_PATH			=	$(APPLICATION_ROOT)/plugins
 # the jni shared library
 export JNI_LIB_PATH			=	$(APPLICATION_ROOT)/lib
 # packaging stuff including java runtime, tomcat and miscalenous configuration files
-export PACKAGING_PATH		=	$(BASE_DIR)/packaging
+export PACKAGING_PATH		=	$(BASE_DIR)packaging
 export JDK_VERSION			=	1.6.0_25
 export JDK_PATH				=	$(PACKAGING_PATH)/jdk$(JDK_VERSION)
 export TOMCAT_VERSION		= 	7.0.35
 export TOMCAT_PATH			=	$(PACKAGING_PATH)/apache-tomcat-$(TOMCAT_VERSION)
 export PACKAGING_CONFIG_PATH=	$(PACKAGING_PATH)/conf
+export IS_DEBIAN_BASED=`cat /etc/*-release | grep -i debian | wc -c`
+export IS_UBUNTU_BASED=`cat /etc/*-release | grep -i ubuntu | wc -c`
 
 # use memory mapping (turned off by default. did not really deliver gains in our case but can be turned on again with USE_MM=true)?
 ifdef USE_MM
@@ -88,7 +90,7 @@ prepare:
 ifndef VERSION
 	$(error VERSION IS NOT SET !!!!!!!!!!!!! Please call make like this: make VERSION=X.X !!!!!)
 endif
-
+	
 	@echo -e "\n###################### TISSUE STACK BUILD [Version: $(VERSION)] ###################"
 	@echo -e "    APPLICATION DATA:      $(DATA_PATH)"
 	@echo -e "    PLUGINS PATH:          $(PLUGINS_PATH)"
@@ -215,13 +217,17 @@ dist: all
 	@mkdir -p $(BUILD_PATH)/logs
 	
 	@echo -e "\tCopying over java runtime [error logs: $(BUILD_PATH)/logs/*.log]..."
-	cp -r $(JDK_PATH) $(BUILD_SRC_PATH)$(DATA_PATH) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
+	@cp -r $(JDK_PATH) $(BUILD_SRC_PATH)$(DATA_PATH) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
 
 	@echo -e "\tCopying over tomcat binaries [error logs: $(BUILD_PATH)/logs/*.log]..."
-	cp -r $(TOMCAT_PATH) $(BUILD_SRC_PATH)$(DATA_PATH) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
+	@cp -r $(TOMCAT_PATH) $(BUILD_SRC_PATH)$(DATA_PATH) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
 
 	@echo -e "\tCopying over tissue stack start script [error logs: $(BUILD_PATH)/logs/*.log]..."
-	cp -r $(PACKAGING_CONFIG_PATH)/$(NAME)_rpm.sh $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
+	@if [ $(IS_DEBIAN_BASED) -gt 0 ] || [ $(IS_UBUNTU_BASED) -gt 0 ]; then \
+		cp -r $(PACKAGING_CONFIG_PATH)/$(NAME).sh $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log; \
+	else \
+		cp -r $(PACKAGING_CONFIG_PATH)/$(NAME)_rpm.sh $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log; \
+	fi
 	@chmod 755 $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME)
 
 	@echo -e "\tBuilding Tissue Stack Web Service (maven build). This may take a while, please be patient! [error logs: $(BUILD_PATH)/logs/*.log]..."
@@ -254,26 +260,33 @@ dist: all
 	export TISSUE_STACK_HOME TISSUE_STACK_JNI_LIB_PATH IMAGE_SERVER_EXE JAVA_HOME CATALINA_HOME PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(NAME)_env.sh;
 	@sudo chmod 755 $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(NAME)_env.sh
 
-	@echo -e "\tCreating post install script..."
-	@ echo -e "#!/bin/bash\n\
-	rm -f /tmp/post-install.log\n\
-	touch /tmp/post-install.log\n\
-	chmod 666 /tmp/post-install.log\n\
-	for dirs in \`find $(DATA_PATH)/ -name \"bin\"\`;do\n\
-	\tchmod -R 755 \$$dirs/* &>> /tmp/post-install.log\n\
-	done\n\
-	su -c \"su - postgres <<EOF\n\
-	initdb &>> /tmp/post-install.log\n\
-	EOF\n\"\n\
-	chkconfig postgresql on &>> /tmp/post-install.log\n\
-	service postgresql start &>> /tmp/post-install.log\n\
-	sleep 5s\n\
-	su -c \"su - postgres <<EOF\n\
-	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_db.sql &>> /tmp/post-install.log\n\
-	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_tables.sql tissuestack &>> /tmp/post-install.log\n\
-	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
-	psql -U postgres -h localhost -f $(DATA_PATH)/sql/update_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
-	EOF\n\"" > $(BUILD_SRC_PATH)/post-install.sh
+	@echo -ne "\tCreating post install script for "
+	@if [ $(IS_DEBIAN_BASED) -gt 0 ] || [ $(IS_UBUNTU_BASED) -gt 0 ]; then \
+		echo -e "a debian based distribution..."; \
+		echo -e "\tNOT HANDLED YET"; \
+		touch $(BUILD_SRC_PATH)/post-install.sh; \
+	else \
+		echo -e "a red hat based distribution..."; \
+		@ echo -e "#!/bin/bash\n\
+		rm -f /tmp/post-install.log\n\
+		touch /tmp/post-install.log\n\
+		chmod 666 /tmp/post-install.log\n\
+		for dirs in \`find $(DATA_PATH)/ -name \"bin\"\`;do\n\
+		\tchmod -R 755 \$$dirs/* &>> /tmp/post-install.log\n\
+		done\n\
+		su -c \"su - postgres <<EOF\n\
+		initdb &>> /tmp/post-install.log\n\
+		EOF\n\"\n\
+		chkconfig postgresql on &>> /tmp/post-install.log\n\
+		service postgresql start &>> /tmp/post-install.log\n\
+		sleep 5s\n\
+		su -c \"su - postgres <<EOF\n\
+		psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_db.sql &>> /tmp/post-install.log\n\
+		psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_tables.sql tissuestack &>> /tmp/post-install.log\n\
+		psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
+		psql -U postgres -h localhost -f $(DATA_PATH)/sql/update_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
+		EOF\n\"" > $(BUILD_SRC_PATH)/post-install.sh; \
+	fi
 	@sudo chmod 755 $(BUILD_SRC_PATH)/post-install.sh
 
 	@echo -e "\tZipping up everything [log: $(BUILD_PATH)/logs/$(NAME)_tar.log ]..."
