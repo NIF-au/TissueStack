@@ -1,0 +1,23 @@
+<VirtualHost *:80>
+        ServerName XXX.xxx
+
+        ServerAdmin webmaster@localhost
+
+        DocumentRoot /opt/tissuestack/web
+
+        Header set Access-Control-Allow-Origin "*"
+
+        ProxyPass /backend http://xxx.xx:8080/TissueStack
+        ProxyPass /image_service http://xxx.xx:4242
+
+        <Directory />
+                Options FollowSymLinks
+                AllowOverride None
+        </Directory>
+
+        ErrorLog ${APACHE_LOG_DIR}/tissue_stack_error.log
+
+        # Possible values include: debug, info, notice, warn, error, crit,
+        # alert, emerg.
+        LogLevel error
+</VirtualHost>

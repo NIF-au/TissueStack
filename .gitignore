@@ -25,4 +25,4 @@ Build (GNU)
 *.esproj
 TissueStackImageServer
 binaries
-packaging
+*.war
