@@ -52,6 +52,14 @@ export BINS_PATH			=	$(APPLICATION_ROOT)/bin
 export PLUGINS_PATH			=	$(APPLICATION_ROOT)/plugins
 # the jni shared library
 export JNI_LIB_PATH			=	$(APPLICATION_ROOT)/lib
+# packaging stuff including java runtime, tomcat and miscalenous configuration files
+export PACKAGING_PATH		=	$(BASE_DIR)/packaging
+export JDK_VERSION			=	1.6.0_25
+export JDK_PATH				=	$(PACKAGING_PATH)/jdk$(JDK_VERSION)
+export TOMCAT_VERSION		= 	7.0.35
+export TOMCAT_PATH			=	$(PACKAGING_PATH)/apache-tomcat-$(TOMCAT_VERSION)
+export PACKAGING_CONFIG_PATH=	$(PACKAGING_PATH)/conf
+
 # use memory mapping (turned off by default. did not really deliver gains in our case but can be turned on again with USE_MM=true)?
 ifdef USE_MM
 ifeq ($(USE_MM),true)
@@ -206,27 +214,22 @@ dist: all
 	@rm -rf $(BUILD_PATH)/logs
 	@mkdir -p $(BUILD_PATH)/logs
 	
-	@echo -e "\tSwitching to 'packaging' branch to copy over java runtime [error logs: $(BUILD_PATH)/logs/*.log]..."
-	@cd $(BASE_DIR); git checkout packaging 2>$(BUILD_PATH)/logs/$(NAME)_copy.log; sleep 1s; \
-	cp -r TissueStack/$(NAME)/jdk1.6.0_25 $(BUILD_SRC_PATH)$(DATA_PATH) >> $(BUILD_PATH)/logs/$(NAME)_copy.log || \
-	(git checkout $(CURRENT_BRANCH) >> $(BUILD_PATH)/logs/$(NAME)_copy.log && echo "ERROR: git error => check logs !!!" && exit -1);
+	@echo -e "\tCopying over java runtime [error logs: $(BUILD_PATH)/logs/*.log]..."
+	cp -r $(JDK_PATH) $(BUILD_SRC_PATH)$(DATA_PATH) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
 
-	@echo -e "\tSwitching to 'packaging' branch to copy over tomcat binaries [error logs: $(BUILD_PATH)/logs/*.log]..."
-	@cd $(BASE_DIR); git checkout packaging 2>$(BUILD_PATH)/logs/$(NAME)_copy.log; sleep 1s; \
-	cp -r TissueStack/$(NAME)/apache-tomcat-7.0.35 $(BUILD_SRC_PATH)$(DATA_PATH) >> $(BUILD_PATH)/logs/$(NAME)_copy.log || \
-	(git checkout $(CURRENT_BRANCH) 2> $(BUILD_PATH)/logs/$(NAME)_copy.log && echo "ERROR: git error => check logs !!!" && exit -1);
+	@echo -e "\tCopying over tomcat binaries [error logs: $(BUILD_PATH)/logs/*.log]..."
+	cp -r $(TOMCAT_PATH) $(BUILD_SRC_PATH)$(DATA_PATH) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
 
-	@echo -e "\tSwitching to 'packaging' branch to copy over tissue stack start script [error logs: $(BUILD_PATH)/logs/*.log]..."
-	@cd $(BASE_DIR); git checkout packaging 2>$(BUILD_PATH)/logs/$(NAME)_copy.log; sleep 1s; \
-	cp -r TissueStack/$(NAME)/bin/$(NAME)_rpm.sh $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME) >> $(BUILD_PATH)/logs/$(NAME)_copy.log || \
-	(git checkout $(CURRENT_BRANCH) 2> $(BUILD_PATH)/logs/$(NAME)_copy.log && echo "ERROR: git error => check logs !!!" && exit -1);
+	@echo -e "\tCopying over tissue stack start script [error logs: $(BUILD_PATH)/logs/*.log]..."
+	cp -r $(PACKAGING_CONFIG_PATH)/$(NAME)_rpm.sh $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
 	@chmod 755 $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME)
 
 	@echo -e "\tBuilding Tissue Stack Web Service (maven build). This may take a while, please be patient! [error logs: $(BUILD_PATH)/logs/*.log]..."
-	@cd $(BASE_DIR); git checkout $(CURRENT_BRANCH) &>$(BUILD_PATH)/logs/$(NAME)_copy.log || (echo "ERROR: git error => check logs !!!" && exit -1)
-	@cd $(BASE_DIR);	mvn clean install > $(BUILD_PATH)/logs/$(NAME)_maven_build.log
+#	@cd $(BASE_DIR); git checkout $(CURRENT_BRANCH) &>$(BUILD_PATH)/logs/$(NAME)_copy.log || (echo "ERROR: git error => check logs !!!" && exit -1)
+	@cd $(BASE_DIR);	mvn clean install &> $(BUILD_PATH)/logs/$(NAME)_maven_build.log
+
 	@echo -e "\tCopying over war file into tomcat web application directory..."
-	@cp $(BASE_DIR)target/TissueStack.war $(BUILD_SRC_PATH)$(DATA_PATH)/apache-tomcat-7.0.35/webapps
+	@cp $(BASE_DIR)target/TissueStack.war $(BUILD_SRC_PATH)$(DATA_PATH)/apache-tomcat-$(TOMCAT_VERSION)/webapps
 
 	@echo -e "\tCreating sql update script containing the desired paths..."
 	@cp  $(BASE_DIR)src/sql/*.sql $(BUILD_SRC_PATH)$(DATA_PATH)/sql
