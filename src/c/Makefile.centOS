@@ -53,7 +53,7 @@ export PLUGINS_PATH			=	$(APPLICATION_ROOT)/plugins
 # the jni shared library
 export JNI_LIB_PATH			=	$(APPLICATION_ROOT)/lib
 # packaging stuff including java runtime, tomcat and miscalenous configuration files
-export PACKAGING_PATH		=	$(BASE_DIR)/packaging
+export PACKAGING_PATH		=	$(BASE_DIR)packaging
 export JDK_VERSION			=	1.6.0_25
 export JDK_PATH				=	$(PACKAGING_PATH)/jdk$(JDK_VERSION)
 export TOMCAT_VERSION		= 	7.0.35
@@ -223,13 +223,13 @@ dist: all
 	@mkdir -p $(BUILD_PATH)/logs
 	
 	@echo -e "\tCopying over java runtime [error logs: $(BUILD_PATH)/logs/*.log]..."
-	cp -r $(JDK_PATH) $(BUILD_SRC_PATH)$(DATA_PATH) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
+	@cp -r $(JDK_PATH) $(BUILD_SRC_PATH)$(DATA_PATH) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
 
 	@echo -e "\tCopying over tomcat binaries [error logs: $(BUILD_PATH)/logs/*.log]..."
-	cp -r $(TOMCAT_PATH) $(BUILD_SRC_PATH)$(DATA_PATH) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
+	@cp -r $(TOMCAT_PATH) $(BUILD_SRC_PATH)$(DATA_PATH) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
 
 	@echo -e "\tCopying over tissue stack start script [error logs: $(BUILD_PATH)/logs/*.log]..."
-	cp -r $(PACKAGING_CONFIG_PATH)/$(NAME)_rpm.sh $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
+	@cp -r $(PACKAGING_CONFIG_PATH)/$(NAME)_rpm.sh $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
 	@chmod 755 $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME)
 
 	@echo -e "\tBuilding Tissue Stack Web Service (maven build). This may take a while, please be patient! [error logs: $(BUILD_PATH)/logs/*.log]..."
