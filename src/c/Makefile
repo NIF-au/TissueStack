@@ -61,6 +61,9 @@ export TOMCAT_PATH			=	$(PACKAGING_PATH)/apache-tomcat-$(TOMCAT_VERSION)
 export PACKAGING_CONFIG_PATH=	$(PACKAGING_PATH)/conf
 export IS_DEBIAN_BASED=`cat /etc/*-release | grep -i debian | wc -c`
 export IS_UBUNTU_BASED=`cat /etc/*-release | grep -i ubuntu | wc -c`
+export HTTPD_CONF_DIR		= 	/etc/httpd/conf.d
+export APACHE2_CONF_DIR		= 	/etc/apache2/sites-available
+export SYS_V_INIT_PATH		= 	/etc/init.d/
 
 # use memory mapping (turned off by default. did not really deliver gains in our case but can be turned on again with USE_MM=true)?
 ifdef USE_MM
@@ -195,6 +198,7 @@ dist: all
 	@mkdir -p $(BUILD_SRC_PATH)$(PROFILE_PATH)
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/ands
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/colormaps
+	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/conf
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/data
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/logs
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/lookup
@@ -222,7 +226,8 @@ dist: all
 	@echo -e "\tCopying over tomcat binaries [error logs: $(BUILD_PATH)/logs/*.log]..."
 	@cp -r $(TOMCAT_PATH) $(BUILD_SRC_PATH)$(DATA_PATH) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
 
-	@echo -e "\tCopying over tissue stack start script [error logs: $(BUILD_PATH)/logs/*.log]..."
+	@echo -e "\tCopying over tissue stack start/conf scripts [error logs: $(BUILD_PATH)/logs/*.log]..."
+	@cp -r $(PACKAGING_CONFIG_PATH)/$(NAME)-httpd.conf $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(NAME).conf &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
 	@if [ $(IS_DEBIAN_BASED) -gt 0 ] || [ $(IS_UBUNTU_BASED) -gt 0 ]; then \
 		cp -r $(PACKAGING_CONFIG_PATH)/$(NAME).sh $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log; \
 	else \
@@ -263,29 +268,60 @@ dist: all
 	@echo -ne "\tCreating post install script for "
 	@if [ $(IS_DEBIAN_BASED) -gt 0 ] || [ $(IS_UBUNTU_BASED) -gt 0 ]; then \
 		echo -e "a debian based distribution..."; \
-		echo -e "\tNOT HANDLED YET"; \
-		touch $(BUILD_SRC_PATH)/post-install.sh; \
+		echo -e "#!/bin/bash\n\
+	rm -f /tmp/post-install.log\n\
+	touch /tmp/post-install.log\n\
+	chmod 666 /tmp/post-install.log\n\
+	for dirs in \`find $(DATA_PATH)/ -name \"bin\"\`;do\n\
+	\tchmod -R 755 \$$dirs/* &>> /tmp/post-install.log\n\
+	done\n\
+	service postgresql start &>> /tmp/post-install.log\n\
+	sleep 5s\n\
+	sudo su - postgres <<EOF\n\
+	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_db.sql &>> /tmp/post-install.log\n\
+	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_tables.sql tissuestack &>> /tmp/post-install.log\n\
+	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
+	psql -U postgres -h localhost -f $(DATA_PATH)/sql/update_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
+	EOF\n\
+	echo \"$(DATA_PATH)\" > /tmp/escaped.string\n\
+	sed -i 's/\//\\\\\\\\\//g' /tmp/escaped.string\n\
+	ESCAPED_STRING=\`cat /tmp/escaped.string\`\n\
+	sed -i \"s/%%DOC_ROOT%%/\$$ESCAPED_STRING\\/web/g\" $(DATA_PATH)/conf/$(NAME).conf\n\
+	sed -i 's/%%ERROR_LOG%%/\\/var\\/log\\/apache2\\/$(NAME)-error.log/g' $(DATA_PATH)/conf/$(NAME).conf\n\
+	cp $(DATA_PATH)/conf/$(NAME).conf $(APACHE2_CONF_DIR)\n\
+	a2ensite $(APACHE2_CONF_DIR)/$(NAME).conf\n\
+	$(SYS_V_INIT_PATH)apache2 restart\
+	" > $(BUILD_SRC_PATH)/post-install.sh; \
 	else \
 		echo -e "a red hat based distribution..."; \
-		@ echo -e "#!/bin/bash\n\
-		rm -f /tmp/post-install.log\n\
-		touch /tmp/post-install.log\n\
-		chmod 666 /tmp/post-install.log\n\
-		for dirs in \`find $(DATA_PATH)/ -name \"bin\"\`;do\n\
-		\tchmod -R 755 \$$dirs/* &>> /tmp/post-install.log\n\
-		done\n\
-		su -c \"su - postgres <<EOF\n\
-		initdb &>> /tmp/post-install.log\n\
-		EOF\n\"\n\
-		chkconfig postgresql on &>> /tmp/post-install.log\n\
-		service postgresql start &>> /tmp/post-install.log\n\
-		sleep 5s\n\
-		su -c \"su - postgres <<EOF\n\
-		psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_db.sql &>> /tmp/post-install.log\n\
-		psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_tables.sql tissuestack &>> /tmp/post-install.log\n\
-		psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
-		psql -U postgres -h localhost -f $(DATA_PATH)/sql/update_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
-		EOF\n\"" > $(BUILD_SRC_PATH)/post-install.sh; \
+	echo -e "#!/bin/bash\n\
+	rm -f /tmp/post-install.log\n\
+	touch /tmp/post-install.log\n\
+	chmod 666 /tmp/post-install.log\n\
+	for dirs in \`find $(DATA_PATH)/ -name \"bin\"\`;do\n\
+	\tchmod -R 755 \$$dirs/* &>> /tmp/post-install.log\n\
+	done\n\
+	su -c \"su - postgres <<EOF\n\
+	initdb &>> /tmp/post-install.log\n\
+	EOF\n\"\n\
+	chkconfig postgresql on &>> /tmp/post-install.log\n\
+	service postgresql start &>> /tmp/post-install.log\n\
+	sleep 5s\n\
+	su -c \"su - postgres <<EOF\n\
+	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_db.sql &>> /tmp/post-install.log\n\
+	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_tables.sql tissuestack &>> /tmp/post-install.log\n\
+	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
+	psql -U postgres -h localhost -f $(DATA_PATH)/sql/update_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
+	EOF\n\"\
+	echo \"$(DATA_PATH)\" > /tmp/escaped.string\n\
+	sed -i 's/\//\\\\\\\\\//g' /tmp/escaped.string\n\
+	ESCAPED_STRING=\`cat /tmp/escaped.string\`\n\
+	sed -i \"s/%%DOC_ROOT%%/\$$ESCAPED_STRING\\/web/g\" $(DATA_PATH)/conf/$(NAME).conf\n\
+	sed -i 's/%%ERROR_LOG%%/\\/var\\/log\\/apache2\\/$(NAME)-error.log/g' $(DATA_PATH)/conf/$(NAME).conf\n\
+	cp $(DATA_PATH)/conf/$(NAME).conf $(HTTPD_CONF_DIR)\n\
+	mv $(HTTPD_CONF_DIR)/welcome.conf $(HTTPD_CONF_DIR)/welcome.conf.disabled\n\
+	$(SYS_V_INIT_PATH)httpd restart\
+	" > $(BUILD_SRC_PATH)/post-install.sh; \
 	fi
 	@sudo chmod 755 $(BUILD_SRC_PATH)/post-install.sh
 

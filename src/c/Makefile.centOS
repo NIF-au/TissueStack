@@ -59,6 +59,8 @@ export JDK_PATH				=	$(PACKAGING_PATH)/jdk$(JDK_VERSION)
 export TOMCAT_VERSION		= 	7.0.35
 export TOMCAT_PATH			=	$(PACKAGING_PATH)/apache-tomcat-$(TOMCAT_VERSION)
 export PACKAGING_CONFIG_PATH=	$(PACKAGING_PATH)/conf
+export HTTPD_CONF_DIR		= 	/etc/httpd/conf.d
+export SYS_V_INIT_PATH		= 	/etc/init.d/
 
 # use memory mapping (turned off by default. did not really deliver gains in our case but can be turned on again with USE_MM=true)?
 ifdef USE_MM
@@ -200,6 +202,7 @@ dist: all
 	@mkdir -p $(BUILD_SRC_PATH)$(PROFILE_PATH)
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/ands
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/colormaps
+	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/conf
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/data
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/logs
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/lookup
@@ -228,7 +231,8 @@ dist: all
 	@echo -e "\tCopying over tomcat binaries [error logs: $(BUILD_PATH)/logs/*.log]..."
 	@cp -r $(TOMCAT_PATH) $(BUILD_SRC_PATH)$(DATA_PATH) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
 
-	@echo -e "\tCopying over tissue stack start script [error logs: $(BUILD_PATH)/logs/*.log]..."
+	@echo -e "\tCopying over tissue stack start/conf scripts [error logs: $(BUILD_PATH)/logs/*.log]..."
+	@cp -r $(PACKAGING_CONFIG_PATH)/$(NAME)-httpd.conf $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(NAME).conf &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
 	@cp -r $(PACKAGING_CONFIG_PATH)/$(NAME)_rpm.sh $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
 	@chmod 755 $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME)
 
@@ -281,7 +285,16 @@ dist: all
 	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_tables.sql tissuestack &>> /tmp/post-install.log\n\
 	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
 	psql -U postgres -h localhost -f $(DATA_PATH)/sql/update_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
-	EOF\n\"" > $(BUILD_SRC_PATH)/post-install.sh
+	EOF\n\"\
+	echo \"$(DATA_PATH)\" > /tmp/escaped.string\n\
+	sed -i 's/\//\\\\\\\\\//g' /tmp/escaped.string\n\
+	ESCAPED_STRING=\`cat /tmp/escaped.string\`\n\
+	sed -i \"s/%%DOC_ROOT%%/\$$ESCAPED_STRING\\/web/g\" $(DATA_PATH)/conf/$(NAME).conf\n\
+	sed -i 's/%%ERROR_LOG%%/\\/var\\/log\\/apache2\\/$(NAME)-error.log/g' $(DATA_PATH)/conf/$(NAME).conf\n\
+	cp $(DATA_PATH)/conf/$(NAME).conf $(HTTPD_CONF_DIR)\n\
+	mv $(HTTPD_CONF_DIR)/welcome.conf $(HTTPD_CONF_DIR)/welcome.conf.disabled\n\
+	$(SYS_V_INIT_PATH)httpd restart\
+	" > $(BUILD_SRC_PATH)/post-install.sh
 	@sudo chmod 755 $(BUILD_SRC_PATH)/post-install.sh
 
 	@echo -e "\tZipping up everything [log: $(BUILD_PATH)/logs/$(NAME)_tar.log ]..."
