@@ -21,7 +21,8 @@ OBJS		=	$(SRCS:%.c=%.o)
 
 %.o: %.c
 	@echo -e "\tCompiling $(@)."
-	@gcc -c $(FLAGS) $(INCLUDE) `GraphicsMagick-config --cppflags` `pkg-config --cflags gtk+-2.0` -fPIC -o $@ $<
+	@gcc -DAPPLICATION_PATH='"$(DATA_PATH)"' -DPLUGINS_PATH='"$(PLUGINS_PATH)"' $(APP_FLAGS) \
+	-c $(FLAGS) $(INCLUDE) `GraphicsMagick-config --cppflags` `pkg-config --cflags gtk+-2.0` -fPIC -o $@ $<
 
 all: compile install
 

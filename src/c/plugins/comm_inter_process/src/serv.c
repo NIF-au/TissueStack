@@ -203,6 +203,7 @@ void		*init(void *args)
 
   a = (t_args_plug *)args;
   LOG_INIT(a);
+  INFO("Inter Process Communicator initialized.");
   return (NULL);
 }
 

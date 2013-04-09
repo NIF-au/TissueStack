@@ -191,6 +191,7 @@ void		*init(void *args)
 {
 	t_args_plug *a = (t_args_plug *)args;
 	LOG_INIT(a);
+	INFO("Nifti Converter initialized.");
 	return (NULL);
 }
 

@@ -19,6 +19,8 @@
 void *init(void *args) {
 	t_args_plug *a = (t_args_plug *)args;
 	LOG_INIT(a);
+
+	INFO("Minc Info initialized.");
 	return NULL;
 }
 

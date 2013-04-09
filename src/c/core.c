@@ -240,7 +240,7 @@ void            init_prog(t_tissue_stack *t)
 	  }*/
     }
   init_func_ptr(t);
-  init_percent_time(t, CONCAT_APP_PATH("tasks/"));
+  init_percent_time(t, strdup(CONCAT_APP_PATH("tasks/")));
 }
 
 void		free_core_struct(t_tissue_stack *t)
@@ -316,6 +316,7 @@ int		main(int argc, char **argv)
   {
 	  sprintf(load_command, "load %s %s/%s", PLUGINS[x][0], PLUGINS_PATH, PLUGINS[x][1]);
 	  plugin_load_from_string(load_command, t);
+	  DEBUG("Loading: %s\n", load_command);
   }
 
   sprintf(serv_command, "start serv %s", argv[1]);

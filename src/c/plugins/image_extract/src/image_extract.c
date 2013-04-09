@@ -456,6 +456,7 @@ void		load_colormaps_from_directory(char *path, t_image_extract *image_args)
   float		**colormap_extracted = NULL;
 
   count_files = count_files_presents_into_directory(path);
+  INFO("Found %i colormaps in %s.\n", count_files, path);
   image_args->premapped_colormap = malloc((count_files + 1) * sizeof(*image_args->premapped_colormap));
   i = 0;
   image_args->colormap_name = malloc((count_files + 1) * sizeof(*image_args->colormap_name));
@@ -859,9 +860,11 @@ void		*init(void *args)
 {
   t_image_extract	*image_args;
   t_args_plug	*a;
-
   a = (t_args_plug *)args;
   prctl(PR_SET_NAME, "Image_plug");
+
+  LOG_INIT(a);
+
   image_args = malloc(sizeof(*image_args));
   image_args->total_slices_to_do = 0;
   image_args->slices_done = 0;
@@ -878,8 +881,6 @@ void		*init(void *args)
   InitializeMagick("./");
   colormap_init(image_args);
   a->this->stock = (void*)image_args;
-
-  LOG_INIT(a);
 
   INFO("Image Extract Plugin: Started");
 

@@ -24,7 +24,8 @@ OBJS		=	$(SRCS:%.c=%.o)
 
 %.o: %.c
 	@echo -e "\tCompiling $(@)."
-	@gcc -c $(FLAGS) `pkg-config --cflags gtk+-2.0` -fPIC -o $@ $< $(INCLUDE)
+	@gcc -DAPPLICATION_PATH='"$(DATA_PATH)"' -DPLUGINS_PATH='"$(PLUGINS_PATH)"' $(APP_FLAGS) \
+	-c $(FLAGS) `pkg-config --cflags gtk+-2.0` -fPIC -o $@ $< $(INCLUDE)
 
 all: compile install
 
