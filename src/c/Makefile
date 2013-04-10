@@ -303,7 +303,7 @@ dist: all
 	done\n\
 	su -c \"su - postgres <<EOF\n\
 	initdb &>> /tmp/post-install.log\n\
-	EOF\n\
+	EOF\n\"\n\
 	chkconfig postgresql on &>> /tmp/post-install.log\n\
 	service postgresql start &>> /tmp/post-install.log\n\
 	sleep 5s\n\
@@ -312,7 +312,7 @@ dist: all
 	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_tables.sql tissuestack &>> /tmp/post-install.log\n\
 	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
 	psql -U postgres -h localhost -f $(DATA_PATH)/sql/update_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
-	EOF\n\"\
+	EOF\n\"\n\
 	echo \"$(DATA_PATH)\" > /tmp/escaped.string\n\
 	sed -i 's/\//\\\\\\\\\//g' /tmp/escaped.string\n\
 	ESCAPED_STRING=\`cat /tmp/escaped.string\`\n\
