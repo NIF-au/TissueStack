@@ -303,7 +303,7 @@ dist: all
 	done\n\
 	su -c \"su - postgres <<EOF\n\
 	initdb &>> /tmp/post-install.log\n\
-	EOF\n\"\n\
+	EOF\n\
 	chkconfig postgresql on &>> /tmp/post-install.log\n\
 	service postgresql start &>> /tmp/post-install.log\n\
 	sleep 5s\n\
