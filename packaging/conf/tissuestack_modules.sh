@@ -30,4 +30,4 @@ if [ $CHECK_SIZE -ne 0 ]; then echo "ERROR: Could not locate needed graphicsmagi
 fi
 
 module load tissuestack/$1 2> /tmp/build_mod_load
-echo -n "Finished.\n"
+echo -e "Finished.\n"
