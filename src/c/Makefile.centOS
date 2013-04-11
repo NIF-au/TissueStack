@@ -286,14 +286,24 @@ dist: all
 	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
 	psql -U postgres -h localhost -f $(DATA_PATH)/sql/update_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
 	EOF\n\"\n\
+	chkconfig httpd on &>> /tmp/post-install.log\n\
 	echo \"$(DATA_PATH)\" > /tmp/escaped.string\n\
-	sed -i 's/\//\\\\\\\\\//g' /tmp/escaped.string\n\
-	ESCAPED_STRING=\`cat /tmp/escaped.string\`\n\
-	cp -f $(DATA_PATH)/conf/$(NAME).conf $(HTTPD_CONF_DIR)/$(NAME).conf\n\
-	sed -i \"s/%%DOC_ROOT%%/\$$ESCAPED_STRING\\/web/g\" $(HTTPD_CONF_DIR)/$(NAME).conf\n\
-	sed -i 's/%%ERROR_LOG%%/\\/var\\/log\\/httpd\\/$(NAME)-error.log/g' $(HTTPD_CONF_DIR)/$(NAME).conf\n\
-	mv $(HTTPD_CONF_DIR)/welcome.conf $(HTTPD_CONF_DIR)/welcome.conf.disabled\n\
-	$(SYS_V_INIT_PATH)httpd restart\
+	sed -i 's/\//\\\\\\\\\//g' /tmp/escaped.string &>> /tmp/post-install.log\n\
+	ESCAPED_STRING=\`cat /tmp/escaped.string\` &>> /tmp/post-install.log\n\
+	cp -f $(DATA_PATH)/conf/$(NAME).conf $(HTTPD_CONF_DIR)/$(NAME).conf &>> /tmp/post-install.log\n\
+	sed -i \"s/##DOC_ROOT##/\$$ESCAPED_STRING\\/web/g\" $(HTTPD_CONF_DIR)/$(NAME).conf &>> /tmp/post-install.log\n\
+	sed -i 's/##ERROR_LOG##/\\/var\\/log\\/httpd\\/$(NAME)-error.log/g' $(HTTPD_CONF_DIR)/$(NAME).conf &>> /tmp/post-install.log\n\
+	mv $(HTTPD_CONF_DIR)/welcome.conf $(HTTPD_CONF_DIR)/welcome.conf.disabled &>> /tmp/post-install.log\n\
+	if [ \`iptables -S | grep -e \"-A INPUT -i lo -j ACCEPT\" -eq 0 ]; then\n\
+	\tiptables -I INPUT 1 -i lo -p all -j ACCEPT &>> /tmp/post-install.log\nfi\n\
+	if [ \`iptables -S | grep -e \"-A INPUT -p tcp -m tcp --dport 8080 -j DROP\" -eq 0 ]; then\n\
+	\tiptables -A INPUT -p tcp --destination-port 8080 -j DROP &>> /tmp/post-install.log\nfi\n\
+	if [ \`iptables -S | grep -e \"-A INPUT -p tcp -m tcp --dport 4242 -j DROP\" -eq 0 ]; then\n\
+	\tiptables -A INPUT -p tcp --destination-port 4242 -j DROP &>> /tmp/post-install.log\nfi\n\
+	if [ \`iptables -S | grep -e \"-A INPUT -p tcp -m tcp --dport 5432 -j DROP\" -eq 0 ]; then\n\
+	\tiptables -A INPUT -p tcp --destination-port 5432 -j DROP &>> /tmp/post-install.log\nfi\n\
+	service iptables save &>> /tmp/post-install.log\n\
+	$(SYS_V_INIT_PATH)httpd restart &>> /tmp/post-install.log\
 	" > $(BUILD_SRC_PATH)/post-install.sh
 	@sudo chmod 755 $(BUILD_SRC_PATH)/post-install.sh
 
