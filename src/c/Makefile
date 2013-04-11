@@ -227,7 +227,7 @@ dist: all
 	@cp -r $(TOMCAT_PATH) $(BUILD_SRC_PATH)$(DATA_PATH) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
 
 	@echo -e "\tCopying over tissue stack start/conf scripts [error logs: $(BUILD_PATH)/logs/*.log]..."
-	@cp -r $(PACKAGING_CONFIG_PATH)/$(NAME)-httpd.conf $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(NAME).conf &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
+	@cp -f $(PACKAGING_CONFIG_PATH)/$(NAME)-httpd.conf $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(NAME).conf &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
 	@if [ $(IS_DEBIAN_BASED) -gt 0 ] || [ $(IS_UBUNTU_BASED) -gt 0 ]; then \
 		cp -r $(PACKAGING_CONFIG_PATH)/$(NAME).sh $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log; \
 	else \
@@ -288,7 +288,7 @@ dist: all
 	ESCAPED_STRING=\`cat /tmp/escaped.string\`\n\
 	sed -i \"s/%%DOC_ROOT%%/\$$ESCAPED_STRING\\/web/g\" $(DATA_PATH)/conf/$(NAME).conf\n\
 	sed -i 's/%%ERROR_LOG%%/\\/var\\/log\\/apache2\\/$(NAME)-error.log/g' $(DATA_PATH)/conf/$(NAME).conf\n\
-	cp $(DATA_PATH)/conf/$(NAME).conf $(APACHE2_CONF_DIR)\n\
+	cp -f $(DATA_PATH)/conf/$(NAME).conf $(APACHE2_CONF_DIR)\n\
 	a2ensite $(APACHE2_CONF_DIR)/$(NAME).conf\n\
 	$(SYS_V_INIT_PATH)apache2 restart\
 	" > $(BUILD_SRC_PATH)/post-install.sh; \
@@ -316,9 +316,9 @@ dist: all
 	echo \"$(DATA_PATH)\" > /tmp/escaped.string\n\
 	sed -i 's/\//\\\\\\\\\//g' /tmp/escaped.string\n\
 	ESCAPED_STRING=\`cat /tmp/escaped.string\`\n\
-	sed -i \"s/%%DOC_ROOT%%/\$$ESCAPED_STRING\\/web/g\" $(DATA_PATH)/conf/$(NAME).conf\n\
-	sed -i 's/%%ERROR_LOG%%/\\/var\\/log\\/apache2\\/$(NAME)-error.log/g' $(DATA_PATH)/conf/$(NAME).conf\n\
-	cp $(DATA_PATH)/conf/$(NAME).conf $(HTTPD_CONF_DIR)\n\
+	cp -f $(DATA_PATH)/conf/$(NAME).conf $(HTTPD_CONF_DIR)\n\
+	sed -i \"s/%%DOC_ROOT%%/\$$ESCAPED_STRING\\/web/g\" $(HTTPD_CONF_DIR)/$(NAME).conf\n\
+	sed -i 's/%%ERROR_LOG%%/\\/var\\/log\\/httpd\\/$(NAME)-error.log/g' $(HTTPD_CONF_DIR)/$(NAME).conf\n\
 	mv $(HTTPD_CONF_DIR)/welcome.conf $(HTTPD_CONF_DIR)/welcome.conf.disabled\n\
 	$(SYS_V_INIT_PATH)httpd restart\
 	" > $(BUILD_SRC_PATH)/post-install.sh; \
