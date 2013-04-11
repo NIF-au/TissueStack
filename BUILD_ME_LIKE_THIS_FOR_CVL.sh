@@ -9,7 +9,7 @@ VERSION=1.1
 DATA_PATH=/mnt/tissuestack
 
 packaging/conf/tissuestack_modules.sh $VERSION
-if [ $? -eq -1 ]; then 
+if [ $? -ne 0 ]; then 
 	exit -1
 fi
 
