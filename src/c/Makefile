@@ -321,13 +321,13 @@ dist: all
 	sed -i \"s/##DOC_ROOT##/\$$ESCAPED_STRING\\/web/g\" $(HTTPD_CONF_DIR)/$(NAME).conf &>> /tmp/post-install.log\n\
 	sed -i 's/##ERROR_LOG##/\\/var\\/log\\/httpd\\/$(NAME)-error.log/g' $(HTTPD_CONF_DIR)/$(NAME).conf &>> /tmp/post-install.log\n\
 	mv $(HTTPD_CONF_DIR)/welcome.conf $(HTTPD_CONF_DIR)/welcome.conf.disabled &>> /tmp/post-install.log\n\
-	if [ \`iptables -S | grep -e \"-A INPUT -i lo -j ACCEPT\" -eq 0 ]; then\n\
+	if [ \`iptables -S | grep -e \"-A INPUT -i lo -j ACCEPT\" | wc -c\` -eq 0 ]; then\n\
 	\tiptables -I INPUT 1 -i lo -p all -j ACCEPT &>> /tmp/post-install.log\nfi\n\
-	if [ \`iptables -S | grep -e \"-A INPUT -p tcp -m tcp --dport 8080 -j DROP\" -eq 0 ]; then\n\
+	if [ \`iptables -S | grep -e \"-A INPUT -p tcp -m tcp --dport 8080 -j DROP\" | wc -c\` -eq 0 ]; then\n\
 	\tiptables -A INPUT -p tcp --destination-port 8080 -j DROP &>> /tmp/post-install.log\nfi\n\
-	if [ \`iptables -S | grep -e \"-A INPUT -p tcp -m tcp --dport 4242 -j DROP\" -eq 0 ]; then\n\
+	if [ \`iptables -S | grep -e \"-A INPUT -p tcp -m tcp --dport 4242 -j DROP\" | wc -c\` -eq 0 ]; then\n\
 	\tiptables -A INPUT -p tcp --destination-port 4242 -j DROP &>> /tmp/post-install.log\nfi\n\
-	if [ \`iptables -S | grep -e \"-A INPUT -p tcp -m tcp --dport 5432 -j DROP\" -eq 0 ]; then\n\
+	if [ \`iptables -S | grep -e \"-A INPUT -p tcp -m tcp --dport 5432 -j DROP\" | wc -c\` -eq 0 ]; then\n\
 	\tiptables -A INPUT -p tcp --destination-port 5432 -j DROP &>> /tmp/post-install.log\nfi\n\
 	service iptables save &>> /tmp/post-install.log\n\
 	$(SYS_V_INIT_PATH)httpd restart &>> /tmp/post-install.log\
