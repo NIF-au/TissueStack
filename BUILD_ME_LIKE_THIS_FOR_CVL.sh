@@ -8,10 +8,7 @@ echo -e "***********************************************************************
 VERSION=1.1
 DATA_PATH=/mnt/tissuestack
 
-packaging/conf/tissuestack_modules.sh $VERSION
-if [ $? -ne 0 ]; then 
-	exit -1
-fi
+source packaging/conf/tissuestack_modules.sh $VERSION
 
 echo -n "Cleaning..."
 make -f Makefile.centOS clean > /dev/null
