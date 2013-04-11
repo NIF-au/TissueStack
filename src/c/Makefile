@@ -286,9 +286,9 @@ dist: all
 	echo \"$(DATA_PATH)\" > /tmp/escaped.string\n\
 	sed -i 's/\//\\\\\\\\\//g' /tmp/escaped.string\n\
 	ESCAPED_STRING=\`cat /tmp/escaped.string\`\n\
-	sed -i \"s/%%DOC_ROOT%%/\$$ESCAPED_STRING\\/web/g\" $(DATA_PATH)/conf/$(NAME).conf\n\
-	sed -i 's/%%ERROR_LOG%%/\\/var\\/log\\/apache2\\/$(NAME)-error.log/g' $(DATA_PATH)/conf/$(NAME).conf\n\
-	cp -f $(DATA_PATH)/conf/$(NAME).conf $(APACHE2_CONF_DIR)\n\
+	cp -f $(DATA_PATH)/conf/$(NAME).conf $(APACHE2_CONF_DIR)/$(NAME).conf\n\
+	sed -i \"s/%%DOC_ROOT%%/\$$ESCAPED_STRING\\/web/g\" $(APACHE2_CONF_DIR)/$(NAME).conf\n\
+	sed -i 's/%%ERROR_LOG%%/\\/var\\/log\\/apache2\\/$(NAME)-error.log/g' $(APACHE2_CONF_DIR)/$(NAME).conf\n\
 	a2ensite $(APACHE2_CONF_DIR)/$(NAME).conf\n\
 	$(SYS_V_INIT_PATH)apache2 restart\
 	" > $(BUILD_SRC_PATH)/post-install.sh; \
@@ -316,7 +316,7 @@ dist: all
 	echo \"$(DATA_PATH)\" > /tmp/escaped.string\n\
 	sed -i 's/\//\\\\\\\\\//g' /tmp/escaped.string\n\
 	ESCAPED_STRING=\`cat /tmp/escaped.string\`\n\
-	cp -f $(DATA_PATH)/conf/$(NAME).conf $(HTTPD_CONF_DIR)\n\
+	cp -f $(DATA_PATH)/conf/$(NAME).conf $(HTTPD_CONF_DIR)/$(NAME).conf\n\
 	sed -i \"s/%%DOC_ROOT%%/\$$ESCAPED_STRING\\/web/g\" $(HTTPD_CONF_DIR)/$(NAME).conf\n\
 	sed -i 's/%%ERROR_LOG%%/\\/var\\/log\\/httpd\\/$(NAME)-error.log/g' $(HTTPD_CONF_DIR)/$(NAME).conf\n\
 	mv $(HTTPD_CONF_DIR)/welcome.conf $(HTTPD_CONF_DIR)/welcome.conf.disabled\n\
