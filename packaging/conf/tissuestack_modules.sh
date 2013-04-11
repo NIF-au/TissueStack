@@ -29,5 +29,5 @@ CHECK_SIZE=`stat -c%s /tmp/build_mod_load`
 if [ $CHECK_SIZE -ne 0 ]; then echo "ERROR: Could not locate needed graphicsmagick package (1.3.18). Please install it and load it: 'module load graphicsmagick/1.3.18' !!!!!"; exit -1
 fi
 
-module load tissuestack/$1 2> /tmp/build_mod_load
+module load tissuestack 2> /tmp/build_mod_load
 echo -e "Finished.\n"
