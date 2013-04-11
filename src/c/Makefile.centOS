@@ -276,10 +276,11 @@ dist: all
 	for dirs in \`find $(DATA_PATH)/ -name \"bin\"\`;do\n\
 	\tchmod -R 755 \$$dirs/* &>> /tmp/post-install.log\n\
 	done\n\
+	sed -i 's/;exit -1//g' $(DATA_PATH)/conf/$(NAME)_modules.sh &>> /tmp/post-install.log\n\
+	cp -r $(DATA_PATH)/conf/$(NAME)_modules.sh $(PROFILE_PATH)/$(NAME)_modules.sh &>> /tmp/post-install.log\n\
 	su -c \"su - postgres <<EOF\n\
 	initdb &>> /tmp/post-install.log\n\
 	EOF\n\"\n\
-	cp -r $(DATA_PATH)/conf/$(NAME)_modules.sh $(PROFILE_PATH)/$(NAME)_modules.sh &>> /tmp/post-install.log\n\
 	chkconfig postgresql on &>> /tmp/post-install.log\n\
 	service postgresql start &>> /tmp/post-install.log\n\
 	sleep 5s\n\
