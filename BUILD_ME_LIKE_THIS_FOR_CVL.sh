@@ -8,7 +8,7 @@ echo -e "***********************************************************************
 VERSION=1.1
 DATA_PATH=/mnt/tissuestack
 
-packaging/conf/tissuestack_modules.sh
+packaging/conf/tissuestack_modules.sh $VERSION
 if [ $? -eq -1 ]; then 
 	exit -1
 fi
