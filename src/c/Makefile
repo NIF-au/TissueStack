@@ -185,7 +185,7 @@ re: tomcatstop clean debug install tomcatstart
 
 # target for building a binary tar.gz (is then used for rpm build)
 # we depend on target 'all' and use a temporary build directory in /tmp/tissuestack_build
-dist: compile
+dist: 	compile
 	@echo -e "\n\n\tBuilding binary archive: $(DIST_NAME):"
 	@echo -e "\t---------------------------------------------------"
 	
@@ -263,7 +263,7 @@ dist: compile
 	CATALINA_HOME=\$$TISSUE_STACK_HOME/apache-tomcat-7.0.35\n\
 	PATH=\$$PATH:$(BINS_PATH)\n\
 	export TISSUE_STACK_HOME TISSUE_STACK_JNI_LIB_PATH IMAGE_SERVER_EXE JAVA_HOME CATALINA_HOME PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(NAME)_env.sh;
-	@sudo chmod 755 $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(NAME)_env.sh
+	@chmod 755 $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(NAME)_env.sh
 
 	@echo -ne "\tCreating post install script for "
 	@if [ $(IS_DEBIAN_BASED) -gt 0 ] || [ $(IS_UBUNTU_BASED) -gt 0 ]; then \
@@ -333,7 +333,7 @@ dist: compile
 	$(SYS_V_INIT_PATH)httpd restart &>> /tmp/post-install.log\
 	" > $(BUILD_SRC_PATH)/post-install.sh; \
 	fi
-	@sudo chmod 755 $(BUILD_SRC_PATH)/post-install.sh
+	@chmod 755 $(BUILD_SRC_PATH)/post-install.sh
 
 	@echo -e "\tZipping up everything [log: $(BUILD_PATH)/logs/$(NAME)_tar.log ]..."
 	@cd $(BUILD_SRC_PATH); tar cvzf $(BUILD_PATH)/$(DIST_NAME) * &> $(BUILD_PATH)/logs/$(NAME)_tar.log
