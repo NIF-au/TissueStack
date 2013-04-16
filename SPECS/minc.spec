@@ -11,8 +11,8 @@ License:	GPLv3+
 URL:		https://github.com/BIC-MNI
 Source:		%{name}-%{version}.tar.gz	
 
-BuildRequires:	chrpath	hdf5 netcdf
-#Requires:	
+BuildRequires:	chrpath	hdf5-devel netcdf-devel
+Requires:	hdf5 netcdf
 
 %description
 The MINC Toolkit, Version 2.1.0.
