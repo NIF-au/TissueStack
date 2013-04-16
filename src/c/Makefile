@@ -79,7 +79,7 @@ export BASE_DIR			= 	$(DIRSRC)../../
 export BUILD_PATH		=	/tmp/$(NAME)_build
 export BUILD_SRC_PATH		=	$(BUILD_PATH)/src
 export DIST_NAME		=	$(NAME)-$(VERSION).tar.gz
-export CURRENT_BRANCH	=	$(shell git branch | grep "*" | sed "s/* //";)
+#export CURRENT_BRANCH	=	$(shell git branch | grep "*" | sed "s/* //";)
 
 %.o: %.c
 	@echo -e "\tCompiling $(@)."
