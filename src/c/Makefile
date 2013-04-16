@@ -185,7 +185,7 @@ re: tomcatstop clean debug install tomcatstart
 
 # target for building a binary tar.gz (is then used for rpm build)
 # we depend on target 'all' and use a temporary build directory in /tmp/tissuestack_build
-dist: all
+dist: compile
 	@echo -e "\n\n\tBuilding binary archive: $(DIST_NAME):"
 	@echo -e "\t---------------------------------------------------"
 	
