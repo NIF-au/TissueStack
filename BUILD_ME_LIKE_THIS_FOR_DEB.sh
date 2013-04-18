@@ -6,14 +6,6 @@ if [ $# -eq 0 ]; then
 	exit -1
 fi
 
-echo "Setting up development tree in $HOME"
-rm -rf $HOME/rpmbuild
-rpmdev-setuptree
-if [ $? -ne 0 ]; then
-	echo "Install the rpm development tools first!"
-	exit -1
-fi
-
 CURRENT_DIR=`pwd`
 
 SOURCE_TAR_DIR=/tmp/tissuestack-$1.tar.gz
@@ -35,9 +27,16 @@ echo "Building source tar.gz (see file list: /tmp/tissuestack-$1.tar.gz.log)"
 tar cvzf tissuestack-$1.tar.gz tissuestack-$1 > /tmp/tissuestack-$1.tar.gz.log
 cd $CURRENT_DIR
 
-cp -f rpm/tissuestack.spec $HOME/rpmbuild/SPECS 
-cp -rf $SOURCE_TAR_DIR/tissuestack-$1.tar.gz $HOME/rpmbuild/SOURCES/
-cd $HOME/rpmbuild/SPECS/
+echo "Setting up build directory and copying config files and source over (see /tmp/tissuestack-$1_deb_build.log)"
+BUILD_DIR=/tmp/tissuestack-$1_debian
+rm -rf $BUILD_DIR
+mkdir $BUILD_DIR
+cd $BUILD_DIR
+tar xvzf $SOURCE_TAR_DIR/tissuestack-$1.tar.gz > /tmp/tissuestack-$1_deb_build.log
+mkdir -p $BUILD_DIR/tissuestack-$1/debian
+cp -rf $CURRENT_DIR/deb/* $BUILD_DIR/tissuestack-$1/debian
 
-echo "Calling RPM build now ..."
-rpmbuild -bb tissuestack.spec
+echo "Starting DEBIAN package build now ..."
+cd $BUILD_DIR/tissuestack-$1
+export TISSUESTACK_BUILD_VERSION=$1
+dpkg-buildpackage -us -uc

@@ -1,0 +1,3 @@
+install_files/etc/profile.d/tissuestack_env.sh etc/profile.d
+install_files/usr/local/tissuestack/* usr/local/tissuestack
+install_files/opt/tissuestack/* opt/tissuestack
