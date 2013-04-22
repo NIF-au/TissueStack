@@ -16,6 +16,9 @@ mvn clean > /dev/null
 echo -e "Finished Cleaning.\n"
 
 make -f Makefile.centOS dist VERSION=$VERSION DATA_PATH=$DATA_PATH
+if [ $? -ne 0 ]; then
+exit -1
+fi
 
 echo -e "\n\n*******************************************************************"
 echo -e "\tNOW GO AHEAD AND CVL BUILD ME FROM THE TAR JUST CREATED"
