@@ -56,10 +56,14 @@ done
 echo -e "\nEverything's down!"
 
 if [ $FIRST_ARGUMENT == "stop" ]; then
-	exit 0
+	exit 1
 fi
 
 echo -e "\nNow start everything again ... (Check following output for errors during during Tissue Stack startup!!) \n"
 
 $CATALINA_HOME/bin/startup.sh
+if [ $? -lt 0 ]; then exit -1;fi
 $IMAGE_SERVER_EXE 4242 &
+if [ $! -lt 1 ] && [ $? -lt 0 ]; then exit -1;fi
+
+exit 1

@@ -98,6 +98,7 @@ endif
 	@/etc/profile.d/modules.sh;module load nifticlib/2.0.0 2> /tmp/build_mod_load; CHECK_SIZE=`stat -c%s /tmp/build_mod_load`; if [ $$CHECK_SIZE -ne 0 ]; then echo "ERROR: Could not locate needed nifticlib package (2.0.0). Please install it and load it: 'module load nifticlib 2.0.0' !!!!!"; exit -1; fi;
 	@/etc/profile.d/modules.sh;module load minc/2.1.0 2> /tmp/build_mod_load; CHECK_SIZE=`stat -c%s /tmp/build_mod_load`; if [ $$CHECK_SIZE -ne 0 ]; then echo "ERROR: Could not locate needed minc package (2.1.0). Please install it and load it: 'module load minc 2.1.0' !!!!!"; exit -1; fi;
 	@/etc/profile.d/modules.sh;module load graphicsmagick/1.3.18 2> /tmp/build_mod_load; CHECK_SIZE=`stat -c%s /tmp/build_mod_load`; if [ $$CHECK_SIZE -ne 0 ]; then echo "ERROR: Could not locate needed graphics magick package (1.3.18). Please install it and load it: 'module load graphics magick 1.3.18' !!!!!"; exit -1; fi;
+	@/etc/profile.d/modules.sh;module load libjpeg-turbo/1.2.0 2> /tmp/build_mod_load; CHECK_SIZE=`stat -c%s /tmp/build_mod_load`; if [ $$CHECK_SIZE -ne 0 ]; then echo "ERROR: Could not locate needed libjpeg-turbo package (1.2.0). Please install it and load it: 'module load libjpeg-turbo/1.2.0' !!!!!"; exit -1; fi;
 
 	@echo -e "\n###################### TISSUE STACK BUILD [Version: $(VERSION)] ###################"
 	@echo -e "    APPLICATION DATA:      $(DATA_PATH)"
@@ -235,7 +236,8 @@ dist: 	compile
 	@echo -e "\tCopying over tissue stack start/conf scripts [error logs: $(BUILD_PATH)/logs/*.log]..."
 	@cp -f $(PACKAGING_CONFIG_PATH)/$(NAME)-httpd.conf $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(NAME).conf &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
 	@cp -f $(PACKAGING_CONFIG_PATH)/$(NAME)_modules.sh $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(NAME)_modules.sh &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
-	@cp -r $(PACKAGING_CONFIG_PATH)/$(NAME)_rpm.sh $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
+	@cp -f $(PACKAGING_CONFIG_PATH)/$(NAME)_init.sh $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(NAME)_init.sh &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
+	@cp -f $(PACKAGING_CONFIG_PATH)/$(NAME)_rpm.sh $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
 	@chmod 755 $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME)
 
 	@echo -e "\tBuilding Tissue Stack Web Service (maven build). This may take a while, please be patient! [error logs: $(BUILD_PATH)/logs/*.log]..."
@@ -308,7 +310,10 @@ dist: 	compile
 	\tiptables -A INPUT -p tcp --destination-port 5432 -j DROP &>> /tmp/post-install.log\nfi\n\
 	service iptables save &>> /tmp/post-install.log\n\
 	$(SYS_V_INIT_PATH)httpd restart &>> /tmp/post-install.log\n\
-	source $(PROFILE_PATH)/$(NAME)_modules.sh &>> /tmp/post-install.log\
+	source $(PROFILE_PATH)/$(NAME)_modules.sh &>> /tmp/post-install.log\n\
+	cp -f $(DATA_PATH)/conf/$(NAME)_init.sh $(SYS_V_INIT_PATH)$(NAME).sh &>> /tmp/post-install.log\n\
+	chmod 755 $(SYS_V_INIT_PATH)$(NAME).sh &>> /tmp/post-install.log\n\
+	chkconfig $(NAME) on &>> /tmp/post-install.log\
 	" > $(BUILD_SRC_PATH)/post-install.sh
 	@chmod 755 $(BUILD_SRC_PATH)/post-install.sh
 

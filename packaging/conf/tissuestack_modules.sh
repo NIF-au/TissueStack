@@ -29,5 +29,10 @@ CHECK_SIZE=`stat -c%s /tmp/build_mod_load`
 if [ $CHECK_SIZE -ne 0 ]; then echo "ERROR: Could not locate needed graphicsmagick package (1.3.18). Please install it and load it: 'module load graphicsmagick/1.3.18' !!!!!";exit -1
 fi
 
+module load libjpeg-turbo/1.2.0 2> /tmp/build_mod_load
+CHECK_SIZE=`stat -c%s /tmp/build_mod_load`
+if [ $CHECK_SIZE -ne 0 ]; then echo "ERROR: Could not locate needed libjpeg-turbo package (1.2.0). Please install it and load it: 'module load libjpeg-turbo/1.2.0' !!!!!";exit -1
+fi
+
 module load tissuestack 2> /tmp/build_mod_load
 echo -e "Finished.\n"
