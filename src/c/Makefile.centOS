@@ -311,8 +311,8 @@ dist: 	compile
 	service iptables save &>> /tmp/post-install.log\n\
 	$(SYS_V_INIT_PATH)httpd restart &>> /tmp/post-install.log\n\
 	source $(PROFILE_PATH)/$(NAME)_modules.sh &>> /tmp/post-install.log\n\
-	cp -f $(DATA_PATH)/conf/$(NAME)_init.sh $(SYS_V_INIT_PATH)$(NAME).sh &>> /tmp/post-install.log\n\
-	chmod 755 $(SYS_V_INIT_PATH)$(NAME).sh &>> /tmp/post-install.log\n\
+	cp -f $(DATA_PATH)/conf/$(NAME)_init.sh $(SYS_V_INIT_PATH)$(NAME) &>> /tmp/post-install.log\n\
+	chmod 755 $(SYS_V_INIT_PATH)$(NAME) &>> /tmp/post-install.log\n\
 	chkconfig $(NAME) on &>> /tmp/post-install.log\
 	" > $(BUILD_SRC_PATH)/post-install.sh
 	@chmod 755 $(BUILD_SRC_PATH)/post-install.sh
