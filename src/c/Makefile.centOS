@@ -61,6 +61,7 @@ export TOMCAT_PATH			=	$(PACKAGING_PATH)/apache-tomcat-$(TOMCAT_VERSION)
 export PACKAGING_CONFIG_PATH=	$(PACKAGING_PATH)/conf
 export HTTPD_CONF_DIR		= 	/etc/httpd/conf.d
 export SYS_V_INIT_PATH		= 	/etc/init.d/
+export EPHEMERAL_STORAGE	= 	/mnt
 
 # use memory mapping (turned off by default. did not really deliver gains in our case but can be turned on again with USE_MM=true)?
 ifdef USE_MM
@@ -205,12 +206,16 @@ dist: 	compile
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/ands
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/colormaps
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/conf
-	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/data
+#	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/data
+	@mkdir -p $(EPHEMERAL_STORAGE)/$(NAME)/data
+	@ln -s $(EPHEMERAL_STORAGE)/$(NAME)/data $(BUILD_SRC_PATH)$(DATA_PATH)/data
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/logs
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/lookup
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/sql
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/tasks
-	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/tiles
+#	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/tiles
+	@mkdir -p $(EPHEMERAL_STORAGE)/$(NAME)/tiles
+	@ln -s $(EPHEMERAL_STORAGE)/$(NAME)/tiles $(BUILD_SRC_PATH)$(DATA_PATH)/tiles
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/upload
 	@ echo "This is a binary build" > $(BUILD_SRC_PATH)/readme.txt
 
