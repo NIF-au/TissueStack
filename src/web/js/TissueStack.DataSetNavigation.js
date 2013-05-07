@@ -241,6 +241,9 @@ TissueStack.DataSetNavigation.prototype = {
 		
 		// we keep the slider and the cross-hair hidden for overlaid data sets
 		$("#dataset_" + index  + "_right_panel").removeClass("hidden");
+		this.handleOverlaidDataSets(index, overlaid);
+	},
+	handleOverlaidDataSets : function(index, overlaid) {
 		if (overlaid && index == 1) {
 			$("#dataset_" + index  + "_right_panel").addClass("hidden");
 			$("#dataset_" + index  + " .cross_overlay").addClass("hidden");
@@ -376,8 +379,8 @@ TissueStack.DataSetNavigation.prototype = {
 	    		   }
 
 	    			// re-initialize data set handed in
-	    			TissueStack.InitUserInterface();
-	    			TissueStack.BindDataSetDependentEvents();
+	    		   TissueStack.InitUserInterface();
+	    		   TissueStack.BindDataSetDependentEvents();
 		       }
 		  });
 	},
