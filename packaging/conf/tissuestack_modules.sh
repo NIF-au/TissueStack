@@ -1,5 +1,5 @@
 #!/bin/bash
-echo -n "Checking 'modules' requirements..."
+echo -n "Checking Tissue Stack 'modules' requirements..."
 if [ ! -f /etc/profile.d/modules.sh ]; then echo "ERROR: Modules package is not installed !!!!!";exit -1; fi;
 
 /etc/profile.d/modules.sh

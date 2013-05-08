@@ -266,6 +266,8 @@ dist: 	compile
 
 	@echo -e "\tCreating environment script containing the desired paths..."
 	@ echo -e "#!/bin/bash\n\
+	mkdir -p $(EPHEMERAL_STORAGE)/$(NAME)/tiles
+	mkdir -p $(EPHEMERAL_STORAGE)/$(NAME)/data
 	TISSUE_STACK_HOME=$(DATA_PATH)\n\
 	TISSUE_STACK_JNI_LIB_PATH=$(JNI_LIB_PATH)\n\
 	IMAGE_SERVER_EXE=$(BINS_PATH)/$(EXE_NAME)\n\
