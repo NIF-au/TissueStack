@@ -266,8 +266,8 @@ dist: 	compile
 
 	@echo -e "\tCreating environment script containing the desired paths..."
 	@ echo -e "#!/bin/bash\n\
-	mkdir -p $(EPHEMERAL_STORAGE)/$(NAME)/tiles
-	mkdir -p $(EPHEMERAL_STORAGE)/$(NAME)/data
+	mkdir -p $(EPHEMERAL_STORAGE)/$(NAME)/tiles\n\
+	mkdir -p $(EPHEMERAL_STORAGE)/$(NAME)/data\n\
 	TISSUE_STACK_HOME=$(DATA_PATH)\n\
 	TISSUE_STACK_JNI_LIB_PATH=$(JNI_LIB_PATH)\n\
 	IMAGE_SERVER_EXE=$(BINS_PATH)/$(EXE_NAME)\n\
@@ -287,6 +287,8 @@ dist: 	compile
 	done\n\
 	sed -i 's/;exit -1//g' $(DATA_PATH)/conf/$(NAME)_modules.sh &>> /tmp/post-install.log\n\
 	cp -r $(DATA_PATH)/conf/$(NAME)_modules.sh $(PROFILE_PATH)/$(NAME)_modules.sh &>> /tmp/post-install.log\n\
+	mkdir -p $(EPHEMERAL_STORAGE)/$(NAME)/data &>> /tmp/post-install.log\n\
+	mkdir -p $(EPHEMERAL_STORAGE)/$(NAME)/tiles &>> /tmp/post-install.log\n\
 	su -c \"su - postgres <<EOF\n\
 	initdb &>> /tmp/post-install.log\n\
 	EOF\n\"\n\
