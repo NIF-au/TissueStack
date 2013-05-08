@@ -216,7 +216,9 @@ dist: 	compile
 #	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/tiles
 	@mkdir -p $(EPHEMERAL_STORAGE)/$(NAME)/tiles
 	@ln -s $(EPHEMERAL_STORAGE)/$(NAME)/tiles $(BUILD_SRC_PATH)$(DATA_PATH)/tiles
-	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/upload
+#	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/upload
+	@mkdir -p $(EPHEMERAL_STORAGE)/$(NAME)/upload
+	@ln -s $(EPHEMERAL_STORAGE)/$(NAME)/upload $(BUILD_SRC_PATH)$(DATA_PATH)/upload
 	@ echo "This is a binary build" > $(BUILD_SRC_PATH)/readme.txt
 
 	@echo -e "\tCopying over Tissue Stack Image Server executables and shared libraries..."
@@ -268,6 +270,7 @@ dist: 	compile
 	@ echo -e "#!/bin/bash\n\
 	mkdir -p $(EPHEMERAL_STORAGE)/$(NAME)/tiles\n\
 	mkdir -p $(EPHEMERAL_STORAGE)/$(NAME)/data\n\
+	mkdir -p $(EPHEMERAL_STORAGE)/$(NAME)/upload\n\
 	TISSUE_STACK_HOME=$(DATA_PATH)\n\
 	TISSUE_STACK_JNI_LIB_PATH=$(JNI_LIB_PATH)\n\
 	IMAGE_SERVER_EXE=$(BINS_PATH)/$(EXE_NAME)\n\
@@ -289,6 +292,7 @@ dist: 	compile
 	cp -r $(DATA_PATH)/conf/$(NAME)_modules.sh $(PROFILE_PATH)/$(NAME)_modules.sh &>> /tmp/post-install.log\n\
 	mkdir -p $(EPHEMERAL_STORAGE)/$(NAME)/data &>> /tmp/post-install.log\n\
 	mkdir -p $(EPHEMERAL_STORAGE)/$(NAME)/tiles &>> /tmp/post-install.log\n\
+	mkdir -p $(EPHEMERAL_STORAGE)/$(NAME)/upload &>> /tmp/post-install.log\n\
 	su -c \"su - postgres <<EOF\n\
 	initdb &>> /tmp/post-install.log\n\
 	EOF\n\"\n\
