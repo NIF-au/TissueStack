@@ -161,7 +161,7 @@ install: prepare
 
 clean:
 	@echo -e "\n\tCleaning $(NAME)...\n"
-	@rm -rf *~ \#*\# $(NAME) ./png/* core hs_err_pid*
+	@rm -rf *~ \#*\# $(NAME) $(EXE_NAME) ./png/* core hs_err_pid*
 	@rm -rf $(DIRSRC)*.o
 	@make -f Makefile --no-print-directory -C ./utils/ clean
 	@make -f Makefile.centOS --no-print-directory -C ./plugins/communicator/ clean
