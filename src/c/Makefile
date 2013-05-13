@@ -323,7 +323,7 @@ dist: 	compile install
 	sed -i \"s/##DOC_ROOT##/\$$ESCAPED_STRING\\/web/g\" $(HTTPD_CONF_DIR)/$(NAME).conf &>> /tmp/post-install.log\n\
 	sed -i 's/##ERROR_LOG##/\\/var\\/log\\/httpd\\/$(NAME)-error.log/g' $(HTTPD_CONF_DIR)/$(NAME).conf &>> /tmp/post-install.log\n\
 	HTTP_VERSION=\`httpd -v | grep \"Apache/\" | cut -f2 -d \"/\" | cut -f1 -d \" \" | cut -f1,2 -d \".\" | sed 's/\\.//g'\` &>> /tmp/post-install.log\n\
-	if [ $$HTTP_VERSION -gt 2.3 ]; then sed -i 's/#Require all granted/Require all granted/g' $(HTTPD_CONF_DIR)/$(NAME).conf; fi &>> /tmp/post-install.log\n\
+	if [ \$$HTTP_VERSION -gt 23 ]; then sed -i 's/#Require all granted/Require all granted/g' $(HTTPD_CONF_DIR)/$(NAME).conf; fi &>> /tmp/post-install.log\n\
 	mv $(HTTPD_CONF_DIR)/welcome.conf $(HTTPD_CONF_DIR)/welcome.conf.disabled &>> /tmp/post-install.log\n\
 	if [ \`iptables -S | grep -e \"-A INPUT -i lo -j ACCEPT\" | wc -c\` -eq 0 ]; then\n\
 	\tiptables -I INPUT 1 -i lo -p all -j ACCEPT &>> /tmp/post-install.log\nfi\n\
