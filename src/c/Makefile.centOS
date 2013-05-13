@@ -161,7 +161,7 @@ install: prepare
 
 clean:
 	@echo -e "\n\tCleaning $(NAME)...\n"
-	@rm -rf *~ \#*\# $(NAME) ./png/* core hs_err_pid*
+	@rm -rf *~ \#*\# $(NAME) $(EXE_NAME) ./png/* core hs_err_pid*
 	@rm -rf $(DIRSRC)*.o
 	@make -f Makefile --no-print-directory -C ./utils/ clean
 	@make -f Makefile.centOS --no-print-directory -C ./plugins/communicator/ clean
@@ -202,7 +202,7 @@ dist: 	compile install
 	@mkdir -p $(BUILD_SRC_PATH)$(PLUGINS_PATH)
 	@mkdir -p $(BUILD_SRC_PATH)$(BINS_PATH)
 	@mkdir -p $(BUILD_SRC_PATH)$(JNI_LIB_PATH)
-	@mkdir -p $(BUILD_SRC_PATH)$(PROFILE_PATH)
+#	@mkdir -p $(BUILD_SRC_PATH)$(PROFILE_PATH)
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/ands
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/colormaps
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/conf
