@@ -243,7 +243,7 @@ dist: 	compile install
 	@echo -e "\tCopying over tissue stack start/conf scripts [error logs: $(BUILD_PATH)/logs/*.log]..."
 	@cp -f $(PACKAGING_CONFIG_PATH)/$(NAME)-httpd.conf $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(NAME).conf &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
 	@cp -f $(PACKAGING_CONFIG_PATH)/$(NAME)_modules.sh $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(NAME)_modules.sh &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
-	@cp -f $(PACKAGING_CONFIG_PATH)/$(NAME)_init.sh $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(NAME)_init.sh &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
+	@cp -f $(PACKAGING_CONFIG_PATH)/$(NAME)_rpm_init.sh $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(NAME)_init.sh &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
 	@cp -f $(PACKAGING_CONFIG_PATH)/$(NAME)_rpm.sh $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
 	@chmod 755 $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME)
 
@@ -326,7 +326,8 @@ dist: 	compile install
 	source $(PROFILE_PATH)/$(NAME)_modules.sh &>> /tmp/post-install.log\n\
 	cp -f $(DATA_PATH)/conf/$(NAME)_init.sh $(SYS_V_INIT_PATH)$(NAME) &>> /tmp/post-install.log\n\
 	chmod 755 $(SYS_V_INIT_PATH)$(NAME) &>> /tmp/post-install.log\n\
-	chkconfig $(NAME) on &>> /tmp/post-install.log\
+	chkconfig $(NAME) on &>> /tmp/post-install.log\n\
+	$(SYS_V_INIT_PATH)$(NAME) start &>> /tmp/post-install.log\
 	" > $(BUILD_SRC_PATH)/post-install.sh
 	@chmod 755 $(BUILD_SRC_PATH)/post-install.sh
 

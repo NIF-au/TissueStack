@@ -232,6 +232,7 @@ dist: 	compile install
 		cp -r $(PACKAGING_CONFIG_PATH)/$(NAME).sh $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log; \
 	else \
 		cp -r $(PACKAGING_CONFIG_PATH)/$(NAME)_rpm.sh $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log; \
+		cp -f $(PACKAGING_CONFIG_PATH)/$(NAME)_rpm_init.sh $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(NAME)_init.sh &>> $(BUILD_PATH)/logs/$(NAME)_copy.log; \
 	fi
 	@chmod 755 $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME)
 
@@ -330,7 +331,11 @@ dist: 	compile install
 	if [ \`iptables -S | grep -e \"-A INPUT -p tcp -m tcp --dport 5432 -j DROP\" | wc -c\` -eq 0 ]; then\n\
 	\tiptables -A INPUT -p tcp --destination-port 5432 -j DROP &>> /tmp/post-install.log\nfi\n\
 	service iptables save &>> /tmp/post-install.log\n\
-	$(SYS_V_INIT_PATH)httpd restart &>> /tmp/post-install.log\
+	service httpd restart &>> /tmp/post-install.log\n\
+	cp -f $(DATA_PATH)/conf/$(NAME)_init.sh $(SYS_V_INIT_PATH)$(NAME) &>> /tmp/post-install.log\n\
+	chmod 755 $(SYS_V_INIT_PATH)$(NAME) &>> /tmp/post-install.log\n\
+	chkconfig $(NAME) on &>> /tmp/post-install.log\n\
+	$(SYS_V_INIT_PATH)$(NAME) start &>> /tmp/post-install.log\
 	" > $(BUILD_SRC_PATH)/post-install.sh; \
 	fi
 	@chmod 755 $(BUILD_SRC_PATH)/post-install.sh

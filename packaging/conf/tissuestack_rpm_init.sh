@@ -7,7 +7,8 @@
 start () {
         echo -n "Starting Tissuestack..."
         echo "Starting Tissuestack..." >> /var/log/messages
-        source /etc/profile.d/tissuestack_env.sh
+        source /etc/profile.d/modules.sh >> /var/log/messages
+        source /etc/profile.d/tissuestack_modules.sh >> /var/log/messages
         tissuestack start >> /var/log/messages
         if [ $? -eq 1 ]; then
                 echo "OK"; echo "TissueStack started." >> /var/log/messages
@@ -22,7 +23,8 @@ start () {
 stop () {
         echo -n "Stopping Tissuestack..."
         echo "Stopping Tissuestack..." >> /var/log/messages
-        source /etc/profile.d/tissuestack_env.sh
+        source /etc/profile.d/modules.sh >> /var/log/messages
+        source /etc/profile.d/tissuestack_modules.sh >> /var/log/messages
         tissuestack stop >> /var/log/messages
         if [ $? -eq 1 ]; then
                 echo "OK"; echo "TissueStack stopped." >> /var/log/messages
