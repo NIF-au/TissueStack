@@ -30,14 +30,21 @@ public final class ImageUtils {
 			
 			String header = null;
 			
+			RandomAccessFile raf = null;
 			try {
 				byte content[] = new byte[RAW_HEADER.length()];
-				final RandomAccessFile raf = new RandomAccessFile(potentialRawFile, "r");
+				raf = new RandomAccessFile(potentialRawFile, "r");
 				raf.read(content);
 				
 				header = new String(content);
 			} catch(Exception any) {
 				return false;
+			} finally {
+				try {
+					raf.close();
+				} catch(Exception any) {
+					// ignored
+				}
 			}
 			
 			if (header == null || !header.equals(RAW_HEADER)) return false; 

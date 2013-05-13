@@ -144,6 +144,12 @@ public final class ColorMapsProvider {
 			return colorMap; 
 		} catch (Exception any) {
 			logger.error("Failed to read color map file '" + colorMapFile.getAbsolutePath() + "'!", any);
+		} finally {
+			try {
+				reader.close();
+			} catch(Exception any) {
+				// ignored
+			}
 		}
 		
 		return null;

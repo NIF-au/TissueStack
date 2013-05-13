@@ -98,7 +98,7 @@ public final class DataSetValuesLookupProvider {
 						logger.error("Line " + lineNumber + " in Lookup file '" + lookupFile.getAbsolutePath()
 								+ "' does not have the required minumum of 5 columns");
 						return null;
-					} 
+					}
 				}
 				lineNumber++;
 			}
@@ -111,6 +111,12 @@ public final class DataSetValuesLookupProvider {
 			return lookupTable; 
 		} catch (Exception any) {
 			logger.error("Failed to read lookup file '" + lookupFile.getAbsolutePath() + "'!");
+		} finally {
+			try {
+				reader.close();
+			} catch(Exception any) {
+				// ignored
+			}
 		}
 		
 		return null;
