@@ -232,7 +232,7 @@ dist: 	compile install
 		cp -r $(PACKAGING_CONFIG_PATH)/$(NAME).sh $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log; \
 	else \
 		cp -r $(PACKAGING_CONFIG_PATH)/$(NAME)_rpm.sh $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log; \
-		cp -f $(PACKAGING_CONFIG_PATH)/$(NAME)_rpm_init.sh $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(NAME)_init.sh &>> $(BUILD_PATH)/logs/$(NAME)_copy.log; \
+		cp -f $(PACKAGING_CONFIG_PATH)/$(NAME)_init.sh $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(NAME)_init.sh &>> $(BUILD_PATH)/logs/$(NAME)_copy.log; \
 	fi
 	@chmod 755 $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME)
 
