@@ -30,7 +30,7 @@ echo "Completed build stage"
 %install
 echo "Entering install stage (see: /tmp/%{name}-%{version}-rpm-build.log)"
 cd %{buildroot}; tar xvzf /tmp/%{name}_build/%{name}-%{version}.tar.gz >> /tmp/%{name}-%{version}-rpm-build.log
-rm -rf %{buildroot}/post-install.sh
+mv %{buildroot}/post-install.sh /tmp
 echo "Completed install stage"
 
 %files
@@ -47,21 +47,29 @@ rm -rf /tmp/%{name}_build
 rm -f /tmp/post-install.log
 touch /tmp/post-install.log
 chmod 666 /tmp/post-install.log
-su - postgres <<EOF
+for dirs in `find /opt/tissuestack/ -name "bin"`;do
+        chmod -R 755 $dirs/* &>> /tmp/post-install.log
+done
+su -c "su - postgres <<EOF
 initdb &>> /tmp/post-install.log
 EOF
+"
 chkconfig postgresql on &>> /tmp/post-install.log
 service postgresql start &>> /tmp/post-install.log
 sleep 5s
-su - postgres <<EOF
+su -c "su - postgres <<EOF
 psql -U postgres -h localhost -f /opt/tissuestack/sql/create_tissuestack_db.sql &>> /tmp/post-install.log
 psql -U postgres -h localhost -f /opt/tissuestack/sql/create_tissuestack_tables.sql tissuestack &>> /tmp/post-install.log
 psql -U postgres -h localhost -f /opt/tissuestack/sql/create_tissuestack_config.sql tissuestack &>> /tmp/post-install.log
 psql -U postgres -h localhost -f /opt/tissuestack/sql/update_tissuestack_config.sql tissuestack &>> /tmp/post-install.log
 EOF
+"
 chkconfig httpd on &>> /tmp/post-install.log
+echo "/opt/tissuestack" > /tmp/escaped.string
+sed -i 's/\//\\\//g' /tmp/escaped.string &>> /tmp/post-install.log
+ESCAPED_STRING=`cat /tmp/escaped.string` &>> /tmp/post-install.log
 cp -f /opt/tissuestack/conf/tissuestack.conf /etc/httpd/conf.d/tissuestack.conf &>> /tmp/post-install.log
-sed -i "s/##DOC_ROOT##/\/opt\/tissuestack\/web/g" /etc/httpd/conf.d/tissuestack.conf &>> /tmp/post-install.log
+sed -i "s/##DOC_ROOT##/$ESCAPED_STRING\/web/g" /etc/httpd/conf.d/tissuestack.conf &>> /tmp/post-install.log
 sed -i 's/##ERROR_LOG##/\/var\/log\/httpd\/tissuestack-error.log/g' /etc/httpd/conf.d/tissuestack.conf &>> /tmp/post-install.log
 mv /etc/httpd/conf.d/welcome.conf /etc/httpd/conf.d/welcome.conf.disabled &>> /tmp/post-install.log
 if [ `iptables -S | grep -e "-A INPUT -i lo -j ACCEPT" | wc -c` -eq 0 ]; then
@@ -77,8 +85,11 @@ if [ `iptables -S | grep -e "-A INPUT -p tcp -m tcp --dport 5432 -j DROP" | wc -
         iptables -A INPUT -p tcp --destination-port 5432 -j DROP &>> /tmp/post-install.log
 fi
 service iptables save &>> /tmp/post-install.log
-/etc/init.d/httpd restart &>> /tmp/post-install.log
-source /etc/profile.d/tissuestack_env.sh
+service httpd restart &>> /tmp/post-install.log
+cp -f /opt/tissuestack/conf/tissuestack_init.sh /etc/init.d/tissuestack &>> /tmp/post-install.log
+chmod 755 /etc/init.d/tissuestack &>> /tmp/post-install.log
+chkconfig tissuestack on &>> /tmp/post-install.log
+/etc/init.d/tissuestack start &>> /tmp/post-install.log
 /sbin/ldconfig
 
 %postun -p /sbin/ldconfig
