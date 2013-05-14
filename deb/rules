@@ -23,6 +23,7 @@ override_dh_auto_build:
 override_dh_auto_install:
 	mkdir install_files
 	cd install_files; tar xvzf /tmp/tissuestack_build/tissuestack-${TISSUESTACK_BUILD_VERSION}.tar.gz >> /tmp/tissuestack-$1_deb_build.log
+	mv install_files/post-install.sh debian/postinst
 
 override_dh_usrlocal:
 

@@ -1,13 +1,16 @@
 #!/bin/bash
 
-# export some environment variables
-TISSUE_STACK_HOME=/opt/tissuestack
-JAVA_HOME=$TISSUE_STACK_HOME/jdk1.6.0_25
-CATALINA_HOME=$TISSUE_STACK_HOME/apache-tomcat-7.0.35
-export TISSUE_STACK_HOME JAVA_HOME CATALINA_HOME
-
-PATH=$PATH:$JAVA_HOME/bin
-export PATH
+# load some environment variables
+if [ -a /etc/profile.d/tissuestack_env.sh ]; then 
+	source /etc/profile.d/tissuestack_env.sh
+else 
+	if [ "$TISSUE_STACK_ENV" != "" ];then
+		source $TISSUE_STACK_ENV
+	else 
+		echo "ERROR: You are missing environment variables!!"
+		exit -1
+	fi
+fi
 
 # actual script
 SHUTDOWN_TRIES=10
@@ -53,10 +56,14 @@ done
 echo -e "\nEverything's down!"
 
 if [ $FIRST_ARGUMENT == "stop" ]; then
-	exit 0
+	exit 1
 fi
 
 echo -e "\nNow start everything again ... (Check following output for errors during during Tissue Stack startup!!) \n"
 
-"$CATALINA_HOME/bin/startup.sh"
-/usr/local/bin/TissueStackImageServer 4242 &
+$CATALINA_HOME/bin/startup.sh
+if [ $? -lt 0 ]; then exit -1;fi
+$IMAGE_SERVER_EXE 4242 &
+if [ $! -lt 1 ] && [ $? -lt 0 ]; then exit -1;fi
+
+exit 1

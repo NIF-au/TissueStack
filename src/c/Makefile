@@ -136,7 +136,7 @@ pluginsCompile:
 	@echo -e "\n\tFinished compiling plugins."
 
 install: prepare
-	@echo -e "\n\tInstalling Binaries (requires super user priviledges):"
+	@echo -e "\n\tInstalling Binaries (may require super user priviledges):"
 	@echo -e "\t-----------------------------------------------\n"
 	@echo -e "\tInstalling '$(EXE_NAME)' executable into: $(BINS_PATH)."
 	@sudo mkdir -p $(BINS_PATH)
@@ -227,12 +227,11 @@ dist: 	compile install
 	@cp -r $(TOMCAT_PATH) $(BUILD_SRC_PATH)$(DATA_PATH) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
 
 	@echo -e "\tCopying over tissue stack start/conf scripts [error logs: $(BUILD_PATH)/logs/*.log]..."
+	@cp -f $(PACKAGING_CONFIG_PATH)/$(NAME)-httpd.conf $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(NAME).conf &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
+	@cp -f $(PACKAGING_CONFIG_PATH)/$(NAME).sh $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
 	@if [ $(IS_DEBIAN_BASED) -gt 0 ] || [ $(IS_UBUNTU_BASED) -gt 0 ]; then \
-		cp -r $(PACKAGING_CONFIG_PATH)/$(NAME).sh $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log; \
-		cp -f $(PACKAGING_CONFIG_PATH)/$(NAME)-httpd.conf $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(NAME).conf &>> $(BUILD_PATH)/logs/$(NAME)_copy.log; \
+		cp -f $(PACKAGING_CONFIG_PATH)/$(NAME)_deb_init.sh $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(NAME)_init.sh &>> $(BUILD_PATH)/logs/$(NAME)_copy.log; \
 	else \
-		cp -f $(PACKAGING_CONFIG_PATH)/$(NAME)-httpd-rpm.conf $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(NAME).conf &>> $(BUILD_PATH)/logs/$(NAME)_copy.log; \
-		cp -r $(PACKAGING_CONFIG_PATH)/$(NAME)_rpm.sh $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log; \
 		cp -f $(PACKAGING_CONFIG_PATH)/$(NAME)_init.sh $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(NAME)_init.sh &>> $(BUILD_PATH)/logs/$(NAME)_copy.log; \
 	fi
 	@chmod 755 $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME)
@@ -274,25 +273,40 @@ dist: 	compile install
 	rm -f /tmp/post-install.log\n\
 	touch /tmp/post-install.log\n\
 	chmod 666 /tmp/post-install.log\n\
-	for dirs in \`find $(DATA_PATH)/ -name \"bin\"\`;do\n\
-	\tchmod -R 755 \$$dirs/* &>> /tmp/post-install.log\n\
-	done\n\
+	chmod -R g+wr,o+wr $(DATA_PATH)/\n\
 	service postgresql start &>> /tmp/post-install.log\n\
 	sleep 5s\n\
 	sudo su - postgres <<EOF\n\
-	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_db.sql &>> /tmp/post-install.log\n\
-	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_tables.sql tissuestack &>> /tmp/post-install.log\n\
-	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
-	psql -U postgres -h localhost -f $(DATA_PATH)/sql/update_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
+	psql -f $(DATA_PATH)/sql/create_$(NAME)_db.sql &>> /tmp/post-install.log\n\
+	psql -f $(DATA_PATH)/sql/create_$(NAME)_tables.sql tissuestack &>> /tmp/post-install.log\n\
+	psql -f $(DATA_PATH)/sql/create_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
+	psql -f $(DATA_PATH)/sql/update_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
 	EOF\n\
 	echo \"$(DATA_PATH)\" > /tmp/escaped.string\n\
 	sed -i 's/\//\\\\\\\\\//g' /tmp/escaped.string &>> /tmp/post-install.log\n\
 	ESCAPED_STRING=\`cat /tmp/escaped.string\` &>> /tmp/post-install.log\n\
-	cp -f $(DATA_PATH)/conf/$(NAME).conf $(APACHE2_CONF_DIR)/$(NAME).conf &>> /tmp/post-install.log\n\
-	sed -i \"s/##DOC_ROOT##/\$$ESCAPED_STRING\\/web/g\" $(APACHE2_CONF_DIR)/$(NAME).conf &>> /tmp/post-install.log\n\
-	sed -i 's/##ERROR_LOG##/\\/var\\/log\\/apache2\\/$(NAME)-error.log/g' $(APACHE2_CONF_DIR)/$(NAME).conf &>> /tmp/post-install.log\n\
-	a2ensite $(APACHE2_CONF_DIR)/$(NAME).conf &>> /tmp/post-install.log\n\
-	$(SYS_V_INIT_PATH)apache2 restart &>> /tmp/post-install.log\
+	cp -f $(DATA_PATH)/conf/$(NAME).conf $(APACHE2_CONF_DIR)/$(NAME) &>> /tmp/post-install.log\n\
+	sed -i \"s/##DOC_ROOT##/\$$ESCAPED_STRING\\/web/g\" $(APACHE2_CONF_DIR)/$(NAME) &>> /tmp/post-install.log\n\
+	sed -i 's/##ERROR_LOG##/\\/var\\/log\\/apache2\\/$(NAME)-error.log/g' $(APACHE2_CONF_DIR)/$(NAME) &>> /tmp/post-install.log\n\
+	APACHE_VERSION=\`apache2 -v | grep \"Apache/\" | cut -f2 -d \"/\" | cut -f1 -d \" \" | cut -f1,2 -d \".\" | sed 's/\\.//g'\` &>> /tmp/post-install.log\n\
+	if [ \$$APACHE_VERSION -gt 23 ]; then sed -i 's/#Require all granted/Require all granted/g' $(APACHE2_CONF_DIR)/$(NAME); fi &>> /tmp/post-install.log\n\
+	a2ensite $(NAME) &>> /tmp/post-install.log\n\
+	a2dissite default &>> /tmp/post-install.log\n\
+	a2enmod headers proxy proxy_http &>> /tmp/post-install.log\n\
+	$(SYS_V_INIT_PATH)apache2 restart &>> /tmp/post-install.log\n\
+	if [ \`iptables -S | grep -e \"-A INPUT -i lo -j ACCEPT\" | wc -c\` -eq 0 ]; then\n\
+	\tiptables -I INPUT 1 -i lo -p all -j ACCEPT &>> /tmp/post-install.log\nfi\n\
+	if [ \`iptables -S | grep -e \"-A INPUT -p tcp -m tcp --dport 8080 -j DROP\" | wc -c\` -eq 0 ]; then\n\
+	\tiptables -A INPUT -p tcp --destination-port 8080 -j DROP &>> /tmp/post-install.log\nfi\n\
+	if [ \`iptables -S | grep -e \"-A INPUT -p tcp -m tcp --dport 4242 -j DROP\" | wc -c\` -eq 0 ]; then\n\
+	\tiptables -A INPUT -p tcp --destination-port 4242 -j DROP &>> /tmp/post-install.log\nfi\n\
+	if [ \`iptables -S | grep -e \"-A INPUT -p tcp -m tcp --dport 5432 -j DROP\" | wc -c\` -eq 0 ]; then\n\
+	\tiptables -A INPUT -p tcp --destination-port 5432 -j DROP &>> /tmp/post-install.log\nfi\n\
+	iptables-save &>> /tmp/post-install.log\n\
+	cp -f $(DATA_PATH)/conf/$(NAME)_init.sh $(SYS_V_INIT_PATH)$(NAME) &>> /tmp/post-install.log\n\
+	chmod 755 $(SYS_V_INIT_PATH)$(NAME) &>> /tmp/post-install.log\n\
+	cd $(SYS_V_INIT_PATH); update-rc.d $(NAME) defaults &>> /tmp/post-install.log\n\
+	$(SYS_V_INIT_PATH)$(NAME) start &>> /tmp/post-install.log\
 	" > $(BUILD_SRC_PATH)/post-install.sh; \
 	else \
 		echo -e "a red hat based distribution..."; \
@@ -300,9 +314,7 @@ dist: 	compile install
 	rm -f /tmp/post-install.log\n\
 	touch /tmp/post-install.log\n\
 	chmod 666 /tmp/post-install.log\n\
-	for dirs in \`find $(DATA_PATH)/ -name \"bin\"\`;do\n\
-	\tchmod -R 755 \$$dirs/* &>> /tmp/post-install.log\n\
-	done\n\
+	chmod -R g+wr,o+wr $(DATA_PATH)/\n\
 	su -c \"su - postgres <<EOF\n\
 	initdb &>> /tmp/post-install.log\n\
 	EOF\n\"\n\
@@ -333,7 +345,7 @@ dist: 	compile install
 	\tiptables -A INPUT -p tcp --destination-port 4242 -j DROP &>> /tmp/post-install.log\nfi\n\
 	if [ \`iptables -S | grep -e \"-A INPUT -p tcp -m tcp --dport 5432 -j DROP\" | wc -c\` -eq 0 ]; then\n\
 	\tiptables -A INPUT -p tcp --destination-port 5432 -j DROP &>> /tmp/post-install.log\nfi\n\
-	service iptables save &>> /tmp/post-install.log\n\
+	iptables-save &>> /tmp/post-install.log\n\
 	service httpd restart &>> /tmp/post-install.log\n\
 	cp -f $(DATA_PATH)/conf/$(NAME)_init.sh $(SYS_V_INIT_PATH)$(NAME) &>> /tmp/post-install.log\n\
 	chmod 755 $(SYS_V_INIT_PATH)$(NAME) &>> /tmp/post-install.log\n\
