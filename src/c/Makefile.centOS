@@ -244,7 +244,7 @@ dist: 	compile install
 	@cp -f $(PACKAGING_CONFIG_PATH)/$(NAME)-httpd.conf $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(NAME).conf &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
 	@cp -f $(PACKAGING_CONFIG_PATH)/$(NAME)_modules.sh $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(NAME)_modules.sh &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
 	@cp -f $(PACKAGING_CONFIG_PATH)/$(NAME)_rpm_init.sh $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(NAME)_init.sh &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
-	@cp -f $(PACKAGING_CONFIG_PATH)/$(NAME)_rpm.sh $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
+	@cp -f $(PACKAGING_CONFIG_PATH)/$(NAME).sh $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME) &>> $(BUILD_PATH)/logs/$(NAME)_copy.log
 	@chmod 755 $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME)
 
 	@echo -e "\tBuilding Tissue Stack Web Service (maven build). This may take a while, please be patient! [error logs: $(BUILD_PATH)/logs/*.log]..."
