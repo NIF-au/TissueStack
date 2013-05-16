@@ -271,6 +271,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
     fclose_check(a->file);
     return;
   }
+  SetImageDepth(img, 8);
 
   if (a->info->contrast != 0)
     {
@@ -345,6 +346,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
       new_image = AllocateImage(new_image_info);
       new_image->rows = height;
       new_image->columns = width;
+      SetImageDepth(new_image, 8);
 
       if ((px = GetImagePixelsEx(img, 0, 0, width, height, &exception)) == NULL)
 	{
