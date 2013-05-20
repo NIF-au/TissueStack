@@ -8,7 +8,7 @@ LIB_PATH	=
 
 NAME		=	utils
 
-FLAGS		=	-ggdb -O2 -Wall -Werror -Wno-unused-result
+FLAGS		=	-ggdb -lm -O2 -Wall -Werror -Wno-unused-result
 
 all: compile
 

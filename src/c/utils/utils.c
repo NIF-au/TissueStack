@@ -288,6 +288,18 @@ char* strlower( char* s )
   return s;
 }
 
+inline unsigned long long mapUnsignedValue(unsigned char fromBitRange, unsigned char toBitRange, unsigned long long value) {
+	// cap at 64 bits
+	if (fromBitRange > 64 || toBitRange > 64) return 0;
+
+	unsigned long long from = 1 << fromBitRange;
+	unsigned long long to = 1 << toBitRange;
+
+	// check if value exceeds its native range
+	if (value > from) return 0;
+
+	return round(((double)value / from) * to);
+}
 
 void		write_http_header(FILE * socket, char * status, char * image_type)
 {
@@ -418,6 +430,32 @@ short testDirectoryCreation() {
 	  return 1;
 }
 
+short testMapValue() {
+	  printf("\t*) Map Value Ranges => ");
+
+	  if (mapUnsignedValue(8, 16, 0) != 0) printf("FAILED !\n");
+	  if (mapUnsignedValue(8, 16, 125) != 32000) printf("FAILED !\n");
+	  if (mapUnsignedValue(8, 16, 256) != 65536) printf("FAILED !\n");
+
+	  if (mapUnsignedValue(16, 8, 0) != 0) printf("FAILED !\n");
+	  if (mapUnsignedValue(16, 8, 32000) != 125) printf("FAILED !\n");
+	  if (mapUnsignedValue(16, 8, 65536) != 256) printf("FAILED !\n");
+
+	  printf("PASSED.\n");
+	  return 1;
+}
+
+void free_null_terminated_char_2D_array(char ** strings) {
+	if (strings == NULL) return;
+
+	int i=0;
+	while (strings[i] != NULL) {
+		free(strings[i]);
+		i++;
+	}
+	free(strings);
+}
+
 short testToUpAndLow() {
 	  printf("\t*) To Upper And Lower => ");
 
@@ -439,17 +477,6 @@ short testToUpAndLow() {
 	  printf("PASSED.\n");
 
 	  return 1;
-}
-
-void free_null_terminated_char_2D_array(char ** strings) {
-	if (strings == NULL) return;
-
-	int i=0;
-	while (strings[i] != NULL) {
-		free(strings[i]);
-		i++;
-	}
-	free(strings);
 }
 
 char		*array_2D_to_array_1D(char **src)
@@ -506,6 +533,11 @@ int		main(int argc, char ** args)
 
    // UPPER AND LOWER TEST
    if (!testToUpAndLow()) {
+	   printf("Tests aborted because of errors!\n");
+	   exit(0);
+   }
+
+   if (!testMapValue()) {
 	   printf("Tests aborted because of errors!\n");
 	   exit(0);
    }

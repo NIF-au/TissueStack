@@ -158,7 +158,7 @@ void fclose_check(FILE *file) {
 }
 
 void		apply_colormap(PixelPacket *px, PixelPacket *px_final, float **premapped_colormap,
-			       t_image_args *a, int width, int height)
+			       t_image_args *a, int width, int height, unsigned long quantum_depth)
 {
   int		i = 0;
   int		j = 0;
@@ -170,10 +170,24 @@ void		apply_colormap(PixelPacket *px, PixelPacket *px_final, float **premapped_c
       while (j < width)
 	{
 	  pixel_value = px[(width * i) + j].red;
+	  if (QuantumDepth != 8 && quantum_depth != QuantumDepth)
+		  pixel_value = (unsigned char) mapUnsignedValue(quantum_depth, 8, (unsigned long long) pixel_value);
 	  pixel_value = (pixel_value >= 255 ? 254 : pixel_value);
-	  px_final[(width * i) + j].red = (unsigned short)(premapped_colormap[pixel_value][0]);
-	  px_final[(width * i) + j].green = (unsigned short)(premapped_colormap[pixel_value][1]);
-	  px_final[(width * i) + j].blue = (unsigned short)(premapped_colormap[pixel_value][2]);
+
+	  px_final[(width * i) + j].red =
+//		(QuantumDepth != 8 && quantum_depth != QuantumDepth) ?
+//			(unsigned short) mapUnsignedValue(8, quantum_depth, (unsigned long long) premapped_colormap[pixel_value][0]) :
+			(unsigned short)(premapped_colormap[pixel_value][0]);
+
+	  px_final[(width * i) + j].green =
+				(QuantumDepth != 8 && quantum_depth != QuantumDepth) ?
+					(unsigned short) mapUnsignedValue(8, quantum_depth, (unsigned long long) premapped_colormap[pixel_value][1]) :
+					(unsigned short)(premapped_colormap[pixel_value][1]);
+
+	  px_final[(width * i) + j].blue =
+				(QuantumDepth != 8 && quantum_depth != QuantumDepth) ?
+					(unsigned short) mapUnsignedValue(8, quantum_depth, (unsigned long long) premapped_colormap[pixel_value][2]) :
+					(unsigned short)(premapped_colormap[pixel_value][2]);
 	  j++;
 	}
       i++;
@@ -193,7 +207,7 @@ unsigned char	get_contrasted_value(unsigned char min, unsigned char max,
 
 void		apply_contrast(PixelPacket *px, unsigned char min, unsigned char max,
 			       unsigned char dataset_min, unsigned char dataset_max,
-			       t_image_args *a, int width, int height)
+			       t_image_args *a, int width, int height, unsigned long quantum_depth)
 {
   int		i = 0;
   int		j = 0;
@@ -205,13 +219,15 @@ void		apply_contrast(PixelPacket *px, unsigned char min, unsigned char max,
       while (j < width)
 	{
 	  pixel_value = px[(width * i) + j].red;
+	  if (QuantumDepth != 8 && quantum_depth != QuantumDepth)
+		  pixel_value = (unsigned char) mapUnsignedValue(quantum_depth, 8, (unsigned long long) pixel_value);
 	  pixel_value = (pixel_value >= 255 ? 254 : pixel_value);
 
 	  pixel_value = get_contrasted_value(min, max, dataset_min, dataset_max, pixel_value);
+	  if (QuantumDepth != 8 && quantum_depth != QuantumDepth)
+		  pixel_value = (unsigned char) mapUnsignedValue(8, quantum_depth, (unsigned long long) pixel_value);
 
-	  px[(width * i) + j].red = (unsigned char)(pixel_value);
-	  px[(width * i) + j].green = (unsigned char)(pixel_value);
-	  px[(width * i) + j].blue = (unsigned char)(pixel_value);
+	  px[(width * i) + j].red = px[(width * i) + j].green = px[(width * i) + j].blue = pixel_value;
 	  j++;
 	}
       i++;
@@ -271,7 +287,6 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
     fclose_check(a->file);
     return;
   }
-  SetImageDepth(img, 8);
 
   if (a->info->contrast != 0)
     {
@@ -301,7 +316,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
       }
 
       apply_contrast(px, a->info->contrast_min, a->info->contrast_max,
-		     a->volume->color_range_min, a->volume->color_range_max, a, width, height);
+		     a->volume->color_range_min, a->volume->color_range_max, a, width, height, img->depth);
 
       if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
 	DestroyImage(img);
@@ -346,7 +361,6 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
       new_image = AllocateImage(new_image_info);
       new_image->rows = height;
       new_image->columns = width;
-      SetImageDepth(new_image, 8);
 
       if ((px = GetImagePixelsEx(img, 0, 0, width, height, &exception)) == NULL)
 	{
@@ -386,7 +400,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
 	return;
       }
 
-      apply_colormap(px, px_tmp, a->info->premapped_colormap[a->info->colormap_id], a, width, height);
+      apply_colormap(px, px_tmp, a->info->premapped_colormap[a->info->colormap_id], a, width, height, img->depth);
 
       if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
 	DestroyImage(img);

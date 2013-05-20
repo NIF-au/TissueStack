@@ -27,6 +27,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <math.h>
 
 /** for string tokenization **/
 int countTokens(char *buffer, char delimiter, char escape);
@@ -55,6 +56,10 @@ inline char * appendCharacterToTempTokenBuffer(char * tempTokenBuffer,
 char* strupper( char* s );
 char* strlower( char* s );
 char		*array_2D_to_array_1D(char **str);
+
+// takes an unsigned value and maps it from its original range to a new range.
+// Note that the range arguments denote the bit length, e.g 8,16,etc. up to a 64 maximum!!
+inline unsigned long long mapUnsignedValue(unsigned char fromBitRange, unsigned char toBitRange, unsigned long long value);
 
 #endif /* !__UTILS_H__ */
 
