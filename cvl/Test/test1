@@ -1,0 +1,11 @@
+#!/bin/sh
+#
+# CVL build system.
+#
+# Test script for cdash test. Each test script should contain only one test 
+# command. If you wish to run multiple testing commands, copy the test script 
+# to a series of test scripts such as "test2, test3, ..." in the same 
+# directory.
+#
+
+echo "CDash ctest ..."

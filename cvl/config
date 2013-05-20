@@ -1,0 +1,285 @@
+#!/bin/sh
+#
+# CVL build system to configure source parameters.
+#
+#
+# Module file description.
+#
+ModuleFileDescription="tissuestack"
+
+#
+# Package release number.
+#
+PACKAGE_RELEASE="1.1"
+
+#
+# For source package, set it "ON", for binary package, set it "OFF".
+#
+SOURCE_BUILD_FLAG="ON"
+
+#
+# Set RPM package dependency requires, using following string format and 
+# delimited by ",". <package1 >= version, package2 >= version, .....>
+#
+RPM_PACKAGE_REQUIRES="postgresql-server >= 8.4, httpd >= 2.1, gtk2, cvl-modules3_2_9"
+
+#
+# Source configure file.
+#
+CONFIGURE="readme.txt"
+
+export PROJECT_SOURCE_PATH=/usr/local/src/`echo $ModuleFileDescription | tr '[:lower:]' '[:upper:]'`/$PACKAGE_RELEASE
+
+#
+# Build configuration set up.
+#
+function ConfigurationCommand() 
+{
+    SOURCE=$1
+    INSTALL=$2
+
+    rm -rf ${PROJECT_SOURCE_PATH}/opt
+    rm -f ${PROJECT_SOURCE_PATH}/post-install.sh
+    cp -r ${SOURCE}/opt ${PROJECT_SOURCE_PATH}/opt
+    cp -f ${SOURCE}/post-install.sh ${PROJECT_SOURCE_PATH}/post-install.sh
+    cp -r ${SOURCE}/usr/local/${ModuleFileDescription}/${PACKAGE_RELEASE}/* ${INSTALL}
+}
+
+#
+# Make command
+#
+function MakeCommand()
+{
+    echo
+}
+
+#
+# Make install command
+#
+function InstallCommand()
+{
+  echo
+}
+
+#
+# Source patch command.
+#
+function PatchCommand()
+{
+    SourceDirectory=$1
+    BuildSourceDirectory=$2
+    InstallDirectory=$3
+
+    echo
+}
+
+#
+# Module file environment setting, multiple lines should be delimited by ";"
+# Note: Certain characters such as " and $ need be escaped by "\"
+#
+#prepend-path --delim \" \" TISSUE_STACK_ENV /usr/local/\$name/\$ver/tissuestack_env
+EnvironmentModuleList="
+setenv TISSUE_STACK_ENV /usr/local/\$name/\$ver/bin/tissuestack_env.sh"
+#
+# Install configuration files to package in format of "<Source>:<Destination>",
+# multiple lines must be delimited by ";". Source files must be available in
+# current source directory.
+#
+#PackageInstallFileList=/:/
+
+#
+# Install configuration directories to package in format of 
+# "<Source>:<Destination>", multiple lines must be delimited by ";". 
+# Source files must be available in current source directory.
+#
+PackageInstallDirectoryList=opt:/
+
+#
+# Set menu layout in format <project_type>:<application_menu>. If this is not 
+# set, the following MeuDirectory and MenuDesktop will be ignored.
+#
+# The <project_type> is currently only defined for "cvl" project.
+# Supporting for "cvl" application_menu includes:
+# - toolbox
+# - system
+# - structural-biology
+# - neuroimaging
+# - energy-materials-atom
+# - energy-materials-xray
+#
+# MenuLayout="cvl:structural-biology"
+
+#
+# Set module category menu, the syntax is in following format:
+#
+# <name>:<icon>:<category> 
+# 
+# (1) <name> is the module name showing on menu. 
+#
+# (2) <icon> is the icon file, if the icon file is from the package, using "~" 
+#     for package parent path.
+#
+# (3) <category> is optional, it does not need to be specified if the <name> 
+#     is the application name. Otherwise, it can be defined similar to the 
+#     <name> without white spaces. Make sure there are NO SPACES in <category>.
+
+#MenuDirectory=
+
+#
+# Set desktop menu, the syntax is in following format:
+#
+# <executable_file>:<name>:<icon>:<add_terminal>:<license>
+#
+# (1) <executable_file> is relative path to the installation prefix. If the
+#     executable file is in /usr/local/fsl/5.0/bin/fsl, it should be set to
+#     "bin/fsl"
+#
+# (2) <name> is the application name showing on menu.
+#
+# (3) <icon> is the name of icon file, if the icon file is from the package, 
+#     using "~" for package parent path.
+#
+# (4) <add_terminal> is a flag with two values of "true" or false".
+#
+# (5) <license> is optional, ignore it if there is no license requirement.
+#     It should point to the license file in the package. For example, 
+#     /usr/local/fsl/5.0/bin/license.txt should be set to "bin/license.txt"
+#
+# Multiple lines should be delimited by ";".
+#
+#MenuDesktop=
+
+#
+# Set library dependencies in following format (version is optional):
+# <module1/version>:<module2/version>...:<moduleN/version>
+#
+#LibraryDependency=
+
+#
+# Local build flag, set it to ON for building or OFF otherwise.
+#
+REQUEST_BUILD="ON"
+
+#
+# Local package flag, set it to ON for packaging or OFF otherwise.
+#
+REQUEST_PACKAGE="ON"
+
+#
+# Build in source directory, "ON" or "OFF".
+#
+BUILD_IN_SOURCE="OFF"
+
+#
+# Install module file flag, "ON" or "OFF".
+#
+INSTALL_MODULE_FILE="ON"
+
+#
+# Binary installation directory "<Source>:<Destination>". This field is only 
+# for applications which have special requirement of source code in different 
+# structure or different binary destination directory.
+#
+#InstallDirectory=opt:/
+
+#
+# Package auto dependency check flag, "true" for enabling the check, "false"
+# for not.
+#
+AutoDependencyCheck="true"
+
+#
+# Pre installation script for RPM package only. The bash script file 
+# should be available in the source location. Edit following variable for 
+# file name (no path) and only one script can be defined.
+#
+PreInstallScript="pre-install.sh"
+
+#
+# Post installation script for RPM package only. The bash script file 
+# should be available in the source location. Edit following variable for 
+# file name (no path) and only one script can be defined.
+#
+PostInstallScript="post-install.sh"
+
+case "$1" in
+    -a|--description)
+        echo -n ${ModuleFileDescription}
+        ;;
+    -b|--build)
+        echo -n ${REQUEST_BUILD}
+        ;;
+    -c|--config)
+        SOURCE_DIR="$2"
+        INSTALL_DIR="$3"
+        ConfigurationCommand ${SOURCE_DIR} ${INSTALL_DIR}
+        ;;
+    -d|--directory-installation-list)
+        echo -n ${PackageInstallDirectoryList}
+        ;;
+    -e|--environment-module-list)
+        echo -n ${EnvironmentModuleList}
+        ;;
+    -f|--file-installation-list)
+        echo -n ${PackageInstallFileList}
+        ;;
+    -g|--group-module-file-installation)
+        echo -n ${INSTALL_MODULE_FILE}
+        ;;
+    -h|--install-directory)
+        echo -n ${InstallDirectory}
+        ;;
+    -i|--install-command)
+        InstallCommand
+        ;;
+    -j|--patch-command)
+        SOURCE_DIR="$2"
+        BUILD_SOURCE_DIR="$3"
+        INSTALL_DIR="$4"
+        PatchCommand ${SOURCE_DIR} ${BUILD_SOURCE_DIR} ${INSTALL_DIR}
+        ;;
+    -k|--make-command)
+        MakeCommand
+        ;;
+    -l|--menu-layout)
+        echo -n ${MenuLayout}
+        ;;
+    -m|--module-file)
+        ;;
+    -n|--menu-directory)
+        echo -n ${MenuDirectory}
+        ;;
+    -o|--menu-desktop)
+        echo -n ${MenuDesktop}
+        ;;
+    -p|--package)
+        echo -n ${REQUEST_PACKAGE}
+        ;;
+    -q|--library-dependency)
+        echo -n ${LibraryDependency}
+        ;;
+    -r|--release)
+        echo -n ${PACKAGE_RELEASE}
+        ;;
+    -s|--use-source-directory)
+        echo -n ${BUILD_IN_SOURCE}
+        ;;
+    -t|--type)
+        echo -n ${CONFIGURE}
+        ;;
+    -u|--auto-dependency-check)
+        echo -n ${AutoDependencyCheck}
+        ;;
+    -v|--pre-install-script-file)
+        echo -n ${PreInstallScript}
+        ;;
+    -w|--rpm-package-requires)
+        echo -n ${RPM_PACKAGE_REQUIRES}
+        ;;
+    -y|--post-install-script-file)
+        echo -n ${PostInstallScript}
+        ;;
+    -z|--source-build-flag)
+        echo -n ${SOURCE_BUILD_FLAG}
+        ;;
+esac

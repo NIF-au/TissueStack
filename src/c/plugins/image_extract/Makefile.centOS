@@ -14,7 +14,8 @@ LIBS		=	-lhdf5								\
 			-lnetcdf 							\
 			-lminc2								\
 			-lpthread							\
-			-ldl
+			-ldl								\
+			-lm
 
 NAME		=	TissueStackImageExtract.so
 
