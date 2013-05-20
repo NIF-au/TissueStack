@@ -9,7 +9,7 @@ LIB_PATH	=	-L/usr/local/lib
 NAME		=	libTissueStack.so
 BIN_NAME	=	TissueStack
 
-FLAGS		=	-ggdb -O2 -Wall -Werror -Wno-unused-result
+FLAGS		=	-ggdb -O2 -lm -Wall -Werror -Wno-unused-result
 
 SHARED_LIBS_DIR = /usr/local/lib
 

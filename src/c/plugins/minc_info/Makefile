@@ -8,7 +8,7 @@ LIB_PATH	=
 
 NAME		=	TissueStackMincInfo.so
 
-FLAGS		=	-ggdb -O2 -Wall -Werror -Wno-unused-result
+FLAGS		=	-ggdb -O2 -lm -Wall -Werror -Wno-unused-result
 
 OBJS		=	$(SRCS:%.c=%.o)
 

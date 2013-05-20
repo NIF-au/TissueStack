@@ -298,7 +298,7 @@ inline unsigned long long mapUnsignedValue(unsigned char fromBitRange, unsigned 
 	// check if value exceeds its native range
 	if (value > from) return 0;
 
-	return round(((double)value / from) * to);
+	return (unsigned long long) lround(((double)value / from) * to);
 }
 
 void		write_http_header(FILE * socket, char * status, char * image_type)

@@ -162,32 +162,32 @@ void		apply_colormap(PixelPacket *px, PixelPacket *px_final, float **premapped_c
 {
   int		i = 0;
   int		j = 0;
-  unsigned char	pixel_value;
-
+  unsigned long long int pixel_value;
+  
   while (i < height)
     {
       j = 0;
       while (j < width)
 	{
-	  pixel_value = px[(width * i) + j].red;
-	  if (QuantumDepth != 8 && quantum_depth != QuantumDepth)
-		  pixel_value = (unsigned char) mapUnsignedValue(quantum_depth, 8, (unsigned long long) pixel_value);
+	  pixel_value = (unsigned long long int) px[(width * i) + j].red;
+	  if (QuantumDepth != 8 && quantum_depth == QuantumDepth) pixel_value = mapUnsignedValue(quantum_depth, 8, pixel_value);
+          
 	  pixel_value = (pixel_value >= 255 ? 254 : pixel_value);
 
 	  px_final[(width * i) + j].red =
-//		(QuantumDepth != 8 && quantum_depth != QuantumDepth) ?
-//			(unsigned short) mapUnsignedValue(8, quantum_depth, (unsigned long long) premapped_colormap[pixel_value][0]) :
+		(QuantumDepth != 8 && quantum_depth == QuantumDepth) ?
+			(unsigned short) mapUnsignedValue(8, quantum_depth, (unsigned long long) premapped_colormap[pixel_value][0]) :
 			(unsigned short)(premapped_colormap[pixel_value][0]);
 
 	  px_final[(width * i) + j].green =
-				(QuantumDepth != 8 && quantum_depth != QuantumDepth) ?
-					(unsigned short) mapUnsignedValue(8, quantum_depth, (unsigned long long) premapped_colormap[pixel_value][1]) :
-					(unsigned short)(premapped_colormap[pixel_value][1]);
+		(QuantumDepth != 8 && quantum_depth == QuantumDepth) ?
+			(unsigned short) mapUnsignedValue(8, quantum_depth, (unsigned long long) premapped_colormap[pixel_value][1]) :
+			(unsigned short)(premapped_colormap[pixel_value][1]);
 
 	  px_final[(width * i) + j].blue =
-				(QuantumDepth != 8 && quantum_depth != QuantumDepth) ?
-					(unsigned short) mapUnsignedValue(8, quantum_depth, (unsigned long long) premapped_colormap[pixel_value][2]) :
-					(unsigned short)(premapped_colormap[pixel_value][2]);
+		(QuantumDepth != 8 && quantum_depth == QuantumDepth) ?
+			(unsigned short) mapUnsignedValue(8, quantum_depth, (unsigned long long) premapped_colormap[pixel_value][2]) :
+			(unsigned short)(premapped_colormap[pixel_value][2]);
 	  j++;
 	}
       i++;
@@ -211,23 +211,24 @@ void		apply_contrast(PixelPacket *px, unsigned char min, unsigned char max,
 {
   int		i = 0;
   int		j = 0;
-  unsigned char	pixel_value;
+  unsigned long long int pixel_value;
 
+  		INFO("%u - %lu\n", QuantumDepth, quantum_depth);
   while (i < height)
     {
       j = 0;
       while (j < width)
 	{
-	  pixel_value = px[(width * i) + j].red;
-	  if (QuantumDepth != 8 && quantum_depth != QuantumDepth)
-		  pixel_value = (unsigned char) mapUnsignedValue(quantum_depth, 8, (unsigned long long) pixel_value);
+	  pixel_value = (unsigned long long int) px[(width * i) + j].red;
+	  if (QuantumDepth != 8 && quantum_depth == QuantumDepth) pixel_value = mapUnsignedValue(quantum_depth, 8, pixel_value);
+	  
 	  pixel_value = (pixel_value >= 255 ? 254 : pixel_value);
 
 	  pixel_value = get_contrasted_value(min, max, dataset_min, dataset_max, pixel_value);
-	  if (QuantumDepth != 8 && quantum_depth != QuantumDepth)
-		  pixel_value = (unsigned char) mapUnsignedValue(8, quantum_depth, (unsigned long long) pixel_value);
+	  if (QuantumDepth != 8 && quantum_depth == QuantumDepth)
+		  pixel_value = mapUnsignedValue(8, quantum_depth, pixel_value);
 
-	  px[(width * i) + j].red = px[(width * i) + j].green = px[(width * i) + j].blue = pixel_value;
+	  px[(width * i) + j].red = px[(width * i) + j].green = px[(width * i) + j].blue = (unsigned char) pixel_value;
 	  j++;
 	}
       i++;

@@ -26,7 +26,8 @@ LIBS		=	-lhdf5								\
 			-ldl								\
 			-lniftiio							\
 			-lznz								\
-			-lz
+			-lz								\
+			-lm
 
 EXE_NAME		=	TissueStackImageServer
 
