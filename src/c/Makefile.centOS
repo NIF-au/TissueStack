@@ -165,6 +165,7 @@ clean:
 	@echo -e "\n\tCleaning $(NAME)...\n"
 	@rm -rf *~ \#*\# $(NAME) $(EXE_NAME) ./png/* core hs_err_pid*
 	@rm -rf $(DIRSRC)*.o
+	@rm -rf $(BUILD_PATH)
 	@make -f Makefile --no-print-directory -C ./utils/ clean
 	@make -f Makefile.centOS --no-print-directory -C ./plugins/communicator/ clean
 	@make -f Makefile.centOS --no-print-directory -C ./plugins/image_extract/ clean
@@ -199,17 +200,17 @@ endif
 
 	@echo -e "\n\n\tBuilding source archive: $(SRC_DIST_NAME):"
 	@echo -e "\t---------------------------------------------------"
-	@mkdir -p $(BUILD_PATH)/sources
-	@cp ../../COPYING ../../README ../../BUILD_ME_LIKE_THIS_FOR_CVL.sh $(BUILD_PATH)/sources
-	@cp ../../pom.xml ../../Makefile.centOS $(BUILD_PATH)/sources
+	@mkdir -p $(BUILD_PATH)/sources/sources
+	@cp ../../COPYING ../../README ../../BUILD_ME_LIKE_THIS_FOR_CVL.sh $(BUILD_PATH)/sources/sources
+	@cp ../../pom.xml ../../Makefile.centOS $(BUILD_PATH)/sources/sources
 	@cp -r ../../cvl/* $(BUILD_PATH)/sources
-	@cp -r ../../src $(BUILD_PATH)/sources
-	@cp -r ../../packaging $(BUILD_PATH)/sources
-	@rm -rf $(BUILD_PATH)/sources/src/c/Makefile
-	@rm -rf $(BUILD_PATH)/sources/src/c/jni/Makefile
-	@rm -rf $(BUILD_PATH)/sources/src/c/plugins/*/Makefile
-	@cp -r ../../data/colormaps $(BUILD_PATH)/sources
-	@cd $(BUILD_PATH); tar cvzf $(SRC_DIST_NAME) sources/* > /dev/null
+	@cp -r ../../src $(BUILD_PATH)/sources/sources
+	@cp -r ../../packaging $(BUILD_PATH)/sources/sources
+	@rm -rf $(BUILD_PATH)/sources/sources/src/c/Makefile
+	@rm -rf $(BUILD_PATH)/sources/sources/src/c/jni/Makefile
+	@rm -rf $(BUILD_PATH)/sources/sources/src/c/plugins/*/Makefile
+	@cp -r ../../data/colormaps $(BUILD_PATH)/sources/sources
+	@cd $(BUILD_PATH)/sources; tar cvzf ../$(SRC_DIST_NAME) * > /dev/null
 	@echo -e "\n\tFinished creating source archive:  $(BUILD_PATH)/$(SRC_DIST_NAME)\n\n"
 
 # target for building a binary tar.gz (is then used for rpm build)

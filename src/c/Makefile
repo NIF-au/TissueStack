@@ -158,6 +158,7 @@ clean:
 	@echo -e "\n\tCleaning $(NAME)...\n"
 	@rm -rf *~ \#*\# $(NAME) $(EXE_NAME) ./png/* core hs_err_pid*
 	@rm -rf $(DIRSRC)*.o
+	@rm -rf $(BUILD_PATH)
 	@make --no-print-directory -C ./utils/ clean
 	@make --no-print-directory -C ./plugins/communicator/ clean
 	@make --no-print-directory -C ./plugins/image_extract/ clean
