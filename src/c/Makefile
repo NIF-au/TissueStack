@@ -322,10 +322,10 @@ dist: 	compile install
 	service postgresql start &>> /tmp/post-install.log\n\
 	sleep 5s\n\
 	su -c \"su - postgres <<EOF\n\
-	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_db.sql &>> /tmp/post-install.log\n\
-	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_tables.sql tissuestack &>> /tmp/post-install.log\n\
-	psql -U postgres -h localhost -f $(DATA_PATH)/sql/create_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
-	psql -U postgres -h localhost -f $(DATA_PATH)/sql/update_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
+	psql -f $(DATA_PATH)/sql/create_$(NAME)_db.sql &>> /tmp/post-install.log\n\
+	psql -f $(DATA_PATH)/sql/create_$(NAME)_tables.sql tissuestack &>> /tmp/post-install.log\n\
+	psql -f $(DATA_PATH)/sql/create_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
+	psql -f $(DATA_PATH)/sql/update_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
 	EOF\n\"\n\
 	chkconfig httpd on &>> /tmp/post-install.log\n\
 	echo \"$(DATA_PATH)\" > /tmp/escaped.string\n\

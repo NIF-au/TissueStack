@@ -47,9 +47,7 @@ rm -rf /tmp/%{name}_build
 rm -f /tmp/post-install.log
 touch /tmp/post-install.log
 chmod 666 /tmp/post-install.log
-for dirs in `find /opt/tissuestack/ -name "bin"`;do
-        chmod -R 755 $dirs/* &>> /tmp/post-install.log
-done
+chmod -R g+wr,o+wr /opt/tissuestack
 su -c "su - postgres <<EOF
 initdb &>> /tmp/post-install.log
 EOF
@@ -58,10 +56,10 @@ chkconfig postgresql on &>> /tmp/post-install.log
 service postgresql start &>> /tmp/post-install.log
 sleep 5s
 su -c "su - postgres <<EOF
-psql -U postgres -h localhost -f /opt/tissuestack/sql/create_tissuestack_db.sql &>> /tmp/post-install.log
-psql -U postgres -h localhost -f /opt/tissuestack/sql/create_tissuestack_tables.sql tissuestack &>> /tmp/post-install.log
-psql -U postgres -h localhost -f /opt/tissuestack/sql/create_tissuestack_config.sql tissuestack &>> /tmp/post-install.log
-psql -U postgres -h localhost -f /opt/tissuestack/sql/update_tissuestack_config.sql tissuestack &>> /tmp/post-install.log
+psql -f /opt/tissuestack/sql/create_tissuestack_db.sql &>> /tmp/post-install.log
+psql -f /opt/tissuestack/sql/create_tissuestack_tables.sql tissuestack &>> /tmp/post-install.log
+psql -f /opt/tissuestack/sql/create_tissuestack_config.sql tissuestack &>> /tmp/post-install.log
+psql -f /opt/tissuestack/sql/update_tissuestack_config.sql tissuestack &>> /tmp/post-install.log
 EOF
 "
 chkconfig httpd on &>> /tmp/post-install.log
@@ -86,7 +84,7 @@ fi
 if [ `iptables -S | grep -e "-A INPUT -p tcp -m tcp --dport 5432 -j DROP" | wc -c` -eq 0 ]; then
         iptables -A INPUT -p tcp --destination-port 5432 -j DROP &>> /tmp/post-install.log
 fi
-service iptables save &>> /tmp/post-install.log
+iptables-save &>> /tmp/post-install.log
 service httpd restart &>> /tmp/post-install.log
 cp -f /opt/tissuestack/conf/tissuestack_init.sh /etc/init.d/tissuestack &>> /tmp/post-install.log
 chmod 755 /etc/init.d/tissuestack &>> /tmp/post-install.log
