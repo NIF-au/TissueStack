@@ -8,7 +8,7 @@ LIB_PATH	=	-L/usr/local/minc/2.1.0/lib -L/usr/local/nifticlib/2.0.0/lib -L/usr/l
 
 NAME		=	TissueStackMincInfo.so
 
-FLAGS		=	-O2
+FLAGS		=	-O2 -lm
 
 OBJS		=	$(SRCS:%.c=%.o)
 

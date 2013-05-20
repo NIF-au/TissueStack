@@ -9,7 +9,7 @@ LIB_PATH	=	-L/usr/local/lib -L/usr/local/minc/2.1.0/lib -L/usr/local/nifticlib/2
 NAME		=	libTissueStack.so
 BIN_NAME	=	TissueStack
 
-FLAGS		=	-O2
+FLAGS		=	-O2 -lm
 
 SHARED_LIBS_DIR = /usr/local/lib
 
