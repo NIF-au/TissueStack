@@ -200,7 +200,7 @@ endif
 
 	@echo -e "\n\n\tBuilding source archive: $(SRC_DIST_NAME):"
 	@echo -e "\t---------------------------------------------------"
-	@mkdir -p $(BUILD_PATH)/sources/sources
+	@mkdir -p $(BUILD_PATH)/sources/sources/data
 	@cp ../../COPYING ../../README ../../BUILD_ME_LIKE_THIS_FOR_CVL.sh $(BUILD_PATH)/sources/sources
 	@cp ../../pom.xml ../../Makefile.centOS $(BUILD_PATH)/sources/sources
 	@cp -r ../../cvl/* $(BUILD_PATH)/sources
@@ -209,7 +209,7 @@ endif
 	@rm -rf $(BUILD_PATH)/sources/sources/src/c/Makefile
 	@rm -rf $(BUILD_PATH)/sources/sources/src/c/jni/Makefile
 	@rm -rf $(BUILD_PATH)/sources/sources/src/c/plugins/*/Makefile
-	@cp -r ../../data/colormaps $(BUILD_PATH)/sources/sources
+	@cp -r ../../data/colormaps $(BUILD_PATH)/sources/sources/data
 	@cd $(BUILD_PATH)/sources; tar cvzf ../$(SRC_DIST_NAME) * > /dev/null
 	@echo -e "\n\tFinished creating source archive:  $(BUILD_PATH)/$(SRC_DIST_NAME)\n\n"
 
