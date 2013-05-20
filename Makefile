@@ -13,4 +13,7 @@ clean:
 
 dist:
 	@make --no-print-directory -C $(DIRSRC) dist
+
+source:
+	@make --no-print-directory -C $(DIRSRC) source
 	

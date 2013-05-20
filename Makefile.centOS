@@ -14,3 +14,6 @@ clean:
 dist:
 	@make -f Makefile.centOS --no-print-directory -C $(DIRSRC) dist
 	
+source:
+	@make -f Makefile.centOS --no-print-directory -C $(DIRSRC) source
+	

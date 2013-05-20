@@ -80,6 +80,7 @@ export BASE_DIR			= 	$(DIRSRC)../../
 export BUILD_PATH		=	/tmp/$(NAME)_build
 export BUILD_SRC_PATH		=	$(BUILD_PATH)/src
 export DIST_NAME		=	$(NAME)-$(VERSION).tar.gz
+export SRC_DIST_NAME		=	$(NAME)-$(VERSION)-sources.tar.gz
 #export CURRENT_BRANCH	=	$(shell git branch | grep "*" | sed "s/* //";)
 
 %.o: %.c
@@ -155,7 +156,7 @@ install: prepare
 
 clean:
 	@echo -e "\n\tCleaning $(NAME)...\n"
-	@rm -rf *~ \#*\# $(NAME) $(EXE_NAME)./png/* core hs_err_pid*
+	@rm -rf *~ \#*\# $(NAME) $(EXE_NAME) ./png/* core hs_err_pid*
 	@rm -rf $(DIRSRC)*.o
 	@make --no-print-directory -C ./utils/ clean
 	@make --no-print-directory -C ./plugins/communicator/ clean
@@ -184,6 +185,24 @@ tomcatstart:
 
 re: tomcatstop clean debug install tomcatstart
 
+source: clean
+ifndef VERSION
+	$(error VERSION IS NOT SET !!!!!!!!!!!!! Please call make like this: make source VERSION=X.X !!!!!)
+endif
+
+	@echo -e "\n\n\tBuilding source archive: $(SRC_DIST_NAME):"
+	@echo -e "\t---------------------------------------------------"
+	@mkdir -p $(BUILD_PATH)/sources
+	@cp ../../COPYING ../../README $(BUILD_PATH)/sources
+	@cp ../../pom.xml ../../Makefile $(BUILD_PATH)/sources
+	@cp -r ../../src $(BUILD_PATH)/sources
+	@rm -rf $(BUILD_PATH)/sources/src/c/Makefile.centOS
+	@rm -rf $(BUILD_PATH)/sources/src/c/*/Makefile.centOS
+	@rm -rf $(BUILD_PATH)/sources/src/c/plugins/*/Makefile.centOS
+	@cp -r ../../data/colormaps $(BUILD_PATH)/sources
+	@cd $(BUILD_PATH); tar cvzf $(SRC_DIST_NAME) sources/* > /dev/null
+	@echo -e "\n\tFinished creating source archive:  $(BUILD_PATH)/$(SRC_DIST_NAME)\n\n"
+	
 # target for building a binary tar.gz (is then used for rpm build)
 # we depend on target 'all' and use a temporary build directory in /tmp/tissuestack_build
 dist: 	compile install
