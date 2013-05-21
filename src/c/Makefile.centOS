@@ -363,7 +363,7 @@ dist: 	compile install
 	chmod 755 $(SYS_V_INIT_PATH)$(NAME) &>> /tmp/post-install.log\n\
 	chkconfig $(NAME) on &>> /tmp/post-install.log\n\
 	$(SYS_V_INIT_PATH)$(NAME) start &>> /tmp/post-install.log\n\
-	exit 0
+	exit 0\
 	" > $(BUILD_SRC_PATH)/post-install.sh
 	@chmod 755 $(BUILD_SRC_PATH)/post-install.sh
 
