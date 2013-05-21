@@ -10,5 +10,6 @@ Homepage: http://tissuestack.com
 
 Package: tissuestack
 Architecture: any
+Pre-Depends: apache2, postgresql
 Depends: ${shlibs:Depends}, ${misc:Depends}, apache2, postgresql
 Description: Tissue Stack Image Server for on-the-fly tile generation and minc/nifti to .raw conversion

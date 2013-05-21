@@ -30,7 +30,10 @@ echo "Completed build stage"
 %install
 echo "Entering install stage (see: /tmp/%{name}-%{version}-rpm-build.log)"
 cd %{buildroot}; tar xvzf /tmp/%{name}_build/%{name}-%{version}.tar.gz >> /tmp/%{name}-%{version}-rpm-build.log
+mv %{buildroot}/pre-install.sh /tmp
 mv %{buildroot}/post-install.sh /tmp
+mv %{buildroot}/pre-uninstall.sh /tmp
+mv %{buildroot}/post-uninstall.sh /tmp
 echo "Completed install stage"
 
 %files
@@ -42,6 +45,24 @@ echo "Completed install stage"
 
 %clean
 rm -rf /tmp/%{name}_build
+
+%pre
+rm -f /tmp/pre-install.log
+touch /tmp/pre-install.log
+chmod 666 /tmp/pre-install.log
+/etc/init.d/tissuestack stop &>> /tmp/pre-install.log
+
+%preun
+rm -f /tmp/uninstall.log
+touch /tmp/uninstall.log
+chmod 666 /tmp/uninstall.log
+/etc/init.d/tissuestack stop &>> /tmp/uninstall.log
+
+%postun
+chkconfig --del tissuestack &>> /tmp/uninstall.log
+rm -rf /etc/httpd/conf.d/tissuestack.conf &>> /tmp/uninstall.log
+mv /etc/httpd/conf.d/welcome.conf.disabled /etc/httpd/conf.d/welcome.conf &>> /tmp/uninstall.log
+service httpd restart &>> /tmp/uninstall.log
 
 %post
 rm -f /tmp/post-install.log

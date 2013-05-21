@@ -303,6 +303,15 @@ dist: 	compile install
 	export TISSUE_STACK_HOME TISSUE_STACK_JNI_LIB_PATH IMAGE_SERVER_EXE JAVA_HOME CATALINA_HOME PATH" > $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME)_env.sh;
 	@chmod 755 $(BUILD_SRC_PATH)$(BINS_PATH)/$(NAME)_env.sh
 
+	@echo -e "\tCreating pre install script..."
+	@ echo -e "#!/bin/bash\n\
+	rm -f /tmp/pre-install.log\n\
+	touch /tmp/pre-install.log\n\
+	chmod 666 /tmp/pre-install.log\n\
+	$(SYS_V_INIT_PATH)$(NAME) stop &>> /tmp/pre-install.log\
+	" > $(BUILD_SRC_PATH)/post-install.sh
+	@chmod 755 $(BUILD_SRC_PATH)/pre-install.sh
+
 	@echo -e "\tCreating post install script..."
 	@ echo -e "#!/bin/bash\n\
 	rm -f /tmp/post-install.log\n\

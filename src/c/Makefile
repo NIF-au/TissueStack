@@ -287,6 +287,27 @@ dist: 	compile install
 	export TISSUE_STACK_HOME TISSUE_STACK_JNI_LIB_PATH IMAGE_SERVER_EXE JAVA_HOME CATALINA_HOME PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(NAME)_env.sh;
 	@chmod 755 $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(NAME)_env.sh
 
+	@echo -ne "\tCreating pre install script for "
+	@if [ $(IS_DEBIAN_BASED) -gt 0 ] || [ $(IS_UBUNTU_BASED) -gt 0 ]; then \
+		echo -e "a debian based distribution..."; \
+		echo -e "#!/bin/bash\n\
+	rm -f /tmp/pre-install.log\n\
+	touch /tmp/pre-install.log\n\
+	chmod 666 /tmp/pre-install.log\n\
+	$(SYS_V_INIT_PATH)$(NAME) stop &>> /tmp/pre-install.log\n\
+	exit 0\
+	" > $(BUILD_SRC_PATH)/pre-install.sh; \
+	else \
+		echo -e "a red hat based distribution..."; \
+	echo -e "#!/bin/bash\n\
+	rm -f /tmp/pre-install.log\n\
+	touch /tmp/pre-install.log\n\
+	chmod 666 /tmp/pre-install.log\n\
+	$(SYS_V_INIT_PATH)$(NAME) stop &>> /tmp/pre-install.log\
+	" > $(BUILD_SRC_PATH)/pre-install.sh; \
+	fi
+	@chmod 755 $(BUILD_SRC_PATH)/pre-install.sh
+
 	@echo -ne "\tCreating post install script for "
 	@if [ $(IS_DEBIAN_BASED) -gt 0 ] || [ $(IS_UBUNTU_BASED) -gt 0 ]; then \
 		echo -e "a debian based distribution..."; \
@@ -327,7 +348,8 @@ dist: 	compile install
 	cp -f $(DATA_PATH)/conf/$(NAME)_init.sh $(SYS_V_INIT_PATH)$(NAME) &>> /tmp/post-install.log\n\
 	chmod 755 $(SYS_V_INIT_PATH)$(NAME) &>> /tmp/post-install.log\n\
 	cd $(SYS_V_INIT_PATH); update-rc.d $(NAME) defaults &>> /tmp/post-install.log\n\
-	$(SYS_V_INIT_PATH)$(NAME) start &>> /tmp/post-install.log\
+	$(SYS_V_INIT_PATH)$(NAME) start &>> /tmp/post-install.log\n\
+	exit 0\
 	" > $(BUILD_SRC_PATH)/post-install.sh; \
 	else \
 		echo -e "a red hat based distribution..."; \
@@ -375,6 +397,49 @@ dist: 	compile install
 	" > $(BUILD_SRC_PATH)/post-install.sh; \
 	fi
 	@chmod 755 $(BUILD_SRC_PATH)/post-install.sh
+
+	@echo -ne "\tCreating pre uninstall script for "
+	@if [ $(IS_DEBIAN_BASED) -gt 0 ] || [ $(IS_UBUNTU_BASED) -gt 0 ]; then \
+		echo -e "a debian based distribution..."; \
+		echo -e "#!/bin/bash\n\
+	rm -f /tmp/uninstall.log\n\
+	touch /tmp/uninstall.log\n\
+	chmod 666 /tmp/uninstall.log\n\
+	$(SYS_V_INIT_PATH)$(NAME) stop &>> /tmp/uninstall.log\n\
+	exit 0\
+	" > $(BUILD_SRC_PATH)/pre-uninstall.sh; \
+	else \
+		echo -e "a red hat based distribution..."; \
+	echo -e "#!/bin/bash\n\
+	rm -f /tmp/uninstall.log\n\
+	touch /tmp/uninstall.log\n\
+	chmod 666 /tmp/uninstall.log\n\
+	$(SYS_V_INIT_PATH)$(NAME) stop &>> /tmp/uninstall.log\
+	" > $(BUILD_SRC_PATH)/pre-uninstall.sh; \
+	fi
+	@chmod 755 $(BUILD_SRC_PATH)/pre-uninstall.sh
+
+	@echo -ne "\tCreating post uninstall script for "
+	@if [ $(IS_DEBIAN_BASED) -gt 0 ] || [ $(IS_UBUNTU_BASED) -gt 0 ]; then \
+		echo -e "a debian based distribution..."; \
+		echo -e "#!/bin/bash\n\
+	rm -rf $(SYS_V_INIT_PATH)$(NAME) &>> /tmp/uninstall.log\n\
+	cd $(SYS_V_INIT_PATH); update-rc.d -f $(NAME) remove &>> /tmp/uninstall.log\n\
+	a2dissite $(NAME) &>> /tmp/uninstall.log\n\
+	a2ensite default &>> /tmp/uninstall.log\n\
+	$(SYS_V_INIT_PATH)apache2 restart &>> /tmp/uninstall.log\n\
+	exit 0\
+	" > $(BUILD_SRC_PATH)/post-uninstall.sh; \
+	else \
+		echo -e "a red hat based distribution..."; \
+	echo -e "#!/bin/bash\n\
+	chkconfig --del $(NAME) &>> /tmp/uninstall.log\n\
+	rm -rf $(HTTPD_CONF_DIR)/$(NAME).conf &>> /tmp/uninstall.log\n\
+	mv $(HTTPD_CONF_DIR)/welcome.conf.disabled $(HTTPD_CONF_DIR)/welcome.conf &>> /tmp/uninstall.log\n\
+	service httpd restart &>> /tmp/uninstall.log\
+	" > $(BUILD_SRC_PATH)/post-uninstall.sh; \
+	fi
+	@chmod 755 $(BUILD_SRC_PATH)/post-uninstall.sh
 
 	@echo -e "\tZipping up everything [log: $(BUILD_PATH)/logs/$(NAME)_tar.log ]..."
 	@cd $(BUILD_SRC_PATH); tar cvzf $(BUILD_PATH)/$(DIST_NAME) * &> $(BUILD_PATH)/logs/$(NAME)_tar.log
