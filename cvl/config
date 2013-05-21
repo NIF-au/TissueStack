@@ -40,8 +40,10 @@ function ConfigurationCommand()
 
     rm -rf ${PROJECT_SOURCE_PATH}/opt
     rm -f ${PROJECT_SOURCE_PATH}/post-install.sh
+    rm -f ${PROJECT_SOURCE_PATH}/pre-install.sh
     cp -r ${SOURCE}/opt ${PROJECT_SOURCE_PATH}/opt
     cp -f ${SOURCE}/post-install.sh ${PROJECT_SOURCE_PATH}/post-install.sh
+    cp -f ${SOURCE}/pre-install.sh ${PROJECT_SOURCE_PATH}/pre-install.sh
     cp -r ${SOURCE}/usr/local/${ModuleFileDescription}/${PACKAGE_RELEASE}/* ${INSTALL}
 }
 
