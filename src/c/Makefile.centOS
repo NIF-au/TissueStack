@@ -310,7 +310,7 @@ dist: 	compile install
 	chmod 666 /tmp/pre-install.log\n\
 	$(SYS_V_INIT_PATH)$(NAME) stop &>> /tmp/pre-install.log\n\
 	exit 0\
-	" > $(BUILD_SRC_PATH)/post-install.sh
+	" > $(BUILD_SRC_PATH)/pre-install.sh
 	@chmod 755 $(BUILD_SRC_PATH)/pre-install.sh
 
 	@echo -e "\tCreating post install script..."
