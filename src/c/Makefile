@@ -303,7 +303,8 @@ dist: 	compile install
 	rm -f /tmp/pre-install.log\n\
 	touch /tmp/pre-install.log\n\
 	chmod 666 /tmp/pre-install.log\n\
-	$(SYS_V_INIT_PATH)$(NAME) stop &>> /tmp/pre-install.log\
+	$(SYS_V_INIT_PATH)$(NAME) stop &>> /tmp/pre-install.log\n\
+	exit 0\
 	" > $(BUILD_SRC_PATH)/pre-install.sh; \
 	fi
 	@chmod 755 $(BUILD_SRC_PATH)/pre-install.sh
@@ -393,7 +394,8 @@ dist: 	compile install
 	cp -f $(DATA_PATH)/conf/$(NAME)_init.sh $(SYS_V_INIT_PATH)$(NAME) &>> /tmp/post-install.log\n\
 	chmod 755 $(SYS_V_INIT_PATH)$(NAME) &>> /tmp/post-install.log\n\
 	chkconfig $(NAME) on &>> /tmp/post-install.log\n\
-	$(SYS_V_INIT_PATH)$(NAME) start &>> /tmp/post-install.log\
+	$(SYS_V_INIT_PATH)$(NAME) start &>> /tmp/post-install.log\n\
+	exit 0\
 	" > $(BUILD_SRC_PATH)/post-install.sh; \
 	fi
 	@chmod 755 $(BUILD_SRC_PATH)/post-install.sh
@@ -414,7 +416,8 @@ dist: 	compile install
 	rm -f /tmp/uninstall.log\n\
 	touch /tmp/uninstall.log\n\
 	chmod 666 /tmp/uninstall.log\n\
-	$(SYS_V_INIT_PATH)$(NAME) stop &>> /tmp/uninstall.log\
+	$(SYS_V_INIT_PATH)$(NAME) stop &>> /tmp/uninstall.log\n\
+	exit 0\
 	" > $(BUILD_SRC_PATH)/pre-uninstall.sh; \
 	fi
 	@chmod 755 $(BUILD_SRC_PATH)/pre-uninstall.sh
@@ -436,7 +439,8 @@ dist: 	compile install
 	chkconfig --del $(NAME) &>> /tmp/uninstall.log\n\
 	rm -rf $(HTTPD_CONF_DIR)/$(NAME).conf &>> /tmp/uninstall.log\n\
 	mv $(HTTPD_CONF_DIR)/welcome.conf.disabled $(HTTPD_CONF_DIR)/welcome.conf &>> /tmp/uninstall.log\n\
-	service httpd restart &>> /tmp/uninstall.log\
+	service httpd restart &>> /tmp/uninstall.log\n\
+	exit 0\
 	" > $(BUILD_SRC_PATH)/post-uninstall.sh; \
 	fi
 	@chmod 755 $(BUILD_SRC_PATH)/post-uninstall.sh

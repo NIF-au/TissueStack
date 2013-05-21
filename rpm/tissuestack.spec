@@ -51,18 +51,22 @@ rm -f /tmp/pre-install.log
 touch /tmp/pre-install.log
 chmod 666 /tmp/pre-install.log
 /etc/init.d/tissuestack stop &>> /tmp/pre-install.log
+exit 0
 
 %preun
 rm -f /tmp/uninstall.log
 touch /tmp/uninstall.log
 chmod 666 /tmp/uninstall.log
 /etc/init.d/tissuestack stop &>> /tmp/uninstall.log
+exit 0
 
 %postun
 chkconfig --del tissuestack &>> /tmp/uninstall.log
 rm -rf /etc/httpd/conf.d/tissuestack.conf &>> /tmp/uninstall.log
 mv /etc/httpd/conf.d/welcome.conf.disabled /etc/httpd/conf.d/welcome.conf &>> /tmp/uninstall.log
 service httpd restart &>> /tmp/uninstall.log
+/sbin/ldconfig
+exit 0
 
 %post
 rm -f /tmp/post-install.log
@@ -112,5 +116,4 @@ chmod 755 /etc/init.d/tissuestack &>> /tmp/post-install.log
 chkconfig tissuestack on &>> /tmp/post-install.log
 /etc/init.d/tissuestack start &>> /tmp/post-install.log
 /sbin/ldconfig
-
-%postun -p /sbin/ldconfig
+exit 0
