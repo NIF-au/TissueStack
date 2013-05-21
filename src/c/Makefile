@@ -437,6 +437,7 @@ dist: 	compile install
 		echo -e "a red hat based distribution..."; \
 	echo -e "#!/bin/bash\n\
 	chkconfig --del $(NAME) &>> /tmp/uninstall.log\n\
+	rm -rf $(SYS_V_INIT_PATH)$(NAME) &>> /tmp/uninstall.log\n\
 	rm -rf $(HTTPD_CONF_DIR)/$(NAME).conf &>> /tmp/uninstall.log\n\
 	mv $(HTTPD_CONF_DIR)/welcome.conf.disabled $(HTTPD_CONF_DIR)/welcome.conf &>> /tmp/uninstall.log\n\
 	service httpd restart &>> /tmp/uninstall.log\n\
