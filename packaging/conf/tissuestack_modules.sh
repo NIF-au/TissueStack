@@ -3,6 +3,9 @@ echo -n "Checking Tissue Stack 'modules' requirements..."
 if [ ! -f /etc/profile.d/modules.sh ]; then echo "ERROR: Modules package is not installed !!!!!";exit -1; fi;
 
 /etc/profile.d/modules.sh
+
+if [ ! -f /tmp/build_mod_load ]; then touch /tmp/build_mod_load; chmod 777 /tmp/build_mod_load; fi;
+
 module load hdf5/1.8.5 2> /tmp/build_mod_load
 CHECK_SIZE=`stat -c%s /tmp/build_mod_load`
 if [ $CHECK_SIZE -ne 0 ]; then echo "ERROR: Could not locate needed hdf5 package (1.8.5). Please install it and load it: 'module load hdf5/1.8.5' !!!!!";exit -1
@@ -35,4 +38,7 @@ if [ $CHECK_SIZE -ne 0 ]; then echo "ERROR: Could not locate needed libjpeg-turb
 fi
 
 module load tissuestack 2> /tmp/build_mod_load
+
+rm -rf /tmp/build_mod_load
+
 echo -e "Finished.\n"
