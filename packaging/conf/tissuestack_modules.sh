@@ -2,7 +2,7 @@
 echo -n "Checking Tissue Stack 'modules' requirements..."
 if [ ! -f /etc/profile.d/modules.sh ]; then echo -e "FAILED\nERROR: Modules package is not installed !!!!!\n"; fi;
 
-/etc/profile.d/modules.sh
+. /etc/profile.d/modules.sh
 
 if [ ! -f /tmp/build_mod_load ]; then touch /tmp/build_mod_load; chmod 777 /tmp/build_mod_load; fi;
 
