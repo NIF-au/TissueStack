@@ -1,88 +1,35 @@
-The "web" part of TissueStack contains the html, css and java script for a Tissue Stack instance.
+##################################################################################
+#########   TISSUE STACK - FRONTEND [ APACHE WEB SERVER, HTML, JS, CSS ]##########
+##################################################################################
 
----------------------------------------------------------------------------------------------------------------------------------------------
+Technically any web server will do, we strongly recommend Apache 2.2 or later.
 
-While technically any web server could serve the aforementioned components, we strongly recommend Apache Webserver 2.2 or later.
-
-If a different web server is used, here are the 3 gottchas that need to be addressed in order to run a TissueStack installation
-successfully:
+If a different web server is used, the following list will give you an impression
+of what is needed to run the entirety of tissuestack components successfully:
 
 
-1) Set the following custom header if you want to allow connections to other/remote TissueStack instances: 
+1) If you want to allow other TissueStack instances to access your data sets,
+   make sure your chosen web-server include this in its response:
         
         Access-Control-Allow-Origin "*"
 
-2) To enable "local" directory access to your application server, e.g. tomcat (see also src/java/README),
-   a url redirect/proxying mechanism is required, pointing to your Java Application Server, e.g. http://TissueStackApplicationServer:8080
-   and accessible under the /backend directory.
-   
-   An typical apache web server configuration (using mod_proxy) for this problem would be:
+2) The web services are accesssed in the front-end code via:
+         "/backend" 
+   In other words, the tomcat server is accessed through a proxy mechanism.
+
+   Instead of:      http://TissueStackApplicationServer:8080/TissueStack/whatever
+   the url becomes: http://TissueStackApplicationServer/backend/whatever
+
+   An typical apache web server configuration (using mod_proxy) is:
    
         ProxyPass /backend http://localhost:8080/TissueStack
         ProxyPassReverse /backend http://localhost:8080/TissueStack
    
-3) Similarly to 2), the image service version is expected to be accessible under the /image_service directory which will be pointing to 
-   your local installation of the TissueStackImageServer (see also: src/c/README)
+3) Analogous to 2), the image service is expected to be proxied.
+   Instead of:      http://TissueStackApplicationServer:4242/whatever
+   the url becomes: http://TissueStackApplicationServer/image_service/whatever
              
    Once again, a typical apache web server solution could be:
    
        ProxyPass /image_service http://localhost:4242
        ProxyPassReverse /image_service http://localhost:4242
-
-                                                           ****
-
-
-Last but not least, for apache web server users, here is a template for what your virtual host configuration should look like:
-(Note: Modify paths to DocumentRoot and server urls according to your needs!)
-
-
-<VirtualHost *:80>
-    ServerAdmin webmaster@localhost
-
-    DocumentRoot /opt/workspace/TissueStack/src/web
-
-       Header set Access-Control-Allow-Origin "*"
-
-    ProxyPass /backend http://localhost:8080/TissueStack
-    ProxyPassReverse /backend http://localhost:8080/TissueStack
-
-        ProxyPass /image_service http://localhost:4242
-        ProxyPassReverse /image_service http://localhost:4242
-
-    <Directory />
-        Options FollowSymLinks
-        AllowOverride None
-    </Directory>
-    <Directory /var/www/>
-        Options Indexes FollowSymLinks MultiViews
-        AllowOverride None
-        Order allow,deny
-        allow from all
-    </Directory>
-
-    ScriptAlias /cgi-bin/ /usr/lib/cgi-bin/
-    <Directory "/usr/lib/cgi-bin">
-        AllowOverride None
-        Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
-        Order allow,deny
-        Allow from all
-    </Directory>
-
-    ErrorLog ${APACHE_LOG_DIR}/error.log
-
-    # Possible values include: debug, info, notice, warn, error, crit,
-    # alert, emerg.
-    LogLevel warn
-
-    CustomLog ${APACHE_LOG_DIR}/access.log combined
-
-    Alias /doc/ "/usr/share/doc/"
-    <Directory "/usr/share/doc/">
-        Options Indexes MultiViews FollowSymLinks
-        AllowOverride None
-        Order deny,allow
-        Deny from all
-        Allow from 127.0.0.0/255.0.0.0 ::1/128
-    </Directory>
-
-</VirtualHost>

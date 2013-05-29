@@ -22,7 +22,7 @@
 #										 #
 #                                   *******                                      #
 #                                                                  		 #
-# A Tissue Stack Server Instance consists of the following 5 components:         # 
+# A Tissue Stack Server Instance consists of the following components:           # 
 #										 #
 #   1) The WEB Front End => see src/web/README for installation instructions     #
 #        									 #
