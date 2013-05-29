@@ -19,9 +19,6 @@
 # mentioned formats into a "raw" file which is basically a stream of bytes       #
 # incl. header for quick and easy sequential reads                               #   
 #										 #
-# Of course any data that is pre-tiled as png/jpeg and adheres to Tissue Stack's #
-# directory structure for tiled data sets can be consumed and viewed via the web #
-# front-end.									 # 
 #										 #
 #                                   *******                                      #
 #                                                                  		 #
@@ -37,27 +34,4 @@
 #   4) The Image Server for pre and on-the-fly tiling  => see src/c/README for   #
 #      how to build and install							 #
 #										 #        
-#   5) Some optional bash scripts for service starting and stopping 		 #
-#      (/etc/init.d/) => see src/bash						 #
-#										 #         
-#										 #
-#   Notes:									 #
-#   ------									 #
-#   -) Number 1, 2 and 3 are by default rather tightly coupled. 		 #
-#      That is not to say that one cannot use the web front-end only but it      #
-#      requires	some modification to bypass the configuration loading and 	 #
-#      construct the necessary java script objects manually.			 #
-#   -) Number 4 is technically optional if all datasets have been pre-tiled 	 #
-#      manually beforehand. Needless to say that the Image Server can take this  #
-#      task off your hands and prepare the tiles just as the application expects #
-#       it.									 #
-#   -) Number 5 is certainly optional and facilitates the startup and shutdown   #
-#      of the Image Server and Java Application Server    			 #
-# 										 #
-# 										 #
-#   ATTENTION:  								 #
-#   ----------									 #
-#   This is a work in progress! The 'develop' branch contains the most 		 #
-#   up-to-date code and newest features.					 #
-#   On the downside, things can be buggy...    					 #
 ##################################################################################
