@@ -140,12 +140,10 @@ void		percent_get(char *id, void *box, t_tissue_stack *t)
   if (t->percent == NULL)
     return;
   if ((result = read_from_file_by_id(id, &f, t)) != NULL)
-    {
-      sprintf(pc, "%s|%s", result[3], result[0]);
-      fclose(f);
-    }
+    sprintf(pc, "%s|%s", result[3], result[0]);
   else
     sprintf(pc, "NULL");
+  if (f != NULL) fclose(f);
   percent_time_write_plug(pc, box);
 }
 

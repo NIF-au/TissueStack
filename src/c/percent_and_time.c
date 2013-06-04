@@ -191,12 +191,11 @@ void		percent_get_direct(char **buff, char *id, t_tissue_stack *t)
   if (t->percent == NULL)
     return;
   if ((result = read_from_file_by_id(id, &f, t)) != NULL)
-    {
       *buff = strdup(result[0]);
-      fclose(f);
-    }
   else
     asprintf(buff, "ERROR");
+  if (f != NULL) fclose(f);
+
 }
 
 int		get_dim_size(t_vol *volume, char c)
@@ -557,6 +556,7 @@ void		percent_cancel_direct(char *id, t_tissue_stack *t)
 	    {
 	      if (fread(buff, 1, 4096, f) > 0)
 		result = percent_str_to_wordtab(buff, '\n');
+	      if (f != NULL) fclose(f);
 	      if (!stat(result[5], &info))
 		{
 		  if (result[4][0] == '0')
@@ -564,7 +564,6 @@ void		percent_cancel_direct(char *id, t_tissue_stack *t)
 		  else
 		    unlink(result[5]);
 		}
-	      fclose(f);
 	      unlink(complete_path);
 	      if (result != NULL)
 		{

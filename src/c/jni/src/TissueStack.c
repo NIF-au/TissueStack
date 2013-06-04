@@ -135,10 +135,12 @@ JNIEXPORT jobject JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_getMinc
 		// append to response
 		response = appendToBuffer(response, buffer);
 	}
-	// close filedescriptor which should be closed aready actually
-	close(fileDescriptor);
 	// free temp buffer
 	free(buffer);
+
+	// close filedescriptor which should be closed aready actually
+	shutdown(fileDescriptor, 2);
+	close(fileDescriptor);
 
 	if (response == NULL) {
 		(*env)->ReleaseStringUTFChars(env, filename, file);
@@ -558,6 +560,10 @@ JNIEXPORT jstring Java_au_edu_uq_cai_TissueStack_jni_TissueStack_convertImageFor
 	memset(buff, 0, 17);
 	read(fileDescriptor, buff, 16);
 
+	// close filedescriptor which should be closed aready actually
+	shutdown(fileDescriptor, 2);
+	close(fileDescriptor);
+
 	if (buff == NULL || strcmp(buff, "NULL") == 0 || strcmp(buff, "") == 0) {
 		(*env)->ReleaseStringUTFChars(env, imageFile, in_file);
 		(*env)->ReleaseStringUTFChars(env, newRawFile, out_file);
@@ -640,6 +646,10 @@ JNIEXPORT jobject  Java_au_edu_uq_cai_TissueStack_jni_TissueStack_callTaskAction
 	char * buffer = malloc(sizeof(buffer) * 1024);
 	memset(buffer, 0, 1024);
 	read(fileDescriptor, buffer, 1023);
+
+	// close filedescriptor which should be closed aready actually
+	shutdown(fileDescriptor, 2);
+	close(fileDescriptor);
 
 	if (buffer == NULL || strcmp(buffer, "") == 0) {
 		(*env)->ReleaseStringUTFChars(env, taskID, task);

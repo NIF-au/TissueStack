@@ -38,21 +38,114 @@ int		get_dim_size(t_vol *volume, char c)
 void		get_width_height(int *height, int *width, int current_dimension,
 				 t_vol *volume)
 {
-  if (volume->dim_name_char[current_dimension] == 'x')
+  if (volume->dim_name_char[0] == 'z' && volume->dim_name_char[1] == 'y' && volume->dim_name_char[2] == 'x')
     {
-      *height = get_dim_size(volume, 'z'); //volume->size[Y];
-      *width = get_dim_size(volume, 'y'); //volume->size[Z];
+      if (volume->dim_name_char[current_dimension] == 'x')
+	{
+	  *height = get_dim_size(volume, 'z'); //volume->size[Y];
+	  *width = get_dim_size(volume, 'y'); //volume->size[Z];
+	}
+      else if (volume->dim_name_char[current_dimension] == 'y')
+	{
+	  *height = get_dim_size(volume, 'z');//volume->size[X];
+	  *width = get_dim_size(volume, 'x');//volume->size[Z];
+	}
+      else
+	{
+	  *height = get_dim_size(volume, 'y');//volume->size[X];
+	  *width = get_dim_size(volume, 'x');//volume->size[Y];
+	}
     }
-  else if (volume->dim_name_char[current_dimension] == 'y')
+  else if (volume->dim_name_char[0] == 'y' && volume->dim_name_char[1] == 'x' && volume->dim_name_char[2] == 'z')
     {
-      *height = get_dim_size(volume, 'z');//volume->size[X];
-      *width = get_dim_size(volume, 'x');//volume->size[Z];
+      if (volume->dim_name_char[current_dimension] == 'x')
+	{
+	  *height = get_dim_size(volume, 'z'); //volume->size[Y];
+	  *width = get_dim_size(volume, 'y'); //volume->size[Z];
+	}
+      else if (volume->dim_name_char[current_dimension] == 'y')
+	{
+	  *height = get_dim_size(volume, 'z');//volume->size[X];
+	  *width = get_dim_size(volume, 'x');//volume->size[Z];
+	}
+      else
+	{
+	  *height = get_dim_size(volume, 'y');//volume->size[X];
+	  *width = get_dim_size(volume, 'x');//volume->size[Y];
+	}
     }
-  else
+  else if (volume->dim_name_char[0] == 'x' && volume->dim_name_char[1] == 'z' && volume->dim_name_char[2] == 'y')
     {
-      *height = get_dim_size(volume, 'y');//volume->size[X];
-      *width = get_dim_size(volume, 'x');//volume->size[Y];
+      if (volume->dim_name_char[current_dimension] == 'x')
+	{
+	  *height = get_dim_size(volume, 'z'); //volume->size[Y];
+	  *width = get_dim_size(volume, 'y'); //volume->size[Z];
+	}
+      else if (volume->dim_name_char[current_dimension] == 'y')
+	{
+	  *height = get_dim_size(volume, 'z');//volume->size[X];
+	  *width = get_dim_size(volume, 'x');//volume->size[Z];
+	}
+      else
+	{
+	  *height = get_dim_size(volume, 'y');//volume->size[X];
+	  *width = get_dim_size(volume, 'x');//volume->size[Y];
+	}
     }
+    else if (volume->dim_name_char[0] == 'z' && volume->dim_name_char[1] == 'x' && volume->dim_name_char[2] == 'y')
+      {
+	if (volume->dim_name_char[current_dimension] == 'x')
+	  {
+	    *height = get_dim_size(volume, 'z'); //volume->size[Y];
+	    *width = get_dim_size(volume, 'y'); //volume->size[Z];
+	  }
+	else if (volume->dim_name_char[current_dimension] == 'y')
+	  {
+	    *height = get_dim_size(volume, 'z');//volume->size[X];
+	    *width = get_dim_size(volume, 'x');//volume->size[Z];
+	  }
+	else
+	  {
+	    *height = get_dim_size(volume, 'y');//volume->size[X];
+	    *width = get_dim_size(volume, 'x');//volume->size[Y];
+	  }
+      }
+    else if (volume->dim_name_char[0] == 'x' && volume->dim_name_char[1] == 'y' && volume->dim_name_char[2] == 'z')
+      {
+	if (volume->dim_name_char[current_dimension] == 'x')
+	  {
+	    *height = get_dim_size(volume, 'z'); //volume->size[Y];
+	    *width = get_dim_size(volume, 'y'); //volume->size[Z];
+	  }
+	else if (volume->dim_name_char[current_dimension] == 'y')
+	  {
+	    *height = get_dim_size(volume, 'z');//volume->size[X];
+	    *width = get_dim_size(volume, 'x');//volume->size[Z];
+	  }
+	else
+	  {
+	    *height = get_dim_size(volume, 'y');//volume->size[X];
+	    *width = get_dim_size(volume, 'x');//volume->size[Y];
+	  }
+      }
+    else if (volume->dim_name_char[0] == 'y' && volume->dim_name_char[1] == 'z' && volume->dim_name_char[2] == 'x')
+      {
+	if (volume->dim_name_char[current_dimension] == 'x')
+	  {
+	    *height = get_dim_size(volume, 'z'); //volume->size[Y];
+	    *width = get_dim_size(volume, 'y'); //volume->size[Z];
+	  }
+	else if (volume->dim_name_char[current_dimension] == 'y')
+	  {
+	    *height = get_dim_size(volume, 'z');//volume->size[X];
+	    *width = get_dim_size(volume, 'x');//volume->size[Z];
+	  }
+	else
+	  {
+	    *height = get_dim_size(volume, 'y');//volume->size[X];
+	    *width = get_dim_size(volume, 'x');//volume->size[Y];
+	  }
+      }
 }
 
 int check_pixels_range(int width, int height, int h_position, int w_position,
@@ -163,7 +256,7 @@ void		apply_colormap(PixelPacket *px, PixelPacket *px_final, float **premapped_c
   int		i = 0;
   int		j = 0;
   unsigned long long int pixel_value;
-  
+
   while (i < height)
     {
       j = 0;
@@ -171,7 +264,7 @@ void		apply_colormap(PixelPacket *px, PixelPacket *px_final, float **premapped_c
 	{
 	  pixel_value = (unsigned long long int) px[(width * i) + j].red;
 	  if (QuantumDepth != 8 && quantum_depth == QuantumDepth) pixel_value = mapUnsignedValue(quantum_depth, 8, pixel_value);
-          
+
 	  pixel_value = (pixel_value >= 255 ? 254 : pixel_value);
 
 	  px_final[(width * i) + j].red =
@@ -221,7 +314,7 @@ void		apply_contrast(PixelPacket *px, unsigned char min, unsigned char max,
 	{
 	  pixel_value = (unsigned long long int) px[(width * i) + j].red;
 	  if (QuantumDepth != 8 && quantum_depth == QuantumDepth) pixel_value = mapUnsignedValue(quantum_depth, 8, pixel_value);
-	  
+
 	  pixel_value = (pixel_value >= 255 ? 254 : pixel_value);
 
 	  pixel_value = get_contrasted_value(min, max, dataset_min, dataset_max, pixel_value);
@@ -281,12 +374,54 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
     return;
   }
 
-  if ((img = ConstituteImage(width, height, "I", CharPixel, hyperslab,
-			     &exception)) == NULL) {
-    CatchException(&exception);
-    DestroyImageInfo(image_info);
-    fclose_check(a->file);
-    return;
+  if ((volume->dim_name_char[0] == 'y' && volume->dim_name_char[1] == 'z' && volume->dim_name_char[2] == 'x' && volume->dim_name_char[current_dimension] == 'x') ||
+      (volume->dim_name_char[0] == 'z' && volume->dim_name_char[1] == 'x' && volume->dim_name_char[2] == 'y' && volume->dim_name_char[current_dimension] == 'z') ||
+      (volume->dim_name_char[0] == 'x' && volume->dim_name_char[1] == 'z' && volume->dim_name_char[2] == 'y' && (volume->dim_name_char[current_dimension] == 'z' || volume->dim_name_char[current_dimension] == 'y')) ||
+      (volume->dim_name_char[0] == 'x' && volume->dim_name_char[1] == 'y' && volume->dim_name_char[2] == 'z') ||
+      (volume->dim_name_char[0] == 'y' && volume->dim_name_char[1] == 'x' && volume->dim_name_char[2] == 'z' && (volume->dim_name_char[current_dimension] == 'y' || volume->dim_name_char[current_dimension] == 'x')))
+    {
+      if ((img = ConstituteImage(height, width, "I", CharPixel, hyperslab,
+				 &exception)) == NULL) {
+	CatchException(&exception);
+	DestroyImageInfo(image_info);
+	fclose_check(a->file);
+	return;
+      }
+      if ((volume->dim_name_char[0] == 'x' && volume->dim_name_char[1] == 'z' && volume->dim_name_char[2] == 'y' &&
+	   (volume->dim_name_char[current_dimension] == 'z' || volume->dim_name_char[current_dimension] == 'y')))
+	{
+	  tmp = img;
+	  if ((img = RotateImage(img, 90, &exception)) == NULL) {
+	    CatchException(&exception);
+	    DestroyImage(tmp);
+	    DestroyImageInfo(image_info);
+	    fclose_check(a->file);
+	    return;
+	  }
+	  DestroyImage(tmp);
+	}
+      else
+	{
+	  tmp = img;
+	  if ((img = RotateImage(img, -90, &exception)) == NULL) {
+	    CatchException(&exception);
+	    DestroyImage(tmp);
+	    DestroyImageInfo(image_info);
+	    fclose_check(a->file);
+	    return;
+	  }
+	  DestroyImage(tmp);
+	}
+    }
+  else
+  {
+      if ((img = ConstituteImage(width, height, "I", CharPixel, hyperslab,
+				 &exception)) == NULL) {
+	CatchException(&exception);
+	DestroyImageInfo(image_info);
+	fclose_check(a->file);
+	return;
+      }
   }
 
   if (a->info->contrast != 0)
@@ -429,16 +564,36 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
     return;
   }
 
-
-  tmp = img;
-  if ((img = FlipImage(img, &exception)) == NULL) {
-    CatchException(&exception);
-    DestroyImage(tmp);
-    DestroyImageInfo(image_info);
-    fclose_check(a->file);
-    return;
-  }
-  DestroyImage(tmp);
+  if ((volume->dim_name_char[0] == 'y' && volume->dim_name_char[1] == 'z' && volume->dim_name_char[2] == 'x' && volume->dim_name_char[current_dimension] == 'x') ||
+      (volume->dim_name_char[0] == 'z' && volume->dim_name_char[1] == 'x' && volume->dim_name_char[2] == 'y' && volume->dim_name_char[current_dimension] == 'z') ||
+      (volume->dim_name_char[0] == 'y' && volume->dim_name_char[1] == 'x' && volume->dim_name_char[2] == 'z' && (volume->dim_name_char[current_dimension] == 'y' || volume->dim_name_char[current_dimension] == 'x')) ||
+      (volume->dim_name_char[0] == 'x' && volume->dim_name_char[1] == 'y' && volume->dim_name_char[2] == 'z'))
+    img = img;
+  else
+    {
+      tmp = img;
+      if ((img = FlipImage(img, &exception)) == NULL) {
+	CatchException(&exception);
+	DestroyImage(tmp);
+	DestroyImageInfo(image_info);
+	fclose_check(a->file);
+	return;
+      }
+      DestroyImage(tmp);
+    }
+  if ((volume->dim_name_char[0] == 'x' && volume->dim_name_char[1] == 'z' && volume->dim_name_char[2] == 'y' && volume->dim_name_char[current_dimension] == 'z') ||
+      (volume->dim_name_char[0] == 'x' && volume->dim_name_char[1] == 'z' && volume->dim_name_char[2] == 'y' && volume->dim_name_char[current_dimension] == 'y'))
+    {
+      tmp = img;
+      if ((img = FlopImage(img, &exception)) == NULL) {
+	CatchException(&exception);
+	DestroyImage(tmp);
+	DestroyImageInfo(image_info);
+	fclose_check(a->file);
+	return;
+      }
+      DestroyImage(tmp);
+    }
 
   if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
     DestroyImage(img);

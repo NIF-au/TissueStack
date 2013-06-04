@@ -112,11 +112,15 @@ void		check_modified_fd(t_serv_comm *s)
 	    {
 	      // Do stuff;
 	      len = read(c->sock, buff, 4096);
-	      if (len == 0)
+	      if (len == 0 || len == -1)
 		{
+		      ERROR("Disconnect %i\n", c->sock);
+	    	  shutdown(c->sock, 2);
+	    	  close(c->sock);
 		  client_diconnected(s, c->sock);
 		  break;
 		}
+	      ERROR("Serving %i\n", c->sock);
 	      buff[len] = '\0';
 	      (*s->general->plug_actions)(s->general, buff, &c->sock);
 	      //	      write(c->sock, "Received\n", strlen("Received\n"));
