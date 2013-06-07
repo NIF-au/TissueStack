@@ -129,10 +129,6 @@ JNIEXPORT jobject JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_getMinc
 		buffer[size] = '\0';
 
 	// This is necessary! We have to close the unix socket server and client side !!!
-	FILE * lala = fopen("/tmp/lalala", "a+");
-	fprintf(lala, "%s\n", buffer);
-	fclose(lala);
-
 	shutdown(fileDescriptor, 2);
 	close(fileDescriptor);
 
