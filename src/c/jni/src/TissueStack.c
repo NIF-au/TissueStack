@@ -120,41 +120,35 @@ JNIEXPORT jobject JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_getMinc
 	free(startMincInfoCommand->buffer);
 	free(startMincInfoCommand);
 
-	// read response into dynamic response buffer
-	t_string_buffer * response = NULL;
-
 	// a smaller buffer for read iterations
-	char * buffer = malloc(sizeof(buffer) * 1024);
+	char * buffer = malloc(sizeof(buffer) * 4096);
 	size_t size = 0;
 
-	while ((size = read(fileDescriptor, buffer, 1024)) > 0) {
-		if (buffer[size] != '\0') { // for EOF scenario
-			buffer[size] = '\0';
-		}
+	size = read(fileDescriptor, buffer, 4096);
+	if (buffer[size] != '\0')
+		buffer[size] = '\0';
 
-		// append to response
-		response = appendToBuffer(response, buffer);
-	}
-	// free temp buffer
-	free(buffer);
+	// This is necessary! We have to close the unix socket server and client side !!!
+	FILE * lala = fopen("/tmp/lalala", "a+");
+	fprintf(lala, "%s\n", buffer);
+	fclose(lala);
 
-	// close filedescriptor which should be closed aready actually
 	shutdown(fileDescriptor, 2);
 	close(fileDescriptor);
 
-	if (response == NULL) {
+	if (size <= 0) {
 		(*env)->ReleaseStringUTFChars(env, filename, file);
 		throwJavaException(env, "java/lang/RuntimeException", "0 length response!");
 		return NULL;
 	}
 
 	// get token count
-	int numberOfTokens = countTokens(response->buffer, '|', '\\');
+	int numberOfTokens = countTokens(buffer, '|', '\\');
 	// tokenize response
-	char ** tokens = tokenizeString(response->buffer, '|', '\\');
+	char ** tokens = tokenizeString(buffer, '|', '\\');
 
 	// free response buffer
-	free_t_string_buffer(response);
+	free(buffer);
 
 	// tokens are NULL
 	if (tokens == NULL || numberOfTokens == 0) {
@@ -497,6 +491,10 @@ JNIEXPORT jstring JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMin
 	memset(buff, 0, 17);
 	read(fileDescriptor, buff, 16);
 
+	// This is necessary! We have to close the unix socket server and client side !!!
+	shutdown(fileDescriptor, 2);
+	close(fileDescriptor);
+
 	jstring ret = (*env)->NewStringUTF(env, buff);
 
 	// clean up
@@ -560,7 +558,7 @@ JNIEXPORT jstring Java_au_edu_uq_cai_TissueStack_jni_TissueStack_convertImageFor
 	memset(buff, 0, 17);
 	read(fileDescriptor, buff, 16);
 
-	// close filedescriptor which should be closed aready actually
+	// This is necessary! We have to close the unix socket server and client side !!!
 	shutdown(fileDescriptor, 2);
 	close(fileDescriptor);
 
@@ -647,7 +645,7 @@ JNIEXPORT jobject  Java_au_edu_uq_cai_TissueStack_jni_TissueStack_callTaskAction
 	memset(buffer, 0, 1024);
 	read(fileDescriptor, buffer, 1023);
 
-	// close filedescriptor which should be closed aready actually
+	// This is necessary! We have to close the unix socket server and client side !!!
 	shutdown(fileDescriptor, 2);
 	close(fileDescriptor);
 

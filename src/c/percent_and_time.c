@@ -105,10 +105,12 @@ void		percent_init_direct(int total_blocks, char **id, char *filename, char *kin
   FILE		*f;
 
   pthread_mutex_lock(&t->percent->mutex_init);
+
   gettimeofday(&tv,NULL);
   *id = malloc(17 * sizeof(**id));
   memset(*id, '0', 17);
   snprintf(*id, 17, "%i%06i", (int)tv.tv_sec, (int)tv.tv_usec);
+
   if (t->percent->path)
     {
       len_path = (strlen(*id) + strlen(t->percent->path));
@@ -123,78 +125,89 @@ void		percent_init_direct(int total_blocks, char **id, char *filename, char *kin
       INFO("Percentage: %s Initialized", str_log);
       task_add_queue(*id, t);
     }
+
   pthread_mutex_unlock(&t->percent->mutex_init);
 }
 
-char		**read_from_file_by_id(char *id, FILE **f, t_tissue_stack *t)
-{
-  char		*complete_path = NULL;
-  struct stat	info;
-  char		**result = NULL;
-  char		buff[4096];
+FILE * open_file_by_id(char *id, t_tissue_stack *t) {
+	if (id == NULL || t == NULL || t->percent == NULL || t->percent->path == NULL)
+		return NULL;
 
-  *f = NULL;
-  if (t->percent->path && id)
-    {
-      asprintf(&complete_path, "%s/%s", t->percent->path, id);
-      if (!stat(complete_path, &info))
-	{
-	  memset(buff, '\0', 4095);
-	  if ((*f = fopen(complete_path, "r+")) != NULL)
-	    {
-	      if (fread(buff, 1, 4096, *f) > 0)
-		result = percent_str_to_wordtab(buff, '\n');
-	      fseek(*f, 0, SEEK_SET);
-	    }
-	  free(complete_path);
-	  return (result);
-	}
-    }
-  return (NULL);
+	char	* complete_path = NULL;
+    FILE * fh = NULL;
+
+    asprintf(&complete_path, "%s/%s", t->percent->path, id);
+
+    fh = fopen(complete_path, "r+");
+    free(complete_path);
+
+    return fh;
 }
 
-void		percent_add_direct(int blocks, char *id, t_tissue_stack *t)
-{
-  char		**result;
-  float		percent_tmp = 0;
-  float		blocks_done;
-  FILE		*f;
+char **read_from_file_by_id(char *id, t_tissue_stack *t) {
 
+	FILE * f = NULL;
+	char **result = NULL;
+	char buff[4096];
 
-  if (id == NULL || t->percent == NULL)
-    return;
-  pthread_mutex_lock(&t->percent->mutex);
-  if ((result = read_from_file_by_id(id, &f, t)) != NULL)
-    {
-      if (result[0] && strcmp(result[0], "100") != 0)
-	{
-	  blocks_done = atof(result[1]);
-	  blocks_done += blocks;
-	  percent_tmp = (float)((float)((float)blocks_done / (float)atof(result[2])) * 100.0);
-	  fprintf(f, "%f\n%f\n%s\n%s\n%s\n%s\n%s\n", percent_tmp, blocks_done, result[2], result[3], result[4], result[5], result[6]);
-	  fclose(f);
+	f = open_file_by_id(id, t);
+
+	if (f == NULL)	return NULL;
+
+	memset(buff, '\0', 4095);
+	if (fread(buff, 1, 4096, f) > 0)
+		result = percent_str_to_wordtab(buff, '\n');
+	fseek(f, 0, SEEK_SET);
+
+	fclose(f);
+	f = NULL;
+
+	return (result);
+}
+
+void percent_add_direct(int blocks, char *id, t_tissue_stack *t) {
+	char **result;
+	float percent_tmp = 0;
+	float blocks_done;
+	FILE *f = NULL;
+
+	if (id == NULL || t->percent == NULL)
+		return;
+	pthread_mutex_lock(&t->percent->mutex);
+	if ((result = read_from_file_by_id(id, t)) != NULL) {
+		if (result[0] && strcmp(result[0], "100") != 0) {
+			blocks_done = atof(result[1]);
+			blocks_done += blocks;
+			percent_tmp = (float) ((float) ((float) blocks_done
+					/ (float) atof(result[2])) * 100.0);
+
+			f = open_file_by_id(id, t);
+			if (f != NULL) {
+				fprintf(f, "%f\n%f\n%s\n%s\n%s\n%s\n%s\n", percent_tmp,
+						blocks_done, result[2], result[3], result[4], result[5],
+						result[6]);
+				fclose(f);
+				f = NULL;
+			}
+		}
 	}
-    }
-  pthread_mutex_unlock(&t->percent->mutex);
-  if (percent_tmp >= 100)
-    {
-      task_finished(id, t);
-      INFO("Percentage: %s ==> 100%%", id);
-    }
+	pthread_mutex_unlock(&t->percent->mutex);
+	if (percent_tmp >= 100) {
+		task_finished(id, t);
+		INFO("Percentage: %s ==> 100%%", id);
+	}
 }
 
 void		percent_get_direct(char **buff, char *id, t_tissue_stack *t)
 {
-  FILE		*f;
   char		**result;
 
   if (t->percent == NULL)
     return;
-  if ((result = read_from_file_by_id(id, &f, t)) != NULL)
+  if ((result = read_from_file_by_id(id, t)) != NULL)
       *buff = strdup(result[0]);
   else
     asprintf(buff, "ERROR");
-  if (f != NULL) fclose(f);
 
 }
 
@@ -240,7 +253,6 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
   int		tiles_nb[3];
   char		*comm;
   int		dim_s_e[3][2];
-  FILE		*f;
   int		width;
   int		height;
   int		w_tiles;
@@ -250,7 +262,7 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
   t_pause_cancel_queue *tmp;
   t_pause_cancel_queue *tmp2;
 
-  if ((result = read_from_file_by_id(id, &f, t)) != NULL)
+  if ((result = read_from_file_by_id(id, t)) != NULL)
     {
       if (strcmp(result[0], "100") != 0)
 	{
@@ -416,7 +428,6 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 	    }
 	}
     }
-  fclose(f);
 }
 
 void		percent_pause_direct(char *id, t_tissue_stack *t)

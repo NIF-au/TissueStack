@@ -329,34 +329,9 @@ float		**get_colormap_from_file(char *path)
 		}
 	      c_row_index++;
 	    }
-	  /*
-	  while (j < len && buff[j] != '\0')
-	    {
-	      if (buff[j] != ' ' && buff[j] != '\t' && buff[j] != '\n' && k == -1)
-		k = j;
-	      else if ((buff[j] == ' ' || buff[j] == '\t')  && k != -1)
-		{
-		  colormap_tmp[c_row_index][c_column_index] = get_float(buff, k, j, len);
-		  c_column_index++;
-		  k = -1;
-		  //printf("%s ==> %i - %i\n", buff, k, j);
-		  printf("vallll = %f\n", colormap_tmp[c_row_index][c_column_index]);
-		  // DEBUG("vallll = %f", colormap_tmp[c_row_index][c_column_index]);
-		}
-	      else if (buff[j] == '\n' && k > -1)
-		{
-		  flag = 1;
-		  colormap_tmp[c_row_index][c_column_index] = get_float(buff, k, j, len);
-		  c_row_index++;
-		  c_column_index = 0;
-		  k = -1;
-		  //		  DEBUG("vannnn = %f", colormap_tmp[c_row_index][c_column_index]);
-		}
-	      j++;
-	    }
-	  */
 	}
-    }
+  }
+  if (fd != 0) close(fd);
   free(buff);
 
   j = 0;
@@ -707,10 +682,10 @@ void		lunch_pct_and_add_task(t_tissue_stack *t, t_vol *vol, t_image_extract *ima
   pthread_mutex_lock(&image_general->percent_mut);
   if (image_general->percentage && image_general->id_percent == NULL)
     {
-      command_line = array_2D_to_array_1D(commands);
-      t->percent_init(get_nb_blocks_percent(image_general, vol), &id_percent, vol->path, "0", image_general->root_path, command_line, t);
-      if (write(fd, id_percent, 16) < 0)
-	ERROR("Open Error");
+	  command_line = array_2D_to_array_1D(commands);
+	  t->percent_init(get_nb_blocks_percent(image_general, vol), &id_percent, vol->path, "0", image_general->root_path, command_line, t);
+	  if (write(fd, id_percent, 16) < 0)
+		  ERROR("Open Error");
       image_general->id_percent = id_percent;
     }
   pthread_mutex_unlock(&image_general->percent_mut);

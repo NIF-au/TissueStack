@@ -23,7 +23,6 @@ void		percent_time_write_plug(char *str, void *box)
     write(*((int *)box), str, strlen(str));
 }
 
-
 char		*str_n_cpy(char *str, int position, int len)
 {
   char		*dest;
@@ -63,7 +62,7 @@ int		percent_letter_count(char *buff, int position, char c)
   int		i;
 
   i = 0;
-  while (buff[position + i] != c && buff[position + i] != '\0')
+  while (buff && buff[position + i] != c && buff[position + i] != '\0')
     i++;
   return (i);
 }
@@ -106,44 +105,54 @@ char		**percent_str_to_wordtab(char *buff, char c)
   return (dest);
 }
 
-char		**read_from_file_by_id(char *id, FILE **f, t_tissue_stack *t)
-{
-  char		*complete_path = NULL;
-  struct stat	info;
-  char		**result = NULL;
-  char		buff[4096];
+char **read_from_file_by_id(char *id, t_tissue_stack *t) {
 
-  *f = NULL;
-  if (t->percent->path)
-    {
-      complete_path = malloc((strlen(id) + strlen(t->percent->path) + 1) * sizeof(*complete_path));
-      complete_path = strcpy(complete_path, t->percent->path);
-      complete_path = strcat(complete_path, id);
-      if (!stat(complete_path, &info))
-	{
-	  *f = fopen(complete_path, "r+");
-	  if (f && fread(buff, 1, 4096, *f) > 0)
-	    result = percent_str_to_wordtab(buff, '\n');
-	  free(complete_path);
-	  return (result);
-	}
-    }
-  return (NULL);
+	FILE * f = NULL;
+	char **result = NULL;
+	char buff[4096];
+
+	f = open_file_by_id(id, t);
+
+	if (f == NULL) 	return NULL;
+
+	memset(buff, '\0', 4095);
+	if (fread(buff, 1, 4096, f) > 0)
+		result = percent_str_to_wordtab(buff, '\n');
+	fseek(f, 0, SEEK_SET);
+
+	fclose(f);
+	f = NULL;
+
+	return (result);
+}
+
+FILE * open_file_by_id(char *id, t_tissue_stack *t) {
+	if (id == NULL || t == NULL || t->percent == NULL || t->percent->path == NULL)
+		return NULL;
+
+	char	* complete_path = NULL;
+    FILE * fh = NULL;
+
+    asprintf(&complete_path, "%s/%s", t->percent->path, id);
+
+    fh = fopen(complete_path, "r+");
+    free(complete_path);
+
+    return fh;
 }
 
 void		percent_get(char *id, void *box, t_tissue_stack *t)
 {
   char		pc[4096];
   char		**result = NULL;
-  FILE		*f = NULL;
 
   if (t->percent == NULL)
     return;
-  if ((result = read_from_file_by_id(id, &f, t)) != NULL)
+  if ((result = read_from_file_by_id(id, t)) != NULL)
     sprintf(pc, "%s|%s", result[3], result[0]);
   else
     sprintf(pc, "NULL");
-  if (f != NULL) fclose(f);
+
   percent_time_write_plug(pc, box);
 }
 
