@@ -170,7 +170,7 @@ void		write_header_into_file(int fd, t_header *h)
   int		len;
 
   memset(head, '\0', 4096);
-  sprintf(head, "%i|%i:%i:%i|%g:%g:%g|%g:%g:%g|%s|%s|%s|%c|%c|%c|%i:%i:%i|%i|%llu:%llu:%llu|",
+  sprintf(head, "%i|%i:%i:%i|%g:%g:%g|%g:%g:%g|%s|%s|%s|%c|%c|%c|%i:%i:%i|%i|%llu:%llu:%llu|%i|",
 	  h->dim_nb,
 	  h->sizes[0], h->sizes[1], h->sizes[2],
 	  h->start[0], h->start[1], h->start[2],
@@ -179,7 +179,7 @@ void		write_header_into_file(int fd, t_header *h)
 	  h->dim_name[0][0], h->dim_name[1][0], h->dim_name[2][0],
 	  h->slice_size[0], h->slice_size[1], h->slice_size[2],
 	  h->slice_max,
-	  (unsigned long long)h->dim_offset[0], (unsigned long long)h->dim_offset[1], (unsigned long long)h->dim_offset[2]);
+	  (unsigned long long)h->dim_offset[0], (unsigned long long)h->dim_offset[1], (unsigned long long)h->dim_offset[2], NIFTI);
   len = strlen(head);
   memset(lenhead, '\0', 200);
   sprintf(lenhead, "@IaMraW@|%i|", len);

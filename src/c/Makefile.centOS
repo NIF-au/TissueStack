@@ -309,6 +309,10 @@ dist: 	compile install
 	touch /tmp/pre-install.log\n\
 	chmod 666 /tmp/pre-install.log\n\
 	$(SYS_V_INIT_PATH)$(NAME) stop &>> /tmp/pre-install.log\n\
+	$(SYS_V_INIT_PATH)httpd stop &>> /tmp/pre-install.log\n\
+	rm -rf $(DATA_PATH)/web/* &>> /tmp/pre-install.log\n\
+	rm -rf $(DATA_PATH)/jdk* &>> /tmp/pre-install.log\n\
+	rm -rf $(DATA_PATH)/apache-tomcat-* &>> /tmp/pre-install.log\n\
 	exit 0\
 	" > $(BUILD_SRC_PATH)/pre-install.sh
 	@chmod 755 $(BUILD_SRC_PATH)/pre-install.sh

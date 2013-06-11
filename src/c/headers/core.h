@@ -219,6 +219,11 @@ struct			s_tissue_stack
   int			(*subscribe)(char *name, void (*action)(char *name, t_plugin *plugin, char *command, void *data, t_tissue_stack *t), t_tissue_stack *t);
 };
 
+enum FORMAT {
+    MINC    = 1,
+    NIFTI = 2
+};
+
 struct			s_vol
 {
   mihandle_t		minc_volume;		// pointer on a MINC structure containig the MINC volume information.
@@ -239,6 +244,7 @@ struct			s_vol
   double		max;                    // max value of the volume
   unsigned char		color_range_min;	// min value of the volume color range
   unsigned char		color_range_max;	// max value of the volume color range
+  enum FORMAT		original_format;		// original format
   t_vol			*next;
 };
 
@@ -320,7 +326,9 @@ void		free_all_tasks(t_tissue_stack *t);
 
 /*		volume.c		*/
 
-int		init_volume(t_memory_mapping * memory_mappings, t_vol *volume, char *path);
+int			init_volume(t_memory_mapping * memory_mappings, t_vol *volume, char *path);
+int			get_dim_size(t_vol *volume, char c);
+void 		get_width_height(int *height, int *width, int current_dimension, t_vol *volume);
 void		*file_actions(void *args);
 void		list_volumes(t_tissue_stack *t, char *options);
 void		add_volume(char *path, t_tissue_stack *t);

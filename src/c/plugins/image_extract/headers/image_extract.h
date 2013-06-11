@@ -99,7 +99,6 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
                                                 long unsigned int *count, t_image_args *a);
 
 void            set_grayscale(unsigned char *ptr, float val);
-void            get_width_height(int *height, int *width, int current_dimension, t_vol *volume);
 void            print_image(char *hyperslab, t_vol *volume, int current_dimension,
                           unsigned int current_slice, int width, int height, t_image_args *a);
 

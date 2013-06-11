@@ -281,8 +281,8 @@ dist: 	compile install
 	TISSUE_STACK_HOME=$(DATA_PATH)\n\
 	TISSUE_STACK_JNI_LIB_PATH=$(JNI_LIB_PATH)\n\
 	IMAGE_SERVER_EXE=$(BINS_PATH)/$(EXE_NAME)\n\
-	JAVA_HOME=\$$TISSUE_STACK_HOME/jdk1.6.0_25\n\
-	CATALINA_HOME=\$$TISSUE_STACK_HOME/apache-tomcat-7.0.35\n\
+	JAVA_HOME=\$$TISSUE_STACK_HOME/jdk$(JDK_VERSION)\n\
+	CATALINA_HOME=\$$TISSUE_STACK_HOME/apache-tomcat-$(TOMCAT_VERSION)\n\
 	PATH=\$$PATH:$(BINS_PATH)\n\
 	export TISSUE_STACK_HOME TISSUE_STACK_JNI_LIB_PATH IMAGE_SERVER_EXE JAVA_HOME CATALINA_HOME PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(NAME)_env.sh;
 	@chmod 755 $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(NAME)_env.sh
@@ -295,6 +295,10 @@ dist: 	compile install
 	touch /tmp/pre-install.log\n\
 	chmod 666 /tmp/pre-install.log\n\
 	$(SYS_V_INIT_PATH)$(NAME) stop &>> /tmp/pre-install.log\n\
+	$(SYS_V_INIT_PATH)apache2 stop &>> /tmp/pre-install.log\n\
+	rm -rf $(DATA_PATH)/web/* &>> /tmp/pre-install.log\n\
+	rm -rf $(DATA_PATH)/jdk* &>> /tmp/pre-install.log\n\
+	rm -rf $(DATA_PATH)/apache-tomcat-* &>> /tmp/pre-install.log\n\
 	exit 0\
 	" > $(BUILD_SRC_PATH)/pre-install.sh; \
 	else \
@@ -304,6 +308,10 @@ dist: 	compile install
 	touch /tmp/pre-install.log\n\
 	chmod 666 /tmp/pre-install.log\n\
 	$(SYS_V_INIT_PATH)$(NAME) stop &>> /tmp/pre-install.log\n\
+	service httpd stop &>> /tmp/pre-install.log\n\
+	rm -rf $(DATA_PATH)/web/* &>> /tmp/pre-install.log\n\
+	rm -rf $(DATA_PATH)/jdk* &>> /tmp/pre-install.log\n\
+	rm -rf $(DATA_PATH)/apache-tomcat-* &>> /tmp/pre-install.log\n\
 	exit 0\
 	" > $(BUILD_SRC_PATH)/pre-install.sh; \
 	fi

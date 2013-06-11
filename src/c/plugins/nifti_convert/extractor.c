@@ -81,5 +81,7 @@ int		main(int ac, char **av)
   DestroyImage(img);
   DestroyImageInfo(image_info);
   close(fd);
+
+  DestroyMagick();
   return (0);
 }

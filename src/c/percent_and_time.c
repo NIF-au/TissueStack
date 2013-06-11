@@ -211,39 +211,6 @@ void		percent_get_direct(char **buff, char *id, t_tissue_stack *t)
 
 }
 
-int		get_dim_size(t_vol *volume, char c)
-{
-  int		i = 0;
-
-  while (i < volume->dim_nb)
-    {
-      if (volume->dim_name_char[i] == c)
-	return (volume->size[i]);
-      i++;
-    }
-  return (0);
-}
-
-void		get_width_height(int *height, int *width, int current_dimension,
-				 t_vol *volume)
-{
-  if (volume->dim_name_char[current_dimension] == 'x')
-    {
-      *height = get_dim_size(volume, 'z'); //volume->size[Y];
-      *width = get_dim_size(volume, 'y'); //volume->size[Z];
-    }
-  else if (volume->dim_name_char[current_dimension] == 'y')
-    {
-      *height = get_dim_size(volume, 'z');//volume->size[X];
-      *width = get_dim_size(volume, 'x');//volume->size[Z];
-    }
-  else
-    {
-      *height = get_dim_size(volume, 'y');//volume->size[X];
-      *width = get_dim_size(volume, 'x');//volume->size[Y];
-    }
-}
-
 void		percent_resume_direct(char *id, t_tissue_stack *t)
 {
   char		**result;
@@ -300,7 +267,7 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 		  i = 0;
 		  while (i < vol->dim_nb)
 		    {
-		      get_width_height(&height, &width, i, vol);
+	    	  get_width_height(&height, &width, i, vol);
 		      h_tiles = (height * scale) / 256;
 		      w_tiles = (width * scale) / 256;
 		      if (height % 256 != 0)

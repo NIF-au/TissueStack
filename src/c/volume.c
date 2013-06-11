@@ -48,6 +48,7 @@ void		alloc_info_volume(t_vol *volume)
   volume->dim_name_char = malloc((volume->dim_nb + 1) * sizeof(*volume->dim_name_char));
   volume->slice_size = malloc(volume->dim_nb * sizeof(*volume->slice_size));
   volume->dim_offset = malloc(volume->dim_nb * sizeof(*volume->dim_offset));
+  volume->original_format = MINC;	// default to MINC
 }
 
 char		*get_header_len(char *header_magick)
@@ -286,8 +287,11 @@ int		raw_volume_init(t_memory_mapping * memory_mappings, t_vol *volume, int fd)
     return (-1);
 
   volume->raw_fd = fd;
-  volume->dim_nb = atoi(info[0]);
 
+  if (count < 13)
+	  return -1;
+
+  volume->dim_nb = atoi(info[0]);
   set_dimension_size(volume, info[1]);
   set_dimension_start(volume, info[2]);
   set_dimension_step(volume, info[3]);
@@ -305,6 +309,9 @@ int		raw_volume_init(t_memory_mapping * memory_mappings, t_vol *volume, int fd)
 
   volume->slices_max = atoi(info[11]);
   set_dimension_offset(volume, info[12], header_len);
+
+  if (count > 13)
+	  volume->original_format = atoi(info[13]);
 
   volume->raw_data = 1;
   volume->minc_volume = NULL;
@@ -569,6 +576,37 @@ void		free_volume(t_vol *v)
 
   v->next = NULL;
   free(v);
+}
+
+int		get_dim_size(t_vol *volume, char c)
+{
+  int		i = 0;
+
+  while (i < volume->dim_nb)
+    {
+      if (volume->dim_name_char[i] == c)
+	return (volume->size[i]);
+      i++;
+    }
+  return (0);
+}
+
+void		get_width_height(int *height, int *width, int current_dimension,	 t_vol *volume) {
+	  if (volume->dim_name_char[current_dimension] == 'x')
+	    {
+	      *height = get_dim_size(volume, 'z'); //volume->size[Y];
+	      *width = get_dim_size(volume, 'y'); //volume->size[Z];
+	    }
+	  else if (volume->dim_name_char[current_dimension] == 'y')
+	    {
+	      *height = get_dim_size(volume, 'z');//volume->size[X];
+	      *width = get_dim_size(volume, 'x');//volume->size[Z];
+	    }
+	  else
+	    {
+	      *height = get_dim_size(volume, 'y');//volume->size[X];
+	      *width = get_dim_size(volume, 'x');//volume->size[Y];
+	    }
 }
 
 void		free_all_volumes(t_tissue_stack *t)
