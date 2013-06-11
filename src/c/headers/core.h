@@ -347,7 +347,12 @@ void		clean_error_list(t_tissue_stack *general, int min);
 
 /*		percent_and_time		*/
 
-char		**read_from_file_by_id(char *id, FILE **f, t_tissue_stack *t);
+FILE * open_file_by_id(char *id, t_tissue_stack *t);
+char		**read_from_file_by_id(char *id, t_tissue_stack *t);
+char		**percent_str_to_wordtab(char *buff, char c);
+int		percent_letter_count(char *buff, int position, char c);
+int		percent_word_count(char *buff, char c);
+
 int		is_num(char *str);
 int		is_percent_paused_cancel(char *id, t_tissue_stack *t);
 void		clean_pause_queue(char *id, t_tissue_stack *t);

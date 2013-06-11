@@ -127,11 +127,7 @@ void *start(void *args) {
 	DEBUG("Sending: #%s#", buffer->buffer);
 
 	// write out response
-	send(*unix_socket, buffer->buffer, buffer->size, 0);
-
-	// close socket
-	shutdown(*unix_socket, 2);
-	close(*unix_socket);
+	write(*unix_socket, buffer->buffer, buffer->size);
 
 	return NULL;
 }

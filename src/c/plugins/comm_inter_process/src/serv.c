@@ -62,6 +62,8 @@ void		serv_accept_new_connections(t_serv_comm *s)
       return;
     }
 
+  DEBUG("SERVER CONNECT %i\n", socket);
+
   add_client_to_list(s, socket, client_addr);
   add_client_to_sock_monitor(s, socket);
 }
@@ -71,16 +73,24 @@ void		client_diconnected(t_serv_comm *s, int sock)
   t_serv_clients *c;
   t_serv_clients *tmp;
 
+  // This is necessary! We have to close the unix socket server and client side !!!
+  shutdown(sock, 2);
+  close(sock);
+
+  DEBUG("SERVER DISCONNECT %i\n", sock);
+
   c = s->first_client;
+
   if (c)
     {
       if (c->sock == sock)
 	{
 	  free(s->first_client);
+
 	  s->first_client = NULL;
 	  c = NULL;
 	}
-    }
+  }
   c = s->first_client;
   while (c != NULL)
     {
@@ -112,14 +122,13 @@ void		check_modified_fd(t_serv_comm *s)
 	    {
 	      // Do stuff;
 	      len = read(c->sock, buff, 4096);
-	      if (len == 0)
+	      if (len <= 0)
 		{
 		  client_diconnected(s, c->sock);
 		  break;
 		}
 	      buff[len] = '\0';
 	      (*s->general->plug_actions)(s->general, buff, &c->sock);
-	      //	      write(c->sock, "Received\n", strlen("Received\n"));
 	      break;
 	    }
 	  c = c->next;
@@ -159,6 +168,7 @@ void		serv_working_loop(t_serv_comm *s)
       if (select((s->bigger_fd + 1), &(s->rd_fds),
 		 NULL, NULL, NULL) == -1)
 	{
+      perror("select");
 	  ERROR("Select Error");
 	  //>state = FAIL;
 	}
@@ -189,12 +199,6 @@ int		serv_init_connect(t_serv_comm *s)
   chmod(UNIX_SOCKET_PATH, 0666);
   listen(s->sock_serv, s->queue_size);
   return (0);
-}
-
-void		yop(char *name, t_plugin *plugin, char *command, void *data, t_tissue_stack *t)
-{
-  DEBUG("Fourth Notification ==>");
-  DEBUG("name = %s\nid = %p\ncommand = %s\ndata = %p", name, plugin, command, data);
 }
 
 void		*init(void *args)

@@ -18,6 +18,7 @@
 #define __PERCENT_TIME_H__
 
 #include "core.h"
+#include <sys/socket.h>
 
 extern  t_log_plugin	log_plugin;
 
