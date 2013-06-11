@@ -19,6 +19,7 @@ package au.edu.uq.cai.TissueStack.dataprovider;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 import javax.persistence.Query;
 
 import au.edu.uq.cai.TissueStack.JPAUtils;
@@ -46,6 +47,31 @@ public final class ConfigurationDataProvider {
 			Query query = em.createQuery("SELECT configuration FROM Configuration AS configuration");	
 			
 			return query.getResultList();	
+		} finally {
+			JPAUtils.instance().closeEntityManager(em);
+		}
+	}
+	
+	public static void addOrUpdateConfigurationValue(Configuration conf) {
+		if (conf == null || conf.getName() == null || conf.getValue() == null)
+			return;
+		
+		final Configuration existing = ConfigurationDataProvider.queryConfigurationById(conf.getName());
+
+		EntityManager em = null; 
+		EntityTransaction update = null;
+		try {
+			em = JPAUtils.instance().getEntityManager(); 
+			
+			update = em.getTransaction();
+			update.begin();
+			
+			if (existing == null)
+				em.persist(conf);
+			else 
+				em.merge(conf);
+			
+			update.commit();
 		} finally {
 			JPAUtils.instance().closeEntityManager(em);
 		}

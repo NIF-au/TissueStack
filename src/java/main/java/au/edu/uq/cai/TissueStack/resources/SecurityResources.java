@@ -24,10 +24,11 @@ import javax.ws.rs.QueryParam;
 
 import org.apache.log4j.Logger;
 
-import au.edu.uq.cai.TissueStack.TissueStackProperties;
+import au.edu.uq.cai.TissueStack.dataobjects.Configuration;
 import au.edu.uq.cai.TissueStack.dataobjects.NoResults;
 import au.edu.uq.cai.TissueStack.dataobjects.Response;
 import au.edu.uq.cai.TissueStack.dataobjects.Session;
+import au.edu.uq.cai.TissueStack.dataprovider.ConfigurationDataProvider;
 import au.edu.uq.cai.TissueStack.dataprovider.SessionDataProvider;
 import au.edu.uq.cai.TissueStack.rest.AbstractRestfulMetaInformation;
 import au.edu.uq.cai.TissueStack.rest.Description;
@@ -52,17 +53,38 @@ public final class SecurityResources extends AbstractRestfulMetaInformation {
 	
 	final static Logger logger = Logger.getLogger(SecurityResources.class);
 	
-	private static final String ADMIN_PASSWORD_PROPERTIES_KEY = "TissueStack.admin.password";
-			
 	// the default global admin password
 	private static final String DEFAULT_GLOBAL_ADMIN_PASSWORD_AS_SHA_2_HEX_STRING = 
 			"101ee9fe7aceaa8bea949e75a529d796da02e08bced78c6c4dde60768183fa14";
 	// the global timeout for a session in millis
-	private static final long SESSION_TIMEOUT = 1000 * 60 * 5; // 5 minutes of inactivity
+	private static final long SESSION_TIMEOUT = 1000 * 60 * 15; // 5 minutes of inactivity
 	
 	@Path("/")
 	public RestfulResource getDefault() {
 		return this.getSecurityResourcesMetaInfo();
+	}
+
+	private String getAdminPassword() {
+		final Configuration passwd = ConfigurationDataProvider.queryConfigurationById("admin_passwd");
+		if (passwd == null || passwd.getValue() == null) {
+			logger.warn("Admin Password record does not exist. We are using the default!!");
+			return DEFAULT_GLOBAL_ADMIN_PASSWORD_AS_SHA_2_HEX_STRING;
+		}
+		return passwd.getValue();
+	}
+
+	private void setAdminPassword(String passwd) throws Exception {
+		if (passwd == null || passwd.trim().isEmpty())
+			throw new IllegalArgumentException("Password has to be a non-empty string!");
+		
+			passwd = SHA2encoder.convertByteArrayToHexString(SHA2encoder.encode(passwd.trim()));
+					
+			final Configuration conf = new Configuration();
+			conf.setName("admin_passwd");
+			conf.setValue(passwd);
+			conf.setDescription("Admin Password");
+			
+			ConfigurationDataProvider.addOrUpdateConfigurationValue(conf);
 	}
 
 	@Path("/sha2_hash")
@@ -77,6 +99,30 @@ public final class SecurityResources extends AbstractRestfulMetaInformation {
 		return new RestfulResource(new Response(SHA2encoder.convertByteArrayToHexString(sha2hashedExpression)));
 	}
 
+	@Path("/passwd")
+	@Description("Set a new admin password given the correct old one")
+	public RestfulResource setNewAdminPassword(
+			@QueryParam("old_passwd") String oldPasswd, @QueryParam("new_passwd") String newPasswd) {
+		if (oldPasswd == null || oldPasswd.trim().isEmpty())
+			throw new IllegalArgumentException("You have to provide your existing password to change it!");
+		
+		if (newPasswd == null || newPasswd.trim().isEmpty())
+			throw new IllegalArgumentException("You have to provide a new password!");
+		
+		try {
+			if (!this.checkAdminPassword(oldPasswd))
+				throw new IllegalArgumentException("The given password does not match your existing password!");
+
+			this.setAdminPassword(newPasswd);
+
+			return new RestfulResource(new Response("Password Changed"));
+		} catch (IllegalArgumentException passon) {
+			throw passon;
+		} catch (Exception any) {
+			logger.error("Failed to set new admin passwd", any);
+			throw new RuntimeException("Failed to set new admin passwd", any);
+		}
+	}
 	@Path("/new_session")
 	@Description("Returns a new session, provided the given password matches the the global admin password")
 	public RestfulResource getNewSession(@QueryParam("password") String password) throws NoSuchAlgorithmException {
@@ -121,7 +167,10 @@ public final class SecurityResources extends AbstractRestfulMetaInformation {
 	}
 
 	private boolean checkAdminPassword(String password) throws NoSuchAlgorithmException {
-		final byte hashedPasswordAsBytes[] = SHA2encoder.encode(password);
+		if (password == null || password.isEmpty())
+			return false;
+		
+		final byte hashedPasswordAsBytes[] = SHA2encoder.encode(password.trim());
 		if (hashedPasswordAsBytes == null) {
 			throw new IllegalArgumentException("Given password has to be a non-empty string!");
 		}
@@ -129,18 +178,10 @@ public final class SecurityResources extends AbstractRestfulMetaInformation {
 		if (hashedPasswordAsHex == null) {
 			throw new IllegalArgumentException("Could not convert sha2 bytes to hex string");
 		}
-		
-		String actualPassword = DEFAULT_GLOBAL_ADMIN_PASSWORD_AS_SHA_2_HEX_STRING;
-		// let's hope somebody defined their own password in the properties file so that it deviates from the default
-		final Object value = TissueStackProperties.instance().getProperty(ADMIN_PASSWORD_PROPERTIES_KEY);
-		if (value != null && !((String) value).trim().isEmpty()) {
-			actualPassword = ((String) value).trim();
-		}
-		
+
 		// do we have a match ?
-		if (hashedPasswordAsHex.equals(actualPassword)) {
+		if (hashedPasswordAsHex.equals(this.getAdminPassword()))
 			return true;
-		}
 		
 		return false;
 	}

@@ -522,7 +522,7 @@ TissueStack.Utils = {
 			url : url,
 			type : method,
 			cache : false,
-			timeout : 30000,
+			timeout : 60000,
 			dataType : "json",
 			success: success,
 			error: error

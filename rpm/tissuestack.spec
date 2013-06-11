@@ -51,6 +51,10 @@ rm -f /tmp/pre-install.log
 touch /tmp/pre-install.log
 chmod 666 /tmp/pre-install.log
 /etc/init.d/tissuestack stop &>> /tmp/pre-install.log
+service httpd stop  &>> /tmp/uninstall.log
+rm -rf /opt/tissuestack/web/* &>> /tmp/pre-install.log
+rm -rf /opt/tissuestack/jdk* &>> /tmp/pre-install.log
+rm -rf /opt/tissuestack/apache-tomcat-* &>> /tmp/pre-install.log
 exit 0
 
 %preun
@@ -58,10 +62,6 @@ rm -f /tmp/uninstall.log
 touch /tmp/uninstall.log
 chmod 666 /tmp/uninstall.log
 /etc/init.d/tissuestack stop &>> /tmp/uninstall.log
-service httpd stop  &>> /tmp/uninstall.log
-rm -rf /opt/tissuestack/web/* &>> /tmp/pre-install.log
-rm -rf /opt/tissuestack/jdk* &>> /tmp/pre-install.log
-rm -rf /opt/tissuestack/apache-tomcat-* &>> /tmp/pre-install.log
 exit 0
 
 %postun
