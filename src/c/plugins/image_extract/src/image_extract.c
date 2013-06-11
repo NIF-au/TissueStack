@@ -763,7 +763,11 @@ void		image_creation_lunch(t_tissue_stack *t, t_vol *vol, int step, t_image_extr
 		args->dim_start_end = generate_dims_start_end_thread(vol, i, dim_start_end[i][0], dim_start_end[i][0] + step);
 	      else
 		args->dim_start_end = generate_dims_start_end_thread(vol, i, dim_start_end[i][0], dim_start_end[i][1]);
+#ifdef _NO_TILING_THREAD_
+	      get_all_slices_of_all_dimensions(args);
+#else
 	      (*t->tp->add)(get_all_slices_of_all_dimensions, (void *)args, t->tp);
+#endif
 	      j += step;
 	      dim_start_end[i][0] += step;
 	    }
