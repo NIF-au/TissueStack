@@ -415,7 +415,6 @@ int		main(int argc, char **argv)
   char **splitted;
   t_args_plug	*args;
 
-  t->pretilingnothread = 1;
 
   printf("Creation of preview. Please be patient this could take a while...\n");
 
