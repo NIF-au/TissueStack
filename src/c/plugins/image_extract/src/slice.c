@@ -218,7 +218,9 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
 		{
 		  a->info->h_position = a->info->start_h;
 		  a->info->w_position = a->info->start_w;
+
 		  print_image(hyperslab, volume, current_dimension, current_slice, width, height, a);
+
 		  a->info->start_w++;
 		  a->general_info->percent_add(1, a->info->id_percent, a->general_info);
 		}
@@ -226,12 +228,14 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
 	    }
 	}
       else {
-	print_image(hyperslab, volume, current_dimension, current_slice, width, height, a);
+    	  print_image(hyperslab, volume, current_dimension, current_slice, width, height, a);
       }
+
       pthread_mutex_lock(&(a->p->lock));
       a->info->slices_done++;
       pthread_mutex_unlock(&(a->p->lock));
       pthread_cond_signal(&(a->info->cond));
+
       DEBUG("SLICE == %i ==> %i", current_slice, current_dimension);
       exit = a->general_info->is_percent_paused_cancel(a->info->id_percent, a->general_info);
       current_slice++;
@@ -239,7 +243,9 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
       // restore original positions
       a->info->h_position = save_h_position;
       a->info->w_position = save_w_position;
+
+      // free slab
+      if (free_hyperslab > 0) free(hyperslab);
     }
   start[current_dimension] = 0;
-  if (free_hyperslab > 0) free(hyperslab);
 }

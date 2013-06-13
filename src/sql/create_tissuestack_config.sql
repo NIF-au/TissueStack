@@ -2,6 +2,7 @@
 
 -- GENERAL INSTANCE CONFIGURATION - some default values
 INSERT INTO configuration VALUES('version', '1.1', 'version');
+INSERT INTO configuration VALUES('session_timeout_minutes', '15', 'The session timeout given in minutes');
 INSERT INTO configuration VALUES('admin_passwd', '101ee9fe7aceaa8bea949e75a529d796da02e08bced78c6c4dde60768183fa14', 'Admin Password');
 INSERT INTO configuration VALUES('image_service_proxy_path', 'image_service', 'image service proxy path (relative to the application''s web root directory)');
 INSERT INTO configuration VALUES('tile_directory', 'tiles', 'tile directory (relative to the application''s web root directory)');

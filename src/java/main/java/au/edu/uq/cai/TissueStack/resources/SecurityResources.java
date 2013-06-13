@@ -57,7 +57,7 @@ public final class SecurityResources extends AbstractRestfulMetaInformation {
 	private static final String DEFAULT_GLOBAL_ADMIN_PASSWORD_AS_SHA_2_HEX_STRING = 
 			"101ee9fe7aceaa8bea949e75a529d796da02e08bced78c6c4dde60768183fa14";
 	// the global timeout for a session in millis
-	private static final long SESSION_TIMEOUT = 1000 * 60 * 15; // 5 minutes of inactivity
+	private static long sessionTimeout = SessionDataProvider.getSessionTimeout();
 	
 	@Path("/")
 	public RestfulResource getDefault() {
@@ -137,7 +137,7 @@ public final class SecurityResources extends AbstractRestfulMetaInformation {
 		
 		final Session newSession = new Session();
 		newSession.setId(uid.toString());
-		newSession.setExpiry(System.currentTimeMillis() + SESSION_TIMEOUT);
+		newSession.setExpiry(System.currentTimeMillis() + SecurityResources.sessionTimeout);
 		
 		// store it in the database
 		SessionDataProvider.persistSession(newSession);
@@ -202,7 +202,7 @@ public final class SecurityResources extends AbstractRestfulMetaInformation {
 		
 		// push out expiry date if we are still valid
 		try {
-			if (SessionDataProvider.extendSessionExpiry(sessionFound.getId(), SESSION_TIMEOUT) != 1) {
+			if (SessionDataProvider.extendSessionExpiry(sessionFound.getId(), SecurityResources.sessionTimeout) != 1) {
 				logger.warn("Could not extend session expiry for session " + session);
 			}
 		} catch (Exception e) {

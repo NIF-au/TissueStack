@@ -192,6 +192,8 @@ void percent_add_direct(int blocks, char *id, t_tissue_stack *t) {
 		}
 	}
 	pthread_mutex_unlock(&t->percent->mutex);
+
+	if (result != NULL) free_null_terminated_char_2D_array(result);
 	if (percent_tmp >= 100) {
 		task_finished(id, t);
 		INFO("Percentage: %s ==> 100%%", id);
@@ -200,7 +202,7 @@ void percent_add_direct(int blocks, char *id, t_tissue_stack *t) {
 
 void		percent_get_direct(char **buff, char *id, t_tissue_stack *t)
 {
-  char		**result;
+  char		**result = NULL;
 
   if (t->percent == NULL)
     return;
@@ -209,6 +211,7 @@ void		percent_get_direct(char **buff, char *id, t_tissue_stack *t)
   else
     asprintf(buff, "ERROR");
 
+  if (result != NULL) free_null_terminated_char_2D_array(result);
 }
 
 void		percent_resume_direct(char *id, t_tissue_stack *t)
@@ -395,6 +398,8 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 	    }
 	}
     }
+
+    if (result != NULL) free_null_terminated_char_2D_array(result);
 }
 
 void		percent_pause_direct(char *id, t_tissue_stack *t)
@@ -520,7 +525,6 @@ void		percent_cancel_direct(char *id, t_tissue_stack *t)
   struct stat	info;
   char		buff[4096];
   char		**result = NULL;
-  int		i = 0;
   FILE		*f;
 
   if (t && id)
@@ -543,52 +547,13 @@ void		percent_cancel_direct(char *id, t_tissue_stack *t)
 		    unlink(result[5]);
 		}
 	      unlink(complete_path);
-	      if (result != NULL)
-		{
-		  while (result[i] != NULL)
-		    free(result[i++]);
-		}
 	    }
 	  free(complete_path);
 	}
    }
+  if (result != NULL) free_null_terminated_char_2D_array(result);
 }
 
-/*
-void		percent_destroy(char **commands, void *box, t_tissue_stack *t)
-{
-  t_percent_elem *tmp;
-  t_percent_elem *sav;
-  char		*str_log;
-
-  if (t->percent == NULL || (tmp = t->percent->first_percent) == NULL ||
-      commands == NULL || commands[1] == NULL || commands[2] == NULL)
-    return;
-  if (strcmp(t->percent->first_percent->id, commands[1]) == 0)
-    ;
-  else
-    {
-      while (tmp != NULL)
-	{
-	  if (tmp->next != NULL)
-	    {
-	      if (strcmp(tmp->next->id, commands[1]) == 0)
-		break;
-	    }
-	  tmp = tmp->next;
-	}
-    }
-  if (tmp == NULL)
-    return;
-  str_log = tmp->next->id;
-  INFO("Percentage: %s Destroyed", str_log);
-  sav = tmp->next->next;
-  free(tmp->next->id);
-  free(tmp->next->time);
-  free(tmp->next);
-  tmp->next = sav;
-}
-*/
 
 void		init_percent_time(t_tissue_stack *t, char *path)
 {

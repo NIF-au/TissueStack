@@ -586,7 +586,7 @@ TissueStack.Admin.prototype = {
 					if (processTask.progress >= 0 && processTask.progress < 100) {
 						$("#" + "progress_text_" + id).html(processTask.progress.toFixed(2) + "%");
 						$("#" + "progress_bar_" + id).val(processTask.progress);
-					} else {
+					} else if (processTask.progress >= 100) {
 						$("#" + "progress_text_" + id).html("100%");
 						$("#" + "progress_bar_" + id).val(100);
 						 // set status to finished

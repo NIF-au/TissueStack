@@ -23,12 +23,15 @@ import javax.persistence.Query;
 import org.apache.log4j.Logger;
 
 import au.edu.uq.cai.TissueStack.JPAUtils;
+import au.edu.uq.cai.TissueStack.dataobjects.Configuration;
 import au.edu.uq.cai.TissueStack.dataobjects.Session;
 
 public final class SessionDataProvider {
 
 	final static Logger logger = Logger.getLogger(SessionDataProvider.class); 
-			
+
+	private static final long DEFAULT_SESSION_TIMEOUT = 1000 * 60 * 15; // 15 minutes of inactivity
+	
 	public static Session querySessionById(String id) {
 		if (id == null) {
 			return null;
@@ -42,6 +45,30 @@ public final class SessionDataProvider {
 		} finally {
 			JPAUtils.instance().closeEntityManager(em);
 		}
+	}
+	
+	public static long getSessionTimeout() {
+		Configuration timeOut = null;
+		long timeOutAsLong = DEFAULT_SESSION_TIMEOUT;
+		
+		try {
+			timeOut = ConfigurationDataProvider.queryConfigurationById("session_timeout_minutes");
+		} catch (Exception e) {
+			// nothing we can do in such a case, db connectivity issue ...
+		}
+		
+		if (timeOut == null || timeOut.getValue() == null)
+			return timeOutAsLong;
+		
+		try {
+			timeOutAsLong = Long.parseLong(timeOut.getValue());
+			// quickly convert to millis
+			timeOutAsLong = timeOutAsLong * 60 * 1000;
+		} catch (Exception notAValidNumber) {
+			// timeout was not a valid number, use default
+		}
+		
+		return timeOutAsLong;
 	}
 	
 	public static void persistSession(Session session) {

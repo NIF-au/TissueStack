@@ -153,6 +153,8 @@ void		percent_get(char *id, void *box, t_tissue_stack *t)
   else
     sprintf(pc, "NULL");
 
+  if (result != NULL) free_null_terminated_char_2D_array(result);
+
   percent_time_write_plug(pc, box);
 }
 
