@@ -61,16 +61,16 @@ ifndef VERSION
 	$(error VERSION IS NOT SET !!!!!!!!!!!!! Please call make like this: make VERSION=X.X !!!!!)
 endif
 
-	@echo -e "\n###################### TISSUE STACK CONVERTER TOOL BUILD [Version: $(VERSION)] ###################"
+	@echo -e "\n###################### TISSUE STACK MINC2RAW CONVERTER TOOL BUILD [Version: $(VERSION)] ###################"
 	@echo -e "    BINARIES PATH:         $(BINS_PATH)"
 	@echo -e "    USE MEMORY MAPPING:    $(USE_MEMORY_MAPPING)"
-	@echo -e "###################### TISSUE STACK CONVERTER TOOL BUILD [Version: $(VERSION)] ###################\n"
+	@echo -e "###################### TISSUE STACK MINC2RAW CONVERTER TOOL BUILD [Version: $(VERSION)] ###################\n"
 
 coreCompile:	$(OBJS)
 	@$(CC) $(OBJS) -o $(EXE_NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) `pkg-config --cflags --libs gtk+-2.0` > /dev/null
-	@echo -e "\tFinished compiling core components."
+	@echo -e "\tFinished compiling converter tool."
 
-install: prepare
+install: compile
 	@echo -e "\n\tInstalling Binaries (may require super user priviledges):"
 	@echo -e "\t-----------------------------------------------\n"
 	@echo -e "\tInstalling '$(EXE_NAME)' executable into: $(BINS_PATH)."
@@ -80,12 +80,12 @@ install: prepare
 	@echo -e "\n\tFinished installing binaries.\n"  
 
 clean:
-	@echo -e "\n\tCleaning $(NAME)...\n"
+	@echo -e "\n\tCleaning $(EXE_NAME)...\n"
 	@rm -rf *~ \#*\# $(NAME) $(EXE_NAME) core hs_err_pid*
 	@rm -rf $(DIRSRC)*.o
 	@rm -rf $(BUILD_PATH)
 	@make --no-print-directory -C ../../utils/ clean
-	@echo -e "\tFinished cleaning $(NAME).\n"
+	@echo -e "\tFinished cleaning $(EXE_NAME).\n"
 
 debug: FLAGS += -D_TSS_DEBUG_
 
@@ -97,6 +97,4 @@ recompile: clean compile
 
 re: clean debug install
 
-source: clean
-
-.PHONY: all prepare compile install clean source re recompile
+.PHONY: all prepare compile install clean re recompile

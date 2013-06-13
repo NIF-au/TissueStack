@@ -222,23 +222,6 @@ void            init_prog(t_tissue_stack *t)
 	  free_t_string_buffer(actualPath);
 	}
 
-      /*
-	if ((t->log->general_fd = open(path, O_CREAT | O_RDWR | O_TRUNC)) == -1)
-	{
-	  ERROR("Open %s failed", path);
-	  t->log->state = OFF; // turn logging off
-	}
-	stat(path, &results);
-	if (results.st_mode != 0666)
-	{
-
-	  if (chmod(path, 0666) == -1)
-	    {
-	      ERROR("Chmod 666  %s failed", path);
-	      t->log->state = OFF; // turn logging off
-	    }
-	  stat(path, &results);
-	  }*/
     }
   init_func_ptr(t);
   init_percent_time(t, strdup(CONCAT_APP_PATH("tasks/")));

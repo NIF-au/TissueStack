@@ -154,7 +154,7 @@ install: prepare
 	@make --no-print-directory -C ./jni/ install
 	@echo -e "\n\tFinished installing binaries.\n"  
 
-clean:
+clean: clean-tools
 	@echo -e "\n\tCleaning $(NAME)...\n"
 	@rm -rf *~ \#*\# $(NAME) $(EXE_NAME) ./png/* core hs_err_pid*
 	@rm -rf $(DIRSRC)*.o
@@ -203,10 +203,19 @@ endif
 	@cp -r ../../data/colormaps $(BUILD_PATH)/sources
 	@cd $(BUILD_PATH); tar cvzf $(SRC_DIST_NAME) sources/* > /dev/null
 	@echo -e "\n\tFinished creating source archive:  $(BUILD_PATH)/$(SRC_DIST_NAME)\n\n"
+
+clean-tools:
+	@make --no-print-directory -C $(DIRSRC)/tools clean
+	
+compile-tools: clean-tools
+	@make --no-print-directory -C $(DIRSRC)/tools compile
+
+install-tools: clean-tools
+	@make --no-print-directory -C $(DIRSRC)/tools install
 	
 # target for building a binary tar.gz (is then used for rpm build)
 # we depend on target 'all' and use a temporary build directory in /tmp/tissuestack_build
-dist: 	compile install
+dist: compile install install-tools
 	@echo -e "\n\n\tBuilding binary archive: $(DIST_NAME):"
 	@echo -e "\t---------------------------------------------------"
 	

@@ -6,7 +6,7 @@ ifndef VERSION
 	$(error VERSION IS NOT SET !!!!!!!!!!!!! Please call make like this: make VERSION=X.X !!!!!)
 endif
 
-install: prepare
+install:
 	@make --no-print-directory -C ./converter/ install
 	@make --no-print-directory -C ./tiler/ install
 
@@ -18,7 +18,7 @@ debug:	prepare
 	@make --no-print-directory -C ./converter/ debug
 	@make --no-print-directory -C ./tiler/ debug
 
-compile: prepare
+compile:
 	@make --no-print-directory -C ./converter/ compile
 	@make --no-print-directory -C ./tiler/ compile
 
@@ -26,6 +26,4 @@ recompile: clean compile
 
 re: clean debug install
 
-source: clean
-
-.PHONY: all prepare compile install clean source re recompile
+.PHONY: all prepare compile install clean re recompile

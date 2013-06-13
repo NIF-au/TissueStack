@@ -2,6 +2,15 @@ DIRSRC		=	./src/c
 
 all: compile install
 
+clean-tools:
+	@make --no-print-directory -C $(DIRSRC) clean-tools
+	
+compile-tools:
+	@make --no-print-directory -C $(DIRSRC) compile-tools
+
+install-tools:
+	@make --no-print-directory -C $(DIRSRC) install-tools
+	
 compile:	
 	@make --no-print-directory -C $(DIRSRC) compile
 

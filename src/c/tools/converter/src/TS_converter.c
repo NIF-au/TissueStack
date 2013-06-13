@@ -126,19 +126,19 @@ t_vol		*init_get_volume_from_minc_file(char *path)
     }
   // get the size of each dimensions
 
-  if ((result = miget_dimension_size(volume->dimensions[0], (misize_t*)&volume->size[0])) != MI_NOERROR)
+  if ((result = miget_dimension_size(volume->dimensions[0], &volume->size[0])) != MI_NOERROR)
     {
       fprintf(stderr, "Error getting dimensions size: %d.\n", result);
       return (NULL);
     }
 
-  if ((result = miget_dimension_size(volume->dimensions[1], (misize_t*)&volume->size[1])) != MI_NOERROR)
+  if ((result = miget_dimension_size(volume->dimensions[1], &volume->size[1])) != MI_NOERROR)
     {
       fprintf(stderr, "Error getting dimensions size: %d.\n", result);
       return (NULL);
     }
 
-  if ((result = miget_dimension_size(volume->dimensions[2], (misize_t*)&volume->size[2])) != MI_NOERROR)
+  if ((result = miget_dimension_size(volume->dimensions[2], &volume->size[2])) != MI_NOERROR)
     {
       fprintf(stderr, "Error getting dimensions size: %d.\n", result);
       return (NULL);
@@ -222,7 +222,7 @@ void		write_header_into_file(int fd, t_header *h)
   int		len;
 
   memset(head, '\0', 4096);
-  sprintf(head, "%i|%i:%i:%i|%g:%g:%g|%g:%g:%g|%s|%s|%s|%c|%c|%c|%i:%i:%i|%i|%llu:%llu:%llu|",
+  sprintf(head, "%i|%i:%i:%i|%g:%g:%g|%g:%g:%g|%s|%s|%s|%c|%c|%c|%i:%i:%i|%i|%llu:%llu:%llu|1|",
 	  h->dim_nb,
 	  h->sizes[0], h->sizes[1], h->sizes[2],
 	  h->start[0], h->start[1], h->start[2],
