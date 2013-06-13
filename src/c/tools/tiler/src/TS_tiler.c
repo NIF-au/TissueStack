@@ -85,7 +85,7 @@ void			signal_manager(t_tissue_stack *t)
   i = 1;
   while (i < 32)
     {
-      if (i != 11)
+      if (i != 11 && i != 2)
 	sigaction(i, &act, NULL);
       i++;
     }
@@ -363,7 +363,7 @@ int		main(int argc, char **argv)
 
   // lunch thread_pool
   t->tp = malloc(sizeof(*t->tp));
-  thread_pool_init(t->tp, 16);
+  thread_pool_init(t->tp, 1);
 
   // start plugins
 
@@ -415,7 +415,6 @@ int		main(int argc, char **argv)
   char **splitted;
   t_args_plug	*args;
 
-  t->pretilingnothread = 1;
 
   printf("Creation of preview. Please be patient this could take a while...\n");
 
