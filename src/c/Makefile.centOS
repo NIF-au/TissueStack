@@ -161,7 +161,7 @@ install: prepare
 	@make -f Makefile.centOS --no-print-directory -C ./jni/ install
 	@echo -e "\n\tFinished installing binaries.\n"  
 
-clean:
+clean: clean-tools
 	@echo -e "\n\tCleaning $(NAME)...\n"
 	@rm -rf *~ \#*\# $(NAME) $(EXE_NAME) ./png/* core hs_err_pid*
 	@rm -rf $(DIRSRC)*.o
@@ -193,7 +193,7 @@ tomcatstart:
 
 re: tomcatstop clean debug install tomcatstart
 
-source: clean
+source: clean clean-tools
 ifndef VERSION
 	$(error VERSION IS NOT SET !!!!!!!!!!!!! Please call make like this: make source VERSION=X.X !!!!!)
 endif
@@ -209,18 +209,20 @@ endif
 	@rm -rf $(BUILD_PATH)/sources/sources/src/c/Makefile
 	@rm -rf $(BUILD_PATH)/sources/sources/src/c/jni/Makefile
 	@rm -rf $(BUILD_PATH)/sources/sources/src/c/plugins/*/Makefile
+	@rm -rf $(BUILD_PATH)/sources/sources/src/c/tools/Makefile
+	@rm -rf $(BUILD_PATH)/sources/sources/src/c/tools/*/Makefile
 	@cp -r ../../data/colormaps $(BUILD_PATH)/sources/sources/data
 	@cd $(BUILD_PATH)/sources; tar cvzf ../$(SRC_DIST_NAME) * > /dev/null
 	@echo -e "\n\tFinished creating source archive:  $(BUILD_PATH)/$(SRC_DIST_NAME)\n\n"
 
 clean-tools:
-	@make --no-print-directory -C $(DIRSRC)/tools clean
+	@make -f Makefile.centOS --no-print-directory -C $(DIRSRC)/tools clean
 	
 compile-tools: clean-tools
-	@make --no-print-directory -C $(DIRSRC)/tools compile
+	@make -f Makefile.centOS --no-print-directory -C $(DIRSRC)/tools compile
 
 install-tools: clean-tools
-	@make --no-print-directory -C $(DIRSRC)/tools install
+	@make -f Makefile.centOS --no-print-directory -C $(DIRSRC)/tools install
 	
 # target for building a binary tar.gz (is then used for rpm build)
 # we depend on target 'all' and use a temporary build directory in /tmp/$(NAME)_build

@@ -186,7 +186,7 @@ tomcatstart:
 
 re: tomcatstop clean debug install tomcatstart
 
-source: clean
+source: clean clean-tools
 ifndef VERSION
 	$(error VERSION IS NOT SET !!!!!!!!!!!!! Please call make like this: make source VERSION=X.X !!!!!)
 endif

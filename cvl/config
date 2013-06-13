@@ -10,7 +10,8 @@ ModuleFileDescription="tissuestack"
 #
 # Package release number.
 #
-PACKAGE_RELEASE="1.1"
+PACKAGE_RELEASE="4.0.0"
+PACKAGE_VERSION="1.1"
 
 #
 # For source package, set it "ON", for binary package, set it "OFF".
@@ -28,7 +29,7 @@ RPM_PACKAGE_REQUIRES="postgresql-server >= 8.4, httpd >= 2.1, gtk2, cvl-modules3
 #
 CONFIGURE="readme.txt"
 
-export PROJECT_SOURCE_PATH=/usr/local/src/`echo $ModuleFileDescription | tr '[:lower:]' '[:upper:]'`/$PACKAGE_RELEASE
+export PROJECT_SOURCE_PATH=/usr/local/src/`echo $ModuleFileDescription | tr '[:lower:]' '[:upper:]'`/$PACKAGE_VERSION
 
 #
 # Build configuration set up.
@@ -44,7 +45,7 @@ function ConfigurationCommand()
     cp -r ${SOURCE}/opt ${PROJECT_SOURCE_PATH}/opt
     cp -f ${SOURCE}/post-install.sh ${PROJECT_SOURCE_PATH}/post-install.sh
     cp -f ${SOURCE}/pre-install.sh ${PROJECT_SOURCE_PATH}/pre-install.sh
-    cp -r ${SOURCE}/usr/local/${ModuleFileDescription}/${PACKAGE_RELEASE}/* ${INSTALL}
+    cp -r ${SOURCE}/usr/local/${ModuleFileDescription}/${PACKAGE_VERSION}/* ${INSTALL}
 }
 
 #
