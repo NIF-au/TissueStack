@@ -333,7 +333,13 @@ dist: compile install install-tools
 	rm -f /tmp/post-install.log\n\
 	touch /tmp/post-install.log\n\
 	chmod 666 /tmp/post-install.log\n\
-	chmod -R g+wr,o+wr $(DATA_PATH)/\n\
+	for dirs in \`find $(DATA_PATH)/* -prune -type d\`;do\n\
+	\tif  [ \$$dirs = \"$(DATA_PATH)/tiles\" ]; then\n\
+	\t\tchmod g+wr,o+wr \$$dirs &>> /tmp/post-install.log\n\
+	\telse\n\
+	\t\tchmod -R g+wr,o+wr \$$dirs &>> /tmp/post-install.log\n\
+	\tfi\n\
+	done\n\
 	service postgresql start &>> /tmp/post-install.log\n\
 	sleep 5s\n\
 	sudo su - postgres <<EOF\n\
@@ -375,7 +381,13 @@ dist: compile install install-tools
 	rm -f /tmp/post-install.log\n\
 	touch /tmp/post-install.log\n\
 	chmod 666 /tmp/post-install.log\n\
-	chmod -R g+wr,o+wr $(DATA_PATH)/\n\
+	for dirs in \`find $(DATA_PATH)/* -prune -type d\`;do\n\
+	\tif  [ \$$dirs = \"$(DATA_PATH)/tiles\" ]; then\n\
+	\t\tchmod g+wr,o+wr \$$dirs &>> /tmp/post-install.log\n\
+	\telse\n\
+	\t\tchmod -R g+wr,o+wr \$$dirs &>> /tmp/post-install.log\n\
+	\tfi\n\
+	done\n\
 	su -c \"su - postgres <<EOF\n\
 	initdb &>> /tmp/post-install.log\n\
 	EOF\n\"\n\
