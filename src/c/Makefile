@@ -308,6 +308,7 @@ dist: compile install install-tools
 	rm -rf $(DATA_PATH)/web/* &>> /tmp/pre-install.log\n\
 	rm -rf $(DATA_PATH)/jdk* &>> /tmp/pre-install.log\n\
 	rm -rf $(DATA_PATH)/apache-tomcat-* &>> /tmp/pre-install.log\n\
+	rm -rf /tmp/tissue_stack_communication &>> /tmp/pre-install.log\n\
 	exit 0\
 	" > $(BUILD_SRC_PATH)/pre-install.sh; \
 	else \
@@ -321,6 +322,7 @@ dist: compile install install-tools
 	rm -rf $(DATA_PATH)/web/* &>> /tmp/pre-install.log\n\
 	rm -rf $(DATA_PATH)/jdk* &>> /tmp/pre-install.log\n\
 	rm -rf $(DATA_PATH)/apache-tomcat-* &>> /tmp/pre-install.log\n\
+	rm -rf /tmp/tissue_stack_communication &>> /tmp/pre-install.log\n\
 	exit 0\
 	" > $(BUILD_SRC_PATH)/pre-install.sh; \
 	fi
@@ -470,6 +472,7 @@ dist: compile install install-tools
 	a2dissite $(NAME) &>> /tmp/uninstall.log\n\
 	a2ensite default &>> /tmp/uninstall.log\n\
 	$(SYS_V_INIT_PATH)apache2 restart &>> /tmp/uninstall.log\n\
+	rm -rf /tmp/tissue_stack_communication &>> /tmp/uninstall.log\n\
 	exit 0\
 	" > $(BUILD_SRC_PATH)/post-uninstall.sh; \
 	else \
@@ -479,6 +482,7 @@ dist: compile install install-tools
 	rm -rf $(SYS_V_INIT_PATH)$(NAME) &>> /tmp/uninstall.log\n\
 	rm -rf $(HTTPD_CONF_DIR)/$(NAME).conf &>> /tmp/uninstall.log\n\
 	mv $(HTTPD_CONF_DIR)/welcome.conf.disabled $(HTTPD_CONF_DIR)/welcome.conf &>> /tmp/uninstall.log\n\
+	rm -rf /tmp/tissue_stack_communication &>> /tmp/uninstall.log\n\
 	service httpd restart &>> /tmp/uninstall.log\n\
 	exit 0\
 	" > $(BUILD_SRC_PATH)/post-uninstall.sh; \

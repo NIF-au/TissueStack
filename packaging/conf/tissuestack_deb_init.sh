@@ -35,6 +35,7 @@ stop () {
                 return -1;
         fi;
         rm -rf /var/lock/tissuestack >> /var/log/syslog
+        rm -rf /tmp/tissue_stack_communication >> /var/log/syslog
         return 0;
 }
 

@@ -30,6 +30,7 @@ stop () {
                 return -1;
         fi;
         rm -rf /var/lock/subsys/tissuestack >> /var/log/messages
+        rm -rf /tmp/tissue_stack_communication >> /var/log/messages
         return 0;
 }
 

@@ -55,6 +55,7 @@ service httpd stop  &>> /tmp/uninstall.log
 rm -rf /opt/tissuestack/web/* &>> /tmp/pre-install.log
 rm -rf /opt/tissuestack/jdk* &>> /tmp/pre-install.log
 rm -rf /opt/tissuestack/apache-tomcat-* &>> /tmp/pre-install.log
+rm -rf /tmp/tissue_stack_communication &>> /tmp/pre-install.log
 exit 0
 
 %preun
@@ -69,6 +70,7 @@ chkconfig --del tissuestack &>> /tmp/uninstall.log
 rm -rf /etc/init.d/tissuestack &>> /tmp/uninstall.log
 rm -rf /etc/httpd/conf.d/tissuestack.conf &>> /tmp/uninstall.log
 mv /etc/httpd/conf.d/welcome.conf.disabled /etc/httpd/conf.d/welcome.conf &>> /tmp/uninstall.log
+rm -rf /tmp/tissue_stack_communication &>> /tmp/uninstall.log
 service httpd restart &>> /tmp/uninstall.log
 /sbin/ldconfig
 exit 0
