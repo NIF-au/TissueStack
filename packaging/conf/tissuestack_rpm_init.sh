@@ -6,6 +6,15 @@
 
 start () {
         echo -n "Starting Tissuestack..."
+       if [ -d "/mnt/tissuestack/data" ]; then
+                su -c 'mkdir -p /mnt/tissuestack/data' tissuestack >> /tmp/messages
+        fi
+        if [ -d "/mnt/tissuestack/upload" ]; then
+                su -c 'mkdir -p /mnt/tissuestack/upload' tissuestack >> /tmp/messages
+        fi
+        if [ -d "/mnt/tissuestack/tiles" ]; then
+                su -c 'mkdir -p /mnt/tissuestack/tiles' tissuestack >> /tmp/messages
+        fi
         su -c 'echo "Starting Tissuestack..." >> /tmp/messages;. /etc/profile.d/modules.sh >> /tmp/messages;. /etc/profile.d/tissuestack_modules.sh >> /tmp/messages;tissuestack start >> /tmp/messages' tissuestack >> /var/log/messages
         if [ $? -eq 1 ]; then
                 echo "OK"; echo "TissueStack started." >> /var/log/messages
