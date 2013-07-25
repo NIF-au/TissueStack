@@ -9,11 +9,10 @@
 # Description:       tissueStack rudimentary init script (delegating to .../bin/tissuestack where the path depends on the install path).
 ### END INIT INFO
 
+
 start () {
         echo -n "Starting Tissuestack..."
-        echo "Starting Tissuestack..." >> /var/log/syslog
-        . /etc/profile.d/tissuestack_env.sh
-        tissuestack start >> /var/log/syslog
+        su -c 'echo "Starting Tissuestack..." >> /tmp/messages;. /etc/profile.d/tissuestack_env.sh >> /tmp/messages;tissuestack start >> /tmp/messages' tissuestack >> /var/log/messages
         if [ $? -eq 1 ]; then
                 echo "OK"; echo "TissueStack started." >> /var/log/syslog
         else

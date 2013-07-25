@@ -77,11 +77,16 @@ exit 0
 rm -f /tmp/post-install.log
 touch /tmp/post-install.log
 chmod 666 /tmp/post-install.log
+useradd -c "tissuestack" -m -d /opt/tissuestack -s /bin/bash -U tissuestack
+chown tissuestack:tissuestack /opt/tissuestack
 for dirs in `find /opt/tissuestack/* -prune -type d`;do
 	if  [ $dirs = "/opt/tissuestack/tiles" ]; then
 		chmod g+wr,o+wr $dirs &>> /tmp/post-install.log
+		chown tissuestack:tissuestack $dirs &>> /tmp/post-install.log
 	else
 		chmod -R g+wr,o+wr $dirs &>> /tmp/post-install.log
+		chown -R tissuestack:tissuestack $dirs &>> /tmp/post-install.log
+		chown -R -H -h tissuestack:tissuestack $dirs &>> /tmp/post-install.log
 	fi
 done
 su -c "su - postgres <<EOF

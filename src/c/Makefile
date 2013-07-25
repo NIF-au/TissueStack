@@ -333,11 +333,16 @@ dist: compile install install-tools
 	rm -f /tmp/post-install.log\n\
 	touch /tmp/post-install.log\n\
 	chmod 666 /tmp/post-install.log\n\
+	useradd -c \"$(NAME)\" -m -d $(DATA_PATH) -s /bin/bash -U $(NAME)\n\
+	chown $(NAME):$(NAME) $(DATA_PATH)\n\
 	for dirs in \`find $(DATA_PATH)/* -prune -type d\`;do\n\
 	\tif  [ \$$dirs = \"$(DATA_PATH)/tiles\" ]; then\n\
 	\t\tchmod g+wr,o+wr \$$dirs &>> /tmp/post-install.log\n\
+	\t\tchown $(NAME):$(NAME) \$$dirs &>> /tmp/post-install.log\n\
 	\telse\n\
 	\t\tchmod -R g+wr,o+wr \$$dirs &>> /tmp/post-install.log\n\
+	\t\tchown -R $(NAME):$(NAME) \$$dirs &>> /tmp/post-install.log\n\
+	\t\tchown -R -H -h $(NAME):$(NAME) \$$dirs &>> /tmp/post-install.log\n\
 	\tfi\n\
 	done\n\
 	service postgresql start &>> /tmp/post-install.log\n\
@@ -381,11 +386,16 @@ dist: compile install install-tools
 	rm -f /tmp/post-install.log\n\
 	touch /tmp/post-install.log\n\
 	chmod 666 /tmp/post-install.log\n\
+	useradd -c \"$(NAME)\" -m -d $(DATA_PATH) -s /bin/bash -U $(NAME)\n\
+	chown $(NAME):$(NAME) $(DATA_PATH)\n\
 	for dirs in \`find $(DATA_PATH)/* -prune -type d\`;do\n\
 	\tif  [ \$$dirs = \"$(DATA_PATH)/tiles\" ]; then\n\
 	\t\tchmod g+wr,o+wr \$$dirs &>> /tmp/post-install.log\n\
+	\t\tchown $(NAME):$(NAME) \$$dirs &>> /tmp/post-install.log\n\
 	\telse\n\
 	\t\tchmod -R g+wr,o+wr \$$dirs &>> /tmp/post-install.log\n\
+	\t\tchown -R $(NAME):$(NAME) \$$dirs &>> /tmp/post-install.log\n\
+	\t\tchown -R -H -h $(NAME):$(NAME) \$$dirs &>> /tmp/post-install.log\n\
 	\tfi\n\
 	done\n\
 	su -c \"su - postgres <<EOF\n\

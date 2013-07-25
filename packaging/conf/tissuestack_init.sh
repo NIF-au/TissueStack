@@ -4,11 +4,10 @@
 # description: TissueStack rudimentary init script (delegating to .../bin/tissuestack where the path depends on the install path)
 # processname: tissuestack
 
+
 start () {
         echo -n "Starting Tissuestack..."
-        echo "Starting Tissuestack..." >> /var/log/messages
-        source /etc/profile.d/tissuestack_env.sh
-        tissuestack start >> /var/log/messages
+        su -c 'echo "Starting Tissuestack..." >> /tmp/messages;. /etc/profile.d/tissuestack_env.sh >> /tmp/messages;tissuestack start >> /tmp/messages' tissuestack >> /var/log/messages
         if [ $? -eq 1 ]; then
                 echo "OK"; echo "TissueStack started." >> /var/log/messages
         else
