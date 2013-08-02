@@ -131,6 +131,7 @@ iptables-save &>> /tmp/post-install.log
 service httpd restart &>> /tmp/post-install.log
 cp -f /opt/tissuestack/conf/tissuestack_init.sh /etc/init.d/tissuestack &>> /tmp/post-install.log
 chmod 755 /etc/init.d/tissuestack &>> /tmp/post-install.log
+chkconfig --add tissuestack &>> /tmp/post-install.log
 chkconfig tissuestack on &>> /tmp/post-install.log
 /etc/init.d/tissuestack start &>> /tmp/post-install.log
 /sbin/ldconfig

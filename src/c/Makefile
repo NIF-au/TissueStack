@@ -434,6 +434,7 @@ dist: compile install install-tools
 	service httpd restart &>> /tmp/post-install.log\n\
 	cp -f $(DATA_PATH)/conf/$(NAME)_init.sh $(SYS_V_INIT_PATH)$(NAME) &>> /tmp/post-install.log\n\
 	chmod 755 $(SYS_V_INIT_PATH)$(NAME) &>> /tmp/post-install.log\n\
+	chkconfig --add $(NAME) &>> /tmp/post-install.log\n\
 	chkconfig $(NAME) on &>> /tmp/post-install.log\n\
 	$(SYS_V_INIT_PATH)$(NAME) start &>> /tmp/post-install.log\n\
 	exit 0\
