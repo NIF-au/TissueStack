@@ -6,6 +6,9 @@
 
 start () {
         echo -n "Starting Tissuestack..."
+       if [ `mount | grep /mnt | wc -c` -eq 0 ]; then
+                mount /mnt
+       fi
        if [ -d "/mnt/tissuestack/data" ]; then
                 su -c 'mkdir -p /mnt/tissuestack/data  >> /tmp/messages' tissuestack
         fi
