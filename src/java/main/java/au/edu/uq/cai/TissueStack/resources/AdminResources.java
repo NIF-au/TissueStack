@@ -272,6 +272,44 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
  		return new RestfulResource(new Response(fileNames.toArray(new String[]{})));
 	}
 
+	@Path("/toggle_tiling")
+	@Description("Sets the flag whether pre-tiling should be used or the image server")
+	public RestfulResource toggleDataSetPreTiledOrImageService(
+			@Description("Mandatory: a user session token")
+			@QueryParam("session") String session,
+			@Description("Mandatory: a dataset id")
+			@QueryParam("id") String id,
+			@Description("Mandatory: a flag: true or false")
+			@QueryParam("flag") String flag) {
+		if (!SecurityResources.checkSession(session)) {
+			throw new RuntimeException("Invalid Session! Please Log In.");
+		}
+
+		long dataSetId = -1;
+		try {
+			dataSetId = Long.parseLong(id);
+		} catch (Exception e) {
+			// use -1 and react below
+		}
+		if (dataSetId <=0) {
+			throw new RuntimeException("Invalid id! Please check if numeric");
+		}
+
+		Boolean flagAsBoolean = null;
+		try {
+			flagAsBoolean = Boolean.valueOf(flag);
+		} catch (Exception e) {
+			// use null and react below
+		}
+		if (flagAsBoolean == null)	{
+			throw new RuntimeException("Invalid flag! Should be true/false!");
+		}
+		
+		DataSetDataProvider.toggleDataSetPreTiledOrImageService(dataSetId, flagAsBoolean.booleanValue());
+		
+		return new RestfulResource(new Response("Toggled pre-tiling/image flag successfully"));
+	}
+	
 	@Path("/add_dataset")
 	@Description("add uploaded dataset to the configuration database")
 	public RestfulResource updateDataSet(

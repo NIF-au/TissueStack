@@ -81,7 +81,36 @@ public final class DataSetDataProvider {
 			JPAUtils.instance().closeEntityManager(em);
 		}
 	}
-	
+
+	public static void toggleDataSetPreTiledOrImageService (long id, boolean flag){
+		if (id <= 0) return;
+		
+		EntityManager em = null; 
+		EntityTransaction write = null;
+
+		try {
+			
+			em = JPAUtils.instance().getEntityManager();
+
+			write = em.getTransaction();
+			Query query = em.createQuery("" +
+					"UPDATE DataSetPlanes planes SET planes.internalIsTiled = :flag WHERE planes.datasetId = :id");	
+			query.setParameter("id", id);
+			query.setParameter("flag", flag ? "T" : "F");
+			
+			write.begin();
+			int result = query.executeUpdate();
+			write.commit();
+
+			if (result == 0) 
+				logger.warn("0 records in DATASET_PLANES updated for data set id: " + id + "!");
+		} catch(Exception any) {
+			logger.error("Failed to update flags in DATASET_PLANES for data set id: " + id + "!", any);
+		} finally {
+			JPAUtils.instance().closeEntityManager(em);
+		}
+	}
+
 	public static void insertNewDataSets(DataSet dataset) {
 		if (dataset == null) {
 			return;

@@ -254,6 +254,64 @@ TissueStack.DataSetNavigation.prototype = {
 			$("#dataset_" + index  + "_right_side_view_canvas").removeClass("ui-bar-a");
 		}
 	},
+	toggleTiles : function(node, flag) {
+		if (!node.data.tiled && node.data.isBaseLayer)
+			alert("You are switching to tile serving. Should you fail to see intact images, it could be that you data set has not been pre-tiled or only partially!");
+		
+		// toggle flag for overlays only tree related flag, for base layers including global dataStore flags and present planes 
+		node.data.tiled = (flag ? false : true);
+		
+		if (node.data.isBaseLayer) {
+			var dataset = TissueStack.dataSetStore.getDataSetById(node.parent.data.key);
+			if (dataset && dataset.data) {
+				for (var i=0; i< dataset.data.length;i++) { 
+					dataset.data[i].isTiled = node.data.tiled;
+				}
+				if (dataset.planes)
+					var k = 0;
+					for (k in dataset.planes) {
+						if (node.data.tiled) dataset.planes[k].eraseCanvasContent();
+						dataset.planes[k].data_extent.is_tiled = node.data.tiled;
+						dataset.planes[k].drawMe(new Date().getTime()); // force redraw
+					}
+				
+				TissueStack.admin.togglePreTilingFlag(dataset.local_id, node.data.tiled);
+			}
+		}
+
+		// flip icon
+		if (node.data.tiled)
+			node.data.icon = "pre_tiled.png";
+		else
+			node.data.icon = "image_service.png";
+		
+		node.render();
+	},
+	bindDynaTreeContextMenu : function(span) {
+		if (!TissueStack.desktop) return;
+		var myTreeContext = $("#dynaTreeContextMenu");
+		if (!myTreeContext) return;
+		
+		var _this = this;
+		
+		$(span).contextMenu({menu: "dynaTreeContextMenu"}, function(action, el, pos) {
+			var node = _this.getDynaTreeNode(el);
+
+			switch( action ) {
+				case "toggleTiling":
+					if (node.data.isFolder || node.data.isBaseLayer) {
+						if (node.data.isBaseLayer) node = node.parent;
+						for (var i=0; i< node.childList.length;i++) { 
+							_this.toggleTiles(node.childList[i], node.data.tiled);
+						}
+						node.data.tiled = (node.data.tiled ? false : true);
+					} else if (node.data.isOverlay) {
+						alert("Overlays cannot be changed!");
+					}
+				break;
+			}
+		});
+	},
 	buildDynaTree : function() {
 		var treeData = [];
 
@@ -267,7 +325,9 @@ TissueStack.DataSetNavigation.prototype = {
 						tooltip: (dataSet.description ? dataSet.description : ""),
 						select: false,
 						isFolder: true,
-						expand: counter == 0 ? true : false
+						expand: counter == 0 ? true : false,
+						tiled: dataSet.data[0].isTiled,
+						icon: "dataset.png"
 					};
 				var children = [];
 				children.push( // add base layer
@@ -277,7 +337,9 @@ TissueStack.DataSetNavigation.prototype = {
 							key: dataSet.id + "_base_layer",
 							tooltip: (dataSet.description ? dataSet.description : ""),
 							select: false,
-							expand: false
+							expand: false,
+							tiled: dataSet.data[0].isTiled,
+							icon: dataSet.data[0].isTiled ? "pre_tiled.png" : "image_service.png"
 						});
 				// add overlays (if exist)
 				if (dataSet.overlays)
@@ -289,7 +351,9 @@ TissueStack.DataSetNavigation.prototype = {
 									key: dataSet.id + "_overlay_" + i,
 									tooltip: dataSet.overlays[i].type,
 									select: false,
-									expand: false
+									expand: false,
+									tiled: dataSet.data[0].isTiled,
+									icon: dataSet.data[0].isTiled ? "pre_tiled.png" : "image_service.png"
 								}
 						);
 				treeData[counter].children = children;
@@ -381,7 +445,18 @@ TissueStack.DataSetNavigation.prototype = {
 	    			// re-initialize data set handed in
 	    		   TissueStack.InitUserInterface();
 	    		   TissueStack.BindDataSetDependentEvents();
-		       }
+		       },
+		       onCreate : function(node, span) {
+		    	   _this.bindDynaTreeContextMenu(span);
+		       },
+		       onClick: function(node, event) {
+					if( $(".contextMenu:visible").length > 0 )	$(".contextMenu").hide();
+				},
+				onKeydown: function(node, event) {
+					// Eat keyboard events, when a menu is open
+					if( $(".contextMenu:visible").length > 0 )
+						return false;
+				}
 		  });
 	},
 	buildTabletMenu : function() {
@@ -407,6 +482,13 @@ TissueStack.DataSetNavigation.prototype = {
 			return dynaTree.getSelectedNodes(stopAtParent);
 		}
 	},
+	getDynaTreeNode :function(node) {
+		if (!$("#treedataset") || !$("#treedataset").dynatree || !node) {
+			return null;
+		}
+		
+		return $.ui.dynatree.getNode(node);
+	}, 	
 	addDataSetToDynaTree : function(dataSet) {
 		var tree = this.getDynaTreeObject();
 		if (!tree) {

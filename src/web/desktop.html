@@ -26,7 +26,10 @@
 	    <script src="js/libs/jquery/jquery.cookie.js"></script>
 	    <script src="js/libs/jquery/jquery.dynatree.js"></script>
 	    <link rel="stylesheet" href="css/ui.dynatree.css">
-		
+ 		<!--TREE DATA SETS CONTEXT MENU-->
+ 		<script src="js/libs/jquery/jquery.contextMenu-custom.js" type="text/javascript"></script>
+  		<link href="css/jquery.contextMenu.css" rel="stylesheet" type="text/css" >
+  				
 		<script src="js/TissueStack.MouseWheel.js"></script>
 		<script src="js/TissueStack.js"></script>
 		<script src="js/TissueStack.Utils.js"></script>
@@ -80,6 +83,12 @@
      	    		
                     <input data-mini="true" size="8" maxlength="50" type="text" id="server_search_input" value="http://"/>
                     <button type="button" id="server_search_button" data-mini="true">Connect to TissueStack Server</button>
+
+					<!-- TREE CONTEXT MENU -->
+						<ul id="dynaTreeContextMenu" class="contextMenu">
+						    <li class="separator" style="background-color: gray;color: white; font-size: 15px;font-weight: bold;text-align: center">Options</li>
+							<li class="toggleTiling"><a style="font-size: 15px;font-weight: normal" href="#toggleTiling">Images <==> Tiles</a></li>
+						</ul>
 
      	    		<!--ADD TREE DATA SET NAVI BAR-->
 					<div id="treedataset" style="height:500px"></div>
@@ -294,8 +303,8 @@
 	 		  			<li id="name_tap">Hello Guest!</li>
 	 		  			<li class="sep">|</li>
 	 		  			<li id="toggle">
-	 		  				<a id="open" class="open" href="#">Log In </a>
-	 		  				<a id="close" style="display: none;" class="close" href="#">Close Panel</a>			
+	 		  				<a id="open" class="open" href="#admin">Log In </a>
+	 		  				<a id="close" style="display: none;" class="close" href="#admin">Close Panel</a>			
 	 		  			</li>
 	 		  			<li class="right"></li>
 	 		  		</ul> 

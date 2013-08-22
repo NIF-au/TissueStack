@@ -408,7 +408,7 @@ TissueStack.Admin.prototype = {
 			_this.replaceErrorMessage("Data Set Has Been Added Successfully!");
 			$('.error_message').css("background", "#32CD32");
 			
-			_this.registerDataSetWithAnds(dataSet.id);
+			//_this.registerDataSetWithAnds(dataSet.id);
 		}
 	},
 	conversionAndPreTileSuccessHandler : function(_this, response, file, type, status, zoom) {
@@ -612,6 +612,22 @@ TissueStack.Admin.prototype = {
 				}
 			);  
 		}, 2500);
+	},
+	togglePreTilingFlag: function(id, flag) {
+		_this = this;
+		if (!_this.session || !id) return;
+		
+		TissueStack.Utils.sendAjaxRequest(
+			"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/toggle_tiling/json?" +
+			"session=" + _this.session + "&id=" + id + "&flag=" + flag,
+			'GET', true,
+			function(data, textStatus, jqXHR) {
+				// truly we don't care
+			},
+			function(jqXHR, textStatus, errorThrown) {
+				// truly we don't care either
+			}
+		);
 	},
 	updateTableHeaders: function () {
         $("#task_list").each(function() {
