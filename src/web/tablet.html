@@ -183,7 +183,7 @@
  	     			<div class="left">
  	     				<!-- Login Form -->
  	     				<form class="clearfix" action="#" method="post">
- 	     					<h1>Member Login</h1>
+ 	     					<h2>Admin Login</h2>
  	     					<label class="grey" for="username">Username:</label>
  	     					<input type="text" size="15" name="username" id="username" disabled="disabled" value="Admin"/>
  	     					<label class="grey" for="password">Password:</label>
@@ -191,25 +191,27 @@
  	     					<input type="button" accesskey="l" class="login_btn_check" id="login_btn" name="login" value="Login" />
  	     				</form>
  	     			</div>
- 	     			<div class="left right">			
- 	     				<!-- Contact Form -->
- 	     				<form action="#" method="post">
- 	     					<h1>Contact CAI</h1>				
- 	     					<label class="grey" for="email">Email:</label>
- 	     					<input type="text" name="email" id="email" size="15" disabled="disabled" value="disabled"/>
- 	     					<input type="button" accesskey="l" class="register_btn_check" id="register_btn" name="register" value="Register"/>
- 	     				</form>
- 	     			</div>
+	 		  			<div class="left right">			
+	 		  				<!-- Password Change Form -->
+	 		  				<form class="clearfix" action="#" method="post">
+	 		  					<h2>Change Admin Password</h2>
+	 		  					<label class="grey" for="password">Old Password:</label>
+	 		  					<input type="password" size="15" name="old_password" id="old_password" value=""/>
+	 		  					<label class="grey" for="password">New Password:</label>
+	 		  					<input type="password" size="15" name="new_password" id="new_password" /><br/>
+	 		  					<input type="button" accesskey="l" class="login_btn_check" id="passwd_change_btn" name="passwd_change" value="Change Password" />
+	 		  				</form>
+	 		  			</div>
  	     		</div>
  	     	</div>
  	     	<!-- The tab on top -->	
  	     	<div class="tab">
  	     		<ul class="login">
  	     			<li class="left"></li>
- 	     			<li id="name_tap">Hello Guest!</li>
+ 	     			<li id="name_tap">Login</li>
  	     			<li class="sep">|</li>
  	     			<li id="toggle">
- 	     				<a id="open" class="open" href="#">Log In </a>
+ 	     				<a id="open" class="open" href="#">Open Panel</a>
  	     				<a id="close" style="display: none;" class="close" href="#">Close Panel</a>			
  	     			</li>
  	     			<li class="right"></li>

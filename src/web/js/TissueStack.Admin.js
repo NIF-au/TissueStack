@@ -53,47 +53,119 @@ TissueStack.Admin.prototype = {
 	},
 	registerCreateSessionHandler : function () {
 	 	var _this = this;
+	 	
+	 	// make it possible to use ENTER to submit
+	 	$("#password").keyup(function(event){
+	 	    if(event.keyCode == 13){
+	 	        $("#login_btn").click();
+	 	    }
+	 	});
+	 	// make it possible to use ENTER to submit
+	 	$("#new_password").keyup(function(event){
+	 	    if(event.keyCode == 13){
+	 	        $("#passwd_change_btn").click();
+	 	    }
+	 	});
 
+	 	// login handler
 		$('#login_btn').click(function(){
 		 	var password = $('#password').val();
-		 	if(password != "") {
-		 		TissueStack.Utils.sendAjaxRequest(
-	 				"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/security/new_session/json?password="+ password, 'GET', true,
-	 				function(data, textStatus, jqXHR) {
-						if (!data.response && !data.error) {
-							_this.replaceErrorMessage("Did not receive any session, neither lose session ....");
-							return;
-						}	
-						if (data.error) {
-							var message = "Session Error: " + (data.error.message ? data.error.message : " no more session available. Please login again.");
-							_this.replaceErrorMessage(message);
-							return;
-						}	
-						if (data.response.noResults) {
-							_this.replaceErrorMessage("Wrong password!");
-							return;
-						}
-						var session= data.response;
-						_this.session = session.id;
-						var value = $('#login_btn').val(100);
-						_this.checkCookie(session, value);
-						
-						if(TissueStack.phone){
-							$('#phone_login').append("").fadeOut(500);		
-							$('#phone_addDataSet').show().fadeIn(500);
-							return;  
-						}
-						$("div#panel").slideUp("slow");
-						$('#name_tap').html("Hello " + $('#username').val());
-						_this.replaceErrorMessage("Login successfully!");
-						$('.error_message').css("background", "#32CD32");
-					},
-					function(jqXHR, textStatus, errorThrown) {
-						_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
+		 	
+		 	if (!password) {
+		 		_this.replaceErrorMessage("A non-empty password needs to be given!");
+		 		return;
+		 	}
+		 	password = $.trim(password);
+		 	if (password == "") {
+		 		_this.replaceErrorMessage("A non-empty password needs to be given!");
+		 		return;
+		 	}
+		 	
+	 		TissueStack.Utils.sendAjaxRequest(
+ 				"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/security/new_session/json?password="+ password, 'GET', true,
+ 				function(data, textStatus, jqXHR) {
+					if (!data.response && !data.error) {
+						_this.replaceErrorMessage("Did not receive any session, neither lose session ....");
+						return;
+					}	
+					if (data.error) {
+						var message = "Session Error: " + (data.error.message ? data.error.message : " no more session available. Please login again.");
+						_this.replaceErrorMessage(message);
+						return;
+					}	
+					if (data.response.noResults) {
+						_this.replaceErrorMessage("Wrong password!");
+						return;
 					}
-				);
-			}
-			$('#password').val("");
+					var session= data.response;
+					_this.session = session.id;
+					var value = $('#login_btn').val(100);
+					_this.checkCookie(session, value);
+					
+					if(TissueStack.phone){
+						$('#phone_login').append("").fadeOut(500);		
+						$('#phone_addDataSet').show().fadeIn(500);
+						return;  
+					}
+					$("#close").click();
+					_this.replaceErrorMessage("Login successfully!");
+					$('.error_message').css("background", "#32CD32");
+					$('#password').val("");
+				},
+				function(jqXHR, textStatus, errorThrown) {
+					_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
+				}
+			);
+		});
+		
+	 	// passwd change handler
+		$('#passwd_change_btn').click(function(){
+		 	var old_password = $('#old_password').val();
+		 	var new_password = $('#new_password').val();
+		 	
+		 	if (!old_password || !new_password) {
+		 		_this.replaceErrorMessage("Both, old and new password need to be given!");
+		 		return;
+		 	}
+		 	old_password = $.trim(old_password);
+		 	new_password = $.trim(new_password);
+		 	if (old_password == "" || new_password == "") {
+		 		_this.replaceErrorMessage("Both, old and new password need to be given!");
+		 		return;
+		 	}
+		 	
+	 		TissueStack.Utils.sendAjaxRequest(
+ 				"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/security/passwd/json?old_passwd="+ old_password
+ 				+ "&new_passwd=" + new_password, 'GET', true,
+ 				function(data, textStatus, jqXHR) {
+					if (!data.response && !data.error) {
+						_this.replaceErrorMessage("Serious Backend Error!");
+						return;
+					}	
+					if (data.error) {
+						var message = "Failed to change Password: " + (data.error.message ? data.error.message : " Try again...");
+						_this.replaceErrorMessage(message);
+						return;
+					}	
+					var session= data.response;
+					_this.session = session.id;
+					var value = $('#login_btn').val(100);
+					_this.checkCookie(session, value);
+					
+					if(TissueStack.phone){
+						$('#phone_login').append("").fadeOut(500);		
+						$('#phone_addDataSet').show().fadeIn(500);
+						return;  
+					}
+					_this.replaceErrorMessage("Password changed successfully!");
+					$('.error_message').css("background", "#32CD32");
+					$('#old_password').val("");
+					$('#new_password').val("");
+				},
+				function(jqXHR, textStatus, errorThrown) {
+					_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
+				}
+			);
 		});
 	},
 	getCookie: function(c_name)	{
