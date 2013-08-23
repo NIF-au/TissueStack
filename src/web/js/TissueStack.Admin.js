@@ -686,12 +686,12 @@ TissueStack.Admin.prototype = {
 		}, 2500);
 	},
 	togglePreTilingFlag: function(id, flag) {
-		_this = this;
-		if (!_this.session || !id) return;
+		__this = this;
+		if (!__this.session || !id) return;
 		
 		TissueStack.Utils.sendAjaxRequest(
 			"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/toggle_tiling/json?" +
-			"session=" + _this.session + "&id=" + id + "&flag=" + flag,
+			"session=" + __this.session + "&id=" + id + "&flag=" + flag,
 			'GET', true,
 			function(data, textStatus, jqXHR) {
 				// truly we don't care
