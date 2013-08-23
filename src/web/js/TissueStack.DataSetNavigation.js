@@ -256,7 +256,7 @@ TissueStack.DataSetNavigation.prototype = {
 	},
 	toggleTiles : function(node, flag) {
 		if (!node.data.tiled && node.data.isBaseLayer)
-			alert("You are switching to tile serving. Should you fail to see intact images, it could be that you data set has not been pre-tiled or only partially!");
+			alert("You are switching to tile serving. Should you fail to see (intact) images, it could be that your data set has not been pre-tiled or only partially!");
 		
 		// toggle flag for overlays only tree related flag, for base layers including global dataStore flags and present planes 
 		node.data.tiled = (flag ? false : true);
