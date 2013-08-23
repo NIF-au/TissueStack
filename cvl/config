@@ -11,7 +11,7 @@ ModuleFileDescription="tissuestack"
 # Package release number.
 #
 PACKAGE_RELEASE="4.0.0"
-PACKAGE_VERSION="1.1"
+PACKAGE_VERSION="1.2"
 
 #
 # For source package, set it "ON", for binary package, set it "OFF".
