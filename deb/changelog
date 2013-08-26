@@ -1,3 +1,9 @@
+tissuestack (1.2) stable; urgency=low
+
+  * new VERSION 1.2
+
+ -- Harald Waxenegger <harald@cai-george.cai.uq.edu.au>  Mon, 26 Aug 2013 16:28:44 +1000
+
 tissuestack (1.1) stable; urgency=low
 
   * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
