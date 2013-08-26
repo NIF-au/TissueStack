@@ -503,7 +503,9 @@ TissueStack.DataSetNavigation.prototype = {
 				tooltip: (dataSet.description ? dataSet.description : ""),
 				select: false,
 				isFolder: true,
-				expand: false
+				expand: false,
+				tiled: dataSet.data[0].isTiled,
+				icon: "dataset.png"
 		});
 		var children = [];
 		children.push( // add base layer
@@ -521,7 +523,9 @@ TissueStack.DataSetNavigation.prototype = {
 			key: dataSet.id + "_base_layer",
 			tooltip: (dataSet.description ? dataSet.description : ""),
 			select: false,
-			expand: false
+			expand: false,
+			tiled: dataSet.data[0].isTiled,
+			icon: dataSet.data[0].isTiled ? "pre_tiled.png" : "image_service.png"
 		});
 
 		// add overlays (if exist)
@@ -534,7 +538,9 @@ TissueStack.DataSetNavigation.prototype = {
 							key: dataSet.id + "_overlay_" + i,
 							tooltip: dataSet.overlays[i].type,
 							select: false,
-							expand: false
+							expand: false,
+							tiled: dataSet.data[0].isTiled,
+							icon: dataSet.data[0].isTiled ? "pre_tiled.png" : "image_service.png"
 						}
 				);
 	},
