@@ -335,8 +335,8 @@ dist: 	compile install install-tools
 	rm -f /tmp/post-install.log\n\
 	touch /tmp/post-install.log\n\
 	chmod 666 /tmp/post-install.log\n\
-	useradd -c \"$(NAME)\" -m -d $(DATA_PATH) -s /bin/bash -U $(NAME)\n\
-	chown -R $(NAME):$(NAME) $(DATA_PATH)\n\
+	useradd -c \"$(NAME)\" -m -d $(DATA_PATH) -s /bin/bash -U $(NAME) &>> /tmp/post-install.log\n\
+	chown -R $(NAME):$(NAME) $(DATA_PATH) &>> /tmp/post-install.log\n\
 	chown -R -H -h $(NAME):$(NAME) $(DATA_PATH)\n\
 	for dirs in \`find $(DATA_PATH)/ -name \"bin\"\`;do\n\
 	\tchmod -R 755 \$$dirs/* &>> /tmp/post-install.log\n\

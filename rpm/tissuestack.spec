@@ -79,8 +79,8 @@ exit 0
 rm -f /tmp/post-install.log
 touch /tmp/post-install.log
 chmod 666 /tmp/post-install.log
-useradd -c "tissuestack" -m -d /opt/tissuestack -s /bin/bash -U tissuestack
-chown tissuestack:tissuestack /opt/tissuestack
+useradd -c "tissuestack" -m -d /opt/tissuestack -s /bin/bash -U tissuestack &>> /tmp/post-install.log
+chown tissuestack:tissuestack /opt/tissuestack &>> /tmp/post-install.log
 for dirs in `find /opt/tissuestack/* -prune -type d`;do
 	if  [ $dirs = "/opt/tissuestack/tiles" ]; then
 		chmod g+wr,o+wr $dirs &>> /tmp/post-install.log
