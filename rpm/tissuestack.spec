@@ -101,6 +101,7 @@ sleep 5s
 su -c "su - postgres <<EOF
 psql -f /opt/tissuestack/sql/create_tissuestack_db.sql &>> /tmp/post-install.log
 psql -f /opt/tissuestack/sql/create_tissuestack_tables.sql tissuestack &>> /tmp/post-install.log
+psql -f /opt/tissuestack/sql/patches.sql tissuestack &>> /tmp/post-install.log
 psql -f /opt/tissuestack/sql/create_tissuestack_config.sql tissuestack &>> /tmp/post-install.log
 psql -f /opt/tissuestack/sql/update_tissuestack_config.sql tissuestack &>> /tmp/post-install.log
 EOF

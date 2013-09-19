@@ -352,6 +352,7 @@ dist: compile install install-tools
 	sudo su - postgres <<EOF\n\
 	psql -f $(DATA_PATH)/sql/create_$(NAME)_db.sql &>> /tmp/post-install.log\n\
 	psql -f $(DATA_PATH)/sql/create_$(NAME)_tables.sql tissuestack &>> /tmp/post-install.log\n\
+	psql -f $(DATA_PATH)/sql/patches.sql tissuestack &>> /tmp/post-install.log\n\
 	psql -f $(DATA_PATH)/sql/create_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
 	psql -f $(DATA_PATH)/sql/update_$(NAME)_config.sql tissuestack &>> /tmp/post-install.log\n\
 	EOF\n\

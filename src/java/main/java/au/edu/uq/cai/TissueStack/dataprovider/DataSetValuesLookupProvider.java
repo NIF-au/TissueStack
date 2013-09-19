@@ -69,7 +69,7 @@ public final class DataSetValuesLookupProvider {
 				StringTokenizer tokenizer = new StringTokenizer(line, "\t", false);
 				int tokenIndex = 0;
 
-				int indexes[] = new int[3]; 
+				int indexes[] = new int[4]; 
 
 				while (tokenIndex < 5) {
 					try {
@@ -78,19 +78,26 @@ public final class DataSetValuesLookupProvider {
 								
 						switch (tokenIndex) {
 							case 0:
-								break; // we skip that one, just autoincrement
+								// turns out this is the associated grayscale value, let's remeber it as well
+								indexes[tokenIndex] = Integer.parseInt(token);
+								break; 
+								
 							case 1: // red value of RGB
-								indexes[tokenIndex-1] = Integer.parseInt(token);
+								indexes[tokenIndex] = Integer.parseInt(token);
 								break;
 							case 2: // green value of RGB
-								indexes[tokenIndex-1] = Integer.parseInt(token);
+								indexes[tokenIndex] = Integer.parseInt(token);
 								break;
 							case 3:  // blue value of RGB
-								indexes[tokenIndex-1] = Integer.parseInt(token);
+								indexes[tokenIndex] = Integer.parseInt(token);
 								break;
 							case 4:
-								// that's the lookup value and store it
-								json.append("\"" + indexes[0] + "/" + indexes[1] + "/" + indexes[2] + "\":");
+								// store both grayscale and rgb lookup value, provided they are different...
+								if (indexes[0]*3 != (indexes[1] + indexes[2] + indexes[3])) {
+									json.append("\"" + indexes[0] + "/" + indexes[0] + "/" + indexes[0] + "\":");
+									json.append("\"" + token + "\",");
+								};
+								json.append("\"" + indexes[1] + "/" + indexes[2] + "/" + indexes[3] + "\":");
 								json.append("\"" + token + "\",");
 						}
 						tokenIndex++;

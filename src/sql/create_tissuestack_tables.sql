@@ -33,9 +33,9 @@ CREATE TABLE dataset
   id bigserial NOT NULL,
   filename VARCHAR(250) NOT NULL,
   description TEXT,
-  lookup_id bigint REFERENCES dataset_values_lookup (id),
+  lookup_id bigint,
   CONSTRAINT dataset_pk PRIMARY KEY (id),
-  CONSTRAINT dataset_lookup_fk FOREIGN KEY (lookup_id) REFERENCES dataset (id),
+  CONSTRAINT dataset_lookup_fk FOREIGN KEY (lookup_id) REFERENCES dataset_values_lookup (id),
   CONSTRAINT dataset_filename_unique UNIQUE (filename)
 );
 ALTER TABLE dataset OWNER TO tissuestack;
