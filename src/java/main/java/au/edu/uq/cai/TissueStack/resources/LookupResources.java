@@ -88,10 +88,12 @@ public final class LookupResources extends AbstractRestfulMetaInformation {
 		DataSetValuesLookupTable dataSetLookupTable = new DataSetValuesLookupTable();
 		dataSetLookupTable.setFilename(file);
 		
-		dataSetLookupTable = DataSetValuesLookupProvider.readLookupContentFromFile(dataSetLookupTable);
-		if (dataSetLookupTable == null) {
+		Object[] lookupData = DataSetValuesLookupProvider.readLookupContentFromFile(dataSetLookupTable); 
+		if (lookupData == null || lookupData[0] == null)
 			return "No Content";
-		}
+
+		dataSetLookupTable = (DataSetValuesLookupTable) lookupData[0];
+		
 		return dataSetLookupTable.getContent();
 	}
 

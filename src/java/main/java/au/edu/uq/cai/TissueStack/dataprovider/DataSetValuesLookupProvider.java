@@ -30,6 +30,7 @@ import javax.persistence.Query;
 import org.apache.log4j.Logger;
 
 import au.edu.uq.cai.TissueStack.JPAUtils;
+import au.edu.uq.cai.TissueStack.dataobjects.ColorMap;
 import au.edu.uq.cai.TissueStack.dataobjects.Configuration;
 import au.edu.uq.cai.TissueStack.dataobjects.DataSetValuesLookupTable;
 
@@ -43,7 +44,7 @@ public final class DataSetValuesLookupProvider {
 		return new File(lookupTablesDir == null || lookupTablesDir.getValue() == null ? DEFAULT_LOOKUP_TABLES_DIRECTORY : lookupTablesDir.getValue());
 	}
 
-	public static DataSetValuesLookupTable readLookupContentFromFile (DataSetValuesLookupTable lookupTable) {
+	public static Object[] readLookupContentFromFile (DataSetValuesLookupTable lookupTable) {
 		if (lookupTable == null || lookupTable.getFilename() == null) { 
 			logger.error("No file name provided for lookup!");
 			return null;
@@ -55,6 +56,11 @@ public final class DataSetValuesLookupProvider {
 			return null;
 		}
 		
+		// we also associate a color map to the lookup data
+		final ColorMap colorLookup = new ColorMap();
+		colorLookup.setFile(lookupFile.getAbsolutePath());
+		colorLookup.setName(lookupFile.getName());
+
 		BufferedReader reader = null; 
 		
 		try {
@@ -63,7 +69,10 @@ public final class DataSetValuesLookupProvider {
 			String line = null;
 			int lineNumber = 1;
 			StringBuffer json = new StringBuffer((int)lookupFile.length());
+			StringBuffer colorJson = new StringBuffer(json.capacity());
+			
 			json.append("{");
+			colorJson.append("\"" + colorLookup.getName() + "\": [");
 			
 			while ((line = reader.readLine()) != null) {
 				StringTokenizer tokenizer = new StringTokenizer(line, "\t", false);
@@ -99,6 +108,8 @@ public final class DataSetValuesLookupProvider {
 								};
 								json.append("\"" + indexes[1] + "/" + indexes[2] + "/" + indexes[3] + "\":");
 								json.append("\"" + token + "\",");
+								// also: build associated color map
+								colorJson.append("[\"L\"," + indexes[0] + "," + indexes[1] + "," + indexes[2] + "," + indexes[3] + "],"); 
 						}
 						tokenIndex++;
 					} catch(NoSuchElementException noMoreTokens) {
@@ -111,11 +122,19 @@ public final class DataSetValuesLookupProvider {
 			}
 			if (json.charAt(json.length()-1) == ',')
 				json.deleteCharAt(json.length()-1);
-			
 			json.append("}");
+			if (colorJson.charAt(colorJson.length()-1) == ',')
+				colorJson.deleteCharAt(colorJson.length()-1);
+			colorJson.append("]");
 			lookupTable.setContent(json.toString());
 			
-			return lookupTable; 
+			final Object[] ret = new Object[] {lookupTable, null};
+			if (colorJson.length() > 1) {
+				colorLookup.setJson(colorJson.toString());
+				ret[1] = colorLookup;
+			}
+			
+			return ret; 
 		} catch (Exception any) {
 			logger.error("Failed to read lookup file '" + lookupFile.getAbsolutePath() + "'!");
 		} finally {
@@ -145,9 +164,12 @@ public final class DataSetValuesLookupProvider {
 			em = JPAUtils.instance().getEntityManager(); 
 
 			for (String file : lookupFiles) {
-				final String fullFileName = new File(lookupDirectory, file).getAbsolutePath(); 
+				final String fullFileName = new File(lookupDirectory, file).getAbsolutePath();
+				
 				// first check whether we have an existing record 
-				DataSetValuesLookupTable row = DataSetValuesLookupProvider.findDataSetValuesLookupTableByUniqueFileName(fullFileName);
+				DataSetValuesLookupTable row = 
+						DataSetValuesLookupProvider.findDataSetValuesLookupTableByUniqueFileName(
+								fullFileName);
 				if (row != null) continue;
 				
 				// start transaction
@@ -206,14 +228,20 @@ public final class DataSetValuesLookupProvider {
 			Query query = em.createQuery("SELECT lookup FROM DataSetValuesLookupTable AS lookup");
 			query.setMaxResults(5000);
 
-			
 			@SuppressWarnings("unchecked" )
 			final List<DataSetValuesLookupTable> results = query.getResultList();
 			for (DataSetValuesLookupTable look : results) {
 				try {
-					look = DataSetValuesLookupProvider.readLookupContentFromFile(look);
-					if (look == null) continue; // error reading file
-					// start transaction
+					Object[] lookupData = DataSetValuesLookupProvider.readLookupContentFromFile(look);
+					if (lookupData == null || lookupData[0] == null) continue; // error reading file
+					
+					look = (DataSetValuesLookupTable) lookupData[0];
+					
+					// if we have a colormap associated with the lookup, add it to the map
+					if (lookupData[1] != null)
+						ColorMapsProvider.instance().addColormap((ColorMap) lookupData[1]);
+						
+					// start persistance transaction
 					final EntityTransaction updateLookupRecord = em.getTransaction();	
 					updateLookupRecord.begin();
 					em.merge(look);

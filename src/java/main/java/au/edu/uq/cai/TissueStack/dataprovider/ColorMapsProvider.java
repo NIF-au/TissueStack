@@ -38,7 +38,7 @@ public final class ColorMapsProvider {
 
 	private static ColorMapsProvider myself;
 	
-	private Map<String, ColorMap> colorMaps;
+	private Map<String, ColorMap> colorMaps = new HashMap<String, ColorMap>(20);
 	
 	private ColorMapsProvider() {
 		final File colorMapsDirectory = this.getColorMapsDirectory();
@@ -53,13 +53,24 @@ public final class ColorMapsProvider {
 			return;
 		}
 		
-		this.colorMaps = new HashMap<String, ColorMap>(colorMapFIles.length);
 		for (String file : colorMapFIles) {
 			final ColorMap map = this.readColorMapFromFile(colorMapsDirectory.getAbsolutePath(), file);
 			if (map != null) this.colorMaps.put(map.getName(), map);
 		}
 	}
 
+	public void addColormap(ColorMap colorMap) {
+		if (this.colorMaps == null)
+			return;
+		
+		// a colormap with this name exists already, we introduce the hack/convention that we add _lookup to the name
+		if (this.colorMaps.containsKey(colorMap.getName()))
+				colorMap.setName(colorMap.getName() + "_lookup");
+		
+		// add the map finally
+		this.colorMaps.put(colorMap.getName(), colorMap);
+	}
+	
 	private File getColorMapsDirectory() {
 		final Configuration colorMapsDir = ConfigurationDataProvider.queryConfigurationById("colormaps_directory");
 		return new File(colorMapsDir == null || colorMapsDir.getValue() == null ? DEFAULT_COLORMAPS_DIRECTORY : colorMapsDir.getValue());
