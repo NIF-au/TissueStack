@@ -541,16 +541,28 @@ void		load_colormaps_from_directory(char *path, t_image_extract *image_args, sho
 							malloc(
 									(255 + 1)
 											* sizeof(*image_args->premapped_colormap[i]));
-					if (discrete)
+					if (discrete) {
 						alloc_and_init_colormap_space_from_lookup(
 								image_args->premapped_colormap[i],
 								colormap_extracted);
-					else
+
+						// this is a hack to avoid a name clash
+						int j=0;
+						while (j<i) {
+							if (strcmp(image_args->colormap_name[j], p->d_name) == 0) {
+								asprintf(&image_args->colormap_name[i], "%s_lookup", strdup(p->d_name));
+								break;
+							} else {
+								image_args->colormap_name[i] = strdup(p->d_name);
+							}
+							j++;
+						}
+					} else {
 						alloc_and_init_colormap_space_from_src(
 								image_args->premapped_colormap[i],
 								colormap_extracted);
-					asprintf(&image_args->colormap_name[i], "%s", p->d_name);
-					image_args->colormap_name[i] = strdup(p->d_name);
+						image_args->colormap_name[i] = strdup(p->d_name);
+					}
 					i++;
 				}
 			}

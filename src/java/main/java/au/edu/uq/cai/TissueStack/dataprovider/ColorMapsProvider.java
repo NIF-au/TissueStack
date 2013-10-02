@@ -63,10 +63,6 @@ public final class ColorMapsProvider {
 		if (this.colorMaps == null)
 			return;
 		
-		// a colormap with this name exists already, we introduce the hack/convention that we add _lookup to the name
-		if (this.colorMaps.containsKey(colorMap.getName()))
-				colorMap.setName(colorMap.getName() + "_lookup");
-		
 		// add the map finally
 		this.colorMaps.put(colorMap.getName(), colorMap);
 	}
@@ -89,7 +85,10 @@ public final class ColorMapsProvider {
 		}
 		
 		ColorMap colorMap = new ColorMap();
-		colorMap.setName(colorMapFile.getName());
+		// a colormap with this name exists already, we introduce the hack/convention that we add _lookup to the name
+		colorMap.setName(
+				this.colorMaps.containsKey(colorMap.getName()) ?
+						colorMap.getName() + "_lookup" : colorMapFile.getName());
 		colorMap.setFile(colorMapFile.getAbsolutePath());
 		
 		BufferedReader reader = null; 
@@ -170,6 +169,10 @@ public final class ColorMapsProvider {
 		return this.colorMaps.get(name);
 	}
 
+	public boolean containsColorMap(String colorMap) {
+		return this.colorMaps.containsKey(colorMap);
+	}
+	
 	public Collection<ColorMap> getColorMaps() {
 		return this.colorMaps.values();
 	}

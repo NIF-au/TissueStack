@@ -59,8 +59,11 @@ public final class DataSetValuesLookupProvider {
 		// we also associate a color map to the lookup data
 		final ColorMap colorLookup = new ColorMap();
 		colorLookup.setFile(lookupFile.getAbsolutePath());
-		colorLookup.setName(lookupFile.getName());
-
+		// a colormap with this name exists already, we introduce the hack/convention that we add _lookup to the name
+		colorLookup.setName(
+				ColorMapsProvider.instance().containsColorMap(lookupFile.getName()) ?
+						lookupFile.getName() + "_lookup" : lookupFile.getName());
+		
 		BufferedReader reader = null; 
 		
 		try {
