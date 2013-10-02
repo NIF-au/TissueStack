@@ -116,24 +116,47 @@ void		alloc_and_init_colormap_space(float **new_colormap, int index)
       j++;
     }
 }
+void 		alloc_and_init_colormap_space_from_lookup(float **new_colormap, float **source)
+{
+	int i=0;
+
+	// initialize with the original gray value i.e. index
+    while (i < 256)
+	{
+	  new_colormap[i] = malloc(3 * sizeof(*new_colormap[i]));
+	  new_colormap[i][0] = new_colormap[i][1] = new_colormap[i][2] = i;
+	  i++;
+	}
+
+    //now use the color lookup we have
+    i = 0;
+    while (source[i] != NULL) {
+      int j = source[i][0];
+  	  new_colormap[j][0] = source[i][1];
+  	  new_colormap[j][1] = source[i][2];
+  	  new_colormap[j][2] = source[i][3];
+
+  	  i++;
+    }
+}
 
 void		alloc_and_init_colormap_space_from_src(float **new_colormap, float **source)
 {
-  int		i;
-  int		j;
-  float		start_red;
-  float		end_red;
-  float		start_green;
-  float		end_green;
-  float		start_blue;
-  float		end_blue;
-  float		start_range;
-  float		end_range;
-  float		red_delta;
-  float		green_delta;
-  float		blue_delta;
-  float		delta;
-  int		end_loop;
+  int		i = 0;
+  int		j = 0;
+  float		start_red = 0;
+  float		end_red = 0;
+  float		start_green = 0;
+  float		end_green = 0;
+  float		start_blue = 0;
+  float		end_blue = 0;
+  float		start_range = 0;
+  float		end_range = 0;
+  float		red_delta = 0;
+  float		green_delta = 0;
+  float		blue_delta = 0;
+  float		delta = 0;
+  int		end_loop = 0;
 
   i = 0;
   j = 1;
@@ -259,7 +282,6 @@ char		**img_str_to_wordtab(char *buff, char c)
   return (dest);
 }
 
-
 float		get_float(char *src, int start, int end, int len)
 {
   char		*tmp;
@@ -284,6 +306,71 @@ float		get_float(char *src, int start, int end, int len)
   return (result);
 }
 
+float		**get_colormap_from_lookup_file(char *path) {
+	  int		fd = 0;
+	  int		len = 1;
+	  char		*buff = NULL;
+	  float		**color = NULL;
+	  float		colormap_tmp[255][4];
+	  int		c_row_index = 0;
+	  int		c_column_index = 0;
+	  int		j = 0;
+
+	  char		**lines;
+	  char		**values;
+
+	  fd = open(path, O_RDONLY);
+
+	  buff = malloc(4096 * sizeof(*buff));
+	  while (len > 0)
+	    {
+	      memset(buff, '\0', 4096);
+	      if ((len = read(fd, buff, 4096)) > 0)
+		{
+		  buff[len] = '\0';
+		  while (j < len && buff[j] != '\0')
+		    {
+		      if (buff[j] != ' ' && (buff[j] < '0' || buff[j] > '9') &&
+			  buff[j] != '.' && buff[j] != '\n')
+			buff[j] = ' ';
+		      j++;
+		    }
+		  lines = img_str_to_wordtab(buff, '\n');
+		  c_row_index = 0;
+		  while (lines[c_row_index] != NULL)
+		    {
+		      values = img_str_to_wordtab(lines[c_row_index], ' ');
+		      c_column_index = 0;
+		      while (values[c_column_index] != NULL)
+			{
+			  colormap_tmp[c_row_index][c_column_index] = atof(values[c_column_index]);
+			  c_column_index++;
+			}
+		      free_null_terminated_char_2D_array(values);
+		      c_row_index++;
+		    }
+	      free_null_terminated_char_2D_array(lines);
+		}
+	  }
+	  if (fd > 0) close(fd);
+	  free(buff);
+
+	  color = malloc((c_row_index + 1) * sizeof(*color));
+	  j=0;
+	  while (j < c_row_index) {
+		  color[j] = malloc(4 * sizeof(*color[j]));
+		  color[j][0] = colormap_tmp[j][0];
+		  color[j][1] = colormap_tmp[j][1];
+		  color[j][2] = colormap_tmp[j][2];
+		  color[j][3] = colormap_tmp[j][3];
+		  j++;
+	  }
+	  // terminate with NULL
+	  color[c_row_index] = NULL;
+
+	  return color;
+}
+
 float		**get_colormap_from_file(char *path)
 {
   int		fd = 0;
@@ -299,7 +386,7 @@ float		**get_colormap_from_file(char *path)
   char		**lines;
   char		**values;
 
-  fd = open(path, O_RDWR);
+  fd = open(path, O_RDONLY);
 
   buff = malloc(4096 * sizeof(*buff));
   while (len > 0)
@@ -327,11 +414,13 @@ float		**get_colormap_from_file(char *path)
 		  colormap_tmp[c_row_index][c_column_index] = atof(values[c_column_index]);
 		  c_column_index++;
 		}
+	      free_null_terminated_char_2D_array(values);
 	      c_row_index++;
 	    }
+	  free_null_terminated_char_2D_array(lines);
 	}
   }
-  if (fd != 0) close(fd);
+  if (fd > 0) close(fd);
   free(buff);
 
   j = 0;
@@ -412,80 +501,88 @@ void		display_colormap(float **colormap, char *name)
 {
   int		i = 0;
 
-  DEBUG("\n\n Colormap Name = |%s|", name);
+  INFO("\n\n Colormap Name = |%s|", name);
   while (colormap[i][0] != 99)
     {
-      DEBUG("%f %f %f %f", colormap[i][0], colormap[i][1], colormap[i][2], colormap[i][3])
+      INFO("%f %f %f %f", colormap[i][0], colormap[i][1], colormap[i][2], colormap[i][3])
       i++;
     }
 }
 
-void		load_colormaps_from_directory(char *path, t_image_extract *image_args)
+void		load_colormaps_from_directory(char *path, t_image_extract *image_args, short discrete)
 {
-  DIR		*d = opendir(path);
-  char		*buf;
-  struct dirent *p;
-  struct stat	statbuf;
-  int		i = 0;
-  int		count_files = 0;
-  float		**colormap_extracted = NULL;
+	DIR *d = opendir(path);
+	char *buf = NULL;
+	struct dirent *p = NULL;
+	struct stat statbuf;
+	int i = 0;
+	float **colormap_extracted = NULL;
 
-  count_files = count_files_presents_into_directory(path);
-  INFO("Found %i colormaps in %s.\n", count_files, path);
-  image_args->premapped_colormap = malloc((count_files + 1) * sizeof(*image_args->premapped_colormap));
-  i = 0;
-  image_args->colormap_name = malloc((count_files + 1) * sizeof(*image_args->colormap_name));
-  if (d)
-    {
-      while ((p = readdir(d)))
-	{
-          if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))
-	    continue;
-	  asprintf(&buf, "%s/%s", path, p->d_name);
-	  if (!stat(buf, &statbuf))
-	    {
-	      if (!S_ISDIR(statbuf.st_mode))
-		{
-		  colormap_extracted = get_colormap_from_file(buf);
-		  image_args->premapped_colormap[i] = malloc((255 + 1) * sizeof(*image_args->premapped_colormap[i]));
-		  alloc_and_init_colormap_space_from_src(image_args->premapped_colormap[i], colormap_extracted);
-		  asprintf(&image_args->colormap_name[i], "%s", p->d_name);
-		  image_args->colormap_name[i] = strdup(p->d_name);
-		  i++;
-		}
-	    }
-	  free(buf);
+	i = 0;
+	// determine length of colormap array
+	while (TRUE) {
+		if (image_args->premapped_colormap[i] == NULL)
+			break;
+		i++;
 	}
-      closedir(d);
-    }
-  image_args->premapped_colormap[i] = NULL;
-  image_args->colormap_name[i] = NULL;
+
+	if (d) {
+		while ((p = readdir(d))) {
+			if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))
+				continue;
+			asprintf(&buf, "%s/%s", path, p->d_name);
+			if (!stat(buf, &statbuf)) {
+				if (!S_ISDIR(statbuf.st_mode)) {
+					colormap_extracted =
+							discrete ?
+									get_colormap_from_lookup_file(buf) :
+									get_colormap_from_file(buf);
+					image_args->premapped_colormap[i] =
+							malloc(
+									(255 + 1)
+											* sizeof(*image_args->premapped_colormap[i]));
+					if (discrete)
+						alloc_and_init_colormap_space_from_lookup(
+								image_args->premapped_colormap[i],
+								colormap_extracted);
+					else
+						alloc_and_init_colormap_space_from_src(
+								image_args->premapped_colormap[i],
+								colormap_extracted);
+					asprintf(&image_args->colormap_name[i], "%s", p->d_name);
+					image_args->colormap_name[i] = strdup(p->d_name);
+					i++;
+				}
+			}
+			free(buf);
+		}
+		if (d>0) closedir(d);
+	}
+	image_args->premapped_colormap[i] = NULL;
+	image_args->colormap_name[i] = NULL;
 }
 
+void		colormap_init(t_image_extract *image_args) {
+  char * colormaps_path = strdup(CONCAT_APP_PATH("colormaps"));
+  char * lookup_path = strdup(CONCAT_APP_PATH("lookup"));
+  int number_of_colormaps = 0;
+  int number_of_lookups = 0;
 
+  number_of_colormaps = count_files_presents_into_directory(colormaps_path);
+  INFO("Found %i colormaps in %s.\n", number_of_colormaps, colormaps_path);
+  number_of_lookups = count_files_presents_into_directory(lookup_path);
+  INFO("Found %i colormaps in %s.\n", number_of_lookups, lookup_path);
 
+  image_args->premapped_colormap = malloc((number_of_colormaps + number_of_lookups + 1) * sizeof(*image_args->premapped_colormap));
+  image_args->premapped_colormap[0] = NULL;
+  image_args->colormap_name = malloc((number_of_colormaps + number_of_lookups + 1) * sizeof(*image_args->colormap_name));
+  image_args->colormap_name[0] = NULL;
 
+  if (number_of_colormaps) load_colormaps_from_directory(colormaps_path, image_args, FALSE);
+  if (number_of_lookups) load_colormaps_from_directory(lookup_path, image_args, TRUE);
 
-void		colormap_init(t_image_extract *image_args)
-{
-  //  int		i;
-  // int		clormp_nb;
-
-  load_colormaps_from_directory(strdup(CONCAT_APP_PATH("colormaps")), image_args);
-
-  /*
-  clormp_nb = 2;
-  image_args->premapped_colormap = malloc((clormp_nb + 1) * sizeof(*image_args->premapped_colormap));
-  i = 0;
-  while (i < clormp_nb)
-    {
-      image_args->premapped_colormap[i] = malloc((255 + 1) * sizeof(*image_args->premapped_colormap[i]));
-      alloc_and_init_colormap_space(image_args->premapped_colormap[i], i);
-      i++;
-    }
-  image_args->colormap_name = colormapa_name;
-  image_args->premapped_colormap[clormp_nb] = NULL;
-  */
+  free(colormaps_path);
+  free(lookup_path);
 }
 
 void		get_percent(FILE *file, t_image_extract *a)
