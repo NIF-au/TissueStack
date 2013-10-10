@@ -305,7 +305,9 @@ dist: 	compile install install-tools
 	mkdir -p $(EPHEMERAL_STORAGE)/$(NAME)/tiles\n\
 	mkdir -p $(EPHEMERAL_STORAGE)/$(NAME)/data\n\
 	mkdir -p $(EPHEMERAL_STORAGE)/$(NAME)/upload\n\
-	chown -R $(NAME):$(NAME) $(EPHEMERAL_STORAGE)/$(NAME)\n\
+	chown -R $(NAME):$(NAME) $(EPHEMERAL_STORAGE)/$(NAME)/data\n\
+	chown -R $(NAME):$(NAME) $(EPHEMERAL_STORAGE)/$(NAME)/upload\n\
+	chown $(NAME):$(NAME) $(EPHEMERAL_STORAGE)/$(NAME)/tiles\n\
 	TISSUE_STACK_HOME=$(DATA_PATH)\n\
 	TISSUE_STACK_JNI_LIB_PATH=$(JNI_LIB_PATH)\n\
 	IMAGE_SERVER_EXE=$(BINS_PATH)/$(EXE_NAME)\n\
@@ -336,8 +338,16 @@ dist: 	compile install install-tools
 	touch /tmp/post-install.log\n\
 	chmod 666 /tmp/post-install.log\n\
 	useradd -c \"$(NAME)\" -m -d $(DATA_PATH) -s /bin/bash -U $(NAME) &>> /tmp/post-install.log\n\
-	chown -R $(NAME):$(NAME) $(DATA_PATH) &>> /tmp/post-install.log\n\
-	chown -R -H -h $(NAME):$(NAME) $(DATA_PATH)\n\
+	for dirs in \`find $(DATA_PATH)/* -prune -type d\`;do\n\
+	\tif  [ \$$dirs = \"$(DATA_PATH)/tiles\" ]; then\n\
+	\t\tchmod g+wr,o+wr \$$dirs &>> /tmp/post-install.log\n\
+	\t\tchown $(NAME):$(NAME) \$$dirs &>> /tmp/post-install.log\n\
+	\telse\n\
+	\t\tchmod -R g+wr,o+wr \$$dirs &>> /tmp/post-install.log\n\
+	\t\tchown -R $(NAME):$(NAME) \$$dirs &>> /tmp/post-install.log\n\
+	\t\tchown -R -H -h $(NAME):$(NAME) \$$dirs &>> /tmp/post-install.log\n\
+	\tfi\n\
+	done\n\
 	for dirs in \`find $(DATA_PATH)/ -name \"bin\"\`;do\n\
 	\tchmod -R 755 \$$dirs/* &>> /tmp/post-install.log\n\
 	done\n\
@@ -346,7 +356,9 @@ dist: 	compile install install-tools
 	mkdir -p $(EPHEMERAL_STORAGE)/$(NAME)/data &>> /tmp/post-install.log\n\
 	mkdir -p $(EPHEMERAL_STORAGE)/$(NAME)/tiles &>> /tmp/post-install.log\n\
 	mkdir -p $(EPHEMERAL_STORAGE)/$(NAME)/upload &>> /tmp/post-install.log\n\
-	chown -R $(NAME):$(NAME) $(EPHEMERAL_STORAGE)/$(NAME)\n\
+	chown -R $(NAME):$(NAME) $(EPHEMERAL_STORAGE)/$(NAME)/data\n\
+	chown -R $(NAME):$(NAME) $(EPHEMERAL_STORAGE)/$(NAME)/upload\n\
+	chown $(NAME):$(NAME) $(EPHEMERAL_STORAGE)/$(NAME)/tiles\n\
 	su -c \"su - postgres <<EOF\n\
 	initdb &>> /tmp/post-install.log\n\
 	EOF\n\"\n\
