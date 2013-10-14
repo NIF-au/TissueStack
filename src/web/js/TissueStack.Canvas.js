@@ -381,9 +381,16 @@ TissueStack.Canvas.prototype = {
 	
 	    		if (this.hasColorMapOrContrastSetting()) {
 					// apply contrast settings first
-					if (this.contrast && (this.contrast.getMinimum() != this.contrast.dataset_min || this.contrast.getMaximum() != this.contrast.dataset_max)) {
-			    		var factor = (this.contrast.getMaximum() - this.contrast.getMinimum()) / (this.contrast.dataset_max - this.contrast.dataset_min);
-			    		val = this.contrast.getMinimum() + Math.round(val * factor);
+					if (this.contrast && 
+							(this.contrast.getMinimum() != this.contrast.dataset_min || this.contrast.getMaximum() != this.contrast.dataset_max)) {
+			    		if (val <= this.contrast.getMinimum()) {
+			    			val = this.contrast.getMinimum();
+			    		} else if (val >= this.contrast.getMaximum()) {
+			    			val = this.contrast.getMaximum();
+			    		} else { 
+			    			var factor = (this.contrast.getMaximum() - this.contrast.getMinimum()) / (this.contrast.dataset_max - this.contrast.dataset_min);
+			    			val = this.contrast.getMinimum() + Math.round(val * factor);
+			    		}
 			    		myImageData.data[x] = myImageData.data[x+1] = myImageData.data[x+2] = val; 
 					}
 					

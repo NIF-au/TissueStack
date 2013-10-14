@@ -165,9 +165,15 @@ unsigned char	get_contrasted_value(unsigned char min, unsigned char max,
 				     unsigned char dataset_min, unsigned char dataset_max, unsigned char initial_value)
 {
   float	ratio;
+  float contrast_min = (float) min;
+  float contrast_max = (float) max;
+  float val = (float) initial_value;
   unsigned char	final_value;
 
-  ratio = (float)((float)((float)max - (float)min) / (float)((float)dataset_max - (float)dataset_min));
+  if (val <= contrast_min) return min;
+  if (val >= contrast_max) return max;
+
+  ratio = (float)((contrast_max - contrast_min) / (float)((float)dataset_max - (float)dataset_min));
   final_value = min + round(initial_value * ratio);
   return (final_value);
 }
