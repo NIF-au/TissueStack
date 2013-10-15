@@ -373,8 +373,32 @@ TissueStack.Canvas.prototype = {
     		width = this.dim_x - xStart;
     	}
     	
-    	var myImageData = ctx.getImageData(xStart, yStart, width, height);
+    	// apply color map and contrast
+    	var myImageData = this.applyContrastAndColorMapToImageData(ctx.getImageData(xStart, yStart, width, height));
     	
+    	// put altered data back into canvas
+    	if (typeof(tempCtx) === 'object') {
+    		// let's copy from the temporary canvas
+    		this.getCanvasContext().putImageData(myImageData, xStart, yStart);
+    		tempCtx = null;
+    	} 	else ctx.putImageData(myImageData, xStart, yStart);
+	}, applyContrastAndColorMapToTiles: function(tempCtx, xStart, yStart, width, height) {
+    	var ctx = typeof(tempCtx) === 'object' ? tempCtx :  this.getCanvasContext();
+
+    	// apply color map and contrast
+    	try {
+    		var myImageData = this.applyContrastAndColorMapToImageData(ctx.getImageData(xStart, yStart, width, height));
+    	} catch (e) {
+			return
+		}
+
+    	// put altered data back into canvas
+    	if (typeof(tempCtx) === 'object') {
+    		// let's copy from the temporary canvas
+    		this.getCanvasContext().putImageData(myImageData, xStart, yStart);
+    		tempCtx = null;
+    	} 	else ctx.putImageData(myImageData, xStart, yStart);
+	}, applyContrastAndColorMapToImageData : function(myImageData) {
     	if (this.getDataExtent().getIsTiled()) {
 	    	for ( var x = 0; x < myImageData.data.length; x += 4) {
 	    		var val = myImageData.data[x];
@@ -384,12 +408,12 @@ TissueStack.Canvas.prototype = {
 					if (this.contrast && 
 							(this.contrast.getMinimum() != this.contrast.dataset_min || this.contrast.getMaximum() != this.contrast.dataset_max)) {
 			    		if (val <= this.contrast.getMinimum()) {
-			    			val = this.contrast.getMinimum();
+			    			val = this.contrast.dataset_min;
 			    		} else if (val >= this.contrast.getMaximum()) {
-			    			val = this.contrast.getMaximum();
-			    		} else { 
-			    			var factor = (this.contrast.getMaximum() - this.contrast.getMinimum()) / (this.contrast.dataset_max - this.contrast.dataset_min);
-			    			val = this.contrast.getMinimum() + Math.round(val * factor);
+			    			val = this.contrast.dataset_max;
+			    		} else {
+			    			val = Math.round(((val - this.contrast.getMinimum()) / (this.contrast.getMaximum() - this.contrast.getMinimum())) * 
+			    					(this.contrast.dataset_max - this.contrast.dataset_min));
 			    		}
 			    		myImageData.data[x] = myImageData.data[x+1] = myImageData.data[x+2] = val; 
 					}
@@ -406,13 +430,7 @@ TissueStack.Canvas.prototype = {
 	    		}
 	    	}
     	}
-    	
-    	// put altered data back into canvas
-    	if (typeof(tempCtx) === 'object') {
-    		// let's copy from the temporary canvas
-    		this.getCanvasContext().putImageData(myImageData, xStart, yStart);
-    		tempCtx = null;
-    	} 	else ctx.putImageData(myImageData, xStart, yStart); 
+    	return myImageData;
 	}, hasColorMapOrContrastSetting : function() {
 		if (!this.isColorMapOn() &&
 				(!this.contrast || (this.contrast.getMinimum() == this.contrast.dataset_min && this.contrast.getMaximum() == this.contrast.dataset_max)) ) {
@@ -627,6 +645,7 @@ TissueStack.Canvas.prototype = {
 						ctx.drawImage(this,
 								imageOffsetX, imageOffsetY, width, height, // tile dimensions
 								canvasX, canvasY, width, height); // canvas dimensions
+						_this.applyContrastAndColorMapToTiles(ctx, canvasX, canvasY, width, height);
 						
 						// damn you async loads
 						if (_this.queue.latestDrawRequestTimestamp < 0 ||
@@ -639,7 +658,7 @@ TissueStack.Canvas.prototype = {
 						if (counter == 0 &&
 								((_this.getDataExtent().getIsTiled() && _this.hasColorMapOrContrastSetting())
 								|| (TissueStack.overlay_datasets && (_this.overlay_canvas || _this.underlying_canvas)))) {
-							_this.applyContrastAndColorMapToCanvasContent(ctx);
+							//_this.applyContrastAndColorMapToCanvasContent(ctx);
 							_this.getCanvasElement().show();
 						}
 

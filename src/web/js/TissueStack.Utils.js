@@ -160,87 +160,61 @@ TissueStack.Utils = {
 			// create new array
 			TissueStack.indexed_color_maps[map] = [];
 
-			var index = 0;
+			// for continuous lookup
+			var valueRangeRow = 1;
+			var offsetRGB = [0,0,0];
+			var valueRangeStart = TissueStack.color_maps[map][valueRangeRow-1][0] * 255;
+			var valueRangeEnd = TissueStack.color_maps[map][valueRangeRow][0] * 255;
 			
-			// we precompute the desired rgb for every byte value in the 256 range
-			for ( var y = 1; y < TissueStack.color_maps[map].length; y++) {
+			for (var index = 0; index < 256 ; index++) {
+				// create RGB value array for byte value
+				TissueStack.indexed_color_maps[map][index] = [];
+
 				// check if we have a discrete lookup to begin with, we identify it because the array length is 5
-				if (TissueStack.color_maps[map][0].length != 5) {
-					// find start and end of value range
-					var valueRangeStart = Math.ceil(TissueStack.color_maps[map][y-1][0] * 255);
-					var valueRangeEnd = Math.ceil(TissueStack.color_maps[map][y][0] * 255);
-					var valueRangeDelta = valueRangeEnd - valueRangeStart;
-					// find start and end of RGB range
-					var redRangeStart = TissueStack.color_maps[map][y-1][1];
-					var redRangeEnd = TissueStack.color_maps[map][y][1];
-					var greenRangeStart = TissueStack.color_maps[map][y-1][2];
-					var greenRangeEnd = TissueStack.color_maps[map][y][2];
-					var blueRangeStart = TissueStack.color_maps[map][y-1][3];
-					var blueRangeEnd = TissueStack.color_maps[map][y][3];
-					// compute deltas to get values in between color ranges 
-					var redDelta = Math.round((redRangeEnd - redRangeStart) / valueRangeDelta);
-					var greenDelta = Math.round((greenRangeEnd - greenRangeStart) / valueRangeDelta);
-					var blueDelta = Math.round((blueRangeEnd - blueRangeStart) / valueRangeDelta);
-					if (valueRangeDelta == 255) {
-					  redDelta = Math.round((redRangeEnd - redRangeStart)) * valueRangeDelta;
-					  greenDelta = Math.round((greenRangeEnd - greenRangeStart)) * valueRangeDelta;
-					  blueDelta = Math.round((blueRangeEnd - blueRangeStart)) * valueRangeDelta;
-					}
+				if (TissueStack.color_maps[map][0].length == 5) {
+					// set up RGB mapping
+					var grayValueToBeMapped =  
+						(index > TissueStack.color_maps[map].length-1) ? index : TissueStack.color_maps[map][index][1];
+						
+					TissueStack.indexed_color_maps[map][grayValueToBeMapped][0] = 
+						(index > TissueStack.color_maps[map].length-1) ? 
+								grayValueToBeMapped : TissueStack.color_maps[map][index][2];
+					TissueStack.indexed_color_maps[map][grayValueToBeMapped][1] =
+						(index > TissueStack.color_maps[map].length-1) ? 
+								grayValueToBeMapped : TissueStack.color_maps[map][index][3];
+					TissueStack.indexed_color_maps[map][grayValueToBeMapped][2] =
+						(index > TissueStack.color_maps[map].length-1) ? 
+								grayValueToBeMapped : TissueStack.color_maps[map][index][4];
+					
+					continue;
 				}
-				
-				// compute and store associated RGB values for byte value
-				var endOfLoop = (TissueStack.color_maps[map][0].length == 5) ? 256 : (index + valueRangeDelta);
-				for (; index < endOfLoop ; index++) {
-					// create RGB value array for byte value
-					TissueStack.indexed_color_maps[map][index] = [];
 
-					// check if we have a discrete lookup to begin with, we identify it because the array length is 5
-					if (TissueStack.color_maps[map][0].length == 5) {
-						if (TissueStack.color_maps[map].length >= 255) break; // have reached ultimate grayscale limit => bye
+				// continuous to discrete mapping
+				// first check if we are within desired range up the present end,
+				// if not => increment row index to move on to next range
+				if (index > valueRangeEnd) {
+					valueRangeRow++;
+					valueRangeStart = valueRangeEnd;
+					valueRangeEnd = TissueStack.color_maps[map][valueRangeRow][0] * 255
+					offsetRGB[0] = TissueStack.color_maps[map][valueRangeRow-1][1];
+					offsetRGB[1] = TissueStack.color_maps[map][valueRangeRow-1][2];
+					offsetRGB[2] = TissueStack.color_maps[map][valueRangeRow-1][3];
+				}
+				var valueRangeDelta = valueRangeEnd - valueRangeStart;
 
-						// set up RGB mapping
-						var grayValueToBeMapped =  
-							(index > TissueStack.color_maps[map].length-1) ? index : TissueStack.color_maps[map][index][1];
-							
-						TissueStack.indexed_color_maps[map][grayValueToBeMapped][0] = 
-							(index > TissueStack.color_maps[map].length-1) ? 
-									grayValueToBeMapped : TissueStack.color_maps[map][index][2];
-						TissueStack.indexed_color_maps[map][grayValueToBeMapped][1] =
-							(index > TissueStack.color_maps[map].length-1) ? 
-									grayValueToBeMapped : TissueStack.color_maps[map][index][3];
-						TissueStack.indexed_color_maps[map][grayValueToBeMapped][2] =
-							(index > TissueStack.color_maps[map].length-1) ? 
-									grayValueToBeMapped : TissueStack.color_maps[map][index][4];
-
-						continue;
-					} else {
-						if (valueRangeDelta == 255) {
-							// set new red value
-							TissueStack.indexed_color_maps[map][index][0] = Math.abs(Math.round((index * redRangeStart) + ((redRangeEnd - index) * redDelta))) / 256;
-							// set new green value
-							TissueStack.indexed_color_maps[map][index][1] = Math.abs(Math.round((index * greenRangeStart) + ((greenRangeEnd - index) * greenDelta))) / 256;
-							// set new blue value
-							TissueStack.indexed_color_maps[map][index][2] = Math.abs(Math.round((index * blueRangeStart) + ((blueRangeEnd - index) * blueDelta))) / 256;
-						} else {
-							// set new red value
-							TissueStack.indexed_color_maps[map][index][0] = Math.round((index * redRangeStart) + ((redRangeEnd - index) * redDelta));
-							// set new green value
-							TissueStack.indexed_color_maps[map][index][1] = Math.round((index * greenRangeStart) + ((greenRangeEnd - index) * greenDelta));
-							// set new blue value
-							TissueStack.indexed_color_maps[map][index][2] = Math.round((index * blueRangeStart) + ((blueRangeEnd - index) * blueDelta));
-						}
-					}
-				} 
-			}
+				// iterate over RGB channels
+				for (var rgb = 1; rgb < 4 ; rgb++) {
+					var rgbRangeStart = TissueStack.color_maps[map][valueRangeRow-1][rgb];
+					var rgbRangeEnd = TissueStack.color_maps[map][valueRangeRow][rgb];
+					var rgbRangeDelta = rgbRangeEnd - rgbRangeStart;
+					var rangeRemainder = index % valueRangeDelta;
+					var rangeRatio = ((rangeRemainder != 0) ?
+										(rgbRangeDelta * rangeRemainder / valueRangeDelta) : rgbRangeDelta) + offsetRGB[rgb-1];
+					
+					TissueStack.indexed_color_maps[map][index][rgb-1] =	Math.round(rangeRatio * 255);
+				}
+			} 
 			
-			// check if we have a discrete lookup to begin with, we identify it because the array length is 5
-			if (TissueStack.color_maps[map][0].length != 5) {
-				TissueStack.indexed_color_maps[map][255] = [
-				                                            TissueStack.indexed_color_maps[map][254][0],
-				                                            TissueStack.indexed_color_maps[map][254][1],
-				                                            TissueStack.indexed_color_maps[map][254][2]
-				                                            ];
-			}
 		}
 	}, updateColorMapChooser : function() {
 		if (typeof(TissueStack.indexed_color_maps) != 'object')

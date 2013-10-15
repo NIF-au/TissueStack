@@ -164,18 +164,14 @@ void		apply_colormap(PixelPacket *px, PixelPacket *px_final, float **premapped_c
 unsigned char	get_contrasted_value(unsigned char min, unsigned char max,
 				     unsigned char dataset_min, unsigned char dataset_max, unsigned char initial_value)
 {
-  float	ratio;
   float contrast_min = (float) min;
   float contrast_max = (float) max;
   float val = (float) initial_value;
-  unsigned char	final_value;
 
-  if (val <= contrast_min) return min;
-  if (val >= contrast_max) return max;
+  if (val <= contrast_min) return dataset_min;
+  if (val >= contrast_max) return dataset_max;
 
-  ratio = (float)((contrast_max - contrast_min) / (float)((float)dataset_max - (float)dataset_min));
-  final_value = min + round(initial_value * ratio);
-  return (final_value);
+  return (unsigned char) round(((val - contrast_min) / (contrast_max - contrast_min)) * (float) (dataset_max - dataset_min));
 }
 
 void		apply_contrast(PixelPacket *px, unsigned char min, unsigned char max,
