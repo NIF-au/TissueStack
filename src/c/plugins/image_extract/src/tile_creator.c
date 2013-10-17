@@ -161,8 +161,8 @@ void		apply_colormap(PixelPacket *px, PixelPacket *px_final, float **premapped_c
     }
 }
 
-unsigned char	get_contrasted_value(unsigned char min, unsigned char max,
-				     unsigned char dataset_min, unsigned char dataset_max, unsigned char initial_value)
+unsigned long long int get_contrasted_value(unsigned char min, unsigned char max,
+				     unsigned char dataset_min, unsigned char dataset_max, unsigned long long int initial_value)
 {
   float contrast_min = (float) min;
   float contrast_max = (float) max;
@@ -171,7 +171,7 @@ unsigned char	get_contrasted_value(unsigned char min, unsigned char max,
   if (val <= contrast_min) return dataset_min;
   if (val >= contrast_max) return dataset_max;
 
-  return (unsigned char) round(((val - contrast_min) / (contrast_max - contrast_min)) * (float) (dataset_max - dataset_min));
+  return (unsigned long long int) lround(((val - contrast_min) / (contrast_max - contrast_min)) * (float) (dataset_max - dataset_min));
 }
 
 void		apply_contrast(PixelPacket *px, unsigned char min, unsigned char max,
@@ -182,7 +182,7 @@ void		apply_contrast(PixelPacket *px, unsigned char min, unsigned char max,
   int		j = 0;
   unsigned long long int pixel_value;
 
-  		INFO("%u - %lu\n", QuantumDepth, quantum_depth);
+  //INFO("%u - %lu\n", QuantumDepth, quantum_depth);
   while (i < height)
     {
       j = 0;
@@ -191,13 +191,13 @@ void		apply_contrast(PixelPacket *px, unsigned char min, unsigned char max,
 	  pixel_value = (unsigned long long int) px[(width * i) + j].red;
 	  if (QuantumDepth != 8 && quantum_depth == QuantumDepth) pixel_value = mapUnsignedValue(quantum_depth, 8, pixel_value);
 
-	  pixel_value = (pixel_value >= 255 ? 254 : pixel_value);
+	  pixel_value = (pixel_value > 255 ? 255 : pixel_value);
 
 	  pixel_value = get_contrasted_value(min, max, dataset_min, dataset_max, pixel_value);
 	  if (QuantumDepth != 8 && quantum_depth == QuantumDepth)
 		  pixel_value = mapUnsignedValue(8, quantum_depth, pixel_value);
 
-	  px[(width * i) + j].red = px[(width * i) + j].green = px[(width * i) + j].blue = (unsigned char) pixel_value;
+	  px[(width * i) + j].red = px[(width * i) + j].green = px[(width * i) + j].blue = (unsigned short) pixel_value;
 	  j++;
 	}
       i++;
