@@ -195,7 +195,7 @@ TissueStack.Utils = {
 				if (index > valueRangeEnd) {
 					valueRangeRow++;
 					valueRangeStart = valueRangeEnd;
-					valueRangeEnd = TissueStack.color_maps[map][valueRangeRow][0] * 255
+					valueRangeEnd = TissueStack.color_maps[map][valueRangeRow][0] * 255;
 					offsetRGB[0] = TissueStack.color_maps[map][valueRangeRow-1][1];
 					offsetRGB[1] = TissueStack.color_maps[map][valueRangeRow-1][2];
 					offsetRGB[2] = TissueStack.color_maps[map][valueRangeRow-1][3];
@@ -208,8 +208,10 @@ TissueStack.Utils = {
 					var rgbRangeEnd = TissueStack.color_maps[map][valueRangeRow][rgb];
 					var rgbRangeDelta = rgbRangeEnd - rgbRangeStart;
 					var rangeRemainder = index % valueRangeDelta;
-					var rangeRatio = ((rangeRemainder != 0) ?
-										(rgbRangeDelta * rangeRemainder / valueRangeDelta) : rgbRangeDelta) + offsetRGB[rgb-1];
+					if (rangeRemainder == 0 && rgbRangeDelta != 0 && valueRangeEnd == 255) {
+						offsetRGB[rgb-1] += rgbRangeDelta;
+					}
+					var rangeRatio = (rgbRangeDelta * rangeRemainder / valueRangeDelta) + offsetRGB[rgb-1];
 					
 					TissueStack.indexed_color_maps[map][index][rgb-1] =	Math.round(rangeRatio * 255);
 				}

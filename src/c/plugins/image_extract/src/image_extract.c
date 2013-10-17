@@ -64,58 +64,6 @@ int		get_size_colormap(float **colormap)
   return (i);
 }
 
-void		alloc_and_init_colormap_space(float **new_colormap, int index)
-{
-  int		i;
-  int		j;
-  float		start_red;
-  float		end_red;
-  float		start_green;
-  float		end_green;
-  float		start_blue;
-  float		end_blue;
-  float		start_range;
-  float		end_range;
-  float		red_delta;
-  float		green_delta;
-  float		blue_delta;
-  float		delta;
-  int		end_loop;
-
-  i = 0;
-  j = 1;
-  while (colormapa[index][j][0] < 99)
-    {
-      start_range	= floor(colormapa[index][j - 1][0] * 255);
-      end_range		= floor(colormapa[index][j][0] * 255);
-      delta		= end_range - start_range;
-
-      start_red		= colormapa[index][j - 1][1];
-      end_red		= colormapa[index][j][1];
-
-      start_green	= colormapa[index][j - 1][2];
-      end_green		= colormapa[index][j][2];
-
-      start_blue	= colormapa[index][j - 1][3];
-      end_blue		= colormapa[index][j][3];
-
-      red_delta = round((end_red - start_red) / delta);
-      green_delta = round((end_green - start_green) / delta);
-      blue_delta = round((end_blue - start_blue) / delta);
-
-      end_loop = i + delta;
-      while (i < end_loop)
-	{
-	  new_colormap[i] = malloc(3 * sizeof(*new_colormap[i]));
-
-	  new_colormap[i][0] = round((i * start_red) + ((end_red - i) * red_delta));
-	  new_colormap[i][1] = round((i * start_green) + ((end_green - i) * green_delta));
-	  new_colormap[i][2] = round((i * start_blue) + ((end_blue - i) * blue_delta));
-	  i++;
-	}
-      j++;
-    }
-}
 void 		alloc_and_init_colormap_space_from_lookup(float **new_colormap, float **source)
 {
 	int i=0;
@@ -142,62 +90,45 @@ void 		alloc_and_init_colormap_space_from_lookup(float **new_colormap, float **s
 
 void		alloc_and_init_colormap_space_from_src(float **new_colormap, float **source)
 {
-  int		i = 0;
-  int		j = 0;
-  float		start_red = 0;
-  float		end_red = 0;
-  float		start_green = 0;
-  float		end_green = 0;
-  float		start_blue = 0;
-  float		end_blue = 0;
-  float		start_range = 0;
-  float		end_range = 0;
-  float		red_delta = 0;
-  float		green_delta = 0;
-  float		blue_delta = 0;
-  float		delta = 0;
-  int		end_loop = 0;
+	short valueRangeRow = 1;
+	float * offsetRGB = malloc(3*sizeof(*offsetRGB));
+	offsetRGB[0] = offsetRGB[1] = offsetRGB[2] = 0;
+	float valueRangeStart = source[valueRangeRow - 1][0] * 255;
+	float valueRangeEnd = source[valueRangeRow][0] * 255;
+	unsigned short index = 0;
+	unsigned short rgb=1;
+	float valueRangeDelta = 0;
 
-  i = 0;
-  j = 1;
-  while (source[j][0] < 99)
-    {
-      start_range	= floor(source[j - 1][0] * 255);
-      end_range		= floor(source[j][0] * 255);
-      delta		= end_range - start_range;
+	for (index = 0; index < 256 ; index++) {
+		// continuous to discrete mapping
+		// first check if we are within desired range up the present end,
+		// if not => increment row index to move on to next range
+		if (index > valueRangeEnd) {
+			valueRangeRow++;
+			valueRangeStart = valueRangeEnd;
+			valueRangeEnd = source[valueRangeRow][0] * 255;
+			offsetRGB[0] = source[valueRangeRow-1][1];
+			offsetRGB[1] = source[valueRangeRow-1][2];
+			offsetRGB[2] = source[valueRangeRow-1][3];
+		}
+		valueRangeDelta = valueRangeEnd - valueRangeStart;
 
-      start_red		= source[j - 1][1];
-      end_red		= source[j][1];
+		// iterate over RGB channels
 
-      start_green	= source[j - 1][2];
-      end_green		= source[j][2];
+		new_colormap[index] = malloc(3 * sizeof(*new_colormap[index]));
+		for (rgb = 1; rgb < 4 ; rgb++) {
+			float rgbRangeStart = source[valueRangeRow-1][rgb];
+			float rgbRangeEnd = source[valueRangeRow][rgb];
+			float rgbRangeDelta = rgbRangeEnd - rgbRangeStart;
+			float rangeRemainder = fmodf((float)index,valueRangeDelta);
+			if (rangeRemainder == 0 && rgbRangeDelta != 0 && valueRangeEnd == 255) {
+				offsetRGB[rgb-1] += rgbRangeDelta;
+			}
+			float rangeRatio = (rgbRangeDelta * rangeRemainder / valueRangeDelta) + offsetRGB[rgb-1];
 
-      start_blue	= source[j - 1][3];
-      end_blue		= source[j][3];
-
-      if (delta == 255)
-	{
-	  red_delta = round((end_red - start_red)) * 255;
-	  green_delta = round((end_green - start_green)) * 255;
-	  blue_delta = round((end_blue - start_blue)) * 255;
+			new_colormap[index][rgb-1] = round(rangeRatio * 255);
+		}
 	}
-      else
-	{
-	  red_delta = round((end_red - start_red) / delta);
-	  green_delta = round((end_green - start_green) / delta);
-	  blue_delta = round((end_blue - start_blue) / delta);
-	}
-      end_loop = i + delta;
-      while (i < end_loop)
-	{
-	  new_colormap[i] = malloc(3 * sizeof(*new_colormap[i]));
-	  new_colormap[i][0] = round((i * start_red) + ((end_red - i) * red_delta));
-	  new_colormap[i][1] = round((i * start_green) + ((end_green - i) * green_delta));
-	  new_colormap[i][2] = round((i * start_blue) + ((end_blue - i) * blue_delta));
-	  i++;
-	}
-      j++;
-    }
 }
 
 char		*str_n_cpy(char *str, int position, int len)
