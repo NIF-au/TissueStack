@@ -10,7 +10,7 @@ ModuleFileDescription="tissuestack"
 #
 # Package release number.
 #
-PACKAGE_RELEASE="4.0.4"
+PACKAGE_RELEASE="4.0.5"
 PACKAGE_VERSION="1.3"
 
 #

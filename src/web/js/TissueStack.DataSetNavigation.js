@@ -320,9 +320,9 @@ TissueStack.DataSetNavigation.prototype = {
 			for (var dataSetKey in TissueStack.dataSetStore.datasets) {
 				var dataSet = TissueStack.dataSetStore.datasets[dataSetKey];
 				treeData[counter] =	{
-						title: dataSet.local_id + '@' +dataSet.host,
+						title: (dataSet.description ? dataSet.description : (dataSet.local_id + '@' +dataSet.host)),
 						key: dataSet.id,
-						tooltip: (dataSet.description ? dataSet.description : ""),
+						tooltip: (dataSet.description ? dataSet.description : (dataSet.local_id + '@' +dataSet.host)),
 						select: false,
 						isFolder: true,
 						expand: counter == 0 ? true : false,
@@ -335,7 +335,7 @@ TissueStack.DataSetNavigation.prototype = {
 							title: 	this.stripFileNameOfDataDirectory(dataSet.filename),
 							isBaseLayer : true,
 							key: dataSet.id + "_base_layer",
-							tooltip: (dataSet.description ? dataSet.description : ""),
+							tooltip: this.stripFileNameOfDataDirectory(dataSet.filename),
 							select: false,
 							expand: false,
 							tiled: dataSet.data[0].isTiled,
@@ -498,9 +498,9 @@ TissueStack.DataSetNavigation.prototype = {
 		var root = tree.getRoot();
 		var newNode = 
 			root.addChild({
-				title: dataSet.local_id + '@' +dataSet.host,
+				title: (dataSet.description ? dataSet.description : (dataSet.local_id + '@' +dataSet.host)),
 				key: dataSet.id,
-				tooltip: (dataSet.description ? dataSet.description : ""),
+				tooltip: (dataSet.description ? dataSet.description : (dataSet.local_id + '@' +dataSet.host)),
 				select: false,
 				isFolder: true,
 				expand: false,
@@ -513,7 +513,7 @@ TissueStack.DataSetNavigation.prototype = {
 					title: 	this.stripFileNameOfDataDirectory(dataSet.filename),
 					isBaseLayer : true,
 					key: dataSet.id + "_base_layer",
-					tooltip: (dataSet.description ? dataSet.description : ""),
+					tooltip: this.stripFileNameOfDataDirectory(dataSet.filename),
 					select: false,
 					expand: false
 				});
@@ -521,7 +521,7 @@ TissueStack.DataSetNavigation.prototype = {
 			title: this.stripFileNameOfDataDirectory(dataSet.filename),
 			isBaseLayer : true,
 			key: dataSet.id + "_base_layer",
-			tooltip: (dataSet.description ? dataSet.description : ""),
+			tooltip: this.stripFileNameOfDataDirectory(dataSet.filename),
 			select: false,
 			expand: false,
 			tiled: dataSet.data[0].isTiled,
@@ -555,8 +555,8 @@ TissueStack.DataSetNavigation.prototype = {
 			var dataSet = TissueStack.dataSetStore.datasets[dataSetKey];
 
 			htmlString += '<div data-role="collapsible"'+' id="tabletTreeDiv-'+ dataSet.local_id + dataSet.host + '"' 
-			  			 + 'data-transition="slide"'+'>' + '<h3>'+ dataSet.local_id + ' in ' + dataSet.host +'</h3>'
-  			  			 + '<p>'+ dataSet.description +'<br>'+ 'Location: '+ this.stripFileNameOfDataDirectory(dataSet.filename) +'</p>'
+			  			 + 'data-transition="slide">' + '<h3>'+ dataSet.description +'</h3>'
+  			  			 + '<p><span style="text-decoration:underline;">' + dataSet.description + '</span><br>[' + dataSet.local_id + '@' + dataSet.host +']<br>('+ this.stripFileNameOfDataDirectory(dataSet.filename) +')</p>'
   			  			 + '</div>';
   			  			 // For future used (Overlay Redio Button in DataSet selection)
   			  			 /* 
