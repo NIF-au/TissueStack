@@ -139,22 +139,27 @@ void		apply_colormap(PixelPacket *px, PixelPacket *px_final, float **premapped_c
 	  pixel_value = (unsigned long long int) px[(width * i) + j].red;
 	  if (QuantumDepth != 8 && quantum_depth == QuantumDepth) pixel_value = mapUnsignedValue(quantum_depth, 8, pixel_value);
 
-	  pixel_value = (pixel_value >= 255 ? 254 : pixel_value);
+	  pixel_value = (pixel_value >= 255 ? 255 : pixel_value);
 
-	  px_final[(width * i) + j].red =
-		(QuantumDepth != 8 && quantum_depth == QuantumDepth) ?
-			(unsigned short) mapUnsignedValue(8, quantum_depth, (unsigned long long) premapped_colormap[pixel_value][0]) :
-			(unsigned short)(premapped_colormap[pixel_value][0]);
+	  px_final[(width * i) + j].red = (unsigned char)(premapped_colormap[pixel_value][0]);
+	  px_final[(width * i) + j].green = (unsigned char)(premapped_colormap[pixel_value][1]);
+	  px_final[(width * i) + j].blue = (unsigned char)(premapped_colormap[pixel_value][2]);
 
-	  px_final[(width * i) + j].green =
-		(QuantumDepth != 8 && quantum_depth == QuantumDepth) ?
-			(unsigned short) mapUnsignedValue(8, quantum_depth, (unsigned long long) premapped_colormap[pixel_value][1]) :
-			(unsigned short)(premapped_colormap[pixel_value][1]);
-
-	  px_final[(width * i) + j].blue =
-		(QuantumDepth != 8 && quantum_depth == QuantumDepth) ?
-			(unsigned short) mapUnsignedValue(8, quantum_depth, (unsigned long long) premapped_colormap[pixel_value][2]) :
-			(unsigned short)(premapped_colormap[pixel_value][2]);
+	  if (QuantumDepth == 16 && quantum_depth == QuantumDepth) { // graphicmagick quantum depth mess which we have to react to at runtime
+		  px_final[(width * i) + j].red =
+				  (unsigned short)mapUnsignedValue(8, 16, (unsigned long long) premapped_colormap[pixel_value][0]);
+		  px_final[(width * i) + j].green =
+				  (unsigned short)mapUnsignedValue(8, 16, (unsigned long long) premapped_colormap[pixel_value][1]);
+		  px_final[(width * i) + j].blue =
+				  (unsigned short)mapUnsignedValue(8, 16, (unsigned long long) premapped_colormap[pixel_value][2]);
+	  } else if (QuantumDepth == 32 && quantum_depth == QuantumDepth) {
+		  px_final[(width * i) + j].red =
+				  (unsigned short)mapUnsignedValue(8, 32, (unsigned long long) premapped_colormap[pixel_value][0]);
+		  px_final[(width * i) + j].green =
+				  (unsigned short)mapUnsignedValue(8, 32, (unsigned long long) premapped_colormap[pixel_value][1]);
+		  px_final[(width * i) + j].blue =
+				  (unsigned short)mapUnsignedValue(8, 32, (unsigned long long) premapped_colormap[pixel_value][2]);
+	  }
 	  j++;
 	}
       i++;
@@ -192,12 +197,17 @@ void		apply_contrast(PixelPacket *px, unsigned char min, unsigned char max,
 	  if (QuantumDepth != 8 && quantum_depth == QuantumDepth) pixel_value = mapUnsignedValue(quantum_depth, 8, pixel_value);
 
 	  pixel_value = (pixel_value > 255 ? 255 : pixel_value);
-
 	  pixel_value = get_contrasted_value(min, max, dataset_min, dataset_max, pixel_value);
-	  if (QuantumDepth != 8 && quantum_depth == QuantumDepth)
-		  pixel_value = mapUnsignedValue(8, quantum_depth, pixel_value);
 
-	  px[(width * i) + j].red = px[(width * i) + j].green = px[(width * i) + j].blue = (unsigned short) pixel_value;
+	  // graphicmagick quantum depth mess which we have to react to at runtime
+	  px[(width * i) + j].red = px[(width * i) + j].green = px[(width * i) + j].blue = (unsigned char) pixel_value;
+	  if (QuantumDepth == 16 && quantum_depth == QuantumDepth) {
+		  px[(width * i) + j].red = px[(width * i) + j].green = px[(width * i) + j].blue =
+				  (unsigned short) mapUnsignedValue(8, 16, pixel_value);
+	  } else if (QuantumDepth == 32 && quantum_depth == QuantumDepth) {
+		  px[(width * i) + j].red = px[(width * i) + j].green = px[(width * i) + j].blue =
+				  (unsigned int) mapUnsignedValue(8, 32, pixel_value);
+	  }
 	  j++;
 	}
       i++;

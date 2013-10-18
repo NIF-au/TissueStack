@@ -179,6 +179,7 @@ TissueStack.Events.prototype = {
 			if (!e.altKey) {
 				// call zoom
 				_this.zoom(e, delta);
+				setTimeout(function(){_this.updateCoordinateDisplay();}, 500);
 				return;
 			}
 

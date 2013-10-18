@@ -120,11 +120,16 @@ TissueStack.Canvas.prototype = {
 		if (!this.getCanvasElement() || this.getCanvasElement().length == 0 || !coords) return;
 		
 		var ctx = this.getCanvasContext();
+		if ((TissueStack.overlay_datasets && this.underlying_canvas) || this.is_linked_dataset) {
+			ctx = TissueStack.overlay_values[this.data_extent.plane].getContext("2d");
+		}
+		
 		var dataForPixel = ctx.getImageData(coords.x, coords.y, 1, 1);
 		if (!dataForPixel || !dataForPixel.data) return;
 
 		// set rgb values, transparency and lookup value (if exists)
 		var value = {r: dataForPixel.data[0], g: dataForPixel.data[1], b: dataForPixel.data[2], t: dataForPixel.data[3], l: null};
+		
 		var label = TissueStack.dataSetStore.datasets[this.data_extent.data_id].
 						lookupValues["" + value.r + "/" + value.g + "/" + value.b];
 		if (typeof(label) != 'undefined')
@@ -503,20 +508,23 @@ TissueStack.Canvas.prototype = {
 
 		var copyOfCanvasY = canvasY;
 
-		//create a temporary Canvas to avoid the flickering for contrast and colormaps
-		if ((this.getDataExtent().getIsTiled() && this.hasColorMapOrContrastSetting())
-				|| (TissueStack.overlay_datasets && (this.overlay_canvas || this.underlying_canvas))) {
+		/*
+	     //create a temporary Canvas to avoid the flickering for contrast and colormaps
+		if (TissueStack.overlay_datasets && (this.overlay_canvas || this.underlying_canvas)) {
 			tempCanvas = document.createElement("canvas");
 			tempCanvas.width = this.dim_x;
 			tempCanvas.height = this.dim_y;
 			// redirect original context to temporary canvas content
 			ctx = tempCanvas.getContext("2d");
-		}
-
+		}*/
 		
 		if ((TissueStack.overlay_datasets && this.underlying_canvas) || this.is_linked_dataset) {
 			this.eraseCanvasContent();
-			ctx.globalAlpha = TissueStack.transparency;
+			ctx.globalAlpha = TissueStack.transparency
+			// for overlay label lookup
+			TissueStack.overlay_values[this.data_extent.plane] = document.createElement("canvas");
+			TissueStack.overlay_values[this.data_extent.plane].width = this.dim_x;
+			TissueStack.overlay_values[this.data_extent.plane].height = this.dim_y;
 		}
 		
 		var totalOfTiles = 0;
@@ -647,6 +655,13 @@ TissueStack.Canvas.prototype = {
 								canvasX, canvasY, width, height); // canvas dimensions
 						_this.applyContrastAndColorMapToTiles(ctx, canvasX, canvasY, width, height);
 						
+						if ((TissueStack.overlay_datasets && _this.underlying_canvas) || _this.is_linked_dataset) {
+							TissueStack.overlay_values[_this.data_extent.plane].getContext("2d");
+							TissueStack.overlay_values[_this.data_extent.plane].getContext("2d").drawImage(this,
+									imageOffsetX, imageOffsetY, width, height, // tile dimensions
+									canvasX, canvasY, width, height); // canvas dimensions
+						}
+						
 						// damn you async loads
 						if (_this.queue.latestDrawRequestTimestamp < 0 ||
 								(timestamp && timestamp < _this.queue.latestDrawRequestTimestamp)) {
@@ -654,11 +669,8 @@ TissueStack.Canvas.prototype = {
 							_this.displayLoadingProgress(0, totalOfTiles, true);
 							return;
 						}
-
-						if (counter == 0 &&
-								((_this.getDataExtent().getIsTiled() && _this.hasColorMapOrContrastSetting())
-								|| (TissueStack.overlay_datasets && (_this.overlay_canvas || _this.underlying_canvas)))) {
-							//_this.applyContrastAndColorMapToCanvasContent(ctx);
+						
+						if (counter == 0 && (TissueStack.overlay_datasets && (_this.overlay_canvas || _this.underlying_canvas))) {
 							_this.getCanvasElement().show();
 						}
 

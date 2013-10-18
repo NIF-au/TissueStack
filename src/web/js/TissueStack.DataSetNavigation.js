@@ -140,6 +140,7 @@ TissueStack.DataSetNavigation.prototype = {
 			dataSet.planes[plane].overlays = null;
 		}
 		dataSet.planes = {};
+		TissueStack.overlay_values = {};
 		
 		// restore plane and canvas order to default
 		var coll = $("#" + dataset + "_main_view_canvas");
