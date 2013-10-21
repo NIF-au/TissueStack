@@ -179,7 +179,7 @@ TissueStack.DataSetNavigation.prototype = {
 		if (!TissueStack.overlay_datasets || (TissueStack.overlay_datasets && !TissueStack.swappedOverlayOrder))
 			TissueStack.reverseOverlayOrder = false;
 		
-		//reset contrast box
+		$("#dataset_1_toolbox_canvas_button, #dataset_1_toolbox_canvas_button").show();
 		$("#dataset_1_url_box, #dataset_1_contrast_box").hide("fast");
 		$("#dataset_2_url_box, #dataset_2_contrast_box").hide("fast");
 		

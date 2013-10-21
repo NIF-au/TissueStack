@@ -90,6 +90,7 @@ TissueStack.InitUserInterface = function (initOpts) {
 	if (TissueStack.desktop && TissueStack.overlay_datasets && TissueStack.dataSetNavigation.selectedDataSets.count == 2) {
 		// hide scale bar for first data set
 		$("#dataset_1_scalecontrol").hide();
+		$("#dataset_1_toolbox_canvas_button, #dataset_2_toolbox_canvas_button").hide();
 		// transparency knob
 		TissueStack.transparency = 0.5; // reset
 		$("#transparency_knob").knob({
@@ -144,18 +145,23 @@ TissueStack.InitUserInterface = function (initOpts) {
 		
 		// crate a contrast slider per data set
 		var contrast = null;
-		if(TissueStack.desktop || TissueStack.tablet)
-			contrast = new TissueStack.ContrastCanvas("dataset_" + (x+1) + "_toolbox_canvas");
-		// crate a contrast slider per data set for phone version
-		if (TissueStack.phone){
-			contrast = new TissueStack.ContrastCanvas("dataset_1_toolbox_canvas_phone");
+		if (!dataSet.lookupValues) {
+			if(TissueStack.desktop || TissueStack.tablet) {
+				//$("#dataset_" + (x+1) + "_toolbox_canvas_button").show();
+				contrast = new TissueStack.ContrastCanvas("dataset_" + (x+1) + "_toolbox_canvas");
+			} // crate a contrast slider per data set for phone version
+			else if (TissueStack.phone){
+				contrast = new TissueStack.ContrastCanvas("dataset_1_toolbox_canvas_phone");
+			}
+		} else {
+			$("#dataset_" + (x+1) + "_toolbox_canvas_button").hide();
 		}
-
 		var dsUnderlying = null;
 		// if we have overlays of data sets on we remember the data set that underlies the top overlay
 		// that way we can later link canvases between the 2 
 		if (TissueStack.desktop && maxDataSets > 1 && x==(maxDataSets-1)) {
 			dsUnderlying = datasets[x-1];
+			if (!dataSet.lookupValues) $("#dataset_" + (x+1) + "_toolbox_canvas_button").show();
 		}
 		
 		// loop over all planes in the data, create canvas and extent objects, then display them

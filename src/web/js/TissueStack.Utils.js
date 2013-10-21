@@ -208,7 +208,7 @@ TissueStack.Utils = {
 					var rgbRangeEnd = TissueStack.color_maps[map][valueRangeRow][rgb];
 					var rgbRangeDelta = rgbRangeEnd - rgbRangeStart;
 					var rangeRemainder = index % valueRangeDelta;
-					if (rangeRemainder == 0 && rgbRangeDelta != 0 && valueRangeEnd == 255) {
+					if (rangeRemainder == 0 && rgbRangeDelta != 0 && rgbRangeDelta != 1 && valueRangeEnd == 255) {
 						offsetRGB[rgb-1] += rgbRangeDelta;
 					}
 					var rangeRatio = (rgbRangeDelta * rangeRemainder / valueRangeDelta) + offsetRGB[rgb-1];

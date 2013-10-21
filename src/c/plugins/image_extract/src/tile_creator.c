@@ -154,11 +154,11 @@ void		apply_colormap(PixelPacket *px, PixelPacket *px_final, float **premapped_c
 				  (unsigned short)mapUnsignedValue(8, 16, (unsigned long long) premapped_colormap[pixel_value][2]);
 	  } else if (QuantumDepth == 32 && quantum_depth == QuantumDepth) {
 		  px_final[(width * i) + j].red =
-				  (unsigned short)mapUnsignedValue(8, 32, (unsigned long long) premapped_colormap[pixel_value][0]);
+				  (unsigned int)mapUnsignedValue(8, 32, (unsigned long long) premapped_colormap[pixel_value][0]);
 		  px_final[(width * i) + j].green =
-				  (unsigned short)mapUnsignedValue(8, 32, (unsigned long long) premapped_colormap[pixel_value][1]);
+				  (unsigned int)mapUnsignedValue(8, 32, (unsigned long long) premapped_colormap[pixel_value][1]);
 		  px_final[(width * i) + j].blue =
-				  (unsigned short)mapUnsignedValue(8, 32, (unsigned long long) premapped_colormap[pixel_value][2]);
+				  (unsigned int)mapUnsignedValue(8, 32, (unsigned long long) premapped_colormap[pixel_value][2]);
 	  }
 	  j++;
 	}
@@ -388,7 +388,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
 	return;
       }
 
-      apply_colormap(px, px_tmp, a->info->premapped_colormap[a->info->colormap_id], a, width, height, img->depth);
+   	  apply_colormap(px, px_tmp, a->info->premapped_colormap[a->info->colormap_id], a, width, height, img->depth);
 
       SyncImagePixels(new_image);
 
@@ -397,7 +397,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
       image_info = new_image_info;
       DestroyImageInfo(image_info_cpy);
       img = new_image;
-    }
+  }
 
   if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
     DestroyImage(img);
@@ -521,7 +521,6 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
   if (streamToSocket) {// && a->info->percentage == 0) { // SOCKET STREAM
     strcpy(img->magick, a->info->image_type);
     image_info->file = a->file;
-
     write_http_header(a->file, "200 OK", a->info->image_type);
     WriteImage(image_info, img);
 

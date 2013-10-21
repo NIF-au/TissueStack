@@ -130,10 +130,11 @@ TissueStack.Canvas.prototype = {
 		// set rgb values, transparency and lookup value (if exists)
 		var value = {r: dataForPixel.data[0], g: dataForPixel.data[1], b: dataForPixel.data[2], t: dataForPixel.data[3], l: null};
 		
-		var label = TissueStack.dataSetStore.datasets[this.data_extent.data_id].
-						lookupValues["" + value.r + "/" + value.g + "/" + value.b];
-		if (typeof(label) != 'undefined')
-			value['l'] = label;
+		if (TissueStack.dataSetStore.datasets[this.data_extent.data_id].lookupValues) {
+			var label = TissueStack.dataSetStore.datasets[this.data_extent.data_id].
+					lookupValues["" + value.r + "/" + value.g + "/" + value.b];
+			if (typeof(label) != 'undefined')	value['l'] = label;
+		}
 		
 		return value;
 	},
@@ -837,7 +838,8 @@ TissueStack.Canvas.prototype = {
 				$('#'+ _this.dataset_id + '_url_box').toggle();		
 			});	
 			// show and hide events for contrast slider
-			$('#'+ _this.dataset_id + '_toolbox_canvas_button').unbind('click').click(function(){ 
+			$('#'+ _this.dataset_id + '_toolbox_canvas_button').unbind('click');
+			$('#'+ _this.dataset_id + '_toolbox_canvas_button').click(function(){ 
 				$('#'+ _this.dataset_id + '_contrast_box').toggle();		
 			});
 		}

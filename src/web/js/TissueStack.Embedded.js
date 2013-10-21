@@ -551,6 +551,10 @@ TissueStack.Embedded.prototype = {
 			$("#dataset_1_main_view_canvas").addClass("canvas_" + sideViewPlaneId);
 			$("#dataset_1_main_view_canvas").removeClass("canvas_" + mainViewPlaneId);
 			
+			// swap main view
+			dataSet.planes[mainViewPlaneId].is_main_view = false;
+			dataSet.planes[sideViewPlaneId].is_main_view = true;
+			
 			// redraw and change the zoom level as well
 			var now = new Date().getTime();
 			dataSet.planes[sideViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(sideCanvasRelativeCross, false, now);

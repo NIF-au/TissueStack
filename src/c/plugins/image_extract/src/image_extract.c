@@ -84,7 +84,7 @@ void		alloc_and_init_colormap_space_from_src(float **new_colormap, float **sourc
 			float rgbRangeEnd = source[valueRangeRow][rgb];
 			float rgbRangeDelta = rgbRangeEnd - rgbRangeStart;
 			float rangeRemainder = fmodf((float)index,valueRangeDelta);
-			if (rangeRemainder == 0 && rgbRangeDelta != 0 && valueRangeEnd == 255) {
+			if (rangeRemainder == 0 && rgbRangeDelta != 0 && rgbRangeDelta != 1 && valueRangeEnd == 255) {
 				offsetRGB[rgb-1] += rgbRangeDelta;
 			}
 			float rangeRatio = (rgbRangeDelta * rangeRemainder / valueRangeDelta) + offsetRGB[rgb-1];
@@ -1028,7 +1028,7 @@ void			*start(void *args)
 	break;
       i++;
     }
-  if (image_args->colormap_name[i] != NULL && strcmp(image_args->colormap_name[i], "gray") != 0 && strcmp(image_args->colormap_name[i], "grey") != 0)
+  if (image_args->colormap_name[i] != NULL)
     image_args->colormap_id = i;
   else
     image_args->colormap_id = -1;
