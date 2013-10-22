@@ -332,6 +332,28 @@ dist: 	compile install install-tools
 	" > $(BUILD_SRC_PATH)/pre-install.sh
 	@chmod 755 $(BUILD_SRC_PATH)/pre-install.sh
 
+	@echo -ne "\tCreating pre uninstall script..."
+	@ echo -e "#!/bin/bash\n\
+	rm -f /tmp/uninstall.log\n\
+	touch /tmp/uninstall.log\n\
+	chmod 666 /tmp/uninstall.log\n\
+	$(SYS_V_INIT_PATH)$(NAME) stop &>> /tmp/uninstall.log\n\
+	exit 0\
+	" > $(BUILD_SRC_PATH)/pre-uninstall.sh
+	@chmod 755 $(BUILD_SRC_PATH)/pre-uninstall.sh
+
+	@echo -ne "\tCreating post uninstall script..."
+	@ echo -e "#!/bin/bash\n\
+	chkconfig --del $(NAME) &>> /tmp/uninstall.log\n\
+	rm -rf $(SYS_V_INIT_PATH)$(NAME) &>> /tmp/uninstall.log\n\
+	rm -rf $(HTTPD_CONF_DIR)/$(NAME).conf &>> /tmp/uninstall.log\n\
+	mv $(HTTPD_CONF_DIR)/welcome.conf.disabled $(HTTPD_CONF_DIR)/welcome.conf &>> /tmp/uninstall.log\n\
+	rm -rf /tmp/tissue_stack_communication &>> /tmp/uninstall.log\n\
+	service httpd restart &>> /tmp/uninstall.log\n\
+	exit 0\
+	" > $(BUILD_SRC_PATH)/post-uninstall.sh
+	@chmod 755 $(BUILD_SRC_PATH)/post-uninstall.sh
+
 	@echo -e "\tCreating post install script..."
 	@ echo -e "#!/bin/bash\n\
 	rm -f /tmp/post-install.log\n\
