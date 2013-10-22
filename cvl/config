@@ -10,7 +10,7 @@ ModuleFileDescription="tissuestack"
 #
 # Package release number.
 #
-PACKAGE_RELEASE="4.0.5"
+PACKAGE_RELEASE="4.0.6"
 PACKAGE_VERSION="1.3"
 
 #
@@ -40,11 +40,15 @@ function ConfigurationCommand()
     INSTALL=$2
 
     rm -rf ${PROJECT_SOURCE_PATH}/opt
-    rm -f ${PROJECT_SOURCE_PATH}/post-install.sh
     rm -f ${PROJECT_SOURCE_PATH}/pre-install.sh
+    rm -f ${PROJECT_SOURCE_PATH}/post-install.sh
+    rm -f ${PROJECT_SOURCE_PATH}/pre-uninstall.sh
+    rm -f ${PROJECT_SOURCE_PATH}/post-uninstall.sh
     cp -r ${SOURCE}/opt ${PROJECT_SOURCE_PATH}/opt
-    cp -f ${SOURCE}/post-install.sh ${PROJECT_SOURCE_PATH}/post-install.sh
     cp -f ${SOURCE}/pre-install.sh ${PROJECT_SOURCE_PATH}/pre-install.sh
+    cp -f ${SOURCE}/post-install.sh ${PROJECT_SOURCE_PATH}/post-install.sh
+    cp -f ${SOURCE}/pre-uninstall.sh ${PROJECT_SOURCE_PATH}/pre-uninstall.sh
+    cp -f ${SOURCE}/post-uninstall.sh ${PROJECT_SOURCE_PATH}/post-uninstall.sh
     cp -r ${SOURCE}/usr/local/${ModuleFileDescription}/${PACKAGE_VERSION}/* ${INSTALL}
 }
 
@@ -205,6 +209,10 @@ PreInstallScript="pre-install.sh"
 #
 PostInstallScript="post-install.sh"
 
+PreUninstallScript="pre-uninstall.sh"
+
+PostUninstallScript="post-uninstall.sh"
+
 case "$1" in
     -a|--description)
         echo -n ${ModuleFileDescription}
@@ -284,5 +292,11 @@ case "$1" in
         ;;
     -z|--source-build-flag)
         echo -n ${SOURCE_BUILD_FLAG}
+        ;;
+    -x1|--pre-uninstall-script-file)
+        echo -n ${PreUninstallScript}
+        ;;
+    -x2|--post-uninstall-script-file)
+        echo -n ${PostUninstallScript}
         ;;
 esac
