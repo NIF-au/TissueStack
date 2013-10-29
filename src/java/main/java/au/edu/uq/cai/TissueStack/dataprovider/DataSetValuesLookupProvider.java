@@ -105,7 +105,7 @@ public final class DataSetValuesLookupProvider {
 								break;
 							case 4:
 								// store both grayscale and rgb lookup value, provided they are different...
-								if (indexes[0]*3 != (indexes[1] + indexes[2] + indexes[3])) {
+								if (indexes[0] != indexes[1] && indexes[0] != indexes[2] && indexes[0] != indexes[3]) {
 									json.append("\"" + indexes[0] + "/" + indexes[0] + "/" + indexes[0] + "\":");
 									json.append("\"" + token + "\",");
 								};
