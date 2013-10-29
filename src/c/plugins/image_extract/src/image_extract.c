@@ -47,6 +47,8 @@ void 		alloc_and_init_colormap_space_from_lookup(float **new_colormap, float **s
   	  new_colormap[j][1] = source[i][2];
   	  new_colormap[j][2] = source[i][3];
 
+  	  //INFO("[%i] => %f | %f | %f \n", j, source[i][1], source[i][2], source[i][3]);
+
   	  i++;
     }
 }
@@ -205,8 +207,9 @@ float		**get_colormap_from_lookup_file(char *path) {
 	  int		len = 1;
 	  char		*buff = NULL;
 	  float		**color = NULL;
-	  float		colormap_tmp[255][4];
+	  float		colormap_tmp[256][4];
 	  int		c_row_index = 0;
+	  int		number_of_lines = 0;
 	  int		c_column_index = 0;
 	  int		j = 0;
 
@@ -214,15 +217,15 @@ float		**get_colormap_from_lookup_file(char *path) {
 	  char		**values;
 
 	  fd = open(path, O_RDONLY);
-
 	  buff = malloc(4096 * sizeof(*buff));
-	  while (len > 0)
+	  while (1)
 	    {
 	      memset(buff, '\0', 4096);
-	      if ((len = read(fd, buff, 4096)) > 0)
-		{
+		  len = read(fd, buff, 4096-1);
+		  if (len <= 0) break;
 		  buff[len] = '\0';
-		  while (j < len && buff[j] != '\0')
+		  j=0;
+		  while (j<len && buff[j] != '\0')
 		    {
 		      if (buff[j] != ' ' && (buff[j] < '0' || buff[j] > '9') &&
 			  buff[j] != '.' && buff[j] != '\n')
@@ -231,27 +234,28 @@ float		**get_colormap_from_lookup_file(char *path) {
 		    }
 		  lines = img_str_to_wordtab(buff, '\n');
 		  c_row_index = 0;
-		  while (lines[c_row_index] != NULL)
+		  while (lines != NULL && lines[c_row_index] != NULL)
 		    {
 		      values = img_str_to_wordtab(lines[c_row_index], ' ');
 		      c_column_index = 0;
 		      while (values[c_column_index] != NULL)
 			{
-			  colormap_tmp[c_row_index][c_column_index] = atof(values[c_column_index]);
+			  colormap_tmp[number_of_lines+c_row_index][c_column_index] = atof(values[c_column_index]);
 			  c_column_index++;
 			}
+
 		      free_null_terminated_char_2D_array(values);
 		      c_row_index++;
 		    }
+		  number_of_lines += c_row_index;
 	      free_null_terminated_char_2D_array(lines);
-		}
 	  }
 	  if (fd > 0) close(fd);
 	  free(buff);
 
-	  color = malloc((c_row_index + 1) * sizeof(*color));
+	  color = malloc((number_of_lines + 1) * sizeof(*color));
 	  j=0;
-	  while (j < c_row_index) {
+	  while (j < number_of_lines) {
 		  color[j] = malloc(4 * sizeof(*color[j]));
 		  color[j][0] = colormap_tmp[j][0];
 		  color[j][1] = colormap_tmp[j][1];
@@ -260,7 +264,7 @@ float		**get_colormap_from_lookup_file(char *path) {
 		  j++;
 	  }
 	  // terminate with NULL
-	  color[c_row_index] = NULL;
+	  color[number_of_lines] = NULL;
 
 	  return color;
 }
@@ -271,7 +275,7 @@ float		**get_colormap_from_file(char *path)
   int		len = 1;
   char		*buff = NULL;
   float		**color = NULL;
-  float		colormap_tmp[255][4];
+  float		colormap_tmp[256][4];
   int		c_row_index = 0;
   int		c_column_index = 0;
   int		j = 0;
@@ -282,12 +286,12 @@ float		**get_colormap_from_file(char *path)
 
   fd = open(path, O_RDONLY);
 
-  buff = malloc(4096 * sizeof(*buff));
+  buff = malloc(8096 * sizeof(*buff));
   while (len > 0)
     {
       flag = 0;
-      memset(buff, '\0', 4096);
-      if ((len = read(fd, buff, 4096)) > 0)
+      memset(buff, '\0', 8096);
+      if ((len = read(fd, buff, 8096)) > 0)
 	{
 	  buff[len] = '\0';
 	  while (j < len && buff[j] != '\0')
@@ -298,7 +302,6 @@ float		**get_colormap_from_file(char *path)
 	      j++;
 	    }
 	  lines = img_str_to_wordtab(buff, '\n');
-	  c_row_index = 0;
 	  while (lines[c_row_index] != NULL)
 	    {
 	      values = img_str_to_wordtab(lines[c_row_index], ' ');
