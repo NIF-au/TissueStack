@@ -234,6 +234,7 @@ float		**get_colormap_from_lookup_file(char *path) {
 		    }
 		  lines = img_str_to_wordtab(buff, '\n');
 		  c_row_index = 0;
+
 		  while (lines != NULL && lines[c_row_index] != NULL)
 		    {
 		      values = img_str_to_wordtab(lines[c_row_index], ' ');
@@ -252,6 +253,8 @@ float		**get_colormap_from_lookup_file(char *path) {
 	  }
 	  if (fd > 0) close(fd);
 	  free(buff);
+
+	  DEBUG("number_of_lines: %i\n", number_of_lines);
 
 	  color = malloc((number_of_lines + 1) * sizeof(*color));
 	  j=0;
@@ -422,7 +425,6 @@ void		load_colormaps_from_directory(char *path, t_image_extract *image_args, sho
 			break;
 		i++;
 	}
-
 	if (d) {
 		while ((p = readdir(d))) {
 			if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))
@@ -435,9 +437,7 @@ void		load_colormaps_from_directory(char *path, t_image_extract *image_args, sho
 									get_colormap_from_lookup_file(buf) :
 									get_colormap_from_file(buf);
 					image_args->premapped_colormap[i] =
-							malloc(
-									(255 + 1)
-											* sizeof(*image_args->premapped_colormap[i]));
+							malloc(256	* sizeof(*image_args->premapped_colormap[i]));
 					if (discrete) {
 						alloc_and_init_colormap_space_from_lookup(
 								image_args->premapped_colormap[i],
