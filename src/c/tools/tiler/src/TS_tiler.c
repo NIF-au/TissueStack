@@ -359,14 +359,11 @@ int		main(int argc, char **argv)
   }
 
   int i = 0;
-  while (i < level)
+  while (i <= level)
   {
-  	zoomlevel += 0.25;
+  	zoomlevel += 0.25f;
   	i++;
   }
-
-  if (level == 0)
-    zoomlevel = 0.25;
 
   if (strcmp(dimension, "xspace") == 0)
   {
