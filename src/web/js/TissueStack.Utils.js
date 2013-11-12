@@ -466,7 +466,8 @@ TissueStack.Utils = {
 
 			// for preview we don't need all the params 
 			if (is_preview) {
-				return url + slice + ".low.res." + image_extension;
+				return url + slice + ".low.res." + 
+					((colormap == 'grey' || colormap == 'gray') ? "" : (colormap + ".")) + image_extension;
 			}
 
 			// for tiling we need the row/col pair in the grid
@@ -477,7 +478,7 @@ TissueStack.Utils = {
 				return null;
 			}
 
-			return url + row + '_' + col + "." + image_extension + "?" + new Date().getTime();
+			return url + row + '_' + col + ((colormap == 'grey' || colormap == 'gray') ? "" : ("_" + colormap)) + "." + image_extension + "?" + new Date().getTime();
 		} else {
 			// seems to work for server so why not use it
 		    url = url + "/" + path + "/?volume=" + filename + "&image_type=PNG&scale=" + zoom + "&dimension="
@@ -638,5 +639,10 @@ TissueStack.Utils = {
         		TissueStack.swappedOverlayOrder = false;
     		}, 250);
     	}
+	}, testHttpFileExistence : function(url) {
+		var succeeded = false;
+		TissueStack.Utils.sendAjaxRequest(url, "GET", false, function() { succeeded=true;});
+		
+		return succeeded;
 	}
 };

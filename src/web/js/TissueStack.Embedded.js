@@ -328,7 +328,10 @@ TissueStack.Embedded.prototype = {
 
 		if (_this.initOpts['color'] && _this.initOpts['color'] != 'grey') {
 			// change color map collectively for all planes
-			for (var id in dataSet.planes) dataSet.planes[id].color_map = _this.initOpts['color']; 
+			for (var id in dataSet.planes) {
+				dataSet.planes[id].color_map = _this.initOpts['color'];
+				dataSet.planes[id].is_color_map_tiled = null;
+			}
 		}
 
 		var givenCoords = {};
@@ -344,10 +347,11 @@ TissueStack.Embedded.prototype = {
 			givenCoords = plane.getRelativeCrossCoordinates();
 			givenCoords.z = plane.getDataExtent().slice;
 		}
-		plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, true, new Date().getTime());
-		setTimeout(function() {
-			plane.events.changeSliceForPlane(givenCoords.z);
-		}, 150);
+		
+		var now = new Date().getTime();
+		plane.events.changeSliceForPlane(givenCoords.z);
+		plane.queue.drawLowResolutionPreview(now);
+		plane.queue.drawRequestAfterLowResolutionPreview(null, now);
 	},
 	adjustCanvasSizes : function() {
 		// get dimensions from parent and impose them on the canvases

@@ -43,6 +43,7 @@ import au.edu.uq.cai.TissueStack.dataobjects.DataSet;
 import au.edu.uq.cai.TissueStack.dataobjects.Response;
 import au.edu.uq.cai.TissueStack.dataobjects.TaskAction;
 import au.edu.uq.cai.TissueStack.dataobjects.TaskStatus;
+import au.edu.uq.cai.TissueStack.dataprovider.ColorMapsProvider;
 import au.edu.uq.cai.TissueStack.dataprovider.ConfigurationDataProvider;
 import au.edu.uq.cai.TissueStack.dataprovider.DataSetDataProvider;
 import au.edu.uq.cai.TissueStack.dataobjects.MincInfo;
@@ -557,7 +558,10 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 			String storeDataSet,
 			@Description("Optional: the image type, default: PNG")
 			@QueryParam("image_type")
-			String imageType){	
+			String imageType,
+			@Description("Optional: a color map, default: grey")
+			@QueryParam("color_map")
+			String colorMap){	
 		// check permissions
 		if (!SecurityResources.checkSession(session)) {
 			throw new RuntimeException("Invalid Session! Please Log In.");
@@ -621,7 +625,11 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 		if (imageType == null || imageType.trim().isEmpty()) {
 			imageType = "PNG";
 		}
-		
+		// evaluate colormap
+		if (colorMap == null || colorMap.trim().isEmpty() ||
+				!ColorMapsProvider.instance().containsColorMap(colorMap)) {
+			colorMap = "grey";
+		}
 		final TissueStack jniTissueStack = new TissueStack();
 		associatedMincInfo = jniTissueStack.getMincInfo(mincFile);
 		// if we didn't find a data set in the db, query the minc file and populate a data set
@@ -727,6 +735,7 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 								tileSizeAsInt,
 								zoomFactor,
 								imageType.trim(),
+								colorMap.trim(),
 								previewAsBoolean)));
 	}
 	

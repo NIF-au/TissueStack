@@ -391,7 +391,7 @@ JNIEXPORT jobject JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_getMinc
 }
 
 JNIEXPORT jstring JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMincVolume
-		  (JNIEnv * env, jobject obj, jstring filename, jstring base_dir, jintArray arr_dimensions, jint size, jdouble zoom_factor, jstring image_type, jboolean preview) {
+		  (JNIEnv * env, jobject obj, jstring filename, jstring base_dir, jintArray arr_dimensions, jint size, jdouble zoom_factor, jstring image_type, jstring color_map, jboolean preview) {
 	i_am_jni = 1;
 
 	// tedious parameter checking
@@ -453,6 +453,11 @@ JNIEXPORT jstring JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMin
 		throwJavaException(env, "java/lang/RuntimeException", "Could not convert java to c string");
 		return NULL;
 	}
+	const char * colorMap = color_map == NULL ? "grey" : (*env)->GetStringUTFChars(env, color_map, NULL);
+	if (colorMap == NULL) {
+		throwJavaException(env, "java/lang/RuntimeException", "Could not convert java to c string");
+		return NULL;
+	}
 
 	// load and start image extract plugin
 	t_string_buffer * startTilingCommand = NULL;
@@ -461,19 +466,19 @@ JNIEXPORT jstring JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMin
 
 	jint * dimensions = (*env)->GetIntArrayElements(env, arr_dimensions, NULL);
 	int x;
-	char conversionBuffer[50];
+	char conversionBuffer[150];
 	for (x=0;x<arraySize;x++)
 	{
 		sprintf(conversionBuffer, " %i", (int)dimensions[x]);
 		startTilingCommand = appendToBuffer(startTilingCommand, conversionBuffer);
 	}
 	if (preview == JNI_TRUE) {
-		sprintf(conversionBuffer, " %.4g 6 full %s grey 0 0 10000 ", (double)zoom_factor, imageType);
+		sprintf(conversionBuffer, " %.4g 6 full %s %s 0 0 10000 ", (double)zoom_factor, imageType, colorMap);
 		startTilingCommand = appendToBuffer(startTilingCommand, conversionBuffer);
 	} else {
-		sprintf(conversionBuffer, " %.4g 1 tiles %s %i", (double)zoom_factor, imageType, (int) size);
+		sprintf(conversionBuffer, " %.4g 1 tiles %s %i -1 -1 %s  0 0 10000 ",
+				(double)zoom_factor, imageType, (int) size, colorMap);
 		startTilingCommand = appendToBuffer(startTilingCommand, conversionBuffer);
-		startTilingCommand = appendToBuffer(startTilingCommand, " -1 -1 grey 0 0 10000 ");
 	}
 
 	startTilingCommand = appendToBuffer(startTilingCommand, "0 0 ");
@@ -497,6 +502,7 @@ JNIEXPORT jstring JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMin
 	(*env)->ReleaseStringUTFChars(env, filename, file);
 	(*env)->ReleaseStringUTFChars(env, base_dir, dir);
 	if (image_type != NULL) (*env)->ReleaseStringUTFChars(env, image_type, imageType);
+	if (color_map != NULL) (*env)->ReleaseStringUTFChars(env, color_map, colorMap);
 	(*env)->ReleaseIntArrayElements(env, arr_dimensions, dimensions, 0);
 
 	return ret;

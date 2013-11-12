@@ -260,6 +260,7 @@ int		main(int argc, char **argv)
   t_tissue_stack	*t;
   char			load_command[150];
   char			*tile_command;
+  char			*color = NULL;
   char			*preview_command;
   char			*file = NULL;
   char			*pathdir = NULL;
@@ -288,18 +289,23 @@ int		main(int argc, char **argv)
   		{"dimension",	required_argument, 0, 'd'},
   		{"slice",		required_argument, 0, 's'},
   		{"level",  		required_argument, 0, 'l'},
+  		{"color",  		optional_argument, 0, 'c'},
   		{"path",  		required_argument, 0, 'p'},
   		{"file",    	required_argument, 0, 'f'},
   		{0, 0, 0, 0}
   	};
            /* getopt_long stores the option index here. */
   	int option_index = 0;
-  	c = getopt_long (argc, argv, "d:s:l:p:f:", long_options, &option_index);
+  	c = getopt_long (argc, argv, "d:s:l:c:p:f:", long_options, &option_index);
   	if (c == -1)
   		break;
   	switch (c)
   	{
-  		case 'd':
+		case 'c':
+		color = strdup(optarg);
+		break;
+
+		case 'd':
   		dimension = strdup(optarg);
   		break;
 
@@ -324,7 +330,7 @@ int		main(int argc, char **argv)
   		break;
 
   		default:
-  		printf("Usage: %s -d DIMENSION_NAME -s SLICE_NB -l LEVEL -p PATH -f FILE\n", argv[0]);
+  		printf("Usage: %s -d DIMENSION_NAME -s SLICE_NB -l LEVEL -c COLORMAP -p PATH -f FILE\n", argv[0]);
   		exit(0);
   	}
   }
@@ -334,6 +340,10 @@ int		main(int argc, char **argv)
 	printf("Usage: %s -d DIMENSION_NAME -s SLICE_NB -l LEVEL -p PATH -f FILE\n", argv[0]);
   	exit(0);
   }
+  if (!color) {
+	  color = strdup("grey");
+  }
+
   prctl(PR_SET_NAME, "TS_CORE");
 
   // initialisation of some variable
@@ -386,11 +396,11 @@ int		main(int argc, char **argv)
 
   signal_manager(t);
 
-  asprintf(&tile_command, "start image %s %i %i %i %i %i %i %.4f 1 tiles %s %i -1 -1 grey 0 0 10000 0 0 %s/%i",
-	   file, z_start, z_end, y_start, y_end, x_start, x_end, zoomlevel, "png", 256, pathdir, level);
+  asprintf(&tile_command, "start image %s %i %i %i %i %i %i %.4f 1 tiles %s %i -1 -1 %s 0 0 10000 0 0 %s/%i",
+	   file, z_start, z_end, y_start, y_end, x_start, x_end, zoomlevel, "png", 256, color, pathdir, level);
 
-  asprintf(&preview_command, "start image %s %i %i %i %i %i %i %.4f 6 full %s grey 0 0 10000 0 0 %s/%i",
-	   file, z_start, z_end, y_start, y_end, x_start, x_end, zoomlevel, "png", pathdir, level);
+  asprintf(&preview_command, "start image %s %i %i %i %i %i %i %.4f 6 full %s %s 0 0 10000 0 0 %s/%i",
+	   file, z_start, z_end, y_start, y_end, x_start, x_end, zoomlevel, "png", color, pathdir, level);
 
   char **splitted;
   t_args_plug	*args;

@@ -204,6 +204,15 @@ TissueStack.Queue.prototype = {
 		
 		var imageTile = new Image();
 		imageTile.crossOrigin = '';
+		
+		// did we check whether we have existing color map tiles?
+		var colorMap = this.canvas.color_map; // default
+		if (this.canvas.getDataExtent().getIsTiled() 
+				&& this.canvas.is_color_map_tiled != null 
+				&& !this.canvas.is_color_map_tiled) {
+			colorMap = 'grey'; // fall back onto grey
+		}
+		
 		var src =
 			TissueStack.Utils.assembleTissueStackImageRequest(
 					"http",
@@ -217,9 +226,18 @@ TissueStack.Queue.prototype = {
 								this.canvas.getDataExtent().getZoomLevelFactorForZoomLevel(this.canvas.getDataExtent().zoom_level),
 					this.canvas.getDataExtent().getOriginalPlane(),
 					slice,
-					this.canvas.color_map,
+					colorMap,
 					this.canvas.image_format
 		);
+		
+		// conduct the actual color tile check. This happens only once or when the colormap is changed
+		if (this.canvas.getDataExtent().getIsTiled() && colorMap != 'grey' 
+				&& this.canvas.is_color_map_tiled == null
+				&& !this.canvas.checkIfWeAreColorMapTiled(src)) {
+				// nope => replace the colormap with grey!
+				src = src.replace("." + colorMap, "");
+		}
+		
 		// append session id & timestamp for image service
 		if (!this.canvas.getDataExtent().getIsTiled()) {
 			if (this.canvas.contrast && (this.canvas.contrast.getMinimum() != this.canvas.contrast.dataset_min || this.canvas.contrast.getMaximum() != this.canvas.contrast.dataset_max)) {

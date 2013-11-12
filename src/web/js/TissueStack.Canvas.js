@@ -68,6 +68,7 @@ TissueStack.Canvas.prototype = {
 	cross_y : 0,
 	queue : null,
 	color_map : "grey",
+	is_color_map_tiled : null,
 	has_been_synced: false,
 	value_range_min: 0,
 	value_range_max: 255,
@@ -424,8 +425,10 @@ TissueStack.Canvas.prototype = {
 			    		myImageData.data[x] = myImageData.data[x+1] = myImageData.data[x+2] = val; 
 					}
 					
-					// apply color map
-					if (this.color_map && this.color_map != "grey") {
+					// apply the color map but only if we are not grey or do not have colored tiles already
+					if (this.color_map && this.color_map != "grey" 
+							&& this.is_color_map_tiled != null 
+							&& !this.is_color_map_tiled) {
 						// set new red value
 						myImageData.data[x] = TissueStack.indexed_color_maps[this.color_map][val][0];
 						// set new green value
@@ -577,6 +580,14 @@ TissueStack.Canvas.prototype = {
 				var imageTile = new Image();
 				imageTile.crossOrigin = '';
 				
+				// did we check whether we have existing color map tiles?
+				var colorMap = this.color_map; // default
+				if (this.getDataExtent().getIsTiled() 
+						&& this.is_color_map_tiled != null 
+						&& !this.is_color_map_tiled) {
+					colorMap = 'grey'; // fall back onto grey
+				}
+				
 				var src = 
 					TissueStack.Utils.assembleTissueStackImageRequest(
 							"http",
@@ -590,12 +601,21 @@ TissueStack.Canvas.prototype = {
 										this.getDataExtent().getZoomLevelFactorForZoomLevel(this.getDataExtent().zoom_level),
 							this.getDataExtent().getOriginalPlane(),
 							slice,
-							this.color_map,
+							colorMap,
 							this.image_format,
 							this.getDataExtent().tile_size,
 							rowIndex,
 							colIndex
 					);
+				
+				/* conduct the actual color tile check. This happens only once or when the colormap is changed
+				if (this.getDataExtent().getIsTiled() && colorMap != 'grey' 
+						&& this.is_color_map_tiled == null
+						&& !this.checkIfWeAreColorMapTiled(src)) {
+						// nope => replace the colormap with grey!
+						src = src.replace("_" + colorMap, "");
+				}*/
+				
 				// append session id & timestamp for image service as well as contrast (if deviates from original range)
 				if (!this.getDataExtent().getIsTiled()) {
 					if (this.contrast && (this.contrast.getMinimum() != this.contrast.dataset_min || this.contrast.getMaximum() != this.contrast.dataset_max)) {
@@ -867,5 +887,10 @@ TissueStack.Canvas.prototype = {
 		$("#" + this.dataset_id + " .tile_count_div progress").val(Math.round(perCent));
 		$("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).html(perCent + "%");
 		$("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).show();
+	}, checkIfWeAreColorMapTiled : function(url) {
+		if (this.is_color_map_tiled == null && !(this.color_map == 'grey' || this.color_map == 'gray')) {
+			this.is_color_map_tiled = TissueStack.Utils.testHttpFileExistence(url);
+		}
+		return this.is_color_map_tiled;
 	}
 };

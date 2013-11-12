@@ -458,7 +458,10 @@ TissueStack.BindDataSetDependentEvents = function () {
 				var now = new Date().getTime();
 				for (var id in dataSet.planes) {	
 					dataSet.planes[id].color_map = e.target.value;
-					dataSet.planes[id].drawMe(now);
+					dataSet.planes[id].is_color_map_tiled = null;
+					dataSet.planes[id].queue.drawLowResolutionPreview(now);
+					dataSet.planes[id].queue.drawRequestAfterLowResolutionPreview();
+					//dataSet.planes[id].drawMe(now);
 				}
 			}
 		});
@@ -478,7 +481,10 @@ TissueStack.BindDataSetDependentEvents = function () {
 				var ds = event.data[0].actualDataSet;
 				for (var id in ds.planes) {	
 					ds.planes[id].color_map = event.target.value;
-					ds.planes[id].drawMe(now);
+					ds.planes[id].is_color_map_tiled = null;
+					ds.planes[id].queue.drawLowResolutionPreview(now);
+					ds.planes[id].queue.drawRequestAfterLowResolutionPreview();
+					//ds.planes[id].drawMe(now);
 				}
 			});
 			
@@ -820,7 +826,10 @@ TissueStack.applyUserParameters = function() {
 
 		if (initOpts['color'] && initOpts['color'] != 'grey' && TissueStack.indexed_color_maps[initOpts['color']]) {
 			// change color map collectively for all planes
-			for (var id in dataSet.planes) dataSet.planes[id].color_map = initOpts['color'];
+			for (var id in dataSet.planes) {
+				dataSet.planes[id].color_map = initOpts['color'];
+				dataSet.planes[id].is_color_map_tiled = null;
+			}
 
 			// set right radio button
 			if (TissueStack.phone) {

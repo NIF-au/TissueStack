@@ -536,17 +536,33 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
     	  return;
       }
 
-      char dir[200]; // first path
+      char dir[300]; // first path
       sprintf(dir, "%s/%c/%i", a->info->root_path, volume->dim_name[current_dimension][0], current_slice);
       t_string_buffer * finalPath = createDirectory(dir, 0777);
       if (finalPath == NULL) {
     	  return;
       }
+
       // complete filename
-      if (strcmp(a->info->service, "full") == 0 && a->info->quality != 1) {
-    	  sprintf(dir, "/%i.low.res.%s", current_slice, a->info->image_type);
-      } else {
-    	  sprintf(dir, "/%i_%i.%s", a->info->start_w, a->info->start_h, a->info->image_type);
+      char * colormap =
+    		  (a->info->colormap_id > -1) ? a->info->colormap_name[a->info->colormap_id] : NULL;
+
+      if (strcmp(a->info->service, "full") == 0 && a->info->quality != 1) { // preview
+    	  if (colormap != NULL &&
+    			  !(strcmp(colormap, "grey") == 0 || strcmp(colormap, "gray") == 0)){
+    		  sprintf(dir, "/%i.low.res.%s.%s", current_slice,
+    			a->info->colormap_name[a->info->colormap_id], a->info->image_type);
+    	  } else {
+    		  sprintf(dir, "/%i.low.res.%s", current_slice, a->info->image_type);
+    	  }
+      } else { // tiles
+    	  if (colormap != NULL &&
+    			  !(strcmp(colormap, "grey") == 0 || strcmp(colormap, "gray") == 0)){
+    		  sprintf(dir, "/%i_%i_%s.%s", a->info->start_w, a->info->start_h,
+    				  a->info->colormap_name[a->info->colormap_id], a->info->image_type);
+    	  } else {
+    		  sprintf(dir, "/%i_%i.%s", a->info->start_w, a->info->start_h, a->info->image_type);
+    	  }
       }
       finalPath = appendToBuffer(finalPath, dir);
       strcpy(img->filename, finalPath->buffer);

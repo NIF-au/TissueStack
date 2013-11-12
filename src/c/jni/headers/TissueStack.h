@@ -61,7 +61,7 @@
 		 * Signature: (Ljava/lang/String;Ljava/lang/String;[IDZ)V
 		 */
 		JNIEXPORT jstring JNICALL Java_au_edu_uq_cai_TissueStack_jni_TissueStack_tileMincVolume
-		  (JNIEnv *, jobject, jstring, jstring, jintArray, jint, jdouble, jstring, jboolean);
+		  (JNIEnv *, jobject, jstring, jstring, jintArray, jint, jdouble, jstring, jstring, jboolean);
 
 		// convert nifti and mnc to raw
 		JNIEXPORT jstring Java_au_edu_uq_cai_TissueStack_jni_TissueStack_convertImageFormatToRaw(
