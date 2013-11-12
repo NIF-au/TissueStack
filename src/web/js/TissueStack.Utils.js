@@ -641,7 +641,15 @@ TissueStack.Utils = {
     	}
 	}, testHttpFileExistence : function(url) {
 		var succeeded = false;
-		TissueStack.Utils.sendAjaxRequest(url, "GET", false, function() { succeeded=true;});
+
+		$.ajax({
+			async : false,
+			url : url,
+			type : "HEAD",
+			cache : false,
+			timeout : 30000,
+			success: function() {succeeded = true;}
+		});
 		
 		return succeeded;
 	}
