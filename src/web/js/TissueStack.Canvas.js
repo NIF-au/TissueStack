@@ -608,13 +608,14 @@ TissueStack.Canvas.prototype = {
 							colIndex
 					);
 				
-				/* conduct the actual color tile check. This happens only once or when the colormap is changed
-				if (this.getDataExtent().getIsTiled() && colorMap != 'grey' 
+				
+				// conduct the actual color tile check. This happens only for overlays, in the other cases the preview logic takes care of it
+				if (TissueStack.overlay_datasets && (this.overlay_canvas || this.underlying_canvas) && this.getDataExtent().getIsTiled() && colorMap != 'grey' 
 						&& this.is_color_map_tiled == null
 						&& !this.checkIfWeAreColorMapTiled(src)) {
 						// nope => replace the colormap with grey!
 						src = src.replace("_" + colorMap, "");
-				}*/
+				}
 				
 				// append session id & timestamp for image service as well as contrast (if deviates from original range)
 				if (!this.getDataExtent().getIsTiled()) {

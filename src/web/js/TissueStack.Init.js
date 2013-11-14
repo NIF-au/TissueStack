@@ -402,6 +402,7 @@ TissueStack.BindDataSetDependentEvents = function () {
    		$('#sync_data_sets').unbind("change");
         $('#sync_data_sets').bind("change", function() {
         	TissueStack.sync_datasets = $('#sync_data_sets')[0].checked;
+        	$('#sync_data_sets').checkboxradio("refresh");
         	if (!TissueStack.sync_datasets && TissueStack.overlay_datasets) {
         		TissueStack.overlay_datasets = false;
         		$('#overlay_data_sets').removeAttr("checked").checkboxradio("refresh");
@@ -411,12 +412,10 @@ TissueStack.BindDataSetDependentEvents = function () {
 		$('#overlay_data_sets').unbind("change");
         $('#overlay_data_sets').bind("change", function() {
         	TissueStack.overlay_datasets = $('#overlay_data_sets')[0].checked;
+    		$('#overlay_data_sets').checkboxradio("refresh");
         	if (TissueStack.overlay_datasets) {
 	        	$('#sync_data_sets').attr("checked", "checked").checkboxradio("refresh");
 	        	TissueStack.sync_datasets = true;
-        	} else {
-	        	$('#sync_data_sets').removeAttr("checked").checkboxradio("refresh");
-	        	TissueStack.sync_datasets = false;
         	}
         	TissueStack.Utils.transitionToDataSetView();
         });
@@ -460,7 +459,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 					dataSet.planes[id].color_map = e.target.value;
 					dataSet.planes[id].is_color_map_tiled = null;
 					dataSet.planes[id].queue.drawLowResolutionPreview(now);
-					dataSet.planes[id].queue.drawRequestAfterLowResolutionPreview();
+					dataSet.planes[id].queue.drawRequestAfterLowResolutionPreview(null, now);
 					//dataSet.planes[id].drawMe(now);
 				}
 			}
@@ -483,7 +482,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 					ds.planes[id].color_map = event.target.value;
 					ds.planes[id].is_color_map_tiled = null;
 					ds.planes[id].queue.drawLowResolutionPreview(now);
-					ds.planes[id].queue.drawRequestAfterLowResolutionPreview();
+					ds.planes[id].queue.drawRequestAfterLowResolutionPreview(null, now);
 					//ds.planes[id].drawMe(now);
 				}
 			});
