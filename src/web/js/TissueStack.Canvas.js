@@ -414,15 +414,29 @@ TissueStack.Canvas.prototype = {
 					// apply contrast settings first
 					if (this.contrast && 
 							(this.contrast.getMinimum() != this.contrast.dataset_min || this.contrast.getMaximum() != this.contrast.dataset_max)) {
-			    		if (val <= this.contrast.getMinimum()) {
-			    			val = this.contrast.dataset_min;
-			    		} else if (val >= this.contrast.getMaximum()) {
-			    			val = this.contrast.dataset_max;
-			    		} else {
-			    			val = Math.round(((val - this.contrast.getMinimum()) / (this.contrast.getMaximum() - this.contrast.getMinimum())) * 
-			    					(this.contrast.dataset_max - this.contrast.dataset_min));
-			    		}
-			    		myImageData.data[x] = myImageData.data[x+1] = myImageData.data[x+2] = val; 
+						var channelIndex = 0;
+						var channels = 1;
+						// for pre-tiled color we need to go through all 3 channels
+						if (this.color_map && this.color_map != "grey" 
+							&& this.is_color_map_tiled != null 
+							&& this.is_color_map_tiled) {
+							channels = 3;
+						}
+						while (channelIndex < channels) {
+							// adjust value to be the right channel
+							val = myImageData.data[x+channelIndex];
+				    		if (val <= this.contrast.getMinimum()) {
+				    			val = this.contrast.dataset_min;
+				    		} else if (val >= this.contrast.getMaximum()) {
+				    			val = this.contrast.dataset_max;
+				    		} else {
+				    			val = Math.round(((val - this.contrast.getMinimum()) / (this.contrast.getMaximum() - this.contrast.getMinimum())) * 
+				    					(this.contrast.dataset_max - this.contrast.dataset_min));
+				    		}
+				    		if (channels == 1)	myImageData.data[x] = myImageData.data[x+1] = myImageData.data[x+2] = val;
+				    		else myImageData.data[x+channelIndex] = val;
+				    		channelIndex++;
+						}
 					}
 					
 					// apply the color map but only if we are not grey or do not have colored tiles already
