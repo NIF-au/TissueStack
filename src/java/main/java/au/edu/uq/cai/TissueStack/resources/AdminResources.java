@@ -22,6 +22,7 @@ import java.io.FilenameFilter;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +36,7 @@ import net.sf.json.JSONException;
 
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
+import org.apache.commons.fileupload.ProgressListener;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.log4j.Logger;
 
@@ -65,8 +67,69 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 	
 	private final static String DEFAULT_UPLOAD_DIRECTORY = "/opt/tissuestack/upload";
 	private final static String DEFAULT_DATA_DIRECTORY = "/opt/tissuestack/data";
-	private final static long DEFAULT_MAX_UPLOAD_SIZE = 1024 * 1024 * 1024;
-			
+	private final static long DEFAULT_MAX_UPLOAD_SIZE = 1024 * 1024 * 1024 * 100; // 100 GB
+
+	private final static Map<String, TaskStatus> uploadsMap = 
+			new HashMap<String, TaskStatus>(10);
+
+	class UploadProgressListener implements ProgressListener {
+		private String fileName;
+		
+		public void setFilename(String filename) {
+			this.fileName = filename;
+		}
+		
+		public void update(long pBytesRead, long pContentLength, int pItems) {
+	    	double progress = 
+	    			   ((double) pBytesRead / pContentLength) * 100;
+	    	if (progress > 100)
+	    		progress = 100;
+	    	
+			AdminResources.updateUploadStatus(this.fileName, Math.floor(progress));
+		};
+	}
+
+	private static void updateUploadStatus(String filename, double progress) {
+		TaskStatus status = AdminResources.getUploadStatus(filename);
+		
+		if (status == null) { // we do not exist, create us
+			status = new TaskStatus(filename, "0.0");
+		}
+		
+		// update status
+		status.setProgress(progress);
+		// update map
+		AdminResources.uploadsMap.put(filename, status);
+	}
+	
+	private static TaskStatus getUploadStatus(String filename) {
+		if (filename == null) return null;
+		
+		return AdminResources.uploadsMap.get(filename.trim());
+	}
+	
+	@Path("/upload_progress")
+	@Description("Returns the progress for a running upload")
+	public RestfulResource queryUploadProgress(
+			@Description("Mandatory: a user session token")
+			@QueryParam("session") String session,
+			@Description("Mandatory: filename")
+			@QueryParam("file")
+			String file){		
+		if (file == null) 
+			throw new RuntimeException("You have to supply a filename to query the upload status!");
+		
+		final TaskStatus status = AdminResources.getUploadStatus(file); 
+		if (status == null) 
+			throw new RuntimeException("No status present for file upload: " + file + "! Check filename again...");
+		
+		// we remove the map entry after it has been read successfully at a 100%
+		if (status.getProgress() >= 100) {
+			AdminResources.uploadsMap.remove(file);
+		}
+		return new RestfulResource(new Response(status));
+	}
+	
 	@Path("/")
 	public RestfulResource getDefault() {
 		return this.getAdminResourcesMetaInfo();
@@ -110,22 +173,9 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 			// use default
 		}
 		
-		/* a custom progress listener
-		ProgressListener progressListener = new ProgressListener(){
-		   // TODO: this has to become more outside accessible for front-end progress updates
-		   public void update(long pBytesRead, long pContentLength, int pItems) {
-		       if (pContentLength == -1) {
-		           System.out.println("So far, " + pBytesRead + " bytes have been read.");
-		       } else {
-		           System.out.println("So far, " + pBytesRead + " of " + pContentLength
-		                              + " bytes have been read.");
-		       }
-		   }
-		};*/
-		
 		// Create a new file upload handler
 		ServletFileUpload upload = new ServletFileUpload();
-		//upload.setProgressListener(progressListener);
+		upload.setProgressListener(new UploadProgressListener());
 		
 		FileItemIterator files;
 		InputStream in = null;
@@ -141,6 +191,9 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 			    if (file == null || file.getName() == null || file.getName().isEmpty()) {
 			    	throw new IllegalArgumentException("No File was Selected!");
 			    }
+			    
+			    // set filename to be accessible within the progres listener
+			    ((UploadProgressListener) upload.getProgressListener()).setFilename(file.getName());
 			    
 			    if (!file.isFormField()) {
 			    	OutputStream out = null;
@@ -162,6 +215,9 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 				       // open streams
 				       in = file.openStream();
 			    	   out = new FileOutputStream(fileToBeUploaded);
+
+			    	   // init progress status
+			    	   AdminResources.updateUploadStatus(fileToBeUploaded.getName(), 0.0);
 			    	   
 			    	   long lastChunkStep = -1;
 			    	   
@@ -226,7 +282,9 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
     			// ignored
     		}
 		}
-			
+
+		// set upload to 100 per cent
+		AdminResources.updateUploadStatus(fileToBeUploaded.getName(), 100);
 		return new RestfulResource(new Response("Upload finished successfully."));
 	}
 	

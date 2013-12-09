@@ -264,30 +264,106 @@ TissueStack.Admin.prototype = {
 	},
 	registerFileUploadHandler : function () {
 		var _this = this;
-		_this.uploadProgress();
+
+		// upload progress elements
+		var bar = $('.bar');
+		var percent = $('.percent');
+		
 		 $("#uploadForm").submit(function(){
+			// extract file name and start upload monitor
+			var filename = $.trim($('#filename_1').val());
+			var progressUpdater = null;
+			if (filename != '') {
+				var slashPos = filename.lastIndexOf('\\');
+				if (slashPos < 0)
+					slashPos = filename.lastIndexOf('/');
+				if (slashPos >= 0) {
+					// reset to zero percent 
+			        bar.width('0%');
+			        percent.html('0%');
+			        // extract file name without fake path
+					filename = filename.substring(slashPos+1);
+
+					// we query periodically and abort after 5 failed communications
+					var failedQueryAttempts = 5;
+					var error_handling = function() {
+						if (failedQueryAttempts <= 0) {
+							if (progressUpdater) clearInterval(progressUpdater);
+						}
+						failedQueryAttempts--;
+					};
+					
+					// the periodic request
+					progressUpdater = setInterval(function () {
+						TissueStack.Utils.sendAjaxRequest(
+								"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/upload_progress/json?file="+ filename,
+								'GET', true,
+								function(data, textStatus, jqXHR) {
+									if ((!data.response && !data.error)
+											|| data.error || data.response.noResults) {
+										error_handling();
+										return;
+									}
+	
+									try {
+										var progress = data.response.progress;
+							
+										//  we are finished: cancel progress monitor
+										if (progress >= 100 ) {
+									    	bar.width('100%');
+									    	percent.html('100%');
+											if (progressUpdater) clearInterval(progressUpdater);
+											_this.displayUploadDirectory();
+											_this.replaceErrorMessage("File Has Been Successfully Uploaded!");
+											$('.error_message').css("background", "#32CD32");
+											
+											return;
+										}
+										
+										// update percent
+								    	var percentVal = progress + '%';
+								    	bar.width(percentVal);
+								    	percent.html(percentVal);
+								    	// reset failed counter
+										failedQueryAttempts = 5;
+									} catch (anything) {
+										error_handling();
+									}
+								},
+								function(jqXHR, textStatus, errorThrown) {
+									error_handling();
+									return;
+								}
+							);  
+						}, 1500);
+				}
+			}
+
+			var errorHandling2 = function(message) {
+			    bar.width('0%');
+			    percent.html('0%');
+				_this.replaceErrorMessage(message);
+			};
+			
+			// the actual submit for the file upload
 			$(this).ajaxSubmit({ 	
 				url : "/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/upload/json?session=" + _this.session,
 				dataType : "json",
 				success: function(data, textStatus, jqXHR) {
 					if (!data.response && !data.error) {
-						_this.replaceErrorMessage("No File Submission!");
+						errorHandling2("No File Submission!");
 						return false;
 					}
 					
 					if (data.error) {
-						var message = "Error: " + (data.error.message ? data.error.message : " No File Submission!");
-						_this.replaceErrorMessage(message);
+						errorHandling2("Error: " + (data.error.message ? data.error.message : " No File Submission!"));
 						return false;
 					}
 					
 					if (data.response.noResults) {
-						_this.replaceErrorMessage("No Results!");
+						errorHandling2("No Results!");
 						return false;
 					}
-					_this.displayUploadDirectory();
-					_this.replaceErrorMessage("File Has Been Successfully Uploaded!");
-					$('.error_message').css("background", "#32CD32");
 				},
 				error: function(jqXHR, textStatus, errorThrown) {
 					_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
@@ -296,38 +372,6 @@ TissueStack.Admin.prototype = {
 			});
 			return false;
 		});
-	},
-	uploadProgress : function () {
-		var _this = this;
-		var bar = $('.bar');
-		var percent = $('.percent');
-		   
-		$('#uploadForm').ajaxForm({
-		    beforeSend: function() {
-		        var percentVal = '0%';
-		        bar.width(percentVal);
-		        percent.html(percentVal);
-		    },
-		    uploadProgress: function(event, position, total, percentComplete) {
-		    	var check_Success = 1;
-		    	$.each($('.uploaded_file'), function(i, uploaded_file) {
-		    		var filePath = $('#filename_1').val();
-		    		if(filePath.match(/fakepath/)){
-		    			filePath = filePath.replace(/C:\\fakepath\\/i, '');	    		
-		    		}
-		    		if (_this.session == null || filePath == uploaded_file.value || filePath == '') {
-		    			check_Success = null;
-		    		}	
-		    	});
-		    	if(check_Success !=null){
-			    	var percentVal = percentComplete + '%';
-			    	bar.width(percentVal);
-			    	percent.html(percentVal);
-		    	}
-		    },
-		    complete: function (xhr) {
-		    }
-		}); 
 	},
 	replaceErrorMessage : function (message) {
 		var excludes = message;
