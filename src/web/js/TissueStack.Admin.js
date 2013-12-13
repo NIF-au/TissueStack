@@ -270,6 +270,19 @@ TissueStack.Admin.prototype = {
 		var percent = $('.percent');
 		
 		 $("#uploadForm").submit(function(){
+			// error display helper
+			var errorHandling2 = function(message) {
+			    bar.width('0%');
+			    percent.html('0%');
+				_this.replaceErrorMessage(message);
+			};
+
+			// check session validity beforehand
+			if (!_this.checkSessionValidity(_this.session)) {
+				errorHandling2("Error: Invalid Session! Please Log In.");
+				return false;
+			}
+			 
 			// extract file name and start upload monitor
 			var filename = $.trim($('#filename_1').val());
 			var progressUpdater = null;
@@ -338,12 +351,6 @@ TissueStack.Admin.prototype = {
 						}, 1500);
 				}
 			}
-
-			var errorHandling2 = function(message) {
-			    bar.width('0%');
-			    percent.html('0%');
-				_this.replaceErrorMessage(message);
-			};
 			
 			// the actual submit for the file upload
 			$(this).ajaxSubmit({ 	
@@ -784,5 +791,26 @@ TissueStack.Admin.prototype = {
         
         $("#task_list").scroll(this.updateTableHeaders);
         $("#task_list").resize(this.updateTableHeaders);
+	},
+	checkSessionValidity : function (session_token) {
+		var isValid = false;
+
+		TissueStack.Utils.sendAjaxRequest(
+			"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/security/check_session/json?session="+ session_token,
+			'GET', false,
+			function(data, textStatus, jqXHR) {
+				if ((!data.response && !data.error) || data.error) {
+					return; // NOK case
+				}
+
+				// this is the OK case!
+				if (data.response.noResults) isValid = true;
+			},
+			function(jqXHR, textStatus, errorThrown) {
+				return;
+			}
+		);  
+	
+		return isValid;
 	}
 };

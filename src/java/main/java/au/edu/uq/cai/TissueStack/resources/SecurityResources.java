@@ -146,6 +146,18 @@ public final class SecurityResources extends AbstractRestfulMetaInformation {
 		return new RestfulResource(new Response(newSession));
 	}
 
+	@Path("/check_session")
+	@Description("Returns a boolean as to whether the supplied session is valid or not.")
+	public RestfulResource checkSessionExposed(
+			@QueryParam("session") String session) {
+		if (!SecurityResources.checkSession(session)) {
+			throw new RuntimeException("Invalid Session! Please Log In.");
+		}
+		
+		// 'success message'
+		return new RestfulResource(new Response(new NoResults()));
+	}
+	
 	@Path("/invalidate_session")
 	@Description("Invalidates a session, provided the session exists")
 	public RestfulResource invalidateSession(
