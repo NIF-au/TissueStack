@@ -11,13 +11,26 @@ CREATE TABLE configuration
 );
 ALTER TABLE configuration OWNER TO tissuestack;
 
+-- ATLAS INFO
+CREATE TABLE atlas_info
+(
+	id bigserial NOT NULL,
+	atlas_prefix VARCHAR(50) NOT NULL,
+	atlas_description VARCHAR(250) NOT NULL,
+	atlas_query_url VARCHAR(250),
+	CONSTRAINT atlas_info_pk PRIMARY KEY (id)
+);
+ALTER TABLE  atlas_info OWNER TO tissuestack;
+
 -- DATASET VALUES LOOKUP TABLE 
 CREATE TABLE dataset_values_lookup
 (
   id bigserial NOT NULL,
   filename VARCHAR(250) NOT NULL,
   content TEXT,
+  atlas_association bigint,
   CONSTRAINT dataset_values_lookup_pk PRIMARY KEY (id),
+  CONSTRAINT dataset_values_lookup_fk FOREIGN KEY (atlas_association) REFERENCES atlas_info (id),
   CONSTRAINT dataset_values_lookup_unique UNIQUE (filename)
 );
 ALTER TABLE dataset_values_lookup OWNER TO tissuestack;
@@ -67,6 +80,19 @@ CREATE TABLE dataset_planes
   CONSTRAINT dataset_planes_unique UNIQUE (dataset_id, name)
 );
 ALTER TABLE dataset_planes OWNER TO tissuestack;
+
+-- DATA SET LOOKUP MAPPING
+CREATE TABLE dataset_lookup_mapping
+(
+	dataset_id bigint NOT NULL,
+	associated_dataset_id bigint NOT NULL,
+	CONSTRAINT dataset_lookup_mapping_pk PRIMARY KEY (dataset_id, associated_dataset_id),
+	CONSTRAINT dataset_lookup_mapping_fk1 FOREIGN KEY (dataset_id)
+		REFERENCES dataset (id) ON DELETE CASCADE ON UPDATE CASCADE,
+	CONSTRAINT dataset_lookup_mapping_fk2 FOREIGN KEY (associated_dataset_id)
+		REFERENCES dataset (id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+ALTER TABLE  dataset_lookup_mapping OWNER TO tissuestack;
 
 -- GENERAL DATASET OVERLAY INFO (SHARED FOR VARIOUS MANIFESTATIONS OF OVERLAY - see below)
 CREATE TABLE dataset_overlays
