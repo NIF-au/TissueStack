@@ -50,4 +50,17 @@ public class Session {
 	public void setExpiry(long expiry) {
 		this.expiry = expiry;
 	}
+	
+	public boolean equals(Object obj) {
+		if (!(obj instanceof Session) || this.id == null) return false;
+		
+		final Session castObj = (Session) obj;
+		return (this.id.equals(castObj.id));
+	}
+	
+	public int hashCode() {
+		if (this.id == null) return Session.class.getName().length();
+
+		return this.id.length();
+	}
 }

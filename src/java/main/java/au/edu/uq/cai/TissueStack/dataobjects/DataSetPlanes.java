@@ -185,5 +185,18 @@ public class DataSetPlanes{
 	public void setValueRangeMax(BigDecimal valueRangeMax) {
 		this.valueRangeMax = valueRangeMax;
 	}
+	
+	public boolean equals(Object obj) {
+		if (!(obj instanceof DataSetPlanes)) return false;
+		
+		final DataSetPlanes castObj = (DataSetPlanes) obj;
+		if (this.id == castObj.id) return true;
+		
+		return false;
+	}
+	
+	public int hashCode() {
+		return new Long(this.id).intValue();
+	}
 }
 

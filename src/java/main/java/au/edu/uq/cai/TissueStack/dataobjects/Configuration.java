@@ -61,4 +61,17 @@ public class Configuration {
 	public void setDescription(String description) {
 		this.description = description;
 	}
+	
+	public boolean equals(Object obj) {
+		if (!(obj instanceof Session) || this.name == null) return false;
+		
+		final Configuration castObj = (Configuration) obj;
+		return (this.name.equals(castObj.name));
+	}
+	
+	public int hashCode() {
+		if (this.name == null) return Configuration.class.getName().length();
+
+		return this.name.length();
+	}
 }

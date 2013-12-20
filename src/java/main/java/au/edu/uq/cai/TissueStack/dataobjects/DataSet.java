@@ -414,7 +414,17 @@ public class DataSet {
 		
 		return newDataSet;
 	}
+	
+	public boolean equals(Object obj) {
+		if (!(obj instanceof DataSet)) return false;
+		
+		final DataSet castObj = (DataSet) obj;
+		if (this.id == castObj.id) return true;
+		
+		return false;
+	}
+	
+	public int hashCode() {
+		return new Long(this.id).intValue();
+	}
 }
-
-
-

@@ -9,11 +9,14 @@
       <class>au.edu.uq.cai.TissueStack.dataobjects.Configuration</class>
       <class>au.edu.uq.cai.TissueStack.dataobjects.DataSet</class>
       <class>au.edu.uq.cai.TissueStack.dataobjects.DataSetPlanes</class>
+      <class>au.edu.uq.cai.TissueStack.dataobjects.DataSetLookupMapping</class>      
       <class>au.edu.uq.cai.TissueStack.dataobjects.AbstractDataSetOverlay</class>
       <class>au.edu.uq.cai.TissueStack.dataobjects.CanvasOverlay</class>
       <class>au.edu.uq.cai.TissueStack.dataobjects.SVGOverlay</class>
       <class>au.edu.uq.cai.TissueStack.dataobjects.OtherDataSetOverlay</class>
       <class>au.edu.uq.cai.TissueStack.dataobjects.DataSetValuesLookupTable</class>
+      <class>au.edu.uq.cai.TissueStack.dataobjects.AtlasInfo</class>      
+      
       
       <properties>
          <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
@@ -30,11 +33,13 @@
       <class>au.edu.uq.cai.TissueStack.dataobjects.Configuration</class>
       <class>au.edu.uq.cai.TissueStack.dataobjects.DataSet</class>
       <class>au.edu.uq.cai.TissueStack.dataobjects.DataSetPlanes</class>
+      <class>au.edu.uq.cai.TissueStack.dataobjects.DataSetLookupMapping</class>      
       <class>au.edu.uq.cai.TissueStack.dataobjects.AbstractDataSetOverlay</class>
       <class>au.edu.uq.cai.TissueStack.dataobjects.CanvasOverlay</class>
       <class>au.edu.uq.cai.TissueStack.dataobjects.SVGOverlay</class>
       <class>au.edu.uq.cai.TissueStack.dataobjects.OtherDataSetOverlay</class>
       <class>au.edu.uq.cai.TissueStack.dataobjects.DataSetValuesLookupTable</class>
+      <class>au.edu.uq.cai.TissueStack.dataobjects.AtlasInfo</class>      
 
       <properties>
          <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>

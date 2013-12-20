@@ -121,4 +121,17 @@ public class AbstractDataSetOverlay implements IOverlays {
 	public void setName(String name) {
 		this.name = name;
 	}
+	
+	public boolean equals(Object obj) {
+		if (!(obj instanceof AbstractDataSetOverlay)) return false;
+		
+		final AbstractDataSetOverlay castObj = (AbstractDataSetOverlay) obj;
+		if (this.id == castObj.id) return true;
+		
+		return false;
+	}
+	
+	public int hashCode() {
+		return new Long(this.id).intValue();
+	}
 }
