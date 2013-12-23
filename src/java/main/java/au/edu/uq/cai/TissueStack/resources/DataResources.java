@@ -16,6 +16,7 @@
  */
 package au.edu.uq.cai.TissueStack.resources;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.GET;
@@ -25,10 +26,15 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
+
 import au.edu.uq.cai.TissueStack.dataobjects.DataSet;
+import au.edu.uq.cai.TissueStack.dataobjects.DataSetLookupMapping;
+import au.edu.uq.cai.TissueStack.dataobjects.IGlobalConstants;
 import au.edu.uq.cai.TissueStack.dataobjects.NoResults;
 import au.edu.uq.cai.TissueStack.dataobjects.Response;
 import au.edu.uq.cai.TissueStack.dataprovider.DataSetDataProvider;
+import au.edu.uq.cai.TissueStack.dataprovider.DataSetLookupMappingDataProvider;
 import au.edu.uq.cai.TissueStack.rest.AbstractRestfulMetaInformation;
 import au.edu.uq.cai.TissueStack.rest.Description;
 
@@ -82,6 +88,40 @@ public final class DataResources extends AbstractRestfulMetaInformation {
 		return result;
 	}
 
+	@Path("/{id}/mapping/json")
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	@Description("Returns the data set lookup mapping information for a given id (if exists) or a not found response (as json)")
+	public Response getDataSetMappingByIdAsJson(
+			@Description("Mandatory Paramter 'id': points towards the record id in the database")
+			@PathParam("id") String id,
+			@Description("Optional Paramter 'include_plane_data': queries and returns associated plane data as well. Defaults to false.")
+			@QueryParam("include_plane_data") String includePlaneData) {
+		final List<DataSetLookupMapping> result = this.getDataSetMappingsByIdInternal(id, includePlaneData);
+		if (result == null) {
+			return new Response(new NoResults());
+		}
+		return new Response(result);
+	}
+
+	@Path("/{id}/mapping/xml")
+	@GET
+	@Produces(MediaType.APPLICATION_XML)
+	@Wrapped(element="DataSetMappings", prefix=IGlobalConstants.XML_PREFIX, namespace=IGlobalConstants.XML_NAMESPACE)
+	@Description("Returns the data set lookup mapping information for a given id (if exists) or a not found response (as xml)")
+	public List<DataSetLookupMapping> getDataSetMappingByIdAsXML(
+			@Description("Mandatory Paramter 'id': points towards the record id in the database")
+			@PathParam("id") String id,
+			@Description("Optional Paramter 'include_plane_data': queries and returns associated plane data as well. Defaults to false.")
+			@QueryParam("include_plane_data") String includePlaneData) {
+		final List<DataSetLookupMapping> result = this.getDataSetMappingsByIdInternal(id, includePlaneData);
+		if (result == null) {
+			return new ArrayList<DataSetLookupMapping>(0);
+		}
+		
+		return result;
+	}
+
 	private DataSet getDataSetByIdInternal(String id) {
 		long idAsLong = -1;
 		if (id == null) {
@@ -93,6 +133,25 @@ public final class DataResources extends AbstractRestfulMetaInformation {
 			throw new IllegalArgumentException("Parameter 'id' is not numeric!");
 		}
 		return DataSetDataProvider.queryDataSetById(idAsLong);
+	}
+
+	private List<DataSetLookupMapping> getDataSetMappingsByIdInternal(String id, String includePlaneData) {
+		long idAsLong = -1;
+		if (id == null) {
+			throw new IllegalArgumentException("Parameter 'id' is mandatory!");
+		}
+		try {
+			idAsLong = Long.parseLong(id);
+		} catch (Exception e) {
+			throw new IllegalArgumentException("Parameter 'id' is not numeric!");
+		}
+		boolean includePlaneDataAsBoolean = Boolean.parseBoolean(includePlaneData);
+
+		final List<DataSetLookupMapping> mappings = 
+				DataSetLookupMappingDataProvider.queryDataSetLookupMappingForGivenDataSetId(idAsLong, includePlaneDataAsBoolean);
+		if (mappings == null || mappings.isEmpty()) return null;
+		
+		return mappings;
 	}
 
 	@Path("/list")
@@ -134,6 +193,7 @@ public final class DataResources extends AbstractRestfulMetaInformation {
 	@Path("/list/xml")
 	@GET
 	@Produces(MediaType.APPLICATION_XML)
+	@Wrapped(element="DataSets", prefix=IGlobalConstants.XML_PREFIX, namespace=IGlobalConstants.XML_NAMESPACE)
 	@Description("Returns all data sets in a paginated fashion, i.e offset=0&max_records=10")
 	public List<DataSet> getDataSetsAsXML(
 			@Description("Optional Paramter 'offset': start record for pagination. Defaults to 0.")

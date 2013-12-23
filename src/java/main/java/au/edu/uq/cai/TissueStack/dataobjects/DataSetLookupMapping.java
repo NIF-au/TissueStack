@@ -25,11 +25,13 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlSeeAlso;
 
 @Entity
 @Table(name="dataset_lookup_mapping")
 @IdClass(DataSetLookupMappingCompositeKey.class)
 @XmlRootElement(name="DataSetLookupMapping", namespace=IGlobalConstants.XML_NAMESPACE)
+@XmlSeeAlso({DataSet.class,DataSetPlanes.class})
 public class DataSetLookupMapping {
 
 	private long datasetId; 
