@@ -333,6 +333,31 @@ void		write_http_header(FILE * socket, char * status, char * image_type)
     }
 }
 
+void		write_http_error(FILE * socket, char * text, char * status)
+{
+  if (socket != NULL)
+    {
+      t_string_buffer * header = appendToBuffer(NULL, "HTTP/1.1 ");
+      if (status != NULL && strlen(status) > 0) // HTTP STATUS
+    	  header = appendToBuffer(header, status);
+      else
+    	  header = appendToBuffer(header, "500 Server Error");
+      header = appendToBuffer(header, "\r\nDate: Thu, 20 May 2004 21:12:11 GMT\r\n"); // Date (in the past)
+      header = appendToBuffer(header, "Connection: close\r\n"); // Connection header (close)
+      header = appendToBuffer(header, "Server: Tissue Stack Image Server\r\n"); // Server header
+      char contLen[150];
+      if (text != NULL && strlen(text) > 0) sprintf(contLen, "Content-Length: %lu\r\n", strlen(text));
+	  header = appendToBuffer(header, "Content-Type: text/plain"); // Content-Type header
+      header = appendToBuffer(header, "\r\nAccess-Control-Allow-Origin: *\r\n"); // allow cross origin requests
+      header = appendToBuffer(header, "Last-Modified: Thu, 20 May 2004 21:12:11 GMT\r\n\r\n"); // last modified header in the past
+      header = appendToBuffer(header, text);
+      write(fileno(socket), header->buffer, header->size);
+
+      free(header->buffer);
+      free(header);
+    }
+}
+
 short testBufferAppend() {
 	printf("\t*) String Append => ");
 

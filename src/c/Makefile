@@ -119,6 +119,9 @@ pluginsCompile:
 	@make --no-print-directory -C ./plugins/image_extract/ compile
 	@rm -rf volume.o
 	@rm -rf utils/utils.o	
+	@make --no-print-directory -C ./plugins/image_query/ compile
+	@rm -rf volume.o
+	@rm -rf utils/utils.o	
 	@make --no-print-directory -C ./plugins/comm_inter_process/ compile
 	@rm -rf volume.o
 	@rm -rf utils/utils.o	
@@ -146,6 +149,7 @@ install: prepare
 	@echo -e "\tFinished installing '$(EXE_NAME)'."
 	@make --no-print-directory -C ./plugins/communicator/ install 
 	@make --no-print-directory -C ./plugins/image_extract/ install
+	@make --no-print-directory -C ./plugins/image_query/ install
 	@make --no-print-directory -C ./plugins/comm_inter_process/ install
 	@make --no-print-directory -C ./plugins/minc_convert/ install
 	@make --no-print-directory -C ./plugins/nifti_convert/ install
@@ -162,6 +166,7 @@ clean: clean-tools
 	@make --no-print-directory -C ./utils/ clean
 	@make --no-print-directory -C ./plugins/communicator/ clean
 	@make --no-print-directory -C ./plugins/image_extract/ clean
+	@make --no-print-directory -C ./plugins/image_query/ clean
 	@make --no-print-directory -C ./plugins/comm_inter_process/ clean
 	@make --no-print-directory -C ./plugins/minc_info/ clean
 	@make --no-print-directory -C ./plugins/minc_convert/ clean

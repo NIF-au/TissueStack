@@ -148,6 +148,7 @@ char		*serv_copy_check_clean_string_from_tab(char **tab)
 {
   char		*str;
 
+  if (tab[0] == NULL || tab[1] == NULL) return NULL;
   str = strdup(tab[1]);
   str[strlen(str)] = '\0';
   str = serv_str_to_wordtab(str, ' ')[0];
@@ -159,6 +160,7 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
   int		i;
   int		j;
   char		*volume = NULL;
+  char		*query = NULL;
   char		*dimension = NULL;
   char		*slice = NULL;
   char		*scale = NULL;
@@ -212,8 +214,10 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
       i = 0;
       while (tmp[i] != NULL)
 	{
-	  tmp2 = serv_str_to_wordtab(tmp[i], '=');
+      tmp2 = serv_str_to_wordtab(tmp[i], '=');
+
 	  if (strcmp(tmp2[0], "volume") == 0)		volume = serv_copy_check_clean_string_from_tab(tmp2);
+	  else if (strcmp(tmp2[0], "query") == 0)   query = serv_copy_check_clean_string_from_tab(tmp2);
 	  else if (strcmp(tmp2[0], "dimension") == 0)	dimension = serv_copy_check_clean_string_from_tab(tmp2);
 	  else if (strcmp(tmp2[0], "slice") == 0)	slice = serv_copy_check_clean_string_from_tab(tmp2);
 	  else if (strcmp(tmp2[0], "scale") == 0)	scale = serv_copy_check_clean_string_from_tab(tmp2);
@@ -235,75 +239,108 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
 	    free(tmp2[j++]);
 	  i++;
 	}
-      if (is_not_num(slice) || is_not_num(dimension) || is_not_num(scale) ||
-	  is_not_num(quality) || is_not_num(x) || is_not_num(y))
+
+      if (is_not_num(slice) || is_not_num(dimension) || (query == NULL && is_not_num(scale)) ||
+    		  (query == NULL && is_not_num(quality)) || is_not_num(x) || is_not_num(y))
 	{
-	  ERROR("Invalid argument: non interger");
-	  return;
+   	  write_http_error(file, "You used a non-numeric value for a strictly numeric parameter!", NULL);
+   	  fclose(file);
+   	  return;
 	}
 
       t_vol		*vol = load_volume(a, volume);
 
       if (vol == NULL) {
-          write_http_header(file, "500 Server Error", "png");
+    	  write_http_error(file, "Volume does not exist!", NULL);
     	  fclose(file);
     	  return;
       }
 
       if ((dimension[0] = get_by_name_dimension_id(vol, dimension, s)) == 0) return;
 
-      if (service == NULL)
-	{
-	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s %s 1 %s %s", volume,
-		  (dimension[0] == '0' ? atoi(slice) : -1),
-		  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
-		  (dimension[0] == '1' ? atoi(slice) : -1),
-		  (dimension[0] == '1' ? (atoi(slice) + 1) : -1),
-		  (dimension[0] == '2' ? atoi(slice) : -1),
-		  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
-		  scale, quality, "full", image_type, (colormap_name == NULL ? "NULL" : colormap_name),
-		  (contrast_min == NULL ? "0" : contrast_min), (contrast_max == NULL ? "0" : contrast_max),
-		  id != NULL ? id : "0", time != NULL ? time : "0");
-	}
-      else if (strcmp(service, "tiles") == 0)
-	{
-	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s %s %s %s %s 1 %s %s", volume,
-		  (dimension[0] == '0' ? atoi(slice) : -1),
-		  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
-		  (dimension[0] == '1' ? atoi(slice) : -1),
-		  (dimension[0] == '1' ? (atoi(slice) + 1) : -1),
-		  (dimension[0] == '2' ? atoi(slice) : -1),
-		  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
-		  scale, quality, service, image_type, square, y, x, (colormap_name == NULL ? "NULL" : colormap_name),
-		  (contrast_min == NULL ? "0" : contrast_min), (contrast_max == NULL ? "0" : contrast_max),
-		  id != NULL ? id : "0", time != NULL ? time : "0");
-	}
-      else if (strcmp(service, "images") == 0)
-	{
-	  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s %s %s %s %s %s 1 %s %s", volume,
-		  (dimension[0] == '0' ? atoi(slice) : -1),
-		  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
-		  (dimension[0] == '1' ? atoi(slice) : -1),
-		  (dimension[0] == '1' ? (atoi(slice) + 1) : -1),
-		  (dimension[0] == '2' ? atoi(slice) : -1),
-		  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
-		  scale, quality, service, image_type, y, x, y_end, x_end, (colormap_name == NULL ? "NULL" : colormap_name),
-		  (contrast_min == NULL ? "0" : contrast_min), (contrast_max == NULL ? "0" : contrast_max),
-		  id != NULL ? id : "0", time != NULL ? time : "0");
-	}
-      if (s->general->tile_requests->is_expired(s->general->tile_requests, id, time)) {
-    	  write_http_header(file, "408 Request Timeout", image_type);
-    	  close(fileno(file));
-    	  return;
+      // we branch as to whether we have a voxel query or a tiling request !
+      if (query == NULL) { // TILING
+    	  // general sanity check
+    	  if (scale == NULL || slice == NULL || dimension == NULL || quality == NULL || image_type == NULL) {
+        	  write_http_error(file, "Not all mandatory params were supplied!", NULL);
+        	  fclose(file);
+        	  return;
+    	  }
+
+		  if (service == NULL) {
+			  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s %s 1 %s %s", volume,
+				  (dimension[0] == '0' ? atoi(slice) : -1),
+				  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
+				  (dimension[0] == '1' ? atoi(slice) : -1),
+				  (dimension[0] == '1' ? (atoi(slice) + 1) : -1),
+				  (dimension[0] == '2' ? atoi(slice) : -1),
+				  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
+				  scale, quality, "full", image_type, (colormap_name == NULL ? "NULL" : colormap_name),
+				  (contrast_min == NULL ? "0" : contrast_min), (contrast_max == NULL ? "0" : contrast_max),
+				  id != NULL ? id : "0", time != NULL ? time : "0");
+		} else if (strcmp(service, "tiles") == 0) {
+	    	  // specific sanity check
+	    	  if (x == NULL || y == NULL || square == NULL) {
+	        	  write_http_error(file, "Not all mandatory params were supplied!", NULL);
+	        	  fclose(file);
+	        	  return;
+	    	  }
+
+			sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s %s %s %s %s 1 %s %s", volume,
+			  (dimension[0] == '0' ? atoi(slice) : -1),
+			  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
+			  (dimension[0] == '1' ? atoi(slice) : -1),
+			  (dimension[0] == '1' ? (atoi(slice) + 1) : -1),
+			  (dimension[0] == '2' ? atoi(slice) : -1),
+			  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
+			  scale, quality, service, image_type, square, y, x, (colormap_name == NULL ? "NULL" : colormap_name),
+			  (contrast_min == NULL ? "0" : contrast_min), (contrast_max == NULL ? "0" : contrast_max),
+			  id != NULL ? id : "0", time != NULL ? time : "0");
+		}  else if (strcmp(service, "images") == 0)	{
+       	  // specific sanity check
+			if (x == NULL || y == NULL || y_end == NULL  || x_end == NULL) {
+	        	  write_http_error(file, "Not all mandatory params were supplied!", NULL);
+	        	  fclose(file);
+	        	  return;
+	    	  }
+
+			sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s %s %s %s %s %s 1 %s %s", volume,
+			  (dimension[0] == '0' ? atoi(slice) : -1),
+			  (dimension[0] == '0' ? (atoi(slice) + 1) : -1),
+			  (dimension[0] == '1' ? atoi(slice) : -1),
+			  (dimension[0] == '1' ? (atoi(slice) + 1) : -1),
+			  (dimension[0] == '2' ? atoi(slice) : -1),
+			  (dimension[0] == '2' ? (atoi(slice) + 1) : -1),
+			  scale, quality, service, image_type, y, x, y_end, x_end, (colormap_name == NULL ? "NULL" : colormap_name),
+			  (contrast_min == NULL ? "0" : contrast_min), (contrast_max == NULL ? "0" : contrast_max),
+			  id != NULL ? id : "0", time != NULL ? time : "0");
+		}
+
+		if (s->general->tile_requests->is_expired(s->general->tile_requests, id, time)) {
+			  write_http_header(file, "408 Request Timeout", image_type);
+			  close(fileno(file));
+			  return;
+		}
+		s->general->tile_requests->add(s->general->tile_requests, id, time);
+      } else { // POINT QUERY
+       	  // specific sanity check
+			if (x == NULL || y == NULL) {
+	        	  write_http_error(file, "Not all mandatory params were supplied!", NULL);
+	        	  fclose(file);
+	        	  return;
+    	  }
+
+    	  sprintf(comm, "start image_query %s %i %i %i %s %s",
+    			  volume,
+    			  (dimension[0] == '0' ? atoi(slice) : -1),
+    			  (dimension[0] == '1' ? atoi(slice) : -1),
+    			  (dimension[0] == '2' ? atoi(slice) : -1),
+    			  y, x);
       }
-	  s->general->tile_requests->add(s->general->tile_requests, id, time);
 
       s->general->plug_actions(s->general, comm, file);
     } else {
-        write_http_header(file, "404 Not Found", NULL);
-        char * notFoundMessage =
-        		"<html><head><title>404 - Not Found</title></head><body><h3>There is no file or resource under that url ...</h3></body></html>";
-        write(fileno(file), notFoundMessage, strlen(notFoundMessage));
+        write_http_error(file, "There is no file or resource under that url", "404 Not Found");
         close(fileno(file));
     }
 }

@@ -265,7 +265,7 @@ void		free_core_struct(t_tissue_stack *t)
 }
 
 // PLEASE DO NOT CHANGE STRINGS HERE UNLESS YOU UPDATE THE CODE THAT REFERENCES THEM !!!!
-static char * PLUGINS[7][2] = {
+static char * PLUGINS[8][2] = {
 		{"image", "TissueStackImageExtract.so"},
 		{"serv", "TissueStackCommunicator.so"},
 		{"comm", "TissueStackProcessCommunicator.so"},
@@ -273,6 +273,7 @@ static char * PLUGINS[7][2] = {
 		{"minc_converter", "TissueStackMincConverter.so"},
 		{"nifti_converter", "TissueStackNiftiConverter.so"},
 		{"progress", "TissueStackPercent.so"},
+		{"image_query", "TissueStackImageQuery.so"}
 };
 
 int		main(int argc, char **argv)
