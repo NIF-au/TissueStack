@@ -24,7 +24,7 @@ void		free_all_plugins(t_tissue_stack *t)
   p = t->first;
   while (p != NULL)
     {
-      save = p;
+	  save = p;
       dlclose(p->handle);
       if (p->name != NULL) free(p->name);
       if (p->path != NULL) free(p->path);
@@ -114,6 +114,13 @@ void		*plugin_try_start(void *args)
   a_cpy->commands = &a_cpy->commands[1];
   plugin_start(a_cpy);
   return (NULL);
+}
+
+void plugin_unload_from_string(char *str, t_tissue_stack *t) {
+	t_args_plug	*args;
+
+	args = create_plug_args(str_to_wordtab(str), t, NULL);
+	plugin_unload(args);
 }
 
 void		plugin_load_from_string(char *str, t_tissue_stack *t)
@@ -288,8 +295,14 @@ void		*plugin_unload(void *args)
   while (this->busy != 0)
     usleep(1000);
 
-  destroy_t_plugin(this, general);
-  destroy_plug_args(a);
+  if (this != NULL) {
+	  destroy_t_plugin(this, general);
+	  this = NULL;
+  }
+  if (a != NULL) {
+	  destroy_plug_args(a);
+	  a = NULL;
+  }
 
   return (NULL);
 }
@@ -306,11 +319,14 @@ void destroy_t_plugin(t_plugin * this, t_tissue_stack * general)
       if (general->first != NULL) general->first->prev = NULL;
     }
 
-  if (this->start_command != NULL) destroy_command_args(this->start_command);
+  if (this->start_command != NULL) {
+	  destroy_command_args(this->start_command);
+	  this->start_command = NULL;
+  }
   if (this->handle != NULL) dlclose(this->handle);
   if (this->name != NULL) free(this->name);
   if (this->path != NULL) free(this->path);
-  if (this->stock != NULL) free(this->stock);
+  //if (this->stock != NULL) free(this->stock);
 
   free(this);
 }

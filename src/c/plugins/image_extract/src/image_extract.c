@@ -96,22 +96,6 @@ void		alloc_and_init_colormap_space_from_src(float **new_colormap, float **sourc
 	}
 }
 
-char		*str_n_cpy(char *str, int position, int len)
-{
-  char		*dest;
-  int		i;
-
-  i = 0;
-  dest = malloc((len + 1) * sizeof(*dest));
-  while (i < len)
-    {
-      dest[i] = str[i + position];
-      i++;
-    }
-  dest[i] = '\0';
-  return (dest);
-}
-
 int		img_word_count(char *buff, char c)
 {
   int		i;
@@ -1062,19 +1046,12 @@ void		*unload(void *args)
   t_args_plug	*a = NULL;
 
   a = (t_args_plug *)args;
-
   image_args = (t_image_extract *)a->this->stock;
-
   free_image_extract(image_args);
 
-  if (a != NULL) {
-	  free(a->name);
-	  free(a->path);
-	  free(a);
-	  a = NULL;
-  }
-
   DestroyMagick();
+
+  INFO("Image Extract Plugin: Unloaded");
 
   return (NULL);
 }

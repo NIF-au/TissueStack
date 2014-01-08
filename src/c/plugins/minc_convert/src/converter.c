@@ -337,5 +337,6 @@ void  		*start(void *args)
 
 void		*unload(void *args)
 {
+	INFO("Minc Convert Plugin: Unloaded");
   return (NULL);
 }

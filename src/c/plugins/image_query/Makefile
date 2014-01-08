@@ -4,7 +4,7 @@ SRCS		=	$(DIRSRC)image_query.c					\
 			$(DIRSRC)../../../volume.c				\
 			$(DIRSRC)../../../utils/utils.c
 
-INCLUDE		=	-I./headers -I./../../utils -I../../headers -I/usr/include/GraphicsMagick -I/usr/local/bic/include
+INCLUDE		=	-I./../image_extract/headers -I./../../utils -I../../headers -I/usr/include/GraphicsMagick -I/usr/local/bic/include
 
 LIB_PATH	=	
 

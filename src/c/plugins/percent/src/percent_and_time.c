@@ -23,22 +23,6 @@ void		percent_time_write_plug(char *str, void *box)
     write(*((int *)box), str, strlen(str));
 }
 
-char		*str_n_cpy(char *str, int position, int len)
-{
-  char		*dest;
-  int		i;
-
-  i = 0;
-  dest = malloc((len + 1) * sizeof(*dest));
-  while (i < len)
-    {
-      dest[i] = str[i + position];
-      i++;
-    }
-  dest[i] = '\0';
-  return (dest);
-}
-
 int		percent_word_count(char *buff, char c)
 {
   int		i;
@@ -208,6 +192,6 @@ void		*start(void *args)
 
 void		*unload(void *args)
 {
-  INFO("Unloaded");
+  INFO("Percent Plugin Unloaded");
   return (NULL);
 }

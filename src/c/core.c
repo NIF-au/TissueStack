@@ -345,6 +345,14 @@ int		main(int argc, char **argv)
   // free all the stuff mallocked
   INFO("Shutting down TissueStackImageServer!");
 
+  // unloading plugins
+  for (x=0;x<nr_of_plugins;x++)
+  {
+	  sprintf(load_command, "unload %s %s/%s", PLUGINS[x][0], PLUGINS_PATH, PLUGINS[x][1]);
+	  plugin_unload_from_string(load_command, t);
+	  DEBUG("Un-Loading: %s\n", load_command);
+  }
+
   t->tp->loop = 0;
   thread_pool_destroy(t->tp);
   free_core_struct(t);

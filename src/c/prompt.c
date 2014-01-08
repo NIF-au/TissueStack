@@ -45,22 +45,6 @@ int		letter_count(char *buff, int position)
   return (i);
 }
 
-char		*str_n_cpy(char *str, int position, int len)
-{
-  char		*dest;
-  int		i;
-
-  i = 0;
-  dest = malloc((len + 1) * sizeof(*dest));
-  while (i < len)
-    {
-      dest[i] = str[i + position];
-      i++;
-    }
-  dest[i] = '\0';
-  return (dest);
-}
-
 char		**str_to_wordtab(char *buff)
 {
   int		i;
@@ -111,7 +95,10 @@ void		destroy_plug_args(t_args_plug *a)
 	  return;
   }
 
-  destroy_command_args(a->commands);
+  if (a->commands != NULL) {
+	  destroy_command_args(a->commands);
+	  a->commands = NULL;
+  }
 
   if (a->name != NULL) {
     free(a->name);
@@ -126,7 +113,7 @@ void		destroy_plug_args(t_args_plug *a)
   a = NULL;
 }
 
-void		destroy_command_args(char ** args)
+void destroy_command_args(char ** args)
 {
   if (args == NULL) {
 	  return;
@@ -241,11 +228,17 @@ void		prompt_exec(char **commands, t_tissue_stack *general, void *box)
       i++;
     }
 
-  destroy_command_args(commands);
+  if (commands != NULL) {
+	  destroy_command_args(commands);
+	  commands = NULL;
+  }
 
   if (i == general->nb_func)
     {
-      destroy_plug_args(args);
+	  if (args != NULL) {
+		  destroy_plug_args(args);
+		  args = NULL;
+	  }
       printf("%s: Unknown command\n", prog);
     }
 }

@@ -339,5 +339,6 @@ void  		*start(void *args)
 
 void		*unload(void *args)
 {
+	INFO("Nifti Converter Plugin: Unloaded");
   return (NULL);
 }

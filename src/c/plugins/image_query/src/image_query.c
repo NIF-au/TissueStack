@@ -15,74 +15,104 @@
  * along with TissueStack.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "image_query.h"
+#include "image_extract.h"
 
 void		*init(void *args)
 {
-  //t_image_extract	*image_args;
-  t_args_plug	*a;
-  a = (t_args_plug *)args;
-  prctl(PR_SET_NAME, "Query_plug");
+	  t_image_extract	*image_args;
+	  t_args_plug	*a;
+	  a = (t_args_plug *)args;
+	  prctl(PR_SET_NAME, "Image_plug");
 
-  LOG_INIT(a);
+	  LOG_INIT(a);
 
-  INFO("Image Query Plugin: Initialized");
+	  image_args = malloc(sizeof(*image_args));
+	  image_args->total_slices_to_do = 0;
+	  image_args->slices_done = 0;
+	  image_args->step = 0;
+	  image_args->dim_start_end = NULL;
+	  image_args->root_path = NULL;
+	  image_args->service = NULL;
+	  image_args->image_type = NULL;
+	  image_args->request_id = NULL;
+	  image_args->request_time = NULL;
+	  pthread_mutex_init(&image_args->mut, NULL);
+	  pthread_mutex_init(&image_args->percent_mut, NULL);
+	  pthread_cond_init(&image_args->cond, NULL);
+	  InitializeMagick("./");
+	  a->this->stock = (void*)image_args;
 
-  // free command line args
-  a->destroy(a);
+	  INFO("Image Extract Plugin: Started");
 
-  return (NULL);
+	  // free command line args
+	  a->destroy(a);
+
+	  return (NULL);
 }
 
-void			*start(void *args)
-{
-	  INFO("Image Query Plugin: Entered");
+void			*start(void *args) {
+	INFO("Image Query Plugin: Entered");
 
-	  //t_image_extract	*image_args;
-  t_args_plug		*a;
-  FILE			*socketDescriptor;
-  t_vol			*volume;
+	t_image_extract	*image_args;
+	//t_image_extract	*image_args_tmp;
+	t_args_plug		*a;
+	FILE			*socketDescriptor;
+	t_vol			*volume;
 
-  a = (t_args_plug *)args;
-  prctl(PR_SET_NAME, "TS_QUERY");
+	a = (t_args_plug *)args;
+	prctl(PR_SET_NAME, "TS_QUERY");
 
-  socketDescriptor = (FILE*)a->box;
-  volume = load_volume(a, a->commands[0]);
-  if (volume == NULL) {
-    write_http_header(socketDescriptor, "500 Server Error", NULL);
-    fclose(socketDescriptor);
-    return NULL;
-  }
+	socketDescriptor = (FILE*)a->box;
+	volume = load_volume(a, a->commands[0]);
+	if (volume == NULL) {
+		write_http_header(socketDescriptor, "500 Server Error", "png");
+		fclose(socketDescriptor);
+		return NULL;
+	}
 
-  write_http_header(socketDescriptor, "200 OK", NULL);
-  fclose(socketDescriptor);
+	//image_args_tmp = (t_image_extract*)a->this->stock;
+	image_args = create_image_struct();
+	image_args->dim_nb = volume->dim_nb;
 
-  INFO("Image Query Plugin: Started");
+	write_http_header(socketDescriptor, "200 OK", "png");
+	fclose(socketDescriptor);
 
-  a->destroy(a);
-
-  return (NULL);
+	return NULL;
 }
 
-void		*unload(void *args)
+t_image_extract	*create_image_struct()
 {
-  //t_image_extract	*image_args = NULL;
-  t_args_plug	*a = NULL;
+  t_image_extract	*image_args;
 
-  a = (t_args_plug *)args;
+  image_args = malloc(sizeof(*image_args));
+  image_args->total_slices_to_do = 0;
+  image_args->slices_done = 0;
+  image_args->step = 0;
+  image_args->dim_start_end = NULL;
+  image_args->root_path = NULL;
+  image_args->service = NULL;
+  image_args->image_type = NULL;
+  image_args->request_id = NULL;
+  image_args->request_time = NULL;
+  pthread_mutex_init(&image_args->mut, NULL);
+  pthread_cond_init(&image_args->cond, NULL);
+  return (image_args);
+}
 
-  INFO("Image Query Plugin: Unloaded");
+void		*unload(void *args) {
+	t_image_extract	*image_args = NULL;
+	t_args_plug	*a = NULL;
 
-  if (a != NULL) {
-	  free(a->name);
-	  free(a->path);
-	  free(a);
-	  a = NULL;
-  }
+	a = (t_args_plug *)args;
+	image_args = (t_image_extract *)a->this->stock;
+	free_image_extract(image_args);
 
-  DestroyMagick();
+	DestroyMagick();
 
-  return (NULL);
+	INFO("Image Query Plugin: Unloaded");
+
+	return (NULL);
+
 }
 
 void			free_image_extract(t_image_extract * extract) {

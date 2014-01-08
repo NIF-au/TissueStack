@@ -268,7 +268,7 @@ struct			s_hist_prompt
 
 int             word_count(char *buff);
 int             letter_count(char *buff, int position);
-char            *str_n_cpy(char *str, int position, int len);
+//char            *str_n_cpy(char *str, int position, int len);
 char            **str_to_wordtab(char *buff);
 char            **copy_args(int start, char **commands);
 void            change_tty_attr();
@@ -314,6 +314,7 @@ void            free_all_plugins(t_tissue_stack *t);
 void 		destroy_t_plugin(t_plugin * this, t_tissue_stack * general);
 void		plugin_load_from_string(char *str, t_tissue_stack *t);
 void		plugin_start_from_string(char *str, t_tissue_stack *t);
+void		plugin_unload_from_string(char *str, t_tissue_stack *t);
 
 /*		tasks			*/
 

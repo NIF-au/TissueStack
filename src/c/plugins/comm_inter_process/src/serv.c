@@ -201,12 +201,15 @@ int		serv_init_connect(t_serv_comm *s)
   return (0);
 }
 
+t_serv_comm	*s;
+
 void		*init(void *args)
 {
   t_args_plug	*a;
 
   a = (t_args_plug *)args;
   LOG_INIT(a);
+  s = NULL;
   INFO("Inter Process Communicator initialized.");
   return (NULL);
 }
@@ -215,7 +218,7 @@ void		*start(void *args)
 {
   prctl(PR_SET_NAME, "TS_INT_COMM");
   t_args_plug	*a = (t_args_plug*)args;
-  t_serv_comm	*s = malloc(sizeof(*s));
+  s = malloc(sizeof(*s));
   s->bigger_fd = 0;
   s->general = a->general_info;
   a->this->stock = s;
@@ -226,6 +229,11 @@ void		*start(void *args)
 
 void		*unload(void *args)
 {
-  destroy_plug_args((t_args_plug*)args);
-  return (NULL);
+	if (s != NULL) {
+		free(s);
+		s = NULL;
+	}
+	INFO("Inter Process Communicator Plugin: Unloaded");
+
+	return (NULL);
 }

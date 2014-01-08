@@ -86,6 +86,7 @@ unsigned int    get_total_slices_to_do(t_vol *v, int **dim_start_end);
 int             **generate_dims_start_end(t_vol *v, int sx, int ex, int sy,
                                           int ey, int sz, int ez);
 int             **generate_dims_start_end_thread(t_vol *v, int dim, int start, int end);
+t_image_extract	*create_image_struct();
 t_image_args      *create_args_thread(t_tissue_stack *t, t_vol *vol, t_image_extract *image_general, FILE *sock);
 void            image_creation_lunch(t_tissue_stack *t, t_vol *vol, int step, t_image_extract *image_general, FILE *sock);
 void			lunch_percent_display(t_tissue_stack *t, t_vol *vol, t_image_extract *image_general);

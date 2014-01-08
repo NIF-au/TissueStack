@@ -58,6 +58,8 @@ char* strupper( char* s );
 char* strlower( char* s );
 char		*array_2D_to_array_1D(char **str);
 
+char		*str_n_cpy(char *str, int position, int len);
+
 // takes an unsigned value and maps it from its original range to a new range.
 // Note that the range arguments denote the bit length, e.g 8,16,etc. up to a 64 maximum!!
 inline unsigned long long mapUnsignedValue(unsigned char fromBitRange, unsigned char toBitRange, unsigned long long value);

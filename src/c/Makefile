@@ -140,7 +140,7 @@ pluginsCompile:
 	@make --no-print-directory -C ./jni/ compile
 	@echo -e "\n\tFinished compiling plugins."
 
-install: prepare
+install: compile
 	@echo -e "\n\tInstalling Binaries (may require super user priviledges):"
 	@echo -e "\t-----------------------------------------------\n"
 	@echo -e "\tInstalling '$(EXE_NAME)' executable into: $(BINS_PATH)."
@@ -215,7 +215,7 @@ clean-tools:
 compile-tools: clean-tools
 	@make --no-print-directory -C $(DIRSRC)/tools compile
 
-install-tools: clean-tools
+install-tools: compile-tools
 	@make --no-print-directory -C $(DIRSRC)/tools install
 	
 # target for building a binary tar.gz (is then used for rpm build)

@@ -29,22 +29,6 @@ unsigned int		get_slices_max(t_vol *volume)
   return (volume->size[Z] * volume->size[Y]);
 }
 
-char		*str_n_cpy(char *str, int position, int len)
-{
-  char		*dest;
-  int		i;
-
-  i = 0;
-  dest = malloc((len + 1) * sizeof(*dest));
-  while (i < len)
-    {
-      dest[i] = str[i + position];
-      i++;
-    }
-  dest[i] = '\0';
-  return (dest);
-}
-
 int		serv_word_count(char *buff, char c)
 {
   int		i;
@@ -459,6 +443,15 @@ void		*start(void *args)
 
 void		*unload(void *args)
 {
-  destroy_plug_args((t_args_plug*)args);
-  return (NULL);
+	t_args_plug	*a = (t_args_plug*)args;
+	t_serv_comm	*s = NULL;
+	if (a != NULL && a->this != NULL && a->this->stock != NULL) s = (t_serv_comm*)a->this->stock;
+
+	if (s != NULL) {
+		free(s);
+		s = NULL;
+	}
+	INFO("Communicator Plugin: Unloaded");
+
+	return (NULL);
 }

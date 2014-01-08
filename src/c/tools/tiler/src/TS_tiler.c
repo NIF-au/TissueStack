@@ -337,7 +337,7 @@ int		main(int argc, char **argv)
 
   if (!file || !pathdir || !dimension)
   {
-	printf("Usage: %s -d DIMENSION_NAME -s SLICE_NB -l LEVEL -p PATH -f FILE\n", argv[0]);
+	printf("Usage: %s -d DIMENSION_NAME -s SLICE_NB -l LEVEL -c COLORMAP -p PATH -f FILE\n", argv[0]);
   	exit(0);
   }
   if (!color) {

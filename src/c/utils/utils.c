@@ -535,6 +535,22 @@ char		*array_2D_to_array_1D(char **src)
   return (str);
 }
 
+char		*str_n_cpy(char *str, int position, int len)
+{
+  char		*dest;
+  int		i;
+
+  i = 0;
+  dest = malloc((len + 1) * sizeof(*dest));
+  while (i < len)
+    {
+      dest[i] = str[i + position];
+      i++;
+    }
+  dest[i] = '\0';
+  return (dest);
+}
+
 /** TESTS **/
 /*
 int		main(int argc, char ** args)

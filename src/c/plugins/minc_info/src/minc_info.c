@@ -133,6 +133,7 @@ void *start(void *args) {
 }
 
 void *unload(void *args) {
+	INFO("Minc Info Plugin: Unloaded");
 	// nothing to do
 	return NULL;
 }
