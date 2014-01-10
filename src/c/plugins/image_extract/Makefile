@@ -6,13 +6,15 @@ SRCS		=	$(DIRSRC)image_extract.c					\
 			$(DIRSRC)../../../volume.c				\
 			$(DIRSRC)../../../utils/utils.c
 
-INCLUDE		=	-I./headers -I./../../utils -I../../headers -I/usr/include/GraphicsMagick -I/usr/local/bic/include
+INCLUDE		=	-I./headers -I./../../utils -I../../headers
 
 LIB_PATH	=	
 
-LIBS		=	-lhdf5								\
-			-lnetcdf 							\
-			-lminc2								\
+LIBS		= -lminc2							\
+			-lhdf5								\
+			-lnetcdf							\
+			-lznz								\
+			-lz									\
 			-lpthread							\
 			-ldl								\
 			-lm

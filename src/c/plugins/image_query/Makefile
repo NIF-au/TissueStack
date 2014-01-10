@@ -4,13 +4,15 @@ SRCS		=	$(DIRSRC)image_query.c					\
 			$(DIRSRC)../../../volume.c				\
 			$(DIRSRC)../../../utils/utils.c
 
-INCLUDE		=	-I./../image_extract/headers -I./../../utils -I../../headers -I/usr/include/GraphicsMagick -I/usr/local/bic/include
+INCLUDE		=	-I./../image_extract/headers -I./../../utils -I../../headers
 
-LIB_PATH	=	
+LIB_PATH	=
 
-LIBS		=	-lhdf5								\
-			-lnetcdf 							\
-			-lminc2								\
+LIBS		=	-lminc2							\
+			-lhdf5								\
+			-lnetcdf							\
+			-lznz								\
+			-lz									\
 			-lpthread							\
 			-ldl								\
 			-lm

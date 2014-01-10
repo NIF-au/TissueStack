@@ -3,19 +3,16 @@ DIRSRC		=	./src/
 SRCS		=	$(DIRSRC)converter.c						\
 			$(DIRSRC)../../../utils/utils.c
 
-INCLUDE		=	-I/usr/include/nifti -I./headers -I./../../headers -I./../../utils -I/usr/local/bic/include
+INCLUDE		=	-I/usr/include/nifti -I./headers -I./../../headers -I./../../utils
 
-LIB_PATH	=	
+LIB_PATH	=		
 
-LIBS		=	-lhdf5								\
-			-lnetcdf 							\
-			-lminc2								\
-			-lpthread							\
-			-lniftiio							\
+LIBS		=-lniftiio							\
 			-lznz								\
-			-lz								\
-			-lm								\
-			-ldl
+			-lz									\
+			-lpthread							\
+			-ldl								\
+			-lm
 
 NAME		=	TissueStackNiftiConverter.so
 

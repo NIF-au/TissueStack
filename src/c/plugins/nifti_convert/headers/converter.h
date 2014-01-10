@@ -24,7 +24,6 @@
 #include <nifti1_io.h>
 #include <fcntl.h>
 #include <limits.h>
-#include <netcdf.h>
 #include <minc2.h>
 #include <float.h>
 
@@ -46,6 +45,21 @@ struct			s_header
 void		*iter_all_pix_and_convert(void *data_in, unsigned int size, nifti_image *nim);
 t_header	*create_header_from_nifti_struct(nifti_image *nifti_volume);
 void		write_header_into_file(int fd, t_header *h);
+
+#define	NC_NAT 	        0	/* NAT = 'Not A Type' (c.f. NaN) */
+#define	NC_BYTE         1	/* signed 1 byte integer */
+#define	NC_CHAR 	2	/* ISO/ASCII character */
+#define	NC_SHORT 	3	/* signed 2 byte integer */
+#define	NC_INT 	        4	/* signed 4 byte integer */
+#define NC_LONG         NC_INT  /* deprecated, but required for backward compatibility. */
+#define	NC_FLOAT 	5	/* single precision floating point number */
+#define	NC_DOUBLE 	6	/* double precision floating point number */
+#define	NC_UBYTE 	7	/* unsigned 1 byte int */
+#define	NC_USHORT 	8	/* unsigned 2-byte int */
+#define	NC_UINT 	9	/* unsigned 4-byte int */
+#define	NC_INT64 	10	/* signed 8-byte int */
+#define	NC_UINT64 	11	/* unsigned 8-byte int */
+#define	NC_STRING 	12	/* string */
 
 #define MI_PRIV_UNSIGNED 0
 #define MI_PRIV_SIGNED 1

@@ -443,15 +443,6 @@ void		*start(void *args)
 
 void		*unload(void *args)
 {
-	t_args_plug	*a = (t_args_plug*)args;
-	t_serv_comm	*s = NULL;
-	if (a != NULL && a->this != NULL && a->this->stock != NULL) s = (t_serv_comm*)a->this->stock;
-
-	if (s != NULL) {
-		free(s);
-		s = NULL;
-	}
 	INFO("Communicator Plugin: Unloaded");
-
 	return (NULL);
 }

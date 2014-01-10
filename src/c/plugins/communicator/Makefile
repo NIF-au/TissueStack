@@ -2,14 +2,11 @@ DIRSRC		=	./src/
 
 SRCS		=	$(DIRSRC)serv.c	$(DIRSRC)../../../volume.c $(DIRSRC)../../../utils/utils.c
 
-INCLUDE		=	-I./headers -I../../headers -I./../../utils -I/usr/local/bic/include
+INCLUDE		=	-I./headers -I../../headers -I./../../utils
 
 LIB_PATH	=	
 
-LIBS		=	-lhdf5								\
-			-lnetcdf 							\
-			-lminc2								\
-			-lpthread							\
+LIBS		= -lpthread							\
 			-ldl								\
 			-lm
 

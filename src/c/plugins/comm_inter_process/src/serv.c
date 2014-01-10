@@ -229,11 +229,6 @@ void		*start(void *args)
 
 void		*unload(void *args)
 {
-	if (s != NULL) {
-		free(s);
-		s = NULL;
-	}
 	INFO("Inter Process Communicator Plugin: Unloaded");
-
 	return (NULL);
 }

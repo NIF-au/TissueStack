@@ -3,18 +3,18 @@ DIRSRC		=	./src/
 SRCS		=	$(DIRSRC)TS_converter.c						\
 			../../utils/utils.c
 
-INCLUDE		=	-I./headers -I../../headers -I../../utils -I/usr/include/nifti -I/usr/local/bic/include
+INCLUDE		=	-I./headers -I../../headers -I../../utils
 
-LIB_PATH	=	
+LIB_PATH	=
 
-LIBS		=	-lhdf5								\
-			-lnetcdf 							\
-			-lminc2								\
-			-lpthread							\
-			-lniftiio                                                       \
-			-ldl								\
+LIBS		=	-lminc2							\
+			-lhdf5								\
+			-lnetcdf							\
+			-lniftiio							\
 			-lznz								\
-			-lz								\
+			-lz									\
+			-lpthread							\
+			-ldl								\
 			-lm
 
 EXE_NAME	=	mnc2raw

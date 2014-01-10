@@ -16,15 +16,14 @@ SRCS		=	$(DIRSRC)core.c							\
 
 INCLUDE		=	-I./headers -I./utils -I/usr/include/nifti -I/usr/local/bic/include
 
-LIB_PATH	=	
+LIB_PATH	=	-I/usr/local/bic/lib
 
-LIBS		=	-lhdf5								\
-			-lnetcdf 							\
-			-lminc2								\
+LIBS		= -lminc2							\
+			-lhdf5							\
+			-lnetcdf							\
 			-lpthread							\
 			-lniftiio							\
 			-ldl								\
-			-lniftiio							\
 			-lznz								\
 			-lz								\
 			-lm
@@ -104,6 +103,8 @@ endif
 	@echo -e "    USE MEMORY MAPPING:    $(USE_MEMORY_MAPPING)"
 	@echo -e "###################### TISSUE STACK BUILD [Version: $(VERSION)] ###################\n"
 	
+compile: prepare coreCompile pluginsCompile
+	
 coreCompile:	$(OBJS)
 	@$(CC) $(OBJS) -o $(EXE_NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) `pkg-config --cflags --libs gtk+-2.0` > /dev/null
 	@echo -e "\tFinished compiling core components."
@@ -140,7 +141,7 @@ pluginsCompile:
 	@make --no-print-directory -C ./jni/ compile
 	@echo -e "\n\tFinished compiling plugins."
 
-install: compile
+install:
 	@echo -e "\n\tInstalling Binaries (may require super user priviledges):"
 	@echo -e "\t-----------------------------------------------\n"
 	@echo -e "\tInstalling '$(EXE_NAME)' executable into: $(BINS_PATH)."
@@ -178,8 +179,6 @@ clean: clean-tools
 debug: FLAGS += -D_TSS_DEBUG_
 
 debug: coreCompile pluginsCompile
-
-compile: prepare coreCompile pluginsCompile
 
 recompile: clean compile
 
@@ -298,7 +297,8 @@ dist: compile install install-tools
 	JAVA_HOME=\$$TISSUE_STACK_HOME/jdk$(JDK_VERSION)\n\
 	CATALINA_HOME=\$$TISSUE_STACK_HOME/apache-tomcat-$(TOMCAT_VERSION)\n\
 	PATH=\$$PATH:$(BINS_PATH)\n\
-	export TISSUE_STACK_HOME TISSUE_STACK_JNI_LIB_PATH IMAGE_SERVER_EXE JAVA_HOME CATALINA_HOME PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(NAME)_env.sh;
+	HDF5_DISABLE_VERSION_CHECK=1\n\
+	export HDF5_DISABLE_VERSION_CHECK TISSUE_STACK_HOME TISSUE_STACK_JNI_LIB_PATH IMAGE_SERVER_EXE JAVA_HOME CATALINA_HOME PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(NAME)_env.sh;
 	@chmod 755 $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(NAME)_env.sh
 
 	@echo -ne "\tCreating pre install script for "

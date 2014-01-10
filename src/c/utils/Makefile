@@ -4,7 +4,9 @@ SRCS		=	$(DIRSRC)utils.c
 
 INCLUDE		=	-I./ -I../headers
 
-LIB_PATH	=	
+LIB_PATH	=
+
+LIBS		=
 
 NAME		=	utils
 
@@ -14,7 +16,7 @@ all: compile
 
 compile:	
 	@echo -e "\t Compiling $(NAME)."
-	@gcc $(SRCS) `pkg-config --cflags gtk+-2.0` -o $(NAME) $(INCLUDE) $(FLAGS)
+	@gcc $(SRCS) `pkg-config --cflags gtk+-2.0` -o $(NAME)  $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS)
 
 clean:
 	@echo -e "\tCleaning $(NAME)..."

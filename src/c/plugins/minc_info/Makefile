@@ -2,9 +2,18 @@ DIRSRC		=	./src/
 
 SRCS		=	$(DIRSRC)minc_info.c ./../../utils/utils.c
 
-INCLUDE		=	-I./headers -I./../../headers -I./../../utils -I/usr/local/bic/include
+INCLUDE		=	-I./headers -I./../../headers -I./../../utils
 
-LIB_PATH	=	
+LIB_PATH	=
+
+LIBS		=	-lminc2							\
+			-lhdf5								\
+			-lnetcdf							\
+			-lznz								\
+			-lz									\
+			-lpthread							\
+			-ldl								\
+			-lm
 
 NAME		=	TissueStackMincInfo.so
 
