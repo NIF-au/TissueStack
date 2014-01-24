@@ -35,30 +35,71 @@ void			*start(void *args) {
 
 	t_args_plug		*a;
 	FILE			*socketDescriptor;
-	t_vol			*volume;
+	int 			i=0;
+	t_vol			*volume = NULL;
+	short 			is_raw = 0;
+	int 			dim=0;
+	int 			slice=0;
+	int 			x=0;
+	int 			y=0;
 
 	a = (t_args_plug *)args;
 	prctl(PR_SET_NAME, "TS_QUERY");
 
 	socketDescriptor = (FILE*)a->box;
-	volume = load_volume(a, a->commands[0]);
-	if (volume == NULL) {
-		write_http_header(socketDescriptor, "500 Server Error", "png");
+
+	// param reads
+	while (a->commands != NULL && a->commands[i] != NULL) {
+		switch (i) {
+			case 0:
+				volume = load_volume(a, a->commands[i]);
+				break;
+			case 1:
+				dim = atoi(a->commands[i]);
+				break;
+			case 2:
+				slice = atoi(a->commands[i]);
+				break;
+			case 3:
+				y = atoi(a->commands[i]);
+				break;
+			case 4:
+				x = atoi(a->commands[i]);
+				break;
+		}
+		i++;
+	}
+
+	// sanity checks
+	if (i != 5) {
+		write_http_error(socketDescriptor, "Query takes inputs: volume, dimension, slice, y and x!", NULL);
 		fclose(socketDescriptor);
 		return NULL;
 	}
 
-	INFO("Number of dims: %i", volume->dim_nb);
-	// loop over them
-	int x=0;
-	while (x<volume->dim_nb) {
-		INFO("Dim[%i] => %c", x,volume->dim_name_char[x]);
-		INFO("Length => %llu", volume->dim_offset[x]);
-		INFO("Size => %u", volume->size[x]);
-		INFO("Starts => %f", volume->starts[x]);
-		INFO("Stepd => %f", volume->steps[x]);
-		x++;
+	if (volume == NULL) {
+		write_http_error(socketDescriptor, "Volume not found or null", NULL);
+		fclose(socketDescriptor);
+		return NULL;
 	}
+
+	// check if is raw file
+	is_raw = israw(volume->path);
+	if (is_raw <= 0) {
+		write_http_error(socketDescriptor, "Volume has to be in RAW format to be queried!", NULL);
+		fclose(socketDescriptor);
+		return NULL;
+	}
+
+	INFO("dim: %c", volume->dim_name_char[dim]);
+	INFO("slice: %i", slice);
+	INFO("x: %i", x);
+	INFO("y: %i", y);
+
+	INFO("Length => %llu", volume->dim_offset[dim]);
+	INFO("Size => %u", volume->size[dim]);
+	INFO("Starts => %f", volume->starts[dim]);
+	INFO("Steps => %f", volume->steps[dim]);
 
 	write_http_header(socketDescriptor, "200 OK", "png");
 	fclose(socketDescriptor);

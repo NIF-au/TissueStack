@@ -224,6 +224,7 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
 	  i++;
 	}
 
+      // general sanity checks
       if (is_not_num(slice) || is_not_num(dimension) || (query == NULL && is_not_num(scale)) ||
     		  (query == NULL && is_not_num(quality)) || is_not_num(x) || is_not_num(y))
 	{
@@ -309,16 +310,15 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
       } else { // POINT QUERY
        	  // specific sanity check
 			if (x == NULL || y == NULL) {
-	        	  write_http_error(file, "Not all mandatory params were supplied!", NULL);
+	        	  write_http_error(file, "Query takes inputs: volume, dimension, slice, y and x!", NULL);
 	        	  fclose(file);
 	        	  return;
     	  }
 
-    	  sprintf(comm, "start image_query %s %i %i %i %s %s",
+    	  sprintf(comm, "start image_query %s %c %i %s %s",
     			  volume,
-    			  (dimension[0] == '0' ? atoi(slice) : -1),
-    			  (dimension[0] == '1' ? atoi(slice) : -1),
-    			  (dimension[0] == '2' ? atoi(slice) : -1),
+    			  dimension[0],
+    			  atoi(slice),
     			  y, x);
       }
 
