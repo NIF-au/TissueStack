@@ -47,7 +47,7 @@ void free_t_string_buffer(t_string_buffer * buffer);
 t_string_buffer * createDirectory(char * path, mode_t mode);
 
 void		write_http_header(FILE * socket, char * status, char * image_type);
-void		write_http_error(FILE * socket, char * text, char * status);
+void		write_http_header2(FILE * socket, char * text, char * status);
 
 void free_null_terminated_char_2D_array(char ** strings);
 inline char * appendCharacterToTempTokenBuffer(char * tempTokenBuffer,

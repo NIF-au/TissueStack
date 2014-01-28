@@ -330,7 +330,7 @@ void		free_all_tasks(t_tissue_stack *t);
 int			init_volume(t_memory_mapping * memory_mappings, t_vol *volume, char *path);
 int			get_dim_size(t_vol *volume, char c);
 void 		get_width_height(int *height, int *width, int current_dimension, t_vol *volume);
-int			israw(char *path);
+int			israw(char *path, int existing_fd);
 void		*file_actions(void *args);
 void		list_volumes(t_tissue_stack *t, char *options);
 void		add_volume(char *path, t_tissue_stack *t);

@@ -16,25 +16,28 @@
  */
 #include "core.h"
 
-int		israw(char *path)
-{
+int		israw(char *path, int existing_fd) {
   int		fd;
   char		check[10];
 
   memset(check, '\0', 9);
-  if ((fd = open(path, O_RDWR)) == -1)
-    {
-      perror("Open ");
-      return (-1);
-    }
+
+  if (existing_fd <= 0 && ((existing_fd = open(path, O_RDONLY)) == -1)) {
+		  perror("Open ");
+		  return (-1);
+  }
+  fd = existing_fd;
+  lseek(fd, 0, SEEK_SET);
+
   if (read(fd, check, 8) == -1)
     {
       perror("Read ");
       return (-1);
     }
   check[9] = '\0';
-  if (strcmp(check, "@IaMraW@") != 0)
-    return (0);
+
+  if (strcmp(check, "@IaMraW@") != 0) return (0);
+
   return (fd);
 }
 
@@ -342,7 +345,7 @@ int		init_volume(t_memory_mapping * memory_mappings, t_vol *volume, char *path)
   volume->color_range_max = 255;
 
   // check if is raw file
-  if ((result = israw(volume->path)) == -1)
+  if ((result = israw(volume->path, 0)) == -1)
     return (-1);
   if (result > 0)
     return (raw_volume_init(memory_mappings, volume, result));

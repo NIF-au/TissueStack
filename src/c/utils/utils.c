@@ -333,7 +333,7 @@ void		write_http_header(FILE * socket, char * status, char * image_type)
     }
 }
 
-void		write_http_error(FILE * socket, char * text, char * status)
+void		write_http_header2(FILE * socket, char * text, char * status)
 {
   if (socket != NULL)
     {

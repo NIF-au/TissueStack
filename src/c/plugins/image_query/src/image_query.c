@@ -37,7 +37,9 @@ void			*start(void *args) {
 	FILE			*socketDescriptor;
 	int 			i=0;
 	t_vol			*volume = NULL;
-	short 			is_raw = 0;
+	unsigned long long int offset = 0;
+	char * pixel = NULL;
+	int 			is_raw = 0;
 	int 			dim=0;
 	int 			slice=0;
 	int 			x=0;
@@ -72,36 +74,46 @@ void			*start(void *args) {
 
 	// sanity checks
 	if (i != 5) {
-		write_http_error(socketDescriptor, "Query takes inputs: volume, dimension, slice, y and x!", NULL);
+		write_http_header2(socketDescriptor, "Query takes inputs: volume, dimension, slice, y and x!", NULL);
 		fclose(socketDescriptor);
 		return NULL;
 	}
 
 	if (volume == NULL) {
-		write_http_error(socketDescriptor, "Volume not found or null", NULL);
+		write_http_header2(socketDescriptor, "Volume not found or null", NULL);
 		fclose(socketDescriptor);
 		return NULL;
 	}
 
 	// check if is raw file
-	is_raw = israw(volume->path);
+	is_raw = israw(volume->path, volume->raw_fd);
 	if (is_raw <= 0) {
-		write_http_error(socketDescriptor, "Volume has to be in RAW format to be queried!", NULL);
+		write_http_header2(socketDescriptor, "Volume has to be in RAW format to be queried!", NULL);
 		fclose(socketDescriptor);
 		return NULL;
 	}
 
+	INFO("is raw: %i", (int)is_raw);
 	INFO("dim: %c", volume->dim_name_char[dim]);
 	INFO("slice: %i", slice);
 	INFO("x: %i", x);
 	INFO("y: %i", y);
 
-	INFO("Length => %llu", volume->dim_offset[dim]);
 	INFO("Size => %u", volume->size[dim]);
 	INFO("Starts => %f", volume->starts[dim]);
 	INFO("Steps => %f", volume->steps[dim]);
 
-	write_http_header(socketDescriptor, "200 OK", "png");
+	offset = (volume->dim_offset[dim] + (unsigned long long int)((unsigned long long int)volume->slice_size[dim] * (unsigned long long int)slice));
+	INFO("Offset => %llu", offset);
+	pixel = malloc(1 * sizeof(*pixel));
+
+	INFO("RAW FD: %i", volume->raw_fd);
+
+	INFO("LSEEK....%i", (int) lseek(volume->raw_fd, offset, SEEK_SET));
+	INFO("READ....%i", (int) read(volume->raw_fd, (void *) pixel, 1));
+	INFO("PIXEL: %i", (int) pixel[0]);
+
+	write_http_header2(socketDescriptor, pixel, "200 OK");
 	fclose(socketDescriptor);
 
 	return NULL;
