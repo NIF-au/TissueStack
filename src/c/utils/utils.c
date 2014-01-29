@@ -333,7 +333,7 @@ void		write_http_header(FILE * socket, char * status, char * image_type)
     }
 }
 
-void		write_http_header2(FILE * socket, char * text, char * status)
+void		write_http_response(FILE * socket, char * text, char * status, char * content_type)
 {
   if (socket != NULL)
     {
@@ -345,9 +345,13 @@ void		write_http_header2(FILE * socket, char * text, char * status)
       header = appendToBuffer(header, "\r\nDate: Thu, 20 May 2004 21:12:11 GMT\r\n"); // Date (in the past)
       header = appendToBuffer(header, "Connection: close\r\n"); // Connection header (close)
       header = appendToBuffer(header, "Server: Tissue Stack Image Server\r\n"); // Server header
-      char contLen[150];
-      if (text != NULL && strlen(text) > 0) sprintf(contLen, "Content-Length: %lu\r\n", strlen(text));
-	  header = appendToBuffer(header, "Content-Type: text/plain"); // Content-Type header
+      char tmp[150];
+      //if (text != NULL && strlen(text) > 0) sprintf(tmp, "Content-Length: %lu\r\n", strlen(text));
+      if (content_type != NULL && strlen(content_type) > 0) {
+    	  sprintf(tmp, "Content-Type: %s", content_type);
+    	  header = appendToBuffer(header, tmp); // Content-Type header
+      } else
+    	  header = appendToBuffer(header, "Content-Type: text/plain"); // Default Content-Type header
       header = appendToBuffer(header, "\r\nAccess-Control-Allow-Origin: *\r\n"); // allow cross origin requests
       header = appendToBuffer(header, "Last-Modified: Thu, 20 May 2004 21:12:11 GMT\r\n\r\n"); // last modified header in the past
       header = appendToBuffer(header, text);

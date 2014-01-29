@@ -652,5 +652,30 @@ TissueStack.Utils = {
 		});
 		
 		return succeeded;
+	}, queryVoxelValue : function(volume, plane, coords) {
+		if (typeof(volume) != 'string' || typeof(plane) != 'string' || typeof(coords) != 'object') return null;
+		
+		// assemble url
+		var url = "/" + TissueStack.configuration['image_service_proxy_path'].value + "/?volume="
+					+ volume + "&dimension=" + plane + "space&slice=" + coords.s + "&x=" + coords.x
+					+ "&y=" + coords.y + "&query=query";
+					
+  		// send ajax request
+ 		TissueStack.Utils.sendAjaxRequest(url, 'GET', true,
+			function(data, textStatus, jqXHR) {
+				if (!data.response && !data.error) {
+					return;
+				}
+				if (data.error) {
+					console.error("" + data.error.description + ": " + data.error.message);				
+					return;
+				}
+
+				console.info(data.response);
+			},
+			function(jqXHR, textStatus, errorThrown) {
+				return;
+			}
+		);
 	}
 };

@@ -38,7 +38,7 @@ void			*start(void *args) {
 	int 			i=0;
 	t_vol			*volume = NULL;
 	unsigned long long int offset = 0;
-	char * pixel = NULL;
+	unsigned char pixel = '\0';
 	int 			is_raw = 0;
 	int 			dim=0;
 	int 			slice=0;
@@ -74,13 +74,19 @@ void			*start(void *args) {
 
 	// sanity checks
 	if (i != 5) {
-		write_http_header2(socketDescriptor, "Query takes inputs: volume, dimension, slice, y and x!", NULL);
+		write_http_response(socketDescriptor,
+  			  "{\"error\": {\"description\": \"Application Exception\", \"message\": \
+  			  \"Query takes inputs: volume, dimension, slice, y and x!\"}}",
+  			  NULL, "application/json");
 		fclose(socketDescriptor);
 		return NULL;
 	}
 
 	if (volume == NULL) {
-		write_http_header2(socketDescriptor, "Volume not found or null", NULL);
+		write_http_response(socketDescriptor,
+  			  "{\"error\": {\"description\": \"Application Exception\", \"message\": \
+  			  \"Volume not found or null!\"}}",
+  			  NULL, "application/json");
 		fclose(socketDescriptor);
 		return NULL;
 	}
@@ -88,7 +94,10 @@ void			*start(void *args) {
 	// check if is raw file
 	is_raw = israw(volume->path, volume->raw_fd);
 	if (is_raw <= 0) {
-		write_http_header2(socketDescriptor, "Volume has to be in RAW format to be queried!", NULL);
+		write_http_response(socketDescriptor,
+  			  "{\"error\": {\"description\": \"Application Exception\", \"message\": \
+  			  \"Volume has to be in RAW format to be queried!\"}}",
+  			  NULL, "application/json");
 		fclose(socketDescriptor);
 		return NULL;
 	}
@@ -105,15 +114,29 @@ void			*start(void *args) {
 
 	offset = (volume->dim_offset[dim] + (unsigned long long int)((unsigned long long int)volume->slice_size[dim] * (unsigned long long int)slice));
 	INFO("Offset => %llu", offset);
-	pixel = malloc(1 * sizeof(*pixel));
 
-	INFO("RAW FD: %i", volume->raw_fd);
+	// TODO: this has to be changed. It's not good. Raw has to have a fixed order for dimensions!
+	// future TODO: the bit depth has to become a double/float !
+	int width = 0;
+	int height = 0;
+	if (dim == 0) {
+		width = volume->size[2] * y;
+		height = x;
+	} else if (dim == 1) {
+		width = volume->size[0] * y;
+		height = x;
+	} else if (dim == 2) {
+		width = volume->size[1] * y;
+		height = x;
+	}
 
-	INFO("LSEEK....%i", (int) lseek(volume->raw_fd, offset, SEEK_SET));
-	INFO("READ....%i", (int) read(volume->raw_fd, (void *) pixel, 1));
-	INFO("PIXEL: %i", (int) pixel[0]);
+	lseek(volume->raw_fd, offset + height + width, SEEK_SET);
+	read(volume->raw_fd, &pixel, 1);
 
-	write_http_header2(socketDescriptor, pixel, "200 OK");
+	char value[20];
+	sprintf(value, "{\"response\": %hu}", (unsigned short) pixel);
+
+	write_http_response(socketDescriptor, value, "200 OK", "application/json");
 	fclose(socketDescriptor);
 
 	return NULL;

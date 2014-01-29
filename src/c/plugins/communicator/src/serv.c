@@ -227,7 +227,10 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
       // general sanity checks
       if (is_not_num(slice) || is_not_num(dimension) || (query == NULL && is_not_num(scale)) ||
     		  (query == NULL && is_not_num(quality)) || is_not_num(x) || is_not_num(y))	{
-    	  write_http_header2(file, "You used a non-numeric value for a strictly numeric parameter!", NULL);
+    	  write_http_response(file,
+    			  "{\"error\": {\"description\": \"Application Exception\", \"message\": \
+    			  \"You used a non-numeric value for a strictly numeric parameter!\"}}",
+    			  NULL, "application/json");
     	  fclose(file);
     	  return;
 	}
@@ -235,7 +238,10 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
       t_vol		*vol = load_volume(a, volume);
 
       if (vol == NULL) {
-    	  write_http_header2(file, "Volume does not exist!", NULL);
+    	  write_http_response(file,
+    			  "{\"error\": {\"description\": \"Application Exception\", \"message\": \
+    			  \"Volume does not exist!\"}}",
+    			  NULL, "application/json");
     	  fclose(file);
     	  return;
       }
@@ -246,7 +252,10 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
       if (query == NULL) { // TILING
     	  // general sanity check
     	  if (scale == NULL || slice == NULL || dimension == NULL || quality == NULL || image_type == NULL) {
-    		  write_http_header2(file, "Not all mandatory params were supplied!", NULL);
+        	  write_http_response(file,
+        			  "{\"error\": {\"description\": \"Application Exception\", \"message\": \
+        			  \"Not all mandatory params were supplied!\"}}",
+        			  NULL, "application/json");
         	  fclose(file);
         	  return;
     	  }
@@ -265,7 +274,10 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
 		} else if (strcmp(service, "tiles") == 0) {
 	    	  // specific sanity check
 	    	  if (x == NULL || y == NULL || square == NULL) {
-	    		  write_http_header2(file, "Not all mandatory params were supplied!", NULL);
+	        	  write_http_response(file,
+	        			  "{\"error\": {\"description\": \"Application Exception\", \"message\": \
+	        			  \"Not all mandatory params were supplied!\"}}",
+	        			  NULL, "application/json");
 	        	  fclose(file);
 	        	  return;
 	    	  }
@@ -283,7 +295,10 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
 		}  else if (strcmp(service, "images") == 0)	{
        	  // specific sanity check
 			if (x == NULL || y == NULL || y_end == NULL  || x_end == NULL) {
-				write_http_header2(file, "Not all mandatory params were supplied!", NULL);
+	        	  write_http_response(file,
+	        			  "{\"error\": {\"description\": \"Application Exception\", \"message\": \
+	        			  \"Not all mandatory params were supplied!\"}}",
+	        			  NULL, "application/json");
 	        	  fclose(file);
 	        	  return;
 	    	  }
@@ -309,7 +324,10 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
       } else { // POINT QUERY
        	  // specific sanity check
 			if (x == NULL || y == NULL) {
-				write_http_header2(file, "Query takes inputs: volume, dimension, slice, y and x!", NULL);
+	        	  write_http_response(file,
+	        			  "{\"error\": {\"description\": \"Application Exception\", \"message\": \
+	        			  \"Query takes inputs: volume, dimension, slice, y and x!\"}}",
+	        			  NULL, "application/json");
 	        	  fclose(file);
 	        	  return;
     	  }
@@ -323,7 +341,8 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
 
       s->general->plug_actions(s->general, comm, file);
     } else {
-    	write_http_header2(file, "There is no file or resource under that url", "404 Not Found");
+
+    	write_http_response(file, "There is no file or resource under that url", "404 Not Found", NULL);
         close(fileno(file));
     }
 }
