@@ -233,10 +233,11 @@ TissueStack.Events.prototype = {
 		var relCoordinates = this.canvas.getDataCoordinates(coords);
 
 		// update coordinate info displayed
+		/*
 		if (!TissueStack.tablet || this.canvas.is_main_view) {
 			this.canvas.updateExtentInfo(dataSet.realWorldCoords[this.canvas.data_extent.plane]);
 			this.updateCoordinateDisplay();
-		}
+		}*/
 		
 		if (this.canvas.mouse_down) {
 			this.canvas.isDragging = true;
@@ -285,6 +286,9 @@ TissueStack.Events.prototype = {
 						 	canvas_dims
 			            ]);
 		} else {
+			if (this.canvas.isDragging) {
+				this.updateCoordinateDisplay();
+			}
 			this.canvas.isDragging = false;
 		}
 	}, changeSliceForPlane : function(slice) {

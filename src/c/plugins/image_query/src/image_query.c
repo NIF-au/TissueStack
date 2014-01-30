@@ -109,16 +109,20 @@ void			*start(void *args) {
 	INFO("y: %i", y);
 
 	INFO("Size => %u", volume->size[dim]);
+	INFO("Slice Size => %u", volume->slice_size[dim]);
 	INFO("Starts => %f", volume->starts[dim]);
 	INFO("Steps => %f", volume->steps[dim]);
 
 	offset = (volume->dim_offset[dim] + (unsigned long long int)((unsigned long long int)volume->slice_size[dim] * (unsigned long long int)slice));
+	INFO("Offset => %llu", volume->dim_offset[dim]);
 	INFO("Offset => %llu", offset);
 
 	// TODO: this has to be changed. It's not good. Raw has to have a fixed order for dimensions!
 	// future TODO: the bit depth has to become a double/float !
-	int width = 0;
-	int height = 0;
+	int width = x;
+	int height = y;
+	//char plane = volume->dim_name_char[dim];
+	/*
 	if (dim == 0) {
 		width = volume->size[2] * y;
 		height = x;
@@ -128,7 +132,7 @@ void			*start(void *args) {
 	} else if (dim == 2) {
 		width = volume->size[1] * y;
 		height = x;
-	}
+	}*/
 
 	lseek(volume->raw_fd, offset + height + width, SEEK_SET);
 	read(volume->raw_fd, &pixel, 1);

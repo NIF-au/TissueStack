@@ -803,7 +803,7 @@ TissueStack.Canvas.prototype = {
 			var dataSet = TissueStack.dataSetStore.getDataSetById(this.getDataExtent().data_id);
 
 			// TEST: fire off backend query
-			//TissueStack.Utils.queryVoxelValue(dataSet.filename, this.getDataExtent().plane, {x: this.cross_x, y: this.cross_y, s: this.getDataExtent().slice});
+			TissueStack.Utils.queryVoxelValue(dataSet.filename, this.getDataExtent().plane, {x: this.cross_x, y: this.cross_y, s: this.getDataExtent().slice});
 			
 			// update url link info
 			this.getUrlLinkString(dataSet.realWorldCoords[this.data_extent.plane]);

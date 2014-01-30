@@ -267,7 +267,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
       (volume->dim_name_char[0] == 'x' && volume->dim_name_char[1] == 'y' && volume->dim_name_char[2] == 'z') ||
       (volume->dim_name_char[0] == 'y' && volume->dim_name_char[1] == 'x' && volume->dim_name_char[2] == 'z' && (volume->dim_name_char[current_dimension] == 'y' || volume->dim_name_char[current_dimension] == 'x'))))
     {
-      if ((img = ConstituteImage(height, width, "I", CharPixel, hyperslab, &exception)) == NULL) {
+	  if ((img = ConstituteImage(height, width, "I", CharPixel, hyperslab, &exception)) == NULL) {
 		CatchException(&exception);
 		DestroyImageInfo(image_info);
 		fclose_check(a->file);
@@ -297,7 +297,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
     	  DestroyImage(tmp);
       }
     } else {
-      if ((img = ConstituteImage(width, height, "I", CharPixel, hyperslab, &exception)) == NULL) {
+    	if ((img = ConstituteImage(width, height, "I", CharPixel, hyperslab, &exception)) == NULL) {
 		CatchException(&exception);
 		DestroyImageInfo(image_info);
 		fclose_check(a->file);

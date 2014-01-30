@@ -45,3 +45,4 @@ TissueStack.transparency = 0.5;
 TissueStack.reverseOverlayOrder = false;
 TissueStack.swappedOverlayOrder = false;
 TissueStack.overlay_values = {};
+TissueStack.mouseOverDataSet = -1;

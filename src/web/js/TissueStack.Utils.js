@@ -496,9 +496,25 @@ TissueStack.Utils = {
 			}
 	
 			$('.dataset').mouseover(function(){
+				var id = $(this).attr('id');
+				if (!id || id.length != "dataset_X".length) return;
+				if (TissueStack.mouseOverDataSet == id.substring("dataset_".length, id.length)) return;
+				
+				TissueStack.mouseOverDataSet = id;
+				var dataSet = TissueStack.dataSetStore.getDataSetById(
+								TissueStack.dataSetNavigation.selectedDataSets[id]);
+				
+				for (var p in dataSet.planes)
+					if (dataSet.planes[p].is_main_view) {
+						dataSet.planes[p].updateExtentInfo(dataSet.realWorldCoords[p]);
+						dataSet.planes[p].events.updateCoordinateDisplay();
+						break;
+					}
+				
 			    $(this).css("border-color","#efff0b").css("border-width",1);
 			    $('.left_panel').css("color","#efff0b").css("font-color","#efff0b");
 			}).mouseout(function(){
+				TissueStack.mouseOverDataSet = -1;
 			   	$(this).css("border-color","white").css("border-width",1);
 			   	$('.left_panel').css("color","white");
 			});
