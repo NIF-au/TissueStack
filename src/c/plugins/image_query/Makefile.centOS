@@ -4,7 +4,7 @@ SRCS		=	$(DIRSRC)image_query.c					\
 			$(DIRSRC)../../../volume.c				\
 			$(DIRSRC)../../../utils/utils.c
 
-INCLUDE		=	-I./../image_extract/headers -I./../../utils -I../../headers -I/usr/include/GraphicsMagick -I/usr/local/bic/include -I/usr/local/nifticlib/2.0.0/include -I/usr/local/minc/2.1.0/include -I/usr/local/graphicsmagick/1.3.18/include/GraphicsMagick
+INCLUDE		=	-I./headers -I./../../utils -I../../headers -I/usr/include/GraphicsMagick -I/usr/local/bic/include -I/usr/local/nifticlib/2.0.0/include -I/usr/local/minc/2.1.0/include -I/usr/local/graphicsmagick/1.3.18/include/GraphicsMagick
 
 LIB_PATH	=	-L/usr/local/minc/2.1.0/lib -L/usr/local/nifticlib/2.0.0/lib -L/usr/local/hdf5/1.8.5/lib -L/usr/local/netcdf/4.1.1/lib -L/usr/local/graphicsmagick/1.3.18/lib
 

@@ -673,7 +673,7 @@ TissueStack.Utils = {
 		
 		// assemble url
 		var url = "/" + TissueStack.configuration['image_service_proxy_path'].value + "/?volume="
-					+ volume + "&dimension=" + plane + "space&slice=" + coords.s + "&x=" + coords.x
+					+ volume + "&dimension=" + plane + "space&slice=" + coords.z + "&x=" + coords.x
 					+ "&y=" + coords.y + "&query=query";
 					
   		// send ajax request
@@ -683,7 +683,7 @@ TissueStack.Utils = {
 					return;
 				}
 				if (data.error) {
-					console.error("" + data.error.description + ": " + data.error.message);				
+					//console.error("" + data.error.description + ": " + data.error.message);				
 					return;
 				}
 

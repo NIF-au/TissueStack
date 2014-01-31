@@ -130,7 +130,7 @@ TissueStack.Canvas.prototype = {
 
 		// set rgb values, transparency and lookup value (if exists)
 		var value = {r: dataForPixel.data[0], g: dataForPixel.data[1], b: dataForPixel.data[2], t: dataForPixel.data[3], l: null};
-		
+
 		if (TissueStack.dataSetStore.datasets[this.data_extent.data_id].lookupValues) {
 			var label = TissueStack.dataSetStore.datasets[this.data_extent.data_id].
 					lookupValues["" + value.r + "/" + value.g + "/" + value.b];
@@ -803,7 +803,8 @@ TissueStack.Canvas.prototype = {
 			var dataSet = TissueStack.dataSetStore.getDataSetById(this.getDataExtent().data_id);
 
 			// TEST: fire off backend query
-			TissueStack.Utils.queryVoxelValue(dataSet.filename, this.getDataExtent().plane, {x: this.cross_x, y: this.cross_y, s: this.getDataExtent().slice});
+			// TODO: contemplate moving this 
+			TissueStack.Utils.queryVoxelValue(dataSet.filename, this.getDataExtent().plane, pixelCoords);
 			
 			// update url link info
 			this.getUrlLinkString(dataSet.realWorldCoords[this.data_extent.plane]);

@@ -4,7 +4,7 @@ SRCS		=	$(DIRSRC)image_query.c					\
 			$(DIRSRC)../../../volume.c				\
 			$(DIRSRC)../../../utils/utils.c
 
-INCLUDE		=	-I./../image_extract/headers -I./../../utils -I../../headers
+INCLUDE		=	-I./headers -I./../../utils -I../../headers
 
 LIB_PATH	=
 
