@@ -758,6 +758,11 @@ TissueStack.Canvas.prototype = {
 		}
 	},
 	updateCoordinateInfo : function(pixelCoords, worldCoords) {
+		var oneToOnePixelCoords = {
+				x : Math.round(pixelCoords.x),
+				y : Math.round(pixelCoords.y),
+				z : Math.round(pixelCoords.z)
+		};
 		pixelCoords = this.getXYCoordinatesWithRespectToZoomLevel(pixelCoords);
 		// outside of extent check
 		if (!pixelCoords || pixelCoords.x < 0 || pixelCoords.x > this.data_extent.x -1 ||  pixelCoords.y < 0 || pixelCoords.y > this.data_extent.y -1) {
@@ -804,7 +809,7 @@ TissueStack.Canvas.prototype = {
 
 			// TEST: fire off backend query
 			// TODO: contemplate moving this 
-			TissueStack.Utils.queryVoxelValue(dataSet.filename, this.getDataExtent().plane, pixelCoords);
+			TissueStack.Utils.queryVoxelValue(dataSet.filename, this.getDataExtent().plane, oneToOnePixelCoords);
 			
 			// update url link info
 			this.getUrlLinkString(dataSet.realWorldCoords[this.data_extent.plane]);

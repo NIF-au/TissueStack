@@ -498,7 +498,7 @@ TissueStack.Utils = {
 			$('.dataset').mouseover(function(){
 				var id = $(this).attr('id');
 				if (!id || id.length != "dataset_X".length) return;
-				if (TissueStack.mouseOverDataSet == id.substring("dataset_".length, id.length)) return;
+				if (TissueStack.mouseOverDataSet == id) return;
 				
 				TissueStack.mouseOverDataSet = id;
 				var dataSet = TissueStack.dataSetStore.getDataSetById(
