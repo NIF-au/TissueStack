@@ -340,6 +340,7 @@ t_vol  *load_volume(t_args_plug * a, char * path);
 void		remove_volume(char *path, t_tissue_stack *t);
 void		free_volume(t_vol *v);
 void		free_all_volumes(t_tissue_stack *t);
+char		get_by_name_dimension_id(t_vol * vol, char *dimension);
 
 /*		core.c			*/
 

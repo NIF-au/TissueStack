@@ -625,3 +625,18 @@ void		free_all_volumes(t_tissue_stack *t)
       free_volume(save);
     }
 }
+
+char		get_by_name_dimension_id(t_vol * vol, char *dimension) {
+  int		i;
+
+  if (!dimension || !vol) return (0);
+
+	  i = 0;
+	  while (i < vol->dim_nb)
+	    {
+	      if (strcmp(vol->dim_name[i], dimension) == 0) return (i + 48);
+	      i++;
+	    }
+
+	  return (48);
+}

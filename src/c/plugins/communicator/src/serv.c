@@ -112,22 +112,6 @@ int		is_not_num(char *str)
   return (0);
 }
 
-char		get_by_name_dimension_id(t_vol * vol, char *dimension, t_serv_comm *s)
-{
-  int		i;
-
-  if (!dimension || !vol || !s) return (0);
-
-	  i = 0;
-	  while (vol->dim_name[i] != NULL)
-	    {
-	      if (strcmp(vol->dim_name[i], dimension) == 0) return (i + 48);
-	      i++;
-	    }
-
-	  return (48);
-}
-
 char		*serv_copy_check_clean_string_from_tab(char **tab)
 {
   char		*str;
@@ -165,6 +149,7 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
   char		*contrast_min = NULL;
   char		*contrast_max = NULL;
   char		comm[500];
+  t_vol		*vol = NULL;
 
   if (buff != NULL) {
 	  tmp = serv_str_to_wordtab(buff, '\n');
@@ -224,29 +209,39 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
 	  i++;
 	}
 
-      // general sanity checks
-      if (is_not_num(slice) || is_not_num(dimension) || (query == NULL && is_not_num(scale)) ||
-    		  (query == NULL && is_not_num(quality)) || is_not_num(x) || is_not_num(y))	{
+      // Differentiation between single and multiple volume requests
+      if (query == NULL && strstr(volume, ":") != NULL) {
     	  write_http_response(file,
     			  "{\"error\": {\"description\": \"Application Exception\", \"message\": \
-    			  \"You used a non-numeric value for a strictly numeric parameter!\"}}",
+    			  \"Only the voxel query operation allows for multiple volume params separated by a colon!\"}}",
     			  NULL, "application/json");
     	  fclose(file);
     	  return;
-	}
+      } else if ( (query == NULL) || (query != NULL && strstr(volume, ":") == NULL)) {
+          // general sanity checks
+          if (is_not_num(slice) || is_not_num(dimension) || (query == NULL && is_not_num(scale)) ||
+        		  (query == NULL && is_not_num(quality)) || is_not_num(x) || is_not_num(y))	{
+        	  write_http_response(file,
+        			  "{\"error\": {\"description\": \"Application Exception\", \"message\": \
+        			  \"You used a non-numeric value for a strictly numeric parameter!\"}}",
+        			  NULL, "application/json");
+        	  fclose(file);
+        	  return;
+    	}
 
-      t_vol		*vol = load_volume(a, volume);
+		  vol = load_volume(a, volume);
 
-      if (vol == NULL) {
-    	  write_http_response(file,
-    			  "{\"error\": {\"description\": \"Application Exception\", \"message\": \
-    			  \"Volume does not exist!\"}}",
-    			  NULL, "application/json");
-    	  fclose(file);
-    	  return;
+		  if (vol == NULL) {
+			  write_http_response(file,
+					  "{\"error\": {\"description\": \"Application Exception\", \"message\": \
+					  \"Volume does not exist!\"}}",
+					  NULL, "application/json");
+			  fclose(file);
+			  return;
+		  }
+
+		  if ((dimension[0] = get_by_name_dimension_id(vol, dimension)) == 0) return;
       }
-
-      if ((dimension[0] = get_by_name_dimension_id(vol, dimension, s)) == 0) return;
 
       // we branch as to whether we have a voxel query or a tiling request !
       if (query == NULL) { // TILING
@@ -332,10 +327,10 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
 	        	  return;
     	  }
 
-    	  sprintf(comm, "start image_query %s %c %i %s %s",
+    	  sprintf(comm, "start image_query %s %s %s %s %s",
     			  volume,
-    			  dimension[0],
-    			  atoi(slice),
+    			  dimension,
+    			  slice,
     			  y, x);
       }
 

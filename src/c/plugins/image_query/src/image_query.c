@@ -50,35 +50,24 @@ void			*start(void *args) {
 	int 					y=0;
 	int width = 0;
 	int height = 0;
+	// since multiple volumes in one request are possible we have to loop through the choices ...
+	int 					nr_of_volumes = 1;
+	char 					**volumes = NULL;
+	char 					**dimensions = NULL;
+	char 					**slices = NULL;
+	char 					**xes = NULL;
+	char 					**ys = NULL;
+	t_string_buffer			*response = NULL;
 
 	a = (t_args_plug *)args;
 	prctl(PR_SET_NAME, "TS_QUERY");
 
 	socketDescriptor = (FILE*)a->box;
 
-	// param reads
+	// param sanity check
 	while (a->commands != NULL && a->commands[i] != NULL) {
-		switch (i) {
-			case 0:
-				volume = load_volume(a, a->commands[i]);
-				break;
-			case 1:
-				dim = atoi(a->commands[i]);
-				break;
-			case 2:
-				slice = atoi(a->commands[i]);
-				break;
-			case 3:
-				y = atoi(a->commands[i]);
-				break;
-			case 4:
-				x = atoi(a->commands[i]);
-				break;
-		}
 		i++;
 	}
-
-	// sanity checks
 	if (i != 5) {
 		write_http_response(socketDescriptor,
   			  "{\"error\": {\"description\": \"Application Exception\", \"message\": \
@@ -87,72 +76,138 @@ void			*start(void *args) {
 		fclose(socketDescriptor);
 		return NULL;
 	}
+	i = 0;
 
-	if (volume == NULL) {
-		write_http_response(socketDescriptor,
-  			  "{\"error\": {\"description\": \"Application Exception\", \"message\": \
-  			  \"Volume not found or null!\"}}",
-  			  NULL, "application/json");
-		fclose(socketDescriptor);
-		return NULL;
-	}
+	// this is for multiple volume queries at once
+	if (strstr(a->commands[0], ":") != NULL) {
+		nr_of_volumes = countTokens(a->commands[0], ':','\\');
+		volumes =  tokenizeString(a->commands[0], ':','\\');
+	  	dimensions = tokenizeString(a->commands[1], ':','\\');
+	  	slices = tokenizeString(a->commands[2], ':','\\');
+	  	xes = tokenizeString(a->commands[4], ':','\\');
+	  	ys = tokenizeString(a->commands[3], ':','\\');
+	  }  else { // old fashioned single volume request to have 1 loop only
+		volumes = malloc(2*sizeof(*volumes));
+		volumes[0] = a->commands[0];
+		volumes[1] = NULL;
+		dimensions = malloc(2*sizeof(*dimensions));
+		dimensions[0] = strdup(a->commands[1]);
+		dimensions[1] = NULL;
+		slices = malloc(2*sizeof(*slices));
+		slices[0] = a->commands[2];
+		slices[1] = NULL;
+		xes = malloc(2*sizeof(*xes));
+		xes[0] = a->commands[4];
+		xes[1] = NULL;
+		ys = malloc(2*sizeof(*ys));
+		ys[0] = a->commands[3];
+		ys[1] = NULL;
+	  }
 
-	// check if is raw file
-	is_raw = israw(volume->path, volume->raw_fd);
-	if (is_raw <= 0) {
-		write_http_response(socketDescriptor,
-  			  "{\"error\": {\"description\": \"Application Exception\", \"message\": \
-  			  \"Volume has to be in RAW format to be queried!\"}}",
-  			  NULL, "application/json");
-		fclose(socketDescriptor);
-		return NULL;
-	}
+	// start response
+	response = appendToBuffer(response, "{\"response\": {");
 
-	// read in whole slice data
-	// TODO: once dimension and orientation have been fixed in raw file, we can go for the pixel directly
-    /*
-	lseek(volume->raw_fd, offset + height + width, SEEK_SET);
-	read(volume->raw_fd, &pixel, 1);
-	INFO("Option 1: %hu", pixel);
-     */
-	offset = (volume->dim_offset[dim] + (unsigned long long int)((unsigned long long int)volume->slice_size[dim] * (unsigned long long int)slice));
-	get_width_height(&height, &width, dim, volume);
-	combined_size = width * height;
+	// loop over all volumes handed in
+	while (i<nr_of_volumes) {
+		if (volumes[i] == NULL) break;
 
-	image_data = malloc(combined_size*sizeof(*image_data));
-	lseek(volume->raw_fd, offset, SEEK_SET);
-	read(volume->raw_fd, image_data, combined_size);
-	lseek(volume->raw_fd, 0, SEEK_SET); // return to beginning, just to be safe
+		volume = load_volume(a, volumes[i]);
 
-	img = extractSliceData(volume, dim, image_data, width, height, socketDescriptor);
-	if (img == NULL) { // something went wrong => say good bye
+		if (volume == NULL) {
+			writeError(socketDescriptor, "Volume not found or null!", volumes, dimensions, slices, xes, ys);
+			return NULL;
+		}
+
+		// check if is raw file
+		is_raw = israw(volume->path, volume->raw_fd);
+		if (is_raw <= 0) {
+			writeError(socketDescriptor, "Volume has to be in RAW format to be queried!", volumes, dimensions, slices, xes, ys);
+			return NULL;
+		}
+
+		// add volume to response
+		if (i != 0) response = appendToBuffer(response, ", ");
+		response = appendToBuffer(response, "\"");
+		response = appendToBuffer(response, volume->path);
+		response = appendToBuffer(response, "\" : ");
+
+		// get proper query param associated with volume index
+		if (dimensions[i] == NULL || slices[i] == NULL || xes[i] == NULL || ys[i] == NULL) {
+			writeError(socketDescriptor,
+					"In the case of multiple volume queries each parameter has to correspond to the number of volumes queried!",
+					volumes, dimensions, slices, xes, ys);
+			return NULL;
+		}
+
+		if (nr_of_volumes > 1) dimensions[i][0] = get_by_name_dimension_id(volume, dimensions[i]);
+		dim = atoi(str_n_cpy(dimensions[i], 0, 1));
+		slice = atoi(slices[i]);
+		x = atoi(xes[i]);
+		y = atoi(ys[i]);
+
+		// read in whole slice data
+		// TODO: once dimension and orientation have been fixed in raw file, we can go for the pixel directly
+		/*
+		lseek(volume->raw_fd, offset + height + width, SEEK_SET);
+		read(volume->raw_fd, &pixel, 1);
+		INFO("Option 1: %hu", pixel);
+		 */
+		offset = (volume->dim_offset[dim] + (unsigned long long int)((unsigned long long int)volume->slice_size[dim] * (unsigned long long int)slice));
+		get_width_height(&height, &width, dim, volume);
+		combined_size = width * height;
+
+		image_data = malloc(combined_size*sizeof(*image_data));
+		lseek(volume->raw_fd, offset, SEEK_SET);
+		read(volume->raw_fd, image_data, combined_size);
+		lseek(volume->raw_fd, 0, SEEK_SET); // return to beginning, just to be safe
+
+		img = extractSliceData(volume, dim, image_data, width, height, socketDescriptor);
+		if (img == NULL) { // something went wrong => say good bye
+			if (image_data != NULL) free(image_data);
+			return NULL;
+		}
+
+		// fetch pixel value and address GraphicsMagick quantum differences among systems
+		px = GetOnePixel(img, x, y);
+		pixel_value = malloc(3*sizeof(*pixel_value)); // RGB
+		pixel_value[0] = (unsigned long long int) px.red;
+		pixel_value[1] = (unsigned long long int) px.green;
+		pixel_value[2] = (unsigned long long int) px.blue;
+		if (QuantumDepth != 8 && img->depth == QuantumDepth) {
+			pixel_value[0] = mapUnsignedValue(img->depth, 8, pixel_value[0]);
+			pixel_value[1] = mapUnsignedValue(img->depth, 8, pixel_value[0]);
+			pixel_value[2] = mapUnsignedValue(img->depth, 8, pixel_value[0]);
+		}
+
+		// add voxel value to response
+		char value[100];
+		sprintf(value, " {\"red\": %llu, \"green\": %llu, \"blue\": %llu}", pixel_value[0], pixel_value[1], pixel_value[2]);
+		response = appendToBuffer(response, value);
+
+		// clean up
 		if (image_data != NULL) free(image_data);
-		return NULL;
+		if (pixel_value != NULL) free(pixel_value);
+		if (img != NULL) DestroyImage(img);
+
+		//increment
+		i++;
 	}
 
-	// fetch pixel value and address GraphicsMagick quantum differences among systems
-    px = GetOnePixel(img, x, y);
-    pixel_value = malloc(3*sizeof(*pixel_value)); // RGB
-    pixel_value[0] = (unsigned long long int) px.red;
-    pixel_value[1] = (unsigned long long int) px.green;
-    pixel_value[2] = (unsigned long long int) px.blue;
-	if (QuantumDepth != 8 && img->depth == QuantumDepth) {
-		pixel_value[0] = mapUnsignedValue(img->depth, 8, pixel_value[0]);
-		pixel_value[1] = mapUnsignedValue(img->depth, 8, pixel_value[0]);
-		pixel_value[2] = mapUnsignedValue(img->depth, 8, pixel_value[0]);
-	}
-
-	char value[100];
-	sprintf(value, "{\"response\": {\"red\": %llu, \"green\": %llu, \"blue\": %llu}}", pixel_value[0], pixel_value[1], pixel_value[2]);
+	// finish off json
+	response = appendToBuffer(response, " } }");
 
 	// write response into socket
-	write_http_response(socketDescriptor, value, "200 OK", "application/json");
+	write_http_response(socketDescriptor, response->buffer, "200 OK", "application/json");
 	fclose(socketDescriptor);
 
-	// clean up
-	if (image_data != NULL) free(image_data);
-	if (pixel_value != NULL) free(pixel_value);
-	if (img != NULL) DestroyImage(img);
+	//clean up
+	free(response->buffer);
+	free(response);
+	free_null_terminated_char_2D_array(volumes);
+	free_null_terminated_char_2D_array(dimensions);
+	free_null_terminated_char_2D_array(slices);
+	free_null_terminated_char_2D_array(xes);
+	free_null_terminated_char_2D_array(ys);
 
 	return NULL;
 }
@@ -266,4 +321,23 @@ void dealWithException(ExceptionInfo *exception, FILE * socketDescriptor, Image 
 	// clean up
 	if (img != NULL) DestroyImage(img);
 	if (image_info != NULL) DestroyImageInfo(image_info);
+}
+
+void writeError(FILE * socketDescriptor, char * error, char **volumes, char **dimensions, char **slices, char **xes, char **ys) {
+	char text[200];
+
+	// compose error message
+	if (error != NULL)
+		sprintf(text, "{\"error\": {\"description\": \"Application Exception\", \"message\": \"%s\"}}", error);
+
+	// write out error
+	write_http_response(socketDescriptor, text, NULL, "application/json");
+	fclose(socketDescriptor);
+
+	// clean up
+	free_null_terminated_char_2D_array(volumes);
+	free_null_terminated_char_2D_array(dimensions);
+	free_null_terminated_char_2D_array(slices);
+	free_null_terminated_char_2D_array(xes);
+	free_null_terminated_char_2D_array(ys);
 }

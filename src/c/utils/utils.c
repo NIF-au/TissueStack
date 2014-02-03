@@ -555,6 +555,7 @@ char		*str_n_cpy(char *str, int position, int len)
   return (dest);
 }
 
+
 /** TESTS **/
 /*
 int		main(int argc, char ** args)
