@@ -128,21 +128,18 @@ TissueStack.Canvas.prototype = {
 		var dataForPixel = ctx.getImageData(coords.x, coords.y, 1, 1);
 		if (!dataForPixel || !dataForPixel.data) return;
 
-		// set rgb values, transparency and lookup value (if exists)
-		var value = {r: dataForPixel.data[0], g: dataForPixel.data[1], b: dataForPixel.data[2], t: dataForPixel.data[3], l: null};
+		// set rgb values and transparency
+		return {r: dataForPixel.data[0], g: dataForPixel.data[1], b: dataForPixel.data[2], t: dataForPixel.data[3], l: null};
+	},
+	getOriginalPixelValue : function(value) {
+		if (typeof(value) != 'object') return;
 
+		// lookup value
 		if (TissueStack.dataSetStore.datasets[this.data_extent.data_id].lookupValues) {
 			var label = TissueStack.dataSetStore.datasets[this.data_extent.data_id].
 					lookupValues["" + value.r + "/" + value.g + "/" + value.b];
 			if (typeof(label) != 'undefined')	value['l'] = label;
 		}
-		
-		return value;
-	},
-	getOriginalPixelValue : function(coords) {
-		// delegate
-		var value = this.getCanvasPixelValue(coords);
-		if (typeof(value) != 'object') return;
 		
 		// map back to original value range (easy since we always have a positive 0-255 range in the canvas)
 		var originalRange = Math.abs(this.value_range_max) - this.value_range_min; 
@@ -773,59 +770,54 @@ TissueStack.Canvas.prototype = {
 			
 			return;
 		}
-			
-		// for desktop and tablet
-		if(TissueStack.desktop || TissueStack.tablet ){
-			var x = worldCoords ? worldCoords.x : pixelCoords.x;
-			var y = worldCoords ? worldCoords.y : pixelCoords.y;
-			var z = worldCoords ? worldCoords.z : pixelCoords.z;
-
-			$("#canvas_point_x").val(Math.round(x *1000) / 1000);
-			$("#canvas_point_y").val(Math.round(y *1000) / 1000);
-			if (this.data_extent.max_slices > 1) {
-				$("#canvas_point_z").val(Math.round(z *1000) / 1000);
-			} else {
-				$("#canvas_point_z").val("");
-			}
-			
-			// display pixel value
-			var pixelVal = this.getOriginalPixelValue({x: this.cross_x, y: this.cross_y});
-			
-			if (typeof(pixelVal) === 'object')
-				if (pixelVal.l)
-					$("#canvas_point_value").val(pixelVal.l);
-				else if (!this.isColorMapOn()) // grayscale
-					$("#canvas_point_value").val((Math.round(pixelVal.r) *1000) / 1000); // display redundant pixel value 
-				else // display r/g/b triples
-					$("#canvas_point_value").val("r: "
-							+ (Math.round(pixelVal.r) *1000) / 1000
-							+ " g: "
-							+ (Math.round(pixelVal.g) *1000) / 1000
-							+ " b: "
-							+ (Math.round(pixelVal.b) *1000) / 1000
-					); // display redundant pixel value
-			
-			var dataSet = TissueStack.dataSetStore.getDataSetById(this.getDataExtent().data_id);
-
-			// TEST: fire off backend query
-			// TODO: contemplate moving this 
-			TissueStack.Utils.queryVoxelValue(dataSet.filename, this.getDataExtent().plane, oneToOnePixelCoords);
-			
-			// update url link info
-			this.getUrlLinkString(dataSet.realWorldCoords[this.data_extent.plane]);
-			
-			return;
-		}
-
+		
 		// phone
-		var log;
+		if (TissueStack.phone) {
+			var log;
+	
+			if (worldCoords) {
+				log = $('.coords');
+				log.html("World > X: " +  Math.round(worldCoords.x * 1000) / 1000 + ", Y: " +  Math.round(worldCoords.y * 1000) / 1000);
+			} else { 
+				log = $('.coords');
+				log.html("Pixels > X: " + pixelCoords.x + ", Y: " + pixelCoords.y);
+			}
+			return;
+		}		
+		
+		// for desktop and tablet
+		var x = worldCoords ? worldCoords.x : pixelCoords.x;
+		var y = worldCoords ? worldCoords.y : pixelCoords.y;
+		var z = worldCoords ? worldCoords.z : pixelCoords.z;
 
-		if (worldCoords) {
-			log = $('.coords');
-			log.html("World > X: " +  Math.round(worldCoords.x * 1000) / 1000 + ", Y: " +  Math.round(worldCoords.y * 1000) / 1000);
-		} else { 
-			log = $('.coords');
-			log.html("Pixels > X: " + pixelCoords.x + ", Y: " + pixelCoords.y);
+		$("#canvas_point_x").val(Math.round(x *1000) / 1000);
+		$("#canvas_point_y").val(Math.round(y *1000) / 1000);
+		if (this.data_extent.max_slices > 1) {
+			$("#canvas_point_z").val(Math.round(z *1000) / 1000);
+		} else {
+			$("#canvas_point_z").val("");
+		}
+		
+		// get at pixel value
+		var dataSet = TissueStack.dataSetStore.getDataSetById(this.getDataExtent().data_id);
+		TissueStack.Utils.queryVoxelValue(dataSet, this, oneToOnePixelCoords);
+		
+		// update url link info
+		this.getUrlLinkString(dataSet.realWorldCoords[this.data_extent.plane]);
+	}, displayPixelValue : function(pixelVal) {
+		if (typeof(pixelVal) === 'object') {
+			if (pixelVal.l)
+				$("#canvas_point_value").val(pixelVal.l);
+			else if (!this.isColorMapOn()) // grayscale
+				$("#canvas_point_value").val((Math.round(pixelVal.r) *1000) / 1000); // display redundant pixel value 
+			else // display r/g/b triples
+				$("#canvas_point_value").val("r: "
+						+ (Math.round(pixelVal.r) *1000) / 1000
+						+ " g: "
+						+ (Math.round(pixelVal.g) *1000) / 1000
+						+ " b: "
+						+ (Math.round(pixelVal.b) *1000) / 1000
+				); 
 		}
 	}, getXYCoordinatesWithRespectToZoomLevel : function(coords) {
 		if (this.upper_left_y < this.dim_y - this.cross_y || this.upper_left_y - (this.data_extent.y - 1) > this.dim_y - this.cross_y) {

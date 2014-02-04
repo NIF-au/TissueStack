@@ -471,7 +471,7 @@ TissueStack.Events.prototype = {
 		// update coordinate info displayed
 		var _this = this;
 		setTimeout(function() {
-			_this.canvas.updateCoordinateInfo(relCrossCoords, worldCoordinates);}
+		_this.canvas.updateCoordinateInfo(relCrossCoords, worldCoordinates);}
 		, 200);
 	}
 };

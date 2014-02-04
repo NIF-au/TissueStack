@@ -668,28 +668,55 @@ TissueStack.Utils = {
 		});
 		
 		return succeeded;
-	}, queryVoxelValue : function(volume, plane, coords) {
-		if (typeof(volume) != 'string' || typeof(plane) != 'string' || typeof(coords) != 'object') return null;
+	}, queryVoxelValue : function(dataset, canvas, coords) {
+		if (typeof(dataset) != 'object' || typeof(canvas) != 'object' || typeof(coords) != 'object') return null;
 		
 		// assemble url
 		var url = "/" + TissueStack.configuration['image_service_proxy_path'].value + "/?volume="
-					+ volume + "&dimension=" + plane + "space&slice=" + coords.z + "&x=" + coords.x
+					+ dataset.filename + "&dimension=" + canvas.getDataExtent().plane + "space&slice=" + coords.z + "&x=" + coords.x
 					+ "&y=" + coords.y + "&query=query";
-					
+		
+		// in case of an error we rely on the canvas pixel querying
+		var errorHandler = function(canvas) {
+			var value = canvas.getCanvasPixelValue({x: canvas.cross_x, y: canvas.cross_y});
+			canvas.displayPixelValue(canvas.getOriginalPixelValue(value));
+		};
+		
+		if (canvas.hasColorMapOrContrastSetting()) {
+			setTimeout(function() {	errorHandler(canvas); } , 200);
+			return;
+		}
+		
   		// send ajax request
  		TissueStack.Utils.sendAjaxRequest(url, 'GET', true,
 			function(data, textStatus, jqXHR) {
 				if (!data.response && !data.error) {
+					errorHandler(canvas);
 					return;
 				}
 				if (data.error) {
-					//console.error("" + data.error.description + ": " + data.error.message);				
+					errorHandler(canvas);
 					return;
 				}
 
-				console.info(data.response);
+				// fall back if no response
+				if (!data || !data.response || !data.response[dataset.filename]) {
+					errorHandler(canvas);
+					return;
+				}
+				
+				var value = canvas.getOriginalPixelValue(
+						{
+							r: data.response[dataset.filename].red,
+							g: data.response[dataset.filename].green,
+							b: data.response[dataset.filename].blue,
+							l: null
+						}
+				);
+				canvas.displayPixelValue(value);
 			},
 			function(jqXHR, textStatus, errorThrown) {
+				errorHandler(canvas);
 				return;
 			}
 		);
