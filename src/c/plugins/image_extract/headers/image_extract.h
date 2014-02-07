@@ -28,8 +28,6 @@
 #include <sys/socket.h>
 #include <math.h>
 
-#include <magick/api.h>
-
 typedef	struct	s_image_extract
 {
   int 		dim_nb;
@@ -107,6 +105,10 @@ void			free_image_extract(t_image_extract * extract);
 void			free_image_args(t_image_args * args);
 
 void		alloc_and_init_colormap_space_from_src(float **new_colormap, float **source);
+
+inline short checkRequestTimeout(t_image_args *a, Image * img, ImageInfo * image_info);
+inline void tidyUp(Image * img, ImageInfo * image_info, FILE *file);
+inline void fclose_check(FILE *file);
 
 extern  t_log_plugin	log_plugin;
 

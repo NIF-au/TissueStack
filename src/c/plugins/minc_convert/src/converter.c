@@ -42,6 +42,9 @@ void		dim_loop(int fd, int dimensions_nb, t_vol *volume,
   unsigned long		*start;
   long unsigned int	*count;
   short			cancel = 0;
+  Image		*img = NULL;
+  int width = 0;
+  int height = 0;
 
   if (dimension_resume > -1)
     dim = dimension_resume;
@@ -70,20 +73,37 @@ void		dim_loop(int fd, int dimensions_nb, t_vol *volume,
       count[dim] = 1;
       while (this_slice < slice && cancel == 0)
 	{
-	  start[dim] = this_slice;
+   	  img = NULL;
+   	  start[dim] = this_slice;
 	  memset(hyperslab, '\0', size);
 	  miget_real_value_hyperslab(volume->minc_volume, MI_TYPE_UBYTE, start, count, hyperslab);
+	  get_width_height(&height, &width, dim, volume);
+	  volume->original_format = MINC;
+	  img = extractSliceDataAtProperOrientation(volume, dim, hyperslab, width, height, NULL);
+	  if (ExportImagePixelArea(img,UndefinedQuantum, 8, (unsigned char *) hyperslab, NULL, NULL) == MagickFail) {
+		  ERROR("Could not convert slice");
+		  if (img != NULL) DestroyImage(img);
+		  free(hyperslab);
+		  return;
+	  }
 	  write(fd, hyperslab, size);
 	  DEBUG("Slice = %i - dim = %i", this_slice, dim);
 	  this_slice++;
 	  t->percent_add(1, id_percent, t);
 	  cancel = t->is_percent_paused_cancel(id_percent, t);
+	  if (img != NULL) DestroyImage(img);
 	}
       start[dim] = 0;
       count[dim] = volume->size[dim];
       dim++;
       free(hyperslab);
     }
+}
+
+void 			turn_into_generic_raw(char * hyperslab) {
+	if (hyperslab == NULL) return;
+
+
 }
 
 t_vol		*init_get_volume_from_minc_file(char *path)
@@ -215,7 +235,7 @@ void		write_header_into_file(int fd, t_header *h)
 	  h->dim_name[0][0], h->dim_name[1][0], h->dim_name[2][0],
 	  h->slice_size[0], h->slice_size[1], h->slice_size[2],
 	  h->slice_max,
-	  (unsigned long long)h->dim_offset[0], (unsigned long long)h->dim_offset[1], (unsigned long long)h->dim_offset[2], MINC);
+	  (unsigned long long)h->dim_offset[0], (unsigned long long)h->dim_offset[1], (unsigned long long)h->dim_offset[2], GENERIC);
   len = strlen(head);
   memset(lenhead, '\0', 200);
   sprintf(lenhead, "@IaMraW@|%i|", len);
@@ -242,7 +262,9 @@ void		*init(void *args)
 
   a = (t_args_plug *)args;
   LOG_INIT(a);
+  InitializeMagick("./");
   INFO("Minc Converter init");
+
   return (NULL);
 }
 
@@ -337,6 +359,7 @@ void  		*start(void *args)
 
 void		*unload(void *args)
 {
+    DestroyMagick();
 	INFO("Minc Convert Plugin: Unloaded");
-  return (NULL);
+	return (NULL);
 }

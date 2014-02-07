@@ -62,7 +62,7 @@ endif
 %.o: %.c
 	@echo -e "\tCompiling $(@)."
 	@$(CC) -DAPPLICATION_PATH='"$(DATA_PATH)"' -DPLUGINS_PATH='"$(PLUGINS_PATH)"' $(APP_FLAGS) \
-		-c $(FLAGS) $(INCLUDE) `pkg-config --cflags gtk+-2.0` -o $@ $<
+		-c $(FLAGS) $(INCLUDE) `pkg-config --cflags gtk+-2.0` `GraphicsMagick-config --cppflags --libs --ldflags` -o $@ $<
 
 all:	compile install
 
@@ -79,7 +79,7 @@ endif
 	@echo -e "###################### TISSUE STACK PRE-TILING TOOL BUILD [Version: $(VERSION)] ###################\n"
 
 coreCompile:	$(OBJS)
-	@$(CC) $(OBJS) -o $(EXE_NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) `pkg-config --cflags --libs gtk+-2.0` > /dev/null
+	@$(CC) $(OBJS) -o $(EXE_NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) `pkg-config --cflags --libs gtk+-2.0` `GraphicsMagick-config --cppflags --libs --ldflags` > /dev/null
 	@echo -e "\tFinished compiling tiling tool."
 
 pluginsCompile:

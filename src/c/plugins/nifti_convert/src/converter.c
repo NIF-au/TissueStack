@@ -179,7 +179,7 @@ void		write_header_into_file(int fd, t_header *h)
 	  h->dim_name[0][0], h->dim_name[1][0], h->dim_name[2][0],
 	  h->slice_size[0], h->slice_size[1], h->slice_size[2],
 	  h->slice_max,
-	  (unsigned long long)h->dim_offset[0], (unsigned long long)h->dim_offset[1], (unsigned long long)h->dim_offset[2], NIFTI);
+	  (unsigned long long)h->dim_offset[0], (unsigned long long)h->dim_offset[1], (unsigned long long)h->dim_offset[2], GENERIC);
   len = strlen(head);
   memset(lenhead, '\0', 200);
   sprintf(lenhead, "@IaMraW@|%i|", len);
@@ -190,8 +190,11 @@ void		write_header_into_file(int fd, t_header *h)
 void		*init(void *args)
 {
 	t_args_plug *a = (t_args_plug *)args;
+
 	LOG_INIT(a);
+	InitializeMagick("./");
 	INFO("Nifti Converter initialized.");
+
 	return (NULL);
 }
 
@@ -216,6 +219,7 @@ void  		*start(void *args)
   unsigned int slice_resume = -1;
   unsigned long long off = 0L;
   char		*command_line = NULL;
+  //Image		*img = NULL;
 
   prctl(PR_SET_NAME, "TS_NIFTI_CON");
 
@@ -303,6 +307,7 @@ void  		*start(void *args)
       size_per_slice = h->slice_size[i - 1];
       while(slice < nslices && cancel == 0)
 	{
+	  //img = NULL;
 	  data = NULL;
 	  dims[i] = slice;
 	  if ((ret = nifti_read_collapsed_image(nim, dims, (void*)&data)) < 0)
@@ -313,6 +318,24 @@ void  		*start(void *args)
 	  if( ret > 0 )
 	    {
 	      data_char = iter_all_pix_and_convert(data, size_per_slice, nim);
+
+	      // TODO: make into a standalone tool
+	      /* TODO: change that to fit nifti
+	      int width = 0;
+	      int height = 0;
+
+	      t_vol * volume; // do this further up
+	      get_width_height(&height, &width, i, volume);
+		  volume->original_format = NIFTI;
+		  img = extractSliceDataAtProperOrientation(volume, i, data_char, width, height, NULL);
+		  if (ExportImagePixelArea(img,UndefinedQuantum, 8, (unsigned char *) data_char, NULL, NULL) == MagickFail) {
+			  ERROR("Could not convert slice");
+			  if (img != NULL) DestroyImage(img);
+			  free(data_char);
+			  return;
+		  }
+		  if (img != NULL) DestroyImage(img);
+		  */
 	      write(fd, data_char, size_per_slice);
 	      free(data_char);
 	    }
@@ -339,6 +362,7 @@ void  		*start(void *args)
 
 void		*unload(void *args)
 {
+    DestroyMagick();
 	INFO("Nifti Converter Plugin: Unloaded");
-  return (NULL);
+	return (NULL);
 }

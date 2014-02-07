@@ -1124,3 +1124,24 @@ void			free_image_args(t_image_args * args) {
 
 	free(args);
 }
+
+inline void fclose_check(FILE *file) {
+	if (file && fcntl(fileno(file), F_GETFL) != -1) {
+        fclose(file);
+    }
+}
+
+inline short checkRequestTimeout(t_image_args *a, Image * img, ImageInfo * image_info) {
+	if (a == NULL || a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
+		write_http_header(a->file, "408 Request Timeout", a->info->image_type);
+		tidyUp(img, image_info,a->file);
+		return TRUE;
+	}
+	return FALSE;
+}
+
+inline void tidyUp(Image * img, ImageInfo * image_info, FILE *file) {
+	if (img != NULL) DestroyImage(img);
+	if (image_info != NULL) DestroyImageInfo(image_info);
+	if (file != NULL) fclose_check(file);
+}

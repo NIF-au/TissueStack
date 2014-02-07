@@ -161,7 +161,7 @@ void			*start(void *args) {
 		read(volume->raw_fd, image_data, combined_size);
 		lseek(volume->raw_fd, 0, SEEK_SET); // return to beginning, just to be safe
 
-		img = extractSliceData(volume, dim, image_data, width, height, socketDescriptor);
+		img = extractSliceDataAtProperOrientation(volume, dim, image_data, width, height, socketDescriptor);
 		if (img == NULL) { // something went wrong => say good bye
 			if (image_data != NULL) free(image_data);
 			return NULL;
@@ -217,110 +217,6 @@ void		*unload(void *args) {
 
 	INFO("Image Query Plugin: Unloaded");
 	return (NULL);
-}
-
-// TODO: All this conditional mumbo jumbo has to be changed. It's not good. Raw has to have a fixed dimension order and orientation!
-// future TODO: the bit depth has to become a double/float !
-Image * extractSliceData(t_vol * volume, int dim, char * image_data, int width, int height, FILE * socketDescriptor) {
-    ExceptionInfo exception;
-    Image		*img = NULL;
-    Image		*tmp = NULL;
-	ImageInfo	*image_info = NULL;
-
-	// init exception
-    GetExceptionInfo(&exception);
-
-    if ((image_info = CloneImageInfo((ImageInfo *)NULL)) == NULL) {
-    	dealWithException(&exception, socketDescriptor, NULL, image_info);
-    	return NULL;
-     }
-
-    if (volume->original_format == MINC &&
-  	  ((volume->dim_name_char[0] == 'y' && volume->dim_name_char[1] == 'z' && volume->dim_name_char[2] == 'x' && volume->dim_name_char[dim] == 'x') ||
-        (volume->dim_name_char[0] == 'z' && volume->dim_name_char[1] == 'x' && volume->dim_name_char[2] == 'y' && volume->dim_name_char[dim] == 'z') ||
-        (volume->dim_name_char[0] == 'x' && volume->dim_name_char[1] == 'z' && volume->dim_name_char[2] == 'y' && (volume->dim_name_char[dim] == 'z' || volume->dim_name_char[dim] == 'y')) ||
-        (volume->dim_name_char[0] == 'x' && volume->dim_name_char[1] == 'y' && volume->dim_name_char[2] == 'z') ||
-        (volume->dim_name_char[0] == 'y' && volume->dim_name_char[1] == 'x' && volume->dim_name_char[2] == 'z' && (volume->dim_name_char[dim] == 'y' || volume->dim_name_char[dim] == 'x')))) {
-  	  if ((img = ConstituteImage(height, width, "I", CharPixel, image_data, &exception)) == NULL) {
-      	dealWithException(&exception, socketDescriptor, NULL, image_info);
-      	return NULL;
-       }
-
-        if ((volume->dim_name_char[0] == 'x' && volume->dim_name_char[1] == 'z' && volume->dim_name_char[2] == 'y' &&
-        		(volume->dim_name_char[dim] == 'z' || volume->dim_name_char[dim] == 'y'))) {
-  		  tmp = img;
-  		  if ((img = RotateImage(img, 90, &exception)) == NULL) {
-  	    	dealWithException(&exception, socketDescriptor, tmp, image_info);
-  	    	return NULL;
-  		  }
-  		  DestroyImage(tmp);
-        } else {
-      	  tmp = img;
-      	  if ((img = RotateImage(img, -90, &exception)) == NULL) {
-   	    	dealWithException(&exception, socketDescriptor, tmp, image_info);
-   	    	return NULL;
-      	  }
-      	  DestroyImage(tmp);
-        }
-      } else {
-      	if ((img = ConstituteImage(width, height, "I", CharPixel, image_data, &exception)) == NULL) {
-      		dealWithException(&exception, socketDescriptor, NULL, image_info);
-  	    	return NULL;
-        }
-    }
-
-    if ((volume->original_format != MINC) ||  (volume->original_format == MINC &&
-  	  !((volume->dim_name_char[0] == 'y' && volume->dim_name_char[1] == 'z' && volume->dim_name_char[2] == 'x' && volume->dim_name_char[dim] == 'x') ||
-        (volume->dim_name_char[0] == 'z' && volume->dim_name_char[1] == 'x' && volume->dim_name_char[2] == 'y' && volume->dim_name_char[dim] == 'z') ||
-        (volume->dim_name_char[0] == 'y' && volume->dim_name_char[1] == 'x' && volume->dim_name_char[2] == 'z' && (volume->dim_name_char[dim] == 'y' ||
-        volume->dim_name_char[dim] == 'x')) || (volume->dim_name_char[0] == 'x' && volume->dim_name_char[1] == 'y' && volume->dim_name_char[2] == 'z')))) {
-        tmp = img;
-        if ((img = FlipImage(img, &exception)) == NULL) {
-  	    	dealWithException(&exception, socketDescriptor, tmp, image_info);
-  	    	return NULL;
-        }
-        DestroyImage(tmp);
-      }
-
-   	 if ((volume->dim_name_char[0] == 'x' && volume->dim_name_char[1] == 'z' && volume->dim_name_char[2] == 'y' && volume->dim_name_char[dim] == 'z') ||
-    		(volume->dim_name_char[0] == 'x' && volume->dim_name_char[1] == 'z' && volume->dim_name_char[2] == 'y' && volume->dim_name_char[dim] == 'y')) {
-        tmp = img;
-        if ((img = FlopImage(img, &exception)) == NULL) {
-  	    	dealWithException(&exception, socketDescriptor, tmp, image_info);
-  	    	return NULL;
-        }
-        DestroyImage(tmp);
-      }
-
-   	// for testing purposes only!
-   	/*
-    strcpy(img->filename, "/tmp/thishereimage.png");
-    WriteImage(image_info, img);
-	*/
-
-    return img;
-}
-
-void dealWithException(ExceptionInfo *exception, FILE * socketDescriptor, Image * img, ImageInfo * image_info) {
-	char error[200];
-
-	if (exception == NULL) return;
-
-	CatchException(exception);
-
-	// compose error message
-	sprintf(error,
-			"{\"error\": {\"description\": \"Application Exception\", \"message\": \"%s\"}}",
-			exception->description != NULL ? exception->description :
-					(exception->reason != NULL ? exception->reason: "N/A"));
-
-	// write out error
-	write_http_response(socketDescriptor, error, NULL, "application/json");
-	fclose(socketDescriptor);
-
-	// clean up
-	if (img != NULL) DestroyImage(img);
-	if (image_info != NULL) DestroyImageInfo(image_info);
 }
 
 void writeError(FILE * socketDescriptor, char * error, char **volumes, char **dimensions, char **slices, char **xes, char **ys) {

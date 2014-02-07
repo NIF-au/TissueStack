@@ -85,7 +85,7 @@ export SRC_DIST_NAME		=	$(NAME)-$(VERSION)-sources.tar.gz
 %.o: %.c
 	@echo -e "\tCompiling $(@)."
 	@$(CC) -DAPPLICATION_PATH='"$(DATA_PATH)"' -DPLUGINS_PATH='"$(PLUGINS_PATH)"' $(APP_FLAGS) \
-		-c $(FLAGS) $(INCLUDE) `pkg-config --cflags gtk+-2.0` -o $@ $<
+		-c $(FLAGS) $(INCLUDE) `pkg-config --cflags gtk+-2.0` `GraphicsMagick-config --cppflags --libs --ldflags` -o $@ $<
 
 all:	compile install
 
@@ -106,7 +106,7 @@ endif
 compile: prepare coreCompile pluginsCompile
 	
 coreCompile:	$(OBJS)
-	@$(CC) $(OBJS) -o $(EXE_NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) `pkg-config --cflags --libs gtk+-2.0` > /dev/null
+	@$(CC) $(OBJS) -o $(EXE_NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) `pkg-config --cflags --libs gtk+-2.0` `GraphicsMagick-config --cppflags --libs --ldflags` > /dev/null
 	@echo -e "\tFinished compiling core components."
 
 pluginsCompile:

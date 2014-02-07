@@ -118,12 +118,6 @@ void convert_tiles_to_pixel_coord(t_image_args *a)
     a->info->w_position *= a->info->square_size;
 }
 
-void fclose_check(FILE *file) {
-	if (file && fcntl(fileno(file), F_GETFL) != -1) {
-        fclose(file);
-    }
-}
-
 void		apply_colormap(PixelPacket *px, PixelPacket *px_final, float **premapped_colormap,
 			       t_image_args *a, int width, int height, unsigned long quantum_depth)
 {
@@ -218,23 +212,19 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
 			    unsigned int current_slice, int width, int height, t_image_args *a)
 {
   ExceptionInfo exception;
-  Image		*img;
-  Image		*tmp;
+  Image		*img = NULL;
+  Image		*tmp = NULL;
   RectangleInfo *portion;
-  ImageInfo	*image_info;
+  ImageInfo	*image_info = NULL;
   int		kind;
   short		streamToSocket;
-  Image		*new_image;
-  ImageInfo	*new_image_info;
-  ImageInfo	*image_info_cpy;
+  Image		*new_image = NULL;
+  ImageInfo	*new_image_info = NULL;
+  ImageInfo	*image_info_cpy = NULL;
   PixelPacket	*px;
   PixelPacket	*px_tmp;
 
-  if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
-    write_http_header(a->file, "408 Request Timeout", a->info->image_type);
-    fclose_check(a->file);
-    return;
-  }
+  if (checkRequestTimeout(a, img, image_info)) return;
 
   if (a->info->percentage == 1 && strcmp(a->info->service, "full") == 0)
       a->general_info->percent_add(1, a->info->id_percent, a->general_info);
@@ -254,71 +244,33 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
 
   GetExceptionInfo(&exception);
   if ((image_info = CloneImageInfo((ImageInfo *)NULL)) == NULL) {
-    CatchException(&exception);
-    DestroyImageInfo(image_info);
-    fclose_check(a->file);
-    return;
+	  tidyUp(NULL, image_info, a->file);
+	  return;
   }
 
-  if (volume->original_format == MINC &&
-	  ((volume->dim_name_char[0] == 'y' && volume->dim_name_char[1] == 'z' && volume->dim_name_char[2] == 'x' && volume->dim_name_char[current_dimension] == 'x') ||
-      (volume->dim_name_char[0] == 'z' && volume->dim_name_char[1] == 'x' && volume->dim_name_char[2] == 'y' && volume->dim_name_char[current_dimension] == 'z') ||
-      (volume->dim_name_char[0] == 'x' && volume->dim_name_char[1] == 'z' && volume->dim_name_char[2] == 'y' && (volume->dim_name_char[current_dimension] == 'z' || volume->dim_name_char[current_dimension] == 'y')) ||
-      (volume->dim_name_char[0] == 'x' && volume->dim_name_char[1] == 'y' && volume->dim_name_char[2] == 'z') ||
-      (volume->dim_name_char[0] == 'y' && volume->dim_name_char[1] == 'x' && volume->dim_name_char[2] == 'z' && (volume->dim_name_char[current_dimension] == 'y' || volume->dim_name_char[current_dimension] == 'x'))))
-    {
-	  if ((img = ConstituteImage(height, width, "I", CharPixel, hyperslab, &exception)) == NULL) {
-		CatchException(&exception);
-		DestroyImageInfo(image_info);
-		fclose_check(a->file);
-		return;
-      }
-
-      if ((volume->dim_name_char[0] == 'x' && volume->dim_name_char[1] == 'z' && volume->dim_name_char[2] == 'y' &&
-	   (volume->dim_name_char[current_dimension] == 'z' || volume->dim_name_char[current_dimension] == 'y'))) {
-		  tmp = img;
-		  if ((img = RotateImage(img, 90, &exception)) == NULL) {
-			CatchException(&exception);
-			DestroyImage(tmp);
-			DestroyImageInfo(image_info);
-			fclose_check(a->file);
-			return;
-		  }
-		  DestroyImage(tmp);
-      } else {
-    	  tmp = img;
-    	  if ((img = RotateImage(img, -90, &exception)) == NULL) {
-			CatchException(&exception);
-			DestroyImage(tmp);
-			DestroyImageInfo(image_info);
-			fclose_check(a->file);
-			return;
-    	  }
-    	  DestroyImage(tmp);
-      }
-    } else {
-    	if ((img = ConstituteImage(width, height, "I", CharPixel, hyperslab, &exception)) == NULL) {
-		CatchException(&exception);
-		DestroyImageInfo(image_info);
-		fclose_check(a->file);
-		return;
-      }
+  // if generic the raw is ready to use as is
+  if (volume->original_format == GENERIC) {
+	  if ((img = ConstituteImage(width, height, "I", CharPixel, hyperslab, &exception)) == NULL) {
+		  dealWithException(&exception, NULL, NULL, image_info);
+		  write_http_header(a->file, "500 Server Error", a->info->image_type);
+		  tidyUp(img, image_info, a->file);
+		  return;
+	  }
+  } else {	// do some orientation nonsense
+	  img = extractSliceDataAtProperOrientation(volume, current_dimension, hyperslab, width, height, NULL);
+  	  if (img == NULL) {
+  		  write_http_header(a->file, "500 Server Error", a->info->image_type);
+  		  tidyUp(img, image_info, a->file);
+  		  return;
+  	  }
   }
 
-	if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
-		DestroyImage(img);
-		DestroyImageInfo(image_info);
-		write_http_header(a->file, "408 Request Timeout", a->info->image_type);
-		fclose_check(a->file);
-		return;
-	}
+  if (checkRequestTimeout(a, img, image_info)) return;
 
   if (a->info->contrast != 0) {
       if ((px = GetImagePixelsEx(img, 0, 0, width, height, &exception)) == NULL)	{
-		DestroyImage(img);
-		DestroyImageInfo(image_info);
-		fclose_check(a->file);
 		CatchException(&exception);
+		tidyUp(img, image_info, a->file);
 		return;
 	}
 
@@ -328,21 +280,13 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
       SyncImagePixels(img);
     }
 
-  if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
-	DestroyImage(img);
-	DestroyImageInfo(image_info);
-	write_http_header(a->file, "408 Request Timeout", a->info->image_type);
-	fclose_check(a->file);
-	return;
-  }
+  if (checkRequestTimeout(a, img, image_info)) return;
 
   if (a->info->colormap_id > -1) {
       if ((new_image_info = CloneImageInfo((ImageInfo *)NULL)) == NULL) {
 		CatchException(&exception);
-		DestroyImageInfo(image_info);
+		tidyUp(img, image_info, a->file);
 		DestroyImageInfo(new_image_info);
-		DestroyImage(img);
-		fclose_check(a->file);
 		return;
       }
 
@@ -352,170 +296,79 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
       new_image->columns = width;
 
       if ((px = GetImagePixelsEx(img, 0, 0, width, height, &exception)) == NULL) {
-	  DestroyImage(img);
-	  DestroyImageInfo(image_info);
-	  DestroyImageInfo(new_image_info);
-	  fclose_check(a->file);
 	  CatchException(&exception);
+	  tidyUp(img, image_info, a->file);
+	  DestroyImageInfo(new_image_info);
 	  return;
 	}
 
-      if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
-		DestroyImage(img);
-		DestroyImageInfo(image_info);
-		DestroyImageInfo(new_image_info);
-		write_http_header(a->file, "408 Request Timeout", a->info->image_type);
-		fclose_check(a->file);
-		return;
-      }
+      if (checkRequestTimeout(a, img, image_info)) return;
 
-      if ((px_tmp = SetImagePixelsEx(new_image, 0, 0, width, height, &exception)) == NULL)
-	{
-	  DestroyImage(img);
-	  DestroyImageInfo(image_info);
-	  DestroyImageInfo(new_image_info);
-	  fclose_check(a->file);
+      if ((px_tmp = SetImagePixelsEx(new_image, 0, 0, width, height, &exception)) == NULL) {
 	  CatchException(&exception);
+	  tidyUp(img, image_info, a->file);
+	  DestroyImageInfo(new_image_info);
 	  return;
 	}
 
-      if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
-	DestroyImage(img);
-	DestroyImageInfo(new_image_info);
-	DestroyImageInfo(image_info);
-	write_http_header(a->file, "408 Request Timeout", a->info->image_type);
-	fclose_check(a->file);
-	return;
-      }
+      if (checkRequestTimeout(a, img, image_info)) return;
 
    	  apply_colormap(px, px_tmp, a->info->premapped_colormap[a->info->colormap_id], a, width, height, img->depth);
 
       SyncImagePixels(new_image);
 
-      DestroyImage(img);
       image_info_cpy = image_info;
       image_info = new_image_info;
-      DestroyImageInfo(image_info_cpy);
+	  tidyUp(img, image_info_cpy, NULL);
       img = new_image;
   }
 
-  if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
-    DestroyImage(img);
-    DestroyImageInfo(image_info);
-    write_http_header(a->file, "408 Request Timeout", a->info->image_type);
-    fclose_check(a->file);
-    return;
-  }
-
-  if ((volume->original_format != MINC) ||  (volume->original_format == MINC &&
-	  !((volume->dim_name_char[0] == 'y' && volume->dim_name_char[1] == 'z' && volume->dim_name_char[2] == 'x' && volume->dim_name_char[current_dimension] == 'x') ||
-      (volume->dim_name_char[0] == 'z' && volume->dim_name_char[1] == 'x' && volume->dim_name_char[2] == 'y' && volume->dim_name_char[current_dimension] == 'z') ||
-      (volume->dim_name_char[0] == 'y' && volume->dim_name_char[1] == 'x' && volume->dim_name_char[2] == 'z' && (volume->dim_name_char[current_dimension] == 'y' ||
-      volume->dim_name_char[current_dimension] == 'x')) || (volume->dim_name_char[0] == 'x' && volume->dim_name_char[1] == 'y' && volume->dim_name_char[2] == 'z'))))
-    {
-      tmp = img;
-      if ((img = FlipImage(img, &exception)) == NULL) {
-		CatchException(&exception);
-		DestroyImage(tmp);
-		DestroyImageInfo(image_info);
-		fclose_check(a->file);
-		return;
-      }
-      DestroyImage(tmp);
-    }
-
-  	 if ((volume->dim_name_char[0] == 'x' && volume->dim_name_char[1] == 'z' && volume->dim_name_char[2] == 'y' && volume->dim_name_char[current_dimension] == 'z') ||
-  		(volume->dim_name_char[0] == 'x' && volume->dim_name_char[1] == 'z' && volume->dim_name_char[2] == 'y' && volume->dim_name_char[current_dimension] == 'y'))
-    {
-      tmp = img;
-      if ((img = FlopImage(img, &exception)) == NULL) {
-		CatchException(&exception);
-		DestroyImage(tmp);
-		DestroyImageInfo(image_info);
-		fclose_check(a->file);
-		return;
-      }
-      DestroyImage(tmp);
-    }
-
-  if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
-    DestroyImage(img);
-    DestroyImageInfo(image_info);
-    write_http_header(a->file, "408 Request Timeout", a->info->image_type);
-    fclose_check(a->file);
-    return;
-  }
+  if (checkRequestTimeout(a, img, image_info)) return;
 
   if (a->info->quality != 1) {
     tmp = img;
     if ((img = SampleImage(img, width / a->info->quality,
 			   height / a->info->quality, &exception)) == NULL) {
       CatchException(&exception);
-      DestroyImage(tmp);
-      DestroyImageInfo(image_info);
-      fclose_check(a->file);
+	  tidyUp(tmp, image_info, a->file);
       return;
     }
     DestroyImage(tmp);
     tmp = img;
     if ((img = SampleImage(img, width, height, &exception)) == NULL) {
       CatchException(&exception);
-      DestroyImage(tmp);
-      DestroyImageInfo(image_info);
-      fclose_check(a->file);
+	  tidyUp(tmp, image_info, a->file);
       return;
     }
     DestroyImage(tmp);
   }
 
-  if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
-    DestroyImage(img);
-    DestroyImageInfo(image_info);
-    write_http_header(a->file, "408 Request Timeout", a->info->image_type);
-    fclose_check(a->file);
-    return;
-  }
+  if (checkRequestTimeout(a, img, image_info)) return;
 
   if (a->info->scale != 1) {
     tmp = img;
     if ((img = ScaleImage(img, (width * a->info->scale),
 			  (height * a->info->scale), &exception)) == NULL) {
       CatchException(&exception);
-      DestroyImage(tmp);
-      DestroyImageInfo(image_info);
-      fclose_check(a->file);
+	  tidyUp(tmp, image_info, a->file);
       return;
     }
     DestroyImage(tmp);
   }
 
-  if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
-    DestroyImage(img);
-    DestroyImageInfo(image_info);
-    write_http_header(a->file, "408 Request Timeout", a->info->image_type);
-    fclose_check(a->file);
-    return;
-  }
+  if (checkRequestTimeout(a, img, image_info)) return;
 
   if (kind == 1 || kind == 3) {
     tmp = img;
     if ((img = CropImage(img, portion, &exception)) == NULL) {
       CatchException(&exception);
-      DestroyImage(tmp);
-      DestroyImageInfo(image_info);
-      fclose_check(a->file);
+	  tidyUp(tmp, image_info, a->file);
       return;
     }
     DestroyImage(tmp);
   }
 
-  if (a->general_info->tile_requests->is_expired(a->general_info->tile_requests, a->info->request_id, a->info->request_time)) {
-    DestroyImage(img);
-    DestroyImageInfo(image_info);
-    write_http_header(a->file, "408 Request Timeout", a->info->image_type);
-    fclose_check(a->file);
-    return;
-  }
+  if (checkRequestTimeout(a, img, image_info)) return;
 
   // write image
   if (streamToSocket) {// && a->info->percentage == 0) { // SOCKET STREAM
@@ -525,9 +378,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
     WriteImage(image_info, img);
 
     // clean up
-    DestroyImage(img);
-    DestroyImageInfo(image_info);
-    fclose_check(a->file);
+	  tidyUp(img, image_info, a->file);
   } else { // WRITE FILE
       a->info->image_type = strlower(a->info->image_type);
 
@@ -570,8 +421,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
       if (img)
     	  WriteImage(image_info, img);
 
-      DestroyImage(img);
-      DestroyImageInfo(image_info);
+	  tidyUp(img, image_info, NULL);
       free(finalPath->buffer);
       free(finalPath);
     }

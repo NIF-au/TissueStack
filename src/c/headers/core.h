@@ -43,6 +43,7 @@
 #include "memory_mapping.h"
 
 #include "gtk/gtk.h"
+#include <magick/api.h>
 
 typedef struct		s_args_plug	t_args_plug;
 typedef struct		s_plugin	t_plugin;
@@ -221,7 +222,8 @@ struct			s_tissue_stack
 
 enum FORMAT {
     MINC    = 1,
-    NIFTI = 2
+    NIFTI 	= 2,
+    GENERIC	= 3
 };
 
 struct			s_vol
@@ -341,6 +343,8 @@ void		remove_volume(char *path, t_tissue_stack *t);
 void		free_volume(t_vol *v);
 void		free_all_volumes(t_tissue_stack *t);
 char		get_by_name_dimension_id(t_vol * vol, char *dimension);
+Image * extractSliceDataAtProperOrientation(t_vol * volume, int dim, char * image_data, int width, int height, FILE * socketDescriptor);
+void dealWithException(ExceptionInfo *exception, FILE * socketDescriptor, Image * img, ImageInfo * image_info);
 
 /*		core.c			*/
 
