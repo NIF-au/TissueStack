@@ -270,7 +270,7 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 		  i = 0;
 		  while (i < vol->dim_nb)
 		    {
-	    	  get_width_height(&height, &width, i, vol);
+	    	  get_width_height(&height, &width, i, vol->dim_nb, vol->dim_name_char, vol->size);
 		      h_tiles = (height * scale) / 256;
 		      w_tiles = (width * scale) / 256;
 		      if (height % 256 != 0)

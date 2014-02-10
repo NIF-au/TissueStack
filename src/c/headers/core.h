@@ -330,8 +330,8 @@ void		free_all_tasks(t_tissue_stack *t);
 /*		volume.c		*/
 
 int			init_volume(t_memory_mapping * memory_mappings, t_vol *volume, char *path);
-int			get_dim_size(t_vol *volume, char c);
-void 		get_width_height(int *height, int *width, int current_dimension, t_vol *volume);
+int			get_dim_size(int dim_nb, char * dim_name_char, unsigned int * size, char c);
+void		get_width_height(int *height, int *width, int current_dimension, int dim_nb, char * dim_name_char, unsigned int * size);
 int			israw(char *path, int existing_fd);
 void		*file_actions(void *args);
 void		list_volumes(t_tissue_stack *t, char *options);
@@ -343,7 +343,7 @@ void		remove_volume(char *path, t_tissue_stack *t);
 void		free_volume(t_vol *v);
 void		free_all_volumes(t_tissue_stack *t);
 char		get_by_name_dimension_id(t_vol * vol, char *dimension);
-Image * extractSliceDataAtProperOrientation(t_vol * volume, int dim, char * image_data, int width, int height, FILE * socketDescriptor);
+Image * extractSliceDataAtProperOrientation(enum FORMAT original_format, char * dim_name_char, int dim, char * image_data, int width, int height, FILE * socketDescriptor);
 void dealWithException(ExceptionInfo *exception, FILE * socketDescriptor, Image * img, ImageInfo * image_info);
 
 /*		core.c			*/

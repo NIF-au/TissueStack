@@ -1,7 +1,8 @@
 DIRSRC		=	./src/
 
 SRCS		=	$(DIRSRC)converter.c			\
-			$(DIRSRC)../../../utils/utils.c
+			$(DIRSRC)../../../utils/utils.c		\
+			$(DIRSRC)../../../volume.c			
 
 INCLUDE		=	-I./headers -I./../../headers -I./../../utils -I/usr/local/bic/include -I/usr/local/bic/include -I/usr/local/nifticlib/2.0.0/include -I/usr/local/minc/2.1.0/include
 

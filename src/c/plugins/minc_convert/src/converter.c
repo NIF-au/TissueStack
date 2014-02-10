@@ -29,75 +29,103 @@ unsigned int            get_slices_max(t_vol *volume)
   return (volume->size[Z] * volume->size[Y]);
 }
 
-void		dim_loop(int fd, int dimensions_nb, t_vol *volume,
-			 t_tissue_stack *t, char *id_percent,
-			 int slice_resume, int dimension_resume)
-{
-  int		dim = 0;
-  int		slice = 0;
-  int		this_slice = 0;
-  int		size;
-  char		*hyperslab;
-  int		i;
-  unsigned long		*start;
-  long unsigned int	*count;
-  short			cancel = 0;
-  Image		*img = NULL;
-  int width = 0;
-  int height = 0;
+void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t,
+		char *id_percent, int slice_resume, int dimension_resume) {
+	int dim = 0;
+	int slice = 0;
+	int this_slice = 0;
+	int size;
+	char *hyperslab;
+	int i = 0, j = 0;
+	unsigned long *start;
+	long unsigned int *count;
+	short cancel = 0;
+	char *dim_name_char = NULL;
+	Image *img = NULL;
+	PixelPacket *pixels;
+	unsigned long long int pixel_value = 0;
+	int width = 0;
+	int height = 0;
 
-  if (dimension_resume > -1)
-    dim = dimension_resume;
-  start = malloc(volume->dim_nb * sizeof(*start));
-  count = malloc(volume->dim_nb * sizeof(*count));
-  start[0] = start[1] = start[2] = 0;
-  i = 0;
-  while (i < volume->dim_nb)
-    {
-      count[i] = volume->size[i];
-      i++;
-    }
-  while (dim < dimensions_nb && cancel == 0)
-    {
-      size = (dim == 0 ? (volume->size[2] * volume->size[1]) :
-	      (dim == 1 ? (volume->size[0] * volume->size[2]) : (volume->size[0] * volume->size[1])));
-      hyperslab = malloc(size * sizeof(*hyperslab));
-      slice = volume->size[dim];
-      if (slice_resume != -1)
-	{
-	  this_slice = slice_resume;
-	  slice_resume = -1;
+	if (dimension_resume > -1)
+		dim = dimension_resume;
+	start = malloc(volume->dim_nb * sizeof(*start));
+	count = malloc(volume->dim_nb * sizeof(*count));
+	start[0] = start[1] = start[2] = 0;
+	i = 0;
+	while (i < volume->dim_nb) {
+		count[i] = volume->size[i];
+		i++;
 	}
-      else
-	this_slice = 0;
-      count[dim] = 1;
-      while (this_slice < slice && cancel == 0)
-	{
-   	  img = NULL;
-   	  start[dim] = this_slice;
-	  memset(hyperslab, '\0', size);
-	  miget_real_value_hyperslab(volume->minc_volume, MI_TYPE_UBYTE, start, count, hyperslab);
-	  get_width_height(&height, &width, dim, volume);
-	  volume->original_format = MINC;
-	  img = extractSliceDataAtProperOrientation(volume, dim, hyperslab, width, height, NULL);
-	  if (ExportImagePixelArea(img,UndefinedQuantum, 8, (unsigned char *) hyperslab, NULL, NULL) == MagickFail) {
-		  ERROR("Could not convert slice");
-		  if (img != NULL) DestroyImage(img);
-		  free(hyperslab);
-		  return;
-	  }
-	  write(fd, hyperslab, size);
-	  DEBUG("Slice = %i - dim = %i", this_slice, dim);
-	  this_slice++;
-	  t->percent_add(1, id_percent, t);
-	  cancel = t->is_percent_paused_cancel(id_percent, t);
-	  if (img != NULL) DestroyImage(img);
+
+	dim_name_char = malloc(volume->dim_nb * sizeof(*dim_name_char));
+	for (j = 0; j < volume->dim_nb; j++)
+		dim_name_char[j] = volume->dim_name[j][0];
+
+	while (dim < dimensions_nb && cancel == 0) { // DIMENSION LOOP
+		size = (dim == 0 ?
+				(volume->size[2] * volume->size[1]) :
+				(dim == 1 ?
+						(volume->size[0] * volume->size[2]) :
+						(volume->size[0] * volume->size[1])));
+		hyperslab = malloc(size * sizeof(*hyperslab));
+		slice = volume->size[dim];
+		if (slice_resume != -1) {
+			this_slice = slice_resume;
+			slice_resume = -1;
+		} else
+			this_slice = 0;
+		count[dim] = 1;
+		while (this_slice < slice && cancel == 0) { // SLICE LOOP
+			img = NULL;
+			start[dim] = this_slice;
+			memset(hyperslab, '\0', size);
+			// read hyperslab
+			miget_real_value_hyperslab(volume->minc_volume, MI_TYPE_UBYTE,
+					start, count, hyperslab);
+
+			// convert to image and perform proper orientation corrections
+			get_width_height(&height, &width, dim, volume->dim_nb, dim_name_char, volume->size);
+			volume->original_format = MINC;
+			img = extractSliceDataAtProperOrientation(
+					volume->original_format, dim_name_char, dim, hyperslab, width, height, NULL);
+			if (img == NULL) {
+				ERROR("Could not convert slice");
+				free(hyperslab);
+				return;
+			}
+
+			// extract pixel info, looping over values
+			pixels = GetImagePixels(img, 0, 0, width, height);
+			if (pixels == NULL) {
+				ERROR("Could not convert slice");
+				if (img != NULL)
+					DestroyImage(img);
+				free(hyperslab);
+				return;
+			}
+			for (j = 0; j < size; j++) {
+				pixel_value = pixels[(width * i) + j].red;
+				if (QuantumDepth != 8 && img->depth == QuantumDepth)
+					pixel_value = mapUnsignedValue(img->depth, 8, pixel_value);
+				hyperslab[j] = (char) pixel_value;
+			}
+			write(fd, hyperslab, size);
+
+			DEBUG("Slice = %i - dim = %i", this_slice, dim);
+			this_slice++;
+			t->percent_add(1, id_percent, t);
+			cancel = t->is_percent_paused_cancel(id_percent, t);
+			if (img != NULL)
+				DestroyImage(img);
+		}
+
+		start[dim] = 0;
+		count[dim] = volume->size[dim];
+		dim++;
+		free(hyperslab);
 	}
-      start[dim] = 0;
-      count[dim] = volume->size[dim];
-      dim++;
-      free(hyperslab);
-    }
+	if (dim_name_char != NULL) free(dim_name_char);
 }
 
 void 			turn_into_generic_raw(char * hyperslab) {

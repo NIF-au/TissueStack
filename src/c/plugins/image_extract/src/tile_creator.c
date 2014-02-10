@@ -257,7 +257,7 @@ void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
 		  return;
 	  }
   } else {	// do some orientation nonsense
-	  img = extractSliceDataAtProperOrientation(volume, current_dimension, hyperslab, width, height, NULL);
+	  img = extractSliceDataAtProperOrientation(volume->original_format, volume->dim_name_char, current_dimension, hyperslab, width, height, NULL);
   	  if (img == NULL) {
   		  write_http_header(a->file, "500 Server Error", a->info->image_type);
   		  tidyUp(img, image_info, a->file);

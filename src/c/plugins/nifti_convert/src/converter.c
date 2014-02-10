@@ -207,7 +207,7 @@ void  		*start(void *args)
   int		ret;
   nifti_image	*nim;
   int		nslices;
-  int		i = 0;
+  int		i = 0, j=0;
   int		fd = 0;
   char		*data_char;
   unsigned int	size_per_slice;
@@ -219,7 +219,13 @@ void  		*start(void *args)
   unsigned int slice_resume = -1;
   unsigned long long off = 0L;
   char		*command_line = NULL;
-  //Image		*img = NULL;
+  Image		*img = NULL;
+  PixelPacket * pixels;
+  char * dim_name_char = NULL;
+  int width = 0;
+  int height = 0;
+  unsigned long long int pixel_value = 0;
+
 
   prctl(PR_SET_NAME, "TS_NIFTI_CON");
 
@@ -294,6 +300,11 @@ void  		*start(void *args)
 	}
       i = 1;
     }
+
+  dim_name_char = malloc(h->dim_nb * sizeof(*dim_name_char));
+  for (j=0;j<h->dim_nb;j++)
+	  dim_name_char[j] = h->dim_name[j][0];
+
   while (i <= nim->dim[0] && cancel == 0)
     {
       if (slice_resume != -1)
@@ -307,36 +318,46 @@ void  		*start(void *args)
       size_per_slice = h->slice_size[i - 1];
       while(slice < nslices && cancel == 0)
 	{
-	  //img = NULL;
+	  img = NULL;
 	  data = NULL;
 	  dims[i] = slice;
 	  if ((ret = nifti_read_collapsed_image(nim, dims, (void*)&data)) < 0)
 	    {
 	      ERROR("Error Nifti Get Hyperslab");
+	      if (dim_name_char != NULL) free(dim_name_char);
 	      return (NULL);
 	    }
 	  if( ret > 0 )
 	    {
 	      data_char = iter_all_pix_and_convert(data, size_per_slice, nim);
 
-	      // TODO: make into a standalone tool
-	      /* TODO: change that to fit nifti
-	      int width = 0;
-	      int height = 0;
+	      get_width_height(&height, &width, i-1, h->dim_nb, dim_name_char, h->sizes);
+	      img = extractSliceDataAtProperOrientation(NIFTI, dim_name_char, i-1, data_char, width, height, NULL);
+	      if (img == NULL) {
+			  ERROR("Could not convert slice");
+			  free(data_char);
+		      if (dim_name_char != NULL) free(dim_name_char);
+			  return NULL;
+		  }
 
-	      t_vol * volume; // do this further up
-	      get_width_height(&height, &width, i, volume);
-		  volume->original_format = NIFTI;
-		  img = extractSliceDataAtProperOrientation(volume, i, data_char, width, height, NULL);
-		  if (ExportImagePixelArea(img,UndefinedQuantum, 8, (unsigned char *) data_char, NULL, NULL) == MagickFail) {
+	      // extract pixel info, looping over values
+	      pixels =  GetImagePixels(img, 0, 0, width, height);
+	      if (pixels == NULL) {
 			  ERROR("Could not convert slice");
 			  if (img != NULL) DestroyImage(img);
 			  free(data_char);
-			  return;
+		      if (dim_name_char != NULL) free(dim_name_char);
+			  return NULL;
 		  }
-		  if (img != NULL) DestroyImage(img);
-		  */
+	      for (j=0;j<size_per_slice;j++) {
+	    	  pixel_value = pixels[(width * i) + j].red;
+    		  if (QuantumDepth != 8 && img->depth == QuantumDepth)
+    			  pixel_value = mapUnsignedValue(img->depth, 8, pixel_value);
+	    	  data_char[j] = (char) pixel_value;
+	      }
 	      write(fd, data_char, size_per_slice);
+
+	      if (img != NULL) DestroyImage(img);
 	      free(data_char);
 	    }
 	  free(data);
@@ -348,6 +369,8 @@ void  		*start(void *args)
       dims[i] = -1;
       i++;
     }
+  if (dim_name_char != NULL) free(dim_name_char);
+
   if (cancel == 0)
     INFO("Conversion: NIFTI: %s to RAW: %s ==> DONE", a->commands[0], a->commands[1]);
   if (close(fd) == -1)

@@ -57,7 +57,7 @@ int		get_nb_blocks_percent(t_image_extract *a, t_vol *volume)
 	    {
 	      if (a->h_position == -1 && a->w_position == -1)
 		{
-    	  get_width_height(&height, &width, i, volume);
+    	  get_width_height(&height, &width, i, volume->dim_nb, volume->dim_name_char, volume->size);
 		  h_tiles = (height * a->scale) / a->square_size;
 		  w_tiles = (width * a->scale) / a->square_size;
 
@@ -181,7 +181,7 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
   max = (unsigned int)(a->dim_start_end[current_dimension][1] == 0 ?
 		       volume->size[current_dimension] : a->dim_start_end[current_dimension][1]);
   // init height and width compare to the dimension
-  get_width_height(&height, &width, current_dimension, volume);
+  get_width_height(&height, &width, current_dimension, volume->dim_nb, volume->dim_name_char, volume->size);
 
   // loop all the slices
   while (current_slice < max && exit == 0)

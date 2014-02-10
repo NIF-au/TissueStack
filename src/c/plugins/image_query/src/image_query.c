@@ -153,7 +153,7 @@ void			*start(void *args) {
 		INFO("Option 1: %hu", pixel);
 		 */
 		offset = (volume->dim_offset[dim] + (unsigned long long int)((unsigned long long int)volume->slice_size[dim] * (unsigned long long int)slice));
-		get_width_height(&height, &width, dim, volume);
+		get_width_height(&height, &width, dim, volume->dim_nb, volume->dim_name_char, volume->size);
 		combined_size = width * height;
 
 		image_data = malloc(combined_size*sizeof(*image_data));
@@ -161,7 +161,8 @@ void			*start(void *args) {
 		read(volume->raw_fd, image_data, combined_size);
 		lseek(volume->raw_fd, 0, SEEK_SET); // return to beginning, just to be safe
 
-		img = extractSliceDataAtProperOrientation(volume, dim, image_data, width, height, socketDescriptor);
+		// TODO: this has to change for when the format is already in generic raw
+		img = extractSliceDataAtProperOrientation(volume->original_format, volume->dim_name_char, dim, image_data, width, height, socketDescriptor);
 		if (img == NULL) { // something went wrong => say good bye
 			if (image_data != NULL) free(image_data);
 			return NULL;

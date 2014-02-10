@@ -581,34 +581,33 @@ void		free_volume(t_vol *v)
   free(v);
 }
 
-int		get_dim_size(t_vol *volume, char c)
+int		get_dim_size(int dim_nb, char * dim_name_char, unsigned int * size, char c)
 {
   int		i = 0;
 
-  while (i < volume->dim_nb)
+  while (i < dim_nb)
     {
-      if (volume->dim_name_char[i] == c)
-	return (volume->size[i]);
+      if (dim_name_char[i] == c)
+	return (size[i]);
       i++;
     }
   return (0);
 }
 
-void		get_width_height(int *height, int *width, int current_dimension,	 t_vol *volume) {
-	  if (volume->dim_name_char[current_dimension] == 'x')
-	    {
-	      *height = get_dim_size(volume, 'z'); //volume->size[Y];
-	      *width = get_dim_size(volume, 'y'); //volume->size[Z];
+void		get_width_height(int *height, int *width, int current_dimension, int dim_nb, char * dim_name_char, unsigned int * size) {
+	  if (dim_name_char[current_dimension] == 'x') {
+	      *height = get_dim_size(dim_nb, dim_name_char, size, 'z'); //volume->size[Y];
+	      *width = get_dim_size(dim_nb, dim_name_char, size, 'y'); //volume->size[Z];
 	    }
-	  else if (volume->dim_name_char[current_dimension] == 'y')
+	  else if (dim_name_char[current_dimension] == 'y')
 	    {
-	      *height = get_dim_size(volume, 'z');//volume->size[X];
-	      *width = get_dim_size(volume, 'x');//volume->size[Z];
+	      *height = get_dim_size(dim_nb, dim_name_char, size, 'z');//volume->size[X];
+	      *width = get_dim_size(dim_nb, dim_name_char, size, 'x');//volume->size[Z];
 	    }
 	  else
 	    {
-	      *height = get_dim_size(volume, 'y');//volume->size[X];
-	      *width = get_dim_size(volume, 'x');//volume->size[Y];
+	      *height = get_dim_size(dim_nb, dim_name_char, size, 'y');//volume->size[X];
+	      *width = get_dim_size(dim_nb, dim_name_char, size, 'x');//volume->size[Y];
 	    }
 }
 
@@ -647,8 +646,8 @@ char		get_by_name_dimension_id(t_vol * vol, char *dimension) {
  * IF the raw file has not been created in the compatible format already
  * see RAW header and enum in core.h: FORMAT.GENERIC (3) to identify a ready to use GENERIC RAW
  */
-Image * extractSliceDataAtProperOrientation(t_vol * volume, int dim, char * image_data, int width, int height, FILE * socketDescriptor) {
-	if (volume == NULL) return NULL;
+Image * extractSliceDataAtProperOrientation(enum FORMAT original_format, char * dim_name_char, int dim, char * image_data, int width, int height, FILE * socketDescriptor) {
+	if (dim_name_char == NULL) return NULL;
 
     ExceptionInfo exception;
     Image		*img = NULL;
@@ -663,19 +662,19 @@ Image * extractSliceDataAtProperOrientation(t_vol * volume, int dim, char * imag
     	return NULL;
      }
 
-    if (volume->original_format == MINC &&
-  	  ((volume->dim_name_char[0] == 'y' && volume->dim_name_char[1] == 'z' && volume->dim_name_char[2] == 'x' && volume->dim_name_char[dim] == 'x') ||
-        (volume->dim_name_char[0] == 'z' && volume->dim_name_char[1] == 'x' && volume->dim_name_char[2] == 'y' && volume->dim_name_char[dim] == 'z') ||
-        (volume->dim_name_char[0] == 'x' && volume->dim_name_char[1] == 'z' && volume->dim_name_char[2] == 'y' && (volume->dim_name_char[dim] == 'z' || volume->dim_name_char[dim] == 'y')) ||
-        (volume->dim_name_char[0] == 'x' && volume->dim_name_char[1] == 'y' && volume->dim_name_char[2] == 'z') ||
-        (volume->dim_name_char[0] == 'y' && volume->dim_name_char[1] == 'x' && volume->dim_name_char[2] == 'z' && (volume->dim_name_char[dim] == 'y' || volume->dim_name_char[dim] == 'x')))) {
+    if (original_format == MINC &&
+  	  ((dim_name_char[0] == 'y' && dim_name_char[1] == 'z' && dim_name_char[2] == 'x' && dim_name_char[dim] == 'x') ||
+        (dim_name_char[0] == 'z' && dim_name_char[1] == 'x' && dim_name_char[2] == 'y' && dim_name_char[dim] == 'z') ||
+        (dim_name_char[0] == 'x' && dim_name_char[1] == 'z' && dim_name_char[2] == 'y' && (dim_name_char[dim] == 'z' || dim_name_char[dim] == 'y')) ||
+        (dim_name_char[0] == 'x' && dim_name_char[1] == 'y' && dim_name_char[2] == 'z') ||
+        (dim_name_char[0] == 'y' && dim_name_char[1] == 'x' && dim_name_char[2] == 'z' && (dim_name_char[dim] == 'y' || dim_name_char[dim] == 'x')))) {
   	  if ((img = ConstituteImage(height, width, "I", CharPixel, image_data, &exception)) == NULL) {
       	dealWithException(&exception, socketDescriptor, NULL, image_info);
       	return NULL;
        }
 
-        if ((volume->dim_name_char[0] == 'x' && volume->dim_name_char[1] == 'z' && volume->dim_name_char[2] == 'y' &&
-        		(volume->dim_name_char[dim] == 'z' || volume->dim_name_char[dim] == 'y'))) {
+        if ((dim_name_char[0] == 'x' && dim_name_char[1] == 'z' && dim_name_char[2] == 'y' &&
+        		(dim_name_char[dim] == 'z' || dim_name_char[dim] == 'y'))) {
   		  tmp = img;
   		  if ((img = RotateImage(img, 90, &exception)) == NULL) {
   	    	dealWithException(&exception, socketDescriptor, tmp, image_info);
@@ -696,12 +695,11 @@ Image * extractSliceDataAtProperOrientation(t_vol * volume, int dim, char * imag
   	    	return NULL;
         }
     }
-
-    if ((volume->original_format != MINC) ||  (volume->original_format == MINC &&
-  	  !((volume->dim_name_char[0] == 'y' && volume->dim_name_char[1] == 'z' && volume->dim_name_char[2] == 'x' && volume->dim_name_char[dim] == 'x') ||
-        (volume->dim_name_char[0] == 'z' && volume->dim_name_char[1] == 'x' && volume->dim_name_char[2] == 'y' && volume->dim_name_char[dim] == 'z') ||
-        (volume->dim_name_char[0] == 'y' && volume->dim_name_char[1] == 'x' && volume->dim_name_char[2] == 'z' && (volume->dim_name_char[dim] == 'y' ||
-        volume->dim_name_char[dim] == 'x')) || (volume->dim_name_char[0] == 'x' && volume->dim_name_char[1] == 'y' && volume->dim_name_char[2] == 'z')))) {
+    if ((original_format == NIFTI) ||  (original_format == MINC &&
+  	  !((dim_name_char[0] == 'y' && dim_name_char[1] == 'z' && dim_name_char[2] == 'x' && dim_name_char[dim] == 'x') ||
+        (dim_name_char[0] == 'z' && dim_name_char[1] == 'x' && dim_name_char[2] == 'y' && dim_name_char[dim] == 'z') ||
+        (dim_name_char[0] == 'y' && dim_name_char[1] == 'x' && dim_name_char[2] == 'z' && (dim_name_char[dim] == 'y' ||
+        dim_name_char[dim] == 'x')) || (dim_name_char[0] == 'x' && dim_name_char[1] == 'y' && dim_name_char[2] == 'z')))) {
         tmp = img;
         if ((img = FlipImage(img, &exception)) == NULL) {
   	    	dealWithException(&exception, socketDescriptor, tmp, image_info);
@@ -710,8 +708,8 @@ Image * extractSliceDataAtProperOrientation(t_vol * volume, int dim, char * imag
         DestroyImage(tmp);
       }
 
-   	 if ((volume->dim_name_char[0] == 'x' && volume->dim_name_char[1] == 'z' && volume->dim_name_char[2] == 'y' && volume->dim_name_char[dim] == 'z') ||
-    		(volume->dim_name_char[0] == 'x' && volume->dim_name_char[1] == 'z' && volume->dim_name_char[2] == 'y' && volume->dim_name_char[dim] == 'y')) {
+   	 if ((dim_name_char[0] == 'x' && dim_name_char[1] == 'z' && dim_name_char[2] == 'y')
+   			 && (dim_name_char[dim] == 'z' || dim_name_char[dim] == 'y')) {
         tmp = img;
         if ((img = FlopImage(img, &exception)) == NULL) {
   	    	dealWithException(&exception, socketDescriptor, tmp, image_info);
@@ -725,6 +723,7 @@ Image * extractSliceDataAtProperOrientation(t_vol * volume, int dim, char * imag
     strcpy(img->filename, "/tmp/thishereimage.png");
     WriteImage(image_info, img);
 	*/
+    SyncImagePixels(img);
 
     return img;
 }
