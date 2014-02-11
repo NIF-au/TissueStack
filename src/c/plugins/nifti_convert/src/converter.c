@@ -209,7 +209,7 @@ void  		*start(void *args)
   int		nslices;
   int		i = 0, j=0;
   int		fd = 0;
-  char		*data_char;
+  unsigned char		*data_char;
   unsigned int	size_per_slice;
   t_header	*h;
   t_args_plug	*a;

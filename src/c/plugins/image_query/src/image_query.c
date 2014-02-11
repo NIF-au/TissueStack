@@ -38,10 +38,11 @@ void			*start(void *args) {
 	t_vol					*volume = NULL;
 	unsigned long long int 	offset = 0;
 	unsigned int 			combined_size = 0;
-	char 					*image_data = NULL;
+	unsigned char 			*image_data = NULL;
+	ExceptionInfo			exception;
 	Image 					*img = NULL;
 	PixelPacket 			px;
-	//unsigned char 		pixel = '\0';
+	unsigned char 		pixel = '\0';
 	unsigned long long 		*pixel_value = NULL;
 	int			 			is_raw = 0;
 	int 					dim=0;
@@ -58,6 +59,7 @@ void			*start(void *args) {
 	char 					**xes = NULL;
 	char 					**ys = NULL;
 	t_string_buffer			*response = NULL;
+	char value[100];
 
 	a = (t_args_plug *)args;
 	prctl(PR_SET_NAME, "TS_QUERY");
@@ -145,50 +147,64 @@ void			*start(void *args) {
 		x = atoi(xes[i]);
 		y = atoi(ys[i]);
 
-		// read in whole slice data
-		// TODO: once dimension and orientation have been fixed in raw file, we can go for the pixel directly
-		/*
-		lseek(volume->raw_fd, offset + height + width, SEEK_SET);
-		read(volume->raw_fd, &pixel, 1);
-		INFO("Option 1: %hu", pixel);
-		 */
+		// find offset and dimensions
 		offset = (volume->dim_offset[dim] + (unsigned long long int)((unsigned long long int)volume->slice_size[dim] * (unsigned long long int)slice));
 		get_width_height(&height, &width, dim, volume->dim_nb, volume->dim_name_char, volume->size);
 		combined_size = width * height;
 
-		image_data = malloc(combined_size*sizeof(*image_data));
-		lseek(volume->raw_fd, offset, SEEK_SET);
-		read(volume->raw_fd, image_data, combined_size);
+		//reset
+		GetExceptionInfo(&exception);
+		img = NULL;
 		lseek(volume->raw_fd, 0, SEEK_SET); // return to beginning, just to be safe
+		memset(value, 0, 100);
 
-		// TODO: this has to change for when the format is already in generic raw
-		img = extractSliceDataAtProperOrientation(volume->original_format, volume->dim_name_char, dim, image_data, width, height, socketDescriptor);
-		if (img == NULL) { // something went wrong => say good bye
+		// if generic the raw is ready to use as is
+		if (volume->original_format == GENERIC) {
+			lseek(volume->raw_fd, offset + y*width + x, SEEK_SET);
+			read(volume->raw_fd, &pixel, 1);
+
+			// set response
+			sprintf(value, " {\"red\": %cu, \"green\": %cu, \"blue\": %cu}", pixel, pixel, pixel);
+			/*
+			if ((img = ConstituteImage(width, height, "I", CharPixel, image_data, &exception)) == NULL) {
+			  dealWithException(&exception, NULL, NULL, NULL);
+			  if (image_data != NULL) free(image_data);
+			  return NULL;
+		  }*/
+		} else {	// do some orientation nonsense
+			image_data = malloc(combined_size*sizeof(*image_data));
+			lseek(volume->raw_fd, offset, SEEK_SET);
+			read(volume->raw_fd, image_data, combined_size);
+
+			img = extractSliceDataAtProperOrientation(volume->original_format, volume->dim_name_char, dim, image_data, width, height, socketDescriptor);
+			if (img == NULL) { // something went wrong => say good bye
+				if (image_data != NULL) free(image_data);
+				return NULL;
+			}
+
+			// fetch pixel value and address GraphicsMagick quantum differences among systems
+			px = GetOnePixel(img, x, y);
+			pixel_value = malloc(3*sizeof(*pixel_value)); // RGB
+			pixel_value[0] = (unsigned long long int) px.red;
+			pixel_value[1] = (unsigned long long int) px.green;
+			pixel_value[2] = (unsigned long long int) px.blue;
+			if (QuantumDepth != 8 && img->depth == QuantumDepth) {
+				pixel_value[0] = mapUnsignedValue(img->depth, 8, pixel_value[0]);
+				pixel_value[1] = mapUnsignedValue(img->depth, 8, pixel_value[1]);
+				pixel_value[2] = mapUnsignedValue(img->depth, 8, pixel_value[2]);
+			}
+
+			// set response
+			sprintf(value, " {\"red\": %llu, \"green\": %llu, \"blue\": %llu}", pixel_value[0], pixel_value[1], pixel_value[2]);
+
+			// clean up
 			if (image_data != NULL) free(image_data);
-			return NULL;
-		}
-
-		// fetch pixel value and address GraphicsMagick quantum differences among systems
-		px = GetOnePixel(img, x, y);
-		pixel_value = malloc(3*sizeof(*pixel_value)); // RGB
-		pixel_value[0] = (unsigned long long int) px.red;
-		pixel_value[1] = (unsigned long long int) px.green;
-		pixel_value[2] = (unsigned long long int) px.blue;
-		if (QuantumDepth != 8 && img->depth == QuantumDepth) {
-			pixel_value[0] = mapUnsignedValue(img->depth, 8, pixel_value[0]);
-			pixel_value[1] = mapUnsignedValue(img->depth, 8, pixel_value[0]);
-			pixel_value[2] = mapUnsignedValue(img->depth, 8, pixel_value[0]);
+			if (img != NULL) DestroyImage(img);
+			if (pixel_value != NULL) free(pixel_value);
 		}
 
 		// add voxel value to response
-		char value[100];
-		sprintf(value, " {\"red\": %llu, \"green\": %llu, \"blue\": %llu}", pixel_value[0], pixel_value[1], pixel_value[2]);
 		response = appendToBuffer(response, value);
-
-		// clean up
-		if (image_data != NULL) free(image_data);
-		if (pixel_value != NULL) free(pixel_value);
-		if (img != NULL) DestroyImage(img);
 
 		//increment
 		i++;

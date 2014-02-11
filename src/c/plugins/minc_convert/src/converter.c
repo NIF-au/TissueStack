@@ -35,7 +35,7 @@ void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t,
 	int slice = 0;
 	int this_slice = 0;
 	int size;
-	char *hyperslab;
+	unsigned char *hyperslab;
 	int i = 0, j = 0;
 	unsigned long *start;
 	long unsigned int *count;

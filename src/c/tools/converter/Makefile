@@ -1,9 +1,10 @@
 DIRSRC		=	./src/
 
 SRCS		=	$(DIRSRC)TS_converter.c						\
-			../../utils/utils.c
+			$(DIRSRC)../../../utils/utils.c								\
+			$(DIRSRC)../../../volume.c
 
-INCLUDE		=	-I./headers -I../../headers -I../../utils
+INCLUDE		=	-I./headers -I../../headers -I../../utils -I../../../headers
 
 LIB_PATH	=
 
@@ -51,7 +52,7 @@ endif
 %.o: %.c
 	@echo -e "\tCompiling $(@)."
 	@$(CC) -DAPPLICATION_PATH='"$(DATA_PATH)"' -DPLUGINS_PATH='"$(PLUGINS_PATH)"' $(APP_FLAGS) \
-		-c $(FLAGS) $(INCLUDE) `pkg-config --cflags gtk+-2.0` -o $@ $<
+		-c $(FLAGS) $(INCLUDE) `pkg-config --cflags gtk+-2.0` `GraphicsMagick-config --cppflags --libs --ldflags` -o $@ $<
 
 all:	compile install
 
@@ -67,7 +68,7 @@ endif
 	@echo -e "###################### TISSUE STACK MINC2RAW CONVERTER TOOL BUILD [Version: $(VERSION)] ###################\n"
 
 coreCompile:	$(OBJS)
-	@$(CC) $(OBJS) -o $(EXE_NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) `pkg-config --cflags --libs gtk+-2.0` > /dev/null
+	@$(CC) $(OBJS) -o $(EXE_NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) `pkg-config --cflags --libs gtk+-2.0` `GraphicsMagick-config --cppflags --libs --ldflags` > /dev/null
 	@echo -e "\tFinished compiling converter tool."
 
 install: compile

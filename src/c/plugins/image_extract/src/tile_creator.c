@@ -208,7 +208,7 @@ void		apply_contrast(PixelPacket *px, unsigned char min, unsigned char max,
     }
 }
 
-void		print_image(char *hyperslab, t_vol *volume, int current_dimension,
+void		print_image(unsigned char *hyperslab, t_vol *volume, int current_dimension,
 			    unsigned int current_slice, int width, int height, t_image_args *a)
 {
   ExceptionInfo exception;

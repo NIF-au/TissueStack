@@ -646,7 +646,7 @@ char		get_by_name_dimension_id(t_vol * vol, char *dimension) {
  * IF the raw file has not been created in the compatible format already
  * see RAW header and enum in core.h: FORMAT.GENERIC (3) to identify a ready to use GENERIC RAW
  */
-Image * extractSliceDataAtProperOrientation(enum FORMAT original_format, char * dim_name_char, int dim, char * image_data, int width, int height, FILE * socketDescriptor) {
+Image * extractSliceDataAtProperOrientation(enum FORMAT original_format, char * dim_name_char, int dim, unsigned char * image_data, int width, int height, FILE * socketDescriptor) {
 	if (dim_name_char == NULL) return NULL;
 
     ExceptionInfo exception;

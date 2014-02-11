@@ -73,7 +73,7 @@ void add_memory_mapped_file(t_memory_mapping * this, char * path) {
 	g_hash_table_replace(this->hash, (gpointer *) copyOfPath, (gpointer *) mm_file);
 }
 
-char * get_memory_mapped_data(t_memory_mapping * this, char * path) {
+unsigned char * get_memory_mapped_data(t_memory_mapping * this, char * path) {
 	t_memory_mapped_file * mm_file = g_hash_table_lookup(this->hash, (gpointer *) path);
 	if (mm_file == NULL || mm_file->data == NULL) return NULL;
 

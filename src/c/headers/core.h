@@ -343,7 +343,7 @@ void		remove_volume(char *path, t_tissue_stack *t);
 void		free_volume(t_vol *v);
 void		free_all_volumes(t_tissue_stack *t);
 char		get_by_name_dimension_id(t_vol * vol, char *dimension);
-Image * extractSliceDataAtProperOrientation(enum FORMAT original_format, char * dim_name_char, int dim, char * image_data, int width, int height, FILE * socketDescriptor);
+Image * extractSliceDataAtProperOrientation(enum FORMAT original_format, char * dim_name_char, int dim, unsigned char * image_data, int width, int height, FILE * socketDescriptor);
 void dealWithException(ExceptionInfo *exception, FILE * socketDescriptor, Image * img, ImageInfo * image_info);
 
 /*		core.c			*/
