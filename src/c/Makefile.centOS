@@ -20,7 +20,9 @@ INCLUDE		=	-I./headers -I./utils 										\
 				-I/usr/local/bic/include									\
 				-I/usr/local/minc/2.1.0/include
 
-LIB_PATH	=	-L/usr/local/minc/2.1.0/lib -L/usr/local/nifticlib/2.0.0/lib -I/usr/local/graphicsmagick/1.3.18/lib -L/usr/local/hdf5/1.8.5/lib -L/usr/local/netcdf/4.1.1/lib
+LIB_PATH	=	-L/usr/local/minc/2.1.0/lib -L/usr/local/nifticlib/2.0.0/lib 	\
+				-L/usr/local/graphicsmagick/1.3.18/lib 							\
+				-L/usr/local/hdf5/1.8.5/lib -L/usr/local/netcdf/4.1.1/lib
 
 LIBS		=	-lhdf5								\
 			-lnetcdf 							\
