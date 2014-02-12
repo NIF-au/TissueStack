@@ -35,7 +35,8 @@
 #include <minc2.h>
 #include <dirent.h>
 #include <sys/prctl.h>
-
+#include <magick/api.h>
+#include <nifti1_io.h>
 
 #include "utils.h"
 #include "thread_pool.h"
@@ -43,9 +44,7 @@
 #include "memory_mapping.h"
 
 #include "gtk/gtk.h"
-#include <magick/api.h>
 
-#include <nifti1_io.h>
 
 typedef struct		s_args_plug	t_args_plug;
 typedef struct		s_plugin	t_plugin;
