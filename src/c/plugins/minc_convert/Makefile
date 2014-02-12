@@ -1,11 +1,11 @@
 DIRSRC		=	./src/
 
-SRCS		=	$(DIRSRC)converter.c			\
+SRCS		=	$(DIRSRC)minc_converter.c			\
 			$(DIRSRC)../../../utils/utils.c		\
 			$(DIRSRC)../../../volume.c
 			
 
-INCLUDE		=	-I./headers -I./../../headers -I./../../utils
+INCLUDE		=	-I/usr/include/nifti -I./headers -I./../../headers -I./../../utils
 
 LIB_PATH	=
 

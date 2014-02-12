@@ -2,7 +2,7 @@ DIRSRC		=	./src/
 
 SRCS		=	$(DIRSRC)percent_and_time.c $(DIRSRC)../../../volume.c $(DIRSRC)../../../utils/utils.c
 
-INCLUDE		=	-I./headers -I../../headers -I./../../utils
+INCLUDE		=	-I/usr/include/nifti -I./headers -I../../headers -I./../../utils
 
 LIB_PATH	=
 

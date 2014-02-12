@@ -2,7 +2,7 @@ DIRSRC		=	./src/
 
 SRCS		=	$(DIRSRC)serv.c
 
-INCLUDE		=	-I./headers -I../../headers -I./../../utils
+INCLUDE		=	-I/usr/include/nifti -I./headers -I../../headers -I./../../utils
 
 LIB_PATH	=
 

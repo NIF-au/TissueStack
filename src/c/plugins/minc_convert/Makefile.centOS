@@ -1,6 +1,6 @@
 DIRSRC		=	./src/
 
-SRCS		=	$(DIRSRC)converter.c			\
+SRCS		=	$(DIRSRC)minc_converter.c			\
 			$(DIRSRC)../../../utils/utils.c		\
 			$(DIRSRC)../../../volume.c			
 

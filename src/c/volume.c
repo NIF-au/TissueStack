@@ -757,3 +757,29 @@ void dealWithException(ExceptionInfo *exception, FILE * socketDescriptor, Image 
 	if (img != NULL) DestroyImage(img);
 	if (image_info != NULL) DestroyImageInfo(image_info);
 }
+
+void		write_header_into_file(int fd, t_header *h)
+{
+  char		head[4096];
+  char		lenhead[200];
+  int		len;
+
+  memset(head, '\0', 4096);
+  sprintf(head, "%i|%i:%i:%i|%g:%g:%g|%g:%g:%g|%s|%s|%s|%c|%c|%c|%i:%i:%i|%i|%llu:%llu:%llu|3|",
+	  h->dim_nb,
+	  h->sizes[0], h->sizes[1], h->sizes[2],
+	  h->start[0], h->start[1], h->start[2],
+	  h->steps[0], h->steps[1], h->steps[2],
+	  h->dim_name[0], h->dim_name[1], h->dim_name[2],
+	  h->dim_name[0][0], h->dim_name[1][0], h->dim_name[2][0],
+	  h->slice_size[0], h->slice_size[1], h->slice_size[2],
+	  h->slice_max,
+	  (unsigned long long)h->dim_offset[0],
+	  (unsigned long long)h->dim_offset[1],
+	  (unsigned long long)h->dim_offset[2]);
+  len = strlen(head);
+  memset(lenhead, '\0', 200);
+  sprintf(lenhead, "@IaMraW@|%i|", len);
+  write(fd, lenhead, strlen(lenhead));
+  write(fd, head, len);
+}

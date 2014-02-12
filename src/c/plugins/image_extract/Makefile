@@ -6,18 +6,19 @@ SRCS		=	$(DIRSRC)image_extract.c					\
 			$(DIRSRC)../../../volume.c				\
 			$(DIRSRC)../../../utils/utils.c
 
-INCLUDE		=	-I./headers -I./../../utils -I../../headers
+INCLUDE		=	-I./headers -I/usr/include/nifti -I./../../utils -I../../headers
 
 LIB_PATH	=	
 
-LIBS		= -lminc2							\
-			-lhdf5								\
-			-lnetcdf							\
-			-lznz								\
-			-lz									\
-			-lpthread							\
-			-ldl								\
-			-lm
+LIBS		= 	-lniftiio							\
+				-lminc2							\
+				-lhdf5								\
+				-lnetcdf							\
+				-lznz								\
+				-lz									\
+				-lpthread							\
+				-ldl								\
+				-lm
 
 NAME		=	TissueStackImageExtract.so
 

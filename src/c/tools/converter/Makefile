@@ -1,10 +1,12 @@
 DIRSRC		=	./src/
 
-SRCS		=	$(DIRSRC)TS_converter.c						\
-			$(DIRSRC)../../../utils/utils.c								\
+SRCS		=	$(DIRSRC)TS_converter.c								\
+			$(DIRSRC)../../../utils/utils.c							\
 			$(DIRSRC)../../../volume.c
 
-INCLUDE		=	-I./headers -I../../headers -I../../utils -I../../../headers
+INCLUDE		=	-I/usr/include/nifti -I./headers -I../../headers 	\
+				-I../../utils -I../../plugins/nifti_convert/headers \
+				-I../../../headers -I../../plugins/minc_convert/headers \
 
 LIB_PATH	=
 
@@ -18,7 +20,7 @@ LIBS		=	-lminc2							\
 			-ldl								\
 			-lm
 
-EXE_NAME	=	mnc2raw
+EXE_NAME	=	mncOrNii2raw
 
 FLAGS		=	-Wall -ggdb -O2 -Wno-unused-result
 
@@ -62,10 +64,10 @@ ifndef VERSION
 	$(error VERSION IS NOT SET !!!!!!!!!!!!! Please call make like this: make VERSION=X.X !!!!!)
 endif
 
-	@echo -e "\n###################### TISSUE STACK MINC2RAW CONVERTER TOOL BUILD [Version: $(VERSION)] ###################"
+	@echo -e "\n###################### TISSUE STACK MINC/NIFTI => RAW CONVERTER TOOL BUILD [Version: $(VERSION)] ###################"
 	@echo -e "    BINARIES PATH:         $(BINS_PATH)"
 	@echo -e "    USE MEMORY MAPPING:    $(USE_MEMORY_MAPPING)"
-	@echo -e "###################### TISSUE STACK MINC2RAW CONVERTER TOOL BUILD [Version: $(VERSION)] ###################\n"
+	@echo -e "###################### TISSUE STACK MINC/NIFTI => RAW CONVERTER TOOL BUILD [Version: $(VERSION)] ###################\n"
 
 coreCompile:	$(OBJS)
 	@$(CC) $(OBJS) -o $(EXE_NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) `pkg-config --cflags --libs gtk+-2.0` `GraphicsMagick-config --cppflags --libs --ldflags` > /dev/null

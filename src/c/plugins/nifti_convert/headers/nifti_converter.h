@@ -21,30 +21,9 @@
 
 #include "utils.h"
 
-#include <nifti1_io.h>
 #include <fcntl.h>
 #include <limits.h>
-#include <minc2.h>
 #include <float.h>
-
-
-typedef struct	s_header	t_header;
-
-struct			s_header
-{
-  int			dim_nb;
-  unsigned int		*sizes;
-  double		*start;
-  double		*steps;
-  char			**dim_name;
-  unsigned long long int	*dim_offset;
-  unsigned int		*slice_size;
-  unsigned int		slice_max;
-};
-
-void		*iter_all_pix_and_convert(void *data_in, unsigned int size, nifti_image *nim);
-t_header	*create_header_from_nifti_struct(nifti_image *nifti_volume);
-void		write_header_into_file(int fd, t_header *h);
 
 #define	NC_NAT 	        0	/* NAT = 'Not A Type' (c.f. NaN) */
 #define	NC_BYTE         1	/* signed 1 byte integer */
@@ -158,6 +137,151 @@ void		write_header_into_file(int fd, t_header *h);
     break;								\
   }									\
   }
+
+int		get_sign_nifti(nifti_image *nim) {
+  if (nim->datatype == 2 || nim->datatype == 512 || nim->datatype == 768)
+    return (MI_PRIV_UNSIGNED);
+  else
+    return (MI_PRIV_SIGNED);
+}
+
+int		get_datatype_nifti(nifti_image *nim) {
+  if (nim->datatype == 2 || nim->datatype == 256)
+    return(NC_CHAR);
+  else if (nim->datatype == 4 || nim->datatype == 512)
+    return (NC_SHORT);
+  else if (nim->datatype == 8 || nim->datatype == 768)
+    return (NC_INT);
+  else if (nim->datatype == 16)
+    return (NC_FLOAT);
+  else
+    return (NC_DOUBLE);
+}
+
+void		*iter_all_pix_and_convert(void *data_in, unsigned int size, nifti_image *nim)
+{
+  int		i;
+  unsigned char	*data_out;
+  double	dvalue = 0.0;
+  void		*inptr;
+  void		*outptr;
+  int		sign;
+  int		datatype;
+  void		*data;
+
+  datatype = get_datatype_nifti(nim);
+  sign = get_sign_nifti(nim);
+
+
+
+  if (nim->datatype == 2 || nim->datatype == 256) {
+    if (nim->datatype == 2)
+      data = (unsigned char*)data_in;
+    else
+      data = (char*)data_in;
+  }
+  else if (nim->datatype == 4 || nim->datatype == 512) {
+    if (nim->datatype == 512)
+      data = (unsigned short*)data_in;
+    else
+      data = (short*)data_in;
+  }
+  else if (nim->datatype == 8 || nim->datatype == 768) {
+    if (nim->datatype == 768)
+      data = (unsigned int*)data_in;
+    else
+      data = (int*)data_in;
+  }
+  else if (nim->datatype == 16)
+    data = (float *)data_in;
+  else
+    data = (double*)data_in;
+
+
+  data_out = malloc((size + 1) * sizeof(*data_out));
+  i = 0;
+  while (i < size)
+    {
+      if (nim->datatype == 2 || nim->datatype == 256) {
+	if (nim->datatype == 2)
+	  inptr = (unsigned char *)(&((unsigned char *)data)[i]);
+	else
+	  inptr = (char *)(&((char *)data)[i]);
+      }
+      else if (nim->datatype == 4 || nim->datatype == 512) {
+	if (nim->datatype == 512)
+	  inptr = (unsigned short *)(&((unsigned short *)data)[i]);
+	else
+	  inptr = (short *)(&((short *)data)[i]);
+      }
+      else if (nim->datatype == 8 || nim->datatype == 768) {
+	if (nim->datatype == 768)
+	  inptr = (unsigned int *)(&((unsigned int *)data)[i]);
+	else
+	  inptr = (int *)(&((int *)data)[i]);
+      }
+      else if (nim->datatype == 16)
+	inptr = (float *)(&((float *)data)[i]);
+      else
+	inptr = (double *)(&((double *)data)[i]);
+      //      inptr = &data[i];
+      outptr = &data_out[i];
+      MI_TO_DOUBLE(dvalue, datatype, sign, inptr);
+      MI_FROM_DOUBLE(dvalue, NC_CHAR, MI_PRIV_UNSIGNED, outptr);
+      i++;
+    }
+  return (data_out);
+}
+
+t_header	*create_header_from_nifti_struct(nifti_image *nifti_volume)
+{
+  t_header	*h;
+  int		i;
+  int		j;
+
+  h = malloc(sizeof(*h));
+  h->dim_nb = nifti_volume->ndim;
+
+  h->sizes = malloc(h->dim_nb * sizeof(*h->sizes));
+  h->start = malloc(h->dim_nb * sizeof(*h->start));
+  h->steps = malloc(h->dim_nb * sizeof(*h->steps));
+  h->dim_name = malloc(h->dim_nb * sizeof(*h->dim_name));
+  h->dim_offset = malloc(h->dim_nb * sizeof(*h->dim_offset));
+  h->slice_size = malloc(h->dim_nb * sizeof(*h->slice_size));
+
+  h->slice_max = (nifti_volume->dim[1] * nifti_volume->dim[2] > nifti_volume->dim[2] * nifti_volume->dim[3] ?
+		  (nifti_volume->dim[1] * nifti_volume->dim[2] > nifti_volume->dim[1] * nifti_volume->dim[3] ? nifti_volume->dim[1] * nifti_volume->dim[2] : nifti_volume->dim[1] * nifti_volume->dim[3]) :
+		  (nifti_volume->dim[2] * nifti_volume->dim[3] > nifti_volume->dim[1] * nifti_volume->dim[3] ? nifti_volume->dim[2] * nifti_volume->dim[3] : nifti_volume->dim[1] * nifti_volume->dim[3]));
+
+  i = 0;
+  while (i < h->dim_nb)
+    {
+      h->sizes[i] = nifti_volume->dim[i + 1];
+      h->start[i] = nifti_volume->sto_xyz.m[i][3];
+      h->steps[i] = nifti_volume->pixdim[i + 1];
+      h->dim_name[i] = strdup("xspace");
+      h->dim_name[i][0] = 'x' + i;
+
+      h->slice_size[i] = 1;
+      j = 1;
+      while (j < h->dim_nb + 1)
+	{
+	  if ((j - 1) != i)
+	    h->slice_size[i] *= nifti_volume->dim[j];
+	  j++;
+	}
+      i++;
+    }
+
+  h->dim_offset[0] = 0;
+  i = 1;
+  while (i < h->dim_nb)
+    {
+      h->dim_offset[i] = (unsigned long long)(h->dim_offset[i - 1] + (unsigned long long)((unsigned long long)h->slice_size[i - 1] * (unsigned long long)h->sizes[i - 1]));
+      i++;
+    }
+  return (h);
+}
 
 extern  t_log_plugin log_plugin;
 

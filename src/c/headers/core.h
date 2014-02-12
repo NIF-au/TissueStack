@@ -45,10 +45,13 @@
 #include "gtk/gtk.h"
 #include <magick/api.h>
 
+#include <nifti1_io.h>
+
 typedef struct		s_args_plug	t_args_plug;
 typedef struct		s_plugin	t_plugin;
 typedef struct		s_function	t_function;
 typedef struct		s_tissue_stack	t_tissue_stack;
+typedef struct		s_header	t_header;
 typedef struct		s_vol		t_vol;
 typedef struct		s_char_prompt	t_char_prompt;
 typedef struct		s_hist_prompt	t_hist_prompt;
@@ -63,7 +66,6 @@ typedef struct		s_log_plugin	t_log_plugin;
 typedef struct		s_tasks		t_tasks;
 typedef	struct		s_prcnt_t	t_prcnt_t;
 typedef	struct		s_pause_cancel_queue	t_pause_cancel_queue;
-
 
 struct			s_tasks
 {
@@ -226,6 +228,18 @@ enum FORMAT {
     GENERIC	= 3
 };
 
+struct			s_header
+{
+  int			dim_nb;
+  unsigned int		*sizes;
+  double		*start;
+  double		*steps;
+  char			**dim_name;
+  unsigned long long int	*dim_offset;
+  unsigned int		*slice_size;
+  unsigned int		slice_max;
+};
+
 struct			s_vol
 {
   mihandle_t		minc_volume;		// pointer on a MINC structure containig the MINC volume information.
@@ -345,6 +359,7 @@ void		free_all_volumes(t_tissue_stack *t);
 char		get_by_name_dimension_id(t_vol * vol, char *dimension);
 Image * extractSliceDataAtProperOrientation(enum FORMAT original_format, char * dim_name_char, int dim, unsigned char * image_data, int width, int height, FILE * socketDescriptor);
 void dealWithException(ExceptionInfo *exception, FILE * socketDescriptor, Image * img, ImageInfo * image_info);
+void			write_header_into_file(int fd, t_header *h);
 
 /*		core.c			*/
 

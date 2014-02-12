@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with TissueStack.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "converter.h"
+#include "minc_converter.h"
 
 unsigned int            get_slices_max(t_vol *volume)
 {
@@ -128,12 +128,6 @@ void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t,
 	if (dim_name_char != NULL) free(dim_name_char);
 }
 
-void 			turn_into_generic_raw(char * hyperslab) {
-	if (hyperslab == NULL) return;
-
-
-}
-
 t_vol		*init_get_volume_from_minc_file(char *path)
 {
   t_vol		*volume;
@@ -197,78 +191,6 @@ t_vol		*init_get_volume_from_minc_file(char *path)
   volume->slices_max = get_slices_max(volume);
   volume->next = NULL;
   return (volume);
-}
-
-t_header	*create_header_from_minc_struct(t_vol *minc_volume)
-{
-  t_header	*h;
-  int		i;
-  int		j;
-
-  h = malloc(sizeof(*h));
-
-  h->dim_nb = minc_volume->dim_nb;
-
-  h->sizes = malloc(h->dim_nb * sizeof(*h->sizes));
-  h->start = malloc(h->dim_nb * sizeof(*h->start));
-  h->steps = malloc(h->dim_nb * sizeof(*h->steps));
-  h->dim_name = malloc(h->dim_nb * sizeof(*h->dim_name));
-  h->dim_offset = malloc(h->dim_nb * sizeof(*h->dim_offset));
-  h->slice_size = malloc(h->dim_nb * sizeof(*h->slice_size));
-
-  h->slice_max = minc_volume->slices_max;
-
-  i = 0;
-  while (i < h->dim_nb)
-    {
-      h->sizes[i] = minc_volume->size[i];
-      h->start[i] = minc_volume->starts[i];
-      h->steps[i] = minc_volume->steps[i];
-      h->dim_name[i] = strdup(minc_volume->dim_name[i]);
-
-      h->slice_size[i] = 1;
-      j = 0;
-      while (j < h->dim_nb)
-	{
-	  if (j != i)
-	    h->slice_size[i] *= minc_volume->size[j];
-	  j++;
-	}
-      i++;
-    }
-
-  h->dim_offset[0] = 0;
-  i = 1;
-  while (i < h->dim_nb)
-    {
-      h->dim_offset[i] = (unsigned long long)(h->dim_offset[i - 1] + (unsigned long long)((unsigned long long)h->slice_size[i - 1] * (unsigned long long)h->sizes[i - 1]));
-      i++;
-    }
-  return (h);
-}
-
-void		write_header_into_file(int fd, t_header *h)
-{
-  char		head[4096];
-  char		lenhead[200];
-  int		len;
-
-  memset(head, '\0', 4096);
-  sprintf(head, "%i|%i:%i:%i|%g:%g:%g|%g:%g:%g|%s|%s|%s|%c|%c|%c|%i:%i:%i|%i|%llu:%llu:%llu|%i|",
-	  h->dim_nb,
-	  h->sizes[0], h->sizes[1], h->sizes[2],
-	  h->start[0], h->start[1], h->start[2],
-	  h->steps[0], h->steps[1], h->steps[2],
-	  h->dim_name[0], h->dim_name[1], h->dim_name[2],
-	  h->dim_name[0][0], h->dim_name[1][0], h->dim_name[2][0],
-	  h->slice_size[0], h->slice_size[1], h->slice_size[2],
-	  h->slice_max,
-	  (unsigned long long)h->dim_offset[0], (unsigned long long)h->dim_offset[1], (unsigned long long)h->dim_offset[2], GENERIC);
-  len = strlen(head);
-  memset(lenhead, '\0', 200);
-  sprintf(lenhead, "@IaMraW@|%i|", len);
-  write(fd, lenhead, strlen(lenhead));
-  write(fd, head, len);
 }
 
 int		get_nb_total_slices_to_do(t_vol *volume)

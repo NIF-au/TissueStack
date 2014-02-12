@@ -4,18 +4,13 @@ SRCS		=	$(DIRSRC)image_query.c					\
 			$(DIRSRC)../../../volume.c				\
 			$(DIRSRC)../../../utils/utils.c
 
-INCLUDE		=	-I./headers -I./../../utils -I../../headers
+INCLUDE		=	-I/usr/include/nifti -I./headers -I./../../utils -I../../headers
 
 LIB_PATH	=
 
-LIBS		=	-lminc2							\
-			-lhdf5								\
-			-lnetcdf							\
-			-lznz								\
-			-lz									\
-			-lpthread							\
-			-ldl								\
-			-lm
+LIBS		=	-lpthread							\
+				-ldl								\
+				-lm
 
 NAME		=	TissueStackImageQuery.so
 

@@ -2,7 +2,7 @@ DIRSRC		=	./src/
 
 SRCS		=	$(DIRSRC)../../plugins/comm_inter_process/src/client.c $(DIRSRC)../../utils/utils.c $(DIRSRC)TissueStack.c 
 
-INCLUDE		=	-I./headers -I./../headers -I./../utils -I./../plugins/minc_info/headers -I./../plugins/comm_inter_process/headers
+INCLUDE		=	-I/usr/include/nifti -I./headers -I./../headers -I./../utils -I./../plugins/minc_info/headers -I./../plugins/comm_inter_process/headers
 
 LIB_PATH	=	-L/usr/local/lib
 

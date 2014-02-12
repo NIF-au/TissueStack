@@ -1,24 +1,30 @@
 DIRSRC		=	./src/
 
 SRCS		=	$(DIRSRC)TS_converter.c						\
-				$(DIRSRC)../../../utils/utils.c								\
+				$(DIRSRC)../../../utils/utils.c				\
 				$(DIRSRC)../../../volume.c
 
-INCLUDE		=	-I./headers -I../../headers -I../../utils -I/usr/local/nifticlib/2.0.0/include -I/usr/local/bic/include -I/usr/local/minc/2.1.0/include
+INCLUDE		=	-I./headers -I../../headers -I../../utils	\
+				-I/usr/local/nifticlib/2.0.0/include		\
+				-I/usr/local/bic/include 					\
+				-I/usr/local/minc/2.1.0/include				\
+				-I../../plugins/nifti_convert/headers 		\
+				-I../../plugins/minc_convert/headers 
+				
 
 LIB_PATH	=	-L/usr/local/minc/2.1.0/lib -L/usr/local/nifticlib/2.0.0/lib -L/usr/local/hdf5/1.8.5/lib -L/usr/local/netcdf/4.1.1/lib
 
 LIBS		=	-lhdf5								\
-			-lnetcdf 							\
-			-lminc2								\
-			-lpthread							\
-			-lniftiio                                                       \
-			-ldl								\
-			-lznz								\
-			-lz								\
-			-lm
+				-lnetcdf 							\
+				-lminc2								\
+				-lpthread							\
+				-lniftiio							\
+				-ldl								\
+				-lznz								\
+				-lz									\
+				-lm
 
-EXE_NAME	=	mnc2raw
+EXE_NAME	=	mncOrNii2raw
 
 FLAGS		=	-Wall -O2
 
@@ -62,10 +68,10 @@ ifndef VERSION
 	$(error VERSION IS NOT SET !!!!!!!!!!!!! Please call make like this: make VERSION=X.X !!!!!)
 endif
 
-	@echo -e "\n###################### TISSUE STACK MINC2RAW CONVERTER TOOL BUILD [Version: $(VERSION)] ###################"
+	@echo -e "\n###################### TISSUE STACK MINC/NIFTI => RAW CONVERTER TOOL BUILD [Version: $(VERSION)] ###################"
 	@echo -e "    BINARIES PATH:         $(BINS_PATH)"
 	@echo -e "    USE MEMORY MAPPING:    $(USE_MEMORY_MAPPING)"
-	@echo -e "###################### TISSUE STACK MINC2RAW CONVERTER TOOL BUILD [Version: $(VERSION)] ###################\n"
+	@echo -e "###################### TISSUE STACK MINC/NIFTI => RAW CONVERTER TOOL BUILD [Version: $(VERSION)] ###################\n"
 
 coreCompile:	$(OBJS)
 	@$(CC) $(OBJS) -o $(EXE_NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) `pkg-config --cflags --libs gtk+-2.0` `GraphicsMagick-config --cppflags --libs --ldflags` > /dev/null
