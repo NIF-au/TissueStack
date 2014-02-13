@@ -375,18 +375,13 @@ int		main(int argc, char **argv)
   	i++;
   }
 
-  if (strcmp(dimension, "xspace") == 0)
-  {
+  if (dimension[0] == 'x' || dimension[0] == 'X') {
   	x_start = slice;
   	x_end = 0;
-  }
-  else if (strcmp(dimension, "yspace") == 0)
-  {
+  } else if (dimension[0] == 'y' || dimension[0] == 'Y') {
   	y_start = slice;
   	y_end = 0;
-  }
-  else if (strcmp(dimension, "zspace") == 0)
-  {
+  } else if (dimension[0] == 'z' || dimension[0] == 'Z') {
   	z_start = slice;
   	z_end = 0;
   }
