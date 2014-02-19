@@ -148,7 +148,9 @@ void			*start(void *args) {
 		y = atoi(ys[i]);
 
 		// find offset and dimensions
-		offset = (volume->dim_offset[dim] + (unsigned long long int)((unsigned long long int)volume->slice_size[dim] * (unsigned long long int)slice));
+		offset = (volume->dim_offset[dim] +
+				(unsigned long long int)
+					((unsigned long long int)volume->slice_size[dim] * (unsigned long long int)slice) * ((volume->raw_data_type == RGB_24BIT) ? 3 : 1));
 		get_width_height(&height, &width, dim, volume->dim_nb, volume->dim_name_char, volume->size);
 		combined_size = width * height;
 
@@ -159,7 +161,7 @@ void			*start(void *args) {
 		memset(value, 0, 100);
 
 		// if generic the raw is ready to use as is
-		if (volume->original_format == GENERIC) {
+		if (volume->raw_format == GENERIC) {
 			lseek(volume->raw_fd, offset + y*width + x, SEEK_SET);
 			read(volume->raw_fd, &pixel, 1);
 
@@ -176,7 +178,7 @@ void			*start(void *args) {
 			lseek(volume->raw_fd, offset, SEEK_SET);
 			read(volume->raw_fd, image_data, combined_size);
 
-			img = extractSliceDataAtProperOrientation(volume->original_format, volume->dim_name_char, dim, image_data, width, height, socketDescriptor);
+			img = extractSliceDataAtProperOrientation(volume->raw_format, volume->raw_data_type, volume->dim_name_char, dim, image_data, width, height, socketDescriptor);
 			if (img == NULL) { // something went wrong => say good bye
 				if (image_data != NULL) free(image_data);
 				return NULL;

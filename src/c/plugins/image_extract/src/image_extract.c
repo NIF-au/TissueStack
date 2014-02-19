@@ -611,7 +611,7 @@ t_image_args	*create_args_thread(t_tissue_stack *t, t_vol *vol, t_image_extract 
 		  i++;
 	  }
   }
-  args->volume->original_format = vol->original_format;
+  args->volume->raw_format = vol->raw_format;
 
   if (vol->path != NULL) args->volume->path = strdup(vol->path);
 

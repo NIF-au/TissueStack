@@ -51,7 +51,8 @@ void		alloc_info_volume(t_vol *volume)
   volume->dim_name_char = malloc((volume->dim_nb + 1) * sizeof(*volume->dim_name_char));
   volume->slice_size = malloc(volume->dim_nb * sizeof(*volume->slice_size));
   volume->dim_offset = malloc(volume->dim_nb * sizeof(*volume->dim_offset));
-  volume->original_format = MINC;	// default to MINC
+  volume->raw_format = MINC;	// default to MINC for compatibility
+  volume->raw_data_type = UCHAR_8_BIT;	// default to unsigned char for compatibility
 }
 
 char		*get_header_len(char *header_magick)
@@ -314,7 +315,9 @@ int		raw_volume_init(t_memory_mapping * memory_mappings, t_vol *volume, int fd)
   set_dimension_offset(volume, info[12], header_len);
 
   if (count > 13) // optional info on original format
-	  volume->original_format = atoi(info[13]);
+	  volume->raw_format = atoi(info[13]);
+  if (count > 14) // optional info on raw data type
+	  volume->raw_data_type = atoi(info[14]);
 
   volume->raw_data = 1;
   volume->minc_volume = NULL;
@@ -646,7 +649,14 @@ char		get_by_name_dimension_id(t_vol * vol, char *dimension) {
  * IF the raw file has not been created in the compatible format already
  * see RAW header and enum in core.h: FORMAT.GENERIC (3) to identify a ready to use GENERIC RAW
  */
-Image * extractSliceDataAtProperOrientation(enum FORMAT original_format, char * dim_name_char, int dim, unsigned char * image_data, int width, int height, FILE * socketDescriptor) {
+Image * extractSliceDataAtProperOrientation(
+		enum RAW_FORMAT original_format,
+		enum RAW_TYPE data_type,
+		char * dim_name_char,
+		int dim,
+		void * image_data,
+		int width, int height,
+		FILE * socketDescriptor) {
 	if (dim_name_char == NULL) return NULL;
 
     ExceptionInfo exception;
@@ -668,7 +678,7 @@ Image * extractSliceDataAtProperOrientation(enum FORMAT original_format, char * 
         (dim_name_char[0] == 'x' && dim_name_char[1] == 'z' && dim_name_char[2] == 'y' && (dim_name_char[dim] == 'z' || dim_name_char[dim] == 'y')) ||
         (dim_name_char[0] == 'x' && dim_name_char[1] == 'y' && dim_name_char[2] == 'z') ||
         (dim_name_char[0] == 'y' && dim_name_char[1] == 'x' && dim_name_char[2] == 'z' && (dim_name_char[dim] == 'y' || dim_name_char[dim] == 'x')))) {
-  	  if ((img = ConstituteImage(height, width, "I", CharPixel, image_data, &exception)) == NULL) {
+    	if ((img = ConstituteImage(height, width, (data_type == RGB_24BIT) ? "RGB" : "I", CharPixel, image_data, &exception)) == NULL) {
       	dealWithException(&exception, socketDescriptor, NULL, image_info);
       	return NULL;
        }
@@ -690,7 +700,7 @@ Image * extractSliceDataAtProperOrientation(enum FORMAT original_format, char * 
       	  DestroyImage(tmp);
         }
       } else {
-      	if ((img = ConstituteImage(width, height, "I", CharPixel, image_data, &exception)) == NULL) {
+      	if ((img = ConstituteImage(width, height, (data_type == RGB_24BIT) ? "RGB" : "I", CharPixel, image_data, &exception)) == NULL) {
       		dealWithException(&exception, socketDescriptor, NULL, image_info);
   	    	return NULL;
         }
@@ -701,6 +711,7 @@ Image * extractSliceDataAtProperOrientation(enum FORMAT original_format, char * 
         (dim_name_char[0] == 'y' && dim_name_char[1] == 'x' && dim_name_char[2] == 'z' && (dim_name_char[dim] == 'y' ||
         dim_name_char[dim] == 'x')) || (dim_name_char[0] == 'x' && dim_name_char[1] == 'y' && dim_name_char[2] == 'z')))) {
         tmp = img;
+
         if ((img = FlipImage(img, &exception)) == NULL) {
   	    	dealWithException(&exception, socketDescriptor, tmp, image_info);
   	    	return NULL;
@@ -718,11 +729,6 @@ Image * extractSliceDataAtProperOrientation(enum FORMAT original_format, char * 
         DestroyImage(tmp);
       }
 
-   	// for testing purposes only!
-   	/*
-    strcpy(img->filename, "/tmp/thishereimage.png");
-    WriteImage(image_info, img);
-	*/
     SyncImagePixels(img);
 
     return img;
@@ -765,7 +771,7 @@ void		write_header_into_file(int fd, t_header *h)
   int		len;
 
   memset(head, '\0', 4096);
-  sprintf(head, "%i|%i:%i:%i|%g:%g:%g|%g:%g:%g|%s|%s|%s|%c|%c|%c|%i:%i:%i|%i|%llu:%llu:%llu|3|",
+  sprintf(head, "%i|%i:%i:%i|%g:%g:%g|%g:%g:%g|%s|%s|%s|%c|%c|%c|%i:%i:%i|%i|%llu:%llu:%llu|3|2|",
 	  h->dim_nb,
 	  h->sizes[0], h->sizes[1], h->sizes[2],
 	  h->start[0], h->start[1], h->start[2],

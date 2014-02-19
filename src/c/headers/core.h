@@ -221,22 +221,27 @@ struct			s_tissue_stack
   int			(*subscribe)(char *name, void (*action)(char *name, t_plugin *plugin, char *command, void *data, t_tissue_stack *t), t_tissue_stack *t);
 };
 
-enum FORMAT {
-    MINC    = 1,
-    NIFTI 	= 2,
-    GENERIC	= 3
+enum RAW_FORMAT {
+    MINC    = 1,	// BACKWARDS COMPATIBILITY FOR MINC
+    NIFTI 	= 2,	// BACKWARDS COMPATIBILITY FOR NIFTI
+    GENERIC	= 3		// NEW COMMON RAW FORMAT COMBINING ORIENTATION AND BIT DEPTH (see below)
+};
+
+enum RAW_TYPE {
+    UCHAR_8_BIT  	= 1,	// FOR BACKWARDS COMPATIBILITY
+    RGB_24BIT		= 2		// NEW COMMON DENOMINATOR FOR RAW TO PAVE ROAD FOR RGB storage
 };
 
 struct			s_header
 {
-  int			dim_nb;
-  unsigned int		*sizes;
-  double		*start;
-  double		*steps;
-  char			**dim_name;
+  int						dim_nb;
+  unsigned int				*sizes;
+  double					*start;
+  double					*steps;
+  char						**dim_name;
   unsigned long long int	*dim_offset;
-  unsigned int		*slice_size;
-  unsigned int		slice_max;
+  unsigned int				*slice_size;
+  unsigned int				slice_max;
 };
 
 struct			s_vol
@@ -259,7 +264,8 @@ struct			s_vol
   double		max;                    // max value of the volume
   unsigned char		color_range_min;	// min value of the volume color range
   unsigned char		color_range_max;	// max value of the volume color range
-  enum FORMAT		original_format;		// original format
+  enum RAW_FORMAT		raw_format;	// format indicator (how should the data be treated)
+  enum RAW_TYPE			raw_data_type;			// raw data type
   t_vol			*next;
 };
 
@@ -356,7 +362,7 @@ void		remove_volume(char *path, t_tissue_stack *t);
 void		free_volume(t_vol *v);
 void		free_all_volumes(t_tissue_stack *t);
 char		get_by_name_dimension_id(t_vol * vol, char *dimension);
-Image * extractSliceDataAtProperOrientation(enum FORMAT original_format, char * dim_name_char, int dim, unsigned char * image_data, int width, int height, FILE * socketDescriptor);
+Image * extractSliceDataAtProperOrientation(enum RAW_FORMAT original_format, enum RAW_TYPE data_type, char * dim_name_char, int dim, void * image_data, int width, int height, FILE * socketDescriptor);
 void dealWithException(ExceptionInfo *exception, FILE * socketDescriptor, Image * img, ImageInfo * image_info);
 void			write_header_into_file(int fd, t_header *h);
 

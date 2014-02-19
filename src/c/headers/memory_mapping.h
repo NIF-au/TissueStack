@@ -33,7 +33,7 @@ typedef struct		s_memory_mapped_file	t_memory_mapped_file;
 struct			s_memory_mapped_file
 {
 	struct stat * file_info;
-	unsigned char * data;
+	void * data;
 };
 
 typedef struct		s_memory_mapping	t_memory_mapping;
@@ -41,13 +41,13 @@ struct			s_memory_mapping
 {
 	GHashTable 		*hash;
 	void 			(*add) (t_memory_mapping * this, char * path);
-	unsigned char 	* (*get) (t_memory_mapping * this, char * path);
+	void 	* (*get) (t_memory_mapping * this, char * path);
 };
 
 void init_memory_mapping(t_memory_mapping * this);
 void destroy_memory_mapping(t_memory_mapping * this);
 
 void add_memory_mapped_file(t_memory_mapping * this, char * path);
-unsigned char * get_memory_mapped_data(t_memory_mapping * this, char * path);
+void * get_memory_mapped_data(t_memory_mapping * this, char * path);
 
 #endif	/*__MEMORY_MAPPING__ */

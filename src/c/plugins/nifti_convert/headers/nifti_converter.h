@@ -25,212 +25,97 @@
 #include <limits.h>
 #include <float.h>
 
-#define	NC_NAT 	        0	/* NAT = 'Not A Type' (c.f. NaN) */
-#define	NC_BYTE         1	/* signed 1 byte integer */
-#define	NC_CHAR 	2	/* ISO/ASCII character */
-#define	NC_SHORT 	3	/* signed 2 byte integer */
-#define	NC_INT 	        4	/* signed 4 byte integer */
-#define NC_LONG         NC_INT  /* deprecated, but required for backward compatibility. */
-#define	NC_FLOAT 	5	/* single precision floating point number */
-#define	NC_DOUBLE 	6	/* double precision floating point number */
-#define	NC_UBYTE 	7	/* unsigned 1 byte int */
-#define	NC_USHORT 	8	/* unsigned 2-byte int */
-#define	NC_UINT 	9	/* unsigned 4-byte int */
-#define	NC_INT64 	10	/* signed 8-byte int */
-#define	NC_UINT64 	11	/* unsigned 8-byte int */
-#define	NC_STRING 	12	/* string */
-
-#define MI_PRIV_UNSIGNED 0
-#define MI_PRIV_SIGNED 1
-
-#define ROUND( x ) ((long) ((x) + ( ((x) >= 0) ? 0.5 : (-0.5) ) ))
-#define _MAX( x, y )  ( ((x) >= (y)) ? (x) : (y) )
-#define _MIN( x, y )  ( ((x) >= (y)) ? (y) : (x) )
-
-#define MI_TO_DOUBLE(dvalue, type, sign, ptr)	{			\
-  switch (type) {							\
-  case NC_BYTE :							\
-  case NC_CHAR:								\
-    switch (sign) {							\
-    case MI_PRIV_UNSIGNED :						\
-      dvalue = (double) *((unsigned char *) ptr); break;		\
-    case MI_PRIV_SIGNED :						\
-      dvalue = (double) *((signed char *) ptr); break;			\
-    }									\
-    break;								\
-  case NC_SHORT :							\
-    switch (sign) {							\
-    case MI_PRIV_UNSIGNED :						\
-      dvalue = (double) *((unsigned short *) ptr); break;		\
-    case MI_PRIV_SIGNED :						\
-      dvalue = (double) *((signed short *) ptr); break;			\
-    }									\
-    break;								\
-  case NC_INT :								\
-    switch (sign) {							\
-    case MI_PRIV_UNSIGNED :						\
-      dvalue = (double) *((unsigned int *) ptr); break;			\
-    case MI_PRIV_SIGNED :						\
-      dvalue = (double) *((signed int  *) ptr); break;			\
-    }									\
-    break;								\
-  case NC_FLOAT :							\
-    dvalue = (double) *((float *) ptr);					\
-    break;								\
-  case NC_DOUBLE :							\
-    dvalue = (double) *((double *) ptr);				\
-    break;								\
-  }									\
-  }
-
-#define MI_FROM_DOUBLE(dvalue, type, sign, ptr)	{			\
-  switch (type) {							\
-  case NC_BYTE :							\
-  case NC_CHAR :							\
-    switch (sign) {							\
-    case MI_PRIV_UNSIGNED :						\
-      dvalue = _MAX(0, dvalue);						\
-      dvalue = _MIN(UCHAR_MAX, dvalue);					\
-      *((unsigned char *) ptr) = ROUND(dvalue);				\
-      break;								\
-    case MI_PRIV_SIGNED :						\
-      dvalue = _MAX(SCHAR_MIN, dvalue);					\
-      dvalue = _MIN(SCHAR_MAX, dvalue);					\
-      *((signed char *) ptr) = ROUND(dvalue);				\
-      break;								\
-    }									\
-    break;								\
-  case NC_SHORT :							\
-    switch (sign) {							\
-    case MI_PRIV_UNSIGNED :						\
-      dvalue = _MAX(0, dvalue);						\
-      dvalue = _MIN(USHRT_MAX, dvalue);					\
-      *((unsigned short *) ptr) = ROUND(dvalue);			\
-      break;								\
-    case MI_PRIV_SIGNED :						\
-      dvalue = _MAX(SHRT_MIN, dvalue);					\
-      dvalue = _MIN(SHRT_MAX, dvalue);					\
-      *((signed short *) ptr) = ROUND(dvalue);				\
-      break;								\
-    }									\
-    break;								\
-  case NC_INT :								\
-    switch (sign) {							\
-    case MI_PRIV_UNSIGNED :						\
-      dvalue = _MAX(0, dvalue);						\
-      dvalue = _MIN(UINT_MAX, dvalue);					\
-      *((unsigned int *) ptr) = ROUND(dvalue);				\
-      break;								\
-    case MI_PRIV_SIGNED :						\
-      dvalue = _MAX(INT_MIN, dvalue);					\
-      dvalue = _MIN(INT_MAX, dvalue);					\
-      *((signed int *) ptr) = ROUND(dvalue);				\
-      break;								\
-    }									\
-    break;								\
-  case NC_FLOAT :							\
-    dvalue = _MAX(-FLT_MAX,dvalue);					\
-    *((float *) ptr) = _MIN(FLT_MAX,dvalue);				\
-    break;								\
-  case NC_DOUBLE :							\
-    *((double *) ptr) = dvalue;						\
-    break;								\
-  }									\
-  }
-
-int		get_sign_nifti(nifti_image *nim) {
-  if (nim->datatype == 2 || nim->datatype == 512 || nim->datatype == 768)
-    return (MI_PRIV_UNSIGNED);
-  else
-    return (MI_PRIV_SIGNED);
-}
-
-int		get_datatype_nifti(nifti_image *nim) {
-  if (nim->datatype == 2 || nim->datatype == 256)
-    return(NC_CHAR);
-  else if (nim->datatype == 4 || nim->datatype == 512)
-    return (NC_SHORT);
-  else if (nim->datatype == 8 || nim->datatype == 768)
-    return (NC_INT);
-  else if (nim->datatype == 16)
-    return (NC_FLOAT);
-  else
-    return (NC_DOUBLE);
-}
-
-void		*iter_all_pix_and_convert(void *data_in, unsigned int size, nifti_image *nim)
+unsigned char		*iter_all_pix_and_convert(void *data, unsigned int size, nifti_image *nim)
 {
-  int		i;
-  unsigned char	*data_out;
-  double	dvalue = 0.0;
-  void		*inptr;
-  void		*outptr;
-  int		sign;
-  int		datatype;
-  void		*data;
+  unsigned int		i = 0;
+  unsigned char 	*out;
+  unsigned short 	error = 0;
 
-  datatype = get_datatype_nifti(nim);
-  sign = get_sign_nifti(nim);
+  out = malloc(sizeof(*out) * size * 3);
+  for (i=0;i<size;i++) {
+	  // keep track of error
+	  error = 0;
+	  // move start back "data type" number of bytes...
+	  data = ((char*)data) + nim->nbyper;
+	  // now extract value
+	  switch(nim->datatype) {
+	  	case NIFTI_TYPE_UINT8: // unsigned char
+	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = ((unsigned char *) data)[0];
+	  		break;
+	  	case NIFTI_TYPE_INT8: // signed char
+	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((char *) data)[0]);
+	  		break;
+	  	case NIFTI_TYPE_UINT16: // unsigned short
+	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((unsigned short *) data)[0]);
+	  		break;
+	  	case NIFTI_TYPE_UINT32: // unsigned int
+	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((unsigned int *) data)[0]);
+	  		break;
+	  	case NIFTI_TYPE_INT16: // signed int
+	  	case NIFTI_TYPE_INT32: // signed int
+	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((int *) data)[0]);
+	  		break;
+	  	case NIFTI_TYPE_UINT64: // unsigned long long
+	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = (double) (((unsigned long long int *) data)[0]);
+	  		break;
+	  	case NIFTI_TYPE_INT64: // signed long long
+	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((long long int *) data)[0]);
+	  		break;
+	  	case NIFTI_TYPE_FLOAT32: //	float
+	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((float *) data)[0]);
+	  		break;
+	  	case NIFTI_TYPE_FLOAT64: //	double
+	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((double *) data)[0]);
+	  		break;
+	  	case NIFTI_TYPE_FLOAT128: // long double
+	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((long double *) data)[0]);
+	  		break;
+	  	case NIFTI_TYPE_RGB24:
+	  		// presumably we have to do nothing ...
+	  		out[i] = (unsigned char) (((unsigned char *) data)[0]);
+	  		break;
+	  	case NIFTI_TYPE_RGBA32:
+	  		// presumably we have to skip alpha channel ...
+	  		if (i !=0 && (i % 4) == 0) data = ((char*)data) + 1;
+	  		break;
+	  	case 0:				// UNKNOWN
+	  		error = 1;
+#ifdef __MINC_NIFTI_CL_CONVERTE__
+	  		fprintf(stderr, "Nifti Conversion Error: unknown data type!");
+#else
+	  		ERROR("Nifti Conversion Error: unknown data type!");
+#endif
+	  		break;
+	  	case DT_BINARY:				// NOT SUPPORTED
+	  	case NIFTI_TYPE_COMPLEX64:
+	  	case NIFTI_TYPE_COMPLEX128:
+	  	case NIFTI_TYPE_COMPLEX256:
+	  		error = 1;
+#ifdef __MINC_NIFTI_CL_CONVERTE__
+	  		fprintf(stderr, "Nifti Conversion Error: unsupported data type!");
+#else
+	  		ERROR("Nifti Conversion Error: unsupported data type!");
+#endif
+	  		break;
+	  	default:	//	even more unknown
+	  		error = 1;
+#ifdef __MINC_NIFTI_CL_CONVERTE__
+	  		fprintf(stderr, "Nifti Conversion Error: unsupported data type!");
+#else
+	  		ERROR("Nifti Conversion Error: data type not listed!");
+#endif
+	  		break;
+	  }
 
-
-
-  if (nim->datatype == 2 || nim->datatype == 256) {
-    if (nim->datatype == 2)
-      data = (unsigned char*)data_in;
-    else
-      data = (char*)data_in;
+	  // check for error
+	  if (error) {
+		  // free and good bye
+		  free(out);
+		  return NULL;
+	  }
   }
-  else if (nim->datatype == 4 || nim->datatype == 512) {
-    if (nim->datatype == 512)
-      data = (unsigned short*)data_in;
-    else
-      data = (short*)data_in;
-  }
-  else if (nim->datatype == 8 || nim->datatype == 768) {
-    if (nim->datatype == 768)
-      data = (unsigned int*)data_in;
-    else
-      data = (int*)data_in;
-  }
-  else if (nim->datatype == 16)
-    data = (float *)data_in;
-  else
-    data = (double*)data_in;
 
-
-  data_out = malloc((size + 1) * sizeof(*data_out));
-  i = 0;
-  while (i < size)
-    {
-      if (nim->datatype == 2 || nim->datatype == 256) {
-	if (nim->datatype == 2)
-	  inptr = (unsigned char *)(&((unsigned char *)data)[i]);
-	else
-	  inptr = (char *)(&((char *)data)[i]);
-      }
-      else if (nim->datatype == 4 || nim->datatype == 512) {
-	if (nim->datatype == 512)
-	  inptr = (unsigned short *)(&((unsigned short *)data)[i]);
-	else
-	  inptr = (short *)(&((short *)data)[i]);
-      }
-      else if (nim->datatype == 8 || nim->datatype == 768) {
-	if (nim->datatype == 768)
-	  inptr = (unsigned int *)(&((unsigned int *)data)[i]);
-	else
-	  inptr = (int *)(&((int *)data)[i]);
-      }
-      else if (nim->datatype == 16)
-	inptr = (float *)(&((float *)data)[i]);
-      else
-	inptr = (double *)(&((double *)data)[i]);
-      //      inptr = &data[i];
-      outptr = &data_out[i];
-      MI_TO_DOUBLE(dvalue, datatype, sign, inptr);
-      MI_FROM_DOUBLE(dvalue, NC_CHAR, MI_PRIV_UNSIGNED, outptr);
-      i++;
-    }
-  return (data_out);
+  return out;
 }
 
 t_header	*create_header_from_nifti_struct(nifti_image *nifti_volume)
@@ -277,11 +162,13 @@ t_header	*create_header_from_nifti_struct(nifti_image *nifti_volume)
   i = 1;
   while (i < h->dim_nb)
     {
-      h->dim_offset[i] = (unsigned long long)(h->dim_offset[i - 1] + (unsigned long long)((unsigned long long)h->slice_size[i - 1] * (unsigned long long)h->sizes[i - 1]));
+      h->dim_offset[i] = (unsigned long long)(h->dim_offset[i - 1] + (unsigned long long)((unsigned long long)h->slice_size[i - 1] * (unsigned long long)h->sizes[i - 1]) * 3);
       i++;
     }
   return (h);
 }
+
+void conversion_failed_actions(t_args_plug * a, char *id, void * data_out, char * dim_name_char);
 
 extern  t_log_plugin log_plugin;
 

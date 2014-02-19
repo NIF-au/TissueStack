@@ -208,7 +208,7 @@ void		apply_contrast(PixelPacket *px, unsigned char min, unsigned char max,
     }
 }
 
-void		print_image(unsigned char *hyperslab, t_vol *volume, int current_dimension,
+void		print_image(void *hyperslab, t_vol *volume, int current_dimension,
 			    unsigned int current_slice, int width, int height, t_image_args *a)
 {
   ExceptionInfo exception;
@@ -249,15 +249,15 @@ void		print_image(unsigned char *hyperslab, t_vol *volume, int current_dimension
   }
 
   // if generic the raw is ready to use as is
-  if (volume->original_format == GENERIC) {
-	  if ((img = ConstituteImage(width, height, "I", CharPixel, hyperslab, &exception)) == NULL) {
+  if (volume->raw_format == GENERIC) {
+	  if ((img = ConstituteImage(width, height, (volume->raw_data_type == RGB_24BIT) ? "RGB" : "I", CharPixel, hyperslab, &exception)) == NULL) {
 		  dealWithException(&exception, NULL, NULL, image_info);
 		  write_http_header(a->file, "500 Server Error", a->info->image_type);
 		  tidyUp(img, image_info, a->file);
 		  return;
 	  }
   } else {	// do some orientation nonsense
-	  img = extractSliceDataAtProperOrientation(volume->original_format, volume->dim_name_char, current_dimension, hyperslab, width, height, NULL);
+	  img = extractSliceDataAtProperOrientation(volume->raw_format, volume->raw_data_type, volume->dim_name_char, current_dimension, hyperslab, width, height, NULL);
   	  if (img == NULL) {
   		  write_http_header(a->file, "500 Server Error", a->info->image_type);
   		  tidyUp(img, image_info, a->file);

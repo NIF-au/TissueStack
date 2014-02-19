@@ -24,16 +24,6 @@
 
 #include <sys/stat.h>
 
-unsigned int	get_slices_max(t_vol *volume);
-void			count_start_init(unsigned long		*start,
-				long unsigned int	*count,
-				t_vol			*volume);
-void			dim_loop(int fd, int dimensions_nb, t_vol *volume,
-			 	 t_tissue_stack *t, char *id_percent,
-			 	 int slice_resume, int dimension_resume);
-
-t_vol			*init_get_volume_from_minc_file(char *path);
-
 void 			convertMinc(char * minc_path, int fd);
 void 			convertNifti(char * nifti_path, int fd);
 

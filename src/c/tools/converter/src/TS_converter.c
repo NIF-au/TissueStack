@@ -17,213 +17,12 @@
 
 #include "TS_converter.h"
 
-unsigned int get_slices_max(t_vol *volume) {
-	// get the larger number of slices possible
-	if ((volume->size[X] * volume->size[Y])
-			> (volume->size[Z] * volume->size[X])) {
-		if ((volume->size[X] * volume->size[Y])
-				> (volume->size[Z] * volume->size[Y]))
-			return (volume->size[X] * volume->size[Y]);
-	} else if ((volume->size[Z] * volume->size[X])
-			> (volume->size[Z] * volume->size[Y]))
-		return (volume->size[Z] * volume->size[X]);
-	return (volume->size[Z] * volume->size[Y]);
-}
-
-void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t,
-		char *id_percent, int slice_resume, int dimension_resume) {
-	int dim = 0;
-	int slice = 0;
-	int this_slice = 0;
-	int size;
-	unsigned char *hyperslab = NULL;
-	int i = 0, j = 0;
-	unsigned long *start;
-	long unsigned int *count;
-	short cancel = 0;
-	char *dim_name_char = NULL;
-	Image *img = NULL;
-	PixelPacket *pixels;
-	unsigned long long int pixel_value = 0;
-	int width = 0;
-	int height = 0;
-
-	if (dimension_resume > -1)
-		dim = dimension_resume;
-	start = malloc(volume->dim_nb * sizeof(*start));
-	count = malloc(volume->dim_nb * sizeof(*count));
-	start[0] = start[1] = start[2] = 0;
-	i = 0;
-	while (i < volume->dim_nb) {
-		count[i] = volume->size[i];
-		i++;
-	}
-
-	dim_name_char = malloc(volume->dim_nb * sizeof(*dim_name_char));
-	for (j = 0; j < volume->dim_nb; j++)
-		dim_name_char[j] = volume->dim_name[j][0];
-
-	printf(
-			"Dimensions size: size[0] ==> %i | size[1] ==> %i | size[2] ==> %i\n\n",
-			(int) volume->size[0], (int) volume->size[1],
-			(int) volume->size[2]);
-	while (dim < dimensions_nb && cancel == 0) { // DIMENSION LOOP
-		size = (dim == 0 ?
-				(volume->size[2] * volume->size[1]) :
-				(dim == 1 ?
-						(volume->size[0] * volume->size[2]) :
-						(volume->size[0] * volume->size[1])));
-		hyperslab = malloc(size * sizeof(*hyperslab));
-		slice = volume->size[dim];
-		if (slice_resume != -1) {
-			this_slice = slice_resume;
-			slice_resume = -1;
-		} else
-			this_slice = 0;
-		count[dim] = 1;
-		while (this_slice < slice && cancel == 0) { // SLICE LOOP
-			img = NULL;
-			start[dim] = this_slice;
-			memset(hyperslab, '\0', size);
-
-			// read hyperslab
-			miget_real_value_hyperslab(volume->minc_volume, MI_TYPE_UBYTE,
-					(misize_t*) start, (misize_t*) count, hyperslab);
-
-			// convert to image and perform proper orientation corrections
-			get_width_height(&height, &width, dim, volume->dim_nb,
-					dim_name_char, volume->size);
-			volume->original_format = MINC;
-			img = extractSliceDataAtProperOrientation(volume->original_format,
-					dim_name_char, dim, hyperslab, width, height, NULL);
-			if (img == NULL) {
-				ERROR("Could not convert slice");
-				free(hyperslab);
-				return;
-			}
-
-			// extract pixel info, looping over values
-			pixels = GetImagePixels(img, 0, 0, width, height);
-			if (pixels == NULL) {
-				ERROR("Could not convert slice");
-				if (img != NULL)
-					DestroyImage(img);
-				free(hyperslab);
-				return;
-			}
-			for (j = 0; j < size; j++) {
-				pixel_value = pixels[(width * i) + j].red;
-				if (QuantumDepth != 8 && img->depth == QuantumDepth)
-					pixel_value = mapUnsignedValue(img->depth, 8, pixel_value);
-				hyperslab[j] = (char) pixel_value;
-			}
-			write(fd, hyperslab, size);
-
-			printf("Slice = %i / %i - dim = %i\r", this_slice,
-					(int) volume->size[dim], dim);
-			fflush(stdout);
-			this_slice++;
-			if (img != NULL)
-				DestroyImage(img);
-
-		}
-		start[dim] = 0;
-		count[dim] = volume->size[dim];
-		dim++;
-		free(hyperslab);
-		printf(
-				"                                                                                                                                          \r");
-	}
-	if (dim_name_char != NULL)
-		free(dim_name_char);
-}
-
-t_vol *init_get_volume_from_minc_file(char *path) {
-	t_vol *volume;
-	int result;
-
-	volume = malloc(sizeof(*volume));
-	volume->path = path;
-	volume->dim_nb = 3;
-	if (volume->path == NULL)
-		return (NULL);
-	// open the minc file
-	if ((result = miopen_volume(volume->path, MI2_OPEN_READ,
-			&volume->minc_volume)) != MI_NOERROR) {
-		fprintf(stderr, "Error opening input file: %d.\n", result);
-		return (NULL);
-	}
-
-	if ((result = miget_volume_dimension_count(volume->minc_volume, 0, 0,
-			&volume->dim_nb)) != MI_NOERROR) {
-		fprintf(stderr, "Error getting number of dimensions: %d.\n", result);
-		return (NULL);
-	}
-
-	volume->dimensions = malloc(volume->dim_nb * sizeof(*volume->dimensions));
-	volume->starts = malloc(volume->dim_nb * sizeof(*volume->starts));
-	volume->steps = malloc(volume->dim_nb * sizeof(*volume->steps));
-	volume->size = malloc(volume->dim_nb * sizeof(*volume->size));
-	volume->dim_name = malloc(volume->dim_nb * sizeof(*volume->dim_name));
-
-	// get the volume dimensions
-	if ((result = miget_volume_dimensions(volume->minc_volume,
-			MI_DIMCLASS_SPATIAL, MI_DIMATTR_ALL, MI_DIMORDER_FILE,
-			volume->dim_nb, volume->dimensions)) == MI_ERROR) {
-		fprintf(stderr, "Error getting dimensions: %d.\n", result);
-		return (NULL);
-	}
-	// get the size of each dimensions
-
-	if ((result = miget_dimension_size(volume->dimensions[0], &volume->size[0]))
-			!= MI_NOERROR) {
-		fprintf(stderr, "Error getting dimensions size: %d.\n", result);
-		return (NULL);
-	}
-
-	if ((result = miget_dimension_size(volume->dimensions[1], &volume->size[1]))
-			!= MI_NOERROR) {
-		fprintf(stderr, "Error getting dimensions size: %d.\n", result);
-		return (NULL);
-	}
-
-	if ((result = miget_dimension_size(volume->dimensions[2], &volume->size[2]))
-			!= MI_NOERROR) {
-		fprintf(stderr, "Error getting dimensions size: %d.\n", result);
-		return (NULL);
-	}
-
-	if ((result = miget_dimension_starts(volume->dimensions, 0, volume->dim_nb,
-			volume->starts)) != MI_NOERROR) {
-		fprintf(stderr, "Error getting dimensions start: %d.\n", result);
-		return (NULL);
-	}
-	if ((result = miget_dimension_separations(volume->dimensions, 0,
-			volume->dim_nb, volume->steps)) != MI_NOERROR) {
-		fprintf(stderr, "Error getting dimensions steps: %d.\n", result);
-		return (NULL);
-	}
-	if (miget_dimension_name(volume->dimensions[0], &volume->dim_name[0])
-			!= MI_NOERROR
-			|| miget_dimension_name(volume->dimensions[1], &volume->dim_name[1])
-					!= MI_NOERROR
-			|| miget_dimension_name(volume->dimensions[2],
-					&volume->dim_name[2])) {
-		fprintf(stderr, "Error getting dimensions name.\n");
-		return (NULL);
-	}
-	// get slices_max
-	volume->slices_max = get_slices_max(volume);
-	volume->next = NULL;
-	return (volume);
-}
-
 int main(int ac, char **av) {
 
 	int len =0;
 	char ext[3];
 	int fd = 0;
-	enum FORMAT format;
+	enum RAW_FORMAT format;
 
 	if (ac < 3) {
 		printf("Usage: ./mncOrNii2raw  [minc/nifti volume path] [raw volume path]\n");
@@ -287,8 +86,8 @@ void	convertNifti(char * nifti_path, int fd) {
 	int				ret;
 	int				sizes[3];
 	int				dims[8] = { 0,  -1, -1, -1, -1, -1, -1, -1 };
-	unsigned char	*data = NULL;
-	unsigned char	*data_char;
+	void 			*data_in = NULL;
+	unsigned char	*data_out = NULL;
 	Image			*img = NULL;
 	PixelPacket 	*pixels;
 	char 			*dim_name_char = NULL;
@@ -296,8 +95,6 @@ void	convertNifti(char * nifti_path, int fd) {
 	int 			height = 0;
 	int				nslices;
 	unsigned int	size_per_slice;
-
-	unsigned long long int pixel_value = 0;
 
 	// read nifti for header info
 	if ((nim = nifti_image_read(nifti_path, 0)) == NULL) {
@@ -326,55 +123,57 @@ void	convertNifti(char * nifti_path, int fd) {
 		size_per_slice = h->slice_size[i - 1];
 		while (slice < nslices) { // SLICE LOOP
 			img = NULL;
-			data = NULL;
+			data_in = NULL;
+			data_out = NULL;
 			dims[i] = slice;
-			if ((ret = nifti_read_collapsed_image(nim, dims, (void*) &data))
-					< 0) {
+			if ((ret = nifti_read_collapsed_image(nim, dims, (void*) &data_in))	< 0) {
 				fprintf(stderr,"Error Nifti Get Hyperslab");
 				if (dim_name_char != NULL)
 					free(dim_name_char);
 				return;
 			}
-			if (ret > 0) {
-				data_char = iter_all_pix_and_convert(data, size_per_slice, nim);
 
-				get_width_height(&height, &width, i - 1, h->dim_nb,
-						dim_name_char, h->sizes);
-				img = extractSliceDataAtProperOrientation(NIFTI, dim_name_char,
-						i - 1, data_char, width, height, NULL);
-				if (img == NULL) {
-					fprintf(stderr,"Could not convert slice");
-					free(data_char);
-					if (dim_name_char != NULL)
-						free(dim_name_char);
-					return;
-				}
-
-				// extract pixel info, looping over values
-				pixels = GetImagePixels(img, 0, 0, width, height);
-				if (pixels == NULL) {
-					fprintf(stderr,"Could not convert slice");
-					if (img != NULL)
-						DestroyImage(img);
-					free(data_char);
-					if (dim_name_char != NULL)
-						free(dim_name_char);
-					return;
-				}
-				for (j = 0; j < size_per_slice; j++) {
-					pixel_value = pixels[(width * i) + j].red;
-					if (QuantumDepth != 8 && img->depth == QuantumDepth)
-						pixel_value = mapUnsignedValue(img->depth, 8,
-								pixel_value);
-					data_char[j] = (char) pixel_value;
-				}
-				write(fd, data_char, size_per_slice);
-
-				if (img != NULL)
-					DestroyImage(img);
-				free(data_char);
+			data_out = iter_all_pix_and_convert(data_in, size_per_slice, nim);
+			free(data_in);
+			if (data_out == NULL) {
+				conversion_failed_actions(NULL, NULL,data_out, dim_name_char);
+				return;
 			}
-			free(data);
+
+			get_width_height(&height, &width, i - 1, h->dim_nb,	dim_name_char, h->sizes);
+			img = extractSliceDataAtProperOrientation(NIFTI, RGB_24BIT, dim_name_char,	i - 1, data_out, width, height, NULL);
+			if (img == NULL) {
+				conversion_failed_actions(NULL, NULL,data_out, dim_name_char);
+				return;
+			}
+
+			// extract pixel info, looping over values
+			pixels = GetImagePixels(img, 0, 0, width, height);
+			if (pixels == NULL) {
+				if (img != NULL) DestroyImage(img);
+				conversion_failed_actions(NULL, NULL,data_out, dim_name_char);
+				return;
+			}
+
+			// sync with data
+			for (j = 0; j < size_per_slice; j++) {
+				// graphicsmagic quantum depth correction
+				if (QuantumDepth != 8 && img->depth == QuantumDepth) {
+					data_out[j*3+0] = (unsigned char) mapUnsignedValue(img->depth, 8, pixels[(width * i) + j].red);
+					data_out[j*3+1] = (unsigned char) mapUnsignedValue(img->depth, 8, pixels[(width * i) + j].green);
+					data_out[j*3+2] = (unsigned char) mapUnsignedValue(img->depth, 8, pixels[(width * i) + j].blue);
+					continue;
+				} // no correction needed
+				data_out[j*3+0] = (unsigned char) pixels[(width * i) + j].red;
+				data_out[j*3+1] = (unsigned char) pixels[(width * i) + j].green;
+				data_out[j*3+2] = (unsigned char) pixels[(width * i) + j].blue;
+			}
+			write(fd, data_out, size_per_slice * 3);
+
+			if (img != NULL)
+				DestroyImage(img);
+			free(data_out);
+
 			slice++;
 			printf("Slice n %i of %i [dimension %i]\r",	slice, nslices, (i - 1));
 			fflush(stdout);
@@ -384,4 +183,10 @@ void	convertNifti(char * nifti_path, int fd) {
 	}
 	if (dim_name_char != NULL) free(dim_name_char);
     DestroyMagick();
+}
+
+void conversion_failed_actions(t_args_plug * a, char *id, void * data_out, char * dim_name_char) {
+	if (data_out != NULL)	free(data_out);
+	if (dim_name_char != NULL) free(dim_name_char);
+	fprintf(stderr,"Could not convert slice");
 }
