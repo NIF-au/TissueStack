@@ -150,7 +150,7 @@ void			*start(void *args) {
 		// find offset and dimensions
 		offset = (volume->dim_offset[dim] +
 				(unsigned long long int)
-					((unsigned long long int)volume->slice_size[dim] * (unsigned long long int)slice));
+					((unsigned long long int)volume->slice_size[dim] * (unsigned long long int)slice) * ((volume->raw_data_type == RGB_24BIT) ? 3 : 1));
 		get_width_height(&height, &width, dim, volume->dim_nb, volume->dim_name_char, volume->size);
 		combined_size = width * height;
 
