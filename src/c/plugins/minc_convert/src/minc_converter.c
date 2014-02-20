@@ -16,74 +16,6 @@
  */
 #include "minc_converter.h"
 
-
-/*
-t_vol		*init_get_volume_from_minc_file(char *path)
-{
-  t_vol		*volume;
-  int		result;
-
-  volume = malloc(sizeof(*volume));
-  volume->path = path;
-  volume->dim_nb = 3;
-  if (volume->path == NULL)
-    return (NULL);
-  // open the minc file
-  if ((result = miopen_volume(volume->path, MI2_OPEN_READ, &volume->minc_volume)) != MI_NOERROR)
-    {
-      ERROR("Error opening input file: %d.", result);
-      return (NULL);
-    }
-
-  if ((result = miget_volume_dimension_count(volume->minc_volume, 0, 0, &volume->dim_nb)) != MI_NOERROR)
-    {
-      ERROR("Error getting number of dimensions: %d.", result);
-      return (NULL);
-    }
-
-  volume->dimensions = malloc(volume->dim_nb * sizeof(*volume->dimensions));
-  volume->starts = malloc(volume->dim_nb * sizeof(*volume->starts));
-  volume->steps = malloc(volume->dim_nb * sizeof(*volume->steps));
-  volume->size = malloc(volume->dim_nb * sizeof(*volume->size));
-  volume->dim_name = malloc(volume->dim_nb * sizeof(*volume->dim_name));
-
-  // get the volume dimensions
-  if ((result = miget_volume_dimensions(volume->minc_volume, MI_DIMCLASS_SPATIAL, MI_DIMATTR_ALL,
-					MI_DIMORDER_FILE, volume->dim_nb, volume->dimensions)) == MI_ERROR)
-    {
-      ERROR("Error getting dimensions: %d.", result);
-      return (NULL);
-    }
-  // get the size of each dimensions
-  if ((result = miget_dimension_sizes(volume->dimensions, volume->dim_nb, volume->size)) != MI_NOERROR)
-    {
-      ERROR("Error getting dimensions size: %d.", result);
-      return (NULL);
-    }
-  if ((result = miget_dimension_starts(volume->dimensions, 0, volume->dim_nb, volume->starts)) != MI_NOERROR)
-    {
-      ERROR("Error getting dimensions start: %d.", result);
-      return (NULL);
-    }
-  if ((result = miget_dimension_separations(volume->dimensions, 0, volume->dim_nb, volume->steps)) != MI_NOERROR)
-    {
-      ERROR("Error getting dimensions steps: %d.", result);
-      return (NULL);
-    }
-  if (miget_dimension_name (volume->dimensions[0], &volume->dim_name[0]) != MI_NOERROR ||
-      miget_dimension_name (volume->dimensions[1], &volume->dim_name[1]) != MI_NOERROR ||
-      miget_dimension_name (volume->dimensions[2], &volume->dim_name[2]))
-    {
-      ERROR("Error getting dimensions name.");
-      return (NULL);
-    }
-  // get slices_max
-  volume->slices_max = get_slices_max(volume);
-  volume->next = NULL;
-  return (volume);
-}
-*/
-
 void		*init(void *args)
 {
   t_args_plug	*a;
@@ -133,7 +65,7 @@ void  		*start(void *args)
 	      i++;
 	    }
 	  if (slice != 0)
-	    off += header->slice_size[i] * (slice - 1);
+	    off += (header->slice_size[i] * (slice - 1) * 3);
 	  lseek(fd, off, SEEK_SET);
 	  if (a->commands[2] != NULL && strcmp(a->commands[2], "@tasks@") == 0 && a->commands[3] != NULL && strlen(a->commands[3]) == 16)
 	    dim_loop(fd, minc_volume->dim_nb, minc_volume, a->general_info,

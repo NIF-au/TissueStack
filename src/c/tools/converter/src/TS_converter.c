@@ -53,6 +53,9 @@ int main(int ac, char **av) {
 	if (chmod(av[2], 0644) == -1)
 		fprintf(stderr, "Chmod failed\n");
 
+	// in case we crash or abort
+	install_signal_manager(av[2], fd);
+
 	// delegate to subroutines for conversion
 	if (format == NIFTI) convertNifti(av[1], fd);
 	else if (format == MINC) convertMinc(av[1], fd);
@@ -72,8 +75,8 @@ void	convertMinc(char * minc_path, int fd) {
 
 	header = create_header_from_minc_struct(minc_volume);
 
-    InitializeMagick("./");
 	write_header_into_file(fd, header);
+    InitializeMagick("./");
 	dim_loop(fd, minc_volume->dim_nb, minc_volume, NULL, NULL, -1, -1);
     DestroyMagick();
 }
@@ -81,6 +84,23 @@ void	convertMinc(char * minc_path, int fd) {
 void	convertNifti(char * nifti_path, int fd) {
 	nifti_image		*nim;
 	t_header		*h;
+
+	// read nifti for header info
+	if ((nim = nifti_image_read(nifti_path, 0)) == NULL) {
+		fprintf(stderr,"Error Nifti read");
+	    return ;
+	}
+	h = create_header_from_nifti_struct(nim);
+
+	// write header
+	write_header_into_file(fd, h);
+
+	// delegate for rest
+    InitializeMagick("./");
+	convertNifti0(NULL, nim, h, fd, 1, NULL);
+    DestroyMagick();
+
+	/*
 	int				i = 1, j=0;
 	int				slice = 0;
 	int				ret;
@@ -96,21 +116,11 @@ void	convertNifti(char * nifti_path, int fd) {
 	int				nslices;
 	unsigned int	size_per_slice;
 
-	// read nifti for header info
+	// read nifti to create header info
 	if ((nim = nifti_image_read(nifti_path, 0)) == NULL) {
 		fprintf(stderr,"Error Nifti read");
 	    return ;
 	}
-
-	sizes[0] = nim->dim[1];
-	sizes[1] = nim->dim[2];
-	sizes[2] = nim->dim[3];
-
-	h = create_header_from_nifti_struct(nim);
-
-	// write header
-	write_header_into_file(fd, h);
-
 	dim_name_char = malloc(h->dim_nb * sizeof(*dim_name_char));
 	for (j=0;j<h->dim_nb;j++)
 		dim_name_char[j] = h->dim_name[j][0];
@@ -183,10 +193,5 @@ void	convertNifti(char * nifti_path, int fd) {
 	}
 	if (dim_name_char != NULL) free(dim_name_char);
     DestroyMagick();
-}
-
-void conversion_failed_actions(t_args_plug * a, char *id, void * data_out, char * dim_name_char) {
-	if (data_out != NULL)	free(data_out);
-	if (dim_name_char != NULL) free(dim_name_char);
-	fprintf(stderr,"Could not convert slice");
+    */
 }

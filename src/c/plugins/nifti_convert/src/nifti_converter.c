@@ -27,34 +27,22 @@ void *init(void *args) {
 }
 
 void *start(void *args) {
-	int dims[8] = { 0, -1, -1, -1, -1, -1, -1, -1 };
-	int sizes[3];
-	void *data_in = NULL;
-	unsigned char *data_out = NULL;
-	int slice = 0;
-	int ret;
-	nifti_image *nim;
-	int nslices;
-	int i = 0, j = 0;
-	int fd = 0;
-	unsigned int size_per_slice;
-	t_header *h;
 	t_args_plug *a;
+	nifti_image *nim;
+	t_header *h;
+	int fd = 0;
+	int i = 0;
+	int sizes[3];
 	char *id_percent;
-	int cancel = 0;
 	unsigned int dimensions_resume = -1;
 	unsigned int slice_resume = -1;
-	unsigned long long off = 0L;
+	unsigned long long offset = 0L;
 	char *command_line = NULL;
-	Image *img = NULL;
-	PixelPacket * pixels;
-	char * dim_name_char = NULL;
-	int width = 0;
-	int height = 0;
 
 	prctl(PR_SET_NAME, "TS_NIFTI_CON");
-
 	a = (t_args_plug*) args;
+
+	// read nifti
 	if ((nim = nifti_image_read(a->commands[0], 0)) == NULL) {
 		ERROR("Error Nifti read");
 		return (NULL);
@@ -64,6 +52,7 @@ void *start(void *args) {
 	sizes[1] = nim->dim[2];
 	sizes[2] = nim->dim[3];
 
+	// create header
 	h = create_header_from_nifti_struct(nim);
 
 	if ((a->commands[3] != NULL && a->commands[4] != NULL
@@ -88,12 +77,12 @@ void *start(void *args) {
 			}
 			i = 0;
 			while (i < dimensions_resume) {
-				off += h->dim_offset[i];
+				offset += h->dim_offset[i];
 				i++;
 			}
 			if (slice_resume != 0)
-				off += h->slice_size[i] * (slice_resume - 1);
-			lseek(fd, off, SEEK_SET);
+				offset += (h->slice_size[i] * (slice_resume - 1) * 3);
+			lseek(fd, offset, SEEK_SET);
 			i = dimensions_resume + 1;
 		}
 	} else {
@@ -118,86 +107,10 @@ void *start(void *args) {
 		i = 1;
 	}
 
-	dim_name_char = malloc(h->dim_nb * sizeof(*dim_name_char));
-	for (j = 0; j < h->dim_nb; j++)
-		dim_name_char[j] = h->dim_name[j][0];
+	// delegate
+	convertNifti0(a, nim, h, fd, i, id_percent);
 
-	while (i <= nim->dim[0] && cancel == 0) {
-		if (slice_resume != -1) {
-			slice = slice_resume;
-			slice_resume = -1;
-		} else
-			slice = 0;
-
-		nslices = sizes[i - 1];
-		size_per_slice = h->slice_size[i - 1];
-		while (slice < nslices && cancel == 0) {
-			img = NULL;
-			data_in = NULL;
-			data_out = NULL;
-			dims[i] = slice;
-
-			if ((ret = nifti_read_collapsed_image(nim, dims, (void*) &data_in))	< 0) {
-				ERROR("Error Nifti Get Hyperslab");
-				if (dim_name_char != NULL) free(dim_name_char);
-				return (NULL);
-			}
-
-			// read nifti data and convert it to proper data type
-			data_out = iter_all_pix_and_convert(data_in, size_per_slice, nim);
-			free(data_in);
-			if (data_out == NULL) {
-				conversion_failed_actions(a, id_percent, data_out,	dim_name_char);
-				return NULL;
-			}
-
-			get_width_height(&height, &width, i - 1, h->dim_nb, dim_name_char,	h->sizes);
-			img = extractSliceDataAtProperOrientation(NIFTI, RGB_24BIT,	dim_name_char, i - 1, data_out, width, height, NULL);
-			if (img == NULL) {
-				conversion_failed_actions(a, id_percent, data_out,	dim_name_char);
-				return NULL;
-			}
-
-			// extract pixel info, looping over values
-			pixels = GetImagePixels(img, 0, 0, width, height);
-			if (pixels == NULL) {
-				if (img != NULL)
-					DestroyImage(img);
-				conversion_failed_actions(a, id_percent, data_out,
-						dim_name_char);
-				return NULL;
-			}
-
-			// sync with data
-			for (j = 0; j < size_per_slice; j++) {
-				// graphicsmagic quantum depth correction
-				if (QuantumDepth != 8 && img->depth == QuantumDepth) {
-					data_out[j * 3 + 0] = (unsigned char) mapUnsignedValue(img->depth, 8, pixels[(width * i) + j].red);
-					data_out[j * 3 + 1] = (unsigned char) mapUnsignedValue(img->depth, 8, pixels[(width * i) + j].green);
-					data_out[j * 3 + 2] = (unsigned char) mapUnsignedValue(img->depth, 8, pixels[(width * i) + j].blue);
-					continue;
-				} // no correction needed
-				data_out[j * 3 + 0] = (unsigned char) pixels[(width * i) + j].red;
-				data_out[j * 3 + 1] = (unsigned char) pixels[(width * i) + j].green;
-				data_out[j * 3 + 2] = (unsigned char) pixels[(width * i) + j].blue;
-			}
-			write(fd, data_out, size_per_slice * 3);
-
-			if (img != NULL) DestroyImage(img);
-			free(data_out);
-			slice++;
-			a->general_info->percent_add(1, id_percent, a->general_info);
-			cancel = a->general_info->is_percent_paused_cancel(id_percent,	a->general_info);
-			DEBUG("Slice n %i on dimension %i slicenb = %i -- cancel = %i",	slice, (i - 1), nslices, cancel);
-		}
-		dims[i] = -1;
-		i++;
-	}
-	if (dim_name_char != NULL)	free(dim_name_char);
-
-	if (cancel == 0)
-		INFO("Conversion: NIFTI: %s to RAW: %s ==> DONE", a->commands[0], a->commands[1]);
-
+	// close file and clean up
 	close(fd);
 	a->destroy(a);
 
@@ -208,13 +121,4 @@ void *unload(void *args) {
 	DestroyMagick();
 	INFO("Nifti Converter Plugin: Unloaded");
 	return (NULL);
-}
-
-void conversion_failed_actions(t_args_plug * a, char *id, void * data_out, char * dim_name_char) {
-	a->general_info->percent_cancel(id, a->general_info);
-
-	if (data_out != NULL) free(data_out);
-	if (dim_name_char != NULL) free(dim_name_char);
-
-	ERROR("Could not convert slice");
 }

@@ -24,7 +24,41 @@
 
 #include <sys/stat.h>
 
+static int file_descriptor = 0;
+static char * file_name = NULL;
+
 void 			convertMinc(char * minc_path, int fd);
 void 			convertNifti(char * nifti_path, int fd);
+
+void 			clean_up() {
+	if (file_descriptor > 0) close(file_descriptor);
+	// remove unfinished file
+	unlink(file_name);
+}
+
+void			signal_handler(int sig)
+{
+	clean_up();
+	exit(-1);
+}
+
+void install_signal_manager(char * fn, int fd) {
+	struct sigaction act;
+	int i;
+
+	// set global values
+	file_name = fn;
+	file_descriptor = fd;
+
+	act.sa_handler = signal_handler;
+	sigemptyset(&act.sa_mask);
+	act.sa_flags = 0;
+	i = 1;
+	while (i < 32) {
+		sigaction(i, &act, NULL);
+		i++;
+	}
+}
+
 
 #endif /* __MINC_NIFTI_CL_CONVERTE__ */

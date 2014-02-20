@@ -46,35 +46,35 @@ unsigned int            get_slices_max(t_vol *volume)
   return (volume->size[Z] * volume->size[Y]);
 }
 
-unsigned char * extractDataFromMincVolume(t_vol * volume, const unsigned long start[], const unsigned long count[], int size) {
-
-	mitype_t		minc_type;
-	misize_t		minc_type_size;
-	void 			*in = NULL;
-	unsigned char 	*out = NULL;
+void extractDataFromMincVolume(
+		t_vol * volume,
+		const unsigned long start[],
+		const unsigned long count[],
+		mitype_t minc_type,
+		misize_t minc_type_size,
+		void * in,
+		unsigned char * out,
+		int size) {
 	unsigned int		i = 0;
-	unsigned short 	error = 0;
+	//unsigned short 	error = 0;
 
-	if (miget_data_type(volume->minc_volume, &minc_type) != MI_NOERROR) return NULL;
-	if (miget_data_type_size(volume->minc_volume, &minc_type_size) != MI_NOERROR) return NULL;
-
-	// create generic data buffer of proper size
-	// TODO: allocate once outside, then deallocate at the very end
-	in = malloc(size*minc_type_size);
-	memset(in, '\0', size*minc_type_size);
-
-	// read hyperslab
-	if (miget_real_value_hyperslab(volume->minc_volume, minc_type, start, count, in) != MI_NOERROR) {
-		if (in != NULL) free(in);
-		return NULL;
+	// read hyperslab as unsigned byte for now and let minc do the dirty deeds of conversion
+	// hence the long block of commented out code below
+	if (miget_real_value_hyperslab(volume->minc_volume, MI_TYPE_UBYTE, start, count, in) != MI_NOERROR) {
+		if (out != NULL) {
+			free(out);
+			out = NULL;
+		}
+		return;
 	}
-
-	out = malloc(sizeof(*out) * size * 3);
 	for (i=0;i<size;i++) {
+		out[i*3+0] = out[i*3+1] = out[i*3+2] = ((unsigned char *) in)[i];
+		/*
 		// keep track of error
 		error = 0;
+
 		// move start back "data type" number of bytes...
-		in = ((char*)in) + minc_type_size;
+		if (i !=0) in = ((char*)in) + minc_type_size;
 
 		// now extract value
 		switch(minc_type) {
@@ -88,7 +88,7 @@ unsigned char * extractDataFromMincVolume(t_vol * volume, const unsigned long st
 				out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((unsigned short *) in)[0]);
 				break;
 			case MI_TYPE_SHORT: // signed int
-				out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((short *) in)[0]);
+				out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((unsigned short *) in)[0]);
 				break;
 			case MI_TYPE_UINT: // unsigned int
 				out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((unsigned int *) in)[0]);
@@ -131,36 +131,35 @@ unsigned char * extractDataFromMincVolume(t_vol * volume, const unsigned long st
 #endif
 				break;
 		  }
-
 		  // check for error
 		  if (error) {
-			  // free and good bye
-			  if (in != NULL) free(in);
-			  if (out != NULL) free(out);
-			  return NULL;
+				if (out != NULL) {
+					free(out);
+					out = NULL;
+				}
 		  }
+		*/
 	}
-	// release in data
-	//if (in != NULL) free(in);
-
-	return out;
 }
 
 void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t, char *id_percent, int slice_resume, int dimension_resume) {
-	int dim = 0;
-	int slice = 0;
-	int this_slice = 0;
-	int size;
-	unsigned char *data = NULL;
-	int i = 0, j = 0;
-	unsigned long *start;
-	long unsigned int *count;
-	short cancel = 0;
-	char *dim_name_char = NULL;
-	Image *img = NULL;
-	PixelPacket *pixels;
-	int width = 0;
-	int height = 0;
+	mitype_t			minc_type;
+	misize_t			minc_type_size;
+	void				*buffer = NULL;
+	int 				dim = 0;
+	int 				slice = 0;
+	int 				this_slice = 0;
+	int 				size;
+	unsigned char 		*data = NULL;
+	int 				i = 0, j = 0;
+	unsigned long 		*start;
+	long unsigned int 	*count;
+	short 				cancel = 0;
+	char 				*dim_name_char = NULL;
+	Image 				*img = NULL;
+	PixelPacket 		*pixels;
+	int 				width = 0;
+	int 				height = 0;
 
 	if (dimension_resume > -1)
 		dim = dimension_resume;
@@ -173,6 +172,17 @@ void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t, char 
 		i++;
 	}
 
+	// get minc volume params
+	if (miget_data_type(volume->minc_volume, &minc_type) != MI_NOERROR) {
+		failureToConvertSlice(t, NULL, NULL, id_percent);
+		return;
+	}
+	if (miget_data_type_size(volume->minc_volume, &minc_type_size) != MI_NOERROR) {
+		failureToConvertSlice(t, NULL, NULL, id_percent);
+		return;
+	}
+
+	// plane lookup
 	dim_name_char = malloc(volume->dim_nb * sizeof(*dim_name_char));
 	for (j = 0; j < volume->dim_nb; j++)
 		dim_name_char[j] = volume->dim_name[j][0];
@@ -190,12 +200,17 @@ void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t, char 
 		} else
 			this_slice = 0;
 		count[dim] = 1;
+
+		// create data buffers of appropriate size
+		buffer = malloc(size*minc_type_size);
+		data = malloc(sizeof(*data) * size * 3);
+
 		while (this_slice < slice && cancel == 0) { // SLICE LOOP
 			img = NULL;
-			data = NULL;
 			start[dim] = this_slice;
 
-			data = extractDataFromMincVolume(volume, start, count, size);
+			// read data
+			extractDataFromMincVolume(volume, start, count, minc_type, minc_type_size, buffer, data, size);
 			if (data == NULL) {
 				failureToConvertSlice(t, NULL, dim_name_char, id_percent);
 				return;
@@ -235,10 +250,10 @@ void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t, char 
 			write(fd, data, size * 3);
 
 #ifdef __MINC_NIFTI_CL_CONVERTE__
-			printf("Slice = %i / %i - dim = %i\r", this_slice, (int) volume->size[dim], dim);
+			printf("Slice %i / %i of plane '%c'       \r", this_slice, (int) volume->size[dim], dim_name_char[dim]);
 			fflush(stdout);
 #else
-			DEBUG("Slice = %i - dim = %i", this_slice, dim);
+			DEBUG("Slice %i / %i [%c]", this_slice, (int) volume->size[dim], dim_name_char[dim]);
 			t->percent_add(1, id_percent, t);
 			cancel = t->is_percent_paused_cancel(id_percent, t);
 #endif
@@ -249,6 +264,9 @@ void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t, char 
 		start[dim] = 0;
 		count[dim] = volume->size[dim];
 		dim++;
+
+		// tidy up
+		if (buffer != NULL) free(buffer);
 		if (data != NULL) free(data);
 	}
 	if (dim_name_char != NULL) free(dim_name_char);

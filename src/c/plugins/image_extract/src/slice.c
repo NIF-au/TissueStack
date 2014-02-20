@@ -139,8 +139,7 @@ unsigned char *		get_raw_data(t_memory_mapping * memory_mappings, t_vol *volume,
 
   offset = (volume->dim_offset[dim] +
 		  (unsigned long long int)
-		  	  ((unsigned long long int)volume->slice_size[dim] * (unsigned long long int)slice)
-		  	  	  * (volume->raw_data_type == RGB_24BIT ? 3 : 1));
+		  	  ((unsigned long long int)volume->slice_size[dim] * (unsigned long long int)slice));
 
   if (memory_mappings != NULL) {
    	data = (unsigned char *) memory_mappings->get(memory_mappings, volume->path);

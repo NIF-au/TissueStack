@@ -731,6 +731,8 @@ Image * extractSliceDataAtProperOrientation(
 
     SyncImagePixels(img);
 
+    if (image_info != NULL) DestroyImageInfo(image_info);
+
     return img;
 }
 

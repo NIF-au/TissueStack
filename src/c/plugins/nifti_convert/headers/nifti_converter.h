@@ -28,7 +28,7 @@
 unsigned char		*iter_all_pix_and_convert(void *data, unsigned int size, nifti_image *nim)
 {
   unsigned int		i = 0;
-  unsigned char 	*out;
+  unsigned char 	*out = NULL;
   unsigned short 	error = 0;
 
   out = malloc(sizeof(*out) * size * 3);
@@ -36,7 +36,7 @@ unsigned char		*iter_all_pix_and_convert(void *data, unsigned int size, nifti_im
 	  // keep track of error
 	  error = 0;
 	  // move start back "data type" number of bytes...
-	  data = ((char*)data) + nim->nbyper;
+	  if (i != 0) data = ((char*)data) + nim->nbyper;
 	  // now extract value
 	  switch(nim->datatype) {
 	  	case NIFTI_TYPE_UINT8: // unsigned char
@@ -168,7 +168,130 @@ t_header	*create_header_from_nifti_struct(nifti_image *nifti_volume)
   return (h);
 }
 
-void conversion_failed_actions(t_args_plug * a, char *id, void * data_out, char * dim_name_char);
+void conversion_failed_actions(t_args_plug * a, char *id, void * data_out, char * dim_name_char) {
+	if (data_out != NULL)	free(data_out);
+	if (dim_name_char != NULL) free(dim_name_char);
+
+#ifdef __MINC_NIFTI_CL_CONVERTE__
+	fprintf(stderr,"Could not convert slice");
+#else
+	//a->general_info->percent_cancel(id, a->general_info);
+	ERROR("Could not convert slice");
+#endif
+}
+
+void	convertNifti0(t_args_plug *a, nifti_image	*nim, t_header *h, int fd, int i, char *id_percent) {
+	int				j=0;
+	int				slice = 0;
+	int				ret;
+	int				sizes[3];
+	int				dims[8] = { 0,  -1, -1, -1, -1, -1, -1, -1 };
+	void 			*data_in = NULL;
+	unsigned char	*data_out = NULL;
+	Image			*img = NULL;
+	PixelPacket 	*pixels;
+	char 			*dim_name_char = NULL;
+	int 			width = 0;
+	int 			height = 0;
+	int				nslices;
+	unsigned int	size_per_slice;
+	int				cancel = 0;
+
+	sizes[0] = nim->dim[1];
+	sizes[1] = nim->dim[2];
+	sizes[2] = nim->dim[3];
+
+	dim_name_char = malloc(h->dim_nb * sizeof(*dim_name_char));
+	for (j=0;j<h->dim_nb;j++)
+		dim_name_char[j] = h->dim_name[j][0];
+
+	while (i <= nim->dim[0] && cancel == 0) {	// DIMENSION LOOP
+		slice = 0;
+		nslices = sizes[i - 1];
+		size_per_slice = h->slice_size[i - 1];
+		while (slice < nslices && cancel == 0) { // SLICE LOOP
+			img = NULL;
+			data_in = NULL;
+			data_out = NULL;
+			dims[i] = slice;
+			if ((ret = nifti_read_collapsed_image(nim, dims, (void*) &data_in))	< 0) {
+				if (dim_name_char != NULL)	free(dim_name_char);
+
+				#ifdef __MINC_NIFTI_CL_CONVERTE__
+				fprintf(stderr,"Error reading Nifti data!");
+#else
+				ERROR("Error reading Nifti data!");
+#endif
+
+				return;
+			}
+
+			data_out = iter_all_pix_and_convert(data_in, size_per_slice, nim);
+			free(data_in);
+			if (data_out == NULL) {
+				conversion_failed_actions(NULL, NULL,data_out, dim_name_char);
+				return;
+			}
+
+			get_width_height(&height, &width, i - 1, h->dim_nb,	dim_name_char, h->sizes);
+			img = extractSliceDataAtProperOrientation(NIFTI, RGB_24BIT, dim_name_char,	i - 1, data_out, width, height, NULL);
+			if (img == NULL) {
+				conversion_failed_actions(NULL, NULL,data_out, dim_name_char);
+				return;
+			}
+
+			// extract pixel info, looping over values
+			pixels = GetImagePixels(img, 0, 0, width, height);
+			if (pixels == NULL) {
+				if (img != NULL) DestroyImage(img);
+				conversion_failed_actions(NULL, NULL,data_out, dim_name_char);
+				return;
+			}
+
+			// sync with data
+			for (j = 0; j < size_per_slice; j++) {
+				// graphicsmagic quantum depth correction
+				if (QuantumDepth != 8 && img->depth == QuantumDepth) {
+					data_out[j*3+0] = (unsigned char) mapUnsignedValue(img->depth, 8, pixels[(width * i) + j].red);
+					data_out[j*3+1] = (unsigned char) mapUnsignedValue(img->depth, 8, pixels[(width * i) + j].green);
+					data_out[j*3+2] = (unsigned char) mapUnsignedValue(img->depth, 8, pixels[(width * i) + j].blue);
+					continue;
+				} // no correction needed
+				data_out[j*3+0] = (unsigned char) pixels[(width * i) + j].red;
+				data_out[j*3+1] = (unsigned char) pixels[(width * i) + j].green;
+				data_out[j*3+2] = (unsigned char) pixels[(width * i) + j].blue;
+			}
+			// write into file
+			write(fd, data_out, size_per_slice * 3);
+			// increment slice
+			slice++;
+
+			// tidy up
+			if (img != NULL)
+				DestroyImage(img);
+			free(data_out);
+
+#ifdef __MINC_NIFTI_CL_CONVERTE__
+			printf("Slice %i / %i of plane '%c'       \r",	slice, nslices, dim_name_char[(i - 1)]);
+			fflush(stdout);
+#else
+			a->general_info->percent_add(1, id_percent, a->general_info);
+			cancel = a->general_info->is_percent_paused_cancel(id_percent,	a->general_info);
+			DEBUG("Slice n %i on dimension %i slicenb = %i -- cancel = %i",	slice, (i - 1), nslices, cancel);
+#endif
+		}
+		dims[i] = -1;
+		i++;
+	}
+
+	// tidy up
+	if (dim_name_char != NULL) free(dim_name_char);
+
+#ifndef __MINC_NIFTI_CL_CONVERTE__
+	if (cancel == 0) INFO("Conversion: NIFTI: %s to RAW: %s ==> DONE", a->commands[0], a->commands[1]);
+#endif
+}
+
 
 extern  t_log_plugin log_plugin;
 
