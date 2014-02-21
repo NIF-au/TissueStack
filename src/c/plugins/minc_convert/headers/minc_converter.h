@@ -146,9 +146,8 @@ void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t, char 
 	mitype_t			minc_type;
 	misize_t			minc_type_size;
 	void				*buffer = NULL;
-	int 				dim = 0;
+	int 				dim = (dimension_resume < 0) ? 0 : dimension_resume;
 	int 				slice = 0;
-	int 				this_slice = 0;
 	int 				size;
 	unsigned char 		*data = NULL;
 	int 				i = 0, j = 0;
@@ -161,8 +160,6 @@ void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t, char 
 	int 				width = 0;
 	int 				height = 0;
 
-	if (dimension_resume > -1)
-		dim = dimension_resume;
 	start = malloc(volume->dim_nb * sizeof(*start));
 	count = malloc(volume->dim_nb * sizeof(*count));
 	start[0] = start[1] = start[2] = 0;
@@ -193,21 +190,23 @@ void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t, char 
 				(dim == 1 ?
 						(volume->size[0] * volume->size[2]) :
 						(volume->size[0] * volume->size[1])));
-		slice = volume->size[dim];
-		if (slice_resume != -1) {
-			this_slice = slice_resume;
-			slice_resume = -1;
-		} else
-			this_slice = 0;
 		count[dim] = 1;
 
 		// create data buffers of appropriate size
 		buffer = malloc(size*minc_type_size);
 		data = malloc(sizeof(*data) * size * 3);
 
-		while (this_slice < slice && cancel == 0) { // SLICE LOOP
+		// reset slice or resume
+		if (slice_resume > 0) {
+			slice = slice_resume;
+			slice_resume = -1;
+		} else {
+			slice = 0;
+		}
+
+		while (slice < volume->size[dim] && cancel == 0) { // SLICE LOOP
 			img = NULL;
-			start[dim] = this_slice;
+			start[dim] = slice;
 
 			// read data
 			extractDataFromMincVolume(volume, start, count, minc_type, minc_type_size, buffer, data, size);
@@ -250,14 +249,14 @@ void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t, char 
 			write(fd, data, size * 3);
 
 #ifdef __MINC_NIFTI_CL_CONVERTE__
-			printf("Slice %i / %i of plane '%c'       \r", this_slice, (int) volume->size[dim], dim_name_char[dim]);
+			printf("Slice %i / %i of plane '%c'       \r", slice, (int) volume->size[dim], dim_name_char[dim]);
 			fflush(stdout);
 #else
-			DEBUG("Slice %i / %i [%c]", this_slice, (int) volume->size[dim], dim_name_char[dim]);
+			DEBUG("Slice %i / %i [%c]", slice, (int) volume->size[dim], dim_name_char[dim]);
 			t->percent_add(1, id_percent, t);
 			cancel = t->is_percent_paused_cancel(id_percent, t);
 #endif
-			this_slice++;
+			slice++;
 			if (img != NULL) DestroyImage(img);
 		}
 

@@ -353,7 +353,7 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 		      i++;
 		    }
 		  asprintf(&comm, "start minc_converter %s %s %i %i @tasks@ %s",
-			   result[3], result[5], dimension, (slice - 2), id);
+			   result[3], result[5], dimension, slice-2, id);
 		  DEBUG("%s", comm);
 		  t->plug_actions(t, comm, NULL);
 		}
@@ -392,7 +392,7 @@ void		percent_resume_direct(char *id, t_tissue_stack *t)
 		  i++;
 		}
 	      asprintf(&comm, "start nifti_converter %s %s %i %i @tasks@ %s",
-		       result[3], result[5], dimension, (slice - 2), id);
+		       result[3], result[5], dimension, slice-2, id);
 	      DEBUG("%s", comm);
 	      t->plug_actions(t, comm, NULL);
 	    }

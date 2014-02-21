@@ -25,58 +25,55 @@
 #include <limits.h>
 #include <float.h>
 
-unsigned char		*iter_all_pix_and_convert(void *data, unsigned int size, nifti_image *nim)
-{
+void	iter_all_pix_and_convert(void *in, unsigned char * out, unsigned int size, nifti_image *nim) {
   unsigned int		i = 0;
-  unsigned char 	*out = NULL;
   unsigned short 	error = 0;
 
-  out = malloc(sizeof(*out) * size * 3);
   for (i=0;i<size;i++) {
 	  // keep track of error
 	  error = 0;
 	  // move start back "data type" number of bytes...
-	  if (i != 0) data = ((char*)data) + nim->nbyper;
+	  if (i != 0) in = ((char*)in) + nim->nbyper;
 	  // now extract value
 	  switch(nim->datatype) {
 	  	case NIFTI_TYPE_UINT8: // unsigned char
-	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = ((unsigned char *) data)[0];
+	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = ((unsigned char *) in)[0];
 	  		break;
 	  	case NIFTI_TYPE_INT8: // signed char
-	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((char *) data)[0]);
+	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((char *) in)[0]);
 	  		break;
 	  	case NIFTI_TYPE_UINT16: // unsigned short
-	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((unsigned short *) data)[0]);
+	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((unsigned short *) in)[0]);
 	  		break;
 	  	case NIFTI_TYPE_UINT32: // unsigned int
-	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((unsigned int *) data)[0]);
+	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((unsigned int *) in)[0]);
 	  		break;
 	  	case NIFTI_TYPE_INT16: // signed int
 	  	case NIFTI_TYPE_INT32: // signed int
-	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((int *) data)[0]);
+	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((int *) in)[0]);
 	  		break;
 	  	case NIFTI_TYPE_UINT64: // unsigned long long
-	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = (double) (((unsigned long long int *) data)[0]);
+	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = (double) (((unsigned long long int *) in)[0]);
 	  		break;
 	  	case NIFTI_TYPE_INT64: // signed long long
-	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((long long int *) data)[0]);
+	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((long long int *) in)[0]);
 	  		break;
 	  	case NIFTI_TYPE_FLOAT32: //	float
-	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((float *) data)[0]);
+	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((float *) in)[0]);
 	  		break;
 	  	case NIFTI_TYPE_FLOAT64: //	double
-	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((double *) data)[0]);
+	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((double *) in)[0]);
 	  		break;
 	  	case NIFTI_TYPE_FLOAT128: // long double
-	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((long double *) data)[0]);
+	  		out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((long double *) in)[0]);
 	  		break;
 	  	case NIFTI_TYPE_RGB24:
 	  		// presumably we have to do nothing ...
-	  		out[i] = (unsigned char) (((unsigned char *) data)[0]);
+	  		out[i] = (unsigned char) (((unsigned char *) in)[0]);
 	  		break;
 	  	case NIFTI_TYPE_RGBA32:
 	  		// presumably we have to skip alpha channel ...
-	  		if (i !=0 && (i % 4) == 0) data = ((char*)data) + 1;
+	  		if (i !=0 && (i % 4) == 0) in = ((char*)in) + 1;
 	  		break;
 	  	case 0:				// UNKNOWN
 	  		error = 1;
@@ -111,11 +108,9 @@ unsigned char		*iter_all_pix_and_convert(void *data, unsigned int size, nifti_im
 	  if (error) {
 		  // free and good bye
 		  free(out);
-		  return NULL;
+		  out = NULL;
 	  }
   }
-
-  return out;
 }
 
 t_header	*create_header_from_nifti_struct(nifti_image *nifti_volume)
@@ -180,7 +175,7 @@ void conversion_failed_actions(t_args_plug * a, char *id, void * data_out, char 
 #endif
 }
 
-void	convertNifti0(t_args_plug *a, nifti_image	*nim, t_header *h, int fd, int i, char *id_percent) {
+void	convertNifti0(t_args_plug *a, nifti_image	*nim, t_header *h, int fd, int i, int slice_resume, char *id_percent) {
 	int				j=0;
 	int				slice = 0;
 	int				ret;
@@ -206,13 +201,20 @@ void	convertNifti0(t_args_plug *a, nifti_image	*nim, t_header *h, int fd, int i,
 		dim_name_char[j] = h->dim_name[j][0];
 
 	while (i <= nim->dim[0] && cancel == 0) {	// DIMENSION LOOP
-		slice = 0;
+		// reset slice or resume
+		if (slice_resume > 0) {
+			slice = slice_resume;
+			slice_resume = -1;
+		} else {
+			slice = 0;
+		}
 		nslices = sizes[i - 1];
 		size_per_slice = h->slice_size[i - 1];
+
+		data_out = malloc(size_per_slice * 3 * sizeof(*data_out));
 		while (slice < nslices && cancel == 0) { // SLICE LOOP
 			img = NULL;
 			data_in = NULL;
-			data_out = NULL;
 			dims[i] = slice;
 			if ((ret = nifti_read_collapsed_image(nim, dims, (void*) &data_in))	< 0) {
 				if (dim_name_char != NULL)	free(dim_name_char);
@@ -226,7 +228,7 @@ void	convertNifti0(t_args_plug *a, nifti_image	*nim, t_header *h, int fd, int i,
 				return;
 			}
 
-			data_out = iter_all_pix_and_convert(data_in, size_per_slice, nim);
+			iter_all_pix_and_convert(data_in, data_out, size_per_slice, nim);
 			free(data_in);
 			if (data_out == NULL) {
 				conversion_failed_actions(NULL, NULL,data_out, dim_name_char);
@@ -267,9 +269,7 @@ void	convertNifti0(t_args_plug *a, nifti_image	*nim, t_header *h, int fd, int i,
 			slice++;
 
 			// tidy up
-			if (img != NULL)
-				DestroyImage(img);
-			free(data_out);
+			if (img != NULL) DestroyImage(img);
 
 #ifdef __MINC_NIFTI_CL_CONVERTE__
 			printf("Slice %i / %i of plane '%c'       \r",	slice, nslices, dim_name_char[(i - 1)]);
@@ -280,6 +280,8 @@ void	convertNifti0(t_args_plug *a, nifti_image	*nim, t_header *h, int fd, int i,
 			DEBUG("Slice n %i on dimension %i slicenb = %i -- cancel = %i",	slice, (i - 1), nslices, cancel);
 #endif
 		}
+
+		if (data_out != NULL) free(data_out);
 		dims[i] = -1;
 		i++;
 	}

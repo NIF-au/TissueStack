@@ -81,7 +81,7 @@ void *start(void *args) {
 				i++;
 			}
 			if (slice_resume != 0)
-				offset += (h->slice_size[i] * (slice_resume - 1) * 3);
+				offset += (h->slice_size[i] * (slice_resume-1) * 3);
 			lseek(fd, offset, SEEK_SET);
 			i = dimensions_resume + 1;
 		}
@@ -108,7 +108,7 @@ void *start(void *args) {
 	}
 
 	// delegate
-	convertNifti0(a, nim, h, fd, i, id_percent);
+	convertNifti0(a, nim, h, fd, i, slice_resume, id_percent);
 
 	// close file and clean up
 	close(fd);

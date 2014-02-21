@@ -97,7 +97,7 @@ void	convertNifti(char * nifti_path, int fd) {
 
 	// delegate for rest
     InitializeMagick("./");
-	convertNifti0(NULL, nim, h, fd, 1, NULL);
+	convertNifti0(NULL, nim, h, fd, 1, -1, NULL);
     DestroyMagick();
 
 	/*
