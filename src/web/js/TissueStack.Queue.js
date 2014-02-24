@@ -316,8 +316,8 @@ TissueStack.Queue.prototype = {
 			var sliceX = draw_request.slice;
 			var sliceY = this.canvas.data_extent.one_to_one_y - draw_request.slice;
 
-			sliceX = Math.round(sliceX * (this.canvas.getDataExtent().x / this.canvas.data_extent.one_to_one_x));
-			sliceY = Math.round(sliceY * (this.canvas.getDataExtent().y / this.canvas.data_extent.one_to_one_y));
+			sliceX = sliceX * (this.canvas.getDataExtent().x / this.canvas.data_extent.one_to_one_x);
+			sliceY = sliceY * (this.canvas.getDataExtent().y / this.canvas.data_extent.one_to_one_y);
 			/*
 			sliceX = (this.canvas.getDataExtent().zoom_level == 1) ?
 					Math.floor(sliceX * (this.canvas.getDataExtent().x / this.canvas.data_extent.one_to_one_x)) :
@@ -413,16 +413,16 @@ TissueStack.Queue.prototype = {
 				draw_request.upperLeftCorner.y = (draw_request.canvasDims.y - draw_request.crossCoords.y) + draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);				
 			}
 
-			draw_request.upperLeftCorner.x = Math.round(draw_request.upperLeftCorner.x);
-			draw_request.upperLeftCorner.y = Math.round(draw_request.upperLeftCorner.y);
+			draw_request.upperLeftCorner.x = draw_request.upperLeftCorner.x;
+			draw_request.upperLeftCorner.y = draw_request.upperLeftCorner.y;
 
-			draw_request.coords.x = Math.round(draw_request.coords.x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x));
-			draw_request.coords.y = Math.round(draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y));
+			draw_request.coords.x = draw_request.coords.x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x);
+			draw_request.coords.y = draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);
 
 			draw_request.max_coords_of_event_triggering_plane.max_x =
-					Math.round(draw_request.max_coords_of_event_triggering_plane.max_x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x));
+					draw_request.max_coords_of_event_triggering_plane.max_x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x);
 			draw_request.max_coords_of_event_triggering_plane.max_y =
-					Math.round(draw_request.max_coords_of_event_triggering_plane.max_y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y));
+					draw_request.max_coords_of_event_triggering_plane.max_y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);
 
 			/*
 			draw_request.upperLeftCorner.x = (draw_request.zoom_level == 1) ? Math.floor(draw_request.upperLeftCorner.x) : Math.ceil(draw_request.upperLeftCorner.x);

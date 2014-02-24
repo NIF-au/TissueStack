@@ -166,7 +166,7 @@ void			*start(void *args) {
 			read(volume->raw_fd, &pixel, 1);
 
 			// set response
-			sprintf(value, " {\"red\": %cu, \"green\": %cu, \"blue\": %cu}", pixel, pixel, pixel);
+			sprintf(value, " {\"red\": %c, \"green\": %c, \"blue\": %c}", pixel, pixel, pixel);
 			/*
 			if ((img = ConstituteImage(width, height, "I", CharPixel, image_data, &exception)) == NULL) {
 			  dealWithException(&exception, NULL, NULL, NULL);

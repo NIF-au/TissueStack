@@ -756,9 +756,9 @@ TissueStack.Canvas.prototype = {
 	},
 	updateCoordinateInfo : function(pixelCoords, worldCoords) {
 		var oneToOnePixelCoords = {
-				x : Math.round(pixelCoords.x),
-				y : Math.round(pixelCoords.y),
-				z : Math.round(pixelCoords.z)
+				x : pixelCoords.x,
+				y : pixelCoords.y,
+				z : pixelCoords.z
 		};
 		pixelCoords = this.getXYCoordinatesWithRespectToZoomLevel(pixelCoords);
 		// outside of extent check
@@ -820,6 +820,7 @@ TissueStack.Canvas.prototype = {
 				); 
 		}
 	}, getXYCoordinatesWithRespectToZoomLevel : function(coords) {
+		/*
 		if (this.upper_left_y < this.dim_y - this.cross_y || this.upper_left_y - (this.data_extent.y - 1) > this.dim_y - this.cross_y) {
 			return;
 		}
@@ -827,7 +828,7 @@ TissueStack.Canvas.prototype = {
 		if (this.cross_x < this.upper_left_x 
 				|| this.cross_x > (this.upper_left_x + (this.getDataExtent().x - 1))) {
 			return;
-		}
+		}*/
 
 		return this.data_extent.getXYCoordinatesWithRespectToZoomLevel(coords);
 	}, getUrlLinkString : function (realWorldCoords) {	

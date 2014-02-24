@@ -78,6 +78,7 @@ void task_exec(char *task_id, t_tissue_stack *t) {
 	char **result;
 	int i;
 	char *dest;
+	int percent = -1;
 
 	if (t && t->tasks && t->tasks->is_running == TRUE)
 		return;
@@ -85,20 +86,28 @@ void task_exec(char *task_id, t_tissue_stack *t) {
 	if ((result = read_from_file_by_id(task_id, t)) != NULL) {
 		t->tasks->is_running = TRUE;
 
-		asprintf(&dest, "start %s %s %s",
-				(result[4][0] == '0' ?
-						"image" :
-						(result[4][0] == '1' ?
-								"minc_converter" : "nifti_converter")),
-				result[6], task_id);
-		t->tasks->task_id = strdup(task_id);
-		t->plug_actions(t, dest, NULL);
-		i = 0;
-		while (i < 7) {
-			free(result[i]);
-			i++;
+		percent = atoi(result[0]);
+		if (percent <= 0) {
+			DEBUG("NEW TASK");
+			asprintf(&dest, "start %s %s %s",
+					(result[4][0] == '0' ?
+							"image" :
+							(result[4][0] == '1' ?
+									"minc_converter" : "nifti_converter")),
+					result[6], task_id);
+			t->tasks->task_id = strdup(task_id);
+
+			t->plug_actions(t, dest, NULL);
+			i = 0;
+			while (i < 7) {
+				free(result[i]);
+				i++;
+			}
+			free(result);
+		} else {
+			DEBUG("RESUME OLD TASK");
+			t->percent_resume(task_id, t);
 		}
-		free(result);
 	} else {
 		t->tasks->is_running = FALSE;
 		task_finished(task_id, t);

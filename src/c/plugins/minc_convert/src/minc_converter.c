@@ -64,13 +64,12 @@ void  		*start(void *args)
 	      off += header->dim_offset[i];
 	      i++;
 	    }
-	  if (slice != 0)
-	    off += (header->slice_size[i] * slice * 3);
+	  if (slice > 0) off += (header->slice_size[i] * slice * 3);
 	  lseek(fd, off, SEEK_SET);
 	  if (a->commands[2] != NULL && strcmp(a->commands[2], "@tasks@") == 0 && a->commands[3] != NULL && strlen(a->commands[3]) == 16) {
 			dim_loop(fd, minc_volume->dim_nb, minc_volume, a->general_info, a->commands[3], -1, -1);
 	  } else {
-	    dim_loop(fd, minc_volume->dim_nb, minc_volume, a->general_info, a->commands[5], slice-1, dimension);
+	    dim_loop(fd, minc_volume->dim_nb, minc_volume, a->general_info, a->commands[5], slice, dimension);
 	  }
 	  close(fd);
 	  return (NULL);

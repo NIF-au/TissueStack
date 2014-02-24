@@ -525,9 +525,10 @@ TissueStack.BindDataSetDependentEvents = function () {
 					givenCoords = plane.getDataExtent().getPixelForWorldCoordinates(givenCoords);
 				}
 
-				givenCoords.x = Math.round(givenCoords.x);
-				givenCoords.y = Math.round(givenCoords.y);
-				givenCoords.z = Math.round(givenCoords.z);
+				givenCoords.x = givenCoords.x;
+				givenCoords.y = givenCoords.y;
+				givenCoords.z = givenCoords.z;
+				
 				/*
 				if (plane.getDataExtent().zoom_level == 1) {
 					givenCoords.x = Math.floor(givenCoords.x);

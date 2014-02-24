@@ -644,13 +644,13 @@ TissueStack.DataSetNavigation.prototype = {
 		// the call to redraw will be able to handle it
 		var pixel_coords_for_handed_in_plane = canvas.getRelativeCrossCoordinates();
 		pixel_coords_for_handed_in_plane.z = canvas.getDataExtent().slice;
-		var real_world_coords_for_handed_in_plane = canvas.getDataExtent().getWorldCoordinatesForPixel(pixel_coords_for_handed_in_plane);
+		var real_world_coords_for_handed_in_plane = canvas.getDataExtent().getWorldCoordinatesForPixelWithBoundsCheck(pixel_coords_for_handed_in_plane);
 		var pixel_coords_for_other_plane = other_plane.getDataExtent().getPixelForWorldCoordinates(real_world_coords_for_handed_in_plane);
 
 		if (!TissueStack.overlay_datasets) {
-			pixel_coords_for_other_plane.x = Math.round(pixel_coords_for_other_plane.x);
-			pixel_coords_for_other_plane.y = Math.round(pixel_coords_for_other_plane.y);
-			pixel_coords_for_other_plane.z = Math.round(pixel_coords_for_other_plane.z);
+			pixel_coords_for_other_plane.x = pixel_coords_for_other_plane.x;
+			pixel_coords_for_other_plane.y = pixel_coords_for_other_plane.y;
+			pixel_coords_for_other_plane.z = pixel_coords_for_other_plane.z;
 
 			/*
 			if (other_plane.getDataExtent().zoom_level == 1) {

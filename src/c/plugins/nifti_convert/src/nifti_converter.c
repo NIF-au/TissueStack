@@ -62,10 +62,12 @@ void *start(void *args) {
 		if (a->commands[2] != NULL) {
 			if (a->commands[2] != NULL && strcmp(a->commands[2], "@tasks@") == 0
 					&& a->commands[3] != NULL && strlen(a->commands[3]) == 16) {
+				INFO("First in");
 				id_percent = a->commands[3];
 				dimensions_resume = 0;
 				slice_resume = 0;
 			} else {
+				INFO("second in");
 				id_percent = a->commands[5];
 				dimensions_resume = atoi(a->commands[2]);
 				slice_resume = atoi(a->commands[3]);
@@ -80,8 +82,7 @@ void *start(void *args) {
 				offset += h->dim_offset[i];
 				i++;
 			}
-			if (slice_resume != 0)
-				offset += (h->slice_size[i] * (slice_resume-1) * 3);
+			if (slice_resume > 0) offset += (h->slice_size[i] * slice_resume * 3);
 			lseek(fd, offset, SEEK_SET);
 			i = dimensions_resume + 1;
 		}
@@ -94,6 +95,7 @@ void *start(void *args) {
 			ERROR("Chmod Error");
 		write_header_into_file(fd, h);
 		if (a->commands[2] != NULL && strcmp(a->commands[2], "@tasks@") == 0) {
+			INFO("Third in");
 			command_line = array_2D_to_array_1D(a->commands);
 			a->general_info->percent_init((sizes[0] + sizes[1] + sizes[2]),
 					&id_percent, a->commands[0], "2", a->commands[1],
