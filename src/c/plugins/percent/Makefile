@@ -1,6 +1,9 @@
 DIRSRC		=	./src/
 
-SRCS		=	$(DIRSRC)percent_and_time.c $(DIRSRC)../../../volume.c $(DIRSRC)../../../utils/utils.c
+SRCS		=	$(DIRSRC)percent_and_time_plugin.c 				\
+				$(DIRSRC)../../../volume.c 						\
+				$(DIRSRC)../../../percent_and_time.c			\
+				$(DIRSRC)../../../utils/utils.c
 
 INCLUDE		=	-I/usr/include/nifti -I./headers -I../../headers -I./../../utils
 

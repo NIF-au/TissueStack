@@ -226,9 +226,6 @@ void		print_image(void *hyperslab, t_vol *volume, int current_dimension,
 
   if (checkRequestTimeout(a, img, image_info)) return;
 
-  if (a->info->percentage == 1 && strcmp(a->info->service, "full") == 0)
-      a->general_info->percent_add(1, a->info->id_percent, a->general_info);
-
   streamToSocket = a->file && fcntl(fileno(a->file), F_GETFL) != -1;
 
   kind = set_service_type(a);
@@ -418,8 +415,7 @@ void		print_image(void *hyperslab, t_vol *volume, int current_dimension,
       finalPath = appendToBuffer(finalPath, dir);
       strcpy(img->filename, finalPath->buffer);
 
-      if (img)
-    	  WriteImage(image_info, img);
+      if (img) WriteImage(image_info, img);
 
 	  tidyUp(img, image_info, NULL);
       free(finalPath->buffer);

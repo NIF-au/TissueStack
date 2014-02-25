@@ -378,29 +378,26 @@ void		add_error(t_tissue_stack  *general, int signal, t_plugin *plug);
 void		remove_error_by_id(t_tissue_stack *general, int id);
 int		get_errors_nb_by_plugin(t_tissue_stack *general, t_plugin * plug);
 int		*get_error_by_plugin(t_tissue_stack *general, t_plugin *plug);
-void		clean_error_list(t_tissue_stack *general, int min);
+void	clean_error_list(t_tissue_stack *general, int min);
 
 /*		percent_and_time		*/
-
-FILE * open_file_by_id(char *id, t_tissue_stack *t);
-char		**read_from_file_by_id(char *id, t_tissue_stack *t);
-char		**percent_str_to_wordtab(char *buff, char c);
-int		percent_letter_count(char *buff, int position, char c);
 int		percent_word_count(char *buff, char c);
-
-int		is_num(char *str);
+int		percent_letter_count(char *buff, int position, char c);
+char	**percent_str_to_wordtab(char *buff, char c);
+FILE 	* open_file_by_id(char *id, t_tissue_stack *t);
+char 	**read_from_file_by_id(char *id, t_tissue_stack *t);
 int		is_percent_paused_cancel(char *id, t_tissue_stack *t);
-void		clean_pause_queue(char *id, t_tissue_stack *t);
-void		percent_time_write(char *str, char **commands, void *box);
-void		percent_init_direct(int total_blocks, char **id, char *filename, char *kind, char *path, char *commmand_line, t_tissue_stack *t);
-void		percent_cancel_direct(char *id, t_tissue_stack *t);
-void		percent_add_direct(int blocks, char *id, t_tissue_stack *t);
-void		percent_get_direct(char **buff, char *id, t_tissue_stack *t);
-void		percent_pause_direct(char *id, t_tissue_stack *t);
-void		percent_resume_direct(char *id, t_tissue_stack *t);
-void		percent_destroy(char **commands, void *box, t_tissue_stack *t);
-void		init_percent_time(t_tissue_stack *t, char *path);
-void		free_all_percent(t_tissue_stack *t);
+void	clean_pause_queue(char *id, t_tissue_stack *t);
+void	percent_time_write(char *str, char **commands, void *box);
+void	percent_init_direct(int total_blocks, char **id, char *filename, char *kind, char *path, char *commmand_line, t_tissue_stack *t);
+void	percent_cancel_direct(char *id, t_tissue_stack *t);
+void	percent_add_direct(int blocks, char *id, t_tissue_stack *t);
+void	percent_get_direct(char **buff, char *id, t_tissue_stack *t);
+void	percent_pause_direct(char *id, t_tissue_stack *t);
+void	percent_resume_direct(char *id, t_tissue_stack *t);
+void	percent_destroy(char **commands, void *box, t_tissue_stack *t);
+void	init_percent_time(t_tissue_stack *t, char *path);
+void	free_all_percent(t_tissue_stack *t);
 
 /*		notification_center.c		*/
 

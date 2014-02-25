@@ -125,30 +125,39 @@ pluginsCompile:
 	@echo -e "\n\n\tCompiling plugins:"
 	@echo -e "\t-------------------\n"
 	@rm -rf volume.o
+	@rm -rf percent_and_time.o
 	@rm -rf utils/utils.o
 	@make -f Makefile.centOS --no-print-directory -C ./plugins/communicator/ compile 
 	@rm -rf volume.o
-	@rm -rf utils/utils.o   
+	@rm -rf percent_and_time.o
+	@rm -rf utils/utils.o
 	@make -f Makefile.centOS --no-print-directory -C ./plugins/image_extract/ compile
 	@rm -rf volume.o
-	@rm -rf utils/utils.o   
+	@rm -rf percent_and_time.o
+	@rm -rf utils/utils.o
 	@make -f Makefile.centOS --no-print-directory -C ./plugins/image_query/ compile
 	@rm -rf volume.o
-	@rm -rf utils/utils.o   
+	@rm -rf percent_and_time.o
+	@rm -rf utils/utils.o
 	@make -f Makefile.centOS --no-print-directory -C ./plugins/comm_inter_process/ compile
 	@rm -rf volume.o
-	@rm -rf utils/utils.o   
+	@rm -rf percent_and_time.o
+	@rm -rf utils/utils.o
 	@make -f Makefile.centOS --no-print-directory -C ./plugins/minc_info/ compile
 	@rm -rf volume.o
-	@rm -rf utils/utils.o   
+	@rm -rf percent_and_time.o
+	@rm -rf utils/utils.o
 	@make -f Makefile.centOS --no-print-directory -C ./plugins/minc_convert/ compile
 	@rm -rf volume.o
-	@rm -rf utils/utils.o   
+	@rm -rf percent_and_time.o
+	@rm -rf utils/utils.o
 	@make -f Makefile.centOS --no-print-directory -C ./plugins/nifti_convert/ compile
 	@rm -rf volume.o
+	@rm -rf percent_and_time.o
 	@rm -rf utils/utils.o
 	@make -f Makefile.centOS --no-print-directory -C ./plugins/percent/ compile
 	@rm -rf volume.o
+	@rm -rf percent_and_time.o
 	@rm -rf utils/utils.o
 	@make -f Makefile.centOS --no-print-directory -C ./jni/ compile
 	@echo -e "\n\tFinished compiling plugins."

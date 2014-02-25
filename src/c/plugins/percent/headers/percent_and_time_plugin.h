@@ -14,15 +14,16 @@
  * You should have received a copy of the GNU General Public License
  * along with TissueStack.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef __PERCENT_TIME_H__
-#define __PERCENT_TIME_H__
+#ifndef __PERCENT_TIME_PLUGIN_H__
+#define __PERCENT_TIME_PLUGIN_H__
 
 #include "core.h"
-#include <sys/socket.h>
+
+void	percent_time_write_plug(char *str, void *box);
 
 extern  t_log_plugin	log_plugin;
 
-#endif /* __PERCENT_TIME_H__ */
+#endif /* __PERCENT_TIME_PLUGIN_H__ */
 
 
 

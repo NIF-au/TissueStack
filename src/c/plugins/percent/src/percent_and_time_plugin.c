@@ -14,115 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with TissueStack.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "percent_and_time.h"
+#include "percent_and_time_plugin.h"
 
-void		percent_time_write_plug(char *str, void *box)
-{
+void		percent_time_write_plug(char *str, void *box) {
   DEBUG("percent = %s", str);
   if (str && box)
     write(*((int *)box), str, strlen(str));
-}
-
-int		percent_word_count(char *buff, char c)
-{
-  int		i;
-  int		count;
-
-  i = 0;
-  count = 0;
-  if (buff[0] != c && buff[0] != '\0')
-    count++;
-  while (buff[i] != '\0')
-    {
-      if ((buff[i] == c && buff[i + 1] != c ) && buff[i + 1] != '\0')
-	count++;
-      i++;
-    }
-  return (count);
-}
-
-int		percent_letter_count(char *buff, int position, char c)
-{
-  int		i;
-
-  i = 0;
-  while (buff && buff[position + i] != c && buff[position + i] != '\0')
-    i++;
-  return (i);
-}
-
-char		**percent_str_to_wordtab(char *buff, char c)
-{
-  int		i = 0;
-  int		j = 0;
-  int wordCount = 0;
-  char		**dest = NULL;
-
-  // preliminary checks
-  if (buff == NULL) {
-	  return NULL;
-  }
-
-  // if word count is 0 => good bye
-  wordCount = percent_word_count(buff, c);
-  if (wordCount == 0) {
-	  return NULL;
-  }
-
-  dest = malloc((wordCount + 1) * sizeof(*dest));
-
-  while (buff[i] != '\0')
-    {
-      if (buff[i] != c && buff[i] != '\0')
-	{
-	  dest[j] = str_n_cpy(buff, i, percent_letter_count(buff, i, c));
-	  j++;
-	  i += percent_letter_count(buff, i, c);
-	}
-      if (buff[i] != '\0')
-	i++;
-    }
-
-  // terminate 2D array with NULL
-  dest[j] = NULL;
-
-  return (dest);
-}
-
-char **read_from_file_by_id(char *id, t_tissue_stack *t) {
-
-	FILE * f = NULL;
-	char **result = NULL;
-	char buff[4096];
-
-	f = open_file_by_id(id, t);
-
-	if (f == NULL) 	return NULL;
-
-	memset(buff, '\0', 4095);
-	if (fread(buff, 1, 4096, f) > 0)
-		result = percent_str_to_wordtab(buff, '\n');
-	fseek(f, 0, SEEK_SET);
-
-	fclose(f);
-	f = NULL;
-
-	return (result);
-}
-
-FILE * open_file_by_id(char *id, t_tissue_stack *t) {
-	if (id == NULL || t == NULL || t->percent == NULL || t->percent->path == NULL)
-		return NULL;
-
-	char	* complete_path = NULL;
-    FILE * fh = NULL;
-
-    asprintf(&complete_path, "%s/%s", t->percent->path, id);
-
-    fh = fopen(complete_path, "r+");
-    free(complete_path);
-
-    return fh;
 }
 
 void		percent_get(char *id, void *box, t_tissue_stack *t)

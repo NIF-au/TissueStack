@@ -119,8 +119,10 @@ void task_lunch(t_tissue_stack *t) {
 	int len = 0;
 	int fd = 0;
 
-	if (t && t->tasks && t->tasks->is_running == TRUE)
+	if (t && t->tasks && t->tasks->is_running == TRUE) {
+		INFO("RUNNING...")
 		return;
+	}
 
 	pthread_mutex_lock(&t->tasks->mutex);
 	if ((fd = open(t->tasks->path, O_RDWR)) > 0) {
