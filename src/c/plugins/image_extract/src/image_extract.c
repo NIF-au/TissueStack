@@ -835,7 +835,7 @@ void *init(void *args) {
 	colormap_init(image_args);
 	a->this->stock = (void*) image_args;
 
-	INFO("Image Extract Plugin: Started");
+	INFO("Image Extract Plugin: Initialized");
 
 	// free command line args
 	a->destroy(a);
@@ -871,26 +871,21 @@ void *start(void *args) {
 	image_args->colormap_name = image_args_tmp->colormap_name;
 	image_args->percent_mut = image_args_tmp->percent_mut;
 
-	INFO("COME HERE 1 !");
-
 	if (strcmp(a->commands[1], "percent") == 0) {
 		get_percent((FILE*) a->box, image_args);
 		a->this->busy = 0;
-		INFO("GET AWAY 1 !");
 		return (NULL);
 	}
 	if (check_num_input(a->commands, 1, 9)) {
 		a->this->busy = 0;
 		return (NULL);
 	}
-	INFO("COME HERE 2 !");
 	image_args->dim_start_end = generate_dims_start_end(volume,
 			atoi(a->commands[1]), atoi(a->commands[2]), atoi(a->commands[3]),
 			atoi(a->commands[4]), atoi(a->commands[5]), atoi(a->commands[6]));
 	if (check_range(image_args->dim_start_end, volume)) {
 		ERROR("Slice out of volume range");
 		a->this->busy = 0;
-		INFO("GET AWAY 2 !");
 		return (NULL);
 	}
 
@@ -908,11 +903,7 @@ void *start(void *args) {
 	image_args->percentage = 0;
 	image_args->id_percent = NULL;
 
-	INFO("COME 1!");
-
 	if (strcmp(image_args->service, "tiles") == 0) {
-		INFO("COME 2!");
-
 		if (check_num_input(a->commands, 11, 14)) {
 			a->this->busy = 0;
 			return (NULL);
@@ -933,9 +924,7 @@ void *start(void *args) {
 				if (a->commands[22] != NULL) {
 					image_args->id_percent = strdup(a->commands[22]);
 					image_args->percent_fd = 1;
-					INFO("Nothing 1!");
 				} else {
-					INFO("Added 1!");
 					lunch_pct_and_add_task(a->general_info, volume, image_args,
 							*((int*) a->box), a->commands);
 					return (NULL);
@@ -972,9 +961,7 @@ void *start(void *args) {
 					if (a->commands[19] != NULL) {
 						image_args->id_percent = strdup(a->commands[19]);
 						image_args->percent_fd = 1;
-						INFO("Nothing 2!");
 					} else {
-						INFO("Added 2!");
 						lunch_pct_and_add_task(a->general_info, volume,
 								image_args, *((int*) a->box), a->commands);
 						return (NULL);
@@ -1037,7 +1024,6 @@ void *start(void *args) {
 					(strcmp(image_args->service, "full") == 0 ?
 							strdup(a->commands[16]) : strdup(a->commands[20])));
 
-	INFO("We got through!");
 	image_creation_lunch(a->general_info, volume, step, image_args,
 			socketDescriptor);
 

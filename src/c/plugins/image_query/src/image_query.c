@@ -27,7 +27,7 @@ void		*init(void *args) {
 	  // free command line args
 	  a->destroy(a);
 
-	  INFO("Image Extract Plugin: Started");
+	  INFO("Image Query Plugin: Initialized");
 	  return (NULL);
 }
 

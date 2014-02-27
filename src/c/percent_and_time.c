@@ -178,6 +178,7 @@ void percent_add_direct(int blocks, char *id, t_tissue_stack *t) {
 	if (result != NULL)
 		free_null_terminated_char_2D_array(result);
 	if (percent_tmp >= 100) {
+		t->tasks->is_running = FALSE;
 		task_finished(id, t);
 		INFO("Percentage: %s ==> 100%%", id);
 	}
@@ -264,7 +265,7 @@ void percent_resume_direct(char *id, t_tissue_stack *t) {
 						i++;
 					}
 					// make sure to complete all dimensions
-					for (;i<3;i++) {
+					for (i=i+1;i<3;i++) {
 						dim_start_end[i][0] = 0;
 						dim_start_end[i][1] = vol->size[i];
 					}
@@ -342,7 +343,6 @@ void percent_resume_direct(char *id, t_tissue_stack *t) {
 							dim_start_end[2][1], // dim 3 end
 							restOfParams,		 // rest of params
 							id);				 // task id
-					INFO("TILING %s\n", comm);
 					t->plug_actions(t, comm, NULL);
 				} else if (result[4][0] == '1') {	//CONVERSION OF MINC
 					vol = t->check_volume(result[3], t);

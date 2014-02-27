@@ -120,7 +120,7 @@ void task_lunch(t_tissue_stack *t) {
 	int fd = 0;
 
 	if (t && t->tasks && t->tasks->is_running == TRUE) {
-		INFO("RUNNING...")
+		DEBUG("TASK IS STILL RUNNING...CANNOT LAUNCH NEW")
 		return;
 	}
 

@@ -71,8 +71,8 @@ void *get_all_slices_of_all_dimensions(void *args) {
 	}
 	start = malloc(volume->dim_nb * sizeof(*start));
 	start[X] = start[Y] = start[Z] = 0; // start to 0 = first slice
-	// loop all dimensions
 
+	// loop all dimensions
 	i = 0;
 	while (i < volume->dim_nb && exit == 0) {
 		// check if the dimension need to be ignored
@@ -205,13 +205,13 @@ void get_all_slices_of_one_dimension(t_vol *volume, unsigned long *start,
 			print_image(data, volume, current_dimension, current_slice, width, height, a);
 		}
 
+		// increment progress
+		if (a->info->percentage == 1) a->general_info->percent_add(1, a->info->id_percent, a->general_info);
+
 		pthread_mutex_lock(&(a->p->lock));
 		a->info->slices_done++;
 		pthread_mutex_unlock(&(a->p->lock));
 		pthread_cond_signal(&(a->info->cond));
-
-		// increment per cent
-		if (a->info->percentage == 1) a->general_info->percent_add(1, a->info->id_percent, a->general_info);
 
 		DEBUG("SLICE == %i ==> %i", current_slice, current_dimension);
 		exit = a->general_info->is_percent_paused_cancel(a->info->id_percent, a->general_info);
