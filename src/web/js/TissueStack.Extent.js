@@ -157,7 +157,7 @@ TissueStack.Extent.prototype = {
 		
 		return {x: Math.floor(this.one_to_one_x * zoomLevelFactor), y: Math.floor(this.one_to_one_y * zoomLevelFactor)};
 	}, setSliceWithRespectToZoomLevel : function(slice) {
-		this.slice = Math.floor(slice / this.zoom_level_factor);
+		this.slice = Math.round(slice / this.zoom_level_factor);
 		/*
 		if (this.zoom_level == 1) {
 			this.slice = Math.floor(slice / this.zoom_level_factor);	
@@ -189,7 +189,11 @@ TissueStack.Extent.prototype = {
 	}, getCenter : function () {
 		return TissueStack.Utils.getCenter(this.x,this.y);
 	}, getWorldCoordinatesForPixel : function(pixelCoords) {
-
+		var worldCoords = {
+			x : pixelCoords.x,
+			y : pixelCoords.y,
+			z : pixelCoords.z,
+		};
 		/*
 		// min & max clamps
 		if (pixelCoords.x < 0)
@@ -201,25 +205,25 @@ TissueStack.Extent.prototype = {
 		pixelCoords.z = pixelCoords.z < 0 ? 0 : pixelCoords.z;  
 		pixelCoords.z = pixelCoords.z > this.max_slices ? this.max_slices : pixelCoords.z; 
 		*/
-		if (pixelCoords.x < 0) pixelCoords.x = 0;
-		if (pixelCoords.y < 0) pixelCoords.y = 0;
-		if (pixelCoords.z < 0) pixelCoords.z = 0;
+		if (worldCoords.x < 0) worldCoords.x = 0;
+		if (worldCoords.y < 0) worldCoords.y = 0;
+		if (worldCoords.z < 0) worldCoords.z = 0;
 
-		if (pixelCoords.x > (this.x-1)) pixelCoords.x = this.x-1;
-		if (pixelCoords.y > (this.y-1)) pixelCoords.y = this.y-1;
-		if (pixelCoords.z > this.max_slices) pixelCoords.z = this.max_slices;
+		if (worldCoords.x > (this.x-1)) worldCoords.x = this.x-1;
+		if (worldCoords.y > (this.y-1)) worldCoords.y = this.y-1;
+		if (worldCoords.z > this.max_slices) worldCoords.z = this.max_slices;
 		
 		// now we'll have to correct x and y according to their zoom level to get the 1:1 pixel Coordinates which can then be transformed
-		pixelCoords.x = pixelCoords.x * (this.one_to_one_x / this.x);
-		pixelCoords.y = pixelCoords.y * (this.one_to_one_y / this.y);
+		worldCoords.x = worldCoords.x * (this.one_to_one_x / this.x);
+		worldCoords.y = worldCoords.y * (this.one_to_one_y / this.y);
 		/*
 		 	pixelCoords.x = pixelCoords.x * (this.one_to_one_x / this.x);
 			pixelCoords.y = pixelCoords.y * (this.one_to_one_y / this.y);
 		 */		
-		pixelCoords = TissueStack.Utils.transformPixelCoordinatesToWorldCoordinates(
-				[pixelCoords.x, this.one_to_one_y - pixelCoords.y, pixelCoords.z, 1], 
+		worldCoords = TissueStack.Utils.transformPixelCoordinatesToWorldCoordinates(
+				[worldCoords.x, this.one_to_one_y - worldCoords.y, worldCoords.z, 1], 
 				this.worldCoordinatesTransformationMatrix);
-		if (!pixelCoords) return null;
+		if (!worldCoords) return null;
 
 		/*
 		if (this.zoom_level == 1) {
@@ -231,23 +235,23 @@ TissueStack.Extent.prototype = {
 		}*/
 		
 		// return world coordinates
-		return {x: pixelCoords[0], y: pixelCoords[1], z: pixelCoords[2]};
+		return {x: worldCoords[0], y: worldCoords[1], z: worldCoords[2]};
 	},
 	getWorldCoordinatesForPixelWithBoundsCheck : function(pixelCoords) {
-		pixelCoords = this.getWorldCoordinatesForPixel(pixelCoords);
-		if (!pixelCoords) return null;
+		var worldCoords = this.getWorldCoordinatesForPixel(pixelCoords);
+		if (!worldCoords) return null;
 		
 		// clamp to min/max
 		var bounds = this.getExtentCoordinates();
-		if (pixelCoords.x < bounds.min_x) pixelCoords.x = bounds.min_x;
-		if (pixelCoords.y < bounds.min_y) pixelCoords.y = bounds.min_y;
-		if (pixelCoords.z < bounds.min_z) pixelCoords.z = bounds.min_z;
+		if (worldCoords.x < bounds.min_x) worldCoords.x = bounds.min_x;
+		if (worldCoords.y < bounds.min_y) worldCoords.y = bounds.min_y;
+		if (worldCoords.z < bounds.min_z) worldCoords.z = bounds.min_z;
 		
-		if (pixelCoords.x > bounds.max_x) pixelCoords.x = bounds.max_x;
-		if (pixelCoords.y > bounds.max_y) pixelCoords.y = bounds.max_y;
-		if (pixelCoords.z > bounds.max_z) pixelCoords.z = bounds.max_z;
+		if (worldCoords.x > bounds.max_x) worldCoords.x = bounds.max_x;
+		if (worldCoords.y > bounds.max_y) worldCoords.y = bounds.max_y;
+		if (worldCoords.z > bounds.max_z) worldCoords.z = bounds.max_z;
 		
-		return pixelCoords;
+		return worldCoords;
 	},
 	getPixelForWorldCoordinates : function(worldCoords) {
 		if (worldCoords == null) {

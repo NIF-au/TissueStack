@@ -260,7 +260,7 @@ TissueStack.InitUserInterface = function (initOpts) {
 
 			if (main_view_plane) {
 				main_view_plane.updateExtentInfo(main_view_plane.getDataExtent().getExtentCoordinates());
-				setTimeout(function() {main_view_plane.events.updateCoordinateDisplay(true);}, 500);
+				setTimeout(function() {main_view_plane.events.updateCoordinateDisplay();}, 500);
 			}
 		}
 	}

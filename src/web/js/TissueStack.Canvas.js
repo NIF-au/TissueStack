@@ -166,11 +166,11 @@ TissueStack.Canvas.prototype = {
 		this.setUpperLeftCorner(centerAfterZoom.x, centerAfterZoom.y);
 		
 		// update displayed info
-		if (!TissueStack.tablet || (TissueStack.tablet && this.is_main_view))
+		if (TissueStack.phone || this.is_main_view)
 			this.updateExtentInfo(this.getDataExtent().getExtentCoordinates());
 
 		if (this.is_main_view)
-			this.events.updateCoordinateDisplay();		
+			this.events.updateCoordinateDisplay();
 	},
 	getDataCoordinates : function(relative_mouse_coords) {
 		var relDataX = -1;
@@ -762,7 +762,9 @@ TissueStack.Canvas.prototype = {
 		};
 		pixelCoords = this.getXYCoordinatesWithRespectToZoomLevel(pixelCoords);
 		// outside of extent check
-		if (!pixelCoords || pixelCoords.x < 0 || pixelCoords.x > this.data_extent.x -1 ||  pixelCoords.y < 0 || pixelCoords.y > this.data_extent.y -1) {
+		if (!pixelCoords || pixelCoords.x < 0 || pixelCoords.x > this.data_extent.x -1 
+				||  pixelCoords.y < 0 || pixelCoords.y > this.data_extent.y -1
+				|| pixelCoords.z < 0 || pixelCoords.z > this.data_extent.max_slices) {
 			$("#canvas_point_x").val("");
 			$("#canvas_point_y").val("");
 			$("#canvas_point_z").val("");

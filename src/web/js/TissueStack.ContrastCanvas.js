@@ -178,7 +178,7 @@ TissueStack.ContrastCanvas.prototype = {
 				_this.mouse_down = false;
 				if(TissueStack.tablet || TissueStack.debug){
 					_this.canvas.events.changeSliceForPlane(_this.canvas.getDataExtent().slice);
-					_this.canvas.events.updateCoordinateDisplay({x: _this.canvas.cross_x, y: _this.canvas.cross_y});
+					_this.canvas.events.updateCoordinateDisplay();
 				}
 			});
 			// TOUCH START 			

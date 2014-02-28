@@ -179,7 +179,6 @@ TissueStack.Events.prototype = {
 			if (!e.altKey) {
 				// call zoom
 				_this.zoom(e, delta);
-				setTimeout(function(){_this.updateCoordinateDisplay();}, 500);
 				return;
 			}
 
@@ -225,6 +224,7 @@ TissueStack.Events.prototype = {
 		this.canvas.mouse_y = coords.y;
 	}, panEnd : function() {
 		this.canvas.mouse_down = false;
+		this.updateCoordinateDisplay();		
 	}, panAndMove : function(e) {
 		var now =new Date().getTime(); 
 
@@ -232,13 +232,6 @@ TissueStack.Events.prototype = {
 		var coords = TissueStack.Utils.getRelativeMouseCoords(e);
 		var relCoordinates = this.canvas.getDataCoordinates(coords);
 
-		// update coordinate info displayed
-		/*
-		if (!TissueStack.tablet || this.canvas.is_main_view) {
-			this.canvas.updateExtentInfo(dataSet.realWorldCoords[this.canvas.data_extent.plane]);
-			this.updateCoordinateDisplay();
-		}*/
-		
 		if (this.canvas.mouse_down) {
 			this.canvas.isDragging = true;
 			var dX = coords.x - this.canvas.mouse_x;
@@ -286,9 +279,7 @@ TissueStack.Events.prototype = {
 						 	canvas_dims
 			            ]);
 		} else {
-			if (this.canvas.isDragging) {
-				this.updateCoordinateDisplay();
-			}
+			if (this.canvas.isDragging) this.updateCoordinateDisplay();
 			this.canvas.isDragging = false;
 		}
 	}, changeSliceForPlane : function(slice) {
@@ -321,6 +312,7 @@ TissueStack.Events.prototype = {
 					canvasDims : canvas_dims
 				});
 		
+
 		// send message out to others that they need to redraw as well
 		this.canvas.getCanvasElement().trigger("sync", 
 					[	this.canvas.data_extent.data_id,
@@ -469,9 +461,29 @@ TissueStack.Events.prototype = {
 		var worldCoordinates = this.canvas.getDataExtent().getWorldCoordinatesForPixelWithBoundsCheck(relCrossCoords);
 		
 		// update coordinate info displayed
-		var _this = this;
+		var __target = this;
+		if (!TissueStack.phone && !__target.canvas.is_main_view) { // if we are not the main view, delegate there...
+			var ds = TissueStack.dataSetStore.getDataSetById(__target.canvas.getDataExtent().data_id);
+			if (ds && ds.planes)
+				for (p in ds.planes)
+					if (ds.planes[p].is_main_view) {
+						__target = ds.planes[p];
+						break;
+					}
+			if (__target) {
+				relCrossCoords = __target.getRelativeCrossCoordinates();
+				relCrossCoords.z = __target.getDataExtent().slice;
+				setTimeout(function() {
+					__target.updateCoordinateInfo(
+							relCrossCoords, 
+							__target.getDataExtent().getWorldCoordinatesForPixel(relCrossCoords));}
+					, 500);
+			}
+			return;
+		}
+		
 		setTimeout(function() {
-		_this.canvas.updateCoordinateInfo(relCrossCoords, worldCoordinates);}
-		, 200);
+		__target.canvas.updateCoordinateInfo(relCrossCoords, worldCoordinates);}
+		, 500);
 	}
 };

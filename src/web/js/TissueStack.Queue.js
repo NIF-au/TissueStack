@@ -313,39 +313,32 @@ TissueStack.Queue.prototype = {
 		
 		// SLICE CHANGE ACTION
 		if (draw_request.action == 'SLICE') {
+			// crosshair focus
+			var crossHairPosition = {x: this.canvas.cross_x, y: this.canvas.cross_y};
+			this.canvas.drawCoordinateCross(crossHairPosition);
+
+			// get slice changes
 			var sliceX = draw_request.slice;
 			var sliceY = this.canvas.data_extent.one_to_one_y - draw_request.slice;
-
+			// adjust for zoom level
 			sliceX = sliceX * (this.canvas.getDataExtent().x / this.canvas.data_extent.one_to_one_x);
 			sliceY = sliceY * (this.canvas.getDataExtent().y / this.canvas.data_extent.one_to_one_y);
-			/*
-			sliceX = (this.canvas.getDataExtent().zoom_level == 1) ?
-					Math.floor(sliceX * (this.canvas.getDataExtent().x / this.canvas.data_extent.one_to_one_x)) :
-					Math.ceil(sliceX * (this.canvas.getDataExtent().x / this.canvas.data_extent.one_to_one_x));
-			sliceY = (this.canvas.getDataExtent().zoom_level == 1) ?
-					Math.floor(sliceY * (this.canvas.getDataExtent().y / this.canvas.data_extent.one_to_one_y)) :
-					Math.ceil(sliceY * (this.canvas.getDataExtent().y / this.canvas.data_extent.one_to_one_y));
-			*/
-			var relativeCrossCoords = this.canvas.getRelativeCrossCoordinates();
-			// correct for negative 1 which indicates end 
-			if (relativeCrossCoords.x < 0) {
-				relativeCrossCoords.x = sliceX + 1;
-			}
-			var deltaX = relativeCrossCoords.x - sliceX;
-			var deltaY = relativeCrossCoords.y - sliceY;
-			
+
+			sliceX = crossHairPosition.x - sliceX;
+			sliceY = crossHairPosition.y + sliceY;
+
 			if (thisHerePlane === 'x' && draw_request.plane === 'z') {
-				this.canvas.moveUpperLeftCorner(0, -deltaY);
+				this.canvas.setUpperLeftCorner(this.canvas.upper_left_x, sliceY);
 			} else if (thisHerePlane === 'y' && draw_request.plane === 'z') {
-				this.canvas.moveUpperLeftCorner(0, -deltaY);
+				this.canvas.setUpperLeftCorner(this.canvas.upper_left_x, sliceY);
 			} else if (thisHerePlane === 'x' && draw_request.plane === 'y') {
-				this.canvas.moveUpperLeftCorner(deltaX, 0);
+				this.canvas.setUpperLeftCorner(sliceX, this.canvas.upper_left_y);
 			} else if (thisHerePlane === 'z' && draw_request.plane === 'y') {
-				this.canvas.moveUpperLeftCorner(0, -deltaY);
+				this.canvas.setUpperLeftCorner(this.canvas.upper_left_x, sliceY);
 			} else if (thisHerePlane === 'y' && draw_request.plane === 'x') {
-				this.canvas.moveUpperLeftCorner(deltaX, 0);
+				this.canvas.setUpperLeftCorner(sliceX, this.canvas.upper_left_y);
 			} else if (thisHerePlane === 'z' && draw_request.plane === 'x') {
-				this.canvas.moveUpperLeftCorner(deltaX, 0);
+				this.canvas.setUpperLeftCorner(sliceX, this.canvas.upper_left_y);
 			}
 			return true;
 		}
@@ -423,25 +416,6 @@ TissueStack.Queue.prototype = {
 					draw_request.max_coords_of_event_triggering_plane.max_x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x);
 			draw_request.max_coords_of_event_triggering_plane.max_y =
 					draw_request.max_coords_of_event_triggering_plane.max_y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);
-
-			/*
-			draw_request.upperLeftCorner.x = (draw_request.zoom_level == 1) ? Math.floor(draw_request.upperLeftCorner.x) : Math.ceil(draw_request.upperLeftCorner.x);
-			draw_request.upperLeftCorner.y = (draw_request.zoom_level == 1) ? Math.floor(draw_request.upperLeftCorner.y) : Math.ceil(draw_request.upperLeftCorner.y);
-
-			draw_request.coords.x = (draw_request.zoom_level == 1) ?
-					Math.floor(draw_request.coords.x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x)) :
-					Math.ceil(draw_request.coords.x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x));
-			draw_request.coords.y = (draw_request.zoom_level == 1) ?
-					Math.floor(draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y)) :
-					Math.ceil(draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y));
-
-			draw_request.max_coords_of_event_triggering_plane.max_x = (draw_request.zoom_level == 1) ?
-					Math.floor(draw_request.max_coords_of_event_triggering_plane.max_x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x)) :
-					Math.ceil(draw_request.max_coords_of_event_triggering_plane.max_x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x));
-			draw_request.max_coords_of_event_triggering_plane.max_y = (draw_request.zoom_level == 1) ?
-					Math.floor(draw_request.max_coords_of_event_triggering_plane.max_y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y)) :
-					Math.ceil(draw_request.max_coords_of_event_triggering_plane.max_y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y));
-			*/
 		} 
 		
 		// PAN AND CLICK ACTION
