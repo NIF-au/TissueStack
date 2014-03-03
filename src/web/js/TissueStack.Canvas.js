@@ -216,7 +216,10 @@ TissueStack.Canvas.prototype = {
 		return $("#" + this.canvas_id + "_cross_overlay");
 	},
 	getRelativeCrossCoordinates : function() {
-		var relCrossX = (this.cross_x > (this.upper_left_x + (this.getDataExtent().x - 1))) ? -(this.cross_x - (this.upper_left_x + (this.getDataExtent().x - 1))) : (this.getDataExtent().x -1) +  (this.upper_left_x - this.cross_x);
+		var relCrossX = 
+			(this.cross_x > this.upper_left_x) ?
+					(this.cross_x > (this.upper_left_x + (this.getDataExtent().x - 1)) ? 
+							(this.upper_left_x + (this.getDataExtent().x - 1) - this.cross_x) : this.upper_left_x - this.cross_x) :	this.upper_left_x;
 		var relCrossY = ((this.dim_y - this.cross_y) > this.upper_left_y) ? (this.upper_left_y - (this.dim_y - this.cross_y)) : ((this.getDataExtent().y - 1) + (this.upper_left_y - (this.getDataExtent().y - 1) - (this.dim_y - this.cross_y)));
 		if (this.upper_left_x < 0 && this.cross_x <= (this.upper_left_x + (this.getDataExtent().x - 1))) {
 			relCrossX = Math.abs(this.upper_left_x) + this.cross_x;
@@ -335,7 +338,7 @@ TissueStack.Canvas.prototype = {
 		                        this.getDataExtent().plane,
 		                        this.getDataExtent().zoom_level,
 		                        this.getDataExtent().slice,
-		                        this.getRelativeCrossCoordinates(),
+		                        coords,
 		                        {max_x: this.getDataExtent().x, max_y: this.getDataExtent().y},
 								{x: this.upper_left_x, y: this.upper_left_y},
 								{x: this.cross_x, y: this.cross_y},
@@ -486,7 +489,7 @@ TissueStack.Canvas.prototype = {
 				|| this.upper_left_y <=0 || (this.upper_left_y - this.getDataExtent().y) >= this.dim_y) {
 			this.syncDataSetCoordinates(this, timestamp, true);
 			return;
-		} 
+		}
 
 		var dataSet = TissueStack.dataSetStore.getDataSetById(this.data_extent.data_id);
 		if (!dataSet) {

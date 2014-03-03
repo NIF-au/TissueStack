@@ -315,7 +315,6 @@ TissueStack.Queue.prototype = {
 		if (draw_request.action == 'SLICE') {
 			// crosshair focus
 			var crossHairPosition = {x: this.canvas.cross_x, y: this.canvas.cross_y};
-			this.canvas.drawCoordinateCross(crossHairPosition);
 
 			// get slice changes
 			var sliceX = draw_request.slice;
@@ -406,9 +405,8 @@ TissueStack.Queue.prototype = {
 				draw_request.upperLeftCorner.y = (draw_request.canvasDims.y - draw_request.crossCoords.y) + draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);				
 			}
 
-			draw_request.upperLeftCorner.x = draw_request.upperLeftCorner.x;
-			draw_request.upperLeftCorner.y = draw_request.upperLeftCorner.y;
-
+			// TODO: check this bit and queue coords passed in (see events)
+			
 			draw_request.coords.x = draw_request.coords.x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x);
 			draw_request.coords.y = draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);
 

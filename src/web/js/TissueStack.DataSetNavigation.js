@@ -644,25 +644,8 @@ TissueStack.DataSetNavigation.prototype = {
 		// the call to redraw will be able to handle it
 		var pixel_coords_for_handed_in_plane = canvas.getRelativeCrossCoordinates();
 		pixel_coords_for_handed_in_plane.z = canvas.getDataExtent().slice;
-		var real_world_coords_for_handed_in_plane = canvas.getDataExtent().getWorldCoordinatesForPixelWithBoundsCheck(pixel_coords_for_handed_in_plane);
+		var real_world_coords_for_handed_in_plane = canvas.getDataExtent().getWorldCoordinatesForPixel(pixel_coords_for_handed_in_plane);
 		var pixel_coords_for_other_plane = other_plane.getDataExtent().getPixelForWorldCoordinates(real_world_coords_for_handed_in_plane);
-
-		if (!TissueStack.overlay_datasets) {
-			pixel_coords_for_other_plane.x = pixel_coords_for_other_plane.x;
-			pixel_coords_for_other_plane.y = pixel_coords_for_other_plane.y;
-			pixel_coords_for_other_plane.z = pixel_coords_for_other_plane.z;
-
-			/*
-			if (other_plane.getDataExtent().zoom_level == 1) {
-				pixel_coords_for_other_plane.x = Math.floor(pixel_coords_for_other_plane.x);
-				pixel_coords_for_other_plane.y = Math.floor(pixel_coords_for_other_plane.y);
-				pixel_coords_for_other_plane.z = Math.floor(pixel_coords_for_other_plane.z);
-			} else {
-				pixel_coords_for_other_plane.x = Math.ceil(pixel_coords_for_other_plane.x);
-				pixel_coords_for_other_plane.y = Math.ceil(pixel_coords_for_other_plane.y);
-				pixel_coords_for_other_plane.z = Math.ceil(pixel_coords_for_other_plane.z);
-			}*/
-		}
 		
 		// THIS IS VITAL TO AVOID an infinite sync chain!!!
 		for (var p in other_ds.planes) {
@@ -670,14 +653,19 @@ TissueStack.DataSetNavigation.prototype = {
 			other_ds.planes[p].queue.last_sync_timestamp = -1;
 		}
 		
-		if (eraseCanvas)
+		if (eraseCanvas) {
 			other_plane.eraseCanvasContent();
-		else {
-			other_plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(pixel_coords_for_other_plane, false, timestamp);
+		} else {
+			// sync coordinate adjustment now absolute, not relative
+			if (canvas.upper_left_x + canvas.data_extent.x <= canvas.cross_x)
+				pixel_coords_for_other_plane.x = Math.abs(pixel_coords_for_other_plane.x) + other_plane.data_extent.x;
+			if (canvas.upper_left_x > canvas.cross_x)
+				pixel_coords_for_other_plane.x = other_plane.cross_x - pixel_coords_for_other_plane.x;
+			other_plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(
+					pixel_coords_for_other_plane, false, timestamp);
 			if (TissueStack.overlay_datasets && canvas.getDataExtent().zoom_level != other_plane.getDataExtent().zoom_level)
 				other_plane.changeToZoomLevel(canvas.getDataExtent().zoom_level);
-			other_plane.queue.drawLowResolutionPreview(timestamp);
-			other_plane.queue.drawRequestAfterLowResolutionPreview(null, timestamp);
+			other_plane.drawMe(timestamp);
 
 			if (other_plane.is_main_view) {
 				var slider = $("#" + (other_plane.dataset_id == "" ? "" : other_plane.dataset_id + "_") + "canvas_main_slider");

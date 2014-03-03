@@ -155,15 +155,9 @@ TissueStack.Extent.prototype = {
 			return null;
 		}
 		
-		return {x: Math.floor(this.one_to_one_x * zoomLevelFactor), y: Math.floor(this.one_to_one_y * zoomLevelFactor)};
+		return {x: Math.round(this.one_to_one_x * zoomLevelFactor), y: Math.round(this.one_to_one_y * zoomLevelFactor)};
 	}, setSliceWithRespectToZoomLevel : function(slice) {
-		this.slice = Math.round(slice / this.zoom_level_factor);
-		/*
-		if (this.zoom_level == 1) {
-			this.slice = Math.floor(slice / this.zoom_level_factor);	
-		} else {
-			this.slice = Math.ceil(slice / this.zoom_level_factor);
-		}*/
+		this.slice = slice / this.zoom_level_factor;
 		
 		var canvasSlider = $("#" + (this.canvas.dataset_id == "" ? "canvas_" : this.canvas.dataset_id + "_canvas_") + "main_slider");
 		if (canvasSlider.length == 0) {
@@ -204,7 +198,7 @@ TissueStack.Extent.prototype = {
 			pixelCoords.z = this.slice;
 		pixelCoords.z = pixelCoords.z < 0 ? 0 : pixelCoords.z;  
 		pixelCoords.z = pixelCoords.z > this.max_slices ? this.max_slices : pixelCoords.z; 
-		*/
+
 		if (worldCoords.x < 0) worldCoords.x = 0;
 		if (worldCoords.y < 0) worldCoords.y = 0;
 		if (worldCoords.z < 0) worldCoords.z = 0;
@@ -212,28 +206,17 @@ TissueStack.Extent.prototype = {
 		if (worldCoords.x > (this.x-1)) worldCoords.x = this.x-1;
 		if (worldCoords.y > (this.y-1)) worldCoords.y = this.y-1;
 		if (worldCoords.z > this.max_slices) worldCoords.z = this.max_slices;
+		*/
 		
 		// now we'll have to correct x and y according to their zoom level to get the 1:1 pixel Coordinates which can then be transformed
 		worldCoords.x = worldCoords.x * (this.one_to_one_x / this.x);
 		worldCoords.y = worldCoords.y * (this.one_to_one_y / this.y);
-		/*
-		 	pixelCoords.x = pixelCoords.x * (this.one_to_one_x / this.x);
-			pixelCoords.y = pixelCoords.y * (this.one_to_one_y / this.y);
-		 */		
+
 		worldCoords = TissueStack.Utils.transformPixelCoordinatesToWorldCoordinates(
 				[worldCoords.x, this.one_to_one_y - worldCoords.y, worldCoords.z, 1], 
 				this.worldCoordinatesTransformationMatrix);
 		if (!worldCoords) return null;
 
-		/*
-		if (this.zoom_level == 1) {
-			pixelCoords.x = Math.floor(pixelCoords.x);
-			pixelCoords.y = Math.floor(pixelCoords.y);
-		} else {
-			pixelCoords.x = Math.ceil(pixelCoords.x);
-			pixelCoords.y = Math.ceil(pixelCoords.y);
-		}*/
-		
 		// return world coordinates
 		return {x: worldCoords[0], y: worldCoords[1], z: worldCoords[2]};
 	},
@@ -272,6 +255,8 @@ TissueStack.Extent.prototype = {
 		pixelCoords.x = pixelCoords.x * (this.x / this.one_to_one_x);
 		pixelCoords.y = this.y - pixelCoords.y * (this.y / this.one_to_one_y);
 
+		/*
+		// min & max clamps 
 		if (pixelCoords.x < 0) pixelCoords.x = 0;
 		if (pixelCoords.y < 0) pixelCoords.y = 0;
 		if (pixelCoords.z < 0) pixelCoords.z = 0;
@@ -280,7 +265,6 @@ TissueStack.Extent.prototype = {
 		if (pixelCoords.y > this.y-1) pixelCoords.y = this.y-1;
 		if (pixelCoords.z > this.max_slices) pixelCoords.z = this.max_slices;
 
-		/*
 		pixelCoords.z = pixelCoords.z;
 		pixelCoords.x = pixelCoords.x * (this.x / this.one_to_one_x);
 		pixelCoords.y = this.y - pixelCoords.y * (this.y / this.one_to_one_y);
@@ -312,14 +296,6 @@ TissueStack.Extent.prototype = {
 		// correct x and y according to their zoom level to get the 1:1 pixel Coordinates which can then be transformed
 		coords.x = coords.x * (this.x / this.one_to_one_x);
 		coords.y = coords.y * (this.y / this.one_to_one_y);
-		/*
-		if (this.zoom_level == 1) {
-			coords.x = Math.floor(coords.x * (this.x / this.one_to_one_x));
-			coords.y = Math.floor(coords.y * (this.y / this.one_to_one_y));
-		} else {
-			coords.x = Math.ceil(coords.x * (this.x / this.one_to_one_x));
-			coords.y = Math.ceil(coords.y * (this.y / this.one_to_one_y));
-		}*/
 	
 		return coords;
 	}, adjustScaleBar :function (length) { 
