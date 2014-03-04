@@ -242,11 +242,6 @@ void percent_resume_direct(char *id, t_tissue_stack *t) {
 				// read number of blocks done
 				blocks_done = atoi(result[1]);
 
-				// TODO: remove
-				int h = 0;
-				for (; h < 7; h++)
-					INFO("%s", result[h]);
-
 				if (result[4][0] == '0') { // TILING
 					vol = t->check_volume(result[3], t);
 
