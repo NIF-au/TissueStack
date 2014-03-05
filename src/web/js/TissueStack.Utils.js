@@ -673,8 +673,8 @@ TissueStack.Utils = {
 		
 		// assemble url
 		var url = "/" + TissueStack.configuration['image_service_proxy_path'].value + "/?volume="
-					+ dataset.filename + "&dimension=" + canvas.getDataExtent().plane + "space&slice=" + coords.z + "&x=" + coords.x
-					+ "&y=" + coords.y + "&query=query";
+					+ dataset.filename + "&dimension=" + canvas.getDataExtent().plane + "space&slice=" + Math.round(coords.z) + "&x=" + Math.round(coords.x)
+					+ "&y=" + Math.round(coords.y) + "&query=query";
 		
 		// in case of an error we rely on the canvas pixel querying
 		var errorHandler = function(canvas) {

@@ -294,8 +294,8 @@ TissueStack.Extent.prototype = {
 		}
 		
 		// correct x and y according to their zoom level to get the 1:1 pixel Coordinates which can then be transformed
-		coords.x = coords.x * (this.x / this.one_to_one_x);
-		coords.y = coords.y * (this.y / this.one_to_one_y);
+		coords.x = coords.x * (this.one_to_one_x / this.x);
+		coords.y = coords.y * (this.one_to_one_y / this.y);
 	
 		return coords;
 	}, adjustScaleBar :function (length) { 

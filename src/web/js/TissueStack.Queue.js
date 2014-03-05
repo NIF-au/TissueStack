@@ -476,21 +476,21 @@ TissueStack.Queue.prototype = {
 		if (this.canvas.upper_left_x > 0) { // in front of us
 			this.canvas.eraseCanvasPortion(0, 0, Math.ceil(this.canvas.upper_left_x), this.canvas.dim_y);
 		}
-		if (this.canvas.upper_left_x <= 0 || (this.canvas.upper_left_x >= 0 && (this.canvas.upper_left_x + this.canvas.getDataExtent().x) < this.canvas.dim_x)){ // behind us
+		if (this.canvas.upper_left_x <= 0 || (this.canvas.upper_left_x >= 0 && (this.canvas.upper_left_x + this.canvas.getDataExtent().x-1) < this.canvas.dim_x)){ // behind us
 			this.canvas.eraseCanvasPortion(
-					Math.floor(this.canvas.upper_left_x + this.canvas.getDataExtent().x), 0,
-					this.canvas.dim_x - Math.floor(this.canvas.upper_left_x + this.canvas.getDataExtent().x), this.canvas.dim_y);
+					Math.floor(this.canvas.upper_left_x + this.canvas.getDataExtent().x-1), 0,
+					this.canvas.dim_x - Math.floor(this.canvas.upper_left_x + this.canvas.getDataExtent().x-1), this.canvas.dim_y);
 		}
 		
 		if (this.canvas.upper_left_y < 0 || (this.canvas.upper_left_y < this.canvas.dim_y && this.canvas.upper_left_y >= 0)) { // in front of us
 			this.canvas.eraseCanvasPortion(0, 0, this.canvas.dim_x, (this.canvas.upper_left_y <= 0) ? this.canvas.dim_y : Math.ceil(this.canvas.dim_y - this.canvas.upper_left_y));
 		}
-		if ((this.canvas.upper_left_y - this.canvas.getDataExtent().y) >= this.canvas.dim_y || (this.canvas.upper_left_y - this.canvas.getDataExtent().y) > 0) { // behind us
+		if ((this.canvas.upper_left_y - this.canvas.getDataExtent().y-1) >= this.canvas.dim_y || (this.canvas.upper_left_y - this.canvas.getDataExtent().y-1) > 0) { // behind us
 			this.canvas.eraseCanvasPortion(
-				0, (this.canvas.upper_left_y >= this.canvas.dim_y && this.canvas.upper_left_y - this.canvas.getDataExtent().y >= this.canvas.dim_y) ? 0 : Math.floor(this.canvas.dim_y - (this.canvas.upper_left_y - this.canvas.getDataExtent().y)),
+				0, (this.canvas.upper_left_y >= this.canvas.dim_y && this.canvas.upper_left_y - this.canvas.getDataExtent().y-1 >= this.canvas.dim_y) ? 0 : Math.floor(this.canvas.dim_y - (this.canvas.upper_left_y - this.canvas.getDataExtent().y-1)),
 				this.canvas.dim_x, 
-				(this.canvas.upper_left_y >= this.canvas.dim_y && this.canvas.upper_left_y - this.canvas.getDataExtent().y >= this.canvas.dim_y) ?
-						this.canvas.dim_y : this.canvas.dim_y - Math.floor(this.canvas.dim_y - (this.canvas.upper_left_y - this.canvas.getDataExtent().y)));
+				(this.canvas.upper_left_y >= this.canvas.dim_y && this.canvas.upper_left_y - this.canvas.getDataExtent().y-1 >= this.canvas.dim_y) ?
+						this.canvas.dim_y : this.canvas.dim_y - Math.floor(this.canvas.dim_y - (this.canvas.upper_left_y - this.canvas.getDataExtent().y-1)));
 		}
 	}
 };

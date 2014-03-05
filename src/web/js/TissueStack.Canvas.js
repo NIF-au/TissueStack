@@ -765,9 +765,9 @@ TissueStack.Canvas.prototype = {
 		};
 		pixelCoords = this.getXYCoordinatesWithRespectToZoomLevel(pixelCoords);
 		// outside of extent check
-		if (!pixelCoords || pixelCoords.x < 0 || pixelCoords.x > this.data_extent.x -1 
-				||  pixelCoords.y < 0 || pixelCoords.y > this.data_extent.y -1
-				|| pixelCoords.z < 0 || pixelCoords.z > this.data_extent.max_slices) {
+		if (!oneToOnePixelCoords || oneToOnePixelCoords.x < 0 || oneToOnePixelCoords.x > this.data_extent.x -1 
+				||  oneToOnePixelCoords.y < 0 || oneToOnePixelCoords.y > this.data_extent.y -1
+				|| oneToOnePixelCoords.z < 0 || oneToOnePixelCoords.z > this.data_extent.max_slices) {
 			$("#canvas_point_x").val("");
 			$("#canvas_point_y").val("");
 			$("#canvas_point_z").val("");
@@ -785,7 +785,7 @@ TissueStack.Canvas.prototype = {
 				log.html("World > X: " +  Math.round(worldCoords.x * 1000) / 1000 + ", Y: " +  Math.round(worldCoords.y * 1000) / 1000);
 			} else { 
 				log = $('.coords');
-				log.html("Pixels > X: " + pixelCoords.x + ", Y: " + pixelCoords.y);
+				log.html("Pixels > X: " + oneToOnePixelCoords.x + ", Y: " + oneToOnePixelCoords.y);
 			}
 			return;
 		}		
@@ -805,7 +805,7 @@ TissueStack.Canvas.prototype = {
 		
 		// get at pixel value
 		var dataSet = TissueStack.dataSetStore.getDataSetById(this.getDataExtent().data_id);
-		TissueStack.Utils.queryVoxelValue(dataSet, this, oneToOnePixelCoords);
+		TissueStack.Utils.queryVoxelValue(dataSet, this, pixelCoords);
 		
 		// update url link info
 		this.getUrlLinkString(dataSet.realWorldCoords[this.data_extent.plane]);

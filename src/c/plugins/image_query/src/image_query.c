@@ -42,7 +42,6 @@ void			*start(void *args) {
 	ExceptionInfo			exception;
 	Image 					*img = NULL;
 	PixelPacket 			px;
-	unsigned char 		pixel = '\0';
 	unsigned long long 		*pixel_value = NULL;
 	int			 			is_raw = 0;
 	int 					dim=0;
@@ -152,32 +151,28 @@ void			*start(void *args) {
 				(unsigned long long int)
 					((unsigned long long int)volume->slice_size[dim] * (unsigned long long int)slice) * ((volume->raw_data_type == RGB_24BIT) ? 3 : 1));
 		get_width_height(&height, &width, dim, volume->dim_nb, volume->dim_name_char, volume->size);
-		combined_size = width * height;
+		combined_size = (volume->raw_data_type == RGB_24BIT) ? 3 : (width * height);
 
 		//reset
 		GetExceptionInfo(&exception);
 		img = NULL;
 		lseek(volume->raw_fd, 0, SEEK_SET); // return to beginning, just to be safe
 		memset(value, 0, 100);
+		image_data = malloc(combined_size*sizeof(*image_data)); // allocate mem for data to be read
 
 		// if generic the raw is ready to use as is
 		if (volume->raw_format == GENERIC) {
-			lseek(volume->raw_fd, offset + y*width + x, SEEK_SET);
-			read(volume->raw_fd, &pixel, 1);
+			// go to proper offset
+			lseek(volume->raw_fd, offset + y*width*3 + x*3, SEEK_SET);
+			read(volume->raw_fd, image_data, 3);
 
 			// set response
-			sprintf(value, " {\"red\": %c, \"green\": %c, \"blue\": %c}", pixel, pixel, pixel);
-			/*
-			if ((img = ConstituteImage(width, height, "I", CharPixel, image_data, &exception)) == NULL) {
-			  dealWithException(&exception, NULL, NULL, NULL);
-			  if (image_data != NULL) free(image_data);
-			  return NULL;
-		  }*/
+			sprintf(value, " {\"red\": %u, \"green\": %u, \"blue\": %u}", image_data[0], image_data[1], image_data[2]);
 		} else {	// do some orientation nonsense
-			image_data = malloc(combined_size*sizeof(*image_data));
 			lseek(volume->raw_fd, offset, SEEK_SET);
 			read(volume->raw_fd, image_data, combined_size);
 
+			// orientation corrections
 			img = extractSliceDataAtProperOrientation(volume->raw_format, volume->raw_data_type, volume->dim_name_char, dim, image_data, width, height, socketDescriptor);
 			if (img == NULL) { // something went wrong => say good bye
 				if (image_data != NULL) free(image_data);
@@ -195,15 +190,15 @@ void			*start(void *args) {
 				pixel_value[1] = mapUnsignedValue(img->depth, 8, pixel_value[1]);
 				pixel_value[2] = mapUnsignedValue(img->depth, 8, pixel_value[2]);
 			}
-
 			// set response
 			sprintf(value, " {\"red\": %llu, \"green\": %llu, \"blue\": %llu}", pixel_value[0], pixel_value[1], pixel_value[2]);
 
 			// clean up
-			if (image_data != NULL) free(image_data);
 			if (img != NULL) DestroyImage(img);
 			if (pixel_value != NULL) free(pixel_value);
 		}
+		// free image data
+		if (image_data != NULL) free(image_data);
 
 		// add voxel value to response
 		response = appendToBuffer(response, value);
