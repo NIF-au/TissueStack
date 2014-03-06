@@ -117,4 +117,15 @@ public final class TaskUtils {
 		 
 		 return true;
 	}
+
+	public static boolean isAMincFileInConversionTaskList() {
+		 final Map<String, Long> tasksInQueue = TaskUtils.getMapOfFilesPresentlyInTaskQueue();
+		 if (tasksInQueue == null || tasksInQueue.isEmpty()) return false;
+		 
+		 for (String name : tasksInQueue.keySet())
+			 if (name.toLowerCase().endsWith(".mnc")) 
+				 return true;
+		 
+		 return false;
+	}
 }

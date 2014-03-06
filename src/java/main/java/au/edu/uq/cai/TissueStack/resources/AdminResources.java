@@ -514,6 +514,12 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 		// check whether we have a minc file on our hands
 		short formatIdentifier = 1; // 1 for minc, 2 for nifti
 		if (ext.equalsIgnoreCase(".mnc")) {
+			// this is to prevent a fatal seg fault if a mnc is being converted by the image server
+			// most likely it is a hdf5 concurrency issue.
+			// bottom line: we allow only 1 minc conversion at a time !
+			if (TaskUtils.isAMincFileInConversionTaskList()) {
+				throw new IllegalArgumentException("Only one minc conversion at a time, sorry!");
+			}
 			final MincInfo mincTest = new TissueStack().getMincInfo(imageFile);
 			if (mincTest == null)
 				throw new IllegalArgumentException("Given file had .mnc extension but proved to be non minc. If it is in fact minc version 1, please convert it to minc 2 before you launch the raw file conversion!");
