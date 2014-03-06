@@ -659,8 +659,16 @@ TissueStack.DataSetNavigation.prototype = {
 			// sync coordinate adjustment now absolute, not relative
 			if (canvas.upper_left_x + canvas.data_extent.x <= canvas.cross_x)
 				pixel_coords_for_other_plane.x = Math.abs(pixel_coords_for_other_plane.x) + other_plane.data_extent.x;
-			if (canvas.upper_left_x > canvas.cross_x)
-				pixel_coords_for_other_plane.x = other_plane.cross_x - pixel_coords_for_other_plane.x;
+			if (canvas.upper_left_x > canvas.cross_x) {
+				pixel_coords_for_other_plane.x = canvas.cross_x - canvas.upper_left_x
+				if (TissueStack.overlay_datasets) {
+					pixel_coords_for_other_plane.x = canvas.cross_x - canvas.upper_left_x
+					if (canvas.getDataExtent().zoom_level != other_plane.getDataExtent().zoom_level) {
+						pixel_coords_for_other_plane.y = canvas.upper_left_y - canvas.cross_y;
+						other_plane.changeToZoomLevel(canvas.getDataExtent().zoom_level);
+					}
+				}
+			}
 			other_plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(
 					pixel_coords_for_other_plane, false, timestamp);
 			if (TissueStack.overlay_datasets && canvas.getDataExtent().zoom_level != other_plane.getDataExtent().zoom_level)

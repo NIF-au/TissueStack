@@ -155,7 +155,7 @@ TissueStack.Extent.prototype = {
 			return null;
 		}
 		
-		return {x: Math.round(this.one_to_one_x * zoomLevelFactor), y: Math.round(this.one_to_one_y * zoomLevelFactor)};
+		return {x: Math.floor(this.one_to_one_x * zoomLevelFactor), y: Math.floor(this.one_to_one_y * zoomLevelFactor)};
 	}, setSliceWithRespectToZoomLevel : function(slice) {
 		this.slice = slice / this.zoom_level_factor;
 		

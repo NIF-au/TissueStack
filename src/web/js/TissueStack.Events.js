@@ -412,6 +412,7 @@ TissueStack.Events.prototype = {
 		} else if (newZoomLevel < 0 || newZoomLevel >= this.canvas.data_extent.zoom_levels.length)
 			return;
 
+		this.canvas.eraseCanvasContent();
 		this.canvas.queue.addToQueue(
 				{	data_id : this.canvas.data_extent.data_id,
 					dataset_id : this.canvas.dataset_id,	 

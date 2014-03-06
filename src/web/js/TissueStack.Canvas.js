@@ -163,7 +163,7 @@ TissueStack.Canvas.prototype = {
 
 		this.getDataExtent().changeToZoomLevel(zoom_level);
 
-		this.setUpperLeftCorner(centerAfterZoom.x, centerAfterZoom.y);
+		if (centerAfterZoom) this.setUpperLeftCorner(centerAfterZoom.x, centerAfterZoom.y);
 		
 		// update displayed info
 		if (TissueStack.phone || this.is_main_view)
@@ -216,10 +216,13 @@ TissueStack.Canvas.prototype = {
 		return $("#" + this.canvas_id + "_cross_overlay");
 	},
 	getRelativeCrossCoordinates : function() {
+		var relCrossX = (this.cross_x > (this.upper_left_x + (this.getDataExtent().x - 1))) ? -(this.cross_x - (this.upper_left_x + (this.getDataExtent().x - 1))) : (this.getDataExtent().x -1) +  (this.upper_left_x - this.cross_x);
+		/*
 		var relCrossX = 
 			(this.cross_x > this.upper_left_x) ?
 					(this.cross_x > (this.upper_left_x + (this.getDataExtent().x - 1)) ? 
 							(this.upper_left_x + (this.getDataExtent().x - 1) - this.cross_x) : this.upper_left_x - this.cross_x) :	this.upper_left_x;
+		*/
 		var relCrossY = ((this.dim_y - this.cross_y) > this.upper_left_y) ? (this.upper_left_y - (this.dim_y - this.cross_y)) : ((this.getDataExtent().y - 1) + (this.upper_left_y - (this.getDataExtent().y - 1) - (this.dim_y - this.cross_y)));
 		if (this.upper_left_x < 0 && this.cross_x <= (this.upper_left_x + (this.getDataExtent().x - 1))) {
 			relCrossX = Math.abs(this.upper_left_x) + this.cross_x;
@@ -284,7 +287,7 @@ TissueStack.Canvas.prototype = {
 		};
 	}, 
 	getNewUpperLeftCornerForPointZoom : function(coords, zoom_level) {
-		var newZoomLevelDims = this.getDataExtent().getZoomLevelDimensions(zoom_level);
+  		var newZoomLevelDims = this.getDataExtent().getZoomLevelDimensions(zoom_level);
 		
 		var deltaXBetweenCrossAndUpperLeftCorner = (this.upper_left_x < 0) ? (coords.x - this.upper_left_x) : Math.abs(coords.x - this.upper_left_x); 
 		var deltaYBetweenCrossAndUpperLeftCorner = (this.upper_left_y < 0) ? ((this.dim_y - coords.y) - this.upper_left_y) : Math.abs((this.dim_y - coords.y) - this.upper_left_y);
