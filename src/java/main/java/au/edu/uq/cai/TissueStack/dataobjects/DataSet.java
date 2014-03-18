@@ -50,7 +50,8 @@ public class DataSet {
 	private List<DataSetPlanes> planes;
 	private DataSetValuesLookupTable lookupValues;
 	private List<DataSetOverlay> overlays;
-
+	private List<DataSetLookupMapping> associatedDataSets;
+	
 	@Id
 	@Column(name="id")
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -108,6 +109,15 @@ public class DataSet {
 	
 	public void setOverlays(List<DataSetOverlay> overlays) {
 		this.overlays = overlays;
+	}
+
+	@Transient
+	public List<DataSetLookupMapping> getAssociatedDataSets() {
+		return this.associatedDataSets;
+	}
+
+	public void setAssociatedDataSets(List<DataSetLookupMapping> associatedDataSets) {
+		this.associatedDataSets = associatedDataSets;
 	}
 
 	@Transient

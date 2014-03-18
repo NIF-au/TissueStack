@@ -73,6 +73,8 @@ TissueStack.DataSetStore.prototype = {
 		this.datasets[id].lookupValues = 
 			(dataSet.lookupValues && dataSet.lookupValues.content) ? 
 					$.parseJSON(dataSet.lookupValues.content) : null;
+		this.datasets[id].associatedDataSets = 
+						(dataSet.associatedDataSets) ? 	dataSet.associatedDataSets : null;
 		if (dataSet.overlays && dataSet.overlays.length > 0)
 				this.datasets[id].overlays = dataSet.overlays; 
 		// this is the data for initialization

@@ -49,11 +49,17 @@ public final class DataSetDataProvider {
 			@SuppressWarnings("unchecked")
 			List<DataSet> result = query.getResultList();
 
+			
 			if (result == null || result.size() != 1) {
 				return null;
 			}
+
+			// fetch associated data sets
+			DataSet ret = result.get(0); 
+			ret.setAssociatedDataSets(
+					DataSetLookupMappingDataProvider.queryDataSetLookupMappingForGivenDataSetId(ret.getId(), false));
 			
-			return result.get(0);
+			return ret;
 		} finally {
 			JPAUtils.instance().closeEntityManager(em);
 		}
@@ -76,7 +82,12 @@ public final class DataSetDataProvider {
 				return null;
 			}
 			
-			return result.get(0);
+			// fetch associated data sets
+			DataSet ret = result.get(0); 
+			ret.setAssociatedDataSets(
+					DataSetLookupMappingDataProvider.queryDataSetLookupMappingForGivenDataSetId(ret.getId(), false));
+			
+			return ret;
 		} finally {
 			JPAUtils.instance().closeEntityManager(em);
 		}
@@ -201,15 +212,17 @@ public final class DataSetDataProvider {
 
 			final List<DataSet> result = query.getResultList();
 
-			if (includePlaneData) {
-				// we check if we have overlays for the data set
+			if (includePlaneData) { // optional plane data
 				for (DataSet dataSet : result) {
+					// associated data sets
+					dataSet.setAssociatedDataSets(DataSetLookupMappingDataProvider.queryDataSetLookupMappingForGivenDataSetId(dataSet.getId(), false));
+
+					// overlays
 					final List<DataSetOverlay> overlays = 
 							DataSetOverlaysProvider.findOverlaysInformationByDataSetId(dataSet.getId());
 					if (overlays != null && !overlays.isEmpty())
 						dataSet.setOverlays(overlays);
 				}
-
 				return result;
 			}
 			

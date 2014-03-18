@@ -33,6 +33,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import net.sf.json.JSONObject;
 import net.sf.json.JsonConfig;
+import net.sf.json.util.CycleDetectionStrategy;
 import net.sf.json.util.PropertyFilter;
 
 @Provider
@@ -45,6 +46,7 @@ public class JSONBodyWriter implements MessageBodyWriter<Object> {
 		jsonConfig = new JsonConfig();
 		jsonConfig.setIgnoreJPATransient(false);
 		jsonConfig.addIgnoreFieldAnnotation(XmlTransient.class);
+		jsonConfig.setCycleDetectionStrategy(CycleDetectionStrategy.STRICT);
 		jsonConfig.setJsonPropertyFilter( new PropertyFilter() {
 		   public boolean apply( Object source, String name, Object value ) {  
 		      if( value == null){  
