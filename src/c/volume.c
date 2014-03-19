@@ -791,3 +791,16 @@ void		write_header_into_file(int fd, t_header *h)
   write(fd, lenhead, strlen(lenhead));
   write(fd, head, len);
 }
+
+unsigned int get_slices_max(t_vol *volume) {
+	// get the larger number of slices possible
+	if ((volume->size[X] * volume->size[Y])
+			> (volume->size[Z] * volume->size[X])) {
+		if ((volume->size[X] * volume->size[Y])
+				> (volume->size[Z] * volume->size[Y]))
+			return (volume->size[X] * volume->size[Y]);
+	} else if ((volume->size[Z] * volume->size[X])
+			> (volume->size[Z] * volume->size[Y]))
+		return (volume->size[Z] * volume->size[X]);
+	return (volume->size[Z] * volume->size[Y]);
+}

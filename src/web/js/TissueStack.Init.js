@@ -525,6 +525,24 @@ TissueStack.BindDataSetDependentEvents = function () {
 					givenCoords = plane.getDataExtent().getPixelForWorldCoordinates(givenCoords);
 				}
 
+				// this is for slight floating point inaccuracies (+/- 1 slice/pixel)
+				givenCoords.x = (givenCoords.x < 0 && givenCoords.x > -1) ? 0 : givenCoords.x;  
+				givenCoords.y = (givenCoords.y < 0 && givenCoords.y > -1) ? 0 : givenCoords.y;
+				givenCoords.z = (givenCoords.z < 0 && givenCoords.z > -1) ? 0 : givenCoords.z;
+				givenCoords.x = 
+					(givenCoords.x > event.data[0].actualDataSet.planes[planeId].data_extent.x && 
+							givenCoords.x < (event.data[0].actualDataSet.planes[planeId].data_extent.x + 1)) ?
+									Math.floor(givenCoords.x) : Math.round(givenCoords.x);
+				givenCoords.y = 
+					(givenCoords.y > event.data[0].actualDataSet.planes[planeId].data_extent.y && 
+							givenCoords.y < (event.data[0].actualDataSet.planes[planeId].data_extent.y + 1)) ?
+									Math.floor(givenCoords.y) : Math.round(givenCoords.y);
+				givenCoords.z = 
+					(givenCoords.z > event.data[0].actualDataSet.planes[planeId].data_extent.max_slices && 
+							givenCoords.z < (event.data[0].actualDataSet.planes[planeId].data_extent.max_slices + 1)) ?
+									Math.floor(givenCoords.z) : Math.round(givenCoords.z);
+									
+
 				if ((event.data[0].actualDataSet.planes[planeId] && (givenCoords.x < 0
 						|| givenCoords.x > event.data[0].actualDataSet.planes[planeId].data_extent.x)) 
 						|| (event.data[0].actualDataSet.planes[planeId] && (givenCoords.y < 0

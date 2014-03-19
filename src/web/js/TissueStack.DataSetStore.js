@@ -70,11 +70,21 @@ TissueStack.DataSetStore.prototype = {
 		this.datasets[id].local_id = dataSet.id;
 		this.datasets[id].description = dataSet.description ? dataSet.description : "";
 		this.datasets[id].filename = dataSet.filename ? dataSet.filename : "";
+		this.datasets[id].associatedAtlas = (dataSet.lookupValues && dataSet.lookupValues.associatedAtlas) ?
+				dataSet.lookupValues.associatedAtlas : null;
 		this.datasets[id].lookupValues = 
 			(dataSet.lookupValues && dataSet.lookupValues.content) ? 
 					$.parseJSON(dataSet.lookupValues.content) : null;
 		this.datasets[id].associatedDataSets = 
 						(dataSet.associatedDataSets) ? 	dataSet.associatedDataSets : null;
+		if (this.datasets[id].associatedDataSets && this.datasets[id].associatedDataSets.length > 0)
+			for (ii=0;ii<this.datasets[id].associatedDataSets.length;ii++)
+				if (this.datasets[id].associatedDataSets[ii].associatedDataSet &&
+						this.datasets[id].associatedDataSets[ii].associatedDataSet.lookupValues &&
+						this.datasets[id].associatedDataSets[ii].associatedDataSet.lookupValues.content)
+					this.datasets[id].associatedDataSets[ii].associatedDataSet.lookupValues.content =
+						$.parseJSON(this.datasets[id].associatedDataSets[ii].associatedDataSet.lookupValues.content);
+			this.datasets[id].associatedDataSets.content = $.parseJSON(this.datasets[id].associatedDataSets.content);
 		if (dataSet.overlays && dataSet.overlays.length > 0)
 				this.datasets[id].overlays = dataSet.overlays; 
 		// this is the data for initialization
@@ -134,5 +144,34 @@ TissueStack.DataSetStore.prototype = {
 					alert("Error connecting to backend: " + textStatus + " " + errorThrown);
 				}				
 		);
+	},	lookupValueForRGBTriple : function(dataSet, rgbTriples) {
+		if (typeof(dataSet) != 'object' || typeof(rgbTriples) != 'object' || !rgbTriples) return rgbTriples;
+
+		// first look up the label info for the actual data set
+		if (typeof(dataSet.lookupValues) == 'object' && dataSet.lookupValues) {
+			var label_key = 
+				'' + rgbTriples[dataSet.filename].red + '/' + rgbTriples[dataSet.filename].green + '/' + rgbTriples[dataSet.filename].blue;
+			var label = dataSet.lookupValues[label_key];
+			if (typeof(label) != 'undefined')	rgbTriples[dataSet.filename].label = label;
+		}
+		// loop over associated data sets if they exist
+		if (dataSet.associatedDataSets && dataSet.associatedDataSets.length > 0) 
+			for (i=0; i<dataSet.associatedDataSets.length;i++) {
+				var assocDs = dataSet.associatedDataSets[i];
+				if (!assocDs) continue;
+				assocDs = assocDs.associatedDataSet;
+				// we might not have lookup values
+				if (typeof(assocDs.lookupValues) != 'object' || !assocDs.lookupValues)
+					continue;
+				// add label from lookup values
+				var assocRGBTriples = rgbTriples[assocDs.filename];
+				if (assocRGBTriples) { // make sure we got the triples
+					label_key =	'' + assocRGBTriples.red + '/' + assocRGBTriples.green + '/' + assocRGBTriples.blue;
+					label = assocDs.lookupValues.content[label_key];
+					if (typeof(label) != 'undefined') assocRGBTriples.label = label;
+				}
+			}
+		
+		return rgbTriples;
 	}
 };

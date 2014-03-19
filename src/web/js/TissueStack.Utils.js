@@ -671,15 +671,34 @@ TissueStack.Utils = {
 	}, queryVoxelValue : function(dataset, canvas, coords) {
 		if (typeof(dataset) != 'object' || typeof(canvas) != 'object' || typeof(coords) != 'object') return null;
 		
+		// the original data set/file
+		var files = dataset.filename;
+		var planes = canvas.getDataExtent().plane;
+		var slices = Math.round(coords.z);
+		var xes = Math.round(coords.x);
+		var ys = Math.round(coords.y);
+
+		// augment it with any associated data sets that need to be queried as well
+		if (dataset.associatedDataSets && dataset.associatedDataSets.length > 0)
+			for (i=0;i<dataset.associatedDataSets.length;i++) {
+				files += (":" + dataset.associatedDataSets[i].associatedDataSet.filename);
+				planes += (":" + canvas.getDataExtent().plane);
+				slices += (":" + Math.round(coords.z));
+				xes += (":" + Math.round(coords.x));
+				ys += (":" + Math.round(coords.y));
+			}
+		
 		// assemble url
 		var url = "/" + TissueStack.configuration['image_service_proxy_path'].value + "/?volume="
-					+ dataset.filename + "&dimension=" + canvas.getDataExtent().plane + "space&slice=" + Math.round(coords.z) + "&x=" + Math.round(coords.x)
-					+ "&y=" + Math.round(coords.y) + "&query=query";
+					+ files + "&dimension=" + planes + "space&slice=" + slices + "&x=" + xes
+					+ "&y=" + ys + "&query=query";
 		
 		// in case of an error we rely on the canvas pixel querying
 		var errorHandler = function(canvas) {
 			var value = canvas.getCanvasPixelValue({x: canvas.cross_x, y: canvas.cross_y});
-			canvas.displayPixelValue(canvas.getOriginalPixelValue(value));
+			var value_wrapped = {};
+			value_wrapped[dataset.filename] = value;
+			canvas.displayPixelValue(dataset, TissueStack.dataSetStore.lookupValueForRGBTriple(dataset, value_wrapped));
 		};
 		
 		if (canvas.hasColorMapOrContrastSetting()) {
@@ -705,15 +724,9 @@ TissueStack.Utils = {
 					return;
 				}
 				
-				var value = canvas.getOriginalPixelValue(
-						{
-							r: data.response[dataset.filename].red,
-							g: data.response[dataset.filename].green,
-							b: data.response[dataset.filename].blue,
-							l: null
-						}
-				);
-				canvas.displayPixelValue(value);
+				var value = 
+					TissueStack.dataSetStore.lookupValueForRGBTriple(dataset, data.response);
+				canvas.displayPixelValue(dataset, value);
 			},
 			function(jqXHR, textStatus, errorThrown) {
 				errorHandler(canvas);

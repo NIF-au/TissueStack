@@ -129,8 +129,8 @@ TissueStack.Canvas.prototype = {
 		if (!dataForPixel || !dataForPixel.data) return;
 
 		// set rgb values and transparency
-		return {r: dataForPixel.data[0], g: dataForPixel.data[1], b: dataForPixel.data[2], t: dataForPixel.data[3], l: null};
-	},
+		return {red: dataForPixel.data[0], green: dataForPixel.data[1], blue: dataForPixel.data[2], t: dataForPixel.data[3], label: null};
+	},/* deprecated
 	getOriginalPixelValue : function(value) {
 		if (typeof(value) != 'object') return;
 
@@ -147,9 +147,9 @@ TissueStack.Canvas.prototype = {
 		for(var rgbVal in value)
 			if (rgbVal != 't' && rgbVal != 'l')
 				value[rgbVal] = this.value_range_min + (value[rgbVal] * (originalRange / 255));
-		
+
 		return value;
-	},
+	},*/
 	changeToZoomLevel : function(zoom_level) {
 		if (typeof(zoom_level) != 'number') {
 			return;
@@ -812,21 +812,50 @@ TissueStack.Canvas.prototype = {
 		
 		// update url link info
 		this.getUrlLinkString(dataSet.realWorldCoords[this.data_extent.plane]);
-	}, displayPixelValue : function(pixelVal) {
-		if (typeof(pixelVal) === 'object') {
-			if (pixelVal.l)
-				$("#canvas_point_value").val(pixelVal.l);
-			else if (!this.isColorMapOn()) // grayscale
-				$("#canvas_point_value").val((Math.round(pixelVal.r) *1000) / 1000); // display redundant pixel value 
-			else // display r/g/b triples
-				$("#canvas_point_value").val("r: "
-						+ (Math.round(pixelVal.r) *1000) / 1000
-						+ " g: "
-						+ (Math.round(pixelVal.g) *1000) / 1000
-						+ " b: "
-						+ (Math.round(pixelVal.b) *1000) / 1000
-				); 
+	}, displayPixelValue : function(dataSet, pixelValues) {
+		if (typeof(pixelValues) != 'object' || !pixelValues
+			|| typeof(dataSet) != 'object' || !dataSet) {
+			$("#canvas_point_value").text("N/A");
+			return;
+		}			
+		
+		var dataSetPixelValues = pixelValues[dataSet.filename];
+		var info = "Pixel Value: ";
+
+		// we have a label info for the data set
+		if (dataSetPixelValues && dataSetPixelValues.label) {
+			// first display info for the actual data set
+			if (dataSet.lookupValues && dataSet.associatedAtlas) info = dataSet.associatedAtlas.prefix;
+			else info = "Label" 
+			info += (": " +  dataSetPixelValues.label);
+		} else if (!this.isColorMapOn()) {
+		// fallback: if no label lookup value was associated, we display either the gray value or the color rgb triples
+			info += (Math.round(dataSetPixelValues.red) *1000) / 1000; // any channel will do for gray 
+		} else {// display r/g/b triples
+			info += ("" + (Math.round(dataSetPixelValues.red) *1000) / 1000 + " (r) "
+					+ (Math.round(dataSetPixelValues.green) *1000) / 1000 + " (g) "
+					+ (Math.round(dataSetPixelValues.blue) *1000) / 1000 + " (b)"
+			); 
 		}
+
+		// loop over associated data sets if they exist and add their atlas/label info
+		if (dataSet.associatedDataSets && dataSet.associatedDataSets.length > 0) 
+			for (i=0; i<dataSet.associatedDataSets.length;i++) {
+				var assocDs = dataSet.associatedDataSets[i];
+				if (!assocDs) continue;
+				assocDs = assocDs.associatedDataSet;
+				// we might not have a label
+				if (!pixelValues[assocDs.filename]) continue;
+				var assocLabel = pixelValues[assocDs.filename].label;
+				if (typeof(assocLabel) == 'undefined' || !assocLabel) continue;
+				// append label info
+				info += "\n"
+				if (assocDs.lookupValues && assocDs.lookupValues.associatedAtlas)
+					info += assocDs.lookupValues.associatedAtlas.prefix;
+				else info += assocDs.description;
+				info += ": " + assocLabel;
+			}
+		$("#canvas_point_value").val(info);
 	}, getXYCoordinatesWithRespectToZoomLevel : function(coords) {
 		/*
 		if (this.upper_left_y < this.dim_y - this.cross_y || this.upper_left_y - (this.data_extent.y - 1) > this.dim_y - this.cross_y) {

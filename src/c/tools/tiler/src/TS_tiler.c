@@ -91,19 +91,6 @@ void			signal_manager(t_tissue_stack *t)
     }
 }
 
-unsigned int            get_slices_max(t_vol *volume)
-{
-  // get the larger number of slices possible
-  if ((volume->size[X] * volume->size[Y]) > (volume->size[Z] * volume->size[X]))
-    {
-      if ((volume->size[X] * volume->size[Y]) > (volume->size[Z] * volume->size[Y]))
-        return (volume->size[X] * volume->size[Y]);
-    }
-  else if ((volume->size[Z] * volume->size[X]) > (volume->size[Z] * volume->size[Y]))
-    return (volume->size[Z] * volume->size[X]);
-  return (volume->size[Z] * volume->size[Y]);
-}
-
 void		*list_actions(void *args)
 {
   t_args_plug   *a;

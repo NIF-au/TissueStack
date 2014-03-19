@@ -459,7 +459,7 @@ TissueStack.Events.prototype = {
 		
 		var relCrossCoords = this.canvas.getRelativeCrossCoordinates();
 		relCrossCoords.z = this.canvas.data_extent.slice;
-		var worldCoordinates = this.canvas.getDataExtent().getWorldCoordinatesForPixelWithBoundsCheck(relCrossCoords);
+		var worldCoordinates = this.canvas.getDataExtent().getWorldCoordinatesForPixel(relCrossCoords);
 		
 		// update coordinate info displayed
 		var __target = this;

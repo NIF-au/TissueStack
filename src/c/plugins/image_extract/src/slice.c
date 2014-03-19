@@ -16,19 +16,6 @@
  */
 #include "image_extract.h"
 
-unsigned int get_slices_max(t_vol *volume) {
-	// get the larger number of slices possible
-	if ((volume->size[X] * volume->size[Y])
-			> (volume->size[Z] * volume->size[X])) {
-		if ((volume->size[X] * volume->size[Y])
-				> (volume->size[Z] * volume->size[Y]))
-			return (volume->size[X] * volume->size[Y]);
-	} else if ((volume->size[Z] * volume->size[X])
-			> (volume->size[Z] * volume->size[Y]))
-		return (volume->size[Z] * volume->size[X]);
-	return (volume->size[Z] * volume->size[Y]);
-}
-
 int get_nb_blocks_percent(t_image_extract *a, t_vol *volume) {
 	int i = 0;
 	int count = 0;
