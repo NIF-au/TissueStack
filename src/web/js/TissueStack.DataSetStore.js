@@ -84,7 +84,6 @@ TissueStack.DataSetStore.prototype = {
 						this.datasets[id].associatedDataSets[ii].associatedDataSet.lookupValues.content)
 					this.datasets[id].associatedDataSets[ii].associatedDataSet.lookupValues.content =
 						$.parseJSON(this.datasets[id].associatedDataSets[ii].associatedDataSet.lookupValues.content);
-			this.datasets[id].associatedDataSets.content = $.parseJSON(this.datasets[id].associatedDataSets.content);
 		if (dataSet.overlays && dataSet.overlays.length > 0)
 				this.datasets[id].overlays = dataSet.overlays; 
 		// this is the data for initialization
@@ -155,7 +154,8 @@ TissueStack.DataSetStore.prototype = {
 			if (typeof(label) != 'undefined')	rgbTriples[dataSet.filename].label = label;
 		}
 		// loop over associated data sets if they exist
-		if (dataSet.associatedDataSets && dataSet.associatedDataSets.length > 0) 
+		
+		if (TissueStack.desktop && dataSet.associatedDataSets && dataSet.associatedDataSets.length > 0) 
 			for (i=0; i<dataSet.associatedDataSets.length;i++) {
 				var assocDs = dataSet.associatedDataSets[i];
 				if (!assocDs) continue;

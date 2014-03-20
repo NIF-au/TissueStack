@@ -757,7 +757,7 @@ TissueStack.Canvas.prototype = {
 			if (this.data_extent.max_slices > 1) {
 				text += ("Z: "+ Math.round(realWorldCoords.min_z *1000) / 1000 + " to " + Math.round(realWorldCoords.max_z *1000) / 1000 + "<br />");
 			}
-			log.html(text + "<hr />");
+			log.html(text);
 		}
 	},
 	updateCoordinateInfo : function(pixelCoords, worldCoords) {
@@ -825,7 +825,7 @@ TissueStack.Canvas.prototype = {
 		// we have a label info for the data set
 		if (dataSetPixelValues && dataSetPixelValues.label) {
 			// first display info for the actual data set
-			if (dataSet.lookupValues && dataSet.associatedAtlas) info = dataSet.associatedAtlas.prefix;
+			if (TissueStack.desktop && dataSet.lookupValues && dataSet.associatedAtlas) info = dataSet.associatedAtlas.prefix;
 			else info = "Label" 
 			info += (": " +  dataSetPixelValues.label);
 		} else if (!this.isColorMapOn()) {
@@ -839,7 +839,7 @@ TissueStack.Canvas.prototype = {
 		}
 
 		// loop over associated data sets if they exist and add their atlas/label info
-		if (dataSet.associatedDataSets && dataSet.associatedDataSets.length > 0) 
+		if (TissueStack.desktop && dataSet.associatedDataSets && dataSet.associatedDataSets.length > 0) 
 			for (i=0; i<dataSet.associatedDataSets.length;i++) {
 				var assocDs = dataSet.associatedDataSets[i];
 				if (!assocDs) continue;

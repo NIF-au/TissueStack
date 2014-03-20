@@ -679,14 +679,15 @@ TissueStack.Utils = {
 		var ys = Math.round(coords.y);
 
 		// augment it with any associated data sets that need to be queried as well
-		if (dataset.associatedDataSets && dataset.associatedDataSets.length > 0)
-			for (i=0;i<dataset.associatedDataSets.length;i++) {
-				files += (":" + dataset.associatedDataSets[i].associatedDataSet.filename);
-				planes += (":" + canvas.getDataExtent().plane);
-				slices += (":" + Math.round(coords.z));
-				xes += (":" + Math.round(coords.x));
-				ys += (":" + Math.round(coords.y));
-			}
+		if (TissueStack.desktop)
+			if (dataset.associatedDataSets && dataset.associatedDataSets.length > 0)
+				for (i=0;i<dataset.associatedDataSets.length;i++) {
+					files += (":" + dataset.associatedDataSets[i].associatedDataSet.filename);
+					planes += (":" + canvas.getDataExtent().plane);
+					slices += (":" + Math.round(coords.z));
+					xes += (":" + Math.round(coords.x));
+					ys += (":" + Math.round(coords.y));
+				}
 		
 		// assemble url
 		var url = "/" + TissueStack.configuration['image_service_proxy_path'].value + "/?volume="
