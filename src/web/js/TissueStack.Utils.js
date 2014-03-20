@@ -350,14 +350,25 @@ TissueStack.Utils = {
 		$('.right_side_view canvas').attr("width", sideCanvasDims.width);
 		$('.right_side_view canvas').attr("height", sideCanvasDims.height);
 		
-		var treeHeight = $('.left_panel').height();
-		$('.left_panel').children().each(function() {
-	      if ($(this).attr('id') != 'treedataset' && $(this).css('display') != 'none') 
-	      treeHeight -= $(this).outerHeight();
-	    });
-		$('#treedataset').css({"height": treeHeight - 50});
+		// adjust Tree Height
+		if (TissueStack.desktop) TissueStack.Utils.adjustCollapsibleSectionsHeight('treedataset');
+		else TissueStack.Utils.adjustCollapsibleSectionsHeight('menutransition');
+		
+				
 		// apply scroll screen for admin upload direcory
 		$('.settings-right-column, .settings-left-column').css({"height": screenHeight/1.7});
+	}, adjustCollapsibleSectionsHeight : function(elem_id) {
+		if (typeof(elem_id) != 'string') return;
+		
+		var treeHeight = $('.left_panel').height();
+		var elCount = 0;
+		$('.left_panel').children().each(function() {
+			  elCount++;
+	      if ($(this).attr('id') != elem_id && $(this).attr('id') != elem_id + '_div' && $(this).css('display') != 'none') { 
+	    	  treeHeight -= $(this).outerHeight();
+	      }
+	    });
+		$('#' + elem_id).css({"height": treeHeight - $("#" + elem_id + "_div .ui-collapsible-heading").outerHeight() - elCount*10});
 	},
 	verifyUrlSyntax : function(url) {
 		if (typeof(url) != "string") {

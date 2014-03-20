@@ -547,8 +547,8 @@ TissueStack.DataSetNavigation.prototype = {
 	},
 	addDataSetToTabletTree : function (dataSet) {
 		
-		$('#tablet_tree').empty();
-		$('#tablet_tree').unbind("expand");
+		$('#treedataset').empty();
+		$('#treedataset').unbind("expand");
 		var htmlString ="";
 
 		
@@ -569,7 +569,7 @@ TissueStack.DataSetNavigation.prototype = {
   			  			 + '</fieldset></div>';
   			  			 */	
 		}		
-		$('#tablet_tree').append(htmlString)
+		$('#treedataset').append(htmlString)
 		.trigger("create").controlgroup('refresh', true);
 
 		this.getSelectedTabletTree(dataSet);

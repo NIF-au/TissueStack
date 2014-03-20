@@ -267,6 +267,18 @@ TissueStack.InitUserInterface = function (initOpts) {
 };
 
 TissueStack.BindGlobalEvents = function () {
+	// for the desktop, we want to resize stuff once the individual sections have been expanded
+	$(".left_panel div[data-role='collapsible']").each(
+			function() {
+				$(this).bind("expand", function() {
+					TissueStack.Utils.adjustCollapsibleSectionsHeight('treedataset');
+				});
+				$(this).bind("collapse", function() {
+					TissueStack.Utils.adjustCollapsibleSectionsHeight('treedataset');
+				});
+			}
+	);
+	
 	// DATA SET SEARCH AND ADDITION
 	// avoid potential double binding by un-binding
 	$('#server_search_button').unbind("click");

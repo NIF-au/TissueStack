@@ -61,7 +61,7 @@
      	    </div>
      	    <div style="min-width: 1400px;">
      	    	<div class="left_panel"> 
-     	    		<div data-mini="true" data-collapsed="false" data-role="collapsible" class="text-align-center">
+     	    		<div data-mini="true" data-collapsed="true" data-role="collapsible" class="text-align-center">
      	    			<h6>Extent/Zoom</h6>
      	    			<div id="canvas_extent" class="text-align-center"></div>
      	    		</div>
@@ -78,13 +78,13 @@
 	                    <input data-mini="true" size="8" maxlength="50" type="text" id="server_search_input" value="http://"/>
 	                    <button data-mini="true" type="button" id="server_search_button">Connect to TissueStack Server</button>
 					</div>
-     	    		<div data-mini="true" data-collapsed="false" data-role="collapsible">
+     	    		<div id="menutransition_div" data-mini="true" data-collapsed="false" data-role="collapsible">
      	    			<h6>Data Sets</h6>
 	     	    		<!--ADD TREE DATA SET NAVI BAR-->
 	     	    		<div id="menutransition" style="height:245px; position:relative; overflow:auto;"> 				
-							<div id="mobile_style_tree_dataset" style="height: 500px; margin: 8px;">
+							<div id="mobile_style_tree_dataset" style="height:500px;margin: 8px;">
 								<div data-role="collapsible-set" data-theme="a" data-content-theme="d" data-mini="true">
-								<div id="tablet_tree"></div>
+								<div id="treedataset"></div>
 								</div>
 							</div>
 						</div>

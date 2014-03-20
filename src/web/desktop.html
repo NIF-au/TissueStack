@@ -75,7 +75,7 @@
      	    			<h6>Extent/Zoom</h6>
      	    			<div id="canvas_extent"></div>
      	    		</div>
-     	    		<div data-mini="true" data-role="collapsible">
+     	    		<div data-mini="true" data-collapsed="false" data-role="collapsible">
      	    			<h6>Coordinates</h6>
 	     	    		<input data-mini="true" size="8" maxlength="10" type="text" id="canvas_point_x" value=""/>
 	     	    		<input data-mini="true" size="8" maxlength="10" type="text" id="canvas_point_y" value=""/>
@@ -83,7 +83,7 @@
 	     	    		<button type="button" id="dataset_1_center_point_in_canvas" data-mini="true">Center Data Set 1</button>
 	     	    		<button type="button" id="dataset_2_center_point_in_canvas" data-mini="true">Center Data Set 2</button>
      	    		</div>
-     	    		<div data-mini="true" data-role="collapsible">
+     	    		<div id="canvas_point_value_div" data-mini="true" data-role="collapsible">
      	    			<h6>Data/Meta Info</h6>
 	     	    		<textarea data-mini="true" readonly="readonly" style="height: 100px;background-color: gray;color: white;" size="8" maxlength="10" id="canvas_point_value"></textarea>
 					</div>
@@ -92,7 +92,7 @@
 	                    <input data-mini="true" size="8" maxlength="50" type="text" id="server_search_input" value="http://"/>
 	                    <button type="button" id="server_search_button" data-mini="true">Connect to TissueStack Server</button>
 					</div>
-     	    		<div data-mini="true" data-collapsed="false" data-role="collapsible">
+     	    		<div id="treedataset_div" data-mini="true" data-collapsed="false" data-role="collapsible">
      	    			<h6>Data Sets</h6>
 					<!-- TREE CONTEXT MENU -->
 						<ul id="dynaTreeContextMenu" class="contextMenu">
@@ -101,7 +101,7 @@
 						</ul>
 
      	    		<!--ADD TREE DATA SET NAVI BAR-->
-						<div id="treedataset" style="height:500px"></div>
+						<div id="treedataset" style="height:250px"></div>
 					</div>
 					<!--END -->
      	    	</div>
