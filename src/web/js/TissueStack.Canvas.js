@@ -815,30 +815,60 @@ TissueStack.Canvas.prototype = {
 	}, displayPixelValue : function(dataSet, pixelValues) {
 		if (typeof(pixelValues) != 'object' || !pixelValues
 			|| typeof(dataSet) != 'object' || !dataSet) {
-			$("#canvas_point_value").text("N/A");
+			$("#canvas_point_value").val("N/A");
 			return;
 		}			
 		
+		var ontologies = [];
+		var children = [];
+		
 		var dataSetPixelValues = pixelValues[dataSet.filename];
-		var info = "Pixel Value: ";
+		var info = "Value";
 
 		// we have a label info for the data set
 		if (dataSetPixelValues && dataSetPixelValues.label) {
 			// first display info for the actual data set
-			if (TissueStack.desktop && dataSet.lookupValues && dataSet.associatedAtlas) info = dataSet.associatedAtlas.prefix;
-			else info = "Label" 
-			info += (": " +  dataSetPixelValues.label);
+			//info = "Label: " + dataSetPixelValues.label;
+			if (TissueStack.desktop && dataSet.lookupValues && dataSet.associatedAtlas) {
+				info += (" (" + dataSet.associatedAtlas.prefix + ")");
+				$("#canvas_point_value").hide();
+				// TODO: add us to the tree only if there is an associated hierarchy present...
+				ontologies[0] =	{
+					title: (dataSet.associatedAtlas.description ? dataSet.associatedAtlas.description : dataSet.associatedAtlas.prefix),
+					key: dataSet.associatedAtlas.id,
+					tooltip: (dataSet.associatedAtlas.description ? dataSet.associatedAtlas.description : dataSet.associatedAtlas.prefix),
+					select: false,
+					isFolder: true,
+					expand: true,
+					icon: "ontology.png"
+				};
+				children[0] = 	{
+					title: dataSetPixelValues.label,
+					key: dataSet.associatedAtlas.id + "_" + dataSetPixelValues.label,
+					tooltip: dataSetPixelValues.label,
+					select: false,
+					isFolder: false,
+					expand: false,
+					icon: "ontology_part.png"
+				};
+				ontologies[0].children = children;
+				children = [];
+			}
 		} else if (!this.isColorMapOn()) {
 		// fallback: if no label lookup value was associated, we display either the gray value or the color rgb triples
-			info += (Math.round(dataSetPixelValues.red) *1000) / 1000; // any channel will do for gray 
+			$("#canvas_point_value").show();
+			info += (": " + (Math.round(dataSetPixelValues.red) *1000) / 1000); // any channel will do for gray 
 		} else {// display r/g/b triples
-			info += ("" + (Math.round(dataSetPixelValues.red) *1000) / 1000 + " (r) "
-					+ (Math.round(dataSetPixelValues.green) *1000) / 1000 + " (g) "
-					+ (Math.round(dataSetPixelValues.blue) *1000) / 1000 + " (b)"
+			$("#canvas_point_value").show();
+			info += " [R/G/B]: ";
+			info += ("" + (Math.round(dataSetPixelValues.red) *1000) / 1000 + "/"
+					+ (Math.round(dataSetPixelValues.green) *1000) / 1000 + "/"
+					+ (Math.round(dataSetPixelValues.blue) *1000) / 1000
 			); 
 		}
-
-		// loop over associated data sets if they exist and add their atlas/label info
+		$("#canvas_point_value").val(info);
+		
+		// loop over associated data sets if they exist and integrate them in the tree structure
 		if (TissueStack.desktop && dataSet.associatedDataSets && dataSet.associatedDataSets.length > 0) 
 			for (i=0; i<dataSet.associatedDataSets.length;i++) {
 				var assocDs = dataSet.associatedDataSets[i];
@@ -855,7 +885,21 @@ TissueStack.Canvas.prototype = {
 				else info += assocDs.description;
 				info += ": " + assocLabel;
 			}
-		$("#canvas_point_value").val(info);
+		
+		// construct tree if we have associated ontologies...
+		if (ontologies && ontologies.length > 0) {
+			 $("#ontology_tree").dynatree({
+			       checkbox: false,
+			       children: ontologies
+			 });
+			 $("#ontology_tree").dynatree("getTree").reload();
+			 $("#ontology_tree").show();
+			 
+		} else {
+			$("#ontology_tree").hide();
+		}
+		TissueStack.Utils.adjustCollapsibleSectionsHeight('ontology_tree');
+		TissueStack.Utils.adjustCollapsibleSectionsHeight('treedataset');
 	}, getXYCoordinatesWithRespectToZoomLevel : function(coords) {
 		/*
 		if (this.upper_left_y < this.dim_y - this.cross_y || this.upper_left_y - (this.data_extent.y - 1) > this.dim_y - this.cross_y) {

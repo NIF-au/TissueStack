@@ -271,9 +271,11 @@ TissueStack.BindGlobalEvents = function () {
 	$(".left_panel div[data-role='collapsible']").each(
 			function() {
 				$(this).bind("expand", function() {
+					TissueStack.Utils.adjustCollapsibleSectionsHeight('ontology_tree');
 					TissueStack.Utils.adjustCollapsibleSectionsHeight('treedataset');
 				});
 				$(this).bind("collapse", function() {
+					TissueStack.Utils.adjustCollapsibleSectionsHeight('ontology_tree');
 					TissueStack.Utils.adjustCollapsibleSectionsHeight('treedataset');
 				});
 			}

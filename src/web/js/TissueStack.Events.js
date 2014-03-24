@@ -347,9 +347,6 @@ TissueStack.Events.prototype = {
 			this.canvas.queue.drawRequestAfterLowResolutionPreview(null, now);
 		}
 		
-		// update coordinate info displayed
-		this.updateCoordinateDisplay();
-		
 		// send message out to others that they need to redraw as well
 		this.canvas.getCanvasElement().trigger("sync",
 								[this.canvas.data_extent.data_id,
@@ -365,6 +362,9 @@ TissueStack.Events.prototype = {
 		                        cross_coords,
 		                        canvas_dims
 		                       ]);
+
+		// update coordinate info displayed
+		this.updateCoordinateDisplay();
 	}, sync : function(e, data_id, dataset_id, timestamp, action, plane, zoom_level, slice, coords, max_coords_of_event_triggering_plane, upperLeftCorner, crossCoords, canvasDims) {
 		// ignore one's own events
 		var thisHerePlane = this.canvas.getDataExtent().plane;

@@ -351,7 +351,10 @@ TissueStack.Utils = {
 		$('.right_side_view canvas').attr("height", sideCanvasDims.height);
 		
 		// adjust Tree Height
-		if (TissueStack.desktop) TissueStack.Utils.adjustCollapsibleSectionsHeight('treedataset');
+		if (TissueStack.desktop) {
+			TissueStack.Utils.adjustCollapsibleSectionsHeight('ontology_tree');
+			TissueStack.Utils.adjustCollapsibleSectionsHeight('treedataset');			
+		}
 		else TissueStack.Utils.adjustCollapsibleSectionsHeight('menutransition');
 		
 				
