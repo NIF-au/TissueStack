@@ -357,11 +357,11 @@ TissueStack.Utils = {
 		}
 		else TissueStack.Utils.adjustCollapsibleSectionsHeight('menutransition');
 		
-				
 		// apply scroll screen for admin upload direcory
 		$('.settings-right-column, .settings-left-column').css({"height": screenHeight/1.7});
 	}, adjustCollapsibleSectionsHeight : function(elem_id) {
 		if (typeof(elem_id) != 'string') return;
+		if (!$("#" + elem_id) || typeof($("#" + elem_id).length) != 'number' || $("#" + elem_id).length == 0) return; 
 		
 		var treeHeight = $('.left_panel').height();
 		var elCount = 0;

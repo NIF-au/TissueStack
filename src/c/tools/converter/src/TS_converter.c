@@ -38,10 +38,10 @@ int main(int ac, char **av) {
 
 	memset(ext, 0, 3);
 	memcpy(ext, &av[1][len-3], 3);
-	if (strcmp(ext, "nii") == 0) format = NIFTI;
+	if (strcmp(ext, "nii") == 0 || strcmp(ext, ".gz") == 0) format = NIFTI;
 	else if (strcmp(ext, "mnc") == 0) format = MINC;
 	else {
-		fprintf(stderr, "File Name must be either minc/infti with respective extension .mnc or .nii!\n");
+		fprintf(stderr, "File Name must be either minc/nifti with respective extension .mnc or .nii/.nii.gz!\n");
 		return -1;
 	}
 
@@ -77,7 +77,7 @@ void	convertMinc(char * minc_path, int fd) {
 
 	write_header_into_file(fd, header);
     InitializeMagick("./");
-	dim_loop(fd, minc_volume->dim_nb, minc_volume, NULL, NULL, -1, -1);
+	dim_loop(fd, minc_volume->dim_nb, minc_volume, NULL, NULL, -1, -1, NULL);
     DestroyMagick();
 }
 
@@ -99,99 +99,4 @@ void	convertNifti(char * nifti_path, int fd) {
     InitializeMagick("./");
 	convertNifti0(NULL, nim, h, fd, 1, -1, NULL);
     DestroyMagick();
-
-	/*
-	int				i = 1, j=0;
-	int				slice = 0;
-	int				ret;
-	int				sizes[3];
-	int				dims[8] = { 0,  -1, -1, -1, -1, -1, -1, -1 };
-	void 			*data_in = NULL;
-	unsigned char	*data_out = NULL;
-	Image			*img = NULL;
-	PixelPacket 	*pixels;
-	char 			*dim_name_char = NULL;
-	int 			width = 0;
-	int 			height = 0;
-	int				nslices;
-	unsigned int	size_per_slice;
-
-	// read nifti to create header info
-	if ((nim = nifti_image_read(nifti_path, 0)) == NULL) {
-		fprintf(stderr,"Error Nifti read");
-	    return ;
-	}
-	dim_name_char = malloc(h->dim_nb * sizeof(*dim_name_char));
-	for (j=0;j<h->dim_nb;j++)
-		dim_name_char[j] = h->dim_name[j][0];
-
-    InitializeMagick("./");
-
-	while (i <= nim->dim[0]) {	// DIMENSION LOOP
-		slice = 0;
-		nslices = sizes[i - 1];
-		size_per_slice = h->slice_size[i - 1];
-		while (slice < nslices) { // SLICE LOOP
-			img = NULL;
-			data_in = NULL;
-			data_out = NULL;
-			dims[i] = slice;
-			if ((ret = nifti_read_collapsed_image(nim, dims, (void*) &data_in))	< 0) {
-				fprintf(stderr,"Error Nifti Get Hyperslab");
-				if (dim_name_char != NULL)
-					free(dim_name_char);
-				return;
-			}
-
-			data_out = iter_all_pix_and_convert(data_in, size_per_slice, nim);
-			free(data_in);
-			if (data_out == NULL) {
-				conversion_failed_actions(NULL, NULL,data_out, dim_name_char);
-				return;
-			}
-
-			get_width_height(&height, &width, i - 1, h->dim_nb,	dim_name_char, h->sizes);
-			img = extractSliceDataAtProperOrientation(NIFTI, RGB_24BIT, dim_name_char,	i - 1, data_out, width, height, NULL);
-			if (img == NULL) {
-				conversion_failed_actions(NULL, NULL,data_out, dim_name_char);
-				return;
-			}
-
-			// extract pixel info, looping over values
-			pixels = GetImagePixels(img, 0, 0, width, height);
-			if (pixels == NULL) {
-				if (img != NULL) DestroyImage(img);
-				conversion_failed_actions(NULL, NULL,data_out, dim_name_char);
-				return;
-			}
-
-			// sync with data
-			for (j = 0; j < size_per_slice; j++) {
-				// graphicsmagic quantum depth correction
-				if (QuantumDepth != 8 && img->depth == QuantumDepth) {
-					data_out[j*3+0] = (unsigned char) mapUnsignedValue(img->depth, 8, pixels[(width * i) + j].red);
-					data_out[j*3+1] = (unsigned char) mapUnsignedValue(img->depth, 8, pixels[(width * i) + j].green);
-					data_out[j*3+2] = (unsigned char) mapUnsignedValue(img->depth, 8, pixels[(width * i) + j].blue);
-					continue;
-				} // no correction needed
-				data_out[j*3+0] = (unsigned char) pixels[(width * i) + j].red;
-				data_out[j*3+1] = (unsigned char) pixels[(width * i) + j].green;
-				data_out[j*3+2] = (unsigned char) pixels[(width * i) + j].blue;
-			}
-			write(fd, data_out, size_per_slice * 3);
-
-			if (img != NULL)
-				DestroyImage(img);
-			free(data_out);
-
-			slice++;
-			printf("Slice n %i of %i [dimension %i]\r",	slice, nslices, (i - 1));
-			fflush(stdout);
-		}
-		dims[i] = -1;
-		i++;
-	}
-	if (dim_name_char != NULL) free(dim_name_char);
-    DestroyMagick();
-    */
 }

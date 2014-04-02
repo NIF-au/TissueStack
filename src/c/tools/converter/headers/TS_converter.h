@@ -39,6 +39,7 @@ void 			clean_up() {
 void			signal_handler(int sig)
 {
 	clean_up();
+	fprintf(stderr, "\nConversion aborted!\n");
 	exit(-1);
 }
 

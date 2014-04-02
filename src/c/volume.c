@@ -705,6 +705,7 @@ Image * extractSliceDataAtProperOrientation(
   	    	return NULL;
         }
     }
+
     if ((original_format == NIFTI) ||  (original_format == MINC &&
   	  !((dim_name_char[0] == 'y' && dim_name_char[1] == 'z' && dim_name_char[2] == 'x' && dim_name_char[dim] == 'x') ||
         (dim_name_char[0] == 'z' && dim_name_char[1] == 'x' && dim_name_char[2] == 'y' && dim_name_char[dim] == 'z') ||
@@ -790,6 +791,23 @@ void		write_header_into_file(int fd, t_header *h)
   sprintf(lenhead, "@IaMraW@|%i|", len);
   write(fd, lenhead, strlen(lenhead));
   write(fd, head, len);
+}
+
+void	determine_isotropy(t_header *h) {
+	if (h == NULL || h->steps == NULL) return;
+
+	unsigned short i = 0;
+	for (i=0;i<h->dim_nb;i++) {
+		if (i == 0) continue;
+		// compare to previous dimension...
+		if (h->steps[i] != h->steps[i-1]) {
+			// flag as anisotropic and leave
+			h->is_isotropic = NO;
+			return;
+		}
+	}
+	// flag as isotropic
+	h->is_isotropic = YES;
 }
 
 unsigned int get_slices_max(t_vol *volume) {

@@ -45,7 +45,6 @@
 
 #include "gtk/gtk.h"
 
-
 typedef struct		s_args_plug	t_args_plug;
 typedef struct		s_plugin	t_plugin;
 typedef struct		s_function	t_function;
@@ -232,15 +231,26 @@ enum RAW_TYPE {
     RGB_24BIT		= 2		// NEW COMMON DENOMINATOR FOR RAW TO PAVE ROAD FOR RGB storage
 };
 
+enum ISOTROPY_FLAG {
+    YES  	= 1,
+    NO		= 2
+};
+
 struct			s_header
 {
   int						dim_nb;
   unsigned int				*sizes;
+  unsigned int				*sizes_isotropic; // if data set was isotropic, this and the sizes array are identical
+  unsigned int				*slice_size;
+  unsigned int				*slice_size_isotropic; // if data set was isotropic, this and the slice_size array are identical
+  enum ISOTROPY_FLAG		is_isotropic;
   double					*start;
   double					*steps;
   char						**dim_name;
   unsigned long long int	*dim_offset;
-  unsigned int				*slice_size;
+  unsigned long long int	*dim_offset_isotropic; // if data set was isotropic, this and the dim_offset array are identical
+  long double				vol_min_val;
+  long double				vol_max_val;
   unsigned int				slice_max;
 };
 
@@ -365,6 +375,7 @@ char		get_by_name_dimension_id(t_vol * vol, char *dimension);
 Image * extractSliceDataAtProperOrientation(enum RAW_FORMAT original_format, enum RAW_TYPE data_type, char * dim_name_char, int dim, void * image_data, int width, int height, FILE * socketDescriptor);
 void dealWithException(ExceptionInfo *exception, FILE * socketDescriptor, Image * img, ImageInfo * image_info);
 void			write_header_into_file(int fd, t_header *h);
+void	determine_isotropy(t_header *h);
 
 /*		core.c			*/
 

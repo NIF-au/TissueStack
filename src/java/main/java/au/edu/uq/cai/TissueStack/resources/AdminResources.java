@@ -484,15 +484,17 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 		
 		final int extStart = imageFile.lastIndexOf(".");
 		if (extStart<1) 
-			throw new IllegalArgumentException("Given image file has to be NIFTI or minc with its corresponding extension .nii or .mnc !");
+			throw new IllegalArgumentException("Given image file has to be NIFTI or minc with its corresponding extension .nii/.nii.gz or .mnc !");
 		
 		final String ext = imageFile.substring(extStart);
 		if (ImageUtils.isRawFormat(imageFile)) 
 			throw new IllegalArgumentException("According to its header the given image file is raw already!");
-		else if (!(ext.equalsIgnoreCase(".nii") || ext.equalsIgnoreCase(".mnc")))
-				throw new IllegalArgumentException("Given image file has to be NIFTI or minc with its corresponding extension .nii or .mnc !");
+		else if (!(ext.equalsIgnoreCase(".nii") || ext.equalsIgnoreCase(".gz") || ext.equalsIgnoreCase(".mnc")))
+				throw new IllegalArgumentException("Given image file has to be NIFTI or minc with its corresponding extension .nii/.nii.gz or .mnc !");
 		
-		final String originalFilenameWithoutExtension = imageFile.substring(0, extStart);
+		String originalFilenameWithoutExtension = imageFile.substring(0, extStart);
+		if (originalFilenameWithoutExtension.toLowerCase().endsWith(".nii"))
+			originalFilenameWithoutExtension = originalFilenameWithoutExtension.substring(0, originalFilenameWithoutExtension.lastIndexOf('.'));
 		
 		// assemble new raw file name, either by using the given name or the default: original file name with extension changed to .raw
 		if (newRawFileName != null && !newRawFileName.trim().isEmpty()) {

@@ -24,128 +24,54 @@
 
 void failureToConvertSlice(t_tissue_stack * t, unsigned char * data, char * dim_name_char, char * id) {
 #ifdef __MINC_NIFTI_CL_CONVERTE__
-				fprintf(stderr, "Could not convert slice");
+	fprintf(stderr, "Could not convert slice");
 #else
-				ERROR("Could not convert slice");
-				t->percent_cancel(id, t);
+	ERROR("Could not convert slice");
+	t->percent_cancel(id, t);
 #endif
-	if (data != NULL) free(data);
-	if (dim_name_char != NULL) free(dim_name_char);
+	if (data != NULL)
+		free(data);
+	if (dim_name_char != NULL)
+		free(dim_name_char);
 }
 
-void extractDataFromMincVolume(
-		t_vol * volume,
-		const unsigned long start[],
-		const unsigned long count[],
-		mitype_t minc_type,
-		misize_t minc_type_size,
-		void * in,
-		unsigned char * out,
-		int size) {
-	unsigned int		i = 0;
-	//unsigned short 	error = 0;
+void extractDataFromMincVolume(t_vol * volume, const unsigned long start[], const unsigned long count[], mitype_t minc_type,
+		misize_t minc_type_size, void * in, unsigned char * out, int size) {
+	unsigned int i = 0;
 
-	// read hyperslab as unsigned byte for now and let minc do the dirty deeds of conversion
-	// hence the long block of commented out code below
-	if (miget_real_value_hyperslab(volume->minc_volume, MI_TYPE_UBYTE, start, count, in) != MI_NOERROR) {
+	// read hyperslab as unsigned byte and let minc do the dirty deeds of conversion
+	if (miget_real_value_hyperslab(volume->minc_volume, MI_TYPE_UBYTE, start,
+			count, in) != MI_NOERROR) {
 		if (out != NULL) {
 			free(out);
 			out = NULL;
 		}
 		return;
 	}
-	for (i=0;i<size;i++) {
-		out[i*3+0] = out[i*3+1] = out[i*3+2] = ((unsigned char *) in)[i];
-		/*
-		// keep track of error
-		error = 0;
-
-		// move start back "data type" number of bytes...
-		if (i !=0) in = ((char*)in) + minc_type_size;
-
-		// now extract value
-		switch(minc_type) {
-			case MI_TYPE_UBYTE: // unsigned char
-				out[i*3+0] = out[i*3+1] = out[i*3+2] = ((unsigned char *) in)[0];
-				break;
-			case MI_TYPE_BYTE: // signed char
-				out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((char *) in)[0]);
-				break;
-			case MI_TYPE_USHORT: // unsigned short
-				out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((unsigned short *) in)[0]);
-				break;
-			case MI_TYPE_SHORT: // signed int
-				out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((unsigned short *) in)[0]);
-				break;
-			case MI_TYPE_UINT: // unsigned int
-				out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((unsigned int *) in)[0]);
-				break;
-			case MI_TYPE_INT: // signed int
-				out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((int *) in)[0]);
-				break;
-			case MI_TYPE_FLOAT: //	float
-				out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((float *) in)[0]);
-				break;
-			case MI_TYPE_DOUBLE: //	double
-				out[i*3+0] = out[i*3+1] = out[i*3+2] = (unsigned char) (((double *) in)[0]);
-				break;
-			case MI_TYPE_UNKNOWN:				// UNKNOWN
-				error = 1;
-#ifdef __MINC_NIFTI_CL_CONVERTE__
-				fprintf(stderr, "Minc Conversion Error: unknown data type!");
-#else
-				ERROR("Minc Conversion Error: unknown data type!");
-#endif
-				break;
-			case MI_TYPE_STRING:				// NOT SUPPORTED
-			case MI_TYPE_SCOMPLEX:
-			case MI_TYPE_ICOMPLEX:
-			case MI_TYPE_FCOMPLEX:
-			case MI_TYPE_DCOMPLEX:
-				error = 1;
-#ifdef __MINC_NIFTI_CL_CONVERTE__
-				fprintf(stderr, "Minc Conversion Error: unsupported data type!");
-#else
-				ERROR("Minc Conversion Error: unsupported data type!");
-#endif
-				break;
-			default:	//	even more unknown
-				error = 1;
-#ifdef __MINC_NIFTI_CL_CONVERTE__
-				fprintf(stderr, "Minc Conversion Error: data type not listed!");
-#else
-				ERROR("Minc Conversion Error: data type not listed!");
-#endif
-				break;
-		  }
-		  // check for error
-		  if (error) {
-				if (out != NULL) {
-					free(out);
-					out = NULL;
-				}
-		  }
-		*/
+	for (i = 0; i < size; i++) {
+		out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] =
+				((unsigned char *) in)[i];
 	}
 }
 
-void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t, char *id_percent, int slice_resume, int dimension_resume) {
-	mitype_t			minc_type;
-	misize_t			minc_type_size;
-	void				*buffer = NULL;
-	int 				dim = (dimension_resume < 0) ? 0 : dimension_resume;
-	int 				slice = 0;
-	int 				size;
-	unsigned char 		*data = NULL;
-	int 				i = 0, j = 0;
-	unsigned long 		*start;
-	long unsigned int 	*count;
-	short 				cancel = 0;
-	char 				*dim_name_char = NULL;
-	Image 				*img = NULL;
-	PixelPacket 		*pixels;
-	int 				width = 0;
-	int 				height = 0;
+void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t,
+		char *id_percent, int slice_resume, int dimension_resume, t_args_plug * a) {
+	mitype_t minc_type;
+	misize_t minc_type_size;
+	void *buffer = NULL;
+	int dim = (dimension_resume < 0) ? 0 : dimension_resume;
+	int slice = 0;
+	int size;
+	unsigned char *data = NULL;
+	int i = 0, j = 0;
+	unsigned long *start;
+	long unsigned int *count;
+	short cancel = 0;
+	char *dim_name_char = NULL;
+	Image *img = NULL;
+	PixelPacket *pixels;
+	int width = 0;
+	int height = 0;
 
 	start = malloc(volume->dim_nb * sizeof(*start));
 	count = malloc(volume->dim_nb * sizeof(*count));
@@ -180,7 +106,7 @@ void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t, char 
 		count[dim] = 1;
 
 		// create data buffers of appropriate size
-		buffer = malloc(size*minc_type_size);
+		buffer = malloc(size * minc_type_size);
 		data = malloc(sizeof(*data) * size * 3);
 
 		// reset slice or resume
@@ -196,18 +122,21 @@ void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t, char 
 			start[dim] = slice;
 
 			// read data
-			extractDataFromMincVolume(volume, start, count, minc_type, minc_type_size, buffer, data, size);
+			extractDataFromMincVolume(volume, start, count, minc_type,
+					minc_type_size, buffer, data, size);
 			if (data == NULL) {
 				failureToConvertSlice(t, NULL, dim_name_char, id_percent);
 				return;
 			}
 
 			// convert to image and perform proper orientation corrections
-			get_width_height(&height, &width, dim, volume->dim_nb, dim_name_char, volume->size);
+			get_width_height(&height, &width, dim, volume->dim_nb,
+					dim_name_char, volume->size);
 			volume->raw_format = MINC;
 			volume->raw_data_type = RGB_24BIT;
-			img = extractSliceDataAtProperOrientation(
-					volume->raw_format, volume->raw_data_type, dim_name_char, dim, data, width, height, NULL);
+			img = extractSliceDataAtProperOrientation(volume->raw_format,
+					volume->raw_data_type, dim_name_char, dim, data, width,
+					height, NULL);
 			if (img == NULL) {
 				failureToConvertSlice(t, data, dim_name_char, id_percent);
 				return;
@@ -216,7 +145,8 @@ void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t, char 
 			// extract pixel info, looping over values
 			pixels = GetImagePixels(img, 0, 0, width, height);
 			if (pixels == NULL) {
-				if (img != NULL) DestroyImage(img);
+				if (img != NULL)
+					DestroyImage(img);
 				failureToConvertSlice(t, data, dim_name_char, id_percent);
 				return;
 			}
@@ -224,9 +154,12 @@ void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t, char 
 			for (j = 0; j < size; j++) {
 				// graphicsmagic quantum depth correction
 				if (QuantumDepth != 8 && img->depth == QuantumDepth) {
-					data[j * 3 + 0] = (unsigned char) mapUnsignedValue(img->depth, 8, pixels[(width * i) + j].red);
-					data[j * 3 + 1] = (unsigned char) mapUnsignedValue(img->depth, 8, pixels[(width * i) + j].green);
-					data[j * 3 + 2] = (unsigned char) mapUnsignedValue(img->depth, 8, pixels[(width * i) + j].blue);
+					data[j * 3 + 0] = (unsigned char) mapUnsignedValue(
+							img->depth, 8, pixels[(width * i) + j].red);
+					data[j * 3 + 1] = (unsigned char) mapUnsignedValue(
+							img->depth, 8, pixels[(width * i) + j].green);
+					data[j * 3 + 2] = (unsigned char) mapUnsignedValue(
+							img->depth, 8, pixels[(width * i) + j].blue);
 					continue;
 				} // no correction needed
 				data[j * 3 + 0] = (unsigned char) pixels[(width * i) + j].red;
@@ -239,12 +172,14 @@ void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t, char 
 			printf("Slice %i / %i of plane '%c'       \r", slice, (int) volume->size[dim], dim_name_char[dim]);
 			fflush(stdout);
 #else
-			DEBUG("Slice %i / %i [%c]", slice, (int) volume->size[dim], dim_name_char[dim]);
+			DEBUG("Slice %i / %i [%c]", slice, (int ) volume->size[dim],
+					dim_name_char[dim]);
 			t->percent_add(1, id_percent, t);
 			cancel = t->is_percent_paused_cancel(id_percent, t);
 #endif
 			slice++;
-			if (img != NULL) DestroyImage(img);
+			if (img != NULL)
+				DestroyImage(img);
 		}
 
 		start[dim] = 0;
@@ -252,23 +187,36 @@ void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t, char 
 		dim++;
 
 		// tidy up
-		if (buffer != NULL) free(buffer);
-		if (data != NULL) free(data);
+		if (buffer != NULL)
+			free(buffer);
+		if (data != NULL)
+			free(data);
 	}
-	if (dim_name_char != NULL) free(dim_name_char);
+	if (dim_name_char != NULL)
+		free(dim_name_char);
+
+
+#ifdef __MINC_NIFTI_CL_CONVERTE__
+	printf("\nConversion finished!\n");
+#else
+	if (cancel == 0) {
+		INFO("Conversion: MINC: %s to RAW: %s ==> DONE", a->commands[0], a->commands[1]);
+	} else {
+		INFO("Conversion: MINC: %s to RAW: %s ==> CANCELED", a->commands[0], a->commands[1]);
+	}
+#endif
+
 }
 
-int		get_nb_total_slices_to_do(t_vol *volume)
-{
-  int		i = 0;
-  int		count = 0;
+int get_nb_total_slices_to_do(t_vol *volume) {
+	int i = 0;
+	int count = 0;
 
-  while (i < volume->dim_nb)
-    {
-      count += volume->size[i];
-      i++;
-    }
-  return (count);
+	while (i < volume->dim_nb) {
+		count += volume->size[i];
+		i++;
+	}
+	return (count);
 }
 
 t_vol *init_get_volume_from_minc_file(char *path) {
@@ -351,56 +299,99 @@ t_vol *init_get_volume_from_minc_file(char *path) {
 	return (volume);
 }
 
-t_header	*create_header_from_minc_struct(t_vol *minc_volume)
-{
-  t_header	*h;
-  int		i;
-  int		j;
+t_header *create_header_from_minc_struct(t_vol *minc_volume) {
+	t_header *h;
+	int i;
+	int j;
 
-  h = malloc(sizeof(*h));
+	h = malloc(sizeof(*h));
 
-  h->dim_nb = minc_volume->dim_nb;
+	h->dim_nb = minc_volume->dim_nb;
 
-  h->sizes = malloc(h->dim_nb * sizeof(*h->sizes));
-  h->start = malloc(h->dim_nb * sizeof(*h->start));
-  h->steps = malloc(h->dim_nb * sizeof(*h->steps));
-  h->dim_name = malloc(h->dim_nb * sizeof(*h->dim_name));
-  h->dim_offset = malloc(h->dim_nb * sizeof(*h->dim_offset));
-  h->slice_size = malloc(h->dim_nb * sizeof(*h->slice_size));
+	h->sizes = malloc(h->dim_nb * sizeof(*h->sizes));
+	h->sizes_isotropic = malloc(h->dim_nb * sizeof(*h->sizes_isotropic));
+	h->start = malloc(h->dim_nb * sizeof(*h->start));
+	h->steps = malloc(h->dim_nb * sizeof(*h->steps));
+	h->dim_name = malloc(h->dim_nb * sizeof(*h->dim_name));
+	h->dim_offset = malloc(h->dim_nb * sizeof(*h->dim_offset));
+	h->dim_offset_isotropic = malloc(h->dim_nb * sizeof(*h->dim_offset_isotropic));
+	h->slice_size = malloc(h->dim_nb * sizeof(*h->slice_size));
+	h->slice_size_isotropic = malloc(h->dim_nb * sizeof(*h->slice_size_isotropic));
 
-  h->slice_max = minc_volume->slices_max;
+	h->slice_max = minc_volume->slices_max;
 
-  i = 0;
-  while (i < h->dim_nb)
-    {
-      h->sizes[i] = minc_volume->size[i];
-      h->start[i] = minc_volume->starts[i];
-      h->steps[i] = minc_volume->steps[i];
-      h->dim_name[i] = strdup(minc_volume->dim_name[i]);
+	i = 0;
+	while (i < h->dim_nb) {
+		h->sizes[i] = minc_volume->size[i];
+		h->sizes_isotropic[i] = h->sizes[i]; // copy over for now and correct it below (if anisotropic)
+		h->start[i] = minc_volume->starts[i];
+		h->steps[i] = minc_volume->steps[i];
+		h->dim_name[i] = strdup(minc_volume->dim_name[i]);
 
-      h->slice_size[i] = 1;
-      j = 0;
-      while (j < h->dim_nb)
-	{
-	  if (j != i)
-	    h->slice_size[i] *= minc_volume->size[j];
-	  j++;
+		h->slice_size[i] = 1;
+		j = 0;
+		while (j < h->dim_nb) {
+			if (j != i)
+				h->slice_size[i] *= minc_volume->size[j];
+			// copy over for now and correct it below (if anisotropic)
+			h->slice_size_isotropic[i] = h->slice_size[i];
+			j++;
+		}
+		i++;
 	}
-      i++;
-    }
 
-  h->dim_offset[0] = 0;
-  i = 1;
-  while (i < h->dim_nb)
-    {
-      h->dim_offset[i] =
-    		  (unsigned long long)(h->dim_offset[i - 1] +
-    				  (unsigned long long)((unsigned long long)h->slice_size[i - 1] * (unsigned long long)h->sizes[i - 1]) * 3);
-      i++;
-    }
-  return (h);
+	// check isotropy
+	determine_isotropy(h);
+	if (h->is_isotropic == NO) { // store isotropic dimensions separately for future use
+		i = 0;
+		while (i < h->dim_nb) {
+			h->slice_size_isotropic[i] = 1;
+			h->sizes_isotropic[i] = (unsigned int) round(
+					(double) h->sizes_isotropic[i] * h->steps[i]);
+			i++;
+		}
+	}
+
+	// calculate offsets
+	i = 0;
+	while (i < h->dim_nb) {
+		if (h->is_isotropic == NO) { // compute slice_sizes for anisotropic
+			j = 0;
+			while (j < h->dim_nb) {
+				if (j != i)	h->slice_size_isotropic[i] *= h->sizes_isotropic[j];
+				j++;
+			}
+		}
+
+		if (i == 0) { // offset for first dimension: 0
+			h->dim_offset[0] = 0;
+			h->dim_offset_isotropic[0] = 0;
+			i++;
+			continue;
+		}
+
+		// following offsets
+		h->dim_offset[i] =
+				(unsigned long long) (h->dim_offset[i - 1]
+						+ (unsigned long long) ((unsigned long long) h->slice_size[i
+								- 1] * (unsigned long long) h->sizes[i - 1]) * 3);
+
+		if (h->is_isotropic == NO) // calculate isotropic offsets
+			h->dim_offset_isotropic[i] =
+					(unsigned long long) (h->dim_offset_isotropic[i - 1]
+							+ (unsigned long long) ((unsigned long long) h->slice_size_isotropic[i
+									- 1]
+									* (unsigned long long) h->sizes_isotropic[i
+											- 1]) * 3);
+		else
+			// merely copy over
+			h->dim_offset_isotropic[i] = h->dim_offset[i];
+		i++;
+	}
+
+	return (h);
 }
 
-extern  t_log_plugin log_plugin;
+extern t_log_plugin log_plugin;
 
 #endif /* __MINC_TOOL_CORE__ */
