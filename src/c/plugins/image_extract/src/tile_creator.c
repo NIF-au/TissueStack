@@ -279,7 +279,9 @@ void		print_image(void *hyperslab, t_vol *volume, int current_dimension,
 
   if (checkRequestTimeout(a, img, image_info)) return;
 
-  if (a->info->colormap_id > -1) {
+  if (a->info->colormap_id > -1 &&
+		  strcmp(a->info->colormap_name[a->info->colormap_id], "grey") != 0
+		  && strcmp(a->info->colormap_name[a->info->colormap_id], "gray") != 0) {
       if ((new_image_info = CloneImageInfo((ImageInfo *)NULL)) == NULL) {
 		CatchException(&exception);
 		tidyUp(img, image_info, a->file);
