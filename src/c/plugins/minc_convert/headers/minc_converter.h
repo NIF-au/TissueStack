@@ -154,17 +154,14 @@ void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t,
 			for (j = 0; j < size; j++) {
 				// graphicsmagic quantum depth correction
 				if (QuantumDepth != 8 && img->depth == QuantumDepth) {
-					data[j * 3 + 0] = (unsigned char) mapUnsignedValue(
-							img->depth, 8, pixels[(width * i) + j].red);
-					data[j * 3 + 1] = (unsigned char) mapUnsignedValue(
-							img->depth, 8, pixels[(width * i) + j].green);
-					data[j * 3 + 2] = (unsigned char) mapUnsignedValue(
-							img->depth, 8, pixels[(width * i) + j].blue);
+					data[j * 3 + 0] = (unsigned char) mapUnsignedValue(img->depth, 8, pixels[j].red);
+					data[j * 3 + 1] = (unsigned char) mapUnsignedValue(img->depth, 8, pixels[j].green);
+					data[j * 3 + 2] = (unsigned char) mapUnsignedValue(img->depth, 8, pixels[j].blue);
 					continue;
 				} // no correction needed
-				data[j * 3 + 0] = (unsigned char) pixels[(width * i) + j].red;
-				data[j * 3 + 1] = (unsigned char) pixels[(width * i) + j].green;
-				data[j * 3 + 2] = (unsigned char) pixels[(width * i) + j].blue;
+				data[j * 3 + 0] = (unsigned char) pixels[j].red;
+				data[j * 3 + 1] = (unsigned char) pixels[j].green;
+				data[j * 3 + 2] = (unsigned char) pixels[j].blue;
 			}
 			write(fd, data, size * 3);
 

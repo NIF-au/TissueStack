@@ -100,7 +100,7 @@ void            get_all_slices_of_one_dimension(t_vol *volume, unsigned long *st
 unsigned char 	*get_raw_data(t_memory_mapping * memory_mappings, t_vol *volume, int dim, int slice, short * free_data);
 
 void            set_grayscale(unsigned char *ptr, float val);
-void            print_image(void *hyperslab, t_vol *volume, int current_dimension,
+void            print_image(unsigned char *hyperslab, t_vol *volume, int current_dimension,
                           unsigned int current_slice, int width, int height, t_image_args *a);
 
 void			free_image_extract(t_image_extract * extract);

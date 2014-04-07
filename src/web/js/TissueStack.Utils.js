@@ -162,7 +162,11 @@ TissueStack.Utils = {
 
 			// for continuous lookup
 			var valueRangeRow = 1;
-			var offsetRGB = [0,0,0];
+			var offsetRGB = [
+			                 TissueStack.color_maps[map][0][1],
+			                 TissueStack.color_maps[map][0][2],
+			                 TissueStack.color_maps[map][0][3]
+			                 ];
 			var valueRangeStart = TissueStack.color_maps[map][valueRangeRow-1][0] * 255;
 			var valueRangeEnd = TissueStack.color_maps[map][valueRangeRow][0] * 255;
 			
@@ -201,7 +205,7 @@ TissueStack.Utils = {
 					offsetRGB[2] = TissueStack.color_maps[map][valueRangeRow-1][3];
 				}
 				var valueRangeDelta = valueRangeEnd - valueRangeStart;
-
+				
 				// iterate over RGB channels
 				for (var rgb = 1; rgb < 4 ; rgb++) {
 					var rgbRangeStart = TissueStack.color_maps[map][valueRangeRow-1][rgb];
@@ -210,6 +214,8 @@ TissueStack.Utils = {
 					var rangeRemainder = index % valueRangeDelta;
 					if (rangeRemainder == 0 && rgbRangeDelta != 0 && rgbRangeDelta != 1 && valueRangeEnd == 255) {
 						offsetRGB[rgb-1] += rgbRangeDelta;
+					} else if (rangeRemainder == 0 && rgbRangeDelta != 0 && valueRangeEnd == 255 && index == 255) {
+						offsetRGB[rgb - 1] += rgbRangeDelta;
 					}
 					var rangeRatio = (rgbRangeDelta * rangeRemainder / valueRangeDelta) + offsetRGB[rgb-1];
 					

@@ -88,12 +88,11 @@ unsigned char * get_raw_data(t_memory_mapping * memory_mappings, t_vol *volume,
 		int dim, int slice, short * free_data) {
 	unsigned long long int offset;
 	unsigned char * data = NULL;
+	unsigned long long int size_per_slice =
+			(unsigned long long int) volume->slice_size[dim] * (unsigned long long int) (volume->raw_data_type == RGB_24BIT ? 3 : 1);
 
 	offset =
-			(volume->dim_offset[dim]
-					+ (unsigned long long int) ((unsigned long long int) volume->slice_size[dim]
-							* (unsigned long long int) slice)
-							* (volume->raw_data_type == RGB_24BIT ? 3 : 1));
+			volume->dim_offset[dim]	+ (unsigned long long int) (size_per_slice	* (unsigned long long int) slice);
 
 	if (memory_mappings != NULL) {
 		data = (unsigned char *) memory_mappings->get(memory_mappings,
@@ -105,12 +104,9 @@ unsigned char * get_raw_data(t_memory_mapping * memory_mappings, t_vol *volume,
 	// plan B: read in a regular fashion
 	*free_data = 1;
 	lseek(volume->raw_fd, offset, SEEK_SET);
-	data = malloc(
-			volume->slice_size[dim] * sizeof(*data)
-					* ((volume->raw_data_type == RGB_24BIT) ? 3 : 1));
-	read(volume->raw_fd, data,
-			volume->slice_size[dim]
-					* ((volume->raw_data_type == RGB_24BIT) ? 3 : 1));
+	data = malloc(size_per_slice);
+	memset(data, 0, size_per_slice);
+	read(volume->raw_fd, data, size_per_slice);
 
 	return data;
 }
@@ -209,8 +205,10 @@ void get_all_slices_of_one_dimension(t_vol *volume, unsigned long *start,
 		a->info->w_position = save_w_position;
 
 		// free slab
-		if (free_data > 0)
+		if (free_data > 0 && data != NULL) {
 			free(data);
+			data = NULL;
+		}
 	}
 	start[current_dimension] = 0;
 }

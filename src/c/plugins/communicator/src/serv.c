@@ -242,6 +242,15 @@ void		interpret_header(t_args_plug * a,  char *buff, FILE *file, t_serv_comm *s)
         	  return;
     	  }
 
+    	  if (atoi(quality) <= 0 || atof(scale) <= 0) {
+        	  write_http_response(file,
+        			  "{\"error\": {\"description\": \"Application Exception\", \"message\": \
+        			  \"Scale and quality have to be positive and greater than 0!\"}}",
+        			  NULL, "application/json");
+        	  fclose(file);
+        	  return;
+    	  }
+
 		  if (service == NULL) {
 			  sprintf(comm, "start image %s %i %i %i %i %i %i %s %s %s %s %s %s %s 1 %s %s", volume,
 				  (dimension[0] == '0' ? atoi(slice) : -1),

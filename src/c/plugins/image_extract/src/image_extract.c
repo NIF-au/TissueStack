@@ -55,7 +55,9 @@ void alloc_and_init_colormap_space_from_src(float **new_colormap,
 		float **source) {
 	short valueRangeRow = 1;
 	float * offsetRGB = malloc(3 * sizeof(*offsetRGB));
-	offsetRGB[0] = offsetRGB[1] = offsetRGB[2] = 0;
+	offsetRGB[0] = source[0][1];
+	offsetRGB[1] = source[0][2];
+	offsetRGB[2] = source[0][3];
 	float valueRangeStart = source[valueRangeRow - 1][0] * 255;
 	float valueRangeEnd = source[valueRangeRow][0] * 255;
 	unsigned short index = 0;
@@ -77,23 +79,27 @@ void alloc_and_init_colormap_space_from_src(float **new_colormap,
 		valueRangeDelta = valueRangeEnd - valueRangeStart;
 
 		// iterate over RGB channels
-
 		new_colormap[index] = malloc(3 * sizeof(*new_colormap[index]));
 		for (rgb = 1; rgb < 4; rgb++) {
 			float rgbRangeStart = source[valueRangeRow - 1][rgb];
 			float rgbRangeEnd = source[valueRangeRow][rgb];
 			float rgbRangeDelta = rgbRangeEnd - rgbRangeStart;
 			float rangeRemainder = fmodf((float) index, valueRangeDelta);
+
 			if (rangeRemainder == 0 && rgbRangeDelta != 0 && rgbRangeDelta != 1
 					&& valueRangeEnd == 255) {
 				offsetRGB[rgb - 1] += rgbRangeDelta;
+			} else if (rangeRemainder == 0 && rgbRangeDelta != 0 && valueRangeEnd == 255 && index == 255) {
+				offsetRGB[rgb - 1] += rgbRangeDelta;
 			}
+
 			float rangeRatio =
 					(rgbRangeDelta * rangeRemainder / valueRangeDelta)
 							+ offsetRGB[rgb - 1];
 
 			new_colormap[index][rgb - 1] = round(rangeRatio * 255);
 		}
+		DEBUG("%u => [%f/%f/%f]", index, new_colormap[index][0], new_colormap[index][1], new_colormap[index][2]);
 	}
 }
 
@@ -364,9 +370,9 @@ int count_files_presents_into_directory(char *path) {
 void display_colormap(float **colormap, char *name) {
 	int i = 0;
 
-	INFO("\n\n Colormap Name = |%s|", name);
+	DEBUG("\n\n Colormap Name = |%s|", name);
 	while (colormap[i][0] != 99) {
-		INFO("%f %f %f %f", colormap[i][0], colormap[i][1], colormap[i][2],
+		DEBUG("%f %f %f %f", colormap[i][0], colormap[i][1], colormap[i][2],
 				colormap[i][3])
 		i++;
 	}
@@ -402,6 +408,7 @@ void load_colormaps_from_directory(char *path, t_image_extract *image_args,
 					image_args->premapped_colormap[i] = malloc(
 							256 * sizeof(*image_args->premapped_colormap[i]));
 					if (discrete) {
+						DEBUG("COLORMAP: %s", p->d_name);
 						alloc_and_init_colormap_space_from_lookup(
 								image_args->premapped_colormap[i],
 								colormap_extracted);
@@ -421,6 +428,7 @@ void load_colormaps_from_directory(char *path, t_image_extract *image_args,
 							j++;
 						}
 					} else {
+						DEBUG("COLORMAP: %s", p->d_name);
 						alloc_and_init_colormap_space_from_src(
 								image_args->premapped_colormap[i],
 								colormap_extracted);

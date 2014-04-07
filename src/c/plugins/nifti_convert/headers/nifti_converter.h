@@ -32,6 +32,7 @@ void setGlobalMinMax(nifti_image *nim, t_header *h) {
 	unsigned int i = 0;
 	unsigned int slice = 0;
 	unsigned int size_per_slice = h->slice_size[0];
+	unsigned int expected_bytes = size_per_slice * (unsigned int) nim->nbyper;
 
 	if (nim->datatype == NIFTI_TYPE_UINT8 || nim->datatype == NIFTI_TYPE_RGB24 || nim->datatype == NIFTI_TYPE_RGBA32
 			|| nim->datatype == NIFTI_TYPE_COMPLEX64 || nim->datatype == NIFTI_TYPE_COMPLEX128 	|| nim->datatype == NIFTI_TYPE_COMPLEX256
@@ -48,7 +49,6 @@ void setGlobalMinMax(nifti_image *nim, t_header *h) {
 	h->vol_max_val = -INFINITY;
 
 	// we use the first dimension, why not, don't make a difference to me ...
-	data_in = malloc(size_per_slice * nim->nbyper);
 	while (slice < h->sizes[0]) { // SLICE LOOP
 		dims[1] = slice;
 		if ((ret = nifti_read_collapsed_image(nim, dims, (void*) &data_in))	< 0) {
@@ -60,6 +60,26 @@ void setGlobalMinMax(nifti_image *nim, t_header *h) {
 #endif
 			return;
 		}
+		in = NULL;
+
+		//sanity check
+		if (ret != expected_bytes) {
+#ifdef __MINC_NIFTI_CL_CONVERTE__
+			fprintf(stderr,
+					"Error reading Nifti data: discrepancy between number of read (%i) and expected bytes (%u)\n", ret, expected_bytes);
+#else
+			ERROR("Error reading Nifti data: discrepancy between number of read (%i) and expected bytes (%u)!", ret, expected_bytes);
+#endif
+			if (ret < expected_bytes) {
+#ifdef __MINC_NIFTI_CL_CONVERTE__
+			fprintf(stderr,	"Conversion aborted!");
+#else
+			ERROR("Conversion aborted!");
+#endif
+			return;
+			}
+		}
+
 		for (i = 0; i < size_per_slice; i++) {
 			// move start back "data type" number of bytes...
 			if (i == 0)
@@ -113,9 +133,11 @@ void setGlobalMinMax(nifti_image *nim, t_header *h) {
 
 		// increment slice
 		slice++;
+		if (data_in != NULL) {
+			free(data_in);
+			data_in = NULL;
+		}
 	}
-	if (data_in != NULL) free(data_in);
-
 }
 
 void iter_all_pix_and_convert(void *in, unsigned char * out, unsigned int size,	nifti_image *nim, t_header * h) {
@@ -127,105 +149,102 @@ void iter_all_pix_and_convert(void *in, unsigned char * out, unsigned int size,	
 		error = 0;
 		// move start back "data type" number of bytes...
 		if (i != 0)
-			in = ((char*) in) + nim->nbyper;
+			in = (void *) (((unsigned char*) in) + nim->nbyper);
 		// range to map to
 		long double range = h->vol_max_val - h->vol_min_val;
 
 		// now extract value
 		switch (nim->datatype) {
-		case NIFTI_TYPE_UINT8: // unsigned char | nothing much to there but copy values
-			out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] = ((unsigned char *) in)[0];
-			break;
-		case NIFTI_TYPE_INT8: // signed char | adjust range to min/max found previously
-			out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] =
-				(unsigned char)
-					roundl(((((long double) ((char *) in)[0]) - h->vol_min_val) / range) * (long double) 255);
-			break;
-		case NIFTI_TYPE_UINT16: // unsigned short
-			out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] =
-				(unsigned char)
-					roundl(((((long double) ((unsigned short *) in)[0]) - h->vol_min_val) / range) * (long double) 255);
-			break;
-		case NIFTI_TYPE_UINT32: // unsigned int
-			out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] =
-				(unsigned char)
-					roundl(((((long double) ((unsigned int *) in)[0]) - h->vol_min_val) / range) * (long double) 255);
-			break;
-		case NIFTI_TYPE_INT16: // signed short
-			out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] =
-				(unsigned char)
-					roundl(((((long double) ((short *) in)[0]) - h->vol_min_val) / range) * (long double) 255);
-			break;
-		case NIFTI_TYPE_INT32: // signed int
-			out[i * 3 + 0] = out[i * 3 + 1] =
-				(unsigned char)
-					roundl(((((long double) ((int *) in)[0]) - h->vol_min_val) / range) * (long double) 255);
-			break;
-		case NIFTI_TYPE_UINT64: // unsigned long long
-			out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] =
-				(unsigned char)
-					roundl(((((long double) ((unsigned long long int *) in)[0]) - h->vol_min_val) / range) * (long double) 255);
-			break;
-		case NIFTI_TYPE_INT64: // signed long long
-			out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] =
-				(unsigned char)
-					roundl(((((long double) ((long long int *) in)[0]) - h->vol_min_val) / range) * (long double) 255);
-			break;
-		case NIFTI_TYPE_FLOAT32: //	float
-			out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] =
-				(unsigned char)
-					roundl(((((long double) ((float *) in)[0]) - h->vol_min_val) / range) * (long double) 255);
-			break;
-		case NIFTI_TYPE_FLOAT64: //	double
-			out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] =
-				(unsigned char)
-					roundl(((((long double) ((double *) in)[0]) - h->vol_min_val) / range) * (long double) 255);
-			break;
-		case NIFTI_TYPE_FLOAT128: // long double
-			out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] =
-				(unsigned char)
-					roundl(((((long double *) in)[0] - h->vol_min_val) / range) * (long double) 255);
-			break;
-		case NIFTI_TYPE_RGB24:
-			// presumably we have to do nothing ...
-			out[i] = ((unsigned char *) in)[0];
-			break;
-		case NIFTI_TYPE_RGBA32:
-			// presumably we have to skip alpha channel ...
-			if (i != 0 && (i % 4) == 0)
-				in = ((char*) in) + 1;
-			break;
-		case 0:				// UNKNOWN
-			error = 1;
-#ifdef __MINC_NIFTI_CL_CONVERTE__
-			fprintf(stderr, "Nifti Conversion Error: unknown data type!");
-#else
-			ERROR("Nifti Conversion Error: unknown data type!")
-			;
-#endif
-			break;
-		case DT_BINARY:				// NOT SUPPORTED
-		case NIFTI_TYPE_COMPLEX64:
-		case NIFTI_TYPE_COMPLEX128:
-		case NIFTI_TYPE_COMPLEX256:
-			error = 1;
-#ifdef __MINC_NIFTI_CL_CONVERTE__
-			fprintf(stderr, "Nifti Conversion Error: unsupported data type!");
-#else
-			ERROR("Nifti Conversion Error: unsupported data type!")
-			;
-#endif
-			break;
-		default:	//	even more unknown
-			error = 1;
-#ifdef __MINC_NIFTI_CL_CONVERTE__
-			fprintf(stderr, "Nifti Conversion Error: unsupported data type!");
-#else
-			ERROR("Nifti Conversion Error: data type not listed!")
-			;
-#endif
-			break;
-		}
+			case NIFTI_TYPE_UINT8: // unsigned char | nothing much to there but copy values
+				out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] = (unsigned char) ((unsigned char *) in)[0];
+				break;
+			case NIFTI_TYPE_INT8: // signed char | adjust range to min/max found previously
+				out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] =
+					(unsigned char)
+						roundl(((((long double) ((char *) in)[0]) - h->vol_min_val) / range) * (long double) 255);
+				break;
+			case NIFTI_TYPE_UINT16: // unsigned short
+				out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] =
+					(unsigned char)
+						roundl(((((long double) ((unsigned short *) in)[0]) - h->vol_min_val) / range) * (long double) 255);
+				break;
+			case NIFTI_TYPE_UINT32: // unsigned int
+				out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] =
+					(unsigned char)
+						roundl(((((long double) ((unsigned int *) in)[0]) - h->vol_min_val) / range) * (long double) 255);
+				break;
+			case NIFTI_TYPE_INT16: // signed short
+				out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] =
+					(unsigned char)
+						roundl(((((long double) ((short *) in)[0]) - h->vol_min_val) / range) * (long double) 255);
+				break;
+			case NIFTI_TYPE_INT32: // signed int
+				out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] =
+					(unsigned char)
+						roundl(((((long double) ((int *) in)[0]) - h->vol_min_val) / range) * (long double) 255);
+				break;
+			case NIFTI_TYPE_UINT64: // unsigned long long
+				out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] =
+					(unsigned char)
+						roundl(((((long double) ((unsigned long long int *) in)[0]) - h->vol_min_val) / range) * (long double) 255);
+				break;
+			case NIFTI_TYPE_INT64: // signed long long
+				out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] =
+					(unsigned char)
+						roundl(((((long double) ((long long int *) in)[0]) - h->vol_min_val) / range) * (long double) 255);
+				break;
+			case NIFTI_TYPE_FLOAT32: //	float
+				out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] =
+					(unsigned char)
+						roundl(((((long double) ((float *) in)[0]) - h->vol_min_val) / range) * (long double) 255);
+				break;
+			case NIFTI_TYPE_FLOAT64: //	double
+				out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] =
+					(unsigned char)
+						roundl(((((long double) ((double *) in)[0]) - h->vol_min_val) / range) * (long double) 255);
+				break;
+			case NIFTI_TYPE_FLOAT128: // long double
+				out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] =
+					(unsigned char)
+						roundl(((((long double *) in)[0] - h->vol_min_val) / range) * (long double) 255);
+				break;
+			case NIFTI_TYPE_RGB24:
+			case NIFTI_TYPE_RGBA32:
+				// presumably we have to do nothing ...
+				out[i * 3 + 0] = ((unsigned char *) in)[0];
+				out[i * 3 + 1] = ((unsigned char *) in)[size];
+				out[i * 3 + 2] = ((unsigned char *) in)[size*2];
+				break;
+			case 0:				// UNKNOWN
+				error = 1;
+	#ifdef __MINC_NIFTI_CL_CONVERTE__
+				fprintf(stderr, "Nifti Conversion Error: unknown data type!");
+	#else
+				ERROR("Nifti Conversion Error: unknown data type!");
+	#endif
+				break;
+			case DT_BINARY:				// NOT SUPPORTED
+			case NIFTI_TYPE_COMPLEX64:
+			case NIFTI_TYPE_COMPLEX128:
+			case NIFTI_TYPE_COMPLEX256:
+				error = 1;
+	#ifdef __MINC_NIFTI_CL_CONVERTE__
+				fprintf(stderr, "Nifti Conversion Error: unsupported data type!");
+	#else
+				ERROR("Nifti Conversion Error: unsupported data type!")
+				;
+	#endif
+				break;
+			default:	//	even more unknown
+				error = 1;
+	#ifdef __MINC_NIFTI_CL_CONVERTE__
+				fprintf(stderr, "Nifti Conversion Error: unsupported data type!");
+	#else
+				ERROR("Nifti Conversion Error: data type not listed!")
+				;
+	#endif
+				break;
+			}
 
 		// check for error
 		if (error) {
@@ -341,10 +360,15 @@ t_header *create_header_from_nifti_struct(nifti_image *nifti_volume) {
 	return (h);
 }
 
-void conversion_failed_actions(t_args_plug * a, char *id, void * data_out,
-		char * dim_name_char) {
-	if (data_out != NULL)
+void conversion_failed_actions(t_args_plug * a, char *id, void * data_out, void * data_in, char * dim_name_char) {
+	if (data_in != NULL) {
+		free(data_in);
+		data_in = NULL;
+	}
+	if (data_out != NULL) {
 		free(data_out);
+		data_out = NULL;
+	}
 	if (dim_name_char != NULL)
 		free(dim_name_char);
 
@@ -372,6 +396,7 @@ void convertNifti0(t_args_plug *a, nifti_image *nim, t_header *h, int fd, int i,
 	unsigned int nslices;
 	unsigned int size_per_slice;
 	int cancel = 0;
+	unsigned int expected_bytes = 0;
 
 #ifdef __MINC_NIFTI_CL_CONVERTE__
 				printf("Determining Data Set Range...");
@@ -405,11 +430,11 @@ void convertNifti0(t_args_plug *a, nifti_image *nim, t_header *h, int fd, int i,
 		}
 		nslices = h->sizes[i - 1];
 		size_per_slice = h->slice_size[i - 1];
+		expected_bytes = size_per_slice * (unsigned int) nim->nbyper;
 
 		data_out = malloc(size_per_slice * 3 * sizeof(*data_out));
 		while (slice < nslices && cancel == 0) { // SLICE LOOP
 			img = NULL;
-			data_in = NULL;
 			dims[i] = slice;
 			if ((ret = nifti_read_collapsed_image(nim, dims, (void*) &data_in))	< 0) {
 				if (dim_name_char != NULL)
@@ -424,11 +449,29 @@ void convertNifti0(t_args_plug *a, nifti_image *nim, t_header *h, int fd, int i,
 				return;
 			}
 
+			//sanity check
+			if (ret != expected_bytes) {
+#ifdef __MINC_NIFTI_CL_CONVERTE__
+				fprintf(stderr,
+						"Error reading Nifti data: discrepancy between number of read (%i) and expected bytes (%u)\n", ret, expected_bytes);
+#else
+				ERROR("Error reading Nifti data: discrepancy between number of read (%i) and expected bytes (%u)!", ret, expected_bytes);
+#endif
+				if (ret < expected_bytes) {
+#ifdef __MINC_NIFTI_CL_CONVERTE__
+				fprintf(stderr,	"Conversion aborted!");
+#else
+				ERROR("Conversion aborted!");
+#endif
+				return;
+				}
+			}
+
+			// loop over values
 			iter_all_pix_and_convert(data_in, data_out, size_per_slice, nim, h);
 
-			free(data_in);
 			if (data_out == NULL) {
-				conversion_failed_actions(NULL, NULL, data_out, dim_name_char);
+				conversion_failed_actions(NULL, NULL, NULL, data_in, dim_name_char);
 				return;
 			}
 
@@ -438,34 +481,22 @@ void convertNifti0(t_args_plug *a, nifti_image *nim, t_header *h, int fd, int i,
 					dim_name_char, i - 1, data_out, width, height, NULL);
 
 			if (img == NULL) {
-				conversion_failed_actions(NULL, NULL, data_out, dim_name_char);
+				conversion_failed_actions(NULL, NULL, data_out, data_in, dim_name_char);
 				return;
 			}
 
-//			ExceptionInfo exception;
-//			GetExceptionInfo(&exception);
-//			ImageInfo * image_info;
-//
-//			if ((image_info = CloneImageInfo((ImageInfo *) NULL)) == NULL) {
-//				conversion_failed_actions(NULL, NULL, data_out, dim_name_char);
-//				return;
-//			}
-//			if (h->is_isotropic == NO) {
-//				img = ScaleImage(img, width, height, &exception);
-//			}
-//
-//			char path[300]; // first path
-//			sprintf(path, "/tmp/img_%c_%i.png", dim_name_char[i - 1], slice);
-//
-//			strcpy(img->filename, path);
-//			WriteImage(image_info, img);
+			// free data in
+			if (data_in != NULL) {
+				free(data_in);
+				data_in = NULL;
+			}
 
 			// extract pixel info, looping over values
 			pixels = GetImagePixels(img, 0, 0, width, height);
 			if (pixels == NULL) {
 				if (img != NULL)
 					DestroyImage(img);
-				conversion_failed_actions(NULL, NULL, data_out, dim_name_char);
+				conversion_failed_actions(NULL, NULL, data_out, data_in, dim_name_char);
 				return;
 			}
 
@@ -473,26 +504,35 @@ void convertNifti0(t_args_plug *a, nifti_image *nim, t_header *h, int fd, int i,
 			for (j = 0; j < size_per_slice; j++) {
 				// graphicsmagic quantum depth correction
 				if (QuantumDepth != 8 && img->depth == QuantumDepth) {
-					data_out[j * 3 + 0] = (unsigned char) mapUnsignedValue(
-							img->depth, 8, pixels[(width * i) + j].red);
-					data_out[j * 3 + 1] = (unsigned char) mapUnsignedValue(
-							img->depth, 8, pixels[(width * i) + j].green);
-					data_out[j * 3 + 2] = (unsigned char) mapUnsignedValue(
-							img->depth, 8, pixels[(width * i) + j].blue);
+					data_out[j * 3 + 0] = (unsigned char) mapUnsignedValue(img->depth, 8, pixels[j].red);
+					data_out[j * 3 + 1] = (unsigned char) mapUnsignedValue(img->depth, 8, pixels[j].green);
+					data_out[j * 3 + 2] = (unsigned char) mapUnsignedValue(img->depth, 8, pixels[j].blue);
 					continue;
 				} // no correction needed
-				data_out[j * 3 + 0] =
-						(unsigned char) pixels[(width * i) + j].red;
-				data_out[j * 3 + 1] =
-						(unsigned char) pixels[(width * i) + j].green;
-				data_out[j * 3 + 2] =
-						(unsigned char) pixels[(width * i) + j].blue;
+				data_out[j * 3 + 0] = (unsigned char) pixels[j].red;
+				data_out[j * 3 + 1] = (unsigned char) pixels[j].green;
+				data_out[j * 3 + 2] = (unsigned char) pixels[j].blue;
 			}
 
-			// write into file
 			write(fd, data_out, size_per_slice * 3);
 			// increment slice
 			slice++;
+
+//			// TODO: fix nifti color
+//			ExceptionInfo exception;
+//			GetExceptionInfo(&exception);
+//			ImageInfo * image_info;
+//
+//			if ((image_info = CloneImageInfo((ImageInfo *) NULL)) == NULL) {
+//				conversion_failed_actions(NULL, NULL, data_out, data_in, dim_name_char);
+//				return;
+//			}
+//
+//			char path[300]; // first path
+//			sprintf(path, "/tmp/img_%c_%i.png", dim_name_char[i - 1], slice);
+//
+//			strcpy(img->filename, path);
+//			WriteImage(image_info, img);
 
 			// tidy up
 			if (img != NULL)
@@ -510,8 +550,10 @@ void convertNifti0(t_args_plug *a, nifti_image *nim, t_header *h, int fd, int i,
 #endif
 		}
 
-		if (data_out != NULL)
+		if (data_out != NULL) {
 			free(data_out);
+			data_out = NULL;
+		}
 		dims[i] = -1;
 		i++;
 	}

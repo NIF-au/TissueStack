@@ -95,6 +95,7 @@ RectangleInfo *create_rectangle_crop(int kind, t_image_args *a)
 {
     RectangleInfo *portion;
 
+
     if (kind == 1 || kind == 3) {
         portion = malloc(sizeof(*portion));
         portion->width = (
@@ -208,7 +209,7 @@ void		apply_contrast(PixelPacket *px, unsigned char min, unsigned char max,
     }
 }
 
-void		print_image(void *hyperslab, t_vol *volume, int current_dimension,
+void		print_image(unsigned char *hyperslab, t_vol *volume, int current_dimension,
 			    unsigned int current_slice, int width, int height, t_image_args *a)
 {
   ExceptionInfo exception;
