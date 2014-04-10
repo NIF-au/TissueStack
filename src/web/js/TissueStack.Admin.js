@@ -235,24 +235,23 @@ TissueStack.Admin.prototype = {
 	    	 var action = $('input[name=radio_task]:checked').val();
 	    	 if (typeof(action) == 'string' && action === 'PreTile')
 	    		 url += "data_set_raw_files";
-	    	 else 
-	    		 url += "upload_directory";
-	    	// complete url
-	    	url += ("/json"); 
+	    	 else url += "upload_directory";
 
+	    	 // complete url setting filter params
+	    	url += ("/json");
+	    	if (typeof(action) == 'string' && action === 'AddDataSet') url += "?display_raw_only=true";
+	    	if (typeof(action) == 'string' && action === 'Convert') url += "?display_conversion_formats_only=true";
 	    	$("#directory_name").html((typeof(action) == 'string' && action === 'PreTile') ? "Data Sets" : "Upload Directory");
 	    	
 	      	TissueStack.Utils.sendAjaxRequest(url, "GET", true,function(result) {
-		    	if (!result || !result.response || result.response.length == 0) {
-		    		return;
-		    	}
-		    	// display results
-	        	var listOfFileName = "";	    	
-		        $.each(result.response, function(i, uploadedFile){
-		        	content = '<input type="radio" name="radio_listFile" class="uploaded_file" id="check_' + uploadedFile + '" value="' + uploadedFile + '" />'
-		        			+ '<label for="'+'check_'+ uploadedFile +'">'+ uploadedFile + '</label>';
-		        	listOfFileName += content; 
-	              });
+	        	var listOfFileName = "";
+	      		if (result && result.response && result.response.length > 0) {
+			        $.each(result.response, function(i, uploadedFile){
+			        	content = '<input type="radio" name="radio_listFile" class="uploaded_file" id="check_' + uploadedFile + '" value="' + uploadedFile + '" />'
+			        			+ '<label for="'+'check_'+ uploadedFile +'">'+ uploadedFile + '</label>';
+			        	listOfFileName += content; 
+		              });
+	      		}
 	            $('.file_radio_list').fadeIn(1500, function() {  
 	             	 $('.file_radio_list').html(listOfFileName)
 	             	 	.trigger( "create" );

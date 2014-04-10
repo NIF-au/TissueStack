@@ -290,15 +290,28 @@ public final class AdminResources extends AbstractRestfulMetaInformation {
 	
 	@Path("/upload_directory")
 	@Description("Displays contents of the upload directory")
-	public RestfulResource getContentsOfUploadDirectory() {
+	public RestfulResource getContentsOfUploadDirectory(
+			@Description("Optional: display only raw files")
+			@QueryParam("display_raw_only") String onlyRaw,
+			@Description("Optional: display only possible conversion formats")
+			@QueryParam("display_conversion_formats_only") String conversionFormatsOnly) {
 		final File fileDirectory = AdminResources.getUploadDirectory();
 		
 		final Map<String, Long> queuedTasks = TaskUtils.getMapOfFilesPresentlyInTaskQueue();
 		
+		final boolean displayOnlyRawFiles = (onlyRaw != null) ? Boolean.parseBoolean(onlyRaw) : false;
+		final boolean displayOnlyConversionFormats = (conversionFormatsOnly != null) ? Boolean.parseBoolean(conversionFormatsOnly) : false;
+		
 		File[] listOfFiles = fileDirectory.listFiles(new FilenameFilter() {
 			public boolean accept(File path, String fileOrDir) {
 				final File full = new File(path, fileOrDir);
-				if (full.isDirectory() || (queuedTasks != null && queuedTasks.containsKey(full.getAbsolutePath()))) {
+				if (full.isDirectory() 
+						|| (queuedTasks != null && queuedTasks.containsKey(full.getAbsolutePath()))
+						|| (displayOnlyRawFiles && !full.getAbsolutePath().endsWith(".raw"))
+						|| (displayOnlyConversionFormats  
+								&& !(full.getAbsolutePath().endsWith(".nii") 
+										|| full.getAbsolutePath().endsWith(".nii.gz")
+										|| full.getAbsolutePath().endsWith(".mnc")))) {
 					return false;
 				}
 				return true;

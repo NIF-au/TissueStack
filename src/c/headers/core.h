@@ -252,6 +252,7 @@ struct			s_header
   long double				vol_min_val;
   long double				vol_max_val;
   unsigned int				slice_max;
+  short						channels;	// number of channels if RGB
 };
 
 struct			s_vol
