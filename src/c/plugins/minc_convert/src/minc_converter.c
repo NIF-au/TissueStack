@@ -67,9 +67,9 @@ void  		*start(void *args)
 	  if (slice > 0) off += (header->slice_size[i] * slice * 3);
 	  lseek(fd, off, SEEK_SET);
 	  if (a->commands[2] != NULL && strcmp(a->commands[2], "@tasks@") == 0 && a->commands[3] != NULL && strlen(a->commands[3]) == 16) {
-			dim_loop(fd, minc_volume->dim_nb, minc_volume, a->general_info, a->commands[3], -1, -1, a);
+			dim_loop(fd, minc_volume->dim_nb, minc_volume, a->general_info, a->commands[3], -1, -1, a, header);
 	  } else {
-	    dim_loop(fd, minc_volume->dim_nb, minc_volume, a->general_info, a->commands[5], slice, dimension, a);
+	    dim_loop(fd, minc_volume->dim_nb, minc_volume, a->general_info, a->commands[5], slice, dimension, a, header);
 	  }
 	  close(fd);
 	  return (NULL);
@@ -90,7 +90,7 @@ void  		*start(void *args)
       if (a->commands[2] != NULL && strcmp(a->commands[2], "@tasks@") == 0)
 	{
 	  command_line = array_2D_to_array_1D(a->commands);
-	  a->general_info->percent_init(get_nb_total_slices_to_do(minc_volume), &id_percent, a->commands[0], "1", a->commands[1], command_line, a->general_info);
+	  a->general_info->percent_init(get_nb_total_slices_to_do(header), &id_percent, a->commands[0], "1", a->commands[1], command_line, a->general_info);
 	  if (a->box != NULL)
 	    {
 	      if (write(*((int*)a->box), id_percent, 16) < 0)
@@ -101,7 +101,7 @@ void  		*start(void *args)
 	  close(fd);
 	  return (NULL);
 	}
-      dim_loop(fd, minc_volume->dim_nb, minc_volume, a->general_info, id_percent, -1, -1, a);
+      dim_loop(fd, minc_volume->dim_nb, minc_volume, a->general_info, id_percent, -1, -1, a, header);
     }
   if (fd != 0)
     {

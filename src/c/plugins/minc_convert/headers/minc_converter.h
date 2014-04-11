@@ -35,9 +35,11 @@ void failureToConvertSlice(t_tissue_stack * t, unsigned char * data, char * dim_
 		free(dim_name_char);
 }
 
-void extractDataFromMincVolume(t_vol * volume, const unsigned long start[], const unsigned long count[], mitype_t minc_type,
-		misize_t minc_type_size, void * in, unsigned char * out, int size) {
+void extractDataFromMincVolume(
+		t_vol * volume, const unsigned long start[], const unsigned long count[], mitype_t minc_type,
+		misize_t minc_type_size, void * in, unsigned char * out, int size, short rgb_channel) {
 	unsigned int i = 0;
+	unsigned char val = 0;
 
 	// read hyperslab as unsigned byte and let minc do the dirty deeds of conversion
 	if (miget_real_value_hyperslab(volume->minc_volume, MI_TYPE_UBYTE, start,
@@ -49,13 +51,14 @@ void extractDataFromMincVolume(t_vol * volume, const unsigned long start[], cons
 		return;
 	}
 	for (i = 0; i < size; i++) {
-		out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] =
-				((unsigned char *) in)[i];
+		val = ((unsigned char *) in)[i];
+		if (rgb_channel < 0) out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] = val;
+		else out[i * 3 + rgb_channel] = val;
 	}
 }
 
 void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t,
-		char *id_percent, int slice_resume, int dimension_resume, t_args_plug * a) {
+		char *id_percent, int slice_resume, int dimension_resume, t_args_plug * a, t_header * h) {
 	mitype_t minc_type;
 	misize_t minc_type_size;
 	void *buffer = NULL;
@@ -72,37 +75,45 @@ void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t,
 	PixelPacket *pixels;
 	int width = 0;
 	int height = 0;
+	short rgb_channel = 0;
+	short rgb_total = h->channels > 0 ? h->channels : 1;
 
-	start = malloc(volume->dim_nb * sizeof(*start));
-	count = malloc(volume->dim_nb * sizeof(*count));
-	start[0] = start[1] = start[2] = 0;
-	i = 0;
-	while (i < volume->dim_nb) {
-		count[i] = volume->size[i];
+	// define start and length for hyperslap read
+	int length = h->channels > 0 ? h->dim_nb+1 : h->dim_nb;
+	start = malloc(length * sizeof(*start));
+	count = malloc(length * sizeof(*count));
+	while (i<length) {
+		start[i] = 0;
+		if (i < 3) {
+			start[i] = 0;
+			count[i] = h->sizes[i];
+		} else count[i] = 1;
 		i++;
 	}
+	i = 0;
 
 	// get minc volume params
 	if (miget_data_type(volume->minc_volume, &minc_type) != MI_NOERROR) {
 		failureToConvertSlice(t, NULL, NULL, id_percent);
 		return;
 	}
+
 	if (miget_data_type_size(volume->minc_volume, &minc_type_size) != MI_NOERROR) {
 		failureToConvertSlice(t, NULL, NULL, id_percent);
 		return;
 	}
 
 	// plane lookup
-	dim_name_char = malloc(volume->dim_nb * sizeof(*dim_name_char));
-	for (j = 0; j < volume->dim_nb; j++)
-		dim_name_char[j] = volume->dim_name[j][0];
+	dim_name_char = malloc(h->dim_nb * sizeof(*dim_name_char));
+	for (j = 0; j < h->dim_nb; j++)
+		dim_name_char[j] = h->dim_name[j][0];
 
 	while (dim < dimensions_nb && cancel == 0) { // DIMENSION LOOP
 		size = (dim == 0 ?
-				(volume->size[2] * volume->size[1]) :
+				(h->sizes[2] * h->sizes[1]) :
 				(dim == 1 ?
-						(volume->size[0] * volume->size[2]) :
-						(volume->size[0] * volume->size[1])));
+						(h->sizes[0] * h->sizes[2]) :
+						(h->sizes[0] * h->sizes[1])));
 		count[dim] = 1;
 
 		// create data buffers of appropriate size
@@ -117,21 +128,29 @@ void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t,
 			slice = 0;
 		}
 
-		while (slice < volume->size[dim] && cancel == 0) { // SLICE LOOP
+		while (slice < h->sizes[dim] && cancel == 0) { // SLICE LOOP
 			img = NULL;
+			rgb_channel = 0;
 			start[dim] = slice;
 
-			// read data
-			extractDataFromMincVolume(volume, start, count, minc_type,
-					minc_type_size, buffer, data, size);
-			if (data == NULL) {
-				failureToConvertSlice(t, NULL, dim_name_char, id_percent);
-				return;
+			// read data (including rgb)
+			while (rgb_channel < rgb_total) {
+				if (h->channels > 0) start[h->dim_nb] = rgb_channel;
+				extractDataFromMincVolume(
+						volume, start, count, minc_type,
+						minc_type_size, buffer, data, size,
+						h->channels > 0 ? rgb_channel : -1);
+
+				if (data == NULL) {
+					failureToConvertSlice(t, NULL, dim_name_char, id_percent);
+					return;
+				}
+
+				rgb_channel++;
 			}
 
 			// convert to image and perform proper orientation corrections
-			get_width_height(&height, &width, dim, volume->dim_nb,
-					dim_name_char, volume->size);
+			get_width_height(&height, &width, dim, h->dim_nb, dim_name_char, h->sizes);
 			volume->raw_format = MINC;
 			volume->raw_data_type = RGB_24BIT;
 			img = extractSliceDataAtProperOrientation(volume->raw_format,
@@ -166,10 +185,10 @@ void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t,
 			write(fd, data, size * 3);
 
 #ifdef __MINC_NIFTI_CL_CONVERTE__
-			printf("Slice %i / %i of plane '%c'       \r", slice, (int) volume->size[dim], dim_name_char[dim]);
+			printf("Slice %i / %i of plane '%c'       \r", slice, (int) h->sizes[dim], dim_name_char[dim]);
 			fflush(stdout);
 #else
-			DEBUG("Slice %i / %i [%c]", slice, (int ) volume->size[dim],
+			DEBUG("Slice %i / %i [%c]", slice, (int ) h->sizes[dim],
 					dim_name_char[dim]);
 			t->percent_add(1, id_percent, t);
 			cancel = t->is_percent_paused_cancel(id_percent, t);
@@ -180,7 +199,7 @@ void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t,
 		}
 
 		start[dim] = 0;
-		count[dim] = volume->size[dim];
+		count[dim] = h->sizes[dim];
 		dim++;
 
 		// tidy up
@@ -205,12 +224,12 @@ void dim_loop(int fd, int dimensions_nb, t_vol *volume, t_tissue_stack *t,
 
 }
 
-int get_nb_total_slices_to_do(t_vol *volume) {
+int get_nb_total_slices_to_do(t_header *header) {
 	int i = 0;
 	int count = 0;
 
-	while (i < volume->dim_nb) {
-		count += volume->size[i];
+	while (i < header->dim_nb) {
+		count += header->sizes[i];
 		i++;
 	}
 	return (count);
@@ -304,6 +323,10 @@ t_header *create_header_from_minc_struct(t_vol *minc_volume) {
 	h = malloc(sizeof(*h));
 
 	h->dim_nb = minc_volume->dim_nb;
+	if (h->dim_nb > 3) { // this is how we handle potential RGB
+		h->channels = 3;
+		h->dim_nb = 3; // internally we use this to determine our loop length
+	} else h->channels = 0;
 
 	h->sizes = malloc(h->dim_nb * sizeof(*h->sizes));
 	h->sizes_isotropic = malloc(h->dim_nb * sizeof(*h->sizes_isotropic));

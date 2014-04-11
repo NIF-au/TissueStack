@@ -77,7 +77,7 @@ void	convertMinc(char * minc_path, int fd) {
 
 	write_header_into_file(fd, header);
     InitializeMagick("./");
-	dim_loop(fd, minc_volume->dim_nb, minc_volume, NULL, NULL, -1, -1, NULL);
+	dim_loop(fd, minc_volume->dim_nb, minc_volume, NULL, NULL, -1, -1, NULL, header);
     DestroyMagick();
 }
 

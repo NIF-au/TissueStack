@@ -57,6 +57,10 @@ void *start(void *args) {
 		buffer = appendToBuffer(buffer, volume->path == NULL ? "NULL" : volume->path);
 		buffer = appendToBuffer(buffer, "|");
 
+		// the minc info does not read beyond three dimensions.
+		// time and rgb dimensions are ignored for our purposes here!
+		if (volume->dim_nb > 3) volume->dim_nb = 3;
+
 		// append number of dimensions
 		char * convertedInt = malloc(sizeof(convertedInt) * 25);
 		sprintf(convertedInt, "%i", volume->dim_nb);
