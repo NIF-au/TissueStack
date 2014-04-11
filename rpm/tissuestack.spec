@@ -2,7 +2,7 @@
 %global debug_package %{nil}
 %global __os_install_post /usr/lib/rpm/brp-compress %{nil}
 Name:		tissuestack
-Version:	1.3
+Version:	1.4
 Release:	0%{?dist}
 Summary:	The TissueStack Application
 

@@ -5,7 +5,7 @@ echo -e "\n\n*******************************************************************
 echo -e "!!! THIS BUILD OF TISSUE STACK BUILDS FOR THE PARTICULAR NEEDS OF CVL e.g MODULES AND README.TXT !!!"
 echo -e "*********************************************************************************************************\n\n"
 
-VERSION=1.3
+VERSION=1.4
 #DATA_PATH=/mnt/tissuestack
 DATA_PATH=/opt/tissuestack
 
