@@ -67,9 +67,9 @@ void  		*start(void *args)
 	  if (slice > 0) off += (header->slice_size[i] * slice * 3);
 	  lseek(fd, off, SEEK_SET);
 	  if (a->commands[2] != NULL && strcmp(a->commands[2], "@tasks@") == 0 && a->commands[3] != NULL && strlen(a->commands[3]) == 16) {
-			dim_loop(fd, minc_volume->dim_nb, minc_volume, a->general_info, a->commands[3], -1, -1, a, header);
+			dim_loop(fd, header->dim_nb, minc_volume, a->general_info, a->commands[3], -1, -1, a, header);
 	  } else {
-	    dim_loop(fd, minc_volume->dim_nb, minc_volume, a->general_info, a->commands[5], slice, dimension, a, header);
+	    dim_loop(fd, header->dim_nb, minc_volume, a->general_info, a->commands[5], slice, dimension, a, header);
 	  }
 	  close(fd);
 	  return (NULL);
@@ -101,7 +101,7 @@ void  		*start(void *args)
 	  close(fd);
 	  return (NULL);
 	}
-      dim_loop(fd, minc_volume->dim_nb, minc_volume, a->general_info, id_percent, -1, -1, a, header);
+      dim_loop(fd, header->dim_nb, minc_volume, a->general_info, id_percent, -1, -1, a, header);
     }
   if (fd != 0)
     {
