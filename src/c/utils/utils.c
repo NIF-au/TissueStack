@@ -292,13 +292,13 @@ inline unsigned long long mapUnsignedValue(unsigned char fromBitRange, unsigned 
 	// cap at 64 bits
 	if (fromBitRange > 64 || toBitRange > 64) return 0;
 
-	unsigned long long from = 1 << fromBitRange;
-	unsigned long long to = 1 << toBitRange;
+	unsigned long long from = ((unsigned long long int) ((unsigned long long int)1 << fromBitRange)) - 1;
+	unsigned long long to = ((unsigned long long int) ((unsigned long long int)1 << toBitRange)) - 1;
 
 	// check if value exceeds its native range
 	if (value > from) return 0;
 
-	return (unsigned long long) lround(((double)value / from) * to);
+	return (unsigned long long) llround(((double)value / from) * to);
 }
 
 void		write_http_header(FILE * socket, char * status, char * image_type)
