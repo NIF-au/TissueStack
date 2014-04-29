@@ -828,7 +828,7 @@ TissueStack.Canvas.prototype = {
 		// we have a label info for the data set
 		if (dataSetPixelValues && dataSetPixelValues.label) {
 			// first display info for the actual data set
-			//info = "Label: " + dataSetPixelValues.label;
+			info = "Label: " + dataSetPixelValues.label;
 			if (TissueStack.desktop && dataSet.lookupValues && dataSet.associatedAtlas) {
 				info += (" (" + dataSet.associatedAtlas.prefix + ")");
 				$("#canvas_point_value").hide();
