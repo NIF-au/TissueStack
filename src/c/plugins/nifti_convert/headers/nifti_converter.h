@@ -206,6 +206,9 @@ void iter_all_pix_and_convert(void *in, unsigned char * out, unsigned int size,	
 			case NIFTI_TYPE_RGB24:
 			case NIFTI_TYPE_RGBA32: // unsigned char per channel
 				val = (unsigned char) ((unsigned char *) in)[0];
+				out[i * 3 + 0] = val;
+				out[i * 3 + 1] = (unsigned char) ((unsigned char *) in)[1];
+				out[i * 3 + 2] = (unsigned char) ((unsigned char *) in)[2];
 				break;
 			case 0:				// UNKNOWN
 				error = 1;
@@ -236,8 +239,10 @@ void iter_all_pix_and_convert(void *in, unsigned char * out, unsigned int size,	
 				break;
 			}
 		// set value in out array, depending on whether we have rgb or not
-		if (h->channels == 0) out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] = val;
-		else out[i * 3 + rgb_channel] = val;
+		if (h->channels == 0) {
+			if (nim->datatype != NIFTI_TYPE_RGB24 && nim->datatype != NIFTI_TYPE_RGBA32)
+				out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] = val;
+		} else out[i * 3 + rgb_channel] = val;
 
 		// check for error
 		if (error) {
