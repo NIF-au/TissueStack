@@ -22,8 +22,6 @@ void tissuestack::networking::Server::start()
 	this->_server_socket = socket(AF_INET, SOCK_STREAM, 0);
 	if (this->_server_socket <= 0)
 		throw tissuestack::common::TissueStackException(std::string("Failed to create server socket!"));
-	std::cout << "Created server socket (FD: "
-			<< this->_server_socket << ")" << std::endl;
 	int optVal = 1;
 	if(setsockopt(this->_server_socket, SOL_SOCKET, SO_REUSEADDR, &optVal, sizeof(optVal)) != 0)
 		throw tissuestack::common::TissueStackException(std::string("Failed to change server socket options!"));
@@ -50,7 +48,7 @@ void tissuestack::networking::Server::start()
 	socklen_t sin_length = sizeof(client_address);
 	int client_socket=0;
 
-	if((client_socket = accept(this->_server_socket, (sockaddr *) &client_address, &sin_length)) < 0)
+	if((client_socket = accept(this->_server_socket, (sockaddr *) &client_address, &sin_length)) <= 0)
 		throw tissuestack::common::TissueStackException(
 					std::string("Failed to accept connections on server socket!"));
 
