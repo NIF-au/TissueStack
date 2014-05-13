@@ -1,4 +1,4 @@
-#include "System.h"
+#include "system.h"
 
 const unsigned int tissuestack::utils::System::getNumberOfCores()
 {

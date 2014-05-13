@@ -1,5 +1,5 @@
-#include "System.h"
-#include "Timer.h"
+#include "system.h"
+#include "timer.h"
 
 int main(int argc, char * args[])
 {

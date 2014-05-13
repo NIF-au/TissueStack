@@ -1,8 +1,18 @@
-#include "Server.h"
+#include "server.h"
 
 int main(int argc, char * args[])
 {
-  std::cerr << "TODO: Implement Me" << std::endl;
+  tissuestack::networking::Server server;
+
+  try
+  {
+	  server.start();
+	  server.stop();
+  } catch (std::exception& e)
+  {
+	  std::cerr << e.what() << std::endl;
+	  return 1;
+  }
 
   return 0;
 }

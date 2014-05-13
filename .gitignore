@@ -26,3 +26,4 @@ TissueStackImageServer
 binaries
 *.war
 bin
+test
