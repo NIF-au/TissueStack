@@ -1,4 +1,4 @@
-#include "timer.h"
+#include "utils.h"
 
 
 /* abstract factory method */
@@ -12,11 +12,11 @@ tissuestack::utils::Timer * const tissuestack::utils::Timer::getInstance(Type ty
 
 /* 'Ordinary' Timer Implementation */
 void tissuestack::utils::OrdinaryTimer::start() {
-  clock_gettime(CLOCK_MONOTONIC_RAW,&this->_clock_start);
+  ::clock_gettime(CLOCK_MONOTONIC_RAW,&this->_clock_start);
 }
 
 const unsigned long long int tissuestack::utils::OrdinaryTimer::stop() {
-  clock_gettime(CLOCK_MONOTONIC_RAW,&this->_clock_end);
+  ::clock_gettime(CLOCK_MONOTONIC_RAW,&this->_clock_end);
 
   unsigned long long int nanosecs_start =
       static_cast<unsigned long long int>(this->_clock_start.tv_sec) * tissuestack::utils::Timer::NANO_SECONDS_PER_SEC
@@ -30,11 +30,11 @@ const unsigned long long int tissuestack::utils::OrdinaryTimer::stop() {
 
 /* Clock Timer Implementation */
 void tissuestack::utils::ClockTimer::start() {
-  this->_clock_start = clock();
+  this->_clock_start = ::clock();
 }
 
 const unsigned long long int tissuestack::utils::ClockTimer::stop() {
-  this->_clock_end = clock();
+  this->_clock_end = ::clock();
 
   return static_cast<unsigned long long int>(((
       static_cast<double>(this->_clock_end - this->_clock_start) / CLOCKS_PER_SEC) * tissuestack::utils::Timer::NANO_SECONDS_PER_SEC) );

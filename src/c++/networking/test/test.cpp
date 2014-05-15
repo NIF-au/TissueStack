@@ -1,4 +1,4 @@
-#include "server.h"
+#include "networking.h"
 
 int main(int argc, char * args[])
 {
@@ -6,11 +6,12 @@ int main(int argc, char * args[])
 
   try
   {
+	  tissuestack::utils::Timer * t = tissuestack::utils::Timer::getInstance(tissuestack::utils::Timer::Type::CLOCK_GET_TIME);
+	  t->start();
 	  server.start();
 	  server.stop();
-  } catch (std::exception& e)
-  {
-	  std::cerr << e.what() << std::endl;
+	  t->stop();
+  }  catch (...) {
 	  return 1;
   }
 

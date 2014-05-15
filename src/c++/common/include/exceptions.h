@@ -9,15 +9,30 @@ namespace tissuestack
 {
   namespace common
   {
-    class TissueStackException final : public std::exception
+    class TissueStackException : public std::exception
     {
     	public:
     		TissueStackException();
     		TissueStackException(std::string what);
+    		void virtual setWhat(std::string what);
     		virtual const char * what() const throw();
-    		~TissueStackException() throw();
+    		virtual ~TissueStackException() throw();
     	private:
     		char * _what;
+    };
+
+    class TissueStackServerException : public TissueStackException
+    {
+    	public:
+			TissueStackServerException();
+			TissueStackServerException(std::string what);
+    };
+
+    class TissueStackInvalidRequestException : public TissueStackException
+    {
+    	public:
+			TissueStackInvalidRequestException();
+			TissueStackInvalidRequestException(std::string what);
     };
   }
 

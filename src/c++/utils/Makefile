@@ -6,7 +6,7 @@ INCLUDE		=	-Iinclude
 
 LIB_PATH	=	
 
-LIBS		=	-lrt -lpthread
+LIBS		=	-lrt
 
 LIB_NAME	=	libTissueStackUtils.so
 
@@ -33,7 +33,7 @@ install:
 
 test:	clean
 	@echo -e "\tCompiling Test for \"$(NAME)\" => [test/test]"
-	@$(CC) -o test/test $(LIBS) $(FLAGS) $(INCLUDE) $(SRCS) test/test.cpp
+	@$(CC) -o test/test $(SRCS) test/test.cpp $(LIBS) $(FLAGS) $(INCLUDE)
 	@echo -en "\tRunning Test for \"$(NAME)\" ... "
 	@test/test 2&> test/output.log; if [ $$? -eq 0 ]; then echo " FAILED (check test/output.log)!"; else echo " SUCCESS.";fi; 
         
