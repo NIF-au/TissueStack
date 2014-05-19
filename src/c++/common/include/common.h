@@ -30,7 +30,7 @@ namespace tissuestack
 				RequestFilter();
 			public:
 				virtual ~RequestFilter();
-				virtual const bool applyFilter(Request & in) const = 0;
+				virtual const bool applyFilter(const Request & in) const = 0;
 		};
 	}
 }

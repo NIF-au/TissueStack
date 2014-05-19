@@ -69,7 +69,8 @@ namespace tissuestack
     	public:
     		HttpRequest & operator=(const HttpRequest&) = delete;
     		HttpRequest(const HttpRequest&) = delete;
-			explicit HttpRequest(RawHttpRequest & raw_request);
+			explicit HttpRequest(const std::string&& raw_content);
+    		explicit HttpRequest(const RawHttpRequest & raw_request);
     		~HttpRequest();
     		const std::string getHeader() const;
     		const std::string dumpHeaders() const;
@@ -86,7 +87,7 @@ namespace tissuestack
     		HttpRequestSanityFilter(const HttpRequestSanityFilter&) = delete;
     		HttpRequestSanityFilter();
 			~HttpRequestSanityFilter();
-    		const bool applyFilter(tissuestack::common::Request & in) const;
+    		const bool applyFilter(const tissuestack::common::Request & in) const;
     };
 
     class RequestPromoter final
@@ -96,8 +97,8 @@ namespace tissuestack
     		RequestPromoter(const RequestPromoter&) = delete;
     		RequestPromoter(); // change into singleton !!
     		virtual ~RequestPromoter();
-    		const virtual tissuestack::networking::HttpRequest& promoteRequest(tissuestack::networking::RawHttpRequest & in) const;
-    		const virtual tissuestack::networking::HttpRequest& promoteRequest(tissuestack::networking::HttpRequest & in) const;
+    		const virtual tissuestack::common::Request& promoteRequest(tissuestack::networking::RawHttpRequest & in) const;
+    		const virtual tissuestack::common::Request& promoteRequest(tissuestack::networking::HttpRequest & in) const;
     };
 
   }

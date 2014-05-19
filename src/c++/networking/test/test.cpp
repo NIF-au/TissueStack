@@ -14,6 +14,7 @@ int main(int argc, char * args[])
 	  std::cout << "Time: " << static_cast<double>(t->stop()) << std::endl;
 
 	  /*
+	   * NOTE: try templated RequestFilter with in and out type handed in: applyFilter takes in and spits out out
 	  std::vector<std::shared_ptr<tissuestack::common::RequestFilter> > filter_chain
 	  {
 		std::shared_ptr<tissuestack::common::RequestFilter>(new tissuestack::networking::HttpRequestSanityFilter())

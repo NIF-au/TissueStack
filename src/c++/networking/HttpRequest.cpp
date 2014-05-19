@@ -4,7 +4,10 @@ tissuestack::networking::HttpRequest::~HttpRequest() {
 	// doing nothing at the moment
 }
 
-tissuestack::networking::HttpRequest::HttpRequest(RawHttpRequest & raw_request)
+tissuestack::networking::HttpRequest::HttpRequest(const std::string&& raw_content) :
+		tissuestack::networking::HttpRequest::HttpRequest(tissuestack::networking::RawHttpRequest(std::move(raw_content))) {}
+
+tissuestack::networking::HttpRequest::HttpRequest(const tissuestack::networking::RawHttpRequest & raw_request)
 {
 	// first sanity check, then extract
 	tissuestack::networking::HttpRequestSanityFilter preliminarySanityCheck;
