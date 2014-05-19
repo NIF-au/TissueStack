@@ -1,14 +1,16 @@
 #include "networking.h"
 
-tissuestack::networking::RawHttpdRequest::RawHttpdRequest() {};
-tissuestack::networking::RawHttpdRequest::~RawHttpdRequest() {};
-
-tissuestack::networking::RawHttpdRequest::RawHttpdRequest(std::string raw_content)
+tissuestack::networking::RawHttpRequest::~RawHttpRequest()
 {
-	//throw tissuestack::common::TissueStackInvalidRequestException(std::string("bad request"));
+	// not doing anything at the moment
 };
 
-const std::string tissuestack::networking::RawHttpdRequest::getRawContent() const
+tissuestack::networking::RawHttpRequest::RawHttpRequest(const std::string&& raw_content)
 {
-	return std::string("NULL");
+
+};
+
+const std::string tissuestack::networking::RawHttpRequest::getContent() const
+{
+	return this->_content;
 };

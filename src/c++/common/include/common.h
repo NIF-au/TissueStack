@@ -1,6 +1,8 @@
 #ifndef	__COMMON_H__
 #define __COMMON_H__
 
+#include <string>
+
 namespace tissuestack
 {
 	namespace common
@@ -17,14 +19,18 @@ namespace tissuestack
 		{
 			protected:
 				Request();
+			public:
+				virtual const std::string getContent() const = 0;
+				virtual ~Request();
 		};
 
 		class RequestFilter
 		{
-			public:
+			protected:
 				RequestFilter();
+			public:
 				virtual ~RequestFilter();
-				virtual bool applyFilter(Request& request);
+				virtual const bool applyFilter(Request & in) const = 0;
 		};
 	}
 }

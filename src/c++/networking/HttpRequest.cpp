@@ -1,30 +1,28 @@
 #include "networking.h"
 
-tissuestack::networking::HttpdRequest::~HttpdRequest() {}
-
-tissuestack::networking::HttpdRequest::HttpdRequest(std::string raw_content) :
-	tissuestack::networking::HttpdRequest::HttpdRequest(tissuestack::networking::RawHttpdRequest(raw_content))
-{
-	throw tissuestack::common::TissueStackInvalidRequestException(std::string(" raw content not implemented "));
+tissuestack::networking::HttpRequest::~HttpRequest() {
+	// doing nothing at the moment
 }
 
-tissuestack::networking::HttpdRequest::HttpdRequest(tissuestack::networking::RawHttpdRequest raw_request)
+tissuestack::networking::HttpRequest::HttpRequest(RawHttpRequest & raw_request)
 {
-	//do stuff
-	throw tissuestack::common::TissueStackInvalidRequestException(std::string(" raw request not implemented "));
-};
-
-const std::string tissuestack::networking::HttpdRequest::getHeader() const
-{
-	return std::string("NULL");
+	// first sanity check, then extract
+	tissuestack::networking::HttpRequestSanityFilter preliminarySanityCheck;
+	if (!preliminarySanityCheck.applyFilter(raw_request))
+		throw tissuestack::common::TissueStackInvalidRequestException(std::string("request did not get past sanity check!"));
 }
 
-const std::string tissuestack::networking::HttpdRequest::dumpHeaders() const
+const std::string tissuestack::networking::HttpRequest::getHeader() const
 {
-	return std::string("NULL");
+	return std::string("NOT IMPLEMENTED YET");
 }
 
-const std::string tissuestack::networking::HttpdRequest::getBody() const
+const std::string tissuestack::networking::HttpRequest::dumpHeaders() const
 {
-	return std::string("NULL");
+	return std::string("NOT IMPLEMENTED YET");
+}
+
+const std::string tissuestack::networking::HttpRequest::getContent() const
+{
+	return this->_content;
 }

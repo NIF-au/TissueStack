@@ -52,44 +52,54 @@ namespace tissuestack
     	void inline shutdown() const;
     };
 
-    class RawHttpdRequest : public tissuestack::common::Request
+    class RawHttpRequest : public tissuestack::common::Request
     {
     	public:
-    		RawHttpdRequest(std::string raw_content);
-    		~RawHttpdRequest();
-    		const std::string getRawContent() const;
+    		RawHttpRequest & operator=(const RawHttpRequest&) = delete;
+    		RawHttpRequest(const RawHttpRequest&) = delete;
+    		explicit RawHttpRequest(const std::string&& raw_content);
+    		~RawHttpRequest();
+    		const std::string getContent() const;
     	private:
-    		RawHttpdRequest(); // we forbid it, we want content
-    		std::string _raw_content;
+    		std::string _content;
     };
 
-    class HttpdRequest : public tissuestack::common::Request
+    class HttpRequest : public tissuestack::common::Request
     {
     	public:
-    		HttpdRequest(std::string raw_content);
-    		explicit HttpdRequest(RawHttpdRequest raw_request);
-    		~HttpdRequest();
+    		HttpRequest & operator=(const HttpRequest&) = delete;
+    		HttpRequest(const HttpRequest&) = delete;
+			explicit HttpRequest(RawHttpRequest & raw_request);
+    		~HttpRequest();
     		const std::string getHeader() const;
     		const std::string dumpHeaders() const;
-    		const std::string getBody() const;
+    		const std::string getContent() const;
     	private:
-    		HttpdRequest(); // we forbid it, we want raw content
     		std::vector<std::string> headers;
-    		std::string _body;
+    		std::string _content;
     };
 
-    /* TODO: let filter chain deal first with http length and basic checks
-     *       then apply meta application filter: is get request ?
-     *       last but not least apply action specific param checks for conversion, tiling, etc.
-     *       each time 'elevate' status of request
-     *       also use specific Processor variation with filters handed over
-     */
-
-    class HttpSanityFilter : public tissuestack::common::RequestFilter
+    class HttpRequestSanityFilter : public tissuestack::common::RequestFilter
     {
     	public:
-    		bool applyFilter(tissuestack::common::Request& request);
+    		HttpRequestSanityFilter & operator=(const HttpRequestSanityFilter&) = delete;
+    		HttpRequestSanityFilter(const HttpRequestSanityFilter&) = delete;
+    		HttpRequestSanityFilter();
+			~HttpRequestSanityFilter();
+    		const bool applyFilter(tissuestack::common::Request & in) const;
     };
+
+    class RequestPromoter final
+    {
+    	public:
+    		RequestPromoter & operator=(const RequestPromoter&) = delete;
+    		RequestPromoter(const RequestPromoter&) = delete;
+    		RequestPromoter(); // change into singleton !!
+    		virtual ~RequestPromoter();
+    		const virtual tissuestack::networking::HttpRequest& promoteRequest(tissuestack::networking::RawHttpRequest & in) const;
+    		const virtual tissuestack::networking::HttpRequest& promoteRequest(tissuestack::networking::HttpRequest & in) const;
+    };
+
   }
 
 }
