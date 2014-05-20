@@ -1,11 +1,7 @@
 #include "networking.h"
 
-const tissuestack::common::Request& tissuestack::networking::RequestPromoter::promoteRequest(tissuestack::networking::RawHttpRequest & in) const
+const tissuestack::common::Request * const tissuestack::networking::RequestPromoter::promoteRequest(const tissuestack::networking::RawHttpRequest * const in) const
 {
-	return std::move(tissuestack::networking::HttpRequest(in));
+	return nullptr;
 };
 
-const tissuestack::common::Request& tissuestack::networking::RequestPromoter::promoteRequest(tissuestack::networking::HttpRequest & in) const
-{
-	return in;
-};

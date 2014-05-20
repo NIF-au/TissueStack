@@ -2,10 +2,12 @@
 #define __SERVER_H__
 
 #include <iostream>
+#include <typeinfo>
 #include <sstream>
 #include <exception>
 #include <cstring>
 #include <vector>
+#include <memory>
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -25,6 +27,8 @@ namespace tissuestack
     class Server final
     {
       public:
+    	Server & operator=(const Server&) = delete;
+    	Server(const Server&) = delete;
     	Server();
     	Server(unsigned int port);
     	~Server();
@@ -57,7 +61,7 @@ namespace tissuestack
     	public:
     		RawHttpRequest & operator=(const RawHttpRequest&) = delete;
     		RawHttpRequest(const RawHttpRequest&) = delete;
-    		explicit RawHttpRequest(const std::string&& raw_content);
+    		explicit RawHttpRequest(const std::string * const raw_content);
     		~RawHttpRequest();
     		const std::string getContent() const;
     	private:
@@ -69,8 +73,8 @@ namespace tissuestack
     	public:
     		HttpRequest & operator=(const HttpRequest&) = delete;
     		HttpRequest(const HttpRequest&) = delete;
-			explicit HttpRequest(const std::string&& raw_content);
-    		explicit HttpRequest(const RawHttpRequest & raw_request);
+    		explicit HttpRequest(const RawHttpRequest * const raw_request);
+    		explicit HttpRequest(const RawHttpRequest * const raw_request, const bool suppress_filter);
     		~HttpRequest();
     		const std::string getHeader() const;
     		const std::string dumpHeaders() const;
@@ -87,7 +91,8 @@ namespace tissuestack
     		HttpRequestSanityFilter(const HttpRequestSanityFilter&) = delete;
     		HttpRequestSanityFilter();
 			~HttpRequestSanityFilter();
-    		const bool applyFilter(const tissuestack::common::Request & in) const;
+    		const tissuestack::common::Request * const applyFilter(const tissuestack::common::Request * const request) const;
+    		const tissuestack::common::Request * const applyFilter0(const RawHttpRequest * const raw_request) const;
     };
 
     class RequestPromoter final
@@ -97,8 +102,7 @@ namespace tissuestack
     		RequestPromoter(const RequestPromoter&) = delete;
     		RequestPromoter(); // change into singleton !!
     		virtual ~RequestPromoter();
-    		const virtual tissuestack::common::Request& promoteRequest(tissuestack::networking::RawHttpRequest & in) const;
-    		const virtual tissuestack::common::Request& promoteRequest(tissuestack::networking::HttpRequest & in) const;
+    		const virtual tissuestack::common::Request * const promoteRequest(const tissuestack::networking::RawHttpRequest * const in) const;
     };
 
   }

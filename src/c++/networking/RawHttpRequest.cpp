@@ -5,7 +5,7 @@ tissuestack::networking::RawHttpRequest::~RawHttpRequest()
 	// not doing anything at the moment
 };
 
-tissuestack::networking::RawHttpRequest::RawHttpRequest(const std::string&& raw_content)
+tissuestack::networking::RawHttpRequest::RawHttpRequest(const std::string * const raw_content)
 {
 
 };

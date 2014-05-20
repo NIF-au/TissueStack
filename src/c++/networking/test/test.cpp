@@ -1,5 +1,4 @@
 #include "networking.h"
-#include <memory>
 
 int main(int argc, char * args[])
 {
@@ -13,20 +12,20 @@ int main(int argc, char * args[])
 	  server.stop();
 	  std::cout << "Time: " << static_cast<double>(t->stop()) << std::endl;
 
-	  /*
-	   * NOTE: try templated RequestFilter with in and out type handed in: applyFilter takes in and spits out out
+	  // NOTE: try templated RequestFilter with in and out type handed in: applyFilter takes in and spits out out
 	  std::vector<std::shared_ptr<tissuestack::common::RequestFilter> > filter_chain
 	  {
-		std::shared_ptr<tissuestack::common::RequestFilter>(new tissuestack::networking::HttpRequestSanityFilter())
+		  std::shared_ptr<tissuestack::common::RequestFilter>(new tissuestack::networking::HttpRequestSanityFilter())
 	  };
-	  tissuestack::networking::RawHttpRequest req(std::string("GET HTTP1.1 \n kakakakakakakak"));
-	  for (auto filter : filter_chain)
-		  if (!filter->applyFilter(req))
-			throw tissuestack::common::TissueStackInvalidRequestException(std::string("request did not get past sanity check!"));
-;
 
-	  //tissuestack::networking::HttpRequest httpReq(req);
-	   */
+	  std::unique_ptr<std::string> someInput(new std::string("GET HTTP1.1 \n kakakakakakakak"));
+	  std::unique_ptr<const tissuestack::common::Request> req(new tissuestack::networking::RawHttpRequest(someInput.get()));
+	  for (auto filter : filter_chain)
+		  req.reset(filter->applyFilter(req.get()));
+
+	  // TODO: nullptr checks and devise good handing in by reference/smart pointer practices
+
+		  //std::cout << req->getContent() << std:: endl;
 
   }  catch (tissuestack::common::TissueStackInvalidRequestException& ex)
   {
