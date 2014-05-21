@@ -71,8 +71,8 @@ void tissuestack::networking::Server::start()
 	std::cout << "Request Size Limit: " << tissuestack::networking::Server::MAX_REQUEST_LENGTH_IN_BYTES << std::endl;
 	std::cout << "Read Timeout (s): " << tissuestack::networking::Server::READ_TIMEOUT_IN_SECONDS << std::endl;
 }
-
-void tissuestack::networking::Server::listen(tissuestack::common::RequestProcessor processor)
+template <typename ProcessorImplementation>
+void tissuestack::networking::Server::listen(const tissuestack::common::RequestProcessor<ProcessorImplementation> * const processor)
 {
 
 }

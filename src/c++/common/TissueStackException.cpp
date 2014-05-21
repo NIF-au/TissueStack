@@ -8,7 +8,7 @@ void tissuestack::common::TissueStackException::setWhat(std::string what)
 	std::strncpy(this->_what, what.c_str(), what.length());
 	this->_what[what.length()] = '\0';
 }
-tissuestack::common::TissueStackException::TissueStackException(std::string what)
+tissuestack::common::TissueStackException::TissueStackException(std::string what) : _what(nullptr)
 {
 	this->setWhat(what);
 }

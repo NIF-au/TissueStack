@@ -1,8 +1,9 @@
 NAME		=	TissueStack Threading
 
 SRCS		=	$(wildcard *.cpp)
+SRCS_COMMON	=	$(wildcard ../common/*.cpp)
 
-INCLUDE		=	-Iinclude -I../utils/include
+INCLUDE		=	-Iinclude -I../utils/include -I../common/include -I../networking/include
 
 LIB_PATH	=
 
@@ -33,7 +34,7 @@ install:
 
 test:	clean
 	@echo -e "\tCompiling Test for \"$(NAME)\" => [test/test]"
-	@$(CC) -o test/test $(LIBS) $(FLAGS) $(INCLUDE) $(SRCS) test/test.cpp
+	@$(CC) -o test/test $(LIBS) $(FLAGS) $(INCLUDE) $(SRCS_COMMON) $(SRCS) test/test.cpp
 	@echo -en "\tRunning Test for \"$(NAME)\" ... "
 	@test/test 2&> test/output.log; if [ $$? -eq 0 ]; then echo " FAILED (check test/output.log)!"; else echo " SUCCESS.";fi; 
 	

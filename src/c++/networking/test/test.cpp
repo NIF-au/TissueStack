@@ -2,10 +2,11 @@
 
 int main(int argc, char * args[])
 {
-  tissuestack::networking::Server server;
+  //tissuestack::networking::Server server;
 
   try
   {
+	  /*
 	  std::unique_ptr<tissuestack::utils::Timer> t(tissuestack::utils::Timer::getInstance(tissuestack::utils::Timer::Type::CLOCK_GET_TIME));
 	  t->start();
 	  server.start();
@@ -26,7 +27,14 @@ int main(int argc, char * args[])
 	  // TODO: nullptr checks and devise good handing in by reference/smart pointer practices
 
 		  //std::cout << req->getContent() << std:: endl;
+	   */
+	  tissuestack::common::TissueStackProcessingStrategy * TissueStackProcessingStrategy =
+			  new tissuestack::common::TissueStackProcessingStrategy();
+	  const tissuestack::common::RequestProcessor<tissuestack::common::TissueStackProcessingStrategy> * const TissueStackProcessor =
+			  tissuestack::common::RequestProcessor<tissuestack::common::TissueStackProcessingStrategy>::instance(TissueStackProcessingStrategy);
+	  TissueStackProcessor->init();
 
+	  delete TissueStackProcessor;
   }  catch (tissuestack::common::TissueStackInvalidRequestException& ex)
   {
 	  std::cerr << ex.what() << std::endl;

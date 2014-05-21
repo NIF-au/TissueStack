@@ -35,7 +35,6 @@ namespace tissuestack
 			TissueStackInvalidRequestException(std::string what);
     };
   }
-
 }
 
 #endif	/* __EXCEPTIONS_H__ */

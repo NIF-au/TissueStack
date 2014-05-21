@@ -1,13 +1,11 @@
 #ifndef	__SERVER_H__
 #define __SERVER_H__
 
-#include <iostream>
+#include "tissuestack.h"
+
 #include <typeinfo>
 #include <sstream>
-#include <exception>
 #include <cstring>
-#include <vector>
-#include <memory>
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -16,9 +14,6 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-#include "common.h"
-#include "exceptions.h"
-#include "utils.h"
 
 namespace tissuestack
 {
@@ -40,7 +35,8 @@ namespace tissuestack
     	unsigned int getPort() const;
     	std::string getServerAddress() const;
     	void start();
-    	void listen(tissuestack::common::RequestProcessor processor);
+    	template <typename ProcessorImplementation>
+    	void listen(const tissuestack::common::RequestProcessor<ProcessorImplementation> * const processor);
     	void stop();
 
       private:
