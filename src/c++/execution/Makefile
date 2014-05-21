@@ -7,7 +7,7 @@ INCLUDE		=	-Iinclude -I../utils/include -I../common/include -I../networking/incl
 
 LIB_PATH	=
 
-LIBS		=	-lrt -lpthread
+LIBS		=	-lrt -lpthread -ldl
 
 LIB_NAME	=	libTissueStackThreading.so
 
@@ -33,6 +33,8 @@ install:
 	@echo -e "\n\tInstalled \"$(LIB_NAME)\" into \"$(INSTALL_DIR)\"\n"
 
 test:	clean
+	@echo -e "\tCompiling test.so for \"$(NAME)\" => [/tmp/test.so]"
+	@$(CC) -o /tmp/test.so test/test.so.cpp $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -fPIC -pie -shared
 	@echo -e "\tCompiling Test for \"$(NAME)\" => [test/test]"
 	@$(CC) -o test/test $(LIBS) $(FLAGS) $(INCLUDE) $(SRCS_COMMON) $(SRCS) test/test.cpp
 	@echo -en "\tRunning Test for \"$(NAME)\" ... "

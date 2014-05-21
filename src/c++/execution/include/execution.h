@@ -3,6 +3,7 @@
 
 #include "tissuestack.h"
 #include <thread>
+#include <dlfcn.h>
 
 namespace tissuestack
 {
@@ -32,6 +33,21 @@ namespace tissuestack
 				void init();
 				void process();
 				void stop();
+		};
+
+		class SharedLibraryFunctionCall: public tissuestack::common::ProcessingStrategy
+		{
+			public:
+				SharedLibraryFunctionCall & operator=(const SharedLibraryFunctionCall&) = delete;
+				SharedLibraryFunctionCall(const SharedLibraryFunctionCall&) = delete;
+				explicit SharedLibraryFunctionCall(const std::string so_library_path);
+				~SharedLibraryFunctionCall();
+				void init();
+				void process();
+				void stop();
+			private:
+				const std::string _so_library_path;
+				void * _so_handle;
 		};
 	}
 }

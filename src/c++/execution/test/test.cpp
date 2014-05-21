@@ -2,7 +2,9 @@
 
 int main(int argc, char * args[])
 {
-  std::cerr << "TODO: Implement Me" << std::endl;
-
+  tissuestack::execution::SharedLibraryFunctionCall so("/tmp/test.so");
+  so.init();
+  so.process();
+  so.stop();
   return 0;
 }
