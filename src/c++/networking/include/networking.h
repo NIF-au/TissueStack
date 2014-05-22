@@ -3,9 +3,12 @@
 
 #include "tissuestack.h"
 
+#include <functional>
 #include <typeinfo>
 #include <sstream>
 #include <cstring>
+#include <stdexcept>
+#include <vector>
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -59,9 +62,9 @@ namespace tissuestack
     		RawHttpRequest(const RawHttpRequest&) = delete;
     		explicit RawHttpRequest(const std::string * const raw_content);
     		~RawHttpRequest();
-    		const std::string getContent() const;
+    		const std::string * const getContent() const;
     	private:
-    		std::string _content;
+    		const std::string * _content;
     };
 
     class HttpRequest : public tissuestack::common::Request
@@ -72,12 +75,12 @@ namespace tissuestack
     		explicit HttpRequest(const RawHttpRequest * const raw_request);
     		explicit HttpRequest(const RawHttpRequest * const raw_request, const bool suppress_filter);
     		~HttpRequest();
-    		const std::string getHeader() const;
-    		const std::string dumpHeaders() const;
-    		const std::string getContent() const;
+    		const std::string getParameter(std::string name) const;
+    		const std::string dumpParameters() const;
+    		const std::string * const getContent() const;
     	private:
-    		std::vector<std::string> headers;
-    		std::string _content;
+    		std::unordered_map<std::string, std::string> _parameters;
+    		std::string _query_string;
     };
 
     class HttpRequestSanityFilter : public tissuestack::common::RequestFilter
@@ -88,7 +91,6 @@ namespace tissuestack
     		HttpRequestSanityFilter();
 			~HttpRequestSanityFilter();
     		const tissuestack::common::Request * const applyFilter(const tissuestack::common::Request * const request) const;
-    		const tissuestack::common::Request * const applyFilter0(const RawHttpRequest * const raw_request) const;
     };
 
     class RequestPromoter final

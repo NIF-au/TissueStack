@@ -9,7 +9,7 @@ INCLUDE			=	-Iinclude -I../utils/include -I../common/include -I../execution/incl
 
 LIB_PATH		=
 
-LIBS			=	-lrt -lpthread
+LIBS			=	-lrt -lpthread -ldl
 
 LIB_NAME		=	libTissueStackNetworking.so
 

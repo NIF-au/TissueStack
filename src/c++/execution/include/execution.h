@@ -4,6 +4,7 @@
 #include "tissuestack.h"
 #include <thread>
 #include <dlfcn.h>
+#include <functional>
 
 namespace tissuestack
 {
@@ -17,7 +18,8 @@ namespace tissuestack
 				explicit ThreadPool(short number_of_threads);
 				short getNumberOfThreads() const;
 				void init();
-				void process();
+				void process(const std::function<void (const tissuestack::common::Request * request)> * functionality,
+						const tissuestack::common::Request * request);
 				void stop();
 
 			private:
@@ -31,7 +33,8 @@ namespace tissuestack
 				SimpleExecution(const SimpleExecution&) = delete;
 				SimpleExecution();
 				void init();
-				void process();
+				void process(const std::function<void (const tissuestack::common::Request * request)> * functionality,
+						const tissuestack::common::Request * request);
 				void stop();
 		};
 
@@ -43,8 +46,10 @@ namespace tissuestack
 				explicit SharedLibraryFunctionCall(const std::string so_library_path);
 				~SharedLibraryFunctionCall();
 				void init();
-				void process();
+				void process(const std::function<void (const tissuestack::common::Request * request)> * functionality,
+						const tissuestack::common::Request * request);
 				void stop();
+				void * const callDlSym(std::string function_name);
 			private:
 				const std::string _so_library_path;
 				void * _so_handle;

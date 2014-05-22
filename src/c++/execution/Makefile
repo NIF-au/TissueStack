@@ -1,23 +1,24 @@
-NAME		=	TissueStack Threading
+NAME			=	TissueStack Threading
 
-SRCS		=	$(wildcard *.cpp)
-SRCS_COMMON	=	$(wildcard ../common/*.cpp)
+SRCS			=	$(wildcard *.cpp)
+SRCS_COMMON		=	$(wildcard ../common/*.cpp)
+SRCS_NETWORK	=	$(wildcard ../networking/*.cpp)
 
-INCLUDE		=	-Iinclude -I../utils/include -I../common/include -I../networking/include
+INCLUDE			=	-Iinclude -I../utils/include -I../common/include -I../networking/include
 
-LIB_PATH	=
+LIB_PATH		=
 
-LIBS		=	-lrt -lpthread -ldl
+LIBS			=	-lrt -lpthread -ldl
 
-LIB_NAME	=	libTissueStackThreading.so
+LIB_NAME		=	libTissueStackThreading.so
 
-INSTALL_DIR	=	/tmp
+INSTALL_DIR		=	/tmp
 
-FLAGS		=	-Wall -Werror -ggdb -std=c++11 -std=gnu++11 -std=c++0x 
+FLAGS			=	-Wall -Werror -ggdb -std=c++11 -std=gnu++11 -std=c++0x 
 
-CC		=	g++
+CC				=	g++
 
-OBJS		=	$(SRCS:%.cpp=%.o)
+OBJS			=	$(SRCS:%.cpp=%.o)
 
 %.o: %.cpp
 	@echo -e "\tCompiling \"$(NAME)\" => [$(@)]"
@@ -36,7 +37,7 @@ test:	clean
 	@echo -e "\tCompiling test.so for \"$(NAME)\" => [/tmp/test.so]"
 	@$(CC) -o /tmp/test.so test/test.so.cpp $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -fPIC -pie -shared
 	@echo -e "\tCompiling Test for \"$(NAME)\" => [test/test]"
-	@$(CC) -o test/test $(LIBS) $(FLAGS) $(INCLUDE) $(SRCS_COMMON) $(SRCS) test/test.cpp
+	@$(CC) -o test/test $(SRCS_NETWORK) $(SRCS_COMMON) $(SRCS) $(FLAGS) $(INCLUDE) $(LIBS) test/test.cpp
 	@echo -en "\tRunning Test for \"$(NAME)\" ... "
 	@test/test 2&> test/output.log; if [ $$? -eq 0 ]; then echo " FAILED (check test/output.log)!"; else echo " SUCCESS.";fi; 
 	

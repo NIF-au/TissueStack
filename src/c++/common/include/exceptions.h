@@ -5,6 +5,11 @@
 #include <cstring>
 #include <string>
 
+//#define THROW_TS_EXCEPTION(ex, message) throw ex (message "[ " __FILE__ " @ " __LINE__ " ]")
+#define EXPANDER(x) #x
+#define EXPANDER2(x) EXPANDER(x)
+#define THROW_TS_EXCEPTION(ex, message) throw ex ("ERROR: " message " [" __FILE__ "@ LINE: " EXPANDER2(__LINE__) "]");
+
 namespace tissuestack
 {
   namespace common
@@ -33,6 +38,13 @@ namespace tissuestack
     	public:
 			TissueStackInvalidRequestException();
 			TissueStackInvalidRequestException(std::string what);
+    };
+
+    class TissueStackNullPointerException : public TissueStackException
+    {
+    	public:
+			TissueStackNullPointerException();
+			TissueStackNullPointerException(std::string what);
     };
   }
 }

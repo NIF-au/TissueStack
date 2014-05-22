@@ -7,9 +7,11 @@ void tissuestack::execution::SimpleExecution::init()
 	std::cout << "Thread Pool Not implemented yet" << std::endl;
 }
 
-void tissuestack::execution::SimpleExecution::process()
+void tissuestack::execution::SimpleExecution::process(
+		const std::function<void (const tissuestack::common::Request * request)> * functionality,
+		const tissuestack::common::Request * request)
 {
-	std::cout << "Thread Pool Not implemented yet" << std::endl;;
+	if (functionality) ((*functionality)(request));
 }
 
 void tissuestack::execution::SimpleExecution::stop()

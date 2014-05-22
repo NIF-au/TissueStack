@@ -12,6 +12,7 @@ int main(int argc, char * args[])
 	  server.start();
 	  server.stop();
 	  std::cout << "Time: " << static_cast<double>(t->stop()) << std::endl;
+	   */
 
 	  // NOTE: try templated RequestFilter with in and out type handed in: applyFilter takes in and spits out out
 	  std::vector<std::shared_ptr<tissuestack::common::RequestFilter> > filter_chain
@@ -19,15 +20,17 @@ int main(int argc, char * args[])
 		  std::shared_ptr<tissuestack::common::RequestFilter>(new tissuestack::networking::HttpRequestSanityFilter())
 	  };
 
-	  std::unique_ptr<std::string> someInput(new std::string("GET HTTP1.1 \n kakakakakakakak"));
+	  std::unique_ptr<std::string> someInput(new std::string("GET dsdfd/?hehe=&=lala=&hihi=99=hshsh=lol  HTTP/1.1"));
 	  std::unique_ptr<const tissuestack::common::Request> req(new tissuestack::networking::RawHttpRequest(someInput.get()));
-	  for (auto filter : filter_chain)
+	  for (auto filter : filter_chain) {
 		  req.reset(filter->applyFilter(req.get()));
+	  }
+	  const tissuestack::networking::HttpRequest * const result =
+			  static_cast<const tissuestack::networking::HttpRequest * const>(req.get());
+	  std::cout << "Content: *" << *result->getContent() << "*" << std::endl;
+	  std::cout << "Dump: " << result->dumpParameters() << std::endl;
 
-	  // TODO: nullptr checks and devise good handing in by reference/smart pointer practices
-
-		  //std::cout << req->getContent() << std:: endl;
-	   */
+	  /*
 	  tissuestack::common::TissueStackProcessingStrategy * TissueStackProcessingStrategy =
 			  new tissuestack::common::TissueStackProcessingStrategy();
 	  const tissuestack::common::RequestProcessor<tissuestack::common::TissueStackProcessingStrategy> * const TissueStackProcessor =
@@ -35,13 +38,14 @@ int main(int argc, char * args[])
 	  TissueStackProcessor->init();
 
 	  delete TissueStackProcessor;
-  }  catch (tissuestack::common::TissueStackInvalidRequestException& ex)
+	  */
+  }  catch (tissuestack::common::TissueStackException& ex)
   {
 	  std::cerr << ex.what() << std::endl;
 	  return -1;
-  }  catch (...)
+  }  catch (std::exception& bad)
   {
-	  std::cerr << "Something bad happened" << std::endl;
+	  std::cerr << "Something bad happened: " << bad.what() << std::endl;
 	  return -1;
   }
 

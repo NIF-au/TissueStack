@@ -6,13 +6,34 @@
 
 #include <iostream>
 #include <string>
-#include <vector>
+#include <unordered_map>
 #include <memory>
 
 namespace tissuestack
 {
 	namespace common
 	{
+		class Request
+		{
+			public:
+				enum class Type
+				{
+					RAW_HTTP_REQUEST,
+					HTTP_REQUEST,
+					TS_IMAGE,
+					TS_TILING,
+					TS_CONVERSION
+				};
+
+				virtual const std::string * const getContent() const = 0;
+				virtual ~Request();
+				const Request::Type getType() const;
+			protected:
+				Request();
+				void setType(Request::Type type);
+			private:
+				Request::Type _type;
+		};
 
 		class ProcessingStrategy
 		{
@@ -23,7 +44,7 @@ namespace tissuestack
 				ProcessingStrategy(const ProcessingStrategy&) = delete;
 				virtual ~ProcessingStrategy();
 				void virtual init() = 0;
-				void virtual process() = 0;
+				void virtual process(const std::function<void (const Request * request)> * functionality, const Request * request) = 0;
 				void virtual stop() = 0;
 		};
 
@@ -35,7 +56,7 @@ namespace tissuestack
 				TissueStackProcessingStrategy();
 				~TissueStackProcessingStrategy();
 				void init();
-				void process();
+				void process(const std::function<void (const Request * request)> * functionality, const Request * request);
 				void stop();
 			private:
 				ProcessingStrategy	* _default_strategy;
@@ -74,15 +95,6 @@ namespace tissuestack
 		template<typename ProcessorImplementation>
 		tissuestack::common::RequestProcessor<ProcessorImplementation> *
 			tissuestack::common::RequestProcessor<ProcessorImplementation>::_instance =	nullptr;
-
-		class Request
-		{
-			protected:
-				Request();
-			public:
-				virtual const std::string getContent() const = 0;
-				virtual ~Request();
-		};
 
 		class RequestFilter
 		{

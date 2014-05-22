@@ -17,19 +17,31 @@ void tissuestack::execution::SharedLibraryFunctionCall::init()
 	if (error != nullptr) std::cout << "Loading => " << error << std::endl;
 }
 
-void tissuestack::execution::SharedLibraryFunctionCall::process()
+/*
+ *  Call ::process with a lambda like this one to call shared library functionality
+ * ---------------------------------------------------------------------------------
+ *
+ * const std::function<void (const tissuestack::common::Request * request)> f =
+ *		  [&so] (const tissuestack::common::Request * request)
+ *		  {
+ *			const void * dlSymReturn = so.callDlSym(std::string("lala"));
+ *			// check return
+ *			if (dlSymReturn == nullptr) return;
+ *
+ *			// cast to desired type
+ *			int (*test)(const char *) = (int (*) (const char *)) dlSymReturn;
+ *
+ *			// call shared library function
+ *			std::string t("Hello World");
+ *			test(t.c_str());
+ *		  };
+ *
+ */
+void tissuestack::execution::SharedLibraryFunctionCall::process(
+		const std::function<void (const tissuestack::common::Request * request)> * functionality,
+		const tissuestack::common::Request * request)
 {
-	dlerror();
-	int (*test)(const char *) = (int (*) (const char *)) dlsym(this->_so_handle, "lala");
-	char * error = dlerror();
-	if (error != nullptr) std::cout << "Sym => " << error << std::endl;
-
-	std::cout << "Before Call ..." << std::endl;
-	std::string t("Hello World");
-	int ret = test(t.c_str());
-
-	std::cout << "After Call ..." << ret << std::endl;
-
+	if (functionality) ((*functionality)(request));
 }
 
 void tissuestack::execution::SharedLibraryFunctionCall::stop()
@@ -38,4 +50,14 @@ void tissuestack::execution::SharedLibraryFunctionCall::stop()
 	dlclose(this->_so_handle);
 	char * error = dlerror();
 	if (error != nullptr) std::cout << "Closing => " << error << std::endl;
+}
+
+void * const tissuestack::execution::SharedLibraryFunctionCall::callDlSym(std::string function_name)
+{
+	dlerror();
+	void * ret = dlsym(this->_so_handle, function_name.c_str());
+	char * error = dlerror();
+
+	if (error) return nullptr;
+	return ret;
 }
