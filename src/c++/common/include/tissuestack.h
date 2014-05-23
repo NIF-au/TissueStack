@@ -25,7 +25,7 @@ namespace tissuestack
 					TS_CONVERSION
 				};
 
-				virtual const std::string * const getContent() const = 0;
+				virtual const std::string getContent() const = 0;
 				virtual ~Request();
 				const Request::Type getType() const;
 			protected:

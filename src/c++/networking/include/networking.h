@@ -3,6 +3,7 @@
 
 #include "tissuestack.h"
 
+#include <algorithm>
 #include <functional>
 #include <typeinfo>
 #include <sstream>
@@ -60,11 +61,11 @@ namespace tissuestack
     	public:
     		RawHttpRequest & operator=(const RawHttpRequest&) = delete;
     		RawHttpRequest(const RawHttpRequest&) = delete;
-    		explicit RawHttpRequest(const std::string * const raw_content);
+    		explicit RawHttpRequest(const std::string raw_content);
     		~RawHttpRequest();
-    		const std::string * const getContent() const;
+    		const std::string getContent() const;
     	private:
-    		const std::string * _content;
+    		const std::string _content;
     };
 
     class HttpRequest : public tissuestack::common::Request
@@ -77,10 +78,16 @@ namespace tissuestack
     		~HttpRequest();
     		const std::string getParameter(std::string name) const;
     		const std::string dumpParameters() const;
-    		const std::string * const getContent() const;
+    		const std::string getContent() const;
     	private:
+    		void addQueryParameter(std::string key, std::string value);
+    		void partiallyURIDecodeString(std::string& potentially_uri_encoded_string);
+    		void processsQueryString();
+    		inline bool skipNextCharacterCheck(int& lengthOfQueryString, int&cursor, int&nPos, std::string& key);
+    		inline void subProcessQueryString(int& lengthOfQueryString, int&cursor, int&nPos, std::string& key);
     		std::unordered_map<std::string, std::string> _parameters;
     		std::string _query_string;
+    		static std::unordered_map<std::string,std::string> MinimalURIDecodingTable;
     };
 
     class HttpRequestSanityFilter : public tissuestack::common::RequestFilter
@@ -90,6 +97,16 @@ namespace tissuestack
     		HttpRequestSanityFilter(const HttpRequestSanityFilter&) = delete;
     		HttpRequestSanityFilter();
 			~HttpRequestSanityFilter();
+    		const tissuestack::common::Request * const applyFilter(const tissuestack::common::Request * const request) const;
+    };
+
+    class TissueStackRequestFilter : public tissuestack::common::RequestFilter
+    {
+    	public:
+			TissueStackRequestFilter & operator=(const TissueStackRequestFilter&) = delete;
+			TissueStackRequestFilter(const TissueStackRequestFilter&) = delete;
+			TissueStackRequestFilter();
+			~TissueStackRequestFilter();
     		const tissuestack::common::Request * const applyFilter(const tissuestack::common::Request * const request) const;
     };
 

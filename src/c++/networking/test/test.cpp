@@ -14,22 +14,25 @@ int main(int argc, char * args[])
 	  std::cout << "Time: " << static_cast<double>(t->stop()) << std::endl;
 	   */
 
-	  // NOTE: try templated RequestFilter with in and out type handed in: applyFilter takes in and spits out out
-	  std::vector<std::shared_ptr<tissuestack::common::RequestFilter> > filter_chain
+	  std::unique_ptr<tissuestack::common::RequestFilter> filter_chain[] =
 	  {
-		  std::shared_ptr<tissuestack::common::RequestFilter>(new tissuestack::networking::HttpRequestSanityFilter())
+			  std::unique_ptr<tissuestack::common::RequestFilter>(new tissuestack::networking::HttpRequestSanityFilter()),
+			  std::unique_ptr<tissuestack::common::RequestFilter>(new tissuestack::networking::TissueStackRequestFilter())
 	  };
 
-	  std::unique_ptr<std::string> someInput(new std::string("GET dsdfd/?hehe=&=lala=&hihi=99=hshsh=lol  HTTP/1.1"));
-	  std::unique_ptr<const tissuestack::common::Request> req(new tissuestack::networking::RawHttpRequest(someInput.get()));
-	  for (auto filter : filter_chain) {
+	  std::string someInput("GET dsdfd/?hehe=l%25ol%5F&%10jijij=&&&&%40ksk&%5Fsss=88&sERvice=image  HTTP/1.1");
+	  std::unique_ptr<const tissuestack::common::Request> req(new tissuestack::networking::RawHttpRequest(someInput));
+	  for (auto &filter : filter_chain)
+	  {
 		  req.reset(filter->applyFilter(req.get()));
 	  }
+
+	  /*
 	  const tissuestack::networking::HttpRequest * const result =
 			  static_cast<const tissuestack::networking::HttpRequest * const>(req.get());
 	  std::cout << "Content: *" << *result->getContent() << "*" << std::endl;
-	  std::cout << "Dump: " << result->dumpParameters() << std::endl;
-
+	  std::cout << "Dump: " << std::endl << result->dumpParameters() << std::endl;
+	   */
 	  /*
 	  tissuestack::common::TissueStackProcessingStrategy * TissueStackProcessingStrategy =
 			  new tissuestack::common::TissueStackProcessingStrategy();
