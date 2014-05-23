@@ -79,6 +79,7 @@ namespace tissuestack
     		const std::string getParameter(std::string name) const;
     		const std::string dumpParameters() const;
     		const std::string getContent() const;
+    		std::unordered_map<std::string, std::string> getParameterMap() const;
     	private:
     		void addQueryParameter(std::string key, std::string value);
     		void partiallyURIDecodeString(std::string& potentially_uri_encoded_string);
@@ -88,6 +89,21 @@ namespace tissuestack
     		std::unordered_map<std::string, std::string> _parameters;
     		std::string _query_string;
     		static std::unordered_map<std::string,std::string> MinimalURIDecodingTable;
+    };
+
+    class TissueStackImageRequest final : public tissuestack::common::Request
+    {
+		public:
+    		static const std::string SERVICE;
+			TissueStackImageRequest & operator=(const TissueStackImageRequest&) = delete;
+			TissueStackImageRequest(const TissueStackImageRequest&) = delete;
+			explicit TissueStackImageRequest(std::unordered_map<std::string, std::string> & request_parameters);
+			const bool hasExpired() const;
+			~TissueStackImageRequest();
+			const std::string getContent() const;
+		private:
+			unsigned long long int _request_id = 0;
+			unsigned long long int _request_timeout = 0;
     };
 
     class HttpRequestSanityFilter : public tissuestack::common::RequestFilter
@@ -109,17 +125,6 @@ namespace tissuestack
 			~TissueStackRequestFilter();
     		const tissuestack::common::Request * const applyFilter(const tissuestack::common::Request * const request) const;
     };
-
-    class RequestPromoter final
-    {
-    	public:
-    		RequestPromoter & operator=(const RequestPromoter&) = delete;
-    		RequestPromoter(const RequestPromoter&) = delete;
-    		RequestPromoter(); // change into singleton !!
-    		virtual ~RequestPromoter();
-    		const virtual tissuestack::common::Request * const promoteRequest(const tissuestack::networking::RawHttpRequest * const in) const;
-    };
-
   }
 
 }

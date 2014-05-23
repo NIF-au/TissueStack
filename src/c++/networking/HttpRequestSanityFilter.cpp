@@ -14,7 +14,7 @@ const tissuestack::common::Request * const tissuestack::networking::HttpRequestS
 {
 	if (request == nullptr)   THROW_TS_EXCEPTION(tissuestack::common::TissueStackException, "applyFilter was called with NULL");
 
-	if (request->getType() != tissuestack::common::Request::Type::RAW_HTTP_REQUEST)
+	if (request->getType() != tissuestack::common::Request::Type::RAW_HTTP)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "applyFilter was called with non raw request");
 
 	// quick check if we begin the right way ...

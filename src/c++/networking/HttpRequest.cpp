@@ -52,7 +52,7 @@ tissuestack::networking::HttpRequest::HttpRequest(const RawHttpRequest * const r
 	this->tissuestack::networking::HttpRequest::processsQueryString();
 
 	// we have passed all preliminary checks => assign us the new type
-	this->setType(tissuestack::common::Request::Type::HTTP_REQUEST);
+	this->setType(tissuestack::common::Request::Type::HTTP);
 
 }
 
@@ -175,4 +175,9 @@ const std::string tissuestack::networking::HttpRequest::dumpParameters() const
 const std::string tissuestack::networking::HttpRequest::getContent() const
 {
 	return this->_query_string;
+}
+
+std::unordered_map<std::string, std::string> tissuestack::networking::HttpRequest::getParameterMap() const
+{
+	return this->_parameters;
 }

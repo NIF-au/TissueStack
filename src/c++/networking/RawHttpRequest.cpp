@@ -7,7 +7,7 @@ tissuestack::networking::RawHttpRequest::~RawHttpRequest()
 
 tissuestack::networking::RawHttpRequest::RawHttpRequest(const std::string raw_content) : _content(raw_content)
 {
-	this->setType(tissuestack::common::Request::Type::RAW_HTTP_REQUEST);
+	this->setType(tissuestack::common::Request::Type::RAW_HTTP);
 };
 
 const std::string tissuestack::networking::RawHttpRequest::getContent() const

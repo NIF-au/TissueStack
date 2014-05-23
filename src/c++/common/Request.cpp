@@ -1,6 +1,6 @@
 #include "tissuestack.h"
 
-tissuestack::common::Request::Request() : _type(tissuestack::common::Request::Type::RAW_HTTP_REQUEST) {};
+tissuestack::common::Request::Request() : _type(tissuestack::common::Request::Type::RAW_HTTP) {};
 
 tissuestack::common::Request::~Request()
 {

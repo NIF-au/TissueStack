@@ -8,6 +8,7 @@
 #include <string>
 #include <unordered_map>
 #include <memory>
+#include <mutex>
 
 namespace tissuestack
 {
@@ -18,8 +19,8 @@ namespace tissuestack
 			public:
 				enum class Type
 				{
-					RAW_HTTP_REQUEST,
-					HTTP_REQUEST,
+					RAW_HTTP,
+					HTTP,
 					TS_IMAGE,
 					TS_TILING,
 					TS_CONVERSION
@@ -103,6 +104,51 @@ namespace tissuestack
 			public:
 				virtual ~RequestFilter();
 				virtual const Request * const applyFilter(const Request * const) const = 0;
+		};
+
+		class TimeStampHashMap final
+		{
+			public:
+				static const unsigned int MAX_ENTRIES = 1000;
+				TimeStampHashMap & operator=(const TimeStampHashMap&) = delete;
+				TimeStampHashMap(const TimeStampHashMap&) = delete;
+				static bool checkForExpiredEntry(unsigned long long int key, unsigned long long int value)
+				{
+					if (key == 0) return false;
+
+					bool ret = false;
+					std::mutex mutex;
+					mutex.lock();
+
+					try
+					{
+						try
+						{
+							// get existing value and compare it against the old value (if exists)
+							unsigned long long int old_value = TimeStampHashMap::_timestamps.at(key);
+							if (old_value > value) ret = true;
+						}  catch (const std::out_of_range& key_does_not_exist) {}
+
+						// let's add the new key/value if not expired
+						if (!ret)
+						{
+							// perhaps we need to clear the hash map
+							if (TimeStampHashMap::_timestamps.size() >= TimeStampHashMap::MAX_ENTRIES)
+								TimeStampHashMap::_timestamps.clear();
+							TimeStampHashMap::_timestamps[key] = value;
+						}
+					}
+					catch (...)
+					{
+						// probably paranoia but never say never
+
+					}
+					mutex.unlock();
+					return ret;
+				}
+			private:
+				TimeStampHashMap();
+				static std::unordered_map<unsigned long long int, unsigned long long int> _timestamps;
 		};
 	}
 }
