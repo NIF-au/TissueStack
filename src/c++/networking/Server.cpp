@@ -44,7 +44,13 @@ void tissuestack::networking::Server::start()
 		throw tissuestack::common::TissueStackServerException(
 				std::string("Failed to listen on server socket!"));
 
-	/*
+	std::cout << "Socket Server has been started on " << this->_server_address << ":"
+			<< this->_port << " [FD: " << this->_server_socket << "]" << std::endl;
+}
+
+/*
+void tissuestack::networking::Server::listen<ProcessorImplementation>(const tissuestack::common::RequestProcessor<ProcessorImplementation> * processor)
+{
 	int count = 5;
 
 	struct sockaddr_in client_address;
@@ -64,18 +70,8 @@ void tissuestack::networking::Server::start()
 		count--;
 	}
 	// TODO: to be continued
-	*/
 
-	std::cout << "Socket Server Listening On " << this->_server_address << ":"
-			<< this->_port << " [FD: " << this->_server_socket << "]" << std::endl;
-	std::cout << "Request Size Limit: " << tissuestack::networking::Server::MAX_REQUEST_LENGTH_IN_BYTES << std::endl;
-	std::cout << "Read Timeout (s): " << tissuestack::networking::Server::READ_TIMEOUT_IN_SECONDS << std::endl;
-}
-template <typename ProcessorImplementation>
-void tissuestack::networking::Server::listen(const tissuestack::common::RequestProcessor<ProcessorImplementation> * const processor)
-{
-
-}
+}*/
 
 void tissuestack::networking::Server::stop()
 {

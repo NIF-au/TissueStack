@@ -38,13 +38,18 @@ const tissuestack::common::Request * const tissuestack::networking::TissueStackR
 	tissuestack::common::Request * return_request = nullptr;
 	if (tissuestack::networking::TissueStackImageRequest::SERVICE.compare(service) == 0)
 		return_request = new tissuestack::networking::TissueStackImageRequest(parameters);
-
-	// TODO: add more request types and perform checks (e.g. timestamp)
-
+	else if (tissuestack::networking::TissueStackPreTilingRequest::SERVICE.compare(service) == 0)
+			return_request = new tissuestack::networking::TissueStackPreTilingRequest(parameters);
+	else if (tissuestack::networking::TissueStackConversionRequest::SERVICE.compare(service) == 0)
+			return_request = new tissuestack::networking::TissueStackConversionRequest(parameters);
 
 	if (return_request == nullptr)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 						"A TissueStack request has to be: 'IMAGE', 'TILING' or 'CONVERSION' !");
+
+	if (return_request->isObsolete())
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackObsoleteRequestException,
+						"The TissueStack Request has become obsolete!");
 
 	return return_request;
 };

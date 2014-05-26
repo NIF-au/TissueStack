@@ -40,7 +40,7 @@ namespace tissuestack
     	std::string getServerAddress() const;
     	void start();
     	template <typename ProcessorImplementation>
-    	void listen(const tissuestack::common::RequestProcessor<ProcessorImplementation> * const processor);
+    	void listen(const tissuestack::common::RequestProcessor<ProcessorImplementation> * processor){};
     	void stop();
 
       private:
@@ -64,6 +64,7 @@ namespace tissuestack
     		explicit RawHttpRequest(const std::string raw_content);
     		~RawHttpRequest();
     		const std::string getContent() const;
+    		const bool isObsolete() const;
     	private:
     		const std::string _content;
     };
@@ -80,6 +81,7 @@ namespace tissuestack
     		const std::string dumpParameters() const;
     		const std::string getContent() const;
     		std::unordered_map<std::string, std::string> getParameterMap() const;
+    		const bool isObsolete() const;
     	private:
     		void addQueryParameter(std::string key, std::string value);
     		void partiallyURIDecodeString(std::string& potentially_uri_encoded_string);
@@ -98,12 +100,36 @@ namespace tissuestack
 			TissueStackImageRequest & operator=(const TissueStackImageRequest&) = delete;
 			TissueStackImageRequest(const TissueStackImageRequest&) = delete;
 			explicit TissueStackImageRequest(std::unordered_map<std::string, std::string> & request_parameters);
-			const bool hasExpired() const;
+			const bool isObsolete() const;
 			~TissueStackImageRequest();
 			const std::string getContent() const;
 		private:
 			unsigned long long int _request_id = 0;
 			unsigned long long int _request_timeout = 0;
+    };
+
+    class TissueStackPreTilingRequest final : public tissuestack::common::Request
+    {
+		public:
+    		static const std::string SERVICE;
+    		TissueStackPreTilingRequest & operator=(const TissueStackPreTilingRequest&) = delete;
+    		TissueStackPreTilingRequest(const TissueStackPreTilingRequest&) = delete;
+			explicit TissueStackPreTilingRequest(std::unordered_map<std::string, std::string> & request_parameters);
+			const bool isObsolete() const;
+			~TissueStackPreTilingRequest();
+			const std::string getContent() const;
+    };
+
+    class TissueStackConversionRequest final : public tissuestack::common::Request
+    {
+		public:
+    		static const std::string SERVICE;
+    		TissueStackConversionRequest & operator=(const TissueStackConversionRequest&) = delete;
+    		TissueStackConversionRequest(const TissueStackConversionRequest&) = delete;
+			explicit TissueStackConversionRequest(std::unordered_map<std::string, std::string> & request_parameters);
+			const bool isObsolete() const;
+			~TissueStackConversionRequest();
+			const std::string getContent() const;
     };
 
     class HttpRequestSanityFilter : public tissuestack::common::RequestFilter

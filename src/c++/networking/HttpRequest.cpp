@@ -181,3 +181,9 @@ std::unordered_map<std::string, std::string> tissuestack::networking::HttpReques
 {
 	return this->_parameters;
 }
+
+const bool tissuestack::networking::HttpRequest::isObsolete() const
+{
+	// at this level we are false by default
+	return false;
+}

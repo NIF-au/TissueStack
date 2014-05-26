@@ -14,6 +14,51 @@ namespace tissuestack
 {
 	namespace common
 	{
+		class TimeStampHashMap final
+		{
+			public:
+				static const unsigned int MAX_ENTRIES = 1000;
+				TimeStampHashMap & operator=(const TimeStampHashMap&) = delete;
+				TimeStampHashMap(const TimeStampHashMap&) = delete;
+				static bool checkForExpiredEntry(unsigned long long int key, unsigned long long int value)
+				{
+					if (key == 0) return false;
+
+					bool ret = false;
+					std::mutex mutex;
+					mutex.lock();
+
+					try
+					{
+						try
+						{
+							// get existing value and compare it against the old value (if exists)
+							unsigned long long int old_value = TimeStampHashMap::_timestamps.at(key);
+							if (old_value > value) ret = true;
+						}  catch (const std::out_of_range& key_does_not_exist) {}
+
+						// let's add the new key/value if not expired
+						if (!ret)
+						{
+							// perhaps we need to clear the hash map
+							if (TimeStampHashMap::_timestamps.size() >= TimeStampHashMap::MAX_ENTRIES)
+								TimeStampHashMap::_timestamps.clear();
+							TimeStampHashMap::_timestamps[key] = value;
+						}
+					}
+					catch (...)
+					{
+						// probably paranoia but never say never
+
+					}
+					mutex.unlock();
+					return ret;
+				}
+			private:
+				TimeStampHashMap();
+				static std::unordered_map<unsigned long long int, unsigned long long int> _timestamps;
+		};
+
 		class Request
 		{
 			public:
@@ -27,6 +72,7 @@ namespace tissuestack
 				};
 
 				virtual const std::string getContent() const = 0;
+				virtual const bool isObsolete() const = 0;
 				virtual ~Request();
 				const Request::Type getType() const;
 			protected:
@@ -72,7 +118,7 @@ namespace tissuestack
 				~RequestProcessor() {
 					delete this->_impl;
 				};
-				static const RequestProcessor<ProcessorImplementation> * const instance(ProcessorImplementation * impl)
+				static const RequestProcessor<ProcessorImplementation> * instance(ProcessorImplementation * impl)
 				{
 					if (RequestProcessor<ProcessorImplementation>::_instance == nullptr)
 						RequestProcessor<ProcessorImplementation>::_instance = new RequestProcessor<ProcessorImplementation>(impl);
@@ -83,8 +129,14 @@ namespace tissuestack
 				{
 					this->_impl->init();
 				};
-				void process() const {};
-				void stop() const {};
+				void process() const
+				{
+					this->_impl->process();
+				};
+				void stop() const
+				{
+					this->_impl->stop();
+				};
 			private:
 				static RequestProcessor<ProcessorImplementation> * _instance;
 				ProcessorImplementation * _impl;
@@ -104,51 +156,6 @@ namespace tissuestack
 			public:
 				virtual ~RequestFilter();
 				virtual const Request * const applyFilter(const Request * const) const = 0;
-		};
-
-		class TimeStampHashMap final
-		{
-			public:
-				static const unsigned int MAX_ENTRIES = 1000;
-				TimeStampHashMap & operator=(const TimeStampHashMap&) = delete;
-				TimeStampHashMap(const TimeStampHashMap&) = delete;
-				static bool checkForExpiredEntry(unsigned long long int key, unsigned long long int value)
-				{
-					if (key == 0) return false;
-
-					bool ret = false;
-					std::mutex mutex;
-					mutex.lock();
-
-					try
-					{
-						try
-						{
-							// get existing value and compare it against the old value (if exists)
-							unsigned long long int old_value = TimeStampHashMap::_timestamps.at(key);
-							if (old_value > value) ret = true;
-						}  catch (const std::out_of_range& key_does_not_exist) {}
-
-						// let's add the new key/value if not expired
-						if (!ret)
-						{
-							// perhaps we need to clear the hash map
-							if (TimeStampHashMap::_timestamps.size() >= TimeStampHashMap::MAX_ENTRIES)
-								TimeStampHashMap::_timestamps.clear();
-							TimeStampHashMap::_timestamps[key] = value;
-						}
-					}
-					catch (...)
-					{
-						// probably paranoia but never say never
-
-					}
-					mutex.unlock();
-					return ret;
-				}
-			private:
-				TimeStampHashMap();
-				static std::unordered_map<unsigned long long int, unsigned long long int> _timestamps;
 		};
 	}
 }

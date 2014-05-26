@@ -40,6 +40,13 @@ namespace tissuestack
 			TissueStackInvalidRequestException(std::string what);
     };
 
+    class TissueStackObsoleteRequestException : public TissueStackInvalidRequestException
+    {
+    	public:
+			TissueStackObsoleteRequestException();
+			TissueStackObsoleteRequestException(std::string what);
+    };
+
     class TissueStackNullPointerException : public TissueStackException
     {
     	public:
