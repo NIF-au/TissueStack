@@ -4,9 +4,10 @@
 int main(int argc, char * args[])
 {
   tissuestack::execution::SharedLibraryFunctionCall so("/tmp/test.so");
+  so.init();
 
-  const std::function<void (const tissuestack::common::Request * request)> f =
- 		  [&so] (const tissuestack::common::Request * request)
+  const std::function<void (const tissuestack::common::Request * request, tissuestack::common::ProcessingStrategy * _this)> f =
+ 		  [&so] (const tissuestack::common::Request * request, tissuestack::common::ProcessingStrategy * _this)
  		  {
 			const void * dlSymReturn = so.callDlSym(std::string("lala"));
 			// check return
@@ -22,7 +23,6 @@ int main(int argc, char * args[])
 			std::cout << "After  Call: " << t << std::endl;
  		  };
 
-  so.init();
   so.process(&f, nullptr);
   so.stop();
 

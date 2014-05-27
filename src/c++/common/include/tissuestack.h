@@ -86,13 +86,21 @@ namespace tissuestack
 		{
 			protected:
 				ProcessingStrategy();
+				void setRunningFlag(bool isRunning);
+				void raiseStopFlag();
+				void resetStopFlag();
 			public:
 				ProcessingStrategy & operator=(const ProcessingStrategy&) = delete;
 				ProcessingStrategy(const ProcessingStrategy&) = delete;
 				virtual ~ProcessingStrategy();
 				void virtual init() = 0;
-				void virtual process(const std::function<void (const Request * request)> * functionality, const Request * request) = 0;
+				void virtual process(const std::function<void (const Request * request, tissuestack::common::ProcessingStrategy * _this)> * functionality, const Request * request) = 0;
 				void virtual stop() = 0;
+				bool isRunning() const;
+				bool isStopFlagRaised() const;
+			private:
+				bool _stopFlagRaised = false;
+				bool _isRunning = false;
 		};
 
 		class TissueStackProcessingStrategy : public ProcessingStrategy
@@ -103,7 +111,7 @@ namespace tissuestack
 				TissueStackProcessingStrategy();
 				~TissueStackProcessingStrategy();
 				void init();
-				void process(const std::function<void (const Request * request)> * functionality, const Request * request);
+				void process(const std::function<void (const Request * request, tissuestack::common::ProcessingStrategy * _this)> * functionality, const Request * request);
 				void stop();
 			private:
 				ProcessingStrategy	* _default_strategy;
@@ -129,14 +137,20 @@ namespace tissuestack
 				{
 					this->_impl->init();
 				};
-				void process() const
+				void process(
+						const std::function<void (const tissuestack::common::Request * request, tissuestack::common::ProcessingStrategy * _this)> * functionality,
+						const tissuestack::common::Request * request) const
 				{
-					this->_impl->process();
+					this->_impl->process(functionality, request);
 				};
 				void stop() const
 				{
 					this->_impl->stop();
 				};
+				bool isRunning() const
+				{
+					return this->_impl->isRunning();
+				}
 			private:
 				static RequestProcessor<ProcessorImplementation> * _instance;
 				ProcessorImplementation * _impl;

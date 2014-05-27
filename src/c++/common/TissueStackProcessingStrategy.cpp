@@ -18,11 +18,11 @@ void tissuestack::common::TissueStackProcessingStrategy::init()
 };
 
 void tissuestack::common::TissueStackProcessingStrategy::process(
-		const std::function<void (const tissuestack::common::Request * request)> * functionality,
+		const std::function<void (const tissuestack::common::Request * request, tissuestack::common::ProcessingStrategy * _this)> * functionality,
 		const tissuestack::common::Request * request)
 {
 	// delegate
-	this->_default_strategy->process(nullptr, nullptr);
+	this->_default_strategy->process(functionality, request);
 };
 
 void tissuestack::common::TissueStackProcessingStrategy::stop()

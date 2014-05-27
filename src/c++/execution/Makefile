@@ -1,4 +1,4 @@
-NAME			=	TissueStack Threading
+NAME			=	TissueStack Execution
 
 SRCS			=	$(wildcard *.cpp)
 SRCS_COMMON		=	$(wildcard ../common/*.cpp)

@@ -18,7 +18,7 @@ namespace tissuestack
 				explicit ThreadPool(short number_of_threads);
 				short getNumberOfThreads() const;
 				void init();
-				void process(const std::function<void (const tissuestack::common::Request * request)> * functionality,
+				void process(const std::function<void (const tissuestack::common::Request * request, tissuestack::common::ProcessingStrategy * _this)> * functionality,
 						const tissuestack::common::Request * request);
 				void stop();
 
@@ -26,14 +26,14 @@ namespace tissuestack
 				short _number_of_threads;
 		};
 
-		class SimpleExecution: public tissuestack::common::ProcessingStrategy
+		class SimpleSequentialExecution: public tissuestack::common::ProcessingStrategy
 		{
 			public:
-				SimpleExecution & operator=(const SimpleExecution&) = delete;
-				SimpleExecution(const SimpleExecution&) = delete;
-				SimpleExecution();
+				SimpleSequentialExecution & operator=(const SimpleSequentialExecution&) = delete;
+				SimpleSequentialExecution(const SimpleSequentialExecution&) = delete;
+				SimpleSequentialExecution();
 				void init();
-				void process(const std::function<void (const tissuestack::common::Request * request)> * functionality,
+				void process(const std::function<void (const tissuestack::common::Request * request, tissuestack::common::ProcessingStrategy * _this)> * functionality,
 						const tissuestack::common::Request * request);
 				void stop();
 		};
@@ -46,7 +46,7 @@ namespace tissuestack
 				explicit SharedLibraryFunctionCall(const std::string so_library_path);
 				~SharedLibraryFunctionCall();
 				void init();
-				void process(const std::function<void (const tissuestack::common::Request * request)> * functionality,
+				void process(const std::function<void (const tissuestack::common::Request * request, tissuestack::common::ProcessingStrategy * _this)> * functionality,
 						const tissuestack::common::Request * request);
 				void stop();
 				void * const callDlSym(std::string function_name);
