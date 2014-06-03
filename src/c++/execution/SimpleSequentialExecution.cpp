@@ -8,15 +8,14 @@ void tissuestack::execution::SimpleSequentialExecution::init()
 }
 
 void tissuestack::execution::SimpleSequentialExecution::process(
-		const std::function<void (const tissuestack::common::Request * request, tissuestack::common::ProcessingStrategy * _this)> * functionality,
-		const tissuestack::common::Request * request)
+		const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality)
 {
 	// delegate only if we haven't received a null pointer for a closure
 	// AND if the stop flag is down
 	if (!this->isStopFlagRaised() && functionality)
 	{
 		this->setRunningFlag(true); // mark us as running
-		((*functionality)(request, this));
+		((*functionality)(this));
 		this->setRunningFlag(false); // mark us as finished
 		this->resetStopFlag(); // reset any stop flag that was raised
 	}

@@ -1,5 +1,5 @@
-#ifndef	__POOL_H__
-#define __POOL_H__
+#ifndef	__EXECUTION_H__
+#define __EXECUTION_H__
 
 #include "tissuestack.h"
 #include <thread>
@@ -18,8 +18,7 @@ namespace tissuestack
 				explicit ThreadPool(short number_of_threads);
 				short getNumberOfThreads() const;
 				void init();
-				void process(const std::function<void (const tissuestack::common::Request * request, tissuestack::common::ProcessingStrategy * _this)> * functionality,
-						const tissuestack::common::Request * request);
+				void process(const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality);
 				void stop();
 
 			private:
@@ -33,8 +32,7 @@ namespace tissuestack
 				SimpleSequentialExecution(const SimpleSequentialExecution&) = delete;
 				SimpleSequentialExecution();
 				void init();
-				void process(const std::function<void (const tissuestack::common::Request * request, tissuestack::common::ProcessingStrategy * _this)> * functionality,
-						const tissuestack::common::Request * request);
+				void process(const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality);
 				void stop();
 		};
 
@@ -46,8 +44,7 @@ namespace tissuestack
 				explicit SharedLibraryFunctionCall(const std::string so_library_path);
 				~SharedLibraryFunctionCall();
 				void init();
-				void process(const std::function<void (const tissuestack::common::Request * request, tissuestack::common::ProcessingStrategy * _this)> * functionality,
-						const tissuestack::common::Request * request);
+				void process(const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality);
 				void stop();
 				void * const callDlSym(std::string function_name);
 			private:
@@ -57,4 +54,4 @@ namespace tissuestack
 	}
 }
 
-#endif	/* __POOL_H__ */
+#endif	/* __EXECUTION_H__ */

@@ -10,6 +10,8 @@ void tissuestack::common::TissueStackException::setWhat(std::string what)
 }
 tissuestack::common::TissueStackException::TissueStackException(std::string what) : _what(nullptr)
 {
+	if (what.empty())
+		this->setWhat(std::string("Exception not properly specified!"));
 	this->setWhat(what);
 }
 

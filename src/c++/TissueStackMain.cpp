@@ -44,15 +44,44 @@ extern "C"
 
 int main(int argc, char * args[])
 {
-	// create an instance of a tissue stack server and wrap it in a smart pointer
 	std::unique_ptr<tissuestack::networking::Server<tissuestack::common::TissueStackProcessingStrategy> >
-		TissueStackServer(new tissuestack::networking::Server<tissuestack::common::TissueStackProcessingStrategy>(4242));
-	// install the signal handler
-	install_signal_handler(TissueStackServer.get());
+				TissueStackServer;
+	try
+	{
+		// create an instance of a tissue stack server and wrap it in a smart pointer
+		//std::unique_ptr<tissuestack::networking::Server<tissuestack::common::TissueStackProcessingStrategy> >
+			TissueStackServer.reset(new tissuestack::networking::Server<tissuestack::common::TissueStackProcessingStrategy>(4242));
+	} catch (tissuestack::common::TissueStackException& ex) {
+		std::cerr << "Failed to instantiate TissueStackServer with Default Strategy for the following reason:" << std::endl;
+		std::cerr << ex.what() << std::endl;
+		return -1;
+	} catch (...)
+	{
+		std::cerr << "Failed to instantiate TissueStackServer with Default Strategy for unexpected reason!" << std::endl;
+		return -1;
+	}
 
-	// instantiate TimeStampHashMap Singleton
-	// TODO: turn it into a singleton which it is not yet !
-	//tissuestack::common::TimeStampHashMap::instance();
+	try
+	{
+		// install the signal handler
+		install_signal_handler(TissueStackServer.get());
+	} catch (...)
+	{
+		std::cerr << "Failed to install the signal handlers!" << std::endl;
+		return -1;
+	}
+
+	std::unique_ptr<tissuestack::common::RequestTimeStampStore> TissueStackTimeStampStore;
+	try
+	{
+		// instantiate TimeStampHashMap Singleton
+		TissueStackTimeStampStore.reset(tissuestack::common::RequestTimeStampStore::instance());
+	} catch (...)
+	{
+		std::cerr << "Failed to instantiate the RequestTimeStampStore!" << std::endl;
+		return -1;
+	}
+
 
 	// instantiate a data set store singleton
 	// TODO: implement
@@ -60,12 +89,36 @@ int main(int argc, char * args[])
 	// instantiate a color map store singleton
 	// TODO: implement
 
-	// start the server socket
-	TissueStackServer->start();
+	try
+	{
+		// start the server socket
+		TissueStackServer->start();
+	} catch (tissuestack::common::TissueStackServerException& ex) {
+		std::cerr << "Failed to start the TissueStack SocketServer for the following reason:" << std::endl;
+		std::cerr << ex.what() << std::endl;
+		return -1;
+	} catch (...)
+	{
+		std::cerr << "Failed to start the TissueStack SocketServer for unexpected reason!" << std::endl;
+		return -1;
+	}
 
-	// accept requests through the default TissueStackProcessingStrategy
-	TissueStackServer->listen();
+	try
+	{
+		// accept requests and process them until we receive a SIGSTOP
+		TissueStackServer->listen();
+	} catch (tissuestack::common::TissueStackException& ex) {
+		std::cerr << "TissueStackServer listen() was aborted for the following reason:" << std::endl;
+		std::cerr << ex.what() << std::endl;
+		return -1;
+	} catch (...)
+	{
+		std::cerr << "TissueStackServer listen() was aborted for unexpected reason!" << std::endl;
+		return -1;
+	}
 
 	// final cleaning up
 	TissueStackServer->stop();
+
+	return 1;
 }

@@ -18,15 +18,14 @@ void tissuestack::execution::ThreadPool::init()
 }
 
 void tissuestack::execution::ThreadPool::process(
-		const std::function<void (const tissuestack::common::Request * request, tissuestack::common::ProcessingStrategy * _this)> * functionality,
-		const tissuestack::common::Request * request)
+		const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality)
 {
 	// dispatch functionality to the pool, only if we are running,
 	// haven't received a stop flag and the closure is not null
 	if (this->isRunning() && !this->isStopFlagRaised() && functionality)
 	{
 		//TODO: sleep vs wait vs conditional variable
-		((*functionality)(request, this));
+		((*functionality)(this));
 	}
 }
 

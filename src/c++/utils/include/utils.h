@@ -4,9 +4,13 @@
 #include <thread>
 #include <iostream>
 #include <ctime>
+#include <sstream>
+#include <cstring>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/sysinfo.h>
+#include <typeinfo>
+#include <cxxabi.h>
 
 namespace tissuestack
 {
@@ -19,6 +23,21 @@ namespace tissuestack
         static const unsigned long long int getTotalRam();
         static const unsigned long long int getUsedRam();
         static const unsigned long long int getFreeRam();
+      private:
+        System();
+        System & operator=(const System&) = delete;
+        System(const System&) = delete;
+    };
+
+    class Misc final
+    {
+      public:
+        static const std::string convertCharPointerToString(char * some_characters);
+    	static const std::string demangleTypeIdName(const char * mangeledIdName);
+      private:
+    	Misc();
+    	Misc & operator=(const Misc&) = delete;
+    	Misc(const Misc&) = delete;
     };
 
     class Timer

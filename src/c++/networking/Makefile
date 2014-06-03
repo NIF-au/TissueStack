@@ -1,9 +1,10 @@
 NAME			=	TissueStack Networking
 
-SRCS			=	$(wildcard *.cpp)
 SRCS_COMMON		=	$(wildcard ../common/*.cpp)
 SRCS_THREADING	=	$(wildcard ../execution/*.cpp)
 SRCS_UTILS		=	$(wildcard ../utils/*.cpp)
+SRCS			=	$(wildcard *.cpp)
+
 
 INCLUDE			=	-Iinclude -I../utils/include -I../common/include -I../execution/include
 

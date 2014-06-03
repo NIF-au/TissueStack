@@ -28,8 +28,8 @@ void tissuestack::execution::SharedLibraryFunctionCall::init()
  *  Call ::process with a lambda like this one to call shared library functionality
  * ---------------------------------------------------------------------------------
  *
- * const std::function<void (const tissuestack::common::Request * request)> f =
- *		  [&so] (const tissuestack::common::Request * request)
+  * const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> f =
+ *		  [&so] (const tissuestack::common::ProcessingStrategy * _this)
  *		  {
  *			const void * dlSymReturn = so.callDlSym(std::string("lala"));
  *			// check return
@@ -45,13 +45,12 @@ void tissuestack::execution::SharedLibraryFunctionCall::init()
  *
  */
 void tissuestack::execution::SharedLibraryFunctionCall::process(
-		const std::function<void (const tissuestack::common::Request * request, tissuestack::common::ProcessingStrategy * _this)> * functionality,
-		const tissuestack::common::Request * request)
+		const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality)
 {
 	// delegate only if we haven't received a null pointer for a closure
 	// AND if we have been loaded already and not been unloaded meanwhile
 	if (this->isRunning() && !this->isStopFlagRaised() && functionality)
-		((*functionality)(request, this));
+		((*functionality)(this));
 }
 
 void tissuestack::execution::SharedLibraryFunctionCall::stop()

@@ -1,6 +1,7 @@
-#include "tissuestack.h"
+#ifndef	__SERVER_H__
+#define __SERVER_H__
 
-#include <sstream>
+#include "tissuestack.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -27,7 +28,7 @@ namespace tissuestack
 
     	Server() : Server(static_cast<unsigned int>(Server::PORT)) {};
 
-    	explicit Server(unsigned int port) : _server_socket(0), _processor(
+    	explicit Server(unsigned int port): _server_socket(0), _processor(
     			tissuestack::common::RequestProcessor<ProcessorImplementation>::instance(new ProcessorImplementation()))
     	{this->_port = port;};
 
@@ -45,10 +46,11 @@ namespace tissuestack
     		// create a reusable server socket
     		this->_server_socket = ::socket(AF_INET, SOCK_STREAM, 0);
     		if (this->_server_socket <= 0)
-    			throw tissuestack::common::TissueStackServerException(std::string("Failed to create server socket!"));
+    			THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException, "Failed to create server socket!");
+
     		int optVal = 1;
     		if(::setsockopt(this->_server_socket, SOL_SOCKET, SO_REUSEADDR, &optVal, sizeof(optVal)) != 0)
-    			throw tissuestack::common::TissueStackServerException(std::string("Failed to change server socket options!"));
+    			THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException, "Failed to change server socket options!");
 
     		//bind server socket to address
     		sockaddr_in server_address;
@@ -57,32 +59,34 @@ namespace tissuestack
     		server_address.sin_port = htons(this->_port);
     		server_address.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    		this->setAddress(inet_ntoa(server_address.sin_addr));
-
     		if(::bind(this->_server_socket, (sockaddr *) &server_address, sizeof(server_address)) < 0)
-    			throw tissuestack::common::TissueStackServerException(
-    					std::string("Failed to bind server socket to address: ").append(this->_server_address));
+    			THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException, "Failed to bind server socket!");
 
     		//listen on server socket with a pre-defined maximum of allowed connections to be queued
     		if(::listen(this->_server_socket, tissuestack::networking::Server<ProcessorImplementation>::MAX_CONNECTIONS_ALLOWED) < 0)
-    			throw tissuestack::common::TissueStackServerException(
-    					std::string("Failed to listen on server socket!"));
+    			THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException, "Failed to listen on server socket!");
 
     		this->_isRunning = true;
-    		std::cout << "Socket Server has been started on " << this->_server_address << ":"
+    		std::cout << "Socket Server has been started on " << inet_ntoa(server_address.sin_addr) << ":"
     				<< this->_port << " [FD: " << this->_server_socket << "]" << std::endl;
     	};
 
+    	/*
+    	 * NOTE: We catch anything that is a controlled TissueStackApplicationException.
+    	 *       Anything else is considered a more grave exception or an error even.
+    	 * 		 This practice implies that the closure and its execution components MUST
+    	 * 		 perform checks and throw the appropriate exceptions !!!
+    	 */
     	void listen()
     	{
-    		  const std::function<void (const tissuestack::common::Request * request, tissuestack::common::ProcessingStrategy * _this)> f =
-    		 		  [] (const tissuestack::common::Request * request, tissuestack::common::ProcessingStrategy * _this)
-    		 		  {
-    					std::cout << "Doing something ..." << std::endl;
-    		 		  };
+    		const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> f =
+    				[] (const tissuestack::common::ProcessingStrategy * _this)
+    		 		{
 
-    		// delegate to request processor
-    		this->_processor->process(&f, nullptr);
+    					std::cout << "Doing something ..." << std::endl;
+    		 		};
+
+   			this->_processor->process(&f);
     	};
 
     	void stop()
@@ -122,17 +126,11 @@ namespace tissuestack
 
       private:
     	unsigned int _port;
-    	std::string _server_address;
     	int	_server_socket;
     	bool _isRunning = false;
     	const tissuestack::common::RequestProcessor<ProcessorImplementation> * _processor;
-
-    	void setAddress(char * address)
-    	{
-    		std::ostringstream in;
-    		in << address;
-    		this->_server_address = in.str();
-    	};
     };
   }
 }
+
+#endif	/* __SERVER_H__ */

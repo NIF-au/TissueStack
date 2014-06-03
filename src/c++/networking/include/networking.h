@@ -1,5 +1,5 @@
-#ifndef	__SERVER_H__
-#define __SERVER_H__
+#ifndef __NETWORKING_H__
+#define __NETWORKING_H__
 
 #include "tissuestack.h"
 
@@ -114,4 +114,4 @@ namespace tissuestack
 
 }
 
-#endif	/* __SERVER_H__ */
+#endif	/* __NETWORKING_H__ */

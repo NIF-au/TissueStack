@@ -7,55 +7,26 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
-#include <memory>
 #include <mutex>
+#include <memory>
 
 namespace tissuestack
 {
 	namespace common
 	{
-		class TimeStampHashMap final
+		class RequestTimeStampStore final
 		{
 			public:
 				static const unsigned int MAX_ENTRIES = 1000;
-				TimeStampHashMap & operator=(const TimeStampHashMap&) = delete;
-				TimeStampHashMap(const TimeStampHashMap&) = delete;
-				static bool checkForExpiredEntry(unsigned long long int key, unsigned long long int value)
-				{
-					if (key == 0) return false;
 
-					bool ret = false;
-					std::mutex mutex;
-					mutex.lock();
+				RequestTimeStampStore & operator=(const RequestTimeStampStore&) = delete;
+				RequestTimeStampStore(const RequestTimeStampStore&) = delete;
 
-					try
-					{
-						try
-						{
-							// get existing value and compare it against the old value (if exists)
-							unsigned long long int old_value = TimeStampHashMap::_timestamps.at(key);
-							if (old_value > value) ret = true;
-						}  catch (const std::out_of_range& key_does_not_exist) {}
-
-						// let's add the new key/value if not expired
-						if (!ret)
-						{
-							// perhaps we need to clear the hash map
-							if (TimeStampHashMap::_timestamps.size() >= TimeStampHashMap::MAX_ENTRIES)
-								TimeStampHashMap::_timestamps.clear();
-							TimeStampHashMap::_timestamps[key] = value;
-						}
-					}
-					catch (...)
-					{
-						// probably paranoia but never say never
-
-					}
-					mutex.unlock();
-					return ret;
-				}
-			private:
-				TimeStampHashMap();
+				static RequestTimeStampStore * instance();
+				static bool checkForExpiredEntry(unsigned long long int key, unsigned long long int value);
+			public:
+				RequestTimeStampStore();
+				static RequestTimeStampStore * _instance;
 				static std::unordered_map<unsigned long long int, unsigned long long int> _timestamps;
 		};
 
@@ -94,27 +65,13 @@ namespace tissuestack
 				ProcessingStrategy(const ProcessingStrategy&) = delete;
 				virtual ~ProcessingStrategy();
 				void virtual init() = 0;
-				void virtual process(const std::function<void (const Request * request, tissuestack::common::ProcessingStrategy * _this)> * functionality, const Request * request) = 0;
+				void virtual process(const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality) = 0;
 				void virtual stop() = 0;
 				bool isRunning() const;
 				bool isStopFlagRaised() const;
 			private:
 				bool _stopFlagRaised = false;
 				bool _isRunning = false;
-		};
-
-		class TissueStackProcessingStrategy : public ProcessingStrategy
-		{
-			public:
-				TissueStackProcessingStrategy & operator=(const TissueStackProcessingStrategy&) = delete;
-				TissueStackProcessingStrategy(const TissueStackProcessingStrategy&) = delete;
-				TissueStackProcessingStrategy();
-				~TissueStackProcessingStrategy();
-				void init();
-				void process(const std::function<void (const Request * request, tissuestack::common::ProcessingStrategy * _this)> * functionality, const Request * request);
-				void stop();
-			private:
-				ProcessingStrategy	* _default_strategy;
 		};
 
 		template<typename ProcessorImplementation>
@@ -138,10 +95,9 @@ namespace tissuestack
 					this->_impl->init();
 				};
 				void process(
-						const std::function<void (const tissuestack::common::Request * request, tissuestack::common::ProcessingStrategy * _this)> * functionality,
-						const tissuestack::common::Request * request) const
+						const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality) const
 				{
-					this->_impl->process(functionality, request);
+					this->_impl->process(functionality);
 				};
 				void stop() const
 				{
@@ -162,6 +118,20 @@ namespace tissuestack
 		template<typename ProcessorImplementation>
 		tissuestack::common::RequestProcessor<ProcessorImplementation> *
 			tissuestack::common::RequestProcessor<ProcessorImplementation>::_instance =	nullptr;
+
+		class TissueStackProcessingStrategy : public ProcessingStrategy
+		{
+			public:
+				TissueStackProcessingStrategy & operator=(const TissueStackProcessingStrategy&) = delete;
+				TissueStackProcessingStrategy(const TissueStackProcessingStrategy&) = delete;
+				TissueStackProcessingStrategy();
+				~TissueStackProcessingStrategy();
+				void init();
+				void process(const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality);
+				void stop();
+			private:
+				ProcessingStrategy	* _default_strategy;
+		};
 
 		class RequestFilter
 		{

@@ -1,5 +1,7 @@
 #include "utils.h"
 
+tissuestack::utils::System::System() {}
+
 const unsigned int tissuestack::utils::System::getNumberOfCores()
 {
 	unsigned int cores = std::thread::hardware_concurrency();

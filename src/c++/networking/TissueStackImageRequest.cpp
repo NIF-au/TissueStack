@@ -19,7 +19,7 @@ const bool tissuestack::networking::TissueStackImageRequest::isObsolete() const
 	// use optional session id and timestamp against timestamp request store...
 	if (this->_request_id == 0 || this->_request_timeout == 0) return false;
 
-	return tissuestack::common::TimeStampHashMap::checkForExpiredEntry(this->_request_id, this->_request_timeout);
+	return tissuestack::common::RequestTimeStampStore::instance()->checkForExpiredEntry(this->_request_id, this->_request_timeout);
 }
 
 const std::string tissuestack::networking::TissueStackImageRequest::getContent() const

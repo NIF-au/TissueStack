@@ -33,24 +33,27 @@ namespace tissuestack
 			TissueStackServerException(std::string what);
     };
 
-    class TissueStackInvalidRequestException : public TissueStackException
+    class TissueStackApplicationException : public TissueStackException
     {
     	public:
-			TissueStackInvalidRequestException();
+			TissueStackApplicationException(std::string what);
+    };
+
+    class TissueStackInvalidRequestException : public TissueStackApplicationException
+    {
+    	public:
 			TissueStackInvalidRequestException(std::string what);
     };
 
     class TissueStackObsoleteRequestException : public TissueStackInvalidRequestException
     {
     	public:
-			TissueStackObsoleteRequestException();
 			TissueStackObsoleteRequestException(std::string what);
     };
 
-    class TissueStackNullPointerException : public TissueStackException
+    class TissueStackNullPointerException : public TissueStackApplicationException
     {
     	public:
-			TissueStackNullPointerException();
 			TissueStackNullPointerException(std::string what);
     };
   }
