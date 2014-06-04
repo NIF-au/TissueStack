@@ -14,6 +14,21 @@ namespace tissuestack
 {
   namespace networking
   {
+  	/*
+  	class AtomicSocketSelector final
+  	{
+  		public:
+  			void startSelectLoop();
+  			void handleRequest(tissuestack::networking::RawHttpRequest * raw_http_request);
+
+  		private:
+  			void filterRequest(tissuestack::networking::RawHttpRequest * raw_http_request);
+			fd_set _master_descriptors;
+			fd_set _tmp_descriptors;
+
+  	};
+  	*/
+
 	template <typename ProcessorImplementation>
     class Server final
     {
@@ -79,14 +94,18 @@ namespace tissuestack
     	 */
     	void listen()
     	{
+    		std::cout << "Socket Server is now ready to accept requests..." << std::endl;
+
+    		this->_processor->init();
+
     		const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> f =
     				[] (const tissuestack::common::ProcessingStrategy * _this)
     		 		{
 
     					std::cout << "Doing something ..." << std::endl;
     		 		};
-
    			this->_processor->process(&f);
+   			std::this_thread::sleep_for(std::chrono::seconds(10));
     	};
 
     	void stop()
@@ -95,25 +114,24 @@ namespace tissuestack
     		// stop incoming requests
     		shutdown(this->_server_socket, SHUT_RD);
 
-    		std::cout << "Shutting Down Request Processor..." << std::endl;
-			// delegate to request processor to finish off pending tasks
-			this->_processor->stop();
-
 			unsigned short shutdownTime = 0;
 			while (true) // 'graceful' shutdown for up to Server::SHUTDOWN_TIMEOUT_IN_SECONDS
 			{
+				std::cout << "Waiting for tasks to be stopped..." << std::endl;
+				// delegate to request processor to finish off pending tasks
+				this->_processor->stop();
+
 				if (shutdownTime > Server::SHUTDOWN_TIMEOUT_IN_SECONDS)
 				{
-		    		std::cout << "Request Processor stopped forcefully!" << std::endl;
+		    		std::cout << "Request Processor will be stopped forcefully!" << std::endl;
 					break;
 				} else if (!this->_processor->isRunning())
 				{
 		    		std::cout << "Request Processor stopped successfully!" << std::endl;
 					break;
 				}
-				sleep(1);
+				std::this_thread::sleep_for(std::chrono::seconds(1));
 				shutdownTime++;
-				std::cout << "Waiting for tasks to be stopped..." << std::endl;
 			}
 
 			// close server socket

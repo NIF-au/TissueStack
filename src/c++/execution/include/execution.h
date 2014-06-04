@@ -2,7 +2,9 @@
 #define __EXECUTION_H__
 
 #include "tissuestack.h"
+#include <condition_variable>
 #include <thread>
+#include <chrono>
 #include <dlfcn.h>
 #include <functional>
 
@@ -10,19 +12,34 @@ namespace tissuestack
 {
 	namespace execution
 	{
+		class WorkerThread : public std::thread
+		{
+			public:
+				explicit WorkerThread(
+						std::function<void (tissuestack::execution::WorkerThread * assigned_worker)> wait_loop);
+				bool isRunning() const;
+				void stop();
+			private:
+				bool _is_running = false;
+		};
+
 		class ThreadPool: public tissuestack::common::ProcessingStrategy
 		{
 			public:
 				ThreadPool & operator=(const ThreadPool&) = delete;
 				ThreadPool(const ThreadPool&) = delete;
 				explicit ThreadPool(short number_of_threads);
+				~ThreadPool();
 				short getNumberOfThreads() const;
 				void init();
 				void process(const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality);
 				void stop();
 
 			private:
-				short _number_of_threads;
+				std::mutex _conditional_mutex;
+				std::condition_variable _notification_condition;
+				short _number_of_threads = 0;
+				WorkerThread ** _workers = nullptr;
 		};
 
 		class SimpleSequentialExecution: public tissuestack::common::ProcessingStrategy
