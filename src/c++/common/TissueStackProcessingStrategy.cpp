@@ -2,9 +2,13 @@
 
 tissuestack::common::TissueStackProcessingStrategy::TissueStackProcessingStrategy() : _default_strategy(nullptr)
 {
-	//TODO: choose based on number of cores available
-	this->_default_strategy = new tissuestack::execution::ThreadPool(static_cast<short>(10));
-	//this->_default_strategy = new tissuestack::execution::SimpleSequentialExecution();
+	// depending on the number of cores, we use 75% rounded up
+	if (tissuestack::utils::System::getNumberOfCores() > 1)
+	{
+		this->_default_strategy = new tissuestack::execution::ThreadPool(
+				static_cast<short>(ceil(tissuestack::utils::System::getNumberOfCores() * 0.75)));
+	} else // or sequentially execute with only one meager core
+		this->_default_strategy = new tissuestack::execution::SimpleSequentialExecution();
 };
 
 tissuestack::common::TissueStackProcessingStrategy::~TissueStackProcessingStrategy()

@@ -12,7 +12,7 @@ tissuestack::networking::HttpRequestSanityFilter::HttpRequestSanityFilter()
 
 const tissuestack::common::Request * const tissuestack::networking::HttpRequestSanityFilter::applyFilter(const tissuestack::common::Request * const request) const
 {
-	if (request == nullptr)   THROW_TS_EXCEPTION(tissuestack::common::TissueStackException, "applyFilter was called with NULL");
+	if (request == nullptr)   THROW_TS_EXCEPTION(tissuestack::common::TissueStackNullPointerException, "applyFilter was called with NULL");
 
 	if (request->getType() != tissuestack::common::Request::Type::RAW_HTTP)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "applyFilter was called with non raw request");

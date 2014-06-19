@@ -3,6 +3,9 @@
 
 #include "tissuestack.h"
 
+#include <sys/types.h>
+#include <sys/socket.h>
+
 #include <algorithm>
 #include <functional>
 #include <typeinfo>
@@ -15,7 +18,7 @@ namespace tissuestack
 {
   namespace networking
   {
-    class RawHttpRequest : public tissuestack::common::Request
+	class RawHttpRequest : public tissuestack::common::Request
     {
     	public:
     		RawHttpRequest & operator=(const RawHttpRequest&) = delete;

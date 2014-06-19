@@ -24,7 +24,7 @@ namespace tissuestack
 
 				static RequestTimeStampStore * instance();
 				static bool checkForExpiredEntry(unsigned long long int key, unsigned long long int value);
-			public:
+			protected:
 				RequestTimeStampStore();
 				static RequestTimeStampStore * _instance;
 				static std::unordered_map<unsigned long long int, unsigned long long int> _timestamps;

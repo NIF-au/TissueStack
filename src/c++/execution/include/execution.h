@@ -7,6 +7,7 @@
 #include <chrono>
 #include <dlfcn.h>
 #include <functional>
+#include <cmath>
 
 namespace tissuestack
 {
@@ -67,6 +68,22 @@ namespace tissuestack
 			private:
 				const std::string _so_library_path;
 				void * _so_handle;
+		};
+
+		class TissueStackOnlineExecutor final
+		{
+			public:
+				TissueStackOnlineExecutor & operator=(const TissueStackOnlineExecutor&) = delete;
+				TissueStackOnlineExecutor(const TissueStackOnlineExecutor&) = delete;
+				static TissueStackOnlineExecutor * instance();
+				void execute(std::string request, int client_descriptor);
+				std::string composeHttpResponse(std::string status, std::string content_type, std::string content);
+				~TissueStackOnlineExecutor();
+			private:
+				TissueStackOnlineExecutor();
+				tissuestack::common::RequestFilter ** _filters = nullptr;
+				static TissueStackOnlineExecutor * _instance;
+
 		};
 	}
 }

@@ -12,7 +12,7 @@ tissuestack::networking::TissueStackRequestFilter::TissueStackRequestFilter()
 
 const tissuestack::common::Request * const tissuestack::networking::TissueStackRequestFilter::applyFilter(const tissuestack::common::Request * const request) const
 {
-	if (request == nullptr)   THROW_TS_EXCEPTION(tissuestack::common::TissueStackException, "applyFilter was called with NULL");
+	if (request == nullptr)   THROW_TS_EXCEPTION(tissuestack::common::TissueStackNullPointerException, "applyFilter was called with NULL");
 
 	// we can only work with an HttpRequest object
 	if (request->getType() != tissuestack::common::Request::Type::HTTP)

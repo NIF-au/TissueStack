@@ -5,6 +5,7 @@ tissuestack::execution::ThreadPool::ThreadPool(short number_of_threads) : _numbe
 	if (number_of_threads <=1)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "A Thread Pool with less than 1 threads is not of much use!");
 	this->_workers = new tissuestack::execution::WorkerThread*[number_of_threads];
+	std::cout << "Thread Pool Size: " << number_of_threads << std::endl;
 }
 
 tissuestack::execution::ThreadPool::~ThreadPool()
@@ -29,7 +30,7 @@ void tissuestack::execution::ThreadPool::init()
 	std::function<void (tissuestack::execution::WorkerThread * assigned_worker)> wait_loop =
 		[this] (tissuestack::execution::WorkerThread * assigned_worker)
 		{
-			std::cout << "Thread " << std::this_thread::get_id() << " starts waiting .." << std::endl;
+			std::cout << "Thread " << std::this_thread::get_id() << " is ready ..." << std::endl;
 
 			while (!this->isStopFlagRaised())
 			{
@@ -63,6 +64,7 @@ void tissuestack::execution::ThreadPool::process(
 	if (this->isRunning() && !this->isStopFlagRaised() && functionality)
 	{
 		//TODO: put he function closure in a queue, notify a thread and have it pick up the item from the work queue
+		// Naturally this has to be mutexed
 		//((*functionality)(this));
 		//this->_notification_condition.notify_one();
 	}
