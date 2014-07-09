@@ -20,7 +20,7 @@ tissuestack::networking::HttpRequest::HttpRequest(const tissuestack::networking:
 	// we merely delegate
 }
 
-tissuestack::networking::HttpRequest::HttpRequest(const RawHttpRequest * const raw_request, const bool suppress_filter)
+tissuestack::networking::HttpRequest::HttpRequest(const RawHttpRequest * const raw_request, const bool suppress_filter) : _query_string("")
 {
 	if (raw_request == nullptr)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackException, "HttpRequest cannot be instantiated with NULL");
@@ -49,7 +49,7 @@ tissuestack::networking::HttpRequest::HttpRequest(const RawHttpRequest * const r
 	this->_query_string.replace(0, nPos+1, "");
 
 	// parse query string and stuff every parameter into the map!
-	this->tissuestack::networking::HttpRequest::processsQueryString();
+	this->processsQueryString();
 
 	// we have passed all preliminary checks => assign us the new type
 	this->setType(tissuestack::common::Request::Type::HTTP);
@@ -58,32 +58,33 @@ tissuestack::networking::HttpRequest::HttpRequest(const RawHttpRequest * const r
 
 void tissuestack::networking::HttpRequest::processsQueryString()
 {
-	int lengthOfQueryString = this->_query_string.length();
+	int lengthOfQueryString = 0;
+	lengthOfQueryString = this->_query_string.length();
 	int cursor = 0, nPos = 0;
-	std::string key("");
+	std::string key = "";
 	while (cursor < lengthOfQueryString)
 	{
 		if (this->_query_string[cursor] == '=') // we have a key or value (potentially)
 		{
 			// skipping next &/=
-			if (this->tissuestack::networking::HttpRequest::skipNextCharacterCheck(lengthOfQueryString, cursor, nPos, key))
+			if (this->skipNextCharacterCheck(lengthOfQueryString, cursor, nPos, key))
 				continue;
 
 			if (key.empty() && nPos < cursor) { // we've got a key
 				key = this->_query_string.substr(nPos, cursor-nPos);
 			}
 			else // check for value case
-				this->tissuestack::networking::HttpRequest::subProcessQueryString(lengthOfQueryString, cursor, nPos, key);
+				this->subProcessQueryString(lengthOfQueryString, cursor, nPos, key);
 
 			nPos = cursor + 1;
 		} else if (this->_query_string[cursor] == '&'	|| cursor+1 == lengthOfQueryString) // we have a value (potentially)
 		{
 			// skipping next &/=
-			if (this->tissuestack::networking::HttpRequest::skipNextCharacterCheck(lengthOfQueryString, cursor, nPos, key))
+			if (this->skipNextCharacterCheck(lengthOfQueryString, cursor, nPos, key))
 				continue;
 
 			// check for value
-			this->tissuestack::networking::HttpRequest::subProcessQueryString(lengthOfQueryString, cursor, nPos, key);
+			this->subProcessQueryString(lengthOfQueryString, cursor, nPos, key);
 			nPos = cursor+1;
 		} else if (this->_query_string[cursor] == '?') // should not happen at all
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "HttpRequest without query string!");
@@ -129,6 +130,7 @@ inline void tissuestack::networking::HttpRequest::addQueryParameter(std::string 
 	std::transform(key.begin(), key.end(), key.begin(), toupper);
 	this->partiallyURIDecodeString(value);
 
+	if (key.empty()) return;
 	this->_parameters[key] = value;
 }
 

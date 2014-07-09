@@ -34,13 +34,18 @@ namespace tissuestack
 				short getNumberOfThreads() const;
 				void init();
 				void process(const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality);
+				void addTask(const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality);
+				const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * removeTask();
+				bool hasNoTasksQueued();
 				void stop();
 
 			private:
+				std::mutex _task_queue_mutex;
 				std::mutex _conditional_mutex;
 				std::condition_variable _notification_condition;
 				short _number_of_threads = 0;
 				WorkerThread ** _workers = nullptr;
+				std::queue<const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> *> _work_load;
 		};
 
 		class SimpleSequentialExecution: public tissuestack::common::ProcessingStrategy

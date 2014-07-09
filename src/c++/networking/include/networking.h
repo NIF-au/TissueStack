@@ -45,13 +45,13 @@ namespace tissuestack
     		std::unordered_map<std::string, std::string> getParameterMap() const;
     		const bool isObsolete() const;
     	private:
-    		void addQueryParameter(std::string key, std::string value);
-    		void partiallyURIDecodeString(std::string& potentially_uri_encoded_string);
+    		inline void addQueryParameter(std::string key, std::string value);
+    		inline void partiallyURIDecodeString(std::string& potentially_uri_encoded_string);
     		void processsQueryString();
-    		inline bool skipNextCharacterCheck(int& lengthOfQueryString, int&cursor, int&nPos, std::string& key);
-    		inline void subProcessQueryString(int& lengthOfQueryString, int&cursor, int&nPos, std::string& key);
+    		inline bool skipNextCharacterCheck(int& lengthOfQueryString, int & cursor, int & nPos, std::string& key);
+    		inline void subProcessQueryString(int& lengthOfQueryString, int & cursor, int & nPos, std::string& key);
     		std::unordered_map<std::string, std::string> _parameters;
-    		std::string _query_string;
+    		std::string _query_string = "";
     		static std::unordered_map<std::string,std::string> MinimalURIDecodingTable;
     };
 

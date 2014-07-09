@@ -15,9 +15,22 @@ void tissuestack::execution::SimpleSequentialExecution::process(
 	if (!this->isStopFlagRaised() && functionality)
 	{
 		this->setRunningFlag(true); // mark us as running
-		((*functionality)(this));
-		this->setRunningFlag(false); // mark us as finished
-		this->resetStopFlag(); // reset any stop flag that was raised
+		try
+		{
+			((*functionality)(this));
+			this->setRunningFlag(false); // mark us as finished
+			this->resetStopFlag(); // reset any stop flag that was raised
+
+			// clean up pointer
+			delete functionality;
+		}  catch (std::exception& bad)
+		{
+			this->setRunningFlag(false); // mark us as finished
+			this->resetStopFlag(); // reset any stop flag that was raised
+			// clean up and propagate
+			delete functionality;
+			throw bad;
+		}
 	}
 }
 

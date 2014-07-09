@@ -54,10 +54,16 @@ void tissuestack::execution::TissueStackOnlineExecutor::execute(std::string requ
 	{
 		// TODO: return reason for invalid requests
 		std::string response = this->composeHttpResponse("400 Bad Request", "text/plain", std::string(invalidRequest.what()));
-		send(client_descriptor, response.c_str(), response.length(), 0);;
-
+		ssize_t bytes = send(client_descriptor, response.c_str(), response.length(), 0);
+		if (bytes < 0)
+			perror("Send error:");
 	}  catch (tissuestack::common::TissueStackException& ex)
 	{
+		std::string response = this->composeHttpResponse("500 Internal Server Error", "text/plain", std::string(ex.what()));
+		ssize_t  bytes = send(client_descriptor, response.c_str(), response.length(), 0);
+		if (bytes < 0)
+			perror("Send error");
+
 		// TODO: log
 		std::cerr << ex.what() << std::endl;
 	}  catch (std::exception& bad)

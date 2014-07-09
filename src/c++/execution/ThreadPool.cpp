@@ -36,7 +36,26 @@ void tissuestack::execution::ThreadPool::init()
 			{
 				std::unique_lock<std::mutex> lock_on_conditional_mutex(this->_conditional_mutex);
 				this->_notification_condition.wait(lock_on_conditional_mutex);
-				std::cout << "Thread " << std::this_thread::get_id() << " is doing some work..." << std::endl;
+
+				// fetch next item from the queue if not empty
+				if (this->hasNoTasksQueued())
+					continue;
+
+				const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * next_task = this->removeTask();
+				if (next_task)
+				{
+					try
+					{
+						((*next_task)(this));
+						// clean up pointer
+						delete next_task;
+					}  catch (std::exception& bad)
+					{
+						// clean up and propagate
+						delete next_task;
+						throw bad;
+					}
+				}
 			}
 			std::cout << "Thread " << std::this_thread::get_id() << " is about to stop working!" << std::endl;
 			assigned_worker->stop();
@@ -63,10 +82,8 @@ void tissuestack::execution::ThreadPool::process(
 	// haven't received a stop flag and the closure is not null
 	if (this->isRunning() && !this->isStopFlagRaised() && functionality)
 	{
-		//TODO: put he function closure in a queue, notify a thread and have it pick up the item from the work queue
-		// Naturally this has to be mutexed
-		//((*functionality)(this));
-		//this->_notification_condition.notify_one();
+		this->addTask(functionality);
+		this->_notification_condition.notify_one();
 	}
 }
 
@@ -92,3 +109,29 @@ void tissuestack::execution::ThreadPool::stop()
 		this->setRunningFlag(false);
 }
 
+void tissuestack::execution::ThreadPool::addTask(const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality)
+{
+	std::lock_guard<std::mutex> lock(this->_task_queue_mutex);
+
+	this->_work_load.push(functionality);
+}
+
+const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * tissuestack::execution::ThreadPool::removeTask()
+{
+	std::lock_guard<std::mutex> lock(this->_task_queue_mutex);
+
+	if (this->_work_load.empty()) return nullptr;
+
+	const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * ret = this->_work_load.front();
+	this->_work_load.pop();
+
+	return ret;
+
+}
+
+bool tissuestack::execution::ThreadPool::hasNoTasksQueued()
+{
+	std::lock_guard<std::mutex> lock(this->_task_queue_mutex);
+
+	return this->_work_load.empty();
+}
