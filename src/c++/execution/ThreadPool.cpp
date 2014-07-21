@@ -1,11 +1,12 @@
 #include "execution.h"
 
-tissuestack::execution::ThreadPool::ThreadPool(short number_of_threads) : _number_of_threads(number_of_threads)
+tissuestack::execution::ThreadPool::ThreadPool(short number_of_threads) :
+	_number_of_threads(number_of_threads)
 {
 	if (number_of_threads <=1)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "A Thread Pool with less than 1 threads is not of much use!");
 	this->_workers = new tissuestack::execution::WorkerThread*[number_of_threads];
-	std::cout << "Thread Pool Size: " << number_of_threads << std::endl;
+	tissuestack::logging::TissueStackLogger::instance()->info("Thread Pool Size: %u\n", number_of_threads);
 }
 
 tissuestack::execution::ThreadPool::~ThreadPool()
@@ -30,7 +31,9 @@ void tissuestack::execution::ThreadPool::init()
 	std::function<void (tissuestack::execution::WorkerThread * assigned_worker)> wait_loop =
 		[this] (tissuestack::execution::WorkerThread * assigned_worker)
 		{
-			std::cout << "Thread " << std::this_thread::get_id() << " is ready ..." << std::endl;
+		tissuestack::logging::TissueStackLogger::instance()->info(
+				"Thread %u is ready\n",
+				std::hash<std::thread::id>()(std::this_thread::get_id()));
 
 			while (!this->isStopFlagRaised())
 			{
@@ -57,7 +60,9 @@ void tissuestack::execution::ThreadPool::init()
 					}
 				}
 			}
-			std::cout << "Thread " << std::this_thread::get_id() << " is about to stop working!" << std::endl;
+			tissuestack::logging::TissueStackLogger::instance()->info(
+					"Thread %u is about to stop working!\n",
+					std::hash<std::thread::id>()(std::this_thread::get_id()));
 			assigned_worker->stop();
 		};
 

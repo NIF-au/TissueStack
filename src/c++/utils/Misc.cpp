@@ -29,3 +29,30 @@ const std::string tissuestack::utils::Misc::demangleTypeIdName(const char * mang
 
 	return ret;
 }
+
+const std::vector<std::string> tissuestack::utils::Misc::tokenizeString(const std::string & some_string, const char delimiter)
+{
+	std::vector<std::string> tokens;
+
+	if (some_string.empty())
+		return tokens;
+
+	size_t old_pos = 0;
+	size_t pos = 0;
+
+	while (1)
+	{
+		pos = some_string.find(delimiter, pos);
+		if (pos == old_pos)
+			pos = some_string.find(delimiter, pos+1);
+
+		tokens.push_back(some_string.substr(old_pos, pos-old_pos));
+
+		if (pos == std::string::npos) break;
+
+		++pos;
+		old_pos=pos;
+	}
+
+	return tokens;
+}

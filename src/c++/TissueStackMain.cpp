@@ -1,3 +1,6 @@
+#include "logging.h"
+#include "singleton.h"
+
 #include "server.h"
 #include "networking.h"
 #include "execution.h"
@@ -10,7 +13,7 @@ extern "C"
 	tissuestack::networking::Server<tissuestack::common::TissueStackProcessingStrategy> * _ts_server_instance = nullptr;
 
 	void handle_signals(int sig) {
-		std::cout << "Received Signal : " << sig;
+		tissuestack::LoggerSingleton->info("Signal Handler Received Signal : %i\n", sig);
 
 		switch (sig) {
 			case SIGHUP:
@@ -49,15 +52,16 @@ int main(int argc, char * args[])
 	try
 	{
 		// create an instance of a tissue stack server and wrap it in a smart pointer
-		//std::unique_ptr<tissuestack::networking::Server<tissuestack::common::TissueStackProcessingStrategy> >
-			TissueStackServer.reset(new tissuestack::networking::Server<tissuestack::common::TissueStackProcessingStrategy>(4242));
+		TissueStackServer.reset(new tissuestack::networking::Server<tissuestack::common::TissueStackProcessingStrategy>(4242));
 	} catch (tissuestack::common::TissueStackException& ex) {
-		std::cerr << "Failed to instantiate TissueStackServer with Default Strategy for the following reason:" << std::endl;
-		std::cerr << ex.what() << std::endl;
+		tissuestack::LoggerSingleton->error(
+				"Failed to instantiate TissueStackServer with Default Strategy for the following reason: %s\n",
+				ex.what());
 		return -1;
 	} catch (...)
 	{
-		std::cerr << "Failed to instantiate TissueStackServer with Default Strategy for unexpected reason!" << std::endl;
+		tissuestack::LoggerSingleton->error(
+				"Failed to instantiate TissueStackServer with Default Strategy for unexpected reason!\n");
 		return -1;
 	}
 
@@ -78,7 +82,7 @@ int main(int argc, char * args[])
 		TissueStackTimeStampStore.reset(tissuestack::common::RequestTimeStampStore::instance());
 	} catch (...)
 	{
-		std::cerr << "Failed to instantiate the RequestTimeStampStore!" << std::endl;
+		tissuestack::LoggerSingleton->error("Failed to instantiate the RequestTimeStampStore!\n");
 		return -1;
 	}
 
@@ -94,12 +98,14 @@ int main(int argc, char * args[])
 		// start the server socket
 		TissueStackServer->start();
 	} catch (tissuestack::common::TissueStackServerException& ex) {
-		std::cerr << "Failed to start the TissueStack SocketServer for the following reason:" << std::endl;
-		std::cerr << ex.what() << std::endl;
+		tissuestack::LoggerSingleton->error(
+				"Failed to start the TissueStack SocketServer for the following reason: %s\n",
+				ex.what());
 		return -1;
 	} catch (...)
 	{
-		std::cerr << "Failed to start the TissueStack SocketServer for unexpected reason!" << std::endl;
+		tissuestack::LoggerSingleton->error(
+				"Failed to start the TissueStack SocketServer for unexpected reason!\n");
 		return -1;
 	}
 
@@ -108,17 +114,14 @@ int main(int argc, char * args[])
 		// accept requests and process them until we receive a SIGSTOP
 		TissueStackServer->listen();
 	} catch (tissuestack::common::TissueStackException& ex) {
-		std::cerr << "TissueStackServer listen() was aborted for the following reason:" << std::endl;
-		std::cerr << ex.what() << std::endl;
+		tissuestack::LoggerSingleton->error(
+				"TissueStackServer listen() was aborted for the following reason: %s\n",
+				ex.what());
 		return -1;
 	} catch (...)
 	{
-		std::cerr << "TissueStackServer listen() was aborted for unexpected reason!" << std::endl;
+		tissuestack::LoggerSingleton->error("TissueStackServer listen() was aborted for unexpected reason!\n");
+		TissueStackServer->stop();
 		return -1;
 	}
-
-	// final cleaning up
-	TissueStackServer->stop();
-
-	return 1;
 }

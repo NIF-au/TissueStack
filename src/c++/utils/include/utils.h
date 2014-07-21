@@ -9,8 +9,10 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/sysinfo.h>
+#include <sys/stat.h>
 #include <typeinfo>
 #include <cxxabi.h>
+#include <vector>
 
 namespace tissuestack
 {
@@ -23,6 +25,9 @@ namespace tissuestack
         static const unsigned long long int getTotalRam();
         static const unsigned long long int getUsedRam();
         static const unsigned long long int getFreeRam();
+        static const bool fileExists(const std::string& file_name);
+        static const bool createDirectory(const std::string& directory, mode_t mode);
+        static const std::string getSystemTimeFormatted(const std::string & format);
       private:
         System();
         System & operator=(const System&) = delete;
@@ -34,6 +39,7 @@ namespace tissuestack
       public:
         static const std::string convertCharPointerToString(char * some_characters);
     	static const std::string demangleTypeIdName(const char * mangeledIdName);
+    	static const std::vector<std::string> tokenizeString(const std::string & some_string, const char delimiter);
       private:
     	Misc();
     	Misc & operator=(const Misc&) = delete;

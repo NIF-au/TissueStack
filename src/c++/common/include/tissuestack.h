@@ -1,6 +1,8 @@
 #ifndef	__TISSUESTACK_H__
 #define __TISSUESTACK_H__
 
+#include "logging.h"
+
 #include "exceptions.h"
 #include "utils.h"
 

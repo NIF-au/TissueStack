@@ -129,7 +129,7 @@ namespace tissuestack
   					if (ret == -1)
   					{
   						if (this->_server->isStopping()) break;
-  						std::cerr << "ServerSocket select returned -1" << std::endl;
+  						tissuestack::LoggerSingleton->error("ServerSocket select returned -1\n");
   					}
 
 					// check existing descriptor list
@@ -146,7 +146,7 @@ namespace tissuestack
 
 								// check accept status
 								if (new_fd  == -1) { // NOK
-									std::cerr << "Failed to accept client connection!" << std::endl;
+									tissuestack::LoggerSingleton->error("Failed to accept client connection!\n");
 								} else
 								{
 									this->addToFileDescriptorList(new_fd);
@@ -154,8 +154,6 @@ namespace tissuestack
 									if (new_fd > max_fd) // keep track of the maximum
   										max_fd = new_fd;
 
-									//std::cout << "New connection from " << inet_ntoa(new_client.sin_addr)
-									//		<< " (fd: " << new_fd << ")" << std::endl;
 								}
 							} else // we are ready to receive from an existing client connection
 							{
@@ -164,11 +162,11 @@ namespace tissuestack
 								if (bytesReceived <= 0 || bytesReceived > MAX_REQUEST_LENGTH_IN_BYTES) { // NOK case
 									// client close
 									if (bytesReceived == 0)
-										std::cerr << "Client closed connection!" << std::endl;
+										tissuestack::LoggerSingleton->error("Client closed connection!\n");
 									else if (bytesReceived < 0)
-										std::cerr << "Data Receive error!" << std::endl;
+										tissuestack::LoggerSingleton->error("Data Receive error!\n");
 									else if (bytesReceived > MAX_REQUEST_LENGTH_IN_BYTES) // for now we have a limit
-										std::cerr << "Exceeded Request Size Allowed: " << MAX_REQUEST_LENGTH_IN_BYTES << " !!" << std::endl;
+										tissuestack::LoggerSingleton->error("Exceeded Request Size Allowed: %u !!\n", MAX_REQUEST_LENGTH_IN_BYTES );
 
 									this->removeDescriptorFromList(i, true);
 								}
@@ -226,7 +224,7 @@ namespace tissuestack
 
 			void start()
 			{
-				std::cout << "Starting Up Socket Server..." << std::endl;
+				tissuestack::LoggerSingleton->info("Starting Up Socket Server...\n");
 
 				// create a reusable server socket
 				this->_server_socket = ::socket(AF_INET, SOCK_STREAM, 0);
@@ -252,13 +250,13 @@ namespace tissuestack
 					THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException, "Failed to listen on server socket!");
 
 				this->_isRunning = true;
-				std::cout << "Socket Server has been started on " << inet_ntoa(server_address.sin_addr) << ":"
-						<< this->_port << " [FD: " << this->_server_socket << "]" << std::endl;
+				tissuestack::LoggerSingleton->info("Socket Server has been started on %s:%u [FD: %i]\n",
+						inet_ntoa(server_address.sin_addr), this->_port, this->_server_socket);
 			};
 
 			void listen()
 			{
-				std::cout << "Socket Server is now ready to accept requests..." << std::endl;
+				tissuestack::LoggerSingleton->info("Socket Server is now ready to accept requests...\n");
 
 				this->_processor->init();
 				// delegate to the selector class
@@ -268,7 +266,7 @@ namespace tissuestack
 
 			void stop()
 			{
-				std::cout << "Shutting Down Socket Server..." << std::endl;
+				tissuestack::LoggerSingleton->info("Shutting Down Socket Server...\n");
 				// stop incoming requests
 				this->_stopRaised = true;
 				shutdown(this->_server_socket, SHUT_RD);
@@ -276,17 +274,17 @@ namespace tissuestack
 				unsigned short shutdownTime = 0;
 				while (true) // 'graceful' shutdown for up to Server::SHUTDOWN_TIMEOUT_IN_SECONDS
 				{
-					std::cout << "Waiting for tasks to be stopped..." << std::endl;
+					tissuestack::LoggerSingleton->info("Waiting for tasks to be stopped...\n");
 					// delegate to request processor to finish off pending tasks
 					this->_processor->stop();
 
 					if (shutdownTime > Server::SHUTDOWN_TIMEOUT_IN_SECONDS)
 					{
-						std::cout << "Request Processor will be stopped forcefully!" << std::endl;
+						tissuestack::LoggerSingleton->info("Request Processor will be stopped forcefully!\n");
 						break;
 					} else if (!this->_processor->isRunning())
 					{
-						std::cout << "Request Processor stopped successfully!" << std::endl;
+						tissuestack::LoggerSingleton->info("Request Processor stopped successfully!\n");
 						break;
 					}
 					std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -298,7 +296,13 @@ namespace tissuestack
 				close(this->_server_socket);
 
 				this->_isRunning = false;
-				std::cout << "Socket Server Shut Down Successfully." << std::endl;
+				tissuestack::LoggerSingleton->info("Socket Server Shut Down Successfully.\n");
+
+				if (tissuestack::LoggerSingleton)
+				{
+					delete tissuestack::LoggerSingleton;
+					tissuestack::LoggerSingleton = nullptr;
+				}
 			};
 
     	private:

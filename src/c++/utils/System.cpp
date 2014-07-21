@@ -33,3 +33,36 @@ const unsigned long long int tissuestack::utils::System::getFreeRam()
      tissuestack::utils::System::getTotalRam() - tissuestack::utils::System::getUsedRam()
   );
 }
+
+const bool tissuestack::utils::System::fileExists(const std::string& file_name)
+{
+	struct stat buffer;
+	return (stat (file_name.c_str(), &buffer) == 0);
+}
+
+const bool tissuestack::utils::System::createDirectory(const std::string& directory, mode_t mode)
+{
+	if (directory.empty())
+		return true;
+
+	// loop over tokens and see if they exist, if not, create
+	std::vector<std::string> directories = tissuestack::utils::Misc::tokenizeString(directory, '/');
+	std::string accumumatedDirectory = "";
+	for (auto subdir : directories)
+	{
+		accumumatedDirectory += (subdir + "/");
+		if (!tissuestack::utils::System::fileExists(accumumatedDirectory))
+			if (mkdir(accumumatedDirectory.c_str(), mode) < 0) return false;
+	}
+
+	return true;
+}
+
+const std::string tissuestack::utils::System::getSystemTimeFormatted(const std::string & format)
+{
+	 char buff[100];
+	 time_t now = time (0);
+	 strftime (buff, 100, format.c_str(), localtime (&now));
+
+	return std::string(buff);
+}
