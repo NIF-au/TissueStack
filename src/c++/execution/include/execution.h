@@ -8,6 +8,7 @@
 #include <dlfcn.h>
 #include <functional>
 #include <cmath>
+#include <errno.h>
 
 namespace tissuestack
 {

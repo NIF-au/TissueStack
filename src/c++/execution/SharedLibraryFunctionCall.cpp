@@ -16,7 +16,7 @@ void tissuestack::execution::SharedLibraryFunctionCall::init()
 	char * error = dlerror();
 
 	if (error) {
-		std::cout << "Error Loading => " << error << std::endl;
+		tissuestack::logging::TissueStackLogger::instance()->error("Error Loading Shared Library: %s\n", error);
 		return;
 	}
 	// let's mark us as running, if we have come that far and haven't been undloaded yet
@@ -65,7 +65,8 @@ void tissuestack::execution::SharedLibraryFunctionCall::stop()
 
 	// check for error
 	char * error = dlerror();
-	if (error != nullptr) std::cout << "Error Closing => " << error << std::endl;
+	if (error != nullptr)
+		tissuestack::logging::TissueStackLogger::instance()->error("Error Closing Shared Library: %s\n", error);
 }
 
 void * const tissuestack::execution::SharedLibraryFunctionCall::callDlSym(std::string function_name)
@@ -80,6 +81,10 @@ void * const tissuestack::execution::SharedLibraryFunctionCall::callDlSym(std::s
 	char * error = dlerror();
 
 	// return null pointer on error, a function pointer otherwise
-	if (error) return nullptr;
+	if (error)
+	{
+		tissuestack::logging::TissueStackLogger::instance()->error("Error Getting Shared Library Function Handle: %s\n", error);
+		return nullptr;
+	}
 	return ret;
 }

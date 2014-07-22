@@ -49,23 +49,23 @@ void tissuestack::execution::TissueStackOnlineExecutor::execute(std::string requ
 	}  catch (tissuestack::common::TissueStackObsoleteRequestException& obsoleteRequest)
 	{
 		// TODO: handle superseded requests
-		std::cerr << obsoleteRequest.what() << std::endl;
+		//tissuestack::logging::TissueStackLogger::instance()->error("Error Closing Shared Library: %s\n", error);
+		//std::cerr << obsoleteRequest.what() << std::endl;
 	}  catch (tissuestack::common::TissueStackInvalidRequestException& invalidRequest)
 	{
 		// TODO: return reason for invalid requests
 		std::string response = this->composeHttpResponse("400 Bad Request", "text/plain", std::string(invalidRequest.what()));
 		ssize_t bytes = send(client_descriptor, response.c_str(), response.length(), 0);
 		if (bytes < 0)
-			perror("Send error:");
+			tissuestack::logging::TissueStackLogger::instance()->error(
+					"Error Sending 400 Bad Request: %s \n", strerror(errno));
 	}  catch (tissuestack::common::TissueStackException& ex)
 	{
 		std::string response = this->composeHttpResponse("500 Internal Server Error", "text/plain", std::string(ex.what()));
 		ssize_t  bytes = send(client_descriptor, response.c_str(), response.length(), 0);
 		if (bytes < 0)
-			perror("Send error");
-
-		// TODO: log
-		std::cerr << ex.what() << std::endl;
+			tissuestack::logging::TissueStackLogger::instance()->error(
+								"Error Sending 500 Internal Server Error: %s \n", strerror(errno));
 	}  catch (std::exception& bad)
 	{
 		// propagate up, they are unexpected and potentially serious!

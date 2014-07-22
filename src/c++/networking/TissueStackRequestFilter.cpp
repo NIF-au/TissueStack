@@ -27,8 +27,6 @@ const tissuestack::common::Request * const tissuestack::networking::TissueStackR
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 				"A TissueStack request needs to have a \"SERVICE\" query parameter, e.g. '/?service=image' !");
 
-	std::cout << std::endl << "SERVICE: " << service << std::endl;
-
 	// upper case for better comparison
 	std::transform(service.begin(), service.end(), service.begin(), toupper);
 

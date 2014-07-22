@@ -71,7 +71,7 @@ int main(int argc, char * args[])
 		install_signal_handler(TissueStackServer.get());
 	} catch (...)
 	{
-		std::cerr << "Failed to install the signal handlers!" << std::endl;
+		tissuestack::logging::TissueStackLogger::instance()->error("Failed to install the signal handlers!\n");
 		return -1;
 	}
 
