@@ -1,4 +1,6 @@
-#include "Image.h"
+#include "imaging.h"
+
+#include <iostream>
 
 int main(int argc, char * args[])
 {
