@@ -127,10 +127,11 @@ inline void tissuestack::networking::HttpRequest::subProcessQueryString(int& len
 inline void tissuestack::networking::HttpRequest::addQueryParameter(std::string key, std::string value)
 {
 	this->partiallyURIDecodeString(key);
-	std::transform(key.begin(), key.end(), key.begin(), toupper);
 	this->partiallyURIDecodeString(value);
 
 	if (key.empty()) return;
+	// make key upper case for easier search
+	std::transform(key.begin(), key.end(), key.begin(), toupper);
 	this->_parameters[key] = value;
 }
 

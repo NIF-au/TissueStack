@@ -37,7 +37,13 @@ const unsigned long long int tissuestack::utils::System::getFreeRam()
 const bool tissuestack::utils::System::fileExists(const std::string& file_name)
 {
 	struct stat buffer;
-	return (stat (file_name.c_str(), &buffer) == 0);
+	return (stat (file_name.c_str(), &buffer) == 0 && !S_ISDIR(buffer.st_mode));
+}
+
+const bool tissuestack::utils::System::directoryExists(const std::string& file_name)
+{
+	struct stat buffer;
+	return (stat (file_name.c_str(), &buffer) == 0 && S_ISDIR(buffer.st_mode));
 }
 
 const bool tissuestack::utils::System::createDirectory(const std::string& directory, mode_t mode)
@@ -51,7 +57,7 @@ const bool tissuestack::utils::System::createDirectory(const std::string& direct
 	for (auto subdir : directories)
 	{
 		accumumatedDirectory += (subdir + "/");
-		if (!tissuestack::utils::System::fileExists(accumumatedDirectory))
+		if (!tissuestack::utils::System::directoryExists(accumumatedDirectory))
 			if (mkdir(accumumatedDirectory.c_str(), mode) < 0) return false;
 	}
 

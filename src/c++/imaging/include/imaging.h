@@ -28,10 +28,10 @@ namespace tissuestack
 				explicit Dimension(const std::string name);
 				Dimension(const Dimension&) = delete;
 				Dimension & operator=(const Dimension&) = delete;
-				const std::string getName();
-				const unsigned int getNumberOfSlices();
-				const long long int getMinumum();
-				const long long int getMaximum();
+				const std::string getName() const;
+				const unsigned int getNumberOfSlices() const;
+				const long long int getMinumum() const;
+				const long long int getMaximum() const;
 
 			private:
 				const std::string 	_name;
@@ -49,13 +49,13 @@ namespace tissuestack
 				Image & operator=(const Image&) = delete;
 				Image(const Image&) = delete;
 				virtual ~Image();
-				const std::string getFileName();
+				const std::string getFileName() const;
 				virtual const bool isRaw() = 0;
-				const FORMAT getFormat();
-				const Dimension * const getDimension(const char dimension_letter);
-				const Dimension * const getDimensionByLongName(const std::string dimension);
-				const long long int getGlobalMinumum();
-				const long long int getGlobalMaximum();
+				const FORMAT getFormat() const ;
+				const Dimension * const getDimension(const char dimension_letter) const;
+				const Dimension * const getDimensionByLongName(const std::string dimension) const;
+				const long long int getGlobalMinumum() const;
+				const long long int getGlobalMaximum() const;
 			protected:
 				void closeFileHandle();
 			private:
@@ -149,7 +149,14 @@ namespace tissuestack
 						const tissuestack::networking::TissueStackImageRequest * request,
 						const int file_descriptor)
 				{
+
+					// TODO: create image object and dimension from request
 					this->_caching_strategy->extractImage(nullptr, nullptr, 0);
+					const std::string response =
+							tissuestack::utils::Misc::composeHttpResponse(
+									"200 OK", "text/plain", "Not implemented yet!!!"
+							);
+					write(file_descriptor, response.c_str(), response.length());
 				};
 
 			private:

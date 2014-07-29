@@ -65,9 +65,29 @@ namespace tissuestack
 			const bool isObsolete() const;
 			~TissueStackImageRequest();
 			const std::string getContent() const;
+			const std::string getDataSetLocation() const;
+			const std::string getDimensionName() const;
+			const unsigned long long int getSliceNumber() const;
+			const unsigned long long int getXCoordinate() const;
+			const unsigned long long int getYCoordinate() const;
+			const unsigned int getLengthOfSquare() const;
+			const float getScaleFactor() const;
+			const float getQualityFactor() const;
+			const std::string getColorMapName() const;
+			const std::string getOutputImageFormat() const;
 		private:
+			std::string _dataset_location;
+			std::string _dimension_name;
+			unsigned long long int _slice_number;
+			unsigned long long int _x_coordinate;
+			unsigned long long int _y_coordinate;
+			unsigned int _length_of_square;
+			float _scale_factor;
+			float _quality_factor;
+			std::string _color_map_name;
+			std::string _output_image_format;
 			unsigned long long int _request_id = 0;
-			unsigned long long int _request_timeout = 0;
+			unsigned long long int _request_timestamp = 0;
     };
 
     class TissueStackPreTilingRequest final : public tissuestack::common::Request

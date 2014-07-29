@@ -24,19 +24,19 @@ void tissuestack::imaging::Image::closeFileHandle()
 	}
 }
 
-const std::string tissuestack::imaging::Image::getFileName()
+const std::string tissuestack::imaging::Image::getFileName() const
 {
 	return this->_file_name;
 }
 
-const tissuestack::imaging::Dimension * const tissuestack::imaging::Image::getDimensionByLongName(const std::string dimension)
+const tissuestack::imaging::Dimension * const tissuestack::imaging::Image::getDimensionByLongName(const std::string dimension) const
 {
 	if (dimension.empty()) return nullptr;
 
 	return this->getDimension(dimension.at(0));
 }
 
-const tissuestack::imaging::Dimension * const tissuestack::imaging::Image::getDimension(const char dimension_letter)
+const tissuestack::imaging::Dimension * const tissuestack::imaging::Image::getDimension(const char dimension_letter) const
 {
 	try
 	{
@@ -47,17 +47,17 @@ const tissuestack::imaging::Dimension * const tissuestack::imaging::Image::getDi
 	}
 }
 
-const long long int tissuestack::imaging::Image::getGlobalMinumum()
+const long long int tissuestack::imaging::Image::getGlobalMinumum() const
 {
 	return this->_global_min_value;
 }
 
-const long long int tissuestack::imaging::Image::getGlobalMaximum()
+const long long int tissuestack::imaging::Image::getGlobalMaximum() const
 {
 	return this->_global_max_value;
 }
 
-const tissuestack::imaging::FORMAT tissuestack::imaging::Image::getFormat()
+const tissuestack::imaging::FORMAT tissuestack::imaging::Image::getFormat() const
 {
 	return this->_format;
 }

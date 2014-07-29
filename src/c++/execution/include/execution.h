@@ -84,7 +84,6 @@ namespace tissuestack
 				TissueStackOnlineExecutor(const TissueStackOnlineExecutor&) = delete;
 				static TissueStackOnlineExecutor * instance();
 				void execute(std::string request, int client_descriptor);
-				std::string composeHttpResponse(std::string status, std::string content_type, std::string content);
 				~TissueStackOnlineExecutor();
 			private:
 				TissueStackOnlineExecutor();

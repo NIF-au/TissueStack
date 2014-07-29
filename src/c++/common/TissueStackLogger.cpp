@@ -3,7 +3,7 @@
 tissuestack::logging::TissueStackLogger::TissueStackLogger() : _log_path(CONCAT_APP_PATH("logs/"))
 {
 	// check if path exists and create it if necessary
-	if (!tissuestack::utils::System::fileExists(this->_log_path))
+	if (!tissuestack::utils::System::directoryExists(this->_log_path))
 	if (!tissuestack::utils::System::createDirectory(this->_log_path, 0775))
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException, "Unable to create the log path!");
 

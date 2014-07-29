@@ -12,7 +12,9 @@
 #include <sys/stat.h>
 #include <typeinfo>
 #include <cxxabi.h>
+#include <algorithm>
 #include <vector>
+#include <unordered_map>
 
 namespace tissuestack
 {
@@ -26,6 +28,7 @@ namespace tissuestack
         static const unsigned long long int getUsedRam();
         static const unsigned long long int getFreeRam();
         static const bool fileExists(const std::string& file_name);
+        static const bool directoryExists(const std::string& file_name);
         static const bool createDirectory(const std::string& directory, mode_t mode);
         static const std::string getSystemTimeFormatted(const std::string & format);
       private:
@@ -40,6 +43,10 @@ namespace tissuestack
         static const std::string convertCharPointerToString(char * some_characters);
     	static const std::string demangleTypeIdName(const char * mangeledIdName);
     	static const std::vector<std::string> tokenizeString(const std::string & some_string, const char delimiter);
+    	static const std::string findUnorderedMapEntryWithUpperCaseStringKey(
+    			std::unordered_map<std::string, std::string> & map, std::string key);
+    	static const std::string composeHttpResponse(
+    			std::string status, std::string content_type, std::string content);
       private:
     	Misc();
     	Misc & operator=(const Misc&) = delete;

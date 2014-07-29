@@ -114,13 +114,15 @@ int main(int argc, char * args[])
 		// accept requests and process them until we receive a SIGSTOP
 		TissueStackServer->listen();
 	} catch (tissuestack::common::TissueStackException& ex) {
-		tissuestack::LoggerSingleton->error(
-				"TissueStackServer listen() was aborted for the following reason: %s\n",
-				ex.what());
+		if (!TissueStackServer->isStopping() && tissuestack::LoggerSingleton)
+			tissuestack::LoggerSingleton->error(
+					"TissueStackServer listen() was aborted for the following reason: %s\n",
+					ex.what());
 		return -1;
 	} catch (...)
 	{
-		tissuestack::LoggerSingleton->error("TissueStackServer listen() was aborted for unexpected reason!\n");
+		if (!TissueStackServer->isStopping() && tissuestack::LoggerSingleton)
+			tissuestack::LoggerSingleton->error("TissueStackServer listen() was aborted for unexpected reason!\n");
 		TissueStackServer->stop();
 		return -1;
 	}
