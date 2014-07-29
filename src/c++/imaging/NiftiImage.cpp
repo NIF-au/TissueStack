@@ -10,3 +10,8 @@ tissuestack::imaging::NiftiImage::NiftiImage(const std::string filename) :
 {
 	// TODO: set other properties
 }
+
+tissuestack::imaging::NiftiImage::~NiftiImage()
+{
+	// do nothing for now
+}

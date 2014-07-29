@@ -2,10 +2,11 @@ NAME			=	TissueStack Execution
 
 SRCS			=	$(wildcard *.cpp)
 SRCS_COMMON		=	$(wildcard ../common/*.cpp)
+SRCS_IMAGING	=	$(wildcard ../imaging/*.cpp)
 SRCS_NETWORK	=	$(wildcard ../networking/*.cpp)
 SRCS_UTILS		=	$(wildcard ../utils/*.cpp)
 
-INCLUDE			=	-Iinclude -I../utils/include -I../common/include -I../networking/include
+INCLUDE			=	-Iinclude -I../utils/include -I../common/include -I../networking/include -I../imaging/include
 
 LIB_PATH		=
 
@@ -38,7 +39,7 @@ test:	clean
 	@echo -e "\tCompiling test.so for \"$(NAME)\" => [/tmp/test.so]"
 	@$(CC) -o /tmp/test.so test/test.so.cpp $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -fPIC -pie -shared
 	@echo -e "\tCompiling Test for \"$(NAME)\" => [test/test]"
-	@$(CC) -o test/test $(SRCS_NETWORK) $(SRCS_COMMON) $(SRCS_UTILS) $(SRCS) $(FLAGS) $(INCLUDE) $(LIBS) test/test.cpp
+	@$(CC) -o test/test $(SRCS_NETWORK) $(SRCS_COMMON) $(SRCS_UTILS) $(SRCS_IMAGING) $(SRCS) $(FLAGS) $(INCLUDE) $(LIBS) test/test.cpp
 	@echo -en "\tRunning Test for \"$(NAME)\" ... "
 	@test/test 2&> test/output.log; if [ $$? -eq 0 ]; then echo " FAILED (check test/output.log)!"; else echo " SUCCESS.";fi; 
 	

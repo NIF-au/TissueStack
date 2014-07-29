@@ -18,6 +18,12 @@ tissuestack::logging::TissueStackLogger::TissueStackLogger() : _log_path(CONCAT_
 	this->all("TissueStackLogger initialized\n");
 };
 
+void tissuestack::logging::TissueStackLogger::purgeInstance()
+{
+	delete tissuestack::logging::TissueStackLogger::_instance;
+	tissuestack::logging::TissueStackLogger::_instance = nullptr;
+}
+
 void tissuestack::logging::TissueStackLogger::log(FILE * log_file, const char * log_args, va_list args)
 {
 	std::lock_guard<std::mutex> lock(this->_log_mutex);

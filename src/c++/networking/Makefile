@@ -1,12 +1,13 @@
 NAME			=	TissueStack Networking
 
 SRCS_COMMON		=	$(wildcard ../common/*.cpp)
+SRCS_IMAGING	=	$(wildcard ../imaging/*.cpp)
 SRCS_THREADING	=	$(wildcard ../execution/*.cpp)
 SRCS_UTILS		=	$(wildcard ../utils/*.cpp)
 SRCS			=	$(wildcard *.cpp)
 
 
-INCLUDE			=	-Iinclude -I../utils/include -I../common/include -I../execution/include
+INCLUDE			=	-Iinclude -I../utils/include -I../common/include -I../execution/include -I../imaging/include
 
 LIB_PATH		=
 
@@ -37,7 +38,7 @@ install:
 
 test:	clean
 	@echo -e "\tCompiling Test for \"$(NAME)\" => [test/test]"
-	@$(CC) -o test/test $(SRCS_COMMON) $(SRCS_THREADING) $(SRCS_UTILS) $(SRCS)  test/test.cpp $(LIBS) $(FLAGS) $(INCLUDE)
+	@$(CC) -o test/test $(SRCS_COMMON) $(SRCS_THREADING) $(SRCS_UTILS) $(SRCS_IMAGING) $(SRCS)  test/test.cpp $(LIBS) $(FLAGS) $(INCLUDE)
 	@echo -en "\tRunning Test for \"$(NAME)\" ... "
 #@test/test 2&> test/output.log; if [ $$? -eq 0 ]; then echo " FAILED (check test/output.log)!"; else echo " SUCCESS.";fi; 
 	@test/test

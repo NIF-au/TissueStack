@@ -1,22 +1,30 @@
-NAME		=	TissueStack Imaging
+NAME			=	TissueStack Imaging
 
-SRCS		=	$(wildcard *.cpp)
+SRCS_COMMON		=	$(wildcard ../common/*.cpp)
+SRCS_NETWORKING	=	$(wildcard ../networking/*.cpp)
+SRCS_EXECUTION	=	$(wildcard ../execution/*.cpp)
+SRCS_UTILS		=	$(wildcard ../utils/*.cpp)
+SRCS			=	$(wildcard *.cpp)
 
-INCLUDE		=	-Iinclude
+INCLUDE			=	-Iinclude -I../common/include -I../execution/include -I../utils/include -I../networking/include
 
-LIB_PATH	=
+LIB_PATH		=
 
-LIBS		=	-lrt
+LIBS			=	-lrt -ldl
 
-LIB_NAME	=	libTissueStackImagging.so
+LIB_NAME		=	libTissueStackImagging.so
 
-INSTALL_DIR	=	/tmp
+INSTALL_DIR		=	/tmp
 
-FLAGS		=	-Wall -Werror -ggdb -std=c++11 -std=gnu++11 -std=c++0x 
+FLAGS			=	-Wall -Werror -ggdb -std=c++11 -std=gnu++11 -std=c++0x 
 
-CC		=	g++
+CC				=	g++
 
-OBJS		=	$(SRCS:%.cpp=%.o)
+OBJS_UTILS		=	$(SRCS_UTILS:%.cpp=%.o)
+OBJS_COMMON		=	$(SRCS_COMMON:%.cpp=%.o)
+OBJS_EXECUTION	=	$(SRCS_EXECUTION:%.cpp=%.o)
+OBJS_NETWORKING	=	$(SRCS_NETWORKING:%.cpp=%.o)
+OBJS			=	$(SRCS:%.cpp=%.o)
 
 %.o: %.cpp
 	@echo -e "\tCompiling \"$(NAME)\" => [$(@)]"
@@ -24,8 +32,8 @@ OBJS		=	$(SRCS:%.cpp=%.o)
 	
 all:	compile install
 
-compile: $(OBJS)
-	@$(CC) $(OBJS) -o $(LIB_NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -shared
+compile: $(OBJS_UTILS) $(OBJS_COMMON) $(OBJS_EXECUTION) $(OBJS_NETWORKING) $(OBJS)
+	@$(CC) $(OBJS) $(OBJS_COMMON)  $(OBJS_UTILS) $(OBJS_EXECUTION) -o $(LIB_NAME) $(INCLUDE) $(LIB_PATH) $(LIBS) $(FLAGS) -shared
 
 install:
 	@if [ -f $(LIB_NAME) ]; then mv $(LIB_NAME) $(INSTALL_DIR); fi;
@@ -33,7 +41,7 @@ install:
 
 test:	clean
 	@echo -e "\tCompiling Test for \"$(NAME)\" => [test/test]"
-	@$(CC) -o test/test $(LIBS) $(FLAGS) $(INCLUDE) $(SRCS) test/test.cpp
+	@$(CC) -o test/test $(LIBS) $(FLAGS) $(INCLUDE) $(SRCS_COMMON) $(SRCS_UTILS) $(SRCS_EXECUTION) $(SRCS_NETWORKING) $(SRCS) test/test.cpp
 	@echo -en "\tRunning Test for \"$(NAME)\" ... "
 	@test/test 2&> test/output.log; if [ $$? -eq 0 ]; then echo " FAILED (check test/output.log)!"; else echo " SUCCESS.";fi; 
         

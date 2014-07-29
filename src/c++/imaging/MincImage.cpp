@@ -10,3 +10,8 @@ tissuestack::imaging::MincImage::MincImage(const std::string filename) :
 {
 	// TODO: set other properties
 }
+
+tissuestack::imaging::MincImage::~MincImage()
+{
+	// do nothing for now
+}

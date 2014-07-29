@@ -4,7 +4,6 @@
 #include "tissuestack.h"
 #include "networking.h"
 #include "execution.h"
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/select.h>

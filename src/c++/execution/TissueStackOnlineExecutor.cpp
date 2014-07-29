@@ -1,3 +1,4 @@
+#include "tissuestack.h"
 #include "execution.h"
 #include "networking.h"
 
@@ -14,6 +15,11 @@ tissuestack::execution::TissueStackOnlineExecutor::~TissueStackOnlineExecutor()
 		delete [] this->_filters;
 	}
 
+	if (this->_imageExtractor)
+	{
+		delete this->_imageExtractor;
+		this->_imageExtractor = nullptr;
+	}
 }
 
 tissuestack::execution::TissueStackOnlineExecutor::TissueStackOnlineExecutor()
@@ -23,7 +29,7 @@ tissuestack::execution::TissueStackOnlineExecutor::TissueStackOnlineExecutor()
 	        	new tissuestack::networking::HttpRequestSanityFilter(),
 	           	new tissuestack::networking::TissueStackRequestFilter(),
 	           	nullptr
-	        }) {}
+	        }), _imageExtractor(new tissuestack::imaging::ImageExtraction<tissuestack::imaging::SimpleCacheHeuristics>) {}
 
 tissuestack::execution::TissueStackOnlineExecutor * tissuestack::execution::TissueStackOnlineExecutor::instance()
 {
@@ -46,6 +52,12 @@ void tissuestack::execution::TissueStackOnlineExecutor::execute(std::string requ
 		  req.reset(this->_filters[i]->applyFilter(req.get()));
 		  i++;
 		}
+
+		if (req.get()->getType() == tissuestack::common::Request::Type::TS_IMAGE)
+			this->_imageExtractor->processImageRequest(
+					static_cast<const tissuestack::networking::TissueStackImageRequest *>(req.get()),
+					client_descriptor);
+
 	}  catch (tissuestack::common::TissueStackObsoleteRequestException& obsoleteRequest)
 	{
 		// TODO: handle superseded requests

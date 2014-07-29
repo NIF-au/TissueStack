@@ -1,5 +1,10 @@
 #include "imaging.h"
 
+tissuestack::imaging::Image::~Image()
+{
+	this->closeFileHandle();
+}
+
 tissuestack::imaging::Image::Image(const std::string filename)
 	: tissuestack::imaging::Image::Image(
 			filename,
@@ -8,9 +13,9 @@ tissuestack::imaging::Image::Image(const std::string filename)
 tissuestack::imaging::Image::Image(
 		const std::string filename,
 		const tissuestack::imaging::FORMAT format) :
-			_format(tissuestack::imaging::FORMAT::RAW) {}
+			_file_name(filename), _format(format) {}
 
-tissuestack::imaging::Image::~Image()
+void tissuestack::imaging::Image::closeFileHandle()
 {
 	if (this->_file_handle)
 	{

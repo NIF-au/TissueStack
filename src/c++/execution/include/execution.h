@@ -2,6 +2,7 @@
 #define __EXECUTION_H__
 
 #include "tissuestack.h"
+#include "imaging.h"
 #include <condition_variable>
 #include <thread>
 #include <chrono>
@@ -88,6 +89,7 @@ namespace tissuestack
 			private:
 				TissueStackOnlineExecutor();
 				tissuestack::common::RequestFilter ** _filters = nullptr;
+				tissuestack::imaging::ImageExtraction<tissuestack::imaging::SimpleCacheHeuristics> * _imageExtractor = nullptr;
 				static TissueStackOnlineExecutor * _instance;
 
 		};
