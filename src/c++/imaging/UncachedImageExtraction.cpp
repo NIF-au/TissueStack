@@ -6,8 +6,8 @@ tissuestack::imaging::UncachedImageExtraction::UncachedImageExtraction()
 }
 
 void tissuestack::imaging::UncachedImageExtraction::extractImage(
-						const Image * image,
-						const Dimension * dimension,
+						const TissueStackImageData * image,
+						const TissueStackDataDimension * dimension,
 						const unsigned long long int slice)
 {
 }

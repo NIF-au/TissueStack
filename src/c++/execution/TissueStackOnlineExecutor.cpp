@@ -73,7 +73,7 @@ void tissuestack::execution::TissueStackOnlineExecutor::execute(std::string requ
 		if (bytes < 0)
 			tissuestack::logging::TissueStackLogger::instance()->error(
 					"Error Sending 400 Bad Request: %s \n", strerror(errno));
-	}  catch (tissuestack::common::TissueStackException& ex)
+	} catch (tissuestack::common::TissueStackException& ex)
 	{
 		std::string response =
 				tissuestack::utils::Misc::composeHttpResponse(

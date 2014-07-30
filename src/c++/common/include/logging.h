@@ -1,13 +1,7 @@
 #ifndef	__LOGGING_H__
 #define __LOGGING_H__
 
-// GLOBAL APPLICATION (DATA) PATH
-#ifndef APPLICATION_PATH
-#define APPLICATION_PATH "/usr/local/tissuestack"
-#endif
-// HELPS US TO ASSEMBLE SUB-DIRECTORIES BASED ON THE ROOT PATH
-#define CONCAT_APP_PATH(PATH_TO_BE_ADDED) APPLICATION_PATH "/" PATH_TO_BE_ADDED
-
+#include "globals.h"
 #include "utils.h"
 #include "exceptions.h"
 #include <mutex>

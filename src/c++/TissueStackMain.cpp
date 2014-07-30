@@ -75,24 +75,6 @@ int main(int argc, char * args[])
 		return -1;
 	}
 
-	std::unique_ptr<tissuestack::common::RequestTimeStampStore> TissueStackTimeStampStore;
-	try
-	{
-		// instantiate TimeStampHashMap Singleton
-		TissueStackTimeStampStore.reset(tissuestack::common::RequestTimeStampStore::instance());
-	} catch (...)
-	{
-		tissuestack::LoggerSingleton->error("Failed to instantiate the RequestTimeStampStore!\n");
-		return -1;
-	}
-
-
-	// instantiate a data set store singleton
-	// TODO: implement
-
-	// instantiate a color map store singleton
-	// TODO: implement
-
 	try
 	{
 		// start the server socket
@@ -106,6 +88,19 @@ int main(int argc, char * args[])
 	{
 		tissuestack::LoggerSingleton->error(
 				"Failed to start the TissueStack SocketServer for unexpected reason!\n");
+		return -1;
+	}
+
+
+	try
+	{
+		// instantiate important singletons
+		tissuestack::common::RequestTimeStampStore::instance(); // for request time stamp checking
+		tissuestack::imaging::TissueStackDataSetStore::instance(); // the data set store
+	// TODO: color map store
+	} catch (...)
+	{
+		tissuestack::LoggerSingleton->error("Could not instantiate global singletons!\n");
 		return -1;
 	}
 

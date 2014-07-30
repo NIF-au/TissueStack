@@ -102,9 +102,9 @@ namespace tissuestack
     						this->removeDescriptorFromList(request_descriptor, true);
     					}  catch (std::exception& bad)
     					{
-    						// close connection and propagate up
+    						// close connection and log error
     						this->removeDescriptorFromList(request_descriptor, true);
-    						throw bad;
+    						tissuestack::LoggerSingleton->error("Something bad happened: %s\n", bad.what());
     					}
     				  });
     			this->_server->_processor->process(f);
@@ -295,6 +295,11 @@ namespace tissuestack
 				close(this->_server_socket);
 
 				this->_isRunning = false;
+
+				// deallocate global singleton objects
+				tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
+				tissuestack::imaging::TissueStackDataSetStore::instance()->purgeInstance();
+
 				tissuestack::LoggerSingleton->info("Socket Server Shut Down Successfully.\n");
 
 				if (tissuestack::LoggerSingleton)

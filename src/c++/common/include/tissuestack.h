@@ -26,6 +26,7 @@ namespace tissuestack
 				RequestTimeStampStore(const RequestTimeStampStore&) = delete;
 
 				static RequestTimeStampStore * instance();
+				void purgeInstance();
 				static bool checkForExpiredEntry(unsigned long long int key, unsigned long long int value);
 			protected:
 				RequestTimeStampStore();

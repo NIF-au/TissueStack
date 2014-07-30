@@ -10,6 +10,12 @@ tissuestack::common::RequestTimeStampStore * tissuestack::common::RequestTimeSta
 	return tissuestack::common::RequestTimeStampStore::_instance;
 }
 
+void tissuestack::common::RequestTimeStampStore::purgeInstance()
+{
+	delete tissuestack::common::RequestTimeStampStore::_instance;
+	tissuestack::common::RequestTimeStampStore::_instance = nullptr;
+}
+
 bool tissuestack::common::RequestTimeStampStore::checkForExpiredEntry(unsigned long long int key, unsigned long long int value)
 {
 	if (key == 0) return false;

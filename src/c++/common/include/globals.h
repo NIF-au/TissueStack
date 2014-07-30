@@ -1,0 +1,14 @@
+#ifndef	__GLOBALS_H__
+#define __GLOBALS_H__
+
+extern "C"
+{
+	// GLOBAL APPLICATION (DATA) PATH
+	#ifndef APPLICATION_PATH
+	#define APPLICATION_PATH "/usr/local/tissuestack"
+	#endif
+	// HELPS US TO ASSEMBLE SUB-DIRECTORIES BASED ON THE ROOT PATH
+	#define CONCAT_APP_PATH(PATH_TO_BE_ADDED) APPLICATION_PATH "/" PATH_TO_BE_ADDED
+}
+
+#endif	/* __GLOBALS_H__ */

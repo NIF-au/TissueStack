@@ -45,10 +45,10 @@ tissuestack::logging::TissueStackLogger::~TissueStackLogger()
 
  tissuestack::logging::TissueStackLogger * tissuestack::logging::TissueStackLogger::instance()
  {
-	if (TissueStackLogger::_instance == nullptr)
-		TissueStackLogger::_instance = new TissueStackLogger();
+	if (tissuestack::logging::TissueStackLogger::_instance == nullptr)
+		tissuestack::logging::TissueStackLogger::_instance = new tissuestack::logging::TissueStackLogger();
 
-	return TissueStackLogger::_instance;
+	return tissuestack::logging::TissueStackLogger::_instance;
  }
 
 void tissuestack::logging::TissueStackLogger::info(const char * log_args, ...)

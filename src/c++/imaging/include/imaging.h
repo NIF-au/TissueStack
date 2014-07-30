@@ -3,6 +3,7 @@
 
 #include "logging.h"
 #include "networking.h"
+#include <memory.h>
 #include <unordered_map>
 
 namespace tissuestack
@@ -22,41 +23,44 @@ namespace tissuestack
 			RGB_24BIT		= 2
 		};
 
-		class Dimension final
+		class TissueStackDataDimension final
 		{
 			public:
-				explicit Dimension(const std::string name);
-				Dimension(const Dimension&) = delete;
-				Dimension & operator=(const Dimension&) = delete;
+				explicit TissueStackDataDimension(const std::string name);
+				TissueStackDataDimension(const TissueStackDataDimension&) = delete;
+				TissueStackDataDimension & operator=(const TissueStackDataDimension&) = delete;
 				const std::string getName() const;
-				const unsigned int getNumberOfSlices() const;
-				const long long int getMinumum() const;
-				const long long int getMaximum() const;
+				const unsigned long long int getNumberOfSlices() const;
+				const unsigned long long int getOffset() const;
+				const int getMinumum() const;
+				const int getMaximum() const;
 
 			private:
 				const std::string 	_name;
-				unsigned int 	_slices = 0;
-				long long int 	_min_value = -1;
-				long long int 	_max_value = -1;
+				unsigned long long int 	_slices = 0;
+				unsigned long long int 	_offset = 0;
+				int 	_min_value = -1;
+				int 	_max_value = -1;
 
 		};
 
-		class Image
+		class TissueStackImageData
 		{
 			public:
-				explicit Image(const std::string filename);
-				Image(const std::string filename, const FORMAT format);
-				Image & operator=(const Image&) = delete;
-				Image(const Image&) = delete;
-				virtual ~Image();
+				TissueStackImageData & operator=(const TissueStackImageData&) = delete;
+				TissueStackImageData(const TissueStackImageData&) = delete;
+				static const TissueStackImageData * fromFile(const std::string filename);
+				virtual ~TissueStackImageData();
 				const std::string getFileName() const;
 				virtual const bool isRaw() = 0;
 				const FORMAT getFormat() const ;
-				const Dimension * const getDimension(const char dimension_letter) const;
-				const Dimension * const getDimensionByLongName(const std::string dimension) const;
-				const long long int getGlobalMinumum() const;
-				const long long int getGlobalMaximum() const;
+				const TissueStackDataDimension * getDimension(const char dimension_letter) const;
+				const TissueStackDataDimension * getDimensionByLongName(const std::string dimension) const;
+				const int getGlobalMinumum() const;
+				const int getGlobalMaximum() const;
 			protected:
+				explicit TissueStackImageData(const std::string filename);
+				TissueStackImageData(const std::string filename, const FORMAT format);
 				void closeFileHandle();
 			private:
 				const std::string		_file_name;
@@ -64,34 +68,75 @@ namespace tissuestack
 				const FORMAT _format;
 				long long int 	_global_min_value = -1;
 				long long int 	_global_max_value = -1;
-				const std::unordered_map<char, Dimension> _dimensions;
-
+				std::unordered_map<char, const TissueStackDataDimension *> _dimensions;
 		};
 
-		class RawImage final : public Image
+		class TissueStackRawData final : public TissueStackImageData
 		{
 			public:
-				explicit RawImage(const std::string filename);
 				const bool isRaw();
 			private:
+				friend class TissueStackImageData;
+				explicit TissueStackRawData(const std::string filename);
 				const RAW_TYPE	_raw_type = RAW_TYPE::RGB_24BIT;
 		};
 
-		class NiftiImage final : public Image
+		class TissueStackNiftiData final : public TissueStackImageData
 		{
 			public:
-				~NiftiImage();
-				NiftiImage(const std::string filename);
+				~TissueStackNiftiData();
 				const bool isRaw();
+				const bool isColor();
+			private:
+				friend class TissueStackImageData;
+				TissueStackNiftiData(const std::string filename);
+				bool _is_color = false;
 		};
 
-		class MincImage final : public Image
+		class TissueStackMincData final : public TissueStackImageData
 		{
 			public:
-				~MincImage();
-				MincImage(const std::string filename);
+				~TissueStackMincData();
 				const bool isRaw();
+			private:
+				friend class TissueStackImageData;
+				TissueStackMincData(const std::string filename);
 		};
+
+		enum class DataSetStatus
+		{
+			IN_CONVERSION, READY
+		};
+
+		class TissueStackDataSet final
+		{
+			public:
+				TissueStackDataSet & operator=(const TissueStackDataSet&) = delete;
+				TissueStackDataSet(const TissueStackDataSet&) = delete;
+				static const TissueStackDataSet * fromTissueStackImageData(const TissueStackImageData * image_data);
+				const TissueStackImageData * getImageData() const;
+				const DataSetStatus getStatus() const;
+				const std::string getDataSetId() const;
+			private:
+				DataSetStatus _status = tissuestack::imaging::DataSetStatus::READY;
+				const TissueStackImageData * _image_data;
+				TissueStackDataSet(const TissueStackImageData * image_data);
+		};
+
+		class TissueStackDataSetStore final
+		{
+			public:
+				TissueStackDataSetStore & operator=(const TissueStackDataSetStore&) = delete;
+				TissueStackDataSetStore(const TissueStackDataSetStore&) = delete;
+				static TissueStackDataSetStore * instance();
+		    	static void purgeInstance();
+		    	const TissueStackDataSet * findDataSet(const std::string id) const;
+		    	void addOrReplaceDataSet(const TissueStackDataSet * dataSet);
+			private:
+		    	TissueStackDataSetStore();
+		    	std::unordered_map<std::string, const TissueStackDataSet *> _data_sets;
+				static TissueStackDataSetStore * _instance;
+	 	};
 
 		class SimpleCacheHeuristics final
 		{
@@ -103,8 +148,8 @@ namespace tissuestack
 
 				// TODO: set appropriate return type, e.g. graphicsmagick (perhaps wrap to be something more generic)
 				void extractImage(
-						const Image * image,
-						const Dimension * dimension,
+						const TissueStackImageData * image,
+						const TissueStackDataDimension * dimension,
 						const unsigned long long int slice);
 		};
 
@@ -117,8 +162,8 @@ namespace tissuestack
 
 				// TODO: set appropriate return type, e.g. graphicsmagick (perhaps wrap to be something more generic)
 				void extractImage(
-						const Image * image,
-						const Dimension * dimension,
+						const TissueStackImageData * image,
+						const TissueStackDataDimension * dimension,
 						const unsigned long long int slice);
 
 				void extractImages(
@@ -149,9 +194,25 @@ namespace tissuestack
 						const tissuestack::networking::TissueStackImageRequest * request,
 						const int file_descriptor)
 				{
+					const tissuestack::imaging::TissueStackDataSet * dataSet =
+							tissuestack::imaging::TissueStackDataSetStore::instance()->findDataSet(request->getDataSetLocation());
 
-					// TODO: create image object and dimension from request
-					this->_caching_strategy->extractImage(nullptr, nullptr, 0);
+					// TODO: change this to a mutexed secton in which we try to add non-existing data sets
+					// alternatively mutex the add section of the data set store
+					if (dataSet == nullptr)
+						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Could not find associated data set!");
+
+					// some more checks regarding the validity of the image request parameters
+					const tissuestack::imaging::TissueStackDataDimension * dimension  =
+							dataSet->getImageData()->getDimensionByLongName(request->getDimensionName());
+					if (dimension == nullptr)
+						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Image Dimension could not be found!");
+					if (request->getSliceNumber() < 0 || request->getSliceNumber() > dimension->getNumberOfSlices())
+						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Slice number requested is out of bounds!");
+
+					// TODO: some more checks regarding number sanity, e.g. quality and scale
+
+					this->_caching_strategy->extractImage(dataSet->getImageData(), dimension, request->getSliceNumber());
 					const std::string response =
 							tissuestack::utils::Misc::composeHttpResponse(
 									"200 OK", "text/plain", "Not implemented yet!!!"
