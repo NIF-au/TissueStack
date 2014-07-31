@@ -2,11 +2,20 @@
 
 tissuestack::imaging::TissueStackDataSetStore::TissueStackDataSetStore()
 {
-	// TODO: read data directory and add data sets
+	if (!tissuestack::utils::System::directoryExists(DATASET_PATH))
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Data Store Directory does NOT exist!");
+
+	const std::vector<std::string> fileList = tissuestack::utils::System::getFilesInDirectory(DATASET_PATH);
+	for (std::string f : fileList)
+		this->addOrReplaceDataSet(tissuestack::imaging::TissueStackDataSet::fromFile(f.c_str()));
 }
 
 void tissuestack::imaging::TissueStackDataSetStore::purgeInstance()
 {
+	// walk through entries and clean them up
+	for (auto entry = this->_data_sets.begin(); entry != this->_data_sets.end(); ++entry)
+		delete entry->second;
+
 	delete tissuestack::imaging::TissueStackDataSetStore::_instance;
 	tissuestack::imaging::TissueStackDataSetStore::_instance = nullptr;
 }
@@ -19,7 +28,7 @@ void tissuestack::imaging::TissueStackDataSetStore::purgeInstance()
 	return tissuestack::imaging::TissueStackDataSetStore::_instance;
  }
 
- const tissuestack::imaging::TissueStackDataSet * tissuestack::imaging::TissueStackDataSetStore::findDataSet(const std::string id) const
+ const tissuestack::imaging::TissueStackDataSet * tissuestack::imaging::TissueStackDataSetStore::findDataSet(const std::string & id) const
  {
 		try
 		{

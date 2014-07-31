@@ -297,8 +297,16 @@ namespace tissuestack
 				this->_isRunning = false;
 
 				// deallocate global singleton objects
-				tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
-				tissuestack::imaging::TissueStackDataSetStore::instance()->purgeInstance();
+				try
+				{
+					tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
+					tissuestack::imaging::TissueStackDataSetStore::instance()->purgeInstance();
+					tissuestack::imaging::TissueStackLabelLookupStore::instance()->purgeInstance();
+					tissuestack::imaging::TissueStackColorMapStore::instance()->purgeInstance();
+				} catch (...)
+				{
+					// can be safely ignored
+				}
 
 				tissuestack::LoggerSingleton->info("Socket Server Shut Down Successfully.\n");
 

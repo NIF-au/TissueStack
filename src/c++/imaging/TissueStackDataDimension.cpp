@@ -1,6 +1,6 @@
 #include "imaging.h"
 
-tissuestack::imaging::TissueStackDataDimension::TissueStackDataDimension(const std::string name) : _name(name) {}
+tissuestack::imaging::TissueStackDataDimension::TissueStackDataDimension(const std::string & name) : _name(name) {}
 
 const std::string tissuestack::imaging::TissueStackDataDimension::getName() const
 {

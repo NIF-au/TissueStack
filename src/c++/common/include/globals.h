@@ -5,10 +5,15 @@ extern "C"
 {
 	// GLOBAL APPLICATION (DATA) PATH
 	#ifndef APPLICATION_PATH
-	#define APPLICATION_PATH "/usr/local/tissuestack"
+	#define APPLICATION_PATH "/opt/tissuestack"
 	#endif
 	// HELPS US TO ASSEMBLE SUB-DIRECTORIES BASED ON THE ROOT PATH
 	#define CONCAT_APP_PATH(PATH_TO_BE_ADDED) APPLICATION_PATH "/" PATH_TO_BE_ADDED
+
+	#define DATASET_PATH CONCAT_APP_PATH("data")
+	#define COLORMAP_PATH CONCAT_APP_PATH("colormaps")
+	#define LOG_PATH CONCAT_APP_PATH("logs")
+	#define LABEL_LOOKUP_PATH CONCAT_APP_PATH("lookup")
 }
 
 #endif	/* __GLOBALS_H__ */

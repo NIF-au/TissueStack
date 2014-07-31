@@ -23,10 +23,70 @@ namespace tissuestack
 			RGB_24BIT		= 2
 		};
 
+		class TissueStackLabelLookup final
+		{
+			public:
+				TissueStackLabelLookup & operator=(const TissueStackLabelLookup&) = delete;
+				TissueStackLabelLookup(const TissueStackLabelLookup&) = delete;
+				~TissueStackLabelLookup();
+				static const TissueStackLabelLookup * fromFile(const std::string & filename);
+				const std::string getLabelLookupId() const;
+			private:
+				const std::string _labellookup_id;
+				explicit TissueStackLabelLookup(const std::string & filename);
+		};
+
+		class TissueStackLabelLookupStore final
+		{
+			public:
+				TissueStackLabelLookupStore & operator=(const TissueStackLabelLookupStore&) = delete;
+				TissueStackLabelLookupStore(const TissueStackLabelLookupStore&) = delete;
+				static TissueStackLabelLookupStore * instance();
+				void purgeInstance();
+				const TissueStackLabelLookup * findLabelLookup(const std::string & id) const;
+				void addOrReplaceLabelLookup(const TissueStackLabelLookup * labelLookup);
+				const std::unordered_map<std::string, const tissuestack::imaging::TissueStackLabelLookup *> getAllLabelLookups() const;
+			private:
+				TissueStackLabelLookupStore();
+				std::unordered_map<std::string, const TissueStackLabelLookup *> _label_lookups;
+				static TissueStackLabelLookupStore * _instance;
+		};
+
+		class TissueStackColorMap final
+		{
+			public:
+				TissueStackColorMap & operator=(const TissueStackColorMap&) = delete;
+				TissueStackColorMap(const TissueStackColorMap&) = delete;
+				~TissueStackColorMap();
+				static const TissueStackColorMap * fromFile(const std::string & filename);
+				static const TissueStackColorMap * fromLabelLookup(const TissueStackLabelLookup * labelLookup);
+				const std::string getColorMapId() const;
+			private:
+				const std::string _colormap_id;
+				explicit TissueStackColorMap(const std::string & filename);
+				explicit TissueStackColorMap(const tissuestack::imaging::TissueStackLabelLookup * label_lookup_file);
+		};
+
+		class TissueStackColorMapStore final
+		{
+			public:
+				TissueStackColorMapStore & operator=(const TissueStackColorMapStore&) = delete;
+				TissueStackColorMapStore(const TissueStackColorMapStore&) = delete;
+				static TissueStackColorMapStore * instance();
+		    	void purgeInstance();
+		    	const TissueStackColorMap * findColorMap(const std::string & id) const;
+		    	void addOrReplaceColorMap(const TissueStackColorMap * colorMap);
+		    	void addOrReplaceColorMap(const TissueStackLabelLookup * labelLookup);
+			private:
+		    	TissueStackColorMapStore();
+		    	std::unordered_map<std::string, const TissueStackColorMap *> _color_maps;
+				static TissueStackColorMapStore * _instance;
+	 	};
+
 		class TissueStackDataDimension final
 		{
 			public:
-				explicit TissueStackDataDimension(const std::string name);
+				explicit TissueStackDataDimension(const std::string & name);
 				TissueStackDataDimension(const TissueStackDataDimension&) = delete;
 				TissueStackDataDimension & operator=(const TissueStackDataDimension&) = delete;
 				const std::string getName() const;
@@ -49,18 +109,18 @@ namespace tissuestack
 			public:
 				TissueStackImageData & operator=(const TissueStackImageData&) = delete;
 				TissueStackImageData(const TissueStackImageData&) = delete;
-				static const TissueStackImageData * fromFile(const std::string filename);
+				static const TissueStackImageData * fromFile(const std::string & filename);
 				virtual ~TissueStackImageData();
 				const std::string getFileName() const;
 				virtual const bool isRaw() = 0;
 				const FORMAT getFormat() const ;
 				const TissueStackDataDimension * getDimension(const char dimension_letter) const;
-				const TissueStackDataDimension * getDimensionByLongName(const std::string dimension) const;
+				const TissueStackDataDimension * getDimensionByLongName(const std::string & dimension) const;
 				const int getGlobalMinumum() const;
 				const int getGlobalMaximum() const;
 			protected:
-				explicit TissueStackImageData(const std::string filename);
-				TissueStackImageData(const std::string filename, const FORMAT format);
+				explicit TissueStackImageData(const std::string & filename);
+				TissueStackImageData(const std::string & filename, const FORMAT format);
 				void closeFileHandle();
 			private:
 				const std::string		_file_name;
@@ -77,7 +137,7 @@ namespace tissuestack
 				const bool isRaw();
 			private:
 				friend class TissueStackImageData;
-				explicit TissueStackRawData(const std::string filename);
+				explicit TissueStackRawData(const std::string & filename);
 				const RAW_TYPE	_raw_type = RAW_TYPE::RGB_24BIT;
 		};
 
@@ -89,7 +149,7 @@ namespace tissuestack
 				const bool isColor();
 			private:
 				friend class TissueStackImageData;
-				TissueStackNiftiData(const std::string filename);
+				TissueStackNiftiData(const std::string & filename);
 				bool _is_color = false;
 		};
 
@@ -100,7 +160,7 @@ namespace tissuestack
 				const bool isRaw();
 			private:
 				friend class TissueStackImageData;
-				TissueStackMincData(const std::string filename);
+				TissueStackMincData(const std::string & filename);
 		};
 
 		enum class DataSetStatus
@@ -113,6 +173,8 @@ namespace tissuestack
 			public:
 				TissueStackDataSet & operator=(const TissueStackDataSet&) = delete;
 				TissueStackDataSet(const TissueStackDataSet&) = delete;
+				~TissueStackDataSet();
+				static const TissueStackDataSet * fromFile(const std::string & filename);
 				static const TissueStackDataSet * fromTissueStackImageData(const TissueStackImageData * image_data);
 				const TissueStackImageData * getImageData() const;
 				const DataSetStatus getStatus() const;
@@ -129,8 +191,8 @@ namespace tissuestack
 				TissueStackDataSetStore & operator=(const TissueStackDataSetStore&) = delete;
 				TissueStackDataSetStore(const TissueStackDataSetStore&) = delete;
 				static TissueStackDataSetStore * instance();
-		    	static void purgeInstance();
-		    	const TissueStackDataSet * findDataSet(const std::string id) const;
+		    	void purgeInstance();
+		    	const TissueStackDataSet * findDataSet(const std::string & id) const;
 		    	void addOrReplaceDataSet(const TissueStackDataSet * dataSet);
 			private:
 		    	TissueStackDataSetStore();
@@ -197,10 +259,14 @@ namespace tissuestack
 					const tissuestack::imaging::TissueStackDataSet * dataSet =
 							tissuestack::imaging::TissueStackDataSetStore::instance()->findDataSet(request->getDataSetLocation());
 
-					// TODO: change this to a mutexed secton in which we try to add non-existing data sets
-					// alternatively mutex the add section of the data set store
+					// we have no associated data set, try to create one
 					if (dataSet == nullptr)
-						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Could not find associated data set!");
+					{
+						 std::lock_guard<std::mutex> lock(this->_dataset_addition_mutex);
+
+						 dataSet = tissuestack::imaging::TissueStackDataSet::fromFile(request->getDataSetLocation());
+						 tissuestack::imaging::TissueStackDataSetStore::instance()->addOrReplaceDataSet(dataSet);
+					}
 
 					// some more checks regarding the validity of the image request parameters
 					const tissuestack::imaging::TissueStackDataDimension * dimension  =
@@ -210,7 +276,16 @@ namespace tissuestack
 					if (request->getSliceNumber() < 0 || request->getSliceNumber() > dimension->getNumberOfSlices())
 						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Slice number requested is out of bounds!");
 
-					// TODO: some more checks regarding number sanity, e.g. quality and scale
+					if (request->getLengthOfSquare() < 0 || request->getLengthOfSquare() > 256 * 5)
+						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "The length of the image square has to range in betwenn 0 and 1280\n");
+					if (request->getQualityFactor() <= 0.0 || request->getQualityFactor() > 1.0)
+						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,"The range of 'quality factor' has to be greater than 0 but no bigger than 1.0\n");
+					if (request->getXCoordinate() < 0)
+						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,"The 'x' (pixel) coordinate has to be a positive integer\n");
+
+					// TODO: check if color map is supported
+					if (request->getColorMapName().empty())
+						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,"The 'y' (pixel) coordinate has to be a positive integer\n");
 
 					this->_caching_strategy->extractImage(dataSet->getImageData(), dimension, request->getSliceNumber());
 					const std::string response =
@@ -221,6 +296,7 @@ namespace tissuestack
 				};
 
 			private:
+			 	std::mutex _dataset_addition_mutex;
 				CachingStrategy * _caching_strategy = nullptr;
 		};
 	}

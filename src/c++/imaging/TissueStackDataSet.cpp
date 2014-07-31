@@ -6,6 +6,18 @@ tissuestack::imaging::TissueStackDataSet::TissueStackDataSet(
 	//TODO: change status if we are being worked on
 }
 
+tissuestack::imaging::TissueStackDataSet::~TissueStackDataSet()
+{
+	if (this->_image_data)
+		delete this->_image_data;
+}
+
+const tissuestack::imaging::TissueStackDataSet * tissuestack::imaging::TissueStackDataSet::fromFile(const std::string & filename)
+{
+	return tissuestack::imaging::TissueStackDataSet::fromTissueStackImageData(
+			tissuestack::imaging::TissueStackImageData::fromFile(filename));
+}
+
 const tissuestack::imaging::TissueStackDataSet * tissuestack::imaging::TissueStackDataSet::fromTissueStackImageData(const TissueStackImageData * image_data)
 {
 	if (image_data == nullptr)

@@ -5,7 +5,7 @@ tissuestack::imaging::TissueStackImageData::~TissueStackImageData()
 	this->closeFileHandle();
 }
 
-const tissuestack::imaging::TissueStackImageData * tissuestack::imaging::TissueStackImageData::fromFile(const std::string filename)
+const tissuestack::imaging::TissueStackImageData * tissuestack::imaging::TissueStackImageData::fromFile(const std::string & filename)
 {
 	if (filename.empty())
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Image with empty file name???");
@@ -28,13 +28,13 @@ const tissuestack::imaging::TissueStackImageData * tissuestack::imaging::TissueS
 	return new tissuestack::imaging::TissueStackRawData(filename);
 }
 
-tissuestack::imaging::TissueStackImageData::TissueStackImageData(const std::string filename)
+tissuestack::imaging::TissueStackImageData::TissueStackImageData(const std::string & filename)
 	: tissuestack::imaging::TissueStackImageData::TissueStackImageData(
 			filename,
 			tissuestack::imaging::FORMAT::RAW) {}
 
 tissuestack::imaging::TissueStackImageData::TissueStackImageData(
-		const std::string filename,
+		const std::string & filename,
 		const tissuestack::imaging::FORMAT format) :
 			_file_name(filename), _format(format) {}
 
@@ -52,7 +52,7 @@ const std::string tissuestack::imaging::TissueStackImageData::getFileName() cons
 	return this->_file_name;
 }
 
-const tissuestack::imaging::TissueStackDataDimension * tissuestack::imaging::TissueStackImageData::getDimensionByLongName(const std::string dimension) const
+const tissuestack::imaging::TissueStackDataDimension * tissuestack::imaging::TissueStackImageData::getDimensionByLongName(const std::string & dimension) const
 {
 	if (dimension.empty()) return nullptr;
 

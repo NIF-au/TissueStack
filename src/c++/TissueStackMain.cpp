@@ -97,7 +97,8 @@ int main(int argc, char * args[])
 		// instantiate important singletons
 		tissuestack::common::RequestTimeStampStore::instance(); // for request time stamp checking
 		tissuestack::imaging::TissueStackDataSetStore::instance(); // the data set store
-	// TODO: color map store
+		tissuestack::imaging::TissueStackLabelLookupStore::instance(); // for label lookups
+		tissuestack::imaging::TissueStackColorMapStore::instance(); // the colormap store
 	} catch (...)
 	{
 		tissuestack::LoggerSingleton->error("Could not instantiate global singletons!\n");

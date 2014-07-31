@@ -1,6 +1,6 @@
 #include "logging.h"
 
-tissuestack::logging::TissueStackLogger::TissueStackLogger() : _log_path(CONCAT_APP_PATH("logs/"))
+tissuestack::logging::TissueStackLogger::TissueStackLogger() : _log_path(LOG_PATH)
 {
 	// check if path exists and create it if necessary
 	if (!tissuestack::utils::System::directoryExists(this->_log_path))
@@ -8,9 +8,9 @@ tissuestack::logging::TissueStackLogger::TissueStackLogger() : _log_path(CONCAT_
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException, "Unable to create the log path!");
 
 	// create and open files
-	this->_info_log = fopen(std::string(this->_log_path + "info.log").c_str(), "a");
-	this->_error_log = fopen(std::string(this->_log_path + "error.log").c_str(), "a");
-	this->_debug_log = fopen(std::string(this->_log_path + "debug.log").c_str(), "a");
+	this->_info_log = fopen(std::string(this->_log_path + "/info.log").c_str(), "a");
+	this->_error_log = fopen(std::string(this->_log_path + "/error.log").c_str(), "a");
+	this->_debug_log = fopen(std::string(this->_log_path + "/debug.log").c_str(), "a");
 
 	if (this->_info_log == NULL || this->_error_log == NULL || this->_debug_log == NULL)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException, "Unable to create the log files");

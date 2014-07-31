@@ -72,3 +72,30 @@ const std::string tissuestack::utils::System::getSystemTimeFormatted(const std::
 
 	return std::string(buff);
 }
+
+const std::vector<std::string> tissuestack::utils::System::getFilesInDirectory(const std::string & directory)
+{
+	std::vector<std::string> files;
+
+	if (!tissuestack::utils::System::directoryExists(directory))
+		return files;
+
+	DIR * dir = opendir(directory.c_str());
+	struct dirent * dir_entry = NULL;
+
+	if (dir == NULL)
+		return files;
+
+	while ((dir_entry = readdir(dir)))
+	{
+		if (!strcmp(dir_entry->d_name, ".") || !strcmp(dir_entry->d_name, ".."))
+			continue;
+		const std::string file = directory + "/" + dir_entry->d_name;
+		if (tissuestack::utils::System::fileExists(file))
+			files.push_back(file);
+	}
+
+	if (dir) closedir(dir);
+
+	return files;
+}

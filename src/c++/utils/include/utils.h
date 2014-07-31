@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <sys/sysinfo.h>
 #include <sys/stat.h>
+#include <dirent.h>
 #include <typeinfo>
 #include <cxxabi.h>
 #include <algorithm>
@@ -31,6 +32,7 @@ namespace tissuestack
         static const bool directoryExists(const std::string& file_name);
         static const bool createDirectory(const std::string& directory, mode_t mode);
         static const std::string getSystemTimeFormatted(const std::string & format);
+        static const std::vector<std::string> getFilesInDirectory(const std::string & directory);
       private:
         System();
         System & operator=(const System&) = delete;
