@@ -62,4 +62,10 @@ void tissuestack::imaging::TissueStackColorMapStore::purgeInstance()
 			 tissuestack::imaging::TissueStackColorMap::fromLabelLookup(labelLookup);
 }
 
+ void tissuestack::imaging::TissueStackColorMapStore::dumpAllColorMapsToDebugLog() const
+ {
+	for (auto entry = this->_color_maps.begin(); entry != this->_color_maps.end(); ++entry)
+		entry->second->dumpColorMapToDebugLog();
+ }
+
 tissuestack::imaging::TissueStackColorMapStore * tissuestack::imaging::TissueStackColorMapStore::_instance = nullptr;

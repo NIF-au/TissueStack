@@ -57,12 +57,12 @@ int main(int argc, char * args[])
 		tissuestack::LoggerSingleton->error(
 				"Failed to instantiate TissueStackServer with Default Strategy for the following reason: %s\n",
 				ex.what());
-		return -1;
+		exit(-1);
 	} catch (...)
 	{
 		tissuestack::LoggerSingleton->error(
 				"Failed to instantiate TissueStackServer with Default Strategy for unexpected reason!\n");
-		return -1;
+		exit(-1);
 	}
 
 	try
@@ -72,7 +72,7 @@ int main(int argc, char * args[])
 	} catch (...)
 	{
 		tissuestack::logging::TissueStackLogger::instance()->error("Failed to install the signal handlers!\n");
-		return -1;
+		exit(-1);
 	}
 
 	try
@@ -83,12 +83,12 @@ int main(int argc, char * args[])
 		tissuestack::LoggerSingleton->error(
 				"Failed to start the TissueStack SocketServer for the following reason: %s\n",
 				ex.what());
-		return -1;
+		exit(-1);
 	} catch (...)
 	{
 		tissuestack::LoggerSingleton->error(
 				"Failed to start the TissueStack SocketServer for unexpected reason!\n");
-		return -1;
+		exit(-1);
 	}
 
 
@@ -99,10 +99,12 @@ int main(int argc, char * args[])
 		tissuestack::imaging::TissueStackDataSetStore::instance(); // the data set store
 		tissuestack::imaging::TissueStackLabelLookupStore::instance(); // for label lookups
 		tissuestack::imaging::TissueStackColorMapStore::instance(); // the colormap store
+		//tissuestack::imaging::TissueStackColorMapStore::instance()->dumpAllColorMapsToDebugLog();
+		//tissuestack::imaging::TissueStackLabelLookupStore::instance()->dumpAllLabelLookupsToDebugLog();
 	} catch (...)
 	{
 		tissuestack::LoggerSingleton->error("Could not instantiate global singletons!\n");
-		return -1;
+		exit(-1);
 	}
 
 	try
@@ -114,12 +116,12 @@ int main(int argc, char * args[])
 			tissuestack::LoggerSingleton->error(
 					"TissueStackServer listen() was aborted for the following reason: %s\n",
 					ex.what());
-		return -1;
+		exit(-1);
 	} catch (...)
 	{
 		if (!TissueStackServer->isStopping() && tissuestack::LoggerSingleton)
 			tissuestack::LoggerSingleton->error("TissueStackServer listen() was aborted for unexpected reason!\n");
 		TissueStackServer->stop();
-		return -1;
+		exit(-1);
 	}
 }

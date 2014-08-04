@@ -4,6 +4,8 @@
 #include "logging.h"
 #include "networking.h"
 #include <memory.h>
+#include <array>
+#include <fstream>
 #include <unordered_map>
 
 namespace tissuestack
@@ -28,11 +30,16 @@ namespace tissuestack
 			public:
 				TissueStackLabelLookup & operator=(const TissueStackLabelLookup&) = delete;
 				TissueStackLabelLookup(const TissueStackLabelLookup&) = delete;
-				~TissueStackLabelLookup();
 				static const TissueStackLabelLookup * fromFile(const std::string & filename);
+				void preFillColorMapArray();
+				void copyGrayIndexedRgbMapping(std::array<unsigned short[3], 256> & grayIndexedRgbMapping) const;
+				const std::string getLabel(const unsigned short & red, const unsigned short & green, const unsigned short & blue) const;
 				const std::string getLabelLookupId() const;
+				void dumpLabelLookupToDebugLog() const;
 			private:
 				const std::string _labellookup_id;
+				std::array<unsigned short[3], 256> _gray_indexed_rgb_mapping;
+				std::unordered_map<std::string, std::string> _label_lookups;
 				explicit TissueStackLabelLookup(const std::string & filename);
 		};
 
@@ -46,6 +53,7 @@ namespace tissuestack
 				const TissueStackLabelLookup * findLabelLookup(const std::string & id) const;
 				void addOrReplaceLabelLookup(const TissueStackLabelLookup * labelLookup);
 				const std::unordered_map<std::string, const tissuestack::imaging::TissueStackLabelLookup *> getAllLabelLookups() const;
+				void dumpAllLabelLookupsToDebugLog() const;
 			private:
 				TissueStackLabelLookupStore();
 				std::unordered_map<std::string, const TissueStackLabelLookup *> _label_lookups;
@@ -57,14 +65,17 @@ namespace tissuestack
 			public:
 				TissueStackColorMap & operator=(const TissueStackColorMap&) = delete;
 				TissueStackColorMap(const TissueStackColorMap&) = delete;
-				~TissueStackColorMap();
 				static const TissueStackColorMap * fromFile(const std::string & filename);
 				static const TissueStackColorMap * fromLabelLookup(const TissueStackLabelLookup * labelLookup);
+				void preFillColorMapArray();
+				const std::array<const unsigned short, 3> getRGBMapForGrayValue(const unsigned short & gray) const;
 				const std::string getColorMapId() const;
+				void dumpColorMapToDebugLog() const;
 			private:
 				const std::string _colormap_id;
+				std::array<unsigned short[3], 256> _gray_indexed_rgb_mapping;
 				explicit TissueStackColorMap(const std::string & filename);
-				explicit TissueStackColorMap(const tissuestack::imaging::TissueStackLabelLookup * label_lookup_file);
+				explicit TissueStackColorMap(const TissueStackLabelLookup * label_lookup_file);
 		};
 
 		class TissueStackColorMapStore final
@@ -77,6 +88,7 @@ namespace tissuestack
 		    	const TissueStackColorMap * findColorMap(const std::string & id) const;
 		    	void addOrReplaceColorMap(const TissueStackColorMap * colorMap);
 		    	void addOrReplaceColorMap(const TissueStackLabelLookup * labelLookup);
+		    	void dumpAllColorMapsToDebugLog() const;
 			private:
 		    	TissueStackColorMapStore();
 		    	std::unordered_map<std::string, const TissueStackColorMap *> _color_maps;

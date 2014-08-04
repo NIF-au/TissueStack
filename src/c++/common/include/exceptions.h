@@ -18,43 +18,43 @@ namespace tissuestack
     {
     	public:
     		TissueStackException();
-    		TissueStackException(std::string what);
-    		void virtual setWhat(std::string what);
+    		explicit TissueStackException(std::string what);
+    		//void virtual setWhat(std::string what);
     		virtual const char * what() const throw();
-    		virtual ~TissueStackException() throw();
+    		//virtual ~TissueStackException() throw();
     	private:
-    		char * _what;
+    		std::string _what;
     };
 
     class TissueStackServerException : public TissueStackException
     {
     	public:
 			TissueStackServerException();
-			TissueStackServerException(std::string what);
+			explicit TissueStackServerException(std::string what);
     };
 
     class TissueStackApplicationException : public TissueStackException
     {
     	public:
-			TissueStackApplicationException(std::string what);
+			explicit TissueStackApplicationException(std::string what);
     };
 
     class TissueStackInvalidRequestException : public TissueStackApplicationException
     {
     	public:
-			TissueStackInvalidRequestException(std::string what);
+			explicit TissueStackInvalidRequestException(std::string what);
     };
 
     class TissueStackObsoleteRequestException : public TissueStackInvalidRequestException
     {
     	public:
-			TissueStackObsoleteRequestException(std::string what);
+			explicit TissueStackObsoleteRequestException(std::string what);
     };
 
     class TissueStackNullPointerException : public TissueStackApplicationException
     {
     	public:
-			TissueStackNullPointerException(std::string what);
+			explicit TissueStackNullPointerException(std::string what);
     };
   }
 }

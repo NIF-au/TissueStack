@@ -43,6 +43,15 @@ const std::vector<std::string> tissuestack::utils::Misc::tokenizeString(const st
 	while (1)
 	{
 		pos = some_string.find(delimiter, pos);
+
+		// peek ahead to avoid repeated appearances of the delimiter
+		if (pos+1 < some_string.length() && some_string.at(pos+1) == delimiter)
+		{
+			++pos;
+			++old_pos;
+			continue;
+		}
+
 		if (pos == old_pos)
 			pos = some_string.find(delimiter, pos+1);
 

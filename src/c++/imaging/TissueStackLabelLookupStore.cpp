@@ -50,4 +50,10 @@ void tissuestack::imaging::TissueStackLabelLookupStore::purgeInstance()
 	 return this->_label_lookups;
  }
 
+ void tissuestack::imaging::TissueStackLabelLookupStore::dumpAllLabelLookupsToDebugLog() const
+ {
+	for (auto entry = this->_label_lookups.begin(); entry != this->_label_lookups.end(); ++entry)
+		entry->second->dumpLabelLookupToDebugLog();
+ }
+
 tissuestack::imaging::TissueStackLabelLookupStore * tissuestack::imaging::TissueStackLabelLookupStore::_instance = nullptr;
