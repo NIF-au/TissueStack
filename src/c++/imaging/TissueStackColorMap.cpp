@@ -2,9 +2,6 @@
 
 tissuestack::imaging::TissueStackColorMap::TissueStackColorMap(const std::string & filename) : _colormap_id(filename)
 {
-	// TODO: map continuous color maps
-
-
 	tissuestack::logging::TissueStackLogger::instance()->info("Loading color map file %s\n", filename.c_str());
 
 	std::string line = "";
@@ -14,7 +11,9 @@ tissuestack::imaging::TissueStackColorMap::TissueStackColorMap(const std::string
 	{
 		file_stream.open(filename);
 
-		this->preFillColorMapArray();
+		tissuestack::imaging::TissueStackColorMap::preFillColorMapArray(this->_gray_indexed_rgb_mapping);
+
+		std::vector<std::array<float, 4> > colorMapRanges;
 
 		for( std::string line; std::getline( file_stream, line ); )
 		{
@@ -25,11 +24,10 @@ tissuestack::imaging::TissueStackColorMap::TissueStackColorMap(const std::string
 				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Color Map file has to have 4 tokens!");
 
 			int colNr = 0;
-			unsigned short gray;
-			unsigned short red;
-			unsigned short green;
-			unsigned short blue;
-			unsigned long long int value;
+			float gray = -1;
+			float red = -1;
+			float green = -1;
+			float blue = -1;
 
 			for (std::string s : tokens)
 			{
@@ -38,32 +36,28 @@ tissuestack::imaging::TissueStackColorMap::TissueStackColorMap(const std::string
 				switch (colNr)
 				{
 					case 0:	// the gray value
-						value = strtouq(s.c_str(), NULL, 10);
-						if (value > 255)
+						gray = strtof(s.c_str(), NULL);
+						if (gray < 0 || gray > 1.0)
 							THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-									"Lookup file has gray value of higher than 255!");
-						gray = static_cast<unsigned short>(value);
+									"Lookup file has gray range outside of 0 and 1!");
 						break;
 					case 1: // Red
-						value = strtouq(s.c_str(), NULL, 10);
-						if (value > 255)
+						red = strtof(s.c_str(), NULL);
+						if (red < 0 || red > 1.0)
 							THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-									"Lookup file has red value of higher than 255!");
-						red = static_cast<unsigned short>(value);
+									"Lookup file has red range outside of 0 and 1!");
 						break;
 					case 2: // Green
-						value = strtouq(s.c_str(), NULL, 10);
-						if (value > 255)
+						green = strtof(s.c_str(), NULL);
+						if (green < 0 || green > 1.0)
 							THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-									"Lookup file has green value of higher than 255!");
-						green = static_cast<unsigned short>(value);
+									"Lookup file has green range outside of 0 and 1!");
 						break;
 					case 3: // Blue
-						value = strtouq(s.c_str(), NULL, 10);
-						if (value > 255)
+						blue = strtof(s.c_str(), NULL);
+						if (blue < 0 || blue > 1.0)
 							THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-									"Lookup file has blue value of higher than 255!");
-						blue = static_cast<unsigned short>(value);
+									"Lookup file has blue range outside of 0 and 1!");
 						break;
 					default:
 						break;
@@ -73,11 +67,54 @@ tissuestack::imaging::TissueStackColorMap::TissueStackColorMap(const std::string
 			if (colNr != 4)
 				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Color Map file has to have 4 tokens!");
 
-			this->_gray_indexed_rgb_mapping[gray][0] = red;
-			this->_gray_indexed_rgb_mapping[gray][1] = green;
-			this->_gray_indexed_rgb_mapping[gray][2] = blue;
+			colorMapRanges.push_back({gray, red, green, blue});
 		}
 		file_stream.close();
+
+		// now go about to convert range to discrete 0-255 value mapping
+		short valueRangeRow = 1;
+		float offsetRGB [3] = { colorMapRanges[0][1], colorMapRanges[0][2], colorMapRanges[0][3] };
+		float valueRangeStart = colorMapRanges[valueRangeRow - 1][0] * 255;
+		float valueRangeEnd = colorMapRanges[valueRangeRow][0] * 255;
+		unsigned short rgb = 1;
+		float valueRangeDelta = 0;
+
+		for (unsigned short index = 0; index < 256; index++) {
+			// continuous to discrete mapping
+			// first check if we are within desired range up the present end,
+			// if not => increment row index to move on to next range
+			if (index > valueRangeEnd) {
+				valueRangeRow++;
+				valueRangeStart = valueRangeEnd;
+				valueRangeEnd = colorMapRanges[valueRangeRow][0] * 255;
+				offsetRGB[0] = colorMapRanges[valueRangeRow - 1][1];
+				offsetRGB[1] = colorMapRanges[valueRangeRow - 1][2];
+				offsetRGB[2] = colorMapRanges[valueRangeRow - 1][3];
+			}
+			valueRangeDelta = valueRangeEnd - valueRangeStart;
+
+			// iterate over RGB channels
+			for (rgb = 1; rgb < 4; rgb++)
+			{
+				float rgbRangeStart = colorMapRanges[valueRangeRow - 1][rgb];
+				float rgbRangeEnd = colorMapRanges[valueRangeRow][rgb];
+				float rgbRangeDelta = rgbRangeEnd - rgbRangeStart;
+				float rangeRemainder = fmodf((float) index, valueRangeDelta);
+
+				if (rangeRemainder == 0 && rgbRangeDelta != 0 && rgbRangeDelta != 1
+						&& valueRangeEnd == 255) {
+					offsetRGB[rgb - 1] += rgbRangeDelta;
+				} else if (rangeRemainder == 0 && rgbRangeDelta != 0 && valueRangeEnd == 255 && index == 255) {
+					offsetRGB[rgb - 1] += rgbRangeDelta;
+				}
+
+				float rangeRatio =
+						(rgbRangeDelta * rangeRemainder / valueRangeDelta)
+								+ offsetRGB[rgb - 1];
+
+				this->_gray_indexed_rgb_mapping[index][rgb-1] = round(rangeRatio * 255);
+			}
+		}
 
 		tissuestack::logging::TissueStackLogger::instance()->info("Finished Loading color map file.\n");
 	}	catch (tissuestack::common::TissueStackException & ex) {
@@ -98,10 +135,10 @@ tissuestack::imaging::TissueStackColorMap::TissueStackColorMap(const tissuestack
 			label_lookup_file->getLabelLookupId().c_str());
 }
 
-void tissuestack::imaging::TissueStackColorMap::preFillColorMapArray()
+void tissuestack::imaging::TissueStackColorMap::preFillColorMapArray(std::array<unsigned short[3], 256> & color_map_array)
 {
 	unsigned short i=0;
-	for (auto & rgb : this->_gray_indexed_rgb_mapping)
+	for (auto & rgb : color_map_array)
 	{
 		rgb[0] = rgb[1] = rgb[2] = i;
 		i++;

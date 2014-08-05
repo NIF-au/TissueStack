@@ -31,7 +31,6 @@ namespace tissuestack
 				TissueStackLabelLookup & operator=(const TissueStackLabelLookup&) = delete;
 				TissueStackLabelLookup(const TissueStackLabelLookup&) = delete;
 				static const TissueStackLabelLookup * fromFile(const std::string & filename);
-				void preFillColorMapArray();
 				void copyGrayIndexedRgbMapping(std::array<unsigned short[3], 256> & grayIndexedRgbMapping) const;
 				const std::string getLabel(const unsigned short & red, const unsigned short & green, const unsigned short & blue) const;
 				const std::string getLabelLookupId() const;
@@ -67,7 +66,7 @@ namespace tissuestack
 				TissueStackColorMap(const TissueStackColorMap&) = delete;
 				static const TissueStackColorMap * fromFile(const std::string & filename);
 				static const TissueStackColorMap * fromLabelLookup(const TissueStackLabelLookup * labelLookup);
-				void preFillColorMapArray();
+				static void preFillColorMapArray(std::array<unsigned short[3], 256> & color_map_array);
 				const std::array<const unsigned short, 3> getRGBMapForGrayValue(const unsigned short & gray) const;
 				const std::string getColorMapId() const;
 				void dumpColorMapToDebugLog() const;

@@ -11,7 +11,7 @@ tissuestack::imaging::TissueStackLabelLookup::TissueStackLabelLookup(const std::
 	{
 		file_stream.open(filename);
 
-		this->preFillColorMapArray();
+		tissuestack::imaging::TissueStackColorMap::preFillColorMapArray(this->_gray_indexed_rgb_mapping);
 
 		for( std::string line; std::getline( file_stream, line ); )
 		{
@@ -115,16 +115,6 @@ const std::string tissuestack::imaging::TissueStackLabelLookup::getLabel(const u
 
 	} catch (std::out_of_range & not_found) {
 		return std::string("");
-	}
-}
-
-void tissuestack::imaging::TissueStackLabelLookup::preFillColorMapArray()
-{
-	unsigned short i=0;
-	for (auto & rgb : this->_gray_indexed_rgb_mapping)
-	{
-		rgb[0] = rgb[1] = rgb[2] = i;
-		i++;
 	}
 }
 
