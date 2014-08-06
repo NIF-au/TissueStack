@@ -31,6 +31,7 @@ const tissuestack::common::Request * const tissuestack::networking::TissueStackR
 	std::transform(service.begin(), service.end(), service.begin(), toupper);
 
 	std::unordered_map<std::string, std::string> parameters = httpRequest->getParameterMap();
+	httpRequest->dumpParametersIntoDebugLog();
 
 	// instantiate the appropriate request class
 	tissuestack::common::Request * return_request = nullptr;

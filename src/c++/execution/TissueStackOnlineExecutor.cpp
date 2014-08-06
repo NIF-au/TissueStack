@@ -61,14 +61,18 @@ void tissuestack::execution::TissueStackOnlineExecutor::execute(std::string requ
 	}  catch (tissuestack::common::TissueStackObsoleteRequestException& obsoleteRequest)
 	{
 		// TODO: handle superseded requests
-		//tissuestack::logging::TissueStackLogger::instance()->error("Error Closing Shared Library: %s\n", error);
-		//std::cerr << obsoleteRequest.what() << std::endl;
 	}  catch (tissuestack::common::TissueStackInvalidRequestException& invalidRequest)
 	{
-		// TODO: return reason for invalid requests
-		std::string response =
+		std::string response = "";
+
+		if (std::strstr(invalidRequest.what(), "favicon.ico") != NULL)
+			response =
+					tissuestack::utils::Misc::composeHttpResponse(
+							"404 Not Found", "text/plain", std::string(invalidRequest.what()));
+		else
+			response =
 				tissuestack::utils::Misc::composeHttpResponse(
-						"400 Bad Request", "text/plain", std::string(invalidRequest.what()));
+						"200 OK", "text/plain", std::string(invalidRequest.what()));
 		ssize_t bytes = send(client_descriptor, response.c_str(), response.length(), 0);
 		if (bytes < 0)
 			tissuestack::logging::TissueStackLogger::instance()->error(

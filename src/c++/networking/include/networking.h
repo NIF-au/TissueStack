@@ -40,16 +40,16 @@ namespace tissuestack
     		explicit HttpRequest(const RawHttpRequest * const raw_request, const bool suppress_filter);
     		~HttpRequest();
     		const std::string getParameter(std::string name) const;
-    		const std::string dumpParameters() const;
+    		void dumpParametersIntoDebugLog() const;
     		const std::string getContent() const;
     		std::unordered_map<std::string, std::string> getParameterMap() const;
     		const bool isObsolete() const;
     	private:
-    		inline void addQueryParameter(std::string key, std::string value);
+    		inline void addQueryParameter(std::string & key, std::string value);
     		inline void partiallyURIDecodeString(std::string& potentially_uri_encoded_string);
     		void processsQueryString();
-    		inline bool skipNextCharacterCheck(int& lengthOfQueryString, int & cursor, int & nPos, std::string& key);
-    		inline void subProcessQueryString(int& lengthOfQueryString, int & cursor, int & nPos, std::string& key);
+    		inline int skipNextCharacterCheck(int& lengthOfQueryString, int & cursor, int & nPos, std::string & key);
+    		inline void subProcessQueryString(int& lengthOfQueryString, int & cursor, int & nPos, std::string & key);
     		std::unordered_map<std::string, std::string> _parameters;
     		std::string _query_string = "";
     		static std::unordered_map<std::string,std::string> MinimalURIDecodingTable;

@@ -38,8 +38,44 @@ tissuestack::imaging::TissueStackImageData::TissueStackImageData(
 		const tissuestack::imaging::FORMAT format) :
 			_file_name(filename), _format(format) {}
 
+int tissuestack::imaging::TissueStackImageData::getFileDescriptor()
+{
+	// only applicable to RAW files
+	if (this->_format != tissuestack::imaging::FORMAT::RAW) return 0;
+
+	int fd = 0;
+	if (this->_file_handle == nullptr)
+		this->openFileHandle();
+
+	fd = fileno(this->_file_handle);
+	if (fd <= 0)
+	{
+		this->openFileHandle(true);
+		fd = fileno(this->_file_handle);
+	}
+
+	return fd;
+}
+
+void tissuestack::imaging::TissueStackImageData::openFileHandle(bool close_open_handle)
+{
+	// only applicable to RAW files
+	if (this->_format != tissuestack::imaging::FORMAT::RAW) return;
+
+	if (this->_file_handle)
+	{
+		if (!close_open_handle) return;
+		else this->closeFileHandle();
+	}
+
+	this->_file_handle = fopen(this->_file_name.c_str(), "ro");
+}
+
 void tissuestack::imaging::TissueStackImageData::closeFileHandle()
 {
+	// only applicable to RAW files
+	if (this->_format != tissuestack::imaging::FORMAT::RAW) return;
+
 	if (this->_file_handle)
 	{
 		fclose(this->_file_handle);

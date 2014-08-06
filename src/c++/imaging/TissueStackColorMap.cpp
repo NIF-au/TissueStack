@@ -62,10 +62,12 @@ tissuestack::imaging::TissueStackColorMap::TissueStackColorMap(const std::string
 					default:
 						break;
 				}
+				if (colNr > 3) break; // we ignore further columns
+
 				colNr++;
 			}
-			if (colNr != 4)
-				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Color Map file has to have 4 tokens!");
+			if (colNr < 3)
+				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Color Map file has to have at least 4 tokens!");
 
 			colorMapRanges.push_back({gray, red, green, blue});
 		}

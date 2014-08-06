@@ -3,6 +3,7 @@
 
 #include "logging.h"
 #include "networking.h"
+#include <stdio.h>
 #include <memory.h>
 #include <array>
 #include <fstream>
@@ -132,6 +133,8 @@ namespace tissuestack
 			protected:
 				explicit TissueStackImageData(const std::string & filename);
 				TissueStackImageData(const std::string & filename, const FORMAT format);
+				int getFileDescriptor();
+				void openFileHandle(bool close_open_handle = false);
 				void closeFileHandle();
 			private:
 				const std::string		_file_name;
@@ -278,6 +281,10 @@ namespace tissuestack
 						 dataSet = tissuestack::imaging::TissueStackDataSet::fromFile(request->getDataSetLocation());
 						 tissuestack::imaging::TissueStackDataSetStore::instance()->addOrReplaceDataSet(dataSet);
 					}
+
+					// we only let RAW file requests go through
+					if (dataSet->getImageData()->getFormat() != tissuestack::imaging::FORMAT::RAW)
+						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Only TissueStack Raw Files are allowed to be requested online!");
 
 					// some more checks regarding the validity of the image request parameters
 					const tissuestack::imaging::TissueStackDataDimension * dimension  =

@@ -35,7 +35,7 @@ OBJS			=	$(SRCS:%.cpp=%.o)
 all:	compile install
 
 
-compile:	clean $(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_IMAGING) $(OBJS_EXECUTION) $(OBJS_UTILS) $(OBJS)
+compile:	$(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_IMAGING) $(OBJS_EXECUTION) $(OBJS_UTILS) $(OBJS)
 	@echo -e "\tCompiling \"$(NAME)\" => $(EXE_NAME)"
 	@$(CC)   $(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_EXECUTION)  $(OBJS_IMAGING) $(OBJS_UTILS) $(OBJS) -o $(EXE_NAME) $(LIBS) $(FLAGS) $(INCLUDE)
 

@@ -90,7 +90,7 @@ namespace tissuestack
 				FD_CLR(descriptor, &this->_master_descriptors);
     		};
 
-    		void dispatchRequest(int request_descriptor, const char * request_data)
+    		void dispatchRequest(int request_descriptor, const std::string request_data)
     		{
     			const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * f = new
     					std::function<void (const tissuestack::common::ProcessingStrategy * _this)>(
@@ -98,7 +98,7 @@ namespace tissuestack
     				  {
     					try
     					{
-    						this->_executor->execute(std::string(request_data), request_descriptor);
+    						this->_executor->execute(request_data, request_descriptor);
     						this->removeDescriptorFromList(request_descriptor, true);
     					}  catch (std::exception& bad)
     					{
@@ -172,7 +172,7 @@ namespace tissuestack
 								else // OK case
 								{
 									this->removeDescriptorFromList(i, false);
-									this->dispatchRequest(i, const_cast<const char *>(data_buffer));
+									this->dispatchRequest(i, std::string(data_buffer));
 								}
 							}
 						}

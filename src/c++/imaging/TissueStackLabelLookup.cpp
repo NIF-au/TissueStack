@@ -69,10 +69,12 @@ tissuestack::imaging::TissueStackLabelLookup::TissueStackLabelLookup(const std::
 					default:
 						break;
 				}
+				if (colNr > 4) break; // we ignore furher columns
+
 				colNr++;
 			}
-			if (colNr != 5)
-				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Lookup file has to have 5 tokens!");
+			if (colNr < 4)
+				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Lookup file has to have at least 5 tokens!");
 
 			// add to rgb mapping if gray is not -1
 			if (gray >=0)

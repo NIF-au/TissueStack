@@ -58,33 +58,30 @@ tissuestack::networking::HttpRequest::HttpRequest(const RawHttpRequest * const r
 
 void tissuestack::networking::HttpRequest::processsQueryString()
 {
-	int lengthOfQueryString = 0;
-	lengthOfQueryString = this->_query_string.length();
+	int lengthOfQueryString = this->_query_string.length();
 	int cursor = 0, nPos = 0;
 	std::string key = "";
+
 	while (cursor < lengthOfQueryString)
 	{
 		if (this->_query_string[cursor] == '=') // we have a key or value (potentially)
 		{
 			// skipping next &/=
-			if (this->skipNextCharacterCheck(lengthOfQueryString, cursor, nPos, key))
-				continue;
+			int cursorBefore = this->skipNextCharacterCheck(lengthOfQueryString, cursor, nPos, key);
 
-			if (key.empty() && nPos < cursor) { // we've got a key
+			if (key.empty() && nPos < cursor)  // we've got a key
 				key = this->_query_string.substr(nPos, cursor-nPos);
-			}
-			else // check for value case
-				this->subProcessQueryString(lengthOfQueryString, cursor, nPos, key);
+			else
+				this->subProcessQueryString(lengthOfQueryString, cursorBefore, nPos, key);
 
 			nPos = cursor + 1;
-		} else if (this->_query_string[cursor] == '&'	|| cursor+1 == lengthOfQueryString) // we have a value (potentially)
+		} else if (this->_query_string[cursor] == '&' || cursor+1 == lengthOfQueryString) // we have a value (potentially)
 		{
 			// skipping next &/=
-			if (this->skipNextCharacterCheck(lengthOfQueryString, cursor, nPos, key))
-				continue;
-
-			// check for value
-			this->subProcessQueryString(lengthOfQueryString, cursor, nPos, key);
+			int cursorBefore = this->skipNextCharacterCheck(lengthOfQueryString, cursor, nPos, key);
+			if (cursorBefore == cursor && cursor+1 == lengthOfQueryString && this->_query_string[cursor] != '&' )
+				cursorBefore++;
+			this->subProcessQueryString(lengthOfQueryString, cursorBefore, nPos, key);
 			nPos = cursor+1;
 		} else if (this->_query_string[cursor] == '?') // should not happen at all
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "HttpRequest without query string!");
@@ -94,28 +91,28 @@ void tissuestack::networking::HttpRequest::processsQueryString()
 	}
 }
 
-inline bool tissuestack::networking::HttpRequest::skipNextCharacterCheck(int& lengthOfQueryString, int&cursor, int&nPos, std::string& key)
+inline int tissuestack::networking::HttpRequest::skipNextCharacterCheck(int& lengthOfQueryString, int & cursor, int & nPos, std::string & key)
 {
-	if ((cursor+1) < lengthOfQueryString &&
-			(this->_query_string[cursor+1] == '&' || this->_query_string[cursor+1] == '=')) // skip = or second &
-	{
-		nPos = ++cursor;
-		key.clear();
-		return true;
-	}
-	return false;
+	int oldCursor = cursor;
+
+	while ((cursor+1) < lengthOfQueryString &&
+			(this->_query_string[cursor+1] == '&' ||
+					this->_query_string[cursor+1] == '=')) // skip = or second &
+		cursor++;
+
+	return oldCursor;
 }
 
-inline void tissuestack::networking::HttpRequest::subProcessQueryString(int& lengthOfQueryString, int&cursor, int&nPos, std::string& key)
+inline void tissuestack::networking::HttpRequest::subProcessQueryString(int& lengthOfQueryString, int & cursor, int & nPos, std::string & key)
 {
-	if (!key.empty() && nPos < cursor)
+	if (!key.empty() && nPos <= cursor)
 	{
 		// delegate adding to achieve uri decode and case insensitivity
 		this->addQueryParameter(
 				key,
 				this->_query_string.substr(
 						nPos,
-						((cursor+1 == lengthOfQueryString) ? lengthOfQueryString - nPos : cursor- nPos)));
+						cursor- nPos));
 		key.clear(); // reset key
 
 		// fast forward after key/value insertion to next potential hit i.e. a '&'
@@ -124,7 +121,7 @@ inline void tissuestack::networking::HttpRequest::subProcessQueryString(int& len
 	}
 }
 
-inline void tissuestack::networking::HttpRequest::addQueryParameter(std::string key, std::string value)
+inline void tissuestack::networking::HttpRequest::addQueryParameter(std::string & key, std::string value)
 {
 	this->partiallyURIDecodeString(key);
 	this->partiallyURIDecodeString(value);
@@ -162,17 +159,22 @@ const std::string tissuestack::networking::HttpRequest::getParameter(std::string
 {
 	try
 	{
+		// upper case for better comparison
+		std::transform(name.begin(), name.end(), name.begin(), toupper);
 		return this->_parameters.at(name);
 	} catch (const std::out_of_range& ignored) { }
 	return std::string("");
 }
 
-const std::string tissuestack::networking::HttpRequest::dumpParameters() const
+void tissuestack::networking::HttpRequest::dumpParametersIntoDebugLog() const
 {
 	std::ostringstream in;
 	for (auto s : this->_parameters)
-		in << "KEY [" << s.first << "]" << " => |" << s.second << "|" << std::endl;
-	return in.str();
+		in << "KEY [" << s.first.c_str() << "]" << " => |" << s.second.c_str() << "|" << std::endl;
+
+	const std::string out = in.str();
+
+	tissuestack::logging::TissueStackLogger::instance()->debug("Parameters:\n%s", out.c_str());
 }
 
 const std::string tissuestack::networking::HttpRequest::getContent() const
