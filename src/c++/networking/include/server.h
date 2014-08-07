@@ -172,7 +172,7 @@ namespace tissuestack
 								else // OK case
 								{
 									this->removeDescriptorFromList(i, false);
-									this->dispatchRequest(i, std::string(data_buffer));
+									this->dispatchRequest(i, std::string(data_buffer, bytesReceived));
 								}
 							}
 						}

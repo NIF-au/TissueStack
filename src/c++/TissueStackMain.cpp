@@ -91,19 +91,49 @@ int main(int argc, char * args[])
 		exit(-1);
 	}
 
+	// instantiate singletons
+	try
+	{
+		tissuestack::common::RequestTimeStampStore::instance(); // for request time stamp checking
+	} catch (std::exception & bad)
+	{
+		tissuestack::LoggerSingleton->error("Could not instantiate RequestTimeStampStore:\n%s\n", bad.what());
+		exit(-1);
+	}
 
 	try
 	{
-		// instantiate important singletons
-		tissuestack::common::RequestTimeStampStore::instance(); // for request time stamp checking
 		tissuestack::imaging::TissueStackDataSetStore::instance(); // the data set store
+		//tissuestack::imaging::TissueStackDataSetStore::instance()->dumpDataSetStoreIntoDebugLog();
+	} catch (std::exception & bad)
+	{
+		tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
+		tissuestack::LoggerSingleton->error("Could not instantiate TissueStackDataSetStore:\n%s\n", bad.what());
+		exit(-1);
+	}
+
+	try
+	{
 		tissuestack::imaging::TissueStackLabelLookupStore::instance(); // for label lookups
-		tissuestack::imaging::TissueStackColorMapStore::instance(); // the colormap store
-		//tissuestack::imaging::TissueStackColorMapStore::instance()->dumpAllColorMapsToDebugLog();
 		//tissuestack::imaging::TissueStackLabelLookupStore::instance()->dumpAllLabelLookupsToDebugLog();
 	} catch (std::exception & bad)
 	{
-		tissuestack::LoggerSingleton->error("Could not instantiate global singletons:\n%s\n", bad.what());
+		tissuestack::imaging::TissueStackDataSetStore::instance()->purgeInstance();
+		tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
+		tissuestack::LoggerSingleton->error("Could not instantiate TissueStackLabelLookupStore:\n%s\n", bad.what());
+		exit(-1);
+	}
+
+	try
+	{
+		tissuestack::imaging::TissueStackColorMapStore::instance(); // the colormap store
+		//tissuestack::imaging::TissueStackColorMapStore::instance()->dumpAllColorMapsToDebugLog();
+	} catch (std::exception & bad)
+	{
+		tissuestack::imaging::TissueStackLabelLookupStore::instance()->purgeInstance();
+		tissuestack::imaging::TissueStackDataSetStore::instance()->purgeInstance();
+		tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
+		tissuestack::LoggerSingleton->error("Could not instantiate TissueStackLabelLookupStore:\n%s\n", bad.what());
 		exit(-1);
 	}
 
@@ -111,16 +141,10 @@ int main(int argc, char * args[])
 	{
 		// accept requests and process them until we receive a SIGSTOP
 		TissueStackServer->listen();
-	} catch (tissuestack::common::TissueStackException& ex) {
-		if (!TissueStackServer->isStopping() && tissuestack::LoggerSingleton)
-			tissuestack::LoggerSingleton->error(
-					"TissueStackServer listen() was aborted for the following reason: %s\n",
-					ex.what());
-		exit(-1);
 	} catch (std::exception & bad)
 	{
 		if (!TissueStackServer->isStopping() && tissuestack::LoggerSingleton)
-			tissuestack::LoggerSingleton->error("TissueStackServer listen() was aborted for unexpected reason:\n%s\n", bad.what());
+			tissuestack::LoggerSingleton->error("TissueStackServer listen() was aborted for the following reason:\n%s\n", bad.what());
 		TissueStackServer->stop();
 		exit(-1);
 	}

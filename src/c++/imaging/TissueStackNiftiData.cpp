@@ -1,6 +1,6 @@
 #include "imaging.h"
 
-const bool tissuestack::imaging::TissueStackNiftiData::isRaw()
+const bool tissuestack::imaging::TissueStackNiftiData::isRaw() const
 {
 	return false;
 }

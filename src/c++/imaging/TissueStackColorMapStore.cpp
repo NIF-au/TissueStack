@@ -5,17 +5,36 @@ tissuestack::imaging::TissueStackColorMapStore::TissueStackColorMapStore()
 	if (!tissuestack::utils::System::directoryExists(COLORMAP_PATH))
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Color Map Directory does NOT exist!");
 
-	const std::vector<std::string> fileList = tissuestack::utils::System::getFilesInDirectory(COLORMAP_PATH);
-	for (std::string f : fileList)
-		this->addOrReplaceColorMap(tissuestack::imaging::TissueStackColorMap::fromFile(f.c_str()));
+		const std::vector<std::string> fileList = tissuestack::utils::System::getFilesInDirectory(COLORMAP_PATH);
+		for (std::string f : fileList)
+		{
+			try
+			{
+				this->addOrReplaceColorMap(tissuestack::imaging::TissueStackColorMap::fromFile(f.c_str()));
+			} catch (std::exception & bad)
+			{
+				tissuestack::logging::TissueStackLogger::instance()->error(
+						"Could not load color map file '%s' for the following reason:\n%s\n", f.c_str(), bad.what());
+			}
+		}
 
-	// add to that the discrete color maps of the label lookups
-	const std::unordered_map<std::string, const tissuestack::imaging::TissueStackLabelLookup *> lookups =
-			tissuestack::imaging::TissueStackLabelLookupStore::instance()->getAllLabelLookups();
+		// add to that the discrete color maps of the label lookups
+		const std::unordered_map<std::string, const tissuestack::imaging::TissueStackLabelLookup *> lookups =
+				tissuestack::imaging::TissueStackLabelLookupStore::instance()->getAllLabelLookups();
 
-	// walk through entries and copy the colormap
-	for (auto lookup = lookups.begin(); lookup != lookups.end(); ++lookup)
-		this->addOrReplaceColorMap(lookup->second);
+		// walk through entries and copy the colormap
+		for (auto lookup : lookups)
+		{
+			try
+			{
+				this->addOrReplaceColorMap(lookup.second);
+			} catch (std::exception & bad)
+			{
+				tissuestack::logging::TissueStackLogger::instance()->error(
+						"Could not load color map from lookup file '%s' for the following reason:\n%s\n",
+						lookup.second->getLabelLookupId().c_str(), bad.what());
+			}
+		}
 }
 
 void tissuestack::imaging::TissueStackColorMapStore::purgeInstance()

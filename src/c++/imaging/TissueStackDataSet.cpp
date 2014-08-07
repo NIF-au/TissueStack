@@ -31,6 +31,11 @@ const tissuestack::imaging::DataSetStatus tissuestack::imaging::TissueStackDataS
 	return this->_status;
 }
 
+void tissuestack::imaging::TissueStackDataSet::dumpDataSetContentIntoDebugLog() const
+{
+	this->_image_data->dumpImageDataIntoDebugLog();
+}
+
 const std::string tissuestack::imaging::TissueStackDataSet::getDataSetId() const
 {
 	return this->_image_data->getFileName();

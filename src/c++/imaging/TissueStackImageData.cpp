@@ -3,6 +3,45 @@
 tissuestack::imaging::TissueStackImageData::~TissueStackImageData()
 {
 	this->closeFileHandle();
+	for (auto dim : this->_dimensions)
+		delete dim.second;
+	this->_dimensions.clear();
+}
+
+void tissuestack::imaging::TissueStackImageData::closeFileHandle()
+{
+	if (this->_file_handle)
+	{
+		fclose(this->_file_handle);
+		this->_file_handle = nullptr;
+	}
+}
+
+int tissuestack::imaging::TissueStackImageData::getFileDescriptor()
+{
+	int fd = 0;
+	if (this->_file_handle == nullptr)
+		this->openFileHandle();
+
+	fd = fileno(this->_file_handle);
+	if (fd <= 0)
+	{
+		this->openFileHandle(true);
+		fd = fileno(this->_file_handle);
+	}
+
+	return fd;
+}
+
+void tissuestack::imaging::TissueStackImageData::openFileHandle(bool close_open_handle)
+{
+	if (this->_file_handle)
+	{
+		if (!close_open_handle) return;
+		else this->closeFileHandle();
+	}
+
+	this->_file_handle = fopen(this->_file_name.c_str(), "ro");
 }
 
 const tissuestack::imaging::TissueStackImageData * tissuestack::imaging::TissueStackImageData::fromFile(const std::string & filename)
@@ -31,57 +70,13 @@ const tissuestack::imaging::TissueStackImageData * tissuestack::imaging::TissueS
 tissuestack::imaging::TissueStackImageData::TissueStackImageData(const std::string & filename)
 	: tissuestack::imaging::TissueStackImageData::TissueStackImageData(
 			filename,
-			tissuestack::imaging::FORMAT::RAW) {}
+			tissuestack::imaging::FORMAT::MINC) {}
 
 tissuestack::imaging::TissueStackImageData::TissueStackImageData(
 		const std::string & filename,
-		const tissuestack::imaging::FORMAT format) :
+		tissuestack::imaging::FORMAT format) :
 			_file_name(filename), _format(format) {}
 
-int tissuestack::imaging::TissueStackImageData::getFileDescriptor()
-{
-	// only applicable to RAW files
-	if (this->_format != tissuestack::imaging::FORMAT::RAW) return 0;
-
-	int fd = 0;
-	if (this->_file_handle == nullptr)
-		this->openFileHandle();
-
-	fd = fileno(this->_file_handle);
-	if (fd <= 0)
-	{
-		this->openFileHandle(true);
-		fd = fileno(this->_file_handle);
-	}
-
-	return fd;
-}
-
-void tissuestack::imaging::TissueStackImageData::openFileHandle(bool close_open_handle)
-{
-	// only applicable to RAW files
-	if (this->_format != tissuestack::imaging::FORMAT::RAW) return;
-
-	if (this->_file_handle)
-	{
-		if (!close_open_handle) return;
-		else this->closeFileHandle();
-	}
-
-	this->_file_handle = fopen(this->_file_name.c_str(), "ro");
-}
-
-void tissuestack::imaging::TissueStackImageData::closeFileHandle()
-{
-	// only applicable to RAW files
-	if (this->_format != tissuestack::imaging::FORMAT::RAW) return;
-
-	if (this->_file_handle)
-	{
-		fclose(this->_file_handle);
-		this->_file_handle = nullptr;
-	}
-}
 
 const std::string tissuestack::imaging::TissueStackImageData::getFileName() const
 {
@@ -116,7 +111,101 @@ const int tissuestack::imaging::TissueStackImageData::getGlobalMaximum() const
 	return this->_global_max_value;
 }
 
+void tissuestack::imaging::TissueStackImageData::setFormat(int original_format)
+{
+	switch (original_format)
+	{
+		case tissuestack::imaging::FORMAT::MINC:
+			this->_format = tissuestack::imaging::FORMAT::MINC;
+			break;
+		case tissuestack::imaging::FORMAT::NIFTI:
+			this->_format = tissuestack::imaging::FORMAT::NIFTI;
+			break;
+		case tissuestack::imaging::FORMAT::RAW:
+			this->_format = tissuestack::imaging::FORMAT::RAW;
+			break;
+		default:
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Incompatible Original Format!");
+			break;
+	}
+}
+
 const tissuestack::imaging::FORMAT tissuestack::imaging::TissueStackImageData::getFormat() const
 {
 	return this->_format;
+}
+
+const std::unordered_map<char, const tissuestack::imaging::TissueStackDataDimension *> tissuestack::imaging::TissueStackImageData::getDimensionMap() const
+{
+	return this->_dimensions;
+}
+
+void tissuestack::imaging::TissueStackImageData::addDimension(tissuestack::imaging::TissueStackDataDimension * dimension)
+{
+	if (dimension == nullptr) return;
+
+	if (this->getDimensionByLongName(dimension->getName()))
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"2 dimensions with same starting letter cannot be added twice. Just a convention for technical convenience, sorry..");
+
+	this->_dim_order.push_back(dimension->getName());
+
+	this->_dimensions[dimension->getName().at(0)] = dimension;
+}
+
+void tissuestack::imaging::TissueStackImageData::addCoordinate(float coord)
+{
+	return this->_coordinates.push_back(coord);
+}
+
+void tissuestack::imaging::TissueStackImageData::addStep(float step)
+{
+	return this->_steps.push_back(step);
+}
+
+const std::vector<float> tissuestack::imaging::TissueStackImageData::getCoordinates() const
+{
+	return this->_coordinates;
+}
+
+const std::vector<float> tissuestack::imaging::TissueStackImageData::getSteps() const
+{
+	return this->_steps;
+}
+
+void tissuestack::imaging::TissueStackImageData::dumpDataDimensionInfoIntoDebugLog() const
+{
+	for (const std::string dim : this->_dim_order)
+		this->getDimensionByLongName(dim)->dumpDataDimensionInfoIntoDebugLog();
+}
+
+void tissuestack::imaging::TissueStackImageData::dumpImageDataIntoDebugLog() const
+{
+	tissuestack::logging::TissueStackLogger::instance()->debug("Image Data For File:%s\n", this->_file_name.c_str());
+	tissuestack::logging::TissueStackLogger::instance()->debug("Original File Format: %u\n", this->_format);
+	this->dumpDataDimensionInfoIntoDebugLog();
+
+	std::ostringstream in;
+
+	in << "Coordinates: ";
+	for (auto v : this->_coordinates)
+		in << v << "\t";
+	tissuestack::logging::TissueStackLogger::instance()->debug("%s\n", in.str().c_str());
+
+	in.str("");
+	in.clear();
+
+	in << "Steps: ";
+	for (auto v : this->_steps)
+		in << v << "\t";
+	tissuestack::logging::TissueStackLogger::instance()->debug("%s\n", in.str().c_str());
+
+	if (!this->isRaw()) return;
+
+	in.str("");
+	in.clear();
+
+	const tissuestack::imaging::TissueStackRawData * __this = static_cast<const tissuestack::imaging::TissueStackRawData *>(this);
+	tissuestack::logging::TissueStackLogger::instance()->debug("Raw Version: %u\n", __this->_raw_version);
+	tissuestack::logging::TissueStackLogger::instance()->debug("Raw Type: %u\n", __this->_raw_type);
 }
