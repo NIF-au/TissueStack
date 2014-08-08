@@ -17,20 +17,12 @@ void tissuestack::imaging::TissueStackImageData::closeFileHandle()
 	}
 }
 
-int tissuestack::imaging::TissueStackImageData::getFileDescriptor()
+const int tissuestack::imaging::TissueStackImageData::getFileDescriptor()
 {
-	int fd = 0;
 	if (this->_file_handle == nullptr)
 		this->openFileHandle();
 
-	fd = fileno(this->_file_handle);
-	if (fd <= 0)
-	{
-		this->openFileHandle(true);
-		fd = fileno(this->_file_handle);
-	}
-
-	return fd;
+	return fileno(this->_file_handle);
 }
 
 void tissuestack::imaging::TissueStackImageData::openFileHandle(bool close_open_handle)

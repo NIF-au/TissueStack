@@ -6,6 +6,8 @@
 #include "exceptions.h"
 #include "utils.h"
 
+#include <magick/api.h>
+
 #include <iostream>
 #include <string>
 #include <unordered_map>

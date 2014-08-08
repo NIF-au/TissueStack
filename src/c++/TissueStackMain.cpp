@@ -139,11 +139,12 @@ int main(int argc, char * args[])
 
 	try
 	{
+		InitializeMagick(NULL);
 		// accept requests and process them until we receive a SIGSTOP
 		TissueStackServer->listen();
 	} catch (std::exception & bad)
 	{
-		if (!TissueStackServer->isStopping() && tissuestack::LoggerSingleton)
+		if (!TissueStackServer->isStopping())
 			tissuestack::LoggerSingleton->error("TissueStackServer listen() was aborted for the following reason:\n%s\n", bad.what());
 		TissueStackServer->stop();
 		exit(-1);

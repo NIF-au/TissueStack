@@ -10,6 +10,11 @@ const bool tissuestack::imaging::TissueStackRawData::isRaw() const
 	return true;
 }
 
+const tissuestack::imaging::RAW_TYPE tissuestack::imaging::TissueStackRawData::getType() const
+{
+	return this->_raw_type;
+}
+
 tissuestack::imaging::TissueStackRawData::TissueStackRawData(const std::string & filename) :
 		tissuestack::imaging::TissueStackImageData(filename, tissuestack::imaging::FORMAT::MINC)
 {

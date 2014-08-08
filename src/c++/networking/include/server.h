@@ -144,8 +144,9 @@ namespace tissuestack
 								int new_fd = accept(this->_server->getServerSocket(), (struct sockaddr *) &new_client, &addrlen);
 
 								// check accept status
-								if (new_fd  == -1) { // NOK
-									tissuestack::LoggerSingleton->error("Failed to accept client connection!\n");
+								if (new_fd  == -1 ) { // NOK
+									if (!this->_server->isStopping())
+										tissuestack::LoggerSingleton->error("Failed to accept client connection!\n");
 								} else
 								{
 									this->addToFileDescriptorList(new_fd);
@@ -160,11 +161,14 @@ namespace tissuestack
 								ssize_t bytesReceived = recv(i, data_buffer, sizeof(data_buffer), 0);
 								if (bytesReceived <= 0 || bytesReceived > MAX_REQUEST_LENGTH_IN_BYTES) { // NOK case
 									// client close
-									if (bytesReceived == 0)
-										tissuestack::LoggerSingleton->error("Client closed connection!\n");
-									else if (bytesReceived < 0)
+									if (bytesReceived == 0 &&
+											!this->_server->isStopping())
+												tissuestack::LoggerSingleton->error("Client closed connection!\n");
+									else if (bytesReceived < 0 &&
+											!this->_server->isStopping())
 										tissuestack::LoggerSingleton->error("Data Receive error!\n");
-									else if (bytesReceived > MAX_REQUEST_LENGTH_IN_BYTES) // for now we have a limit
+									else if (bytesReceived > MAX_REQUEST_LENGTH_IN_BYTES &&
+											!this->_server->isStopping()) // for now we have a limit
 										tissuestack::LoggerSingleton->error("Exceeded Request Size Allowed: %u !!\n", MAX_REQUEST_LENGTH_IN_BYTES );
 
 									this->removeDescriptorFromList(i, true);
@@ -315,6 +319,7 @@ namespace tissuestack
 					delete tissuestack::LoggerSingleton;
 					tissuestack::LoggerSingleton = nullptr;
 				}
+				DestroyMagick();
 			};
 
     	private:

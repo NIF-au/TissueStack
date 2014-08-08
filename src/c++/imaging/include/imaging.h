@@ -162,11 +162,11 @@ namespace tissuestack
 				const int getGlobalMinumum() const;
 				const int getGlobalMaximum() const;
 				void dumpImageDataIntoDebugLog() const;
+				const int getFileDescriptor();
 			protected:
 				explicit TissueStackImageData(const std::string & filename);
 				TissueStackImageData(const std::string & filename, FORMAT format);
 				const std::unordered_map<char, const TissueStackDataDimension *> getDimensionMap() const;
-				int getFileDescriptor();
 				void setFormat(int original_format);
 				void addDimension(TissueStackDataDimension * dimension);
 				void addCoordinate(float coord);
@@ -193,6 +193,7 @@ namespace tissuestack
 				const bool isRaw() const;
 				const unsigned long long int getFileSizeInBytes() const;
 				const unsigned long long int getSupposedFileSizeInBytes() const;
+				const RAW_TYPE getType() const;
 			private:
 				void setRawType(int type);
 				void setRawVersion(int version);
@@ -266,21 +267,6 @@ namespace tissuestack
 				static TissueStackDataSetStore * _instance;
 	 	};
 
-		class SimpleCacheHeuristics final
-		{
-			public:
-				SimpleCacheHeuristics & operator=(const SimpleCacheHeuristics&) = delete;
-				SimpleCacheHeuristics(const SimpleCacheHeuristics&) = delete;
-				SimpleCacheHeuristics();
-				~SimpleCacheHeuristics();
-
-				// TODO: set appropriate return type, e.g. graphicsmagick (perhaps wrap to be something more generic)
-				void extractImage(
-						const TissueStackImageData * image,
-						const TissueStackDataDimension * dimension,
-						const unsigned long long int slice);
-		};
-
 		class UncachedImageExtraction final
 		{
 			public:
@@ -288,18 +274,39 @@ namespace tissuestack
 				UncachedImageExtraction(const UncachedImageExtraction&) = delete;
 				UncachedImageExtraction();
 
-				// TODO: set appropriate return type, e.g. graphicsmagick (perhaps wrap to be something more generic)
 				void extractImage(
-						const TissueStackImageData * image,
-						const TissueStackDataDimension * dimension,
-						const unsigned long long int slice);
-
-				void extractImages(
+						const TissueStackRawData * image,
 						const tissuestack::networking::TissueStackImageRequest * request,
-						const int file_descriptor);
+						const unsigned long long int slice) const;
 
+				void extractImage(
+						const int descriptor,
+						const TissueStackRawData * image,
+						const tissuestack::networking::TissueStackImageRequest * request,
+						const unsigned long long int slice) const;
+		};
+
+		class SimpleCacheHeuristics final
+		{
+			public:
+				SimpleCacheHeuristics & operator=(const SimpleCacheHeuristics&) = delete;
+				SimpleCacheHeuristics(const SimpleCacheHeuristics&) = delete;
+				SimpleCacheHeuristics();
+				explicit SimpleCacheHeuristics(const tissuestack::imaging::UncachedImageExtraction * image_extraction);
+				~SimpleCacheHeuristics();
+
+				void extractImage(
+						const TissueStackRawData * image,
+						const tissuestack::networking::TissueStackImageRequest * request,
+						const unsigned long long int slice) const;
+
+				void extractImage(
+						const int descriptor,
+						const TissueStackRawData * image,
+						const tissuestack::networking::TissueStackImageRequest * request,
+						const unsigned long long int slice) const;
 			private:
-				SimpleCacheHeuristics _source;
+				const UncachedImageExtraction * _uncached_extraction = nullptr;
 		};
 
 		template <typename CachingStrategy>
@@ -345,29 +352,43 @@ namespace tissuestack
 					}
 
 					// we only let RAW file requests go through
-					if (dataSet->getImageData()->getFormat() != tissuestack::imaging::FORMAT::RAW)
+					if (!dataSet->getImageData()->isRaw())
 						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Only TissueStack Raw Files are allowed to be requested online!");
 
 					// some more checks regarding the validity of the image request parameters
 					const tissuestack::imaging::TissueStackDataDimension * dimension  =
 							dataSet->getImageData()->getDimensionByLongName(request->getDimensionName());
 					if (dimension == nullptr)
-						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Image Dimension could not be found!");
+						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+								"Image Dimension could not be found!");
 					if (request->getSliceNumber() < 0 || request->getSliceNumber() > dimension->getNumberOfSlices())
-						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Slice number requested is out of bounds!");
+						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+								"Slice number requested is out of bounds!");
 
 					if (request->getLengthOfSquare() < 0 || request->getLengthOfSquare() > 256 * 5)
-						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "The length of the image square has to range in betwenn 0 and 1280\n");
+						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+								"The length of the image square has to range in betwenn 0 and 1280");
 					if (request->getQualityFactor() <= 0.0 || request->getQualityFactor() > 1.0)
-						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,"The range of 'quality factor' has to be greater than 0 but no bigger than 1.0\n");
+						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+								"The range of 'quality factor' has to be greater than 0 but no bigger than 1.0");
 					if (request->getXCoordinate() < 0)
-						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,"The 'x' (pixel) coordinate has to be a positive integer\n");
+						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+								"The 'x' (pixel) coordinate has to be a positive integer");
 
-					// TODO: check if color map is supported
 					if (request->getColorMapName().empty())
-						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,"The 'y' (pixel) coordinate has to be a positive integer\n");
+						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+								"Request is missing color map information");
+					if (tissuestack::imaging::TissueStackColorMapStore::instance()->findColorMap(request->getColorMapName()) == nullptr)
+						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+								"Request has been given a non-existing color map");
 
-					this->_caching_strategy->extractImage(dataSet->getImageData(), dimension, request->getSliceNumber());
+					// perform extraction
+					this->_caching_strategy->extractImage(
+							file_descriptor,
+							static_cast<const tissuestack::imaging::TissueStackRawData *>(dataSet->getImageData()),
+							request,
+							request->getSliceNumber());
+
 					const std::string response =
 							tissuestack::utils::Misc::composeHttpResponse(
 									"200 OK", "text/plain", "Not implemented yet!!!"

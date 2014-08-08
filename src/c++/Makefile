@@ -37,7 +37,8 @@ all:	compile install
 
 compile:	$(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_IMAGING) $(OBJS_EXECUTION) $(OBJS_UTILS) $(OBJS)
 	@echo -e "\tCompiling \"$(NAME)\" => $(EXE_NAME)"
-	@$(CC)   $(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_EXECUTION)  $(OBJS_IMAGING) $(OBJS_UTILS) $(OBJS) -o $(EXE_NAME) $(LIBS) $(FLAGS) $(INCLUDE)
+	@$(CC)   $(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_EXECUTION)  $(OBJS_IMAGING) $(OBJS_UTILS) $(OBJS) \
+	`GraphicsMagick-config --cppflags --libs --ldflags` -o $(EXE_NAME) $(LIBS) $(FLAGS) $(INCLUDE)
 
 install:
 	@if [ -f $(EXE_NAME) ]; then mv $(EXE_NAME) $(INSTALL_DIR); fi;
