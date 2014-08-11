@@ -126,65 +126,58 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::createImageFromDat
 	GetExceptionInfo(&exception);
 
 	const std::vector<std::string> dim_order = image->getDimensionOrder();
-	const char dim =	actualDimension->getName().at(0);
+	const char dim = actualDimension->getName().at(0);
 
-	if (image->getFormat() == tissuestack::imaging::FORMAT::MINC && (
-		(dim == 'x'
-			&& dim_order[0].at(0) == 'y' && dim_order[1].at(0) == 'z' && dim_order[2].at(0) == 'x') ||
-		(dim == 'y'
-			&& dim_order[0].at(0) == 'x' && dim_order[1].at(0) == 'z'	&& dim_order[2].at(0) == 'y') ||
-		(dim == 'z'
-			&& dim_order[0].at(0) == 'z' && dim_order[1].at(0) == 'x' && dim_order[2].at(0) == 'y') ||
-		(dim_order[0].at(0) == 'x' || dim_order[1].at(0) == 'y' || dim_order[2].at(0) == 'z') ||
-		((dim == 'x' || dim == 'y')
-			&& dim_order[0].at(0) == 'y' && dim_order[1].at(0) == 'x' && dim_order[2].at(0) == 'z')))
-	{
-		img = ConstituteImage(
-			actualDimension->getHeight(),
-			actualDimension->getWidth(),
-			(image->getType() == tissuestack::imaging::RAW_TYPE::UCHAR_8_BIT) ? "I" : "RGB",
-			CharPixel,
-			data, &exception);
-	} else
-	{
-		// this is the norm really!!
-		img = ConstituteImage(
-			actualDimension->getWidth(),
-			actualDimension->getHeight(),
-			(image->getType() == tissuestack::imaging::RAW_TYPE::UCHAR_8_BIT) ? "I" : "RGB",
-			CharPixel,
-			data, &exception);
-	}
+	img = ConstituteImage(
+		actualDimension->getWidth(),
+		actualDimension->getHeight(),
+		(image->getType() == tissuestack::imaging::RAW_TYPE::UCHAR_8_BIT) ? "I" : "RGB",
+		CharPixel,
+		data, &exception);
 
 	// sanity check: was graphics magick able to create an image based on what we gave it?
 	if (img == NULL)
 	{
-	    CatchException(&exception);
+		CatchException(&exception);
 		DestroyImageInfo(imgInfo);
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-				"Could not constitute Image!");
+			"Could not constitute Image!");
 	}
-	// we are good if we are within the newer RAW format
+
 	if (image->getFormat() == tissuestack::imaging::FORMAT::RAW) return img;
 
 	// we have to do some eye watering stuff to deal with legacy
+	tissuestack::logging::TissueStackLogger::instance()->debug("Actual Dimension: %c\n", dim);
+	tissuestack::logging::TissueStackLogger::instance()->debug("Order [0/1/2]: %c/%c/%c\n", dim_order[0].at(0), dim_order[1].at(0), dim_order[2].at(0));
 	Image * tmp = img;
-	if ((dim_order[0].at(0) == 'x'
-			&& dim_order[1].at(0) == 'z'
-					&& dim_order[2].at(0) == 'y') ||
-			(dim == 'z' || dim == 'y'))
+	if ((image->getFormat() == tissuestack::imaging::FORMAT::MINC) && (
+		(dim == 'x'
+			&& dim_order[0].at(0) == 'y' && dim_order[1].at(0) == 'z' && dim_order[2].at(0) == 'x') ||
+		(dim == 'z'
+			&& dim_order[0].at(0) == 'z' && dim_order[1].at(0) == 'x' && dim_order[2].at(0) == 'y') ||
+		((dim == 'y' || dim == 'z')
+			&& dim_order[0].at(0) == 'x' && dim_order[1].at(0) == 'z' && dim_order[2].at(0) == 'y') ||
+		(dim_order[0].at(0) == 'x' || dim_order[1].at(0) == 'y' || dim_order[2].at(0) == 'z') ||
+		((dim == 'x' || dim == 'y')
+			&& dim_order[0].at(0) == 'y' && dim_order[1].at(0) == 'x' && dim_order[2].at(0) == 'z')))
 	{
-		img = RotateImage(img, 90, &exception);
-	} else img = RotateImage(img, -90, &exception);
+		if (dim_order[0].at(0) == 'x'
+				&& dim_order[1].at(0) == 'z'
+						&& dim_order[2].at(0) == 'y' &&
+				(dim == 'z' || dim == 'y'))
+		{
+			img = RotateImage(img, 90, &exception);
+		} else img = RotateImage(img, -90, &exception);
 
-	DestroyImage(tmp);
-	if (img == NULL)
-	{
-		CatchException(&exception);
-		DestroyImage(img);
-		DestroyImageInfo(imgInfo);
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-				"Image Extraction: Failed to rotate image to make it backward compatible!");
+		DestroyImage(tmp);
+		if (img == NULL)
+		{
+			CatchException(&exception);
+			DestroyImage(img);
+			DestroyImageInfo(imgInfo);
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+					"Image Extraction: Failed to rotate image to make it backward compatible!");
+		}
 	}
 
 	if (image->getFormat() == tissuestack::imaging::FORMAT::NIFTI ||

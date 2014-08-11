@@ -104,7 +104,7 @@ int main(int argc, char * args[])
 	try
 	{
 		tissuestack::imaging::TissueStackDataSetStore::instance(); // the data set store
-		//tissuestack::imaging::TissueStackDataSetStore::instance()->dumpDataSetStoreIntoDebugLog();
+		tissuestack::imaging::TissueStackDataSetStore::instance()->dumpDataSetStoreIntoDebugLog();
 	} catch (std::exception & bad)
 	{
 		tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
