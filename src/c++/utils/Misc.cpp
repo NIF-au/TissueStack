@@ -86,19 +86,19 @@ const std::string tissuestack::utils::Misc::composeHttpResponse(
 	std::ostringstream response;
 
 	response << "HTTP/1.1 " << status << CR_LF; // HTTTP/1.1 status
-	response << "Server: Tissue Stack Image Server" <<  CR_LF; // Server header
-	response << "Connection: close" << CR_LF; // Connection header (close)
 	response << "Date: Thu, 20 May 2004 21:12:11 GMT" << CR_LF; // Date (in the past)
-	response << "Last-Modified: Thu, 20 May 2004 21:12:11 GMT" << CR_LF; // last modified header in the past
-	response << "Access-Control-Allow-Origin: *" << CR_LF; // allow cross origin requests
+	response << "Connection: close" << CR_LF; // Connection header (close)
+	response << "Server: Tissue Stack Image Server" <<  CR_LF; // Server header
 	response << "Accept-Ranges: bytes" << CR_LF; // Accept-Ranges header
 	response << "Content-Type: " << content_type << CR_LF; // Content-Type header
+	response << "Last-Modified: Thu, 20 May 2004 21:12:11 GMT" << CR_LF; // last modified header in the past
+	response << "Access-Control-Allow-Origin: *" << CR_LF; // allow cross origin requests
 
 	if (!content.empty())
 	{
 		response << "Content-Length: " << content.length() << CR_LF << CR_LF; // Content-Length header
 		response << content;
-	}
+	} else response <<  CR_LF;
 
 	return response.str();
 }

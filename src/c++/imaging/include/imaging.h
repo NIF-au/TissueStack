@@ -133,14 +133,17 @@ namespace tissuestack
 				const unsigned long long int getNumberOfSlices() const;
 				const unsigned long long int getSliceSize() const;
 				const unsigned long long int getOffset() const;
+				const unsigned int getWidth() const;
+				const unsigned int getHeight() const;
+				void setWidthAndHeight(const std::array<unsigned int, 2> & widthAndHeight);
 				void dumpDataDimensionInfoIntoDebugLog() const;
 			private:
 				const std::string 	_name;
 				unsigned long long int 	_offset;
 				unsigned long long int 	_numberOfSlices;
 				unsigned long long int 	_sliceSize;
-				int 	_min_value = -1;
-				int 	_max_value = -1;
+				unsigned int _width;
+				unsigned int _height;
 
 		};
 
@@ -163,6 +166,7 @@ namespace tissuestack
 				const int getGlobalMaximum() const;
 				void dumpImageDataIntoDebugLog() const;
 				const int getFileDescriptor();
+				void initializeWidthAndHeightForDimensions();
 			protected:
 				explicit TissueStackImageData(const std::string & filename);
 				TissueStackImageData(const std::string & filename, FORMAT format);
@@ -172,6 +176,7 @@ namespace tissuestack
 				void addCoordinate(float coord);
 				void addStep(float step);
 			private:
+				void setWidthAndHeightByDimension(const std::string & dimension);
 				void openFileHandle(bool close_open_handle = false);
 				void closeFileHandle();
 				void dumpDataDimensionInfoIntoDebugLog() const;
@@ -284,6 +289,36 @@ namespace tissuestack
 						const TissueStackRawData * image,
 						const tissuestack::networking::TissueStackImageRequest * request,
 						const unsigned long long int slice) const;
+			private:
+				void inline changeContrast(
+						Image * img,
+						ImageInfo * imgInfo,
+						unsigned short minimum,
+						unsigned short maximum) const;
+
+				void inline applyColorMap(
+						Image * img,
+						ImageInfo * imgInfo,
+						const std::string color_map_name) const;
+
+				inline Image * scaleImage(
+						Image * img,
+						ImageInfo * imgInfo,
+						const unsigned int width,
+						const unsigned int height) const;
+
+				inline Image * degradeImage(
+						Image * img,
+						ImageInfo * imgInfo,
+						const unsigned int width,
+						const unsigned int height,
+						const float quality_factor) const;
+
+				inline Image * createImageFromDataRead(
+						const tissuestack::imaging::TissueStackRawData * image,
+						const tissuestack::imaging::TissueStackDataDimension * actualDimension,
+						const unsigned char * data,
+						ImageInfo * imgInfo) const;
 		};
 
 		class SimpleCacheHeuristics final
@@ -393,7 +428,7 @@ namespace tissuestack
 							tissuestack::utils::Misc::composeHttpResponse(
 									"200 OK", "text/plain", "Not implemented yet!!!"
 							);
-					write(file_descriptor, response.c_str(), response.length());
+					//write(file_descriptor, response.c_str(), response.length());
 				};
 
 			private:

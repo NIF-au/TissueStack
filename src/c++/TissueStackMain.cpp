@@ -139,7 +139,7 @@ int main(int argc, char * args[])
 
 	try
 	{
-		InitializeMagick(NULL);
+		InitializeMagick("/tmp");
 		// accept requests and process them until we receive a SIGSTOP
 		TissueStackServer->listen();
 	} catch (std::exception & bad)

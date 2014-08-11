@@ -34,5 +34,5 @@ void tissuestack::imaging::SimpleCacheHeuristics::extractImage(
 						const unsigned long long int slice) const
 {
 	// for now just delegate to uncached extraction
-	this->_uncached_extraction->extractImage(image, request, slice);
+	this->_uncached_extraction->extractImage(descriptor, image, request, slice);
 }

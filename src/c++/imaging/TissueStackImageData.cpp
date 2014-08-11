@@ -69,6 +69,40 @@ tissuestack::imaging::TissueStackImageData::TissueStackImageData(
 		tissuestack::imaging::FORMAT format) :
 			_file_name(filename), _format(format) {}
 
+void tissuestack::imaging::TissueStackImageData::initializeWidthAndHeightForDimensions()
+{
+	for (auto dim : this->_dim_order)
+		this->setWidthAndHeightByDimension(dim);
+}
+
+void tissuestack::imaging::TissueStackImageData::setWidthAndHeightByDimension(const std::string & dimension)
+{
+	std::array<unsigned int,2> widthAndHeight = {0, 0};
+
+	tissuestack::imaging::TissueStackDataDimension * width = nullptr;
+	tissuestack::imaging::TissueStackDataDimension * height = nullptr;
+
+	if (dimension.at(0) == 'x')
+	{
+		width = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('y'));
+		height = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('z'));
+	} else if (dimension.at(0) == 'y')
+	{
+		width = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('x'));
+		height = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('z'));
+	} else if (dimension.at(0) == 'z')
+	{
+		width = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('x'));
+		height = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('y'));
+	}
+
+	if (width) widthAndHeight[0] = width->getNumberOfSlices();
+	if (height) widthAndHeight[1] = height->getNumberOfSlices();
+
+	const_cast<tissuestack::imaging::TissueStackDataDimension *>(
+			this->getDimensionByLongName(dimension))->setWidthAndHeight(
+					const_cast<const std::array<unsigned int,2> & >(widthAndHeight));
+}
 
 const std::string tissuestack::imaging::TissueStackImageData::getFileName() const
 {
@@ -200,4 +234,9 @@ void tissuestack::imaging::TissueStackImageData::dumpImageDataIntoDebugLog() con
 	const tissuestack::imaging::TissueStackRawData * __this = static_cast<const tissuestack::imaging::TissueStackRawData *>(this);
 	tissuestack::logging::TissueStackLogger::instance()->debug("Raw Version: %u\n", __this->_raw_version);
 	tissuestack::logging::TissueStackLogger::instance()->debug("Raw Type: %u\n", __this->_raw_type);
+}
+
+const std::vector<std::string> tissuestack::imaging::TissueStackImageData::getDimensionOrder() const
+{
+	return this->_dim_order;
 }
