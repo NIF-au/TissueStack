@@ -75,6 +75,8 @@ namespace tissuestack
 			const float getQualityFactor() const;
 			const std::string getColorMapName() const;
 			const std::string getOutputImageFormat() const;
+			const unsigned short getContrastMinimum() const;
+			const unsigned short getContrastMaximum() const;
 		private:
 			std::string _dataset_location;
 			std::string _dimension_name;
@@ -86,6 +88,8 @@ namespace tissuestack
 			float _quality_factor;
 			std::string _color_map_name;
 			std::string _output_image_format;
+			unsigned short _contrast_min;
+			unsigned short _contrast_max;
 			unsigned long long int _request_id = 0;
 			unsigned long long int _request_timestamp = 0;
     };

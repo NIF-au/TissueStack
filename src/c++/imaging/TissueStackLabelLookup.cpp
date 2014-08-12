@@ -135,7 +135,7 @@ const tissuestack::imaging::TissueStackLabelLookup * tissuestack::imaging::Tissu
 
 const std::string tissuestack::imaging::TissueStackLabelLookup::getLabelLookupId() const
 {
-	return this->_labellookup_id;
+	return this->_labellookup_id.substr(strlen(LABEL_LOOKUP_PATH) + 1);
 }
 
 void tissuestack::imaging::TissueStackLabelLookup::dumpLabelLookupToDebugLog() const

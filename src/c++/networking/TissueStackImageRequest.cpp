@@ -138,6 +138,34 @@ tissuestack::networking::TissueStackImageRequest::TissueStackImageRequest(std::u
 		this->_color_map_name = "grey";
 	else this->_color_map_name = value;
 
+	value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "min");
+	if (value.empty())
+			this->_contrast_min = 0;
+	else
+	{
+		try
+		{
+			this->_contrast_min = static_cast<unsigned short>(atoi(value.c_str()));
+		} catch (...)
+		{
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Optional Parameter 'min' is not a valid positve integer!");
+		}
+	}
+
+	value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "max");
+	if (value.empty())
+			this->_contrast_max = 255;
+	else
+	{
+		try
+		{
+			this->_contrast_max = static_cast<unsigned short>(atoi(value.c_str()));
+		} catch (...)
+		{
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Optional Parameter 'max' is not a valid positve integer!");
+		}
+	}
+
 	// we have passed all preliminary checks => assign us the new type
 	this->setType(tissuestack::common::Request::Type::TS_IMAGE);
 
@@ -174,6 +202,16 @@ const std::string tissuestack::networking::TissueStackImageRequest::getDimension
 const unsigned int tissuestack::networking::TissueStackImageRequest::getLengthOfSquare() const
 {
 	return this->_length_of_square;
+}
+
+const unsigned short tissuestack::networking::TissueStackImageRequest::getContrastMinimum() const
+{
+	return this->_contrast_min;
+}
+
+const unsigned short tissuestack::networking::TissueStackImageRequest::getContrastMaximum() const
+{
+	return this->_contrast_max;
 }
 
 const std::string tissuestack::networking::TissueStackImageRequest::getOutputImageFormat() const

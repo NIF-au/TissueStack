@@ -127,12 +127,12 @@ const tissuestack::imaging::TissueStackDataDimension * tissuestack::imaging::Tis
 	}
 }
 
-const int tissuestack::imaging::TissueStackImageData::getGlobalMinumum() const
+const unsigned short tissuestack::imaging::TissueStackImageData::getImageDataMinumum() const
 {
 	return this->_global_min_value;
 }
 
-const int tissuestack::imaging::TissueStackImageData::getGlobalMaximum() const
+const unsigned short tissuestack::imaging::TissueStackImageData::getImageDataMaximum() const
 {
 	return this->_global_max_value;
 }

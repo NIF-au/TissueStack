@@ -20,6 +20,8 @@ void tissuestack::imaging::UncachedImageExtraction::extractImage(
 						const tissuestack::networking::TissueStackImageRequest * request,
 						const unsigned long long int slice) const
 {
+	//TODO: request obsolete check
+
 	// determine some parameters for data reading
 	const tissuestack::imaging::TissueStackDataDimension * actualDimension =
 			image->getDimensionByLongName(request->getDimensionName());
@@ -62,14 +64,24 @@ void tissuestack::imaging::UncachedImageExtraction::extractImage(
 			imgInfo);
 
 	// apply possible contrast settings
-	// TODO: append request params
-	//if (request->getContrast() != 0)
-	//	this->changeContrast(img, imgInfo, 0, 255);
+	if (request->getContrastMinimum() != 0 && request->getContrastMaximum() != 255)
+		this->changeContrast(
+				img, imgInfo,
+				request->getContrastMinimum(),
+				request->getContrastMaximum(),
+				image->getImageDataMinumum(),
+				image->getImageDataMaximum(),
+				actualDimension->getWidth(),
+				actualDimension->getHeight());
 
 	// perform color mapping if requested
 	if (request->getColorMapName().compare("gray") != 0 ||
 		request->getColorMapName().compare("grey") != 0)
-		this->applyColorMap(img, imgInfo, request->getColorMapName());
+		this->applyColorMap(
+				img, imgInfo,
+				request->getColorMapName(),
+				actualDimension->getWidth(),
+				actualDimension->getHeight());
 
 	// adjust scale (if requested)
 	if (request->getScaleFactor() != static_cast<const float>(1.0))
@@ -296,17 +308,169 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::scaleImage(
 void inline tissuestack::imaging::UncachedImageExtraction::changeContrast(
 					Image * img,
 					ImageInfo * imgInfo,
-					unsigned short minimum,
-					unsigned short maximum) const
+					const unsigned short minimum,
+					const unsigned short maximum,
+					const unsigned short dataset_min,
+					const unsigned short dataset_max,
+					const unsigned long int width,
+					const unsigned long int height) const
 {
-	//TODO implement
+	ExceptionInfo exception;
+	GetExceptionInfo(&exception);
+	PixelPacket * pixels = GetImagePixelsEx(img, 0, 0, width, height, &exception);
+
+	if (pixels == NULL)
+	{
+		CatchException(&exception);
+		DestroyImage(img);
+		DestroyImageInfo(imgInfo);
+
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Contrast Application: Could not obtain pixels from image!");
+	}
+
+	unsigned int i = 0;
+	unsigned int j = 0;
+	unsigned long long int pixel_value;
+
+
+	while (i < height)
+	{
+		j = 0;
+		while (j < width)
+		{
+			pixel_value = static_cast<unsigned long long int>(pixels[(width * i) + j].red);
+			if (QuantumDepth != 8 && img->depth == QuantumDepth) pixel_value =
+					this->mapUnsignedValue(img->depth, 8, pixel_value);
+
+			//pixel_value = get_contrasted_value(min, max, dataset_min, dataset_max, pixel_value);
+			float contrast_min = static_cast<float>(minimum);
+			float contrast_max = static_cast<float>(maximum);
+			float val = static_cast<float>(pixel_value);
+
+			if (val <= contrast_min)
+				pixel_value = dataset_min;
+			else if (val >= contrast_max)
+				pixel_value = dataset_max;
+			else
+				pixel_value =
+					static_cast<unsigned long long int>(
+						lround(((val - contrast_min) / (contrast_max - contrast_min))
+							* static_cast<float>(dataset_max - dataset_min)));
+
+			// graphicmagick quantum depth mess which we have to react to at runtime
+			pixels[(width * i) + j].red =
+				pixels[(width * i) + j].green =
+					pixels[(width * i) + j].blue = static_cast<unsigned char>(pixel_value);
+
+			if (QuantumDepth == 16 && img->depth == QuantumDepth)
+			{
+				pixels[(width * i) + j].red =
+					pixels[(width * i) + j].green =
+						pixels[(width * i) + j].blue =
+							static_cast<unsigned short>(this->mapUnsignedValue(8, 16, pixel_value));
+			} else if (QuantumDepth == 32 && img->depth == QuantumDepth)
+			{
+				pixels[(width * i) + j].red =
+					pixels[(width * i) + j].green =
+						pixels[(width * i) + j].blue =
+							static_cast<unsigned int>(this->mapUnsignedValue(8, 32, pixel_value));
+			}
+			j++;
+		}
+		i++;
+	}
+}
+
+inline unsigned long long tissuestack::imaging::UncachedImageExtraction::mapUnsignedValue(const unsigned char fromBitRange, const unsigned char toBitRange, const unsigned long long value) const {
+	// cap at 64 bits
+	if (fromBitRange > 64 || toBitRange > 64) return 0;
+
+	unsigned long long from = (static_cast<unsigned long long int>(1) << fromBitRange) - static_cast<unsigned long long int>(1);
+	unsigned long long to = (static_cast<unsigned long long int>(1) << toBitRange) - static_cast<unsigned long long int>(1);
+
+	// check if value exceeds its native range
+	if (value > from) return 0;
+
+	return static_cast<unsigned long long>(llround((static_cast<double>(value) / from) * static_cast<double>(to)));
 }
 
 void inline tissuestack::imaging::UncachedImageExtraction::applyColorMap(
 		Image * img,
 		ImageInfo * imgInfo,
-		const std::string color_map_name) const
+		const std::string color_map_name,
+		const unsigned long int width,
+		const unsigned long int height) const
 {
-	//TODO implement
-}
+	// retrieve color map
+	const tissuestack::imaging::TissueStackColorMap * colorMap =
+			tissuestack::imaging::TissueStackColorMapStore::instance()->findColorMap(color_map_name);
+	if (colorMap == nullptr)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Colormap Application: Could not find color map!");
 
+	ExceptionInfo exception;
+	GetExceptionInfo(&exception);
+	PixelPacket * pixels = GetImagePixelsEx(img, 0, 0, width, height, &exception);
+
+	if (pixels == NULL)
+	{
+		CatchException(&exception);
+		DestroyImage(img);
+		DestroyImageInfo(imgInfo);
+
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Colormap Application: Could not obtain pixels from image!");
+	}
+
+	unsigned int i = 0;
+	unsigned int j = 0;
+	unsigned long long int pixel_value;
+
+	while (i < height)
+	{
+		j = 0;
+		while (j < width)
+		{
+			pixel_value = static_cast<unsigned long long int>(pixels[(width * i) + j].red);
+			const std::array<const unsigned short, 3> mapping = colorMap->getRGBMapForGrayValue(pixel_value);
+			if (QuantumDepth != 8 && img->depth == QuantumDepth) pixel_value =
+					this->mapUnsignedValue(img->depth, 8, pixel_value);
+
+			pixels[(width * i) + j].red = static_cast<unsigned char>(mapping[0]);
+			pixels[(width * i) + j].green = static_cast<unsigned char>(mapping[1]);
+			pixels[(width * i) + j].blue = static_cast<unsigned char>(mapping[2]);
+
+			// graphicmagick quantum depth mess which we have to react to at runtime
+			if (QuantumDepth == 16 && img->depth == QuantumDepth) {
+				pixels[(width * i) + j].red =
+					static_cast<unsigned short>(
+						this->mapUnsignedValue(
+							8, 16, static_cast<unsigned long long int>(mapping[0])));
+				pixels[(width * i) + j].green =
+					static_cast<unsigned short>(
+						this->mapUnsignedValue(
+							8, 16, static_cast<unsigned long long int>(mapping[1])));
+				pixels[(width * i) + j].blue =
+					static_cast<unsigned short>(
+						this->mapUnsignedValue(
+							8, 16, static_cast<unsigned long long int>(mapping[2])));
+			} else if (QuantumDepth == 32 && img->depth == QuantumDepth) {
+				pixels[(width * i) + j].red =
+					static_cast<unsigned int>(
+						this->mapUnsignedValue(
+							8, 32, static_cast<unsigned long long int>(mapping[0])));
+				pixels[(width * i) + j].green =
+					static_cast<unsigned int>(
+						this->mapUnsignedValue(
+							8, 32, static_cast<unsigned long long int>(mapping[1])));
+				pixels[(width * i) + j].blue =
+					static_cast<unsigned int>(
+						this->mapUnsignedValue(
+							8, 32, static_cast<unsigned long long int>(mapping[2])));
+			}
+			j++;
+		}
+		i++;
+	}
+}

@@ -162,8 +162,8 @@ namespace tissuestack
 				const std::vector<std::string> getDimensionOrder() const;
 				const std::vector<float> getCoordinates() const;
 				const std::vector<float> getSteps() const;
-				const int getGlobalMinumum() const;
-				const int getGlobalMaximum() const;
+				const unsigned short getImageDataMinumum() const;
+				const unsigned short getImageDataMaximum() const;
 				void dumpImageDataIntoDebugLog() const;
 				const int getFileDescriptor();
 				void initializeWidthAndHeightForDimensions();
@@ -182,8 +182,8 @@ namespace tissuestack
 				void dumpDataDimensionInfoIntoDebugLog() const;
 				const std::string		_file_name;
 				FORMAT _format;
-				long long int 	_global_min_value = -1;
-				long long int 	_global_max_value = -1;
+				unsigned short 	_global_min_value = 0;
+				unsigned short 	_global_max_value = 255;
 				std::vector<std::string> _dim_order;
 				std::vector<float> _coordinates;
 				std::vector<float> _steps;
@@ -293,13 +293,19 @@ namespace tissuestack
 				void inline changeContrast(
 						Image * img,
 						ImageInfo * imgInfo,
-						unsigned short minimum,
-						unsigned short maximum) const;
+						const unsigned short minimum,
+						const unsigned short maximum,
+						const unsigned short dataset_min,
+						const unsigned short dataset_max,
+						const unsigned long int width,
+						const unsigned long int height) const;
 
 				void inline applyColorMap(
 						Image * img,
 						ImageInfo * imgInfo,
-						const std::string color_map_name) const;
+						const std::string color_map_name,
+						const unsigned long int width,
+						const unsigned long int height) const;
 
 				inline Image * scaleImage(
 						Image * img,
@@ -319,6 +325,11 @@ namespace tissuestack
 						const tissuestack::imaging::TissueStackDataDimension * actualDimension,
 						const unsigned char * data,
 						ImageInfo * imgInfo) const;
+
+				inline unsigned long long mapUnsignedValue(
+						const unsigned char fromBitRange,
+						const unsigned char toBitRange,
+						const unsigned long long value) const;
 		};
 
 		class SimpleCacheHeuristics final
@@ -416,6 +427,12 @@ namespace tissuestack
 					if (tissuestack::imaging::TissueStackColorMapStore::instance()->findColorMap(request->getColorMapName()) == nullptr)
 						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 								"Request has been given a non-existing color map");
+
+					if (request->getContrastMinimum() < 0 || request->getContrastMinimum() > 255
+							|| request->getContrastMaximum() < 0 || request->getContrastMaximum() > 255
+							|| request->getContrastMinimum() >= request->getContrastMaximum())
+						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+								"Request has been given invalid contrast parameters");
 
 					// perform extraction
 					this->_caching_strategy->extractImage(
