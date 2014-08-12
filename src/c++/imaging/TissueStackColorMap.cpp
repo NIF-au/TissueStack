@@ -172,7 +172,10 @@ const tissuestack::imaging::TissueStackColorMap * tissuestack::imaging::TissueSt
 
 const std::string tissuestack::imaging::TissueStackColorMap::getColorMapId() const
 {
-	return this->_colormap_id.substr(strlen(COLORMAP_PATH) + 1);
+	if (this->_colormap_id.find(COLORMAP_PATH) == 0)
+		return this->_colormap_id.substr(strlen(COLORMAP_PATH) + 1);
+
+	return this->_colormap_id;
 }
 
 void tissuestack::imaging::TissueStackColorMap::dumpColorMapToDebugLog() const

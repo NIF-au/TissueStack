@@ -431,9 +431,10 @@ void inline tissuestack::imaging::UncachedImageExtraction::applyColorMap(
 		while (j < width)
 		{
 			pixel_value = static_cast<unsigned long long int>(pixels[(width * i) + j].red);
-			const std::array<const unsigned short, 3> mapping = colorMap->getRGBMapForGrayValue(pixel_value);
 			if (QuantumDepth != 8 && img->depth == QuantumDepth) pixel_value =
-					this->mapUnsignedValue(img->depth, 8, pixel_value);
+							this->mapUnsignedValue(img->depth, 8, pixel_value);
+			const std::array<const unsigned short, 3> mapping =
+					colorMap->getRGBMapForGrayValue(static_cast<unsigned short>(pixel_value));
 
 			pixels[(width * i) + j].red = static_cast<unsigned char>(mapping[0]);
 			pixels[(width * i) + j].green = static_cast<unsigned char>(mapping[1]);
