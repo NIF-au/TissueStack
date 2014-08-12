@@ -30,7 +30,7 @@ OBJS_UTILS		=	$(SRCS_UTILS:%.cpp=%.o)
 OBJS			=	$(SRCS:%.cpp=%.o)
 %.o: %.cpp
 	@echo -e "\tCompiling \"$(NAME)\" => [$(@)]"
-	@$(CC) -c $(LIBS) $(FLAGS) $(INCLUDE) -o $@ -fPIC -pie $<
+	@$(CC) -c $(LIBS) $(FLAGS) $(INCLUDE) `GraphicsMagick-config --cppflags --libs --ldflags` -o $@ -fPIC -pie $<
 
 all:	compile install
 
