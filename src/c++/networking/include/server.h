@@ -160,11 +160,15 @@ namespace tissuestack
 								char data_buffer[MAX_REQUEST_LENGTH_IN_BYTES+1];
 								ssize_t bytesReceived = recv(i, data_buffer, sizeof(data_buffer), 0);
 								if (bytesReceived <= 0 || bytesReceived > MAX_REQUEST_LENGTH_IN_BYTES) { // NOK case
-									// client close
-									if (bytesReceived == 0 &&
-											!this->_server->isStopping())
-												tissuestack::LoggerSingleton->error("Client closed connection!\n");
-									else if (bytesReceived < 0 &&
+
+									/*
+									 * //client close which we will ignore from now on
+									 * if (bytesReceived == 0 &&
+									 *		!this->_server->isStopping())
+									 *			tissuestack::LoggerSingleton->error("Client closed connection!\n");
+									 *  else
+									 */
+									if (bytesReceived < 0 &&
 											!this->_server->isStopping())
 										tissuestack::LoggerSingleton->error("Data Receive error!\n");
 									else if (bytesReceived > MAX_REQUEST_LENGTH_IN_BYTES &&

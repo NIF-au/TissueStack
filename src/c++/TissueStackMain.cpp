@@ -38,7 +38,7 @@ extern "C"
 		act.sa_flags = 0;
 		i = 1;
 		while (i < 32) {
-			if (i != 11) // TODO: handle seg fault differently...
+			if (i != 11)
 				sigaction(i, &act, nullptr);
 			i++;
 		}
@@ -104,7 +104,7 @@ int main(int argc, char * args[])
 	try
 	{
 		tissuestack::imaging::TissueStackDataSetStore::instance(); // the data set store
-		tissuestack::imaging::TissueStackDataSetStore::instance()->dumpDataSetStoreIntoDebugLog();
+		//tissuestack::imaging::TissueStackDataSetStore::instance()->dumpDataSetStoreIntoDebugLog();
 	} catch (std::exception & bad)
 	{
 		tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
