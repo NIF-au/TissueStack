@@ -20,7 +20,7 @@ void tissuestack::imaging::UncachedImageExtraction::extractImage(
 						const tissuestack::networking::TissueStackImageRequest * request,
 						const unsigned long long int slice) const
 {
-	//TODO: request obsolete check
+	//TODO: perform some obsolete request checks
 
 	// determine some parameters for data reading
 	const tissuestack::imaging::TissueStackDataDimension * actualDimension =
@@ -75,7 +75,7 @@ void tissuestack::imaging::UncachedImageExtraction::extractImage(
 				actualDimension->getHeight());
 
 	// perform color mapping if requested
-	if (request->getColorMapName().compare("gray") != 0 ||
+	if (request->getColorMapName().compare("gray") != 0 &&
 		request->getColorMapName().compare("grey") != 0)
 		this->applyColorMap(
 				img, imgInfo,
@@ -158,9 +158,7 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::createImageFromDat
 
 	if (image->getFormat() == tissuestack::imaging::FORMAT::RAW) return img;
 
-	// we have to do some eye watering stuff to deal with legacy
-	tissuestack::logging::TissueStackLogger::instance()->debug("Actual Dimension: %c\n", dim);
-	tissuestack::logging::TissueStackLogger::instance()->debug("Order [0/1/2]: %c/%c/%c\n", dim_order[0].at(0), dim_order[1].at(0), dim_order[2].at(0));
+	/*
 	Image * tmp = img;
 	if ((image->getFormat() == tissuestack::imaging::FORMAT::MINC) && (
 		(dim == 'x'
@@ -190,8 +188,9 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::createImageFromDat
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 					"Image Extraction: Failed to rotate image to make it backward compatible!");
 		}
-	}
+	}*/
 
+	Image * tmp = img;
 	if (image->getFormat() == tissuestack::imaging::FORMAT::NIFTI ||
 			(image->getFormat() == tissuestack::imaging::FORMAT::MINC &&
 				!((dim == 'x' && dim_order[0].at(0) == 'y' && dim_order[1].at(0) == 'z' && dim_order[2].at(0) == 'x') ||
@@ -199,7 +198,6 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::createImageFromDat
 				((dim == 'x' || dim == 'y') && dim_order[0].at(0) == 'y' && dim_order[1].at(0) == 'x' && dim_order[2].at(0) == 'z') ||
 				(dim_order[0].at(0) == 'x' && dim_order[1].at(0) == 'y' && dim_order[2].at(0) == 'z'))))
 	{
-		tmp = img;
 		img = FlipImage(img, &exception);
 		DestroyImage(tmp);
 		if (img == NULL)
