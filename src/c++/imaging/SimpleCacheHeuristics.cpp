@@ -20,21 +20,19 @@ tissuestack::imaging::SimpleCacheHeuristics::~SimpleCacheHeuristics()
 
 void tissuestack::imaging::SimpleCacheHeuristics::extractImage(
 						const TissueStackRawData * image,
-						const tissuestack::networking::TissueStackImageRequest * request,
-						const unsigned long long int slice) const
+						const tissuestack::networking::TissueStackImageRequest * request) const
 {
 	// delegate
-	this->extractImage(-1, image, request, slice);
+	this->extractImage(-1, image, request);
 }
 
 void tissuestack::imaging::SimpleCacheHeuristics::extractImage(
 						const int descriptor,
 						const TissueStackRawData * image,
-						const tissuestack::networking::TissueStackImageRequest * request,
-						const unsigned long long int slice) const
+						const tissuestack::networking::TissueStackImageRequest * request) const
 {
 	// for now just delegate to uncached extraction
 	// TODO: implement
 
-	this->_uncached_extraction->extractImage(descriptor, image, request, slice);
+	this->_uncached_extraction->extractImage(descriptor, image, request);
 }

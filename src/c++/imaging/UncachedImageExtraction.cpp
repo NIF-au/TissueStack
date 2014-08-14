@@ -7,21 +7,16 @@ tissuestack::imaging::UncachedImageExtraction::UncachedImageExtraction()
 
 void tissuestack::imaging::UncachedImageExtraction::extractImage(
 						const tissuestack::imaging::TissueStackRawData * image,
-						const tissuestack::networking::TissueStackImageRequest * request,
-						const unsigned long long int slice) const
+						const tissuestack::networking::TissueStackImageRequest * request) const
 {
 	// delegate
-	this->extractImage(-1, image, request, slice);
+	this->extractImage(-1, image, request);
 }
 
-void tissuestack::imaging::UncachedImageExtraction::extractImage(
-						const int descriptor,
-						const tissuestack::imaging::TissueStackRawData * image,
-						const tissuestack::networking::TissueStackImageRequest * request,
-						const unsigned long long int slice) const
+Image * tissuestack::imaging::UncachedImageExtraction::extractImageOnly(
+		const tissuestack::imaging::TissueStackRawData * image,
+		const tissuestack::networking::TissueStackImageRequest * request) const
 {
-	//TODO: perform some obsolete request checks
-
 	// determine some parameters for data reading
 	const tissuestack::imaging::TissueStackDataDimension * actualDimension =
 			image->getDimensionByLongName(request->getDimensionName());
@@ -31,16 +26,8 @@ void tissuestack::imaging::UncachedImageExtraction::extractImage(
 			static_cast<long long int>(
 					(image->getType() == tissuestack::imaging::RAW_TYPE::UCHAR_8_BIT) ? 1 : 3);
 	unsigned long long int actualOffset =
-			actualDimension->getOffset() +	request->getSliceNumber() * static_cast<unsigned long long int>(dataLength);
-
-	ExceptionInfo exception;
-	ImageInfo	*imgInfo = NULL;
-
-	GetExceptionInfo(&exception);
-	imgInfo = CloneImageInfo((ImageInfo *)NULL);
-	if (imgInfo == NULL)
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-				"Could not create ImageInfo!");
+			actualDimension->getOffset() +
+				static_cast<unsigned long long int>(request->getSliceNumber()) * static_cast<unsigned long long int>(dataLength);
 
 	// read the actual raw data to write out images later on
 	std::unique_ptr<unsigned char[]> data(new unsigned char[dataLength]);
@@ -55,18 +42,27 @@ void tissuestack::imaging::UncachedImageExtraction::extractImage(
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Failed to read entire slice from RAW file!");
 
-	// start graphics magick  image instantiation
-	Image * img =
+	return
 		this->createImageFromDataRead(
 			image,
 			actualDimension,
-			data.get(),
-			imgInfo);
+			data.get());
+}
+
+Image * tissuestack::imaging::UncachedImageExtraction::applyPostExtractionTasks(
+		Image * img,
+		const tissuestack::imaging::TissueStackRawData * image,
+		const tissuestack::networking::TissueStackImageRequest * request) const
+{
+	if (img == NULL) return NULL;
+
+	const tissuestack::imaging::TissueStackDataDimension * actualDimension =
+			image->getDimensionByLongName(request->getDimensionName());
 
 	// apply possible contrast settings
 	if (request->getContrastMinimum() != 0 && request->getContrastMaximum() != 255)
 		this->changeContrast(
-				img, imgInfo,
+				img,
 				request->getContrastMinimum(),
 				request->getContrastMaximum(),
 				image->getImageDataMinumum(),
@@ -78,7 +74,7 @@ void tissuestack::imaging::UncachedImageExtraction::extractImage(
 	if (request->getColorMapName().compare("gray") != 0 &&
 		request->getColorMapName().compare("grey") != 0)
 		this->applyColorMap(
-				img, imgInfo,
+				img,
 				request->getColorMapName(),
 				actualDimension->getWidth(),
 				actualDimension->getHeight());
@@ -88,7 +84,6 @@ void tissuestack::imaging::UncachedImageExtraction::extractImage(
 		img =
 			this->scaleImage(
 				img,
-				imgInfo,
 				static_cast<const float>(actualDimension->getWidth()) * request->getScaleFactor(),
 				static_cast<const float>(actualDimension->getHeight()) * request->getScaleFactor());
 
@@ -97,10 +92,38 @@ void tissuestack::imaging::UncachedImageExtraction::extractImage(
 		img =
 			this->degradeImage(
 				img,
-				imgInfo,
 				static_cast<const float>(actualDimension->getWidth()) * request->getScaleFactor(),
 				static_cast<const float>(actualDimension->getHeight()) * request->getScaleFactor(),
 				request->getQualityFactor());
+
+	// we don't have a preview => chop up into tiles
+	if (!request->isPreview())
+		img = this->getImageTile(img, request);
+
+	return img;
+}
+
+void tissuestack::imaging::UncachedImageExtraction::extractImage(
+						const int descriptor,
+						const tissuestack::imaging::TissueStackRawData * image,
+						const tissuestack::networking::TissueStackImageRequest * request) const
+{
+	Image * img =
+		this->extractImageOnly(
+			image,
+			request);
+	if (img == NULL)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Could not create Image");
+
+	img =
+		this->applyPostExtractionTasks(
+			img,
+			image,
+			request);
+	if (img == NULL)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Could not apply post extraction tasks to image");
 
 	// this is the part were we start to serialize the output of our finished image work
 	std::string formatLowerCase =  request->getOutputImageFormat();
@@ -116,6 +139,14 @@ void tissuestack::imaging::UncachedImageExtraction::extractImage(
     				 ""
     );
 
+	ExceptionInfo exception;
+	ImageInfo	*imgInfo = NULL;
+	GetExceptionInfo(&exception);
+	imgInfo = CloneImageInfo((ImageInfo *)NULL);
+	if (imgInfo == NULL)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Could not create ImageInfo!");
+
     FILE * handle = fdopen(descriptor, "wr");
     imgInfo->file = handle;
     write(descriptor, httpResponseHeader.c_str(), httpResponseHeader.length());
@@ -130,8 +161,7 @@ void tissuestack::imaging::UncachedImageExtraction::extractImage(
 inline Image * tissuestack::imaging::UncachedImageExtraction::createImageFromDataRead(
 		const tissuestack::imaging::TissueStackRawData * image,
 		const tissuestack::imaging::TissueStackDataDimension * actualDimension,
-		const unsigned char * data,
-		ImageInfo * imgInfo) const
+		const unsigned char * data) const
 {
 	Image * img = NULL;
 	ExceptionInfo exception;
@@ -151,7 +181,6 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::createImageFromDat
 	if (img == NULL)
 	{
 		CatchException(&exception);
-		DestroyImageInfo(imgInfo);
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"Could not constitute Image!");
 	}
@@ -204,7 +233,6 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::createImageFromDat
 		{
 			CatchException(&exception);
 			DestroyImage(img);
-			DestroyImageInfo(imgInfo);
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 					"Image Extraction: Failed to flip image to make it backward compatible!");
 		}
@@ -220,7 +248,6 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::createImageFromDat
 		{
 			CatchException(&exception);
 			DestroyImage(img);
-			DestroyImageInfo(imgInfo);
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 					"Image Extraction: Failed to flop image to make it backward compatible!");
 		}
@@ -228,9 +255,9 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::createImageFromDat
 
 	return img;
 }
+
 inline Image * tissuestack::imaging::UncachedImageExtraction::degradeImage(
 		Image * img,
-		ImageInfo * imgInfo,
 		const unsigned int width,
 		const unsigned int height,
 		const float quality_factor) const
@@ -250,7 +277,6 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::degradeImage(
 	{
 		CatchException(&exception);
 		DestroyImage(img);
-		DestroyImageInfo(imgInfo);
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Image Extraction: Failed to adjust quality!");
 	}
@@ -266,7 +292,6 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::degradeImage(
 	{
 		CatchException(&exception);
 		DestroyImage(img);
-		DestroyImageInfo(imgInfo);
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Image Extraction: Failed to adjust quality!");
 	}
@@ -276,7 +301,6 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::degradeImage(
 
 inline Image * tissuestack::imaging::UncachedImageExtraction::scaleImage(
 		Image * img,
-		ImageInfo * imgInfo,
 		const unsigned int width,
 		const unsigned int height) const
 {
@@ -295,7 +319,6 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::scaleImage(
 	{
 		CatchException(&exception);
 		DestroyImage(img);
-		DestroyImageInfo(imgInfo);
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Image Extraction: Failed to adjust quality!");
 	}
@@ -305,7 +328,6 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::scaleImage(
 
 void inline tissuestack::imaging::UncachedImageExtraction::changeContrast(
 					Image * img,
-					ImageInfo * imgInfo,
 					const unsigned short minimum,
 					const unsigned short maximum,
 					const unsigned short dataset_min,
@@ -321,8 +343,6 @@ void inline tissuestack::imaging::UncachedImageExtraction::changeContrast(
 	{
 		CatchException(&exception);
 		DestroyImage(img);
-		DestroyImageInfo(imgInfo);
-
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"Contrast Application: Could not obtain pixels from image!");
 	}
@@ -330,7 +350,6 @@ void inline tissuestack::imaging::UncachedImageExtraction::changeContrast(
 	unsigned int i = 0;
 	unsigned int j = 0;
 	unsigned long long int pixel_value;
-
 
 	while (i < height)
 	{
@@ -395,7 +414,6 @@ inline unsigned long long tissuestack::imaging::UncachedImageExtraction::mapUnsi
 
 void inline tissuestack::imaging::UncachedImageExtraction::applyColorMap(
 		Image * img,
-		ImageInfo * imgInfo,
 		const std::string color_map_name,
 		const unsigned long int width,
 		const unsigned long int height) const
@@ -404,8 +422,11 @@ void inline tissuestack::imaging::UncachedImageExtraction::applyColorMap(
 	const tissuestack::imaging::TissueStackColorMap * colorMap =
 			tissuestack::imaging::TissueStackColorMapStore::instance()->findColorMap(color_map_name);
 	if (colorMap == nullptr)
+	{
+		DestroyImage(img);
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"Colormap Application: Could not find color map!");
+	}
 
 	ExceptionInfo exception;
 	GetExceptionInfo(&exception);
@@ -415,8 +436,6 @@ void inline tissuestack::imaging::UncachedImageExtraction::applyColorMap(
 	{
 		CatchException(&exception);
 		DestroyImage(img);
-		DestroyImageInfo(imgInfo);
-
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"Colormap Application: Could not obtain pixels from image!");
 	}
@@ -472,4 +491,46 @@ void inline tissuestack::imaging::UncachedImageExtraction::applyColorMap(
 		}
 		i++;
 	}
+}
+
+inline Image * tissuestack::imaging::UncachedImageExtraction::getImageTile(
+		Image * img,
+		const tissuestack::networking::TissueStackImageRequest * request) const
+{
+	if (img == NULL) return NULL;
+
+	// check if we don't exceed bounds
+	unsigned int xOffset = request->getXCoordinate()*request->getLengthOfSquare();
+	unsigned int yOffset = request->getYCoordinate()*request->getLengthOfSquare();
+
+	if (xOffset >  img->columns || yOffset > img->rows)
+	{
+		DestroyImage(img);
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Image Extraction: tile number(x/y) exceeds the width/height of the image (given the square length)");
+	}
+
+	ExceptionInfo exception;
+	GetExceptionInfo(&exception);
+
+	RectangleInfo * tile = static_cast<RectangleInfo *>(malloc(sizeof(*tile)));
+	tile->height = request->getLengthOfSquare();
+	tile->width = request->getLengthOfSquare();
+	tile->x = xOffset;
+	tile->y = yOffset;
+
+	Image * tmp = img;
+	img = CropImage(img, tile, &exception);
+
+	free(tile);
+	DestroyImage(tmp);
+	if (img == NULL)
+	{
+		CatchException(&exception);
+		DestroyImage(img);
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Image Extraction: Failed to crop image to get tile!");
+	}
+
+	return img;
 }

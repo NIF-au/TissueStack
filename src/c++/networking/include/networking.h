@@ -58,18 +58,20 @@ namespace tissuestack
     class TissueStackImageRequest final : public tissuestack::common::Request
     {
 		public:
-    		static const std::string SERVICE;
+    		static const std::string SERVICE1;
+    		static const std::string SERVICE2;
 			TissueStackImageRequest & operator=(const TissueStackImageRequest&) = delete;
 			TissueStackImageRequest(const TissueStackImageRequest&) = delete;
 			explicit TissueStackImageRequest(std::unordered_map<std::string, std::string> & request_parameters);
+			TissueStackImageRequest(std::unordered_map<std::string, std::string> & request_parameters, bool is_preview);
 			const bool isObsolete() const;
 			~TissueStackImageRequest();
 			const std::string getContent() const;
 			const std::string getDataSetLocation() const;
 			const std::string getDimensionName() const;
-			const unsigned long long int getSliceNumber() const;
-			const unsigned long long int getXCoordinate() const;
-			const unsigned long long int getYCoordinate() const;
+			const unsigned int getSliceNumber() const;
+			const unsigned int getXCoordinate() const;
+			const unsigned int getYCoordinate() const;
 			const unsigned int getLengthOfSquare() const;
 			const float getScaleFactor() const;
 			const float getQualityFactor() const;
@@ -77,12 +79,15 @@ namespace tissuestack
 			const std::string getOutputImageFormat() const;
 			const unsigned short getContrastMinimum() const;
 			const unsigned short getContrastMaximum() const;
+			const bool isPreview() const;
 		private:
+			void instantiateMe(std::unordered_map<std::string, std::string> & request_parameters);
+			bool _is_preview = false;
 			std::string _dataset_location;
 			std::string _dimension_name;
-			unsigned long long int _slice_number;
-			unsigned long long int _x_coordinate;
-			unsigned long long int _y_coordinate;
+			unsigned int _slice_number;
+			unsigned int _x_coordinate;
+			unsigned int _y_coordinate;
 			unsigned int _length_of_square;
 			float _scale_factor;
 			float _quality_factor;

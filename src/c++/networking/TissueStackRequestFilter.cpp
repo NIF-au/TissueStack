@@ -35,8 +35,10 @@ const tissuestack::common::Request * const tissuestack::networking::TissueStackR
 
 	// instantiate the appropriate request class
 	tissuestack::common::Request * return_request = nullptr;
-	if (tissuestack::networking::TissueStackImageRequest::SERVICE.compare(service) == 0)
-		return_request = new tissuestack::networking::TissueStackImageRequest(parameters);
+	if (tissuestack::networking::TissueStackImageRequest::SERVICE1.compare(service) == 0)
+		return_request = new tissuestack::networking::TissueStackImageRequest(parameters, false);
+	if (tissuestack::networking::TissueStackImageRequest::SERVICE2.compare(service) == 0)
+		return_request = new tissuestack::networking::TissueStackImageRequest(parameters, true);
 	else if (tissuestack::networking::TissueStackPreTilingRequest::SERVICE.compare(service) == 0)
 			return_request = new tissuestack::networking::TissueStackPreTilingRequest(parameters);
 	else if (tissuestack::networking::TissueStackConversionRequest::SERVICE.compare(service) == 0)
@@ -44,7 +46,7 @@ const tissuestack::common::Request * const tissuestack::networking::TissueStackR
 
 	if (return_request == nullptr)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
-						"A TissueStack request has to be: 'IMAGE', 'TILING' or 'CONVERSION' !");
+						"A TissueStack request has to be: 'IMAGE', 'IMAGE_PREVIEW, 'POINT_QUERY', 'TILING','CONVERSION' or 'CONFIGURATION'!");
 
 	if (return_request->isObsolete())
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackObsoleteRequestException,

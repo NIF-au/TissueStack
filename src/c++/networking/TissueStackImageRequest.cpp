@@ -1,11 +1,12 @@
 #include "networking.h"
 
-const std::string tissuestack::networking::TissueStackImageRequest::SERVICE = "IMAGE";
+const std::string tissuestack::networking::TissueStackImageRequest::SERVICE1 = "IMAGE";
+const std::string tissuestack::networking::TissueStackImageRequest::SERVICE2 = "IMAGE_PREVIEW";
 
 
 tissuestack::networking::TissueStackImageRequest::~TissueStackImageRequest() {}
 
-tissuestack::networking::TissueStackImageRequest::TissueStackImageRequest(std::unordered_map<std::string, std::string> & request_parameters)
+void tissuestack::networking::TissueStackImageRequest::instantiateMe(std::unordered_map<std::string, std::string> & request_parameters)
 {
 	std::string value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "dataset");
 	if (value.empty())
@@ -25,32 +26,10 @@ tissuestack::networking::TissueStackImageRequest::TissueStackImageRequest(std::u
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Mandatory parameter 'slice' was not supplied!");
 	try
 	{
-		this->_slice_number = strtoull(value.c_str(), NULL, 10);
+		this->_slice_number =  static_cast<unsigned int>(strtoul(value.c_str(), NULL, 10));
 	} catch (...)
 	{
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Mandatory parameter 'slice' is not a valid positve integer!");
-	}
-
-	value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "x");
-	if (value.empty())
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Mandatory parameter 'x' was not supplied!");
-	try
-	{
-		this->_x_coordinate = strtoull(value.c_str(), NULL, 10);
-	} catch (...)
-	{
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Mandatory parameter 'x' is not a valid positve integer!");
-	}
-
-	value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "y");
-	if (value.empty())
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Mandatory parameter 'y' was not supplied!");
-	try
-	{
-		this->_y_coordinate = strtoull(value.c_str(), NULL, 10);
-	} catch (...)
-	{
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Mandatory parameter 'y' is not a valid positve integer!");
 	}
 
 	value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "scale");
@@ -81,19 +60,6 @@ tissuestack::networking::TissueStackImageRequest::TissueStackImageRequest(std::u
 		}
 	}
 
-	value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "square");
-	if (value.empty())
-		this->_length_of_square = 256;
-	else
-	{
-		try
-		{
-			this->_length_of_square = strtoul(value.c_str(), NULL, 10);
-		} catch (...)
-		{
-			THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Optional Parameter 'square' is not a valid positive integer!");
-		}
-	}
 
 	value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "id");
 	if (value.empty())
@@ -166,9 +132,65 @@ tissuestack::networking::TissueStackImageRequest::TissueStackImageRequest(std::u
 		}
 	}
 
+	// the tile coordinates and the square length are not meaningful for previews
+	if (!this->_is_preview)
+	{
+		value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "x");
+		if (value.empty())
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Mandatory parameter 'x' was not supplied!");
+		try
+		{
+			this->_x_coordinate = static_cast<unsigned int>(strtoul(value.c_str(), NULL, 10));
+		} catch (...)
+		{
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Mandatory parameter 'x' is not a valid positve integer!");
+		}
+
+		value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "y");
+		if (value.empty())
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Mandatory parameter 'y' was not supplied!");
+		try
+		{
+			this->_y_coordinate = static_cast<unsigned int>(strtoul(value.c_str(), NULL, 10));
+		} catch (...)
+		{
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Mandatory parameter 'y' is not a valid positve integer!");
+		}
+
+		value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "square");
+		if (value.empty())
+			this->_length_of_square = 256;
+		else
+		{
+			try
+			{
+				this->_length_of_square = strtoul(value.c_str(), NULL, 10);
+			} catch (...)
+			{
+				THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Optional Parameter 'square' is not a valid positive integer!");
+			}
+		}
+	}
+
 	// we have passed all preliminary checks => assign us the new type
 	this->setType(tissuestack::common::Request::Type::TS_IMAGE);
+}
 
+tissuestack::networking::TissueStackImageRequest::TissueStackImageRequest(
+		std::unordered_map<std::string, std::string> & request_parameters, bool is_preview) : _is_preview(is_preview)
+{
+	this->instantiateMe(request_parameters);
+}
+
+tissuestack::networking::TissueStackImageRequest::TissueStackImageRequest(std::unordered_map<std::string, std::string> & request_parameters)
+{
+	// set flag if we only want a prview
+	std::string service = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "SERVICE");
+	std::transform(service.begin(), service.end(), service.begin(), toupper);
+	if (tissuestack::networking::TissueStackImageRequest::SERVICE2.compare(service) == 0)
+		this->_is_preview = true;
+
+	this->instantiateMe(request_parameters);
 }
 
 const bool tissuestack::networking::TissueStackImageRequest::isObsolete() const
@@ -213,6 +235,10 @@ const unsigned short tissuestack::networking::TissueStackImageRequest::getContra
 {
 	return this->_contrast_max;
 }
+const bool tissuestack::networking::TissueStackImageRequest::isPreview() const
+{
+	return this->_is_preview;
+}
 
 const std::string tissuestack::networking::TissueStackImageRequest::getOutputImageFormat() const
 {
@@ -229,17 +255,17 @@ const float tissuestack::networking::TissueStackImageRequest::getScaleFactor() c
 	return this->_scale_factor;
 }
 
-const unsigned long long int tissuestack::networking::TissueStackImageRequest::getSliceNumber() const
+const unsigned int tissuestack::networking::TissueStackImageRequest::getSliceNumber() const
 {
 	return this->_slice_number;
 }
 
-const unsigned long long int tissuestack::networking::TissueStackImageRequest::getXCoordinate() const
+const unsigned int tissuestack::networking::TissueStackImageRequest::getXCoordinate() const
 {
 	return this->_x_coordinate;
 }
 
-const unsigned long long int tissuestack::networking::TissueStackImageRequest::getYCoordinate() const
+const unsigned int tissuestack::networking::TissueStackImageRequest::getYCoordinate() const
 {
 	return this->_y_coordinate;
 }

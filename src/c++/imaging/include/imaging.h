@@ -281,18 +281,25 @@ namespace tissuestack
 
 				void extractImage(
 						const TissueStackRawData * image,
-						const tissuestack::networking::TissueStackImageRequest * request,
-						const unsigned long long int slice) const;
+						const tissuestack::networking::TissueStackImageRequest * request) const;
 
 				void extractImage(
 						const int descriptor,
 						const TissueStackRawData * image,
-						const tissuestack::networking::TissueStackImageRequest * request,
-						const unsigned long long int slice) const;
+						const tissuestack::networking::TissueStackImageRequest * request) const;
+
+				Image * extractImageOnly(
+						const TissueStackRawData * image,
+						const tissuestack::networking::TissueStackImageRequest * request) const;
+
+				Image * applyPostExtractionTasks(
+						Image * img,
+						const TissueStackRawData * image,
+						const tissuestack::networking::TissueStackImageRequest * request) const;
+
 			private:
 				void inline changeContrast(
 						Image * img,
-						ImageInfo * imgInfo,
 						const unsigned short minimum,
 						const unsigned short maximum,
 						const unsigned short dataset_min,
@@ -302,29 +309,29 @@ namespace tissuestack
 
 				void inline applyColorMap(
 						Image * img,
-						ImageInfo * imgInfo,
 						const std::string color_map_name,
 						const unsigned long int width,
 						const unsigned long int height) const;
 
 				inline Image * scaleImage(
 						Image * img,
-						ImageInfo * imgInfo,
 						const unsigned int width,
 						const unsigned int height) const;
 
 				inline Image * degradeImage(
 						Image * img,
-						ImageInfo * imgInfo,
 						const unsigned int width,
 						const unsigned int height,
 						const float quality_factor) const;
 
+				inline Image * getImageTile(
+						Image * img,
+						const tissuestack::networking::TissueStackImageRequest * request) const;
+
 				inline Image * createImageFromDataRead(
 						const tissuestack::imaging::TissueStackRawData * image,
 						const tissuestack::imaging::TissueStackDataDimension * actualDimension,
-						const unsigned char * data,
-						ImageInfo * imgInfo) const;
+						const unsigned char * data) const;
 
 				inline unsigned long long mapUnsignedValue(
 						const unsigned char fromBitRange,
@@ -343,14 +350,12 @@ namespace tissuestack
 
 				void extractImage(
 						const TissueStackRawData * image,
-						const tissuestack::networking::TissueStackImageRequest * request,
-						const unsigned long long int slice) const;
+						const tissuestack::networking::TissueStackImageRequest * request) const;
 
 				void extractImage(
 						const int descriptor,
 						const TissueStackRawData * image,
-						const tissuestack::networking::TissueStackImageRequest * request,
-						const unsigned long long int slice) const;
+						const tissuestack::networking::TissueStackImageRequest * request) const;
 			private:
 				const UncachedImageExtraction * _uncached_extraction = nullptr;
 		};
@@ -410,36 +415,42 @@ namespace tissuestack
 					if (request->getSliceNumber() < 0 || request->getSliceNumber() > dimension->getNumberOfSlices())
 						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 								"Slice number requested is out of bounds!");
-
-					if (request->getLengthOfSquare() < 0 || request->getLengthOfSquare() > 256 * 5)
-						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
-								"The length of the image square has to range in betwenn 0 and 1280");
 					if (request->getQualityFactor() <= 0.0 || request->getQualityFactor() > 1.0)
 						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 								"The range of 'quality factor' has to be greater than 0 but no bigger than 1.0");
-					if (request->getXCoordinate() < 0)
+					if (request->getScaleFactor() <= 0.0)
 						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
-								"The 'x' (pixel) coordinate has to be a positive integer");
-
+								"The range of 'scale factor' has to be greater than 0");
 					if (request->getColorMapName().empty())
 						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 								"Request is missing color map information");
 					if (tissuestack::imaging::TissueStackColorMapStore::instance()->findColorMap(request->getColorMapName()) == nullptr)
 						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 								"Request has been given a non-existing color map");
-
 					if (request->getContrastMinimum() < 0 || request->getContrastMinimum() > 255
 							|| request->getContrastMaximum() < 0 || request->getContrastMaximum() > 255
 							|| request->getContrastMinimum() >= request->getContrastMaximum())
 						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 								"Request has been given invalid contrast parameters");
+					if (!request->isPreview()) // only for non preview requests
+					{
+						if (request->getLengthOfSquare() < 0 || request->getLengthOfSquare() > 256 * 5)
+							THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+									"The length of the image square has to range in betwenn 0 and 1280");
+						if (request->getXCoordinate() < 0)
+							THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+									"The 'x' (pixel) coordinate has to be a positive integer");
+						if (request->getYCoordinate() < 0)
+							THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+									"The 'y' (pixel) coordinate has to be a positive integer");
+
+					}
 
 					// perform extraction
 					this->_caching_strategy->extractImage(
 							file_descriptor,
 							static_cast<const tissuestack::imaging::TissueStackRawData *>(dataSet->getImageData()),
-							request,
-							request->getSliceNumber());
+							request);
 
 					const std::string response =
 							tissuestack::utils::Misc::composeHttpResponse(
