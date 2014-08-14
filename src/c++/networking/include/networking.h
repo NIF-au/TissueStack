@@ -55,7 +55,7 @@ namespace tissuestack
     		static std::unordered_map<std::string,std::string> MinimalURIDecodingTable;
     };
 
-    class TissueStackImageRequest final : public tissuestack::common::Request
+    class TissueStackImageRequest : public tissuestack::common::Request
     {
 		public:
     		static const std::string SERVICE1;
@@ -65,7 +65,6 @@ namespace tissuestack
 			explicit TissueStackImageRequest(std::unordered_map<std::string, std::string> & request_parameters);
 			TissueStackImageRequest(std::unordered_map<std::string, std::string> & request_parameters, bool is_preview);
 			const bool isObsolete() const;
-			~TissueStackImageRequest();
 			const std::string getContent() const;
 			const std::string getDataSetLocation() const;
 			const std::string getDimensionName() const;
@@ -80,8 +79,16 @@ namespace tissuestack
 			const unsigned short getContrastMinimum() const;
 			const unsigned short getContrastMaximum() const;
 			const bool isPreview() const;
+			const bool hasExpired() const;
+		protected:
+			TissueStackImageRequest();
+			void setDataSetFromRequestParameters(const std::unordered_map<std::string, std::string> & request_parameters);
+			void setTimeStampInfoFromRequestParameters(const std::unordered_map<std::string, std::string> & request_parameters);
+			void setDimensionFromRequestParameters(const std::unordered_map<std::string, std::string> & request_parameters);
+			void setSliceFromRequestParameters(const std::unordered_map<std::string, std::string> & request_parameters);
+			void setCoordinatesFromRequestParameters(const std::unordered_map<std::string, std::string> & request_parameters);
 		private:
-			void instantiateMe(std::unordered_map<std::string, std::string> & request_parameters);
+			void setImageRequestMembersFromRequestParameters(const std::unordered_map<std::string, std::string> & request_parameters);
 			bool _is_preview = false;
 			std::string _dataset_location;
 			std::string _dimension_name;
@@ -97,6 +104,16 @@ namespace tissuestack
 			unsigned short _contrast_max;
 			unsigned long long int _request_id = 0;
 			unsigned long long int _request_timestamp = 0;
+    };
+
+    class TissueStackQueryRequest final : public TissueStackImageRequest
+    {
+		public:
+    		static const std::string SERVICE;
+    		TissueStackQueryRequest & operator=(const TissueStackQueryRequest&) = delete;
+			TissueStackQueryRequest(const TissueStackQueryRequest&) = delete;
+			explicit TissueStackQueryRequest(std::unordered_map<std::string, std::string> & request_parameters);
+			const std::string getContent() const;
     };
 
     class TissueStackPreTilingRequest final : public tissuestack::common::Request

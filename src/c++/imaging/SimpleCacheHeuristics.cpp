@@ -18,6 +18,16 @@ tissuestack::imaging::SimpleCacheHeuristics::~SimpleCacheHeuristics()
 		delete this->_uncached_extraction;
 }
 
+void tissuestack::imaging::SimpleCacheHeuristics::performQuery(
+						const int descriptor,
+						const tissuestack::imaging::TissueStackRawData * image,
+						const tissuestack::networking::TissueStackQueryRequest * request) const
+{
+	// delegate
+	// TODO: implement
+	this->_uncached_extraction->performQuery(descriptor, image, request);
+}
+
 void tissuestack::imaging::SimpleCacheHeuristics::extractImage(
 						const TissueStackRawData * image,
 						const tissuestack::networking::TissueStackImageRequest * request) const

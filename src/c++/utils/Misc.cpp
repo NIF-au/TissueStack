@@ -67,7 +67,7 @@ const std::vector<std::string> tissuestack::utils::Misc::tokenizeString(const st
 }
 
 const std::string tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(
-		std::unordered_map<std::string, std::string> & map, std::string key)
+		const std::unordered_map<std::string, std::string> & map, std::string key)
 {
 	std::transform(key.begin(), key.end(), key.begin(), toupper);
 

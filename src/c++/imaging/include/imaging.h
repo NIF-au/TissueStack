@@ -279,64 +279,69 @@ namespace tissuestack
 				UncachedImageExtraction(const UncachedImageExtraction&) = delete;
 				UncachedImageExtraction();
 
-				void extractImage(
-						const TissueStackRawData * image,
-						const tissuestack::networking::TissueStackImageRequest * request) const;
+				void performQuery(
+					const int descriptor,
+					const tissuestack::imaging::TissueStackRawData * image,
+					const tissuestack::networking::TissueStackQueryRequest * request) const;
 
 				void extractImage(
-						const int descriptor,
-						const TissueStackRawData * image,
-						const tissuestack::networking::TissueStackImageRequest * request) const;
+					const TissueStackRawData * image,
+					const tissuestack::networking::TissueStackImageRequest * request) const;
+
+				void extractImage(
+					const int descriptor,
+					const TissueStackRawData * image,
+					const tissuestack::networking::TissueStackImageRequest * request) const;
 
 				Image * extractImageOnly(
-						const TissueStackRawData * image,
-						const tissuestack::networking::TissueStackImageRequest * request) const;
+					const TissueStackRawData * image,
+					const tissuestack::networking::TissueStackImageRequest * request) const;
 
 				Image * applyPostExtractionTasks(
-						Image * img,
-						const TissueStackRawData * image,
-						const tissuestack::networking::TissueStackImageRequest * request) const;
+					Image * img,
+					const TissueStackRawData * image,
+					const tissuestack::networking::TissueStackImageRequest * request) const;
 
 			private:
 				void inline changeContrast(
-						Image * img,
-						const unsigned short minimum,
-						const unsigned short maximum,
-						const unsigned short dataset_min,
-						const unsigned short dataset_max,
-						const unsigned long int width,
-						const unsigned long int height) const;
+					Image * img,
+					const unsigned short minimum,
+					const unsigned short maximum,
+					const unsigned short dataset_min,
+					const unsigned short dataset_max,
+					const unsigned long int width,
+					const unsigned long int height) const;
 
 				void inline applyColorMap(
-						Image * img,
-						const std::string color_map_name,
-						const unsigned long int width,
-						const unsigned long int height) const;
+					Image * img,
+					const std::string color_map_name,
+					const unsigned long int width,
+					const unsigned long int height) const;
 
 				inline Image * scaleImage(
-						Image * img,
-						const unsigned int width,
-						const unsigned int height) const;
+					Image * img,
+					const unsigned int width,
+					const unsigned int height) const;
 
 				inline Image * degradeImage(
-						Image * img,
-						const unsigned int width,
-						const unsigned int height,
-						const float quality_factor) const;
+					Image * img,
+					const unsigned int width,
+					const unsigned int height,
+					const float quality_factor) const;
 
 				inline Image * getImageTile(
-						Image * img,
-						const tissuestack::networking::TissueStackImageRequest * request) const;
+					Image * img,
+					const tissuestack::networking::TissueStackImageRequest * request) const;
 
 				inline Image * createImageFromDataRead(
-						const tissuestack::imaging::TissueStackRawData * image,
-						const tissuestack::imaging::TissueStackDataDimension * actualDimension,
-						const unsigned char * data) const;
+					const tissuestack::imaging::TissueStackRawData * image,
+					const tissuestack::imaging::TissueStackDataDimension * actualDimension,
+					const unsigned char * data) const;
 
 				inline unsigned long long mapUnsignedValue(
-						const unsigned char fromBitRange,
-						const unsigned char toBitRange,
-						const unsigned long long value) const;
+					const unsigned char fromBitRange,
+					const unsigned char toBitRange,
+					const unsigned long long value) const;
 		};
 
 		class SimpleCacheHeuristics final
@@ -349,13 +354,19 @@ namespace tissuestack
 				~SimpleCacheHeuristics();
 
 				void extractImage(
-						const TissueStackRawData * image,
-						const tissuestack::networking::TissueStackImageRequest * request) const;
+					const TissueStackRawData * image,
+					const tissuestack::networking::TissueStackImageRequest * request) const;
 
 				void extractImage(
-						const int descriptor,
-						const TissueStackRawData * image,
-						const tissuestack::networking::TissueStackImageRequest * request) const;
+					const int descriptor,
+					const TissueStackRawData * image,
+					const tissuestack::networking::TissueStackImageRequest * request) const;
+
+				void performQuery(
+					const int descriptor,
+					const tissuestack::imaging::TissueStackRawData * image,
+					const tissuestack::networking::TissueStackQueryRequest * request) const;
+
 			private:
 				const UncachedImageExtraction * _uncached_extraction = nullptr;
 		};
@@ -376,8 +387,7 @@ namespace tissuestack
 				};
 				ImageExtraction() : _caching_strategy(new CachingStrategy()) {};
 
-				void processImageRequest(
-						const tissuestack::networking::TissueStackImageRequest * request,
+				const TissueStackImageData * processRequest(const tissuestack::networking::TissueStackImageRequest * request,
 						const int file_descriptor)
 				{
 					const tissuestack::imaging::TissueStackDataSet * dataSet =
@@ -406,8 +416,7 @@ namespace tissuestack
 					if (!dataSet->getImageData()->isRaw())
 						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Only TissueStack Raw Files are allowed to be requested online!");
 
-					// some more checks regarding the validity of the image request parameters
-					const tissuestack::imaging::TissueStackDataDimension * dimension  =
+					const TissueStackDataDimension * dimension  =
 							dataSet->getImageData()->getDimensionByLongName(request->getDimensionName());
 					if (dimension == nullptr)
 						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
@@ -415,6 +424,41 @@ namespace tissuestack
 					if (request->getSliceNumber() < 0 || request->getSliceNumber() > dimension->getNumberOfSlices())
 						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 								"Slice number requested is out of bounds!");
+					if (!request->isPreview()) // only for non preview requests
+					{
+						if (request->getXCoordinate() < 0)
+							THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+									"The 'x' (pixel) coordinate has to be a positive integer");
+						if (request->getYCoordinate() < 0)
+							THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+									"The 'y' (pixel) coordinate has to be a positive integer");
+					}
+
+					return dataSet->getImageData();
+				}
+
+
+				void processQueryRequest(
+						const tissuestack::networking::TissueStackQueryRequest * request,
+						const int file_descriptor)
+				{
+					const TissueStackImageData * imageData =
+							this->processRequest(request, file_descriptor);
+					// perform query
+					this->_caching_strategy->performQuery(
+						file_descriptor,
+						static_cast<const tissuestack::imaging::TissueStackRawData *>(imageData),
+						static_cast<const tissuestack::networking::TissueStackQueryRequest *>(request));
+				}
+
+				void processImageRequest(
+						const tissuestack::networking::TissueStackImageRequest * request,
+						const int file_descriptor)
+				{
+					const TissueStackImageData * imageData =
+						this->processRequest(request, file_descriptor);
+
+					// some more checks regarding the validity of the image request parameters
 					if (request->getQualityFactor() <= 0.0 || request->getQualityFactor() > 1.0)
 						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 								"The range of 'quality factor' has to be greater than 0 but no bigger than 1.0");
@@ -437,26 +481,13 @@ namespace tissuestack
 						if (request->getLengthOfSquare() < 0 || request->getLengthOfSquare() > 256 * 5)
 							THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 									"The length of the image square has to range in betwenn 0 and 1280");
-						if (request->getXCoordinate() < 0)
-							THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
-									"The 'x' (pixel) coordinate has to be a positive integer");
-						if (request->getYCoordinate() < 0)
-							THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
-									"The 'y' (pixel) coordinate has to be a positive integer");
-
 					}
 
 					// perform extraction
 					this->_caching_strategy->extractImage(
-							file_descriptor,
-							static_cast<const tissuestack::imaging::TissueStackRawData *>(dataSet->getImageData()),
-							request);
-
-					const std::string response =
-							tissuestack::utils::Misc::composeHttpResponse(
-									"200 OK", "text/plain", "Not implemented yet!!!"
-							);
-					//write(file_descriptor, response.c_str(), response.length());
+						file_descriptor,
+						static_cast<const tissuestack::imaging::TissueStackRawData *>(imageData),
+						request);
 				};
 
 			private:

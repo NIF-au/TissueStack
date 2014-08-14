@@ -42,6 +42,10 @@ Image * tissuestack::imaging::UncachedImageExtraction::extractImageOnly(
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Failed to read entire slice from RAW file!");
 
+	if (request->hasExpired())
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackObsoleteRequestException,
+			"Old Image Request!");
+
 	return
 		this->createImageFromDataRead(
 			image,
@@ -103,6 +107,90 @@ Image * tissuestack::imaging::UncachedImageExtraction::applyPostExtractionTasks(
 	return img;
 }
 
+void tissuestack::imaging::UncachedImageExtraction::performQuery(
+						const int descriptor,
+						const tissuestack::imaging::TissueStackRawData * image,
+						const tissuestack::networking::TissueStackQueryRequest * request) const
+{
+	const tissuestack::imaging::TissueStackDataDimension * actualDimension =
+			image->getDimensionByLongName(request->getDimensionName());
+
+	if (request->getXCoordinate() > actualDimension->getWidth() ||
+			request->getYCoordinate() > actualDimension->getHeight())
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Image Query: Coordinate (x/y) exceeds the width/height of the image slice!");
+
+	long long int dataLength =
+			actualDimension->getSliceSize() *
+			static_cast<long long int>(
+					(image->getType() == tissuestack::imaging::RAW_TYPE::UCHAR_8_BIT) ? 1 : 3);
+	unsigned long long int actualOffset =
+			actualDimension->getOffset() +
+				static_cast<unsigned long long int>(request->getSliceNumber()) * static_cast<unsigned long long int>(dataLength);
+
+	std::ostringstream response;
+
+	// start json response
+	response << "{\"response\": {\""
+			<< image->getFileName() << "\" : ";
+
+	if (image->getFormat() == tissuestack::imaging::FORMAT::RAW)
+	{
+		actualOffset +=
+			static_cast<unsigned long long int>(
+					static_cast<unsigned long long int>(request->getYCoordinate())*actualDimension->getWidth()*3 +
+					static_cast<unsigned long long int>(request->getXCoordinate()*3));
+
+		std::unique_ptr<unsigned char[]> data(new unsigned char[3]);
+		memset(data.get(), '\0', 3);
+		ssize_t bRead =
+			pread64(
+				const_cast<tissuestack::imaging::TissueStackRawData *>(image)->getFileDescriptor(),
+				data.get(),
+				3,
+				actualOffset);
+		if (bRead != 3)
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+					"Failed to query slice within RAW file!");
+
+		response << "{\"red\":" << std::to_string(data[0]);
+		response << ", \"green\":" << std::to_string(data[1]);
+		response << ", \"blue\":" << std::to_string(data[2]) << "}}}";
+	} else
+	{
+		Image * img =
+			this->extractImageOnly(image, request);
+
+		PixelPacket pixels =
+			GetOnePixel(
+				img,
+				request->getXCoordinate(),
+				request->getYCoordinate());
+
+		long long unsigned int pixel_value[3] =
+		{
+			static_cast<unsigned long long int>(pixels.red),
+			static_cast<unsigned long long int>(pixels.green),
+			static_cast<unsigned long long int>(pixels.blue)
+		};
+		if (QuantumDepth != 8 && img->depth == QuantumDepth) {
+			pixel_value[0] = this->mapUnsignedValue(img->depth, 8, pixel_value[0]);
+			pixel_value[1] = this->mapUnsignedValue(img->depth, 8, pixel_value[1]);
+			pixel_value[2] = this->mapUnsignedValue(img->depth, 8, pixel_value[2]);
+		}
+		response << "{\"red\":" << pixel_value[0];
+		response << ", \"green\":" << pixel_value[1];
+		response << ", \"blue\":" << pixel_value[2] << "}}}";
+
+		DestroyImage(img);
+	}
+
+	const std::string httpResponseHeader =
+		tissuestack::utils::Misc::composeHttpResponse(
+			"200 OK", "text/json", response.str());
+	write(descriptor, httpResponseHeader.c_str(), httpResponseHeader.length());
+}
+
 void tissuestack::imaging::UncachedImageExtraction::extractImage(
 						const int descriptor,
 						const tissuestack::imaging::TissueStackRawData * image,
@@ -116,6 +204,14 @@ void tissuestack::imaging::UncachedImageExtraction::extractImage(
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Could not create Image");
 
+	// timeout check
+	if (request->hasExpired())
+	{
+		DestroyImage(img);
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackObsoleteRequestException,
+			"Old Image Request!");
+	}
+
 	img =
 		this->applyPostExtractionTasks(
 			img,
@@ -124,6 +220,14 @@ void tissuestack::imaging::UncachedImageExtraction::extractImage(
 	if (img == NULL)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"Could not apply post extraction tasks to image");
+
+	// timeout check
+	if (request->hasExpired())
+	{
+		DestroyImage(img);
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackObsoleteRequestException,
+			"Old Image Request!");
+	}
 
 	// this is the part were we start to serialize the output of our finished image work
 	std::string formatLowerCase =  request->getOutputImageFormat();

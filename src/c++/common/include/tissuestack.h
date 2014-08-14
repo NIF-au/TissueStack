@@ -22,18 +22,33 @@ namespace tissuestack
 		class RequestTimeStampStore final
 		{
 			public:
-				static const unsigned int MAX_ENTRIES = 1000;
 
 				RequestTimeStampStore & operator=(const RequestTimeStampStore&) = delete;
 				RequestTimeStampStore(const RequestTimeStampStore&) = delete;
 
 				static RequestTimeStampStore * instance();
+
 				void purgeInstance();
-				static bool checkForExpiredEntry(unsigned long long int key, unsigned long long int value);
-			protected:
+
+				const bool doesIdExist(const unsigned long long int id);
+
+				const bool checkForExpiredEntry(
+						const unsigned long long int id,
+						const unsigned long long int timestamp);
+
+				void addTimeStamp(
+						const unsigned long long int id,
+						const unsigned long long int timestamp);
+			private:
+				inline const unsigned long long int calculateTimeDifference(
+						const unsigned long long int id,
+						const unsigned long long int timestamp);
+
+				static const unsigned int MAX_ENTRIES = 1000;
 				RequestTimeStampStore();
+				std::unordered_map<unsigned long long int, unsigned long long int> _timestamps;
+				std::mutex _timestamp_mutex;
 				static RequestTimeStampStore * _instance;
-				static std::unordered_map<unsigned long long int, unsigned long long int> _timestamps;
 		};
 
 		class Request
@@ -44,6 +59,7 @@ namespace tissuestack
 					RAW_HTTP,
 					HTTP,
 					TS_IMAGE,
+					TS_QUERY,
 					TS_TILING,
 					TS_CONVERSION
 				};

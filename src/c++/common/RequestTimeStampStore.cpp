@@ -16,41 +16,89 @@ void tissuestack::common::RequestTimeStampStore::purgeInstance()
 	tissuestack::common::RequestTimeStampStore::_instance = nullptr;
 }
 
-bool tissuestack::common::RequestTimeStampStore::checkForExpiredEntry(unsigned long long int key, unsigned long long int value)
+const bool tissuestack::common::RequestTimeStampStore::checkForExpiredEntry(
+		const unsigned long long int id, const unsigned long long int timestamp)
 {
-	if (key == 0) return false;
+	if (id == 0 || timestamp == 0) return false;
 
-	bool ret = false;
-	std::mutex mutex;
-	mutex.lock();
+	std::lock_guard<std::mutex> lock(this->_timestamp_mutex);
+
+	// get existing value and compare it against the new value
+	unsigned long long int old_difference = 0;
 
 	try
 	{
-		try
-		{
-			// get existing value and compare it against the old value (if exists)
-			unsigned long long int old_value = tissuestack::common::RequestTimeStampStore::_timestamps.at(key);
-			if (old_value > value) ret = true;
-		}  catch (const std::out_of_range& key_does_not_exist) {}
-
-		// let's add the new key/value if not expired
-		if (!ret)
-		{
-			// perhaps we need to clear the hash map
-			if (tissuestack::common::RequestTimeStampStore::_timestamps.size() >= tissuestack::common::RequestTimeStampStore::MAX_ENTRIES)
-				tissuestack::common::RequestTimeStampStore::_timestamps.clear();
-			tissuestack::common::RequestTimeStampStore::_timestamps[key] = value;
-		}
-	}
-	catch (...)
+		old_difference = tissuestack::common::RequestTimeStampStore::_timestamps.at(id);
+	}  catch (const std::out_of_range& key_does_not_exist)
 	{
-		// probably paranoia but never say never
-
+		return false;
 	}
-	mutex.unlock();
-	return ret;
+
+	const unsigned long long int new_difference = this->calculateTimeDifference(id, timestamp);
+	if (new_difference < old_difference)
+	{
+		//tissuestack::logging::TissueStackLogger::instance()->debug(
+		//		"EXPIRED: Id: %llu\tTime: %llu\tOld Delta:%llu\tNew Delta:%llu\n", id, timestamp, old_difference, new_difference);
+		return true;
+	}
+
+	return false;
+}
+
+const bool tissuestack::common::RequestTimeStampStore::doesIdExist(const unsigned long long int id)
+{
+	std::lock_guard<std::mutex> lock(this->_timestamp_mutex);
+
+	try
+	{
+		tissuestack::common::RequestTimeStampStore::_timestamps.at(id);
+		return true;
+	}  catch (const std::out_of_range& key_does_not_exist)
+	{
+		return false;
+	}
+}
+
+inline const unsigned long long int tissuestack::common::RequestTimeStampStore::calculateTimeDifference(
+		unsigned long long int id, unsigned long long int timestamp)
+{
+	// the id is longer by a few digits so we right pad the difference with 9s
+	std::string timestampAsAString = std::to_string(timestamp);
+
+	unsigned short numberOfIdDigits = std::to_string(id).length();
+	unsigned short numberOfTimestampDigits = timestampAsAString.length();
+	short deltaOfDigits = numberOfIdDigits-numberOfTimestampDigits;
+	if (deltaOfDigits <= 0) return 0;
+
+	char tmp[deltaOfDigits];
+	memset(tmp, '9', deltaOfDigits);
+	timestampAsAString.append(tmp, deltaOfDigits);
+
+	unsigned long long int paddedTimeStamp = strtoull(timestampAsAString.c_str(), NULL, 10);
+
+	return paddedTimeStamp-id;
+}
+
+void tissuestack::common::RequestTimeStampStore::addTimeStamp(
+		const unsigned long long int id,
+		const unsigned long long int timestamp)
+{
+	if (id == 0 || timestamp == 0 || this->doesIdExist(id))
+		return;
+
+	std::lock_guard<std::mutex> lock(this->_timestamp_mutex);
+
+	// let's add the new diff
+	const unsigned long long int diff = this->calculateTimeDifference(id, timestamp);
+
+	//tissuestack::logging::TissueStackLogger::instance()->debug(
+	//		"ADDED: Id: %llu\tTime: %llu\tDelta:%llu\n", id, timestamp, diff);
+
+	// perhaps we need to clear the hash map
+	if (tissuestack::common::RequestTimeStampStore::_timestamps.size() >= tissuestack::common::RequestTimeStampStore::MAX_ENTRIES)
+		tissuestack::common::RequestTimeStampStore::_timestamps.clear();
+
+	tissuestack::common::RequestTimeStampStore::_timestamps[id] = diff;
 }
 
 tissuestack::common::RequestTimeStampStore * tissuestack::common::RequestTimeStampStore::_instance = nullptr;
-std::unordered_map<unsigned long long int, unsigned long long int> tissuestack::common::RequestTimeStampStore::_timestamps;
-

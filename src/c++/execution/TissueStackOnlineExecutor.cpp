@@ -42,6 +42,8 @@ tissuestack::execution::TissueStackOnlineExecutor * tissuestack::execution::Tiss
 
 void tissuestack::execution::TissueStackOnlineExecutor::execute(std::string request, int client_descriptor)
 {
+	std::string response = "";
+
 	try
 	{
 		std::unique_ptr<const tissuestack::common::Request> req(new tissuestack::networking::RawHttpRequest(request));
@@ -57,41 +59,44 @@ void tissuestack::execution::TissueStackOnlineExecutor::execute(std::string requ
 			this->_imageExtractor->processImageRequest(
 					static_cast<const tissuestack::networking::TissueStackImageRequest *>(req.get()),
 					client_descriptor);
-
+		else if (req.get()->getType() == tissuestack::common::Request::Type::TS_QUERY)
+			this->_imageExtractor->processQueryRequest(
+					static_cast<const tissuestack::networking::TissueStackQueryRequest *>(req.get()),
+					client_descriptor);
 	}  catch (tissuestack::common::TissueStackObsoleteRequestException& obsoleteRequest)
 	{
-		// TODO: handle superseded requests
+		response =
+				tissuestack::utils::Misc::composeHttpResponse(
+					"408 Request Timeout", "text/plain", std::string(obsoleteRequest.what()));
 	}  catch (tissuestack::common::TissueStackInvalidRequestException& invalidRequest)
 	{
-		std::string response = "";
-
 		if (std::strstr(invalidRequest.what(), "favicon.ico") != NULL)
 			response =
-					tissuestack::utils::Misc::composeHttpResponse(
-							"404 Not Found", "text/plain", std::string(invalidRequest.what()));
+				tissuestack::utils::Misc::composeHttpResponse(
+					"404 Not Found", "text/plain", std::string(invalidRequest.what()));
 		else
 			response =
 				tissuestack::utils::Misc::composeHttpResponse(
-						"200 OK", "text/plain", std::string(invalidRequest.what()));
-		ssize_t bytes = send(client_descriptor, response.c_str(), response.length(), 0);
-		if (bytes < 0)
-			tissuestack::logging::TissueStackLogger::instance()->error(
-					"Error Sending 400 Bad Request: %s \n", strerror(errno));
+					"200 OK", "text/plain", std::string(invalidRequest.what()));
 	} catch (tissuestack::common::TissueStackException& ex)
 	{
-		std::string response =
-				tissuestack::utils::Misc::composeHttpResponse(
-						"500 Internal Server Error", "text/plain",
-						std::string(ex.what()));
-		ssize_t  bytes = send(client_descriptor, response.c_str(), response.length(), 0);
-		if (bytes < 0)
-			tissuestack::logging::TissueStackLogger::instance()->error(
-								"Error Sending 500 Internal Server Error: %s \n", strerror(errno));
+		response =
+			tissuestack::utils::Misc::composeHttpResponse(
+				"500 Internal Server Error", "text/plain", std::string(ex.what()));
 	}  catch (std::exception& bad)
 	{
 		// propagate up, they are unexpected and potentially serious!
 		throw bad;
 	}
+
+	if (response.empty())
+		return;
+
+	// sending error message
+	ssize_t  bytes = send(client_descriptor, response.c_str(), response.length(), 0);
+	if (bytes < 0)
+		tissuestack::logging::TissueStackLogger::instance()->error(
+			"Error Sending 500 Internal Server Error: %s \n", strerror(errno));
 }
 
 tissuestack::execution::TissueStackOnlineExecutor * tissuestack::execution::TissueStackOnlineExecutor::_instance = nullptr;

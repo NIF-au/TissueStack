@@ -46,7 +46,7 @@ namespace tissuestack
     	static const std::string demangleTypeIdName(const char * mangeledIdName);
     	static const std::vector<std::string> tokenizeString(const std::string & some_string, const char delimiter);
     	static const std::string findUnorderedMapEntryWithUpperCaseStringKey(
-    			std::unordered_map<std::string, std::string> & map, std::string key);
+    			const std::unordered_map<std::string, std::string> & map, std::string key);
     	static const std::string composeHttpResponse(
     			std::string status, std::string content_type, std::string content);
       private:

@@ -37,8 +37,10 @@ const tissuestack::common::Request * const tissuestack::networking::TissueStackR
 	tissuestack::common::Request * return_request = nullptr;
 	if (tissuestack::networking::TissueStackImageRequest::SERVICE1.compare(service) == 0)
 		return_request = new tissuestack::networking::TissueStackImageRequest(parameters, false);
-	if (tissuestack::networking::TissueStackImageRequest::SERVICE2.compare(service) == 0)
+	else if (tissuestack::networking::TissueStackImageRequest::SERVICE2.compare(service) == 0)
 		return_request = new tissuestack::networking::TissueStackImageRequest(parameters, true);
+	else if (tissuestack::networking::TissueStackQueryRequest::SERVICE.compare(service) == 0)
+		return_request = new tissuestack::networking::TissueStackQueryRequest(parameters);
 	else if (tissuestack::networking::TissueStackPreTilingRequest::SERVICE.compare(service) == 0)
 			return_request = new tissuestack::networking::TissueStackPreTilingRequest(parameters);
 	else if (tissuestack::networking::TissueStackConversionRequest::SERVICE.compare(service) == 0)
@@ -48,9 +50,14 @@ const tissuestack::common::Request * const tissuestack::networking::TissueStackR
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 						"A TissueStack request has to be: 'IMAGE', 'IMAGE_PREVIEW, 'POINT_QUERY', 'TILING','CONVERSION' or 'CONFIGURATION'!");
 
+	// a general isObsolete check. for most but not all requests that equates to a superseded timestamp check
+	// for conversion/tiling, this can be used to catch duplicate conversion/tiling requests
 	if (return_request->isObsolete())
+	{
+		delete return_request;
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackObsoleteRequestException,
-						"The TissueStack Request has become obsolete!");
+			"The TissueStack Request has become obsolete!");
+	}
 
 	return return_request;
 };

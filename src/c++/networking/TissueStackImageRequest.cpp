@@ -3,10 +3,10 @@
 const std::string tissuestack::networking::TissueStackImageRequest::SERVICE1 = "IMAGE";
 const std::string tissuestack::networking::TissueStackImageRequest::SERVICE2 = "IMAGE_PREVIEW";
 
+tissuestack::networking::TissueStackImageRequest::TissueStackImageRequest() {}
 
-tissuestack::networking::TissueStackImageRequest::~TissueStackImageRequest() {}
-
-void tissuestack::networking::TissueStackImageRequest::instantiateMe(std::unordered_map<std::string, std::string> & request_parameters)
+void tissuestack::networking::TissueStackImageRequest::setDataSetFromRequestParameters(
+		const std::unordered_map<std::string, std::string> & request_parameters)
 {
 	std::string value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "dataset");
 	if (value.empty())
@@ -15,53 +15,12 @@ void tissuestack::networking::TissueStackImageRequest::instantiateMe(std::unorde
 
 	if (!tissuestack::utils::System::fileExists(this->_dataset_location))
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Parameter 'dataset' does not represent an existing file!");
+}
 
-	value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "dimension");
-	if (value.empty())
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Mandatory parameter 'dimension' was not supplied!");
-	this->_dimension_name = value;
-
-	value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "slice");
-	if (value.empty())
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Mandatory parameter 'slice' was not supplied!");
-	try
-	{
-		this->_slice_number =  static_cast<unsigned int>(strtoul(value.c_str(), NULL, 10));
-	} catch (...)
-	{
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Mandatory parameter 'slice' is not a valid positve integer!");
-	}
-
-	value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "scale");
-	if (value.empty())
-		this->_scale_factor = 1.0;
-	else
-	{
-		try
-		{
-			this->_scale_factor = strtof(value.c_str(), NULL);
-		} catch (...)
-		{
-			THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Optional Parameter 'scale' is not a valid floating point number!");
-		}
-	}
-
-	value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "quality");
-	if (value.empty())
-		this->_quality_factor = 1.0;
-	else
-	{
-		try
-		{
-			this->_quality_factor = strtof(value.c_str(), NULL);
-		} catch (...)
-		{
-			THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Optional Parameter 'quality' is not a valid floating point number!");
-		}
-	}
-
-
-	value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "id");
+void tissuestack::networking::TissueStackImageRequest::setTimeStampInfoFromRequestParameters(
+		const std::unordered_map<std::string, std::string> & request_parameters)
+{
+	std::string value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "id");
 	if (value.empty())
 		this->_request_id = 0;
 	else
@@ -86,6 +45,91 @@ void tissuestack::networking::TissueStackImageRequest::instantiateMe(std::unorde
 		} catch (...)
 		{
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Optional Parameter 'timestamp' is not a valid positve integer!");
+		}
+	}
+
+}
+
+void tissuestack::networking::TissueStackImageRequest::setDimensionFromRequestParameters(const std::unordered_map<std::string, std::string> & request_parameters)
+{
+	std::string value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "dimension");
+	if (value.empty())
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Mandatory parameter 'dimension' was not supplied!");
+	this->_dimension_name = value;
+
+}
+
+void tissuestack::networking::TissueStackImageRequest::setSliceFromRequestParameters(const std::unordered_map<std::string, std::string> & request_parameters)
+{
+	std::string value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "slice");
+	if (value.empty())
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Mandatory parameter 'slice' was not supplied!");
+	try
+	{
+		this->_slice_number =  static_cast<unsigned int>(strtoul(value.c_str(), NULL, 10));
+	} catch (...)
+	{
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Mandatory parameter 'slice' is not a valid positve integer!");
+	}
+}
+
+void tissuestack::networking::TissueStackImageRequest::setCoordinatesFromRequestParameters(const std::unordered_map<std::string, std::string> & request_parameters)
+{
+	std::string value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "x");
+	if (value.empty())
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Mandatory parameter 'x' was not supplied!");
+	try
+	{
+		this->_x_coordinate = static_cast<unsigned int>(strtoul(value.c_str(), NULL, 10));
+	} catch (...)
+	{
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Mandatory parameter 'x' is not a valid positve integer!");
+	}
+
+	value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "y");
+	if (value.empty())
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Mandatory parameter 'y' was not supplied!");
+	try
+	{
+		this->_y_coordinate = static_cast<unsigned int>(strtoul(value.c_str(), NULL, 10));
+	} catch (...)
+	{
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Mandatory parameter 'y' is not a valid positve integer!");
+	}
+}
+
+void tissuestack::networking::TissueStackImageRequest::setImageRequestMembersFromRequestParameters(const std::unordered_map<std::string, std::string> & request_parameters)
+{
+	this->setTimeStampInfoFromRequestParameters(request_parameters);
+	this->setDataSetFromRequestParameters(request_parameters);
+	this->setDimensionFromRequestParameters(request_parameters);
+	this->setSliceFromRequestParameters(request_parameters);
+
+	std::string value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "scale");
+	if (value.empty())
+		this->_scale_factor = 1.0;
+	else
+	{
+		try
+		{
+			this->_scale_factor = strtof(value.c_str(), NULL);
+		} catch (...)
+		{
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Optional Parameter 'scale' is not a valid floating point number!");
+		}
+	}
+
+	value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "quality");
+	if (value.empty())
+		this->_quality_factor = 1.0;
+	else
+	{
+		try
+		{
+			this->_quality_factor = strtof(value.c_str(), NULL);
+		} catch (...)
+		{
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Optional Parameter 'quality' is not a valid floating point number!");
 		}
 	}
 
@@ -135,27 +179,7 @@ void tissuestack::networking::TissueStackImageRequest::instantiateMe(std::unorde
 	// the tile coordinates and the square length are not meaningful for previews
 	if (!this->_is_preview)
 	{
-		value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "x");
-		if (value.empty())
-			THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Mandatory parameter 'x' was not supplied!");
-		try
-		{
-			this->_x_coordinate = static_cast<unsigned int>(strtoul(value.c_str(), NULL, 10));
-		} catch (...)
-		{
-			THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Mandatory parameter 'x' is not a valid positve integer!");
-		}
-
-		value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "y");
-		if (value.empty())
-			THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Mandatory parameter 'y' was not supplied!");
-		try
-		{
-			this->_y_coordinate = static_cast<unsigned int>(strtoul(value.c_str(), NULL, 10));
-		} catch (...)
-		{
-			THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Mandatory parameter 'y' is not a valid positve integer!");
-		}
+		this->setCoordinatesFromRequestParameters(request_parameters);
 
 		value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "square");
 		if (value.empty())
@@ -179,7 +203,7 @@ void tissuestack::networking::TissueStackImageRequest::instantiateMe(std::unorde
 tissuestack::networking::TissueStackImageRequest::TissueStackImageRequest(
 		std::unordered_map<std::string, std::string> & request_parameters, bool is_preview) : _is_preview(is_preview)
 {
-	this->instantiateMe(request_parameters);
+	this->setImageRequestMembersFromRequestParameters(request_parameters);
 }
 
 tissuestack::networking::TissueStackImageRequest::TissueStackImageRequest(std::unordered_map<std::string, std::string> & request_parameters)
@@ -190,14 +214,20 @@ tissuestack::networking::TissueStackImageRequest::TissueStackImageRequest(std::u
 	if (tissuestack::networking::TissueStackImageRequest::SERVICE2.compare(service) == 0)
 		this->_is_preview = true;
 
-	this->instantiateMe(request_parameters);
+	this->setImageRequestMembersFromRequestParameters(request_parameters);
 }
 
 const bool tissuestack::networking::TissueStackImageRequest::isObsolete() const
 {
-	// use optional session id and timestamp against timestamp request store...
-	if (this->_request_id == 0 || this->_request_timestamp == 0) return false;
+	tissuestack::common::RequestTimeStampStore::instance()->addTimeStamp(this->_request_id, this->_request_timestamp);
 
+	// delegate
+	return this->hasExpired();
+}
+
+const bool tissuestack::networking::TissueStackImageRequest::hasExpired() const
+{
+	// convenience method that unlike isObsolete does not add new requests and is inlined for frequent calling
 	return tissuestack::common::RequestTimeStampStore::instance()->checkForExpiredEntry(this->_request_id, this->_request_timestamp);
 }
 
