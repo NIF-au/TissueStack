@@ -28,7 +28,7 @@ OBJS			=	$(SRCS:%.cpp=%.o)
 
 %.o: %.cpp
 	@echo -e "\tCompiling \"$(NAME)\" => [$(@)]"
-	@$(CC) -c $(LIBS) $(FLAGS) $(INCLUDE) -o $@ -fPIC -pie $<
+	@$(CC) -c $(LIBS) $(FLAGS) $(INCLUDE) `GraphicsMagick-config --cppflags --libs --ldflags` -o $@ -fPIC -pie $<
 	
 all:	compile install
 
@@ -41,7 +41,7 @@ install:
 
 test:	clean
 	@echo -e "\tCompiling Test for \"$(NAME)\" => [test/test]"
-	@$(CC) -o test/test $(LIBS) $(FLAGS) $(INCLUDE) $(SRCS_COMMON) $(SRCS_UTILS) $(SRCS_EXECUTION) $(SRCS_NETWORKING) $(SRCS) test/test.cpp
+	@$(CC) $(SRCS_COMMON) $(SRCS_UTILS) $(SRCS_EXECUTION) $(SRCS_NETWORKING) $(SRCS) test/test.cpp -o test/test `GraphicsMagick-config --cppflags --libs --ldflags` $(LIBS) $(FLAGS) $(INCLUDE)
 	@echo -en "\tRunning Test for \"$(NAME)\" ... "
 	@test/test 2&> test/output.log; if [ $$? -eq 0 ]; then echo " FAILED (check test/output.log)!"; else echo " SUCCESS.";fi; 
         
