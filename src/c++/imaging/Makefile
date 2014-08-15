@@ -12,7 +12,7 @@ LIB_PATH		=
 
 LIBS			=	-lrt -ldl
 
-LIB_NAME		=	libTissueStackImagging.so
+LIB_NAME		=	libTissueStackImaging.so
 
 INSTALL_DIR		=	/tmp
 

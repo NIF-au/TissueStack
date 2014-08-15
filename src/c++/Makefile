@@ -4,15 +4,16 @@ SRCS_COMMON		=	$(wildcard common/*.cpp)
 SRCS_NETWORKING	=	$(wildcard networking/*.cpp)
 SRCS_IMAGING	=	$(wildcard imaging/*.cpp)
 SRCS_EXECUTION	=	$(wildcard execution/*.cpp)
+SRCS_DATABASE	=	$(wildcard database/*.cpp)
 SRCS_UTILS		=	$(wildcard utils/*.cpp)
 SRCS			=	$(wildcard *.cpp)
 
 
-INCLUDE			=	-Icommon/include -Inetworking/include -Iexecution/include -Iimaging/include -Iutils/include
+INCLUDE			=	-Icommon/include -Inetworking/include -Iexecution/include -Iimaging/include -Iutils/include -Idatabase/include
 
 LIB_PATH		=
 
-LIBS			=	-lrt -lpthread -ldl
+LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq
 
 EXE_NAME		=	TissueStackImageServer
 
@@ -26,6 +27,7 @@ OBJS_COMMON		=	$(SRCS_COMMON:%.cpp=%.o)
 OBJS_NETWORKING	=	$(SRCS_NETWORKING:%.cpp=%.o)
 OBJS_IMAGING	=	$(SRCS_IMAGING:%.cpp=%.o)
 OBJS_EXECUTION	=	$(SRCS_EXECUTION:%.cpp=%.o)
+OBJS_DATABASE	=	$(SRCS_DATABASE:%.cpp=%.o)
 OBJS_UTILS		=	$(SRCS_UTILS:%.cpp=%.o)
 OBJS			=	$(SRCS:%.cpp=%.o)
 %.o: %.cpp
@@ -35,9 +37,9 @@ OBJS			=	$(SRCS:%.cpp=%.o)
 all:	compile install
 
 
-compile:	$(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_IMAGING) $(OBJS_EXECUTION) $(OBJS_UTILS) $(OBJS)
+compile:	$(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_IMAGING) $(OBJS_EXECUTION) $(OBJS_DATABASE) $(OBJS_UTILS) $(OBJS)
 	@echo -e "\tCompiling \"$(NAME)\" => $(EXE_NAME)"
-	@$(CC)   $(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_EXECUTION)  $(OBJS_IMAGING) $(OBJS_UTILS) $(OBJS) \
+	@$(CC)   $(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_EXECUTION) $(OBJS_DATABASE) $(OBJS_IMAGING) $(OBJS_UTILS) $(OBJS) \
 	`GraphicsMagick-config --cppflags --libs --ldflags` -o $(EXE_NAME) $(LIBS) $(FLAGS) $(INCLUDE)
 
 install:
