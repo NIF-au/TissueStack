@@ -24,7 +24,7 @@ tissuestack::database::TissueStackPostgresConnector::TissueStackPostgresConnecto
 
 	std::ostringstream connectString;
 	connectString << "dbname=" << database << " user=" << user;
-	connectString << " hostaddr=" << host << " port=" << port;
+	connectString << " host=" << host << " port=" << port;
 
 	try
 	{
@@ -53,6 +53,12 @@ tissuestack::database::TissueStackPostgresConnector * tissuestack::database::Tis
 
 	return tissuestack::database::TissueStackPostgresConnector::_instance;
  }
+
+const pqxx::result tissuestack::database::TissueStackPostgresConnector::executeNonTransactionalQuery(const std::string sql)
+{
+	pqxx::nontransaction non_transaction(*this->_connection);
+	return non_transaction.exec(sql);
+}
 
 const bool tissuestack::database::TissueStackPostgresConnector::isConnected() const
 {

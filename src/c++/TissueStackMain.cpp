@@ -1,5 +1,6 @@
 #include "logging.h"
 #include "singleton.h"
+#include "database.h"
 
 #include "server.h"
 #include "networking.h"
@@ -88,6 +89,40 @@ int main(int argc, char * args[])
 	{
 		tissuestack::LoggerSingleton->error(
 				"Failed to start the TissueStack SocketServer for unexpected reason:\n%s\n", bad.what());
+		exit(-1);
+	}
+
+	// start database connection
+	try
+	{
+		// TODO: there has to 1 text file for database connection parameters that is handed over at start
+		if (!tissuestack::database::TissueStackPostgresConnector::instance()->isConnected())
+		{
+			tissuestack::LoggerSingleton->error("Database is not connected!\n");
+			tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
+			exit(-1);
+		}
+		tissuestack::LoggerSingleton->info("Database connection established!\n");
+		// TODO: move commented part into 'rest' section. also solidify with catch and tests for database connectivity
+		/*
+		const std::vector<tissuestack::database::Configuration *> conf =
+				tissuestack::database::ConfigurationDataProvider::queryAllConfigurations();
+		for (tissuestack::database::Configuration * c : conf)
+		{
+			tissuestack::LoggerSingleton->debug("%s\n", c->getJson().c_str());
+			delete c;
+		}
+		const tissuestack::database::Configuration * conf =
+				tissuestack::database::ConfigurationDataProvider::queryConfigurationById("bla");
+		if (conf)
+		{
+			tissuestack::LoggerSingleton->debug("%s\n", conf->getJson().c_str());
+			delete conf;
+		}
+		*/
+	} catch (std::exception & bad)
+	{
+		tissuestack::LoggerSingleton->error("Could not create databases connection:\n%s\n", bad.what());
 		exit(-1);
 	}
 

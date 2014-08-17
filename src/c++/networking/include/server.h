@@ -304,13 +304,14 @@ namespace tissuestack
 
 				this->_isRunning = false;
 
-				// deallocate global singleton objects
+				// deallocate global singleton objects and disconnect database
 				try
 				{
 					tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
 					tissuestack::imaging::TissueStackDataSetStore::instance()->purgeInstance();
 					tissuestack::imaging::TissueStackLabelLookupStore::instance()->purgeInstance();
 					tissuestack::imaging::TissueStackColorMapStore::instance()->purgeInstance();
+					tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
 				} catch (...)
 				{
 					// can be safely ignored
