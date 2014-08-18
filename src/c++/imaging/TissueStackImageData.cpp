@@ -77,7 +77,7 @@ void tissuestack::imaging::TissueStackImageData::initializeWidthAndHeightForDime
 
 void tissuestack::imaging::TissueStackImageData::setWidthAndHeightByDimension(const std::string & dimension)
 {
-	std::array<unsigned int,2> widthAndHeight = {0, 0};
+	std::array<unsigned int,2> widthAndHeight = {{0, 0}};
 
 	tissuestack::imaging::TissueStackDataDimension * width = nullptr;
 	tissuestack::imaging::TissueStackDataDimension * height = nullptr;

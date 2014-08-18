@@ -294,7 +294,7 @@ namespace tissuestack
 						tissuestack::LoggerSingleton->info("Request Processor stopped successfully!\n");
 						break;
 					}
-					std::this_thread::sleep_for(std::chrono::seconds(1));
+					sleep(1);
 					shutdownTime++;
 				}
 

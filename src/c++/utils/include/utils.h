@@ -15,6 +15,7 @@
 #include <cxxabi.h>
 #include <algorithm>
 #include <vector>
+#include <stdexcept>
 #include <unordered_map>
 
 namespace tissuestack

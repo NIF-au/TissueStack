@@ -69,7 +69,7 @@ tissuestack::imaging::TissueStackColorMap::TissueStackColorMap(const std::string
 			if (colNr < 3)
 				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Color Map file has to have at least 4 tokens!");
 
-			colorMapRanges.push_back({gray, red, green, blue});
+			colorMapRanges.push_back({{gray, red, green, blue}});
 		}
 		file_stream.close();
 
@@ -150,11 +150,11 @@ void tissuestack::imaging::TissueStackColorMap::preFillColorMapArray(std::array<
 const std::array<const unsigned short, 3> tissuestack::imaging::TissueStackColorMap::getRGBMapForGrayValue(const unsigned short & gray) const
 {
 	const std::array<const unsigned short, 3> ret =
-			{
+			{{
 				this->_gray_indexed_rgb_mapping[gray][0],
 				this->_gray_indexed_rgb_mapping[gray][1],
 				this->_gray_indexed_rgb_mapping[gray][2],
-			};
+			}};
 	return ret;
 }
 

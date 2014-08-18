@@ -25,6 +25,8 @@ tissuestack::database::TissueStackPostgresConnector::TissueStackPostgresConnecto
 	std::ostringstream connectString;
 	connectString << "dbname=" << database << " user=" << user;
 	connectString << " host=" << host << " port=" << port;
+	connectString << " password=" << password;
+	connectString << " sslmode=allow";
 
 	try
 	{

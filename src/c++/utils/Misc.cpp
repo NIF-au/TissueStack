@@ -42,22 +42,27 @@ const std::vector<std::string> tissuestack::utils::Misc::tokenizeString(const st
 
 	while (1)
 	{
-		pos = some_string.find(delimiter, pos);
-
 		// peek ahead to avoid repeated appearances of the delimiter
-		if (pos+1 < some_string.length() && some_string.at(pos+1) == delimiter)
+		if (pos != std::string::npos &&
+				pos < some_string.length()-1 &&
+				some_string.at(pos) == delimiter &&
+				some_string.at(pos+1) == delimiter)
 		{
 			++pos;
 			++old_pos;
 			continue;
 		}
 
-		if (pos == old_pos)
-			pos = some_string.find(delimiter, pos+1);
+		pos = some_string.find(delimiter, pos);
+		if (pos != std::string::npos && pos == old_pos)
+		{
+			++pos;
+			continue;
+		}
 
 		tokens.push_back(some_string.substr(old_pos, pos-old_pos));
-
-		if (pos == std::string::npos) break;
+		if (pos == std::string::npos)
+			break;
 
 		++pos;
 		old_pos=pos;
@@ -74,7 +79,7 @@ const std::string tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseSt
 	try
 	{
 		return map.at(key);
-	} catch (const std::out_of_range& ignored) { }
+	} catch (const std::out_of_range & ignored) { }
 
 	return std::string("");
 }

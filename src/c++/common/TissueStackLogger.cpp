@@ -1,11 +1,11 @@
 #include "logging.h"
 
-tissuestack::logging::TissueStackLogger::TissueStackLogger() : _log_path(LOG_PATH)
+tissuestack::logging::TissueStackLogger::TissueStackLogger() : _log_path("///opt///tissuestack///logs")
 {
 	// check if path exists and create it if necessary
 	if (!tissuestack::utils::System::directoryExists(this->_log_path))
-	if (!tissuestack::utils::System::createDirectory(this->_log_path, 0775))
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException, "Unable to create the log path!");
+		if (!tissuestack::utils::System::createDirectory(this->_log_path, 0775))
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException, "Unable to create the log path!");
 
 	// create and open files
 	this->_info_log = fopen(std::string(this->_log_path + "/info.log").c_str(), "a");

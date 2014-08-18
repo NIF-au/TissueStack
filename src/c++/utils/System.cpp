@@ -58,7 +58,8 @@ const bool tissuestack::utils::System::createDirectory(const std::string& direct
 	{
 		accumumatedDirectory += (subdir + "/");
 		if (!tissuestack::utils::System::directoryExists(accumumatedDirectory))
-			if (mkdir(accumumatedDirectory.c_str(), mode) < 0) return false;
+			if (mkdir(accumumatedDirectory.c_str(), mode) < 0)
+				return false;
 	}
 
 	return true;

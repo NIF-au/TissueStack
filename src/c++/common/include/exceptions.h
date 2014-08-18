@@ -2,6 +2,7 @@
 #define __EXCEPTIONS_H__
 
 #include <exception>
+#include <stdexcept>
 #include <cstring>
 #include <string>
 
