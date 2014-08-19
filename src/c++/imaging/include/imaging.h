@@ -329,6 +329,8 @@ namespace tissuestack
 					const unsigned int height,
 					const float quality_factor) const;
 
+				inline Image * convertAnythingToRgbImage(Image * img) const;
+
 				inline Image * getImageTile(
 					Image * img,
 					const tissuestack::networking::TissueStackImageRequest * request) const;
