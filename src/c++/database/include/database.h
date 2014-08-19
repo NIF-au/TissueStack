@@ -24,6 +24,8 @@ namespace tissuestack
 		    	void purgeInstance();
 		    	const bool isConnected() const;
 			private:
+		    	std::string _connectString;
+		    	void reconnect();
 		    	TissueStackPostgresConnector(
 		    			const std::string host,
 		    			const short port,

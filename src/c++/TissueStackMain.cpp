@@ -48,12 +48,34 @@ extern "C"
 
 int main(int argc, char * args[])
 {
+	// we have been given the location of a startup configuration file
+	if (argc > 1)
+	{
+		std::string startUpConfFile(args[1]);
+		if (!tissuestack::utils::System::fileExists(startUpConfFile))
+		{
+			std::cerr << "\nERROR: Parameter given does not point to a file location!\n\n" <<
+				"Usage: TissueStackImageServer [configuration file]\n" <<
+				"Note: The configuration file (if used) has to be a text file with one key/value pair per line.\n" <<
+				"Tabs are not appreciated and comment lines start with #. e.g:\n\n" <<
+				"\t# TissueStack Image Server Port\n\tport=4242\n" <<
+				"\t# Configuration database host\n\tdb_host=localhost\n" <<
+				"\t# Configuration database port\n\tdb_port=5432\n" <<
+				"\t# Configuration database name\n\tdb_name=tissuestack\n" <<
+				"\t# Configuration database user\n\tdb_user=tissuestack\n" <<
+				"\t# Configuration database password\n\tdb_password=tissuestack\n\n" << std::endl;
+			exit(-1);
+		}
+
+		// TODO: parse startup configuration (use vector of database configuration tuples)
+	}
+
 	std::unique_ptr<tissuestack::networking::Server<tissuestack::common::TissueStackProcessingStrategy> >
 				TissueStackServer;
 	try
 	{
 		// create an instance of a tissue stack server and wrap it in a smart pointer
-		TissueStackServer.reset(new tissuestack::networking::Server<tissuestack::common::TissueStackProcessingStrategy>(4242));
+		TissueStackServer.reset(new tissuestack::networking::Server<tissuestack::common::TissueStackProcessingStrategy>());
 	} catch (tissuestack::common::TissueStackException& ex) {
 		tissuestack::LoggerSingleton->error(
 				"Failed to instantiate TissueStackServer with Default Strategy for the following reason: %s\n",
@@ -100,6 +122,7 @@ int main(int argc, char * args[])
 		{
 			tissuestack::LoggerSingleton->error("Database is not connected!\n");
 			tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
+			tissuestack::LoggerSingleton->purgeInstance();
 			exit(-1);
 		}
 		tissuestack::LoggerSingleton->info("Database connection established!\n");

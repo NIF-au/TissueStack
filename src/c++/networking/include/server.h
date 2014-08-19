@@ -201,9 +201,7 @@ namespace tissuestack
 			Server & operator=(const Server&) = delete;
 			Server(const Server&) = delete;
 
-			Server() : Server(static_cast<unsigned int>(Server::PORT)) {};
-
-			explicit Server(unsigned int port): _server_socket(0), _processor(
+			explicit Server(unsigned int port=4242): _server_socket(0), _processor(
 					tissuestack::common::RequestProcessor<ProcessorImplementation>::instance(new ProcessorImplementation()))
 			{this->_port = port;};
 

@@ -27,10 +27,11 @@ tissuestack::database::TissueStackPostgresConnector::TissueStackPostgresConnecto
 	connectString << " host=" << host << " port=" << port;
 	connectString << " password=" << password;
 	connectString << " sslmode=allow";
+	this->_connectString = connectString.str();
 
 	try
 	{
-		this->_connection = new pqxx::connection(connectString.str());
+		this->_connection = new pqxx::connection(this->_connectString);
 	} catch (std::exception & any) {
 		tissuestack::logging::TissueStackLogger::instance()->error(
 			"Failed to establish database connection: %s\n", any.what());
@@ -58,14 +59,38 @@ tissuestack::database::TissueStackPostgresConnector * tissuestack::database::Tis
 
 const pqxx::result tissuestack::database::TissueStackPostgresConnector::executeNonTransactionalQuery(const std::string sql)
 {
-	pqxx::nontransaction non_transaction(*this->_connection);
-	return non_transaction.exec(sql);
+	try
+	{
+		pqxx::nontransaction non_transaction(*this->_connection);
+		return non_transaction.exec(sql);
+	} catch (std::exception & bad) { // check connectivity
+		if (!this->isConnected()) // we try it one more time
+		{
+			this->reconnect();
+			pqxx::nontransaction non_transaction(*this->_connection);
+			return non_transaction.exec(sql);
+		}
+		throw bad; // propagate (t'was not the connection, strangely enough)
+	}
+}
+
+void tissuestack::database::TissueStackPostgresConnector::reconnect()
+{
+	this->_connection = new pqxx::connection(this->_connectString);
 }
 
 const bool tissuestack::database::TissueStackPostgresConnector::isConnected() const
 {
 	if (this->_connection == nullptr) return false;
-	return this->_connection->is_open();
+
+	try
+	{
+		return this->_connection->is_open();
+	} catch(std::exception & bad)
+	{
+		tissuestack::logging::TissueStackLogger::instance()->error("Database not connected for reason: %s\n", bad.what());
+		return false;
+	}
 }
 
 tissuestack::database::TissueStackPostgresConnector * tissuestack::database::TissueStackPostgresConnector::_instance = nullptr;
