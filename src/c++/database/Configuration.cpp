@@ -23,6 +23,14 @@ const std::string tissuestack::database::Configuration::getDescription() const
 	return this->_description;
 }
 
+void tissuestack::database::Configuration::setValue(const std::string value)
+{
+	if (value.empty()) return;
+
+	this->_value = value;
+}
+
+
 const std::string tissuestack::database::Configuration::getJson() const
 {
 	std::ostringstream json;

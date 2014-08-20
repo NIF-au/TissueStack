@@ -104,7 +104,7 @@ namespace tissuestack
     					{
     						// close connection and log error
     						this->removeDescriptorFromList(request_descriptor, true);
-    						tissuestack::LoggerSingleton->error("Something bad happened: %s\n", bad.what());
+    						tissuestack::logging::TissueStackLogger::instance()->error("Something bad happened: %s\n", bad.what());
     					}
     				  });
     			this->_server->_processor->process(f);
@@ -128,7 +128,7 @@ namespace tissuestack
   					if (ret == -1)
   					{
   						if (this->_server->isStopping()) break;
-  						tissuestack::LoggerSingleton->error("ServerSocket select returned -1\n");
+  						tissuestack::logging::TissueStackLogger::instance()->error("ServerSocket select returned -1\n");
   					}
 
 					// check existing descriptor list
@@ -146,7 +146,7 @@ namespace tissuestack
 								// check accept status
 								if (new_fd  == -1 ) { // NOK
 									if (!this->_server->isStopping())
-										tissuestack::LoggerSingleton->error("Failed to accept client connection!\n");
+										tissuestack::logging::TissueStackLogger::instance()->error("Failed to accept client connection!\n");
 								} else
 								{
 									this->addToFileDescriptorList(new_fd);
@@ -165,15 +165,15 @@ namespace tissuestack
 									 * //client close which we will ignore from now on
 									 * if (bytesReceived == 0 &&
 									 *		!this->_server->isStopping())
-									 *			tissuestack::LoggerSingleton->error("Client closed connection!\n");
+									 *			tissuestack::logging::TissueStackLogger::instance()->error("Client closed connection!\n");
 									 *  else
 									 */
 									if (bytesReceived < 0 &&
 											!this->_server->isStopping())
-										tissuestack::LoggerSingleton->error("Data Receive error!\n");
+										tissuestack::logging::TissueStackLogger::instance()->error("Data Receive error!\n");
 									else if (bytesReceived > MAX_REQUEST_LENGTH_IN_BYTES &&
 											!this->_server->isStopping()) // for now we have a limit
-										tissuestack::LoggerSingleton->error("Exceeded Request Size Allowed: %u !!\n", MAX_REQUEST_LENGTH_IN_BYTES );
+										tissuestack::logging::TissueStackLogger::instance()->error("Exceeded Request Size Allowed: %u !!\n", MAX_REQUEST_LENGTH_IN_BYTES );
 
 									this->removeDescriptorFromList(i, true);
 								}
@@ -229,7 +229,7 @@ namespace tissuestack
 
 			void start()
 			{
-				tissuestack::LoggerSingleton->info("Starting Up Socket Server...\n");
+				tissuestack::logging::TissueStackLogger::instance()->info("Starting Up Socket Server...\n");
 
 				// create a reusable server socket
 				this->_server_socket = ::socket(AF_INET, SOCK_STREAM, 0);
@@ -255,13 +255,13 @@ namespace tissuestack
 					THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException, "Failed to listen on server socket!");
 
 				this->_isRunning = true;
-				tissuestack::LoggerSingleton->info("Socket Server has been started on %s:%u [FD: %i]\n",
+				tissuestack::logging::TissueStackLogger::instance()->info("Socket Server has been started on %s:%u [FD: %i]\n",
 						inet_ntoa(server_address.sin_addr), this->_port, this->_server_socket);
 			};
 
 			void listen()
 			{
-				tissuestack::LoggerSingleton->info("Socket Server is now ready to accept requests...\n");
+				tissuestack::logging::TissueStackLogger::instance()->info("Socket Server is now ready to accept requests...\n");
 
 				this->_processor->init();
 				// delegate to the selector class
@@ -271,7 +271,7 @@ namespace tissuestack
 
 			void stop()
 			{
-				tissuestack::LoggerSingleton->info("Shutting Down Socket Server...\n");
+				tissuestack::logging::TissueStackLogger::instance()->info("Shutting Down Socket Server...\n");
 				// stop incoming requests
 				this->_stopRaised = true;
 				shutdown(this->_server_socket, SHUT_RD);
@@ -279,17 +279,17 @@ namespace tissuestack
 				unsigned short shutdownTime = 0;
 				while (true) // 'graceful' shutdown for up to Server::SHUTDOWN_TIMEOUT_IN_SECONDS
 				{
-					tissuestack::LoggerSingleton->info("Waiting for tasks to be stopped...\n");
+					tissuestack::logging::TissueStackLogger::instance()->info("Waiting for tasks to be stopped...\n");
 					// delegate to request processor to finish off pending tasks
 					this->_processor->stop();
 
 					if (shutdownTime > Server::SHUTDOWN_TIMEOUT_IN_SECONDS)
 					{
-						tissuestack::LoggerSingleton->info("Request Processor will be stopped forcefully!\n");
+						tissuestack::logging::TissueStackLogger::instance()->info("Request Processor will be stopped forcefully!\n");
 						break;
 					} else if (!this->_processor->isRunning())
 					{
-						tissuestack::LoggerSingleton->info("Request Processor stopped successfully!\n");
+						tissuestack::logging::TissueStackLogger::instance()->info("Request Processor stopped successfully!\n");
 						break;
 					}
 					sleep(1);
@@ -305,23 +305,19 @@ namespace tissuestack
 				// deallocate global singleton objects and disconnect database
 				try
 				{
+					tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
+					tissuestack::TissueStackConfigurationParameters::instance()->purgeInstance();
 					tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
 					tissuestack::imaging::TissueStackDataSetStore::instance()->purgeInstance();
 					tissuestack::imaging::TissueStackLabelLookupStore::instance()->purgeInstance();
 					tissuestack::imaging::TissueStackColorMapStore::instance()->purgeInstance();
-					tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
 				} catch (...)
 				{
 					// can be safely ignored
 				}
 
-				tissuestack::LoggerSingleton->info("Socket Server Shut Down Successfully.\n");
-
-				if (tissuestack::LoggerSingleton)
-				{
-					delete tissuestack::LoggerSingleton;
-					tissuestack::LoggerSingleton = nullptr;
-				}
+				tissuestack::logging::TissueStackLogger::instance()->info("Socket Server Shut Down Successfully.\n");
+				tissuestack::logging::TissueStackLogger::instance()->purgeInstance();
 				DestroyMagick();
 			};
 

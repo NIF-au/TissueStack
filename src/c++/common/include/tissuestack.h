@@ -2,9 +2,10 @@
 #define __TISSUESTACK_H__
 
 #include "logging.h"
-
 #include "exceptions.h"
 #include "utils.h"
+#include "database.h"
+#include "parameters.h"
 
 #include <magick/api.h>
 

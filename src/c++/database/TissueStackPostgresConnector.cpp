@@ -1,4 +1,5 @@
 #include "database.h"
+#include "parameters.h"
 
 tissuestack::database::TissueStackPostgresConnector::~TissueStackPostgresConnector()
 {
@@ -14,9 +15,9 @@ tissuestack::database::TissueStackPostgresConnector::~TissueStackPostgresConnect
 tissuestack::database::TissueStackPostgresConnector::TissueStackPostgresConnector(
 		const std::string host,
 		const short port,
-		const std::string password,
 		const std::string database,
-		const std::string user)
+		const std::string user,
+		const std::string password)
 {
 	if (host.empty() || password.empty() || database.empty() || user.empty() || port <=0)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
@@ -44,15 +45,17 @@ void tissuestack::database::TissueStackPostgresConnector::purgeInstance()
 	tissuestack::database::TissueStackPostgresConnector::_instance = nullptr;
 }
 
-tissuestack::database::TissueStackPostgresConnector * tissuestack::database::TissueStackPostgresConnector::instance(
-	const std::string host,
-	const short port,
-	const std::string password)
+tissuestack::database::TissueStackPostgresConnector * tissuestack::database::TissueStackPostgresConnector::instance()
  {
 	if (tissuestack::database::TissueStackPostgresConnector::_instance == nullptr)
 		tissuestack::database::TissueStackPostgresConnector::_instance =
 			new tissuestack::database::TissueStackPostgresConnector(
-				host, port, password);
+					tissuestack::TissueStackConfigurationParameters::instance()->getParameter("db_host"),
+					static_cast<short>(atoi(
+							tissuestack::TissueStackConfigurationParameters::instance()->getParameter("db_port").c_str())),
+					tissuestack::TissueStackConfigurationParameters::instance()->getParameter("db_name"),
+					tissuestack::TissueStackConfigurationParameters::instance()->getParameter("db_user"),
+					tissuestack::TissueStackConfigurationParameters::instance()->getParameter("db_password"));
 
 	return tissuestack::database::TissueStackPostgresConnector::_instance;
  }

@@ -16,10 +16,7 @@ namespace tissuestack
 				TissueStackPostgresConnector & operator=(const TissueStackPostgresConnector&) = delete;
 				TissueStackPostgresConnector(const TissueStackPostgresConnector&) = delete;
 				~TissueStackPostgresConnector();
-				static TissueStackPostgresConnector * instance(
-						const std::string host = "localhost",
-						const short port = 5432,
-						const std::string password = "tissuestack");
+				static TissueStackPostgresConnector * instance();
 				const pqxx::result executeNonTransactionalQuery(const std::string sql);
 		    	void purgeInstance();
 		    	const bool isConnected() const;
@@ -29,9 +26,9 @@ namespace tissuestack
 		    	TissueStackPostgresConnector(
 		    			const std::string host,
 		    			const short port,
-		    			const std::string password,
-		    			const std::string database = "tissuestack",
-		    			const std::string user = "tissuestack");
+		    			const std::string database,
+		    			const std::string user,
+		    			const std::string password);
 				static TissueStackPostgresConnector * _instance;
 				pqxx::connection * _connection = nullptr;
 	 	};
@@ -44,6 +41,7 @@ namespace tissuestack
 				Configuration(const std::string name, const std::string value, const std::string description = "");
 				const std::string getName() const;
 				const std::string getValue() const;
+				void setValue(const std::string value);
 				const std::string getDescription() const;
 				const std::string getJson() const;
 			private:
