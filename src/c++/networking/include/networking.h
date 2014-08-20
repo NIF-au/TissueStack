@@ -140,6 +140,23 @@ namespace tissuestack
 			const std::string getContent() const;
     };
 
+    class TissueStackServicesRequest final : public tissuestack::common::Request
+    {
+		public:
+    		static const std::string SERVICE;
+    		TissueStackServicesRequest & operator=(const TissueStackServicesRequest&) = delete;
+    		TissueStackServicesRequest(const TissueStackServicesRequest&) = delete;
+			explicit TissueStackServicesRequest(std::unordered_map<std::string, std::string> & request_parameters);
+			const bool isObsolete() const;
+			~TissueStackServicesRequest();
+			const std::string getRequestParameter(const std::string & which, const bool convertUpperCase = false) const;
+			const std::string getSubService() const;
+			const std::string getContent() const;
+		private:
+			std::unordered_map<std::string, std::string> _request_parameters;
+			std::string _subService;
+    };
+
     class HttpRequestSanityFilter : public tissuestack::common::RequestFilter
     {
     	public:

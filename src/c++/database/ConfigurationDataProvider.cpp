@@ -16,13 +16,16 @@ const tissuestack::database::Configuration * tissuestack::database::Configuratio
 			tissuestack::database::TissueStackPostgresConnector::instance()->executeNonTransactionalQuery(sql);
 
 	if (results.size() == 0) return ret;
+	if (results.size() > 1)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Unique key based search returned more than 1 record!");
 
 	for (pqxx::result::const_iterator conf = results.begin(); conf != results.end(); ++conf)
 	{
 		ret = tissuestack::database::ConfigurationDataProvider::readResult(conf);
 		break;
 	}
-
+	tissuestack::logging::TissueStackLogger::instance()->debug("Value:\n%s\n", ret->getValue().c_str());
 	return ret;
 }
 

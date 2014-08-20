@@ -34,10 +34,10 @@ void tissuestack::database::Configuration::setValue(const std::string value)
 const std::string tissuestack::database::Configuration::getJson() const
 {
 	std::ostringstream json;
-	json << "{ \"name\": \"" << this->_name << "\"";
-	json << ", \"value\": " << this->_value << "\"";
+	json << "{ \"name\": \"" << tissuestack::utils::Misc::maskQuotesInJson(this->_name) << "\"";
+	json << ", \"value\": \"" << tissuestack::utils::Misc::maskQuotesInJson(this->_value) << "\"";
 	if (!this->_description.empty())
-		json << ", \"description\": " << this->_description << "\"";;
+		json << ", \"description\": \"" << tissuestack::utils::Misc::maskQuotesInJson(this->_description) << "\"";
 	json << " }";
 
 	return json.str();

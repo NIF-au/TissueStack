@@ -30,6 +30,33 @@ const std::string tissuestack::utils::Misc::demangleTypeIdName(const char * mang
 	return ret;
 }
 
+const std::string tissuestack::utils::Misc::maskQuotesInJson(const std::string & json)
+{
+	if (json.empty()) return json;
+
+	std::ostringstream in;
+	for (char c : json)
+	{
+		if (c == '"')
+			in << "\\\"";
+		else if (c == '\\')
+			in << "\\\\";
+		else if (c == '\r')
+			in << "\\r";
+		else if (c == '\b')
+			in << "\\b";
+		else if (c == '\f')
+			in << "\\f";
+		else if (c == '\t')
+			in << "\\t";
+		else if (c == '\n')
+			in << "\\n";
+		else
+			in << c;
+	}
+	return in.str();
+}
+
 const std::vector<std::string> tissuestack::utils::Misc::tokenizeString(const std::string & some_string, const char delimiter)
 {
 	std::vector<std::string> tokens;

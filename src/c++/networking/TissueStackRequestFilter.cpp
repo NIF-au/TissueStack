@@ -41,6 +41,8 @@ const tissuestack::common::Request * const tissuestack::networking::TissueStackR
 		return_request = new tissuestack::networking::TissueStackImageRequest(parameters, true);
 	else if (tissuestack::networking::TissueStackQueryRequest::SERVICE.compare(service) == 0)
 		return_request = new tissuestack::networking::TissueStackQueryRequest(parameters);
+	else if (tissuestack::networking::TissueStackServicesRequest::SERVICE.compare(service) == 0)
+		return_request = new tissuestack::networking::TissueStackServicesRequest(parameters);
 	else if (tissuestack::networking::TissueStackPreTilingRequest::SERVICE.compare(service) == 0)
 			return_request = new tissuestack::networking::TissueStackPreTilingRequest(parameters);
 	else if (tissuestack::networking::TissueStackConversionRequest::SERVICE.compare(service) == 0)
@@ -48,7 +50,7 @@ const tissuestack::common::Request * const tissuestack::networking::TissueStackR
 
 	if (return_request == nullptr)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
-						"A TissueStack request has to be: 'IMAGE', 'IMAGE_PREVIEW, 'POINT_QUERY', 'TILING','CONVERSION' or 'CONFIGURATION'!");
+						"A TissueStack request has to be: 'IMAGE', 'IMAGE_PREVIEW, 'POINT_QUERY', 'TILING','CONVERSION' or 'SERVICES'!");
 
 	// a general isObsolete check. for most but not all requests that equates to a superseded timestamp check
 	// for conversion/tiling, this can be used to catch duplicate conversion/tiling requests

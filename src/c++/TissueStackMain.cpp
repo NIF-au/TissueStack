@@ -72,7 +72,7 @@ int main(int argc, char * args[])
 		try
 		{
 			Params->readInConfigurationFile(startUpConfFile);
-			Params->dumpConfigurationToDebugLog();
+			//Params->dumpConfigurationToDebugLog();
 		} catch(std::exception & parseError)
 		{
 			std::cerr << "Failed to read passed in configuration file: " <<
@@ -153,23 +153,6 @@ int main(int argc, char * args[])
 			exit(-1);
 		}
 		Logger->info("Database connection established!\n");
-		// TODO: move commented part into 'rest' section. also solidify with catch and tests for database connectivity
-		/*
-		const std::vector<tissuestack::database::Configuration *> conf =
-				tissuestack::database::ConfigurationDataProvider::queryAllConfigurations();
-		for (tissuestack::database::Configuration * c : conf)
-		{
-			Logger->debug("%s\n", c->getJson().c_str());
-			delete c;
-		}
-		const tissuestack::database::Configuration * conf =
-				tissuestack::database::ConfigurationDataProvider::queryConfigurationById("bla");
-		if (conf)
-		{
-			Logger->debug("%s\n", conf->getJson().c_str());
-			delete conf;
-		}
-		*/
 	} catch (std::exception & bad)
 	{
 		Logger->error("Could not create databases connection:\n%s\n", bad.what());

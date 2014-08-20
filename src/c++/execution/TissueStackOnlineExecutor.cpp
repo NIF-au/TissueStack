@@ -20,6 +20,12 @@ tissuestack::execution::TissueStackOnlineExecutor::~TissueStackOnlineExecutor()
 		delete this->_imageExtractor;
 		this->_imageExtractor = nullptr;
 	}
+
+	if (this->_serviesDelegator)
+	{
+		delete this->_serviesDelegator;
+		this->_serviesDelegator = nullptr;
+	}
 }
 
 tissuestack::execution::TissueStackOnlineExecutor::TissueStackOnlineExecutor()
@@ -29,7 +35,8 @@ tissuestack::execution::TissueStackOnlineExecutor::TissueStackOnlineExecutor()
 	        	new tissuestack::networking::HttpRequestSanityFilter(),
 	           	new tissuestack::networking::TissueStackRequestFilter(),
 	           	nullptr
-	        }), _imageExtractor(new tissuestack::imaging::ImageExtraction<tissuestack::imaging::SimpleCacheHeuristics>) {}
+	        }), _imageExtractor(new tissuestack::imaging::ImageExtraction<tissuestack::imaging::SimpleCacheHeuristics>),
+	        	_serviesDelegator(new tissuestack::services::TissueStackServicesDelegator()) {}
 
 tissuestack::execution::TissueStackOnlineExecutor * tissuestack::execution::TissueStackOnlineExecutor::instance()
 {
@@ -63,6 +70,11 @@ void tissuestack::execution::TissueStackOnlineExecutor::execute(std::string requ
 			this->_imageExtractor->processQueryRequest(
 					static_cast<const tissuestack::networking::TissueStackQueryRequest *>(req.get()),
 					client_descriptor);
+		else if (req.get()->getType() == tissuestack::common::Request::Type::TS_SERVICES)
+			this->_serviesDelegator->processRequest(
+					static_cast<const tissuestack::networking::TissueStackServicesRequest *>(req.get()),
+					client_descriptor);
+
 	}  catch (tissuestack::common::TissueStackObsoleteRequestException& obsoleteRequest)
 	{
 		response =
