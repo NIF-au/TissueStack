@@ -79,26 +79,37 @@ void tissuestack::execution::TissueStackOnlineExecutor::execute(std::string requ
 	{
 		response =
 				tissuestack::utils::Misc::composeHttpResponse(
-					"408 Request Timeout", "text/plain", std::string(obsoleteRequest.what()));
+					"408 Request Timeout",
+					"application/json",
+					tissuestack::services::TissueStackServiceError(obsoleteRequest).toJson());
 	}  catch (tissuestack::common::TissueStackInvalidRequestException& invalidRequest)
 	{
 		if (std::strstr(invalidRequest.what(), "favicon.ico") != NULL)
 			response =
 				tissuestack::utils::Misc::composeHttpResponse(
-					"404 Not Found", "text/plain", std::string(invalidRequest.what()));
+					"404 Not Found",
+					"application/json",
+					tissuestack::services::TissueStackServiceError(invalidRequest).toJson());
 		else
 			response =
 				tissuestack::utils::Misc::composeHttpResponse(
-					"200 OK", "text/plain", std::string(invalidRequest.what()));
+					"200 OK",
+					"application/json",
+					tissuestack::services::TissueStackServiceError(invalidRequest).toJson());
 	} catch (tissuestack::common::TissueStackException& ex)
 	{
 		response =
 			tissuestack::utils::Misc::composeHttpResponse(
-				"500 Internal Server Error", "text/plain", std::string(ex.what()));
-	}  catch (std::exception& bad)
+				"500 Internal Server Error",
+				"application/json",
+				tissuestack::services::TissueStackServiceError(ex).toJson());
+	}  catch (std::exception & bad)
 	{
-		// propagate up, they are unexpected and potentially serious!
-		throw bad;
+		response =
+			tissuestack::utils::Misc::composeHttpResponse(
+				"500 Internal Server Error",
+				"application/json",
+				tissuestack::services::TissueStackServiceError(bad).toJson());
 	}
 
 	if (response.empty())

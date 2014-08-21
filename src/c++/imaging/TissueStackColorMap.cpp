@@ -118,6 +118,8 @@ tissuestack::imaging::TissueStackColorMap::TissueStackColorMap(const std::string
 			}
 		}
 
+		this->marshallColorMapContentsIntoJson(colorMapRanges);
+
 		tissuestack::logging::TissueStackLogger::instance()->info("Finished Loading color map file.\n");
 	}	catch (tissuestack::common::TissueStackException & ex) {
 		tissuestack::logging::TissueStackLogger::instance()->debug("%s\n", ex.what());
@@ -133,6 +135,7 @@ tissuestack::imaging::TissueStackColorMap::TissueStackColorMap(const tissuestack
 		_colormap_id(label_lookup_file->getLabelLookupId())
 {
 	label_lookup_file->copyGrayIndexedRgbMapping(this->_gray_indexed_rgb_mapping);
+	this->marshallLookupFileContentsIntoJson();
 	tissuestack::logging::TissueStackLogger::instance()->info("Copied color map file from lookup file: %s\n",
 			label_lookup_file->getLabelLookupId().c_str());
 }
@@ -170,12 +173,70 @@ const tissuestack::imaging::TissueStackColorMap * tissuestack::imaging::TissueSt
 	return new tissuestack::imaging::TissueStackColorMap(labelLookup);
 }
 
+void tissuestack::imaging::TissueStackColorMap::marshallColorMapContentsIntoJson(
+		const std::vector<std::array<float, 4> > & colorMapRanges)
+{
+	std::ostringstream json;
+	json << "\"" << this->getColorMapId() << "\": [";
+	unsigned short i = 0;
+	for (auto row : colorMapRanges)
+	{
+		if (i != 0)
+			json << ",";
+
+		json << "[" << row[0] << "," << row[1] << ","
+			<< row[2] << "," << row[3] << "]";
+		i++;
+	}
+	json << "]";
+
+	this->_colorMapFileContentAsJson = json.str();
+}
+void tissuestack::imaging::TissueStackColorMap::marshallLookupFileContentsIntoJson()
+{
+	std::ostringstream json;
+	json << "\"" << this->getColorMapId() << "\": [";
+	unsigned short i = 0;
+	for (auto row : this->_gray_indexed_rgb_mapping)
+	{
+		if (i != 0)
+			json << ",";
+		json << "[\"L\"," << i << "," << row[0] << ","
+			<< row[1] << "," << row[2] << "]";
+		i++;
+	}
+	json << "]";
+
+	this->_colorMapFileContentAsJson = json.str();
+}
+
 const std::string tissuestack::imaging::TissueStackColorMap::getColorMapId() const
 {
 	if (this->_colormap_id.find(COLORMAP_PATH) == 0)
 		return this->_colormap_id.substr(strlen(COLORMAP_PATH) + 1);
 
 	return this->_colormap_id;
+}
+
+const std::string tissuestack::imaging::TissueStackColorMap::toJson(bool originalColorMapContents) const
+{
+	if (originalColorMapContents)
+		return this->_colorMapFileContentAsJson;
+
+	std::ostringstream json;
+	json << "\"" << this->getColorMapId() << "\": [";
+	unsigned short i = 0;
+	for (auto row : this->_gray_indexed_rgb_mapping)
+	{
+		if (i != 0)
+			json << ",";
+		json << "[" << row[0] << "," << row[1] << ","
+			<< row[2]  << "]";
+		i++;
+	}
+	json << "]";
+
+	return json.str();
 }
 
 void tissuestack::imaging::TissueStackColorMap::dumpColorMapToDebugLog() const

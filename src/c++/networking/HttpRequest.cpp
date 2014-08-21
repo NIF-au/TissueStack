@@ -34,7 +34,7 @@ tissuestack::networking::HttpRequest::HttpRequest(const RawHttpRequest * const r
 
 	// we go on to dissect the GET request, we really don't care for any other http method
 	const std::string raw_content = raw_request->getContent();
-	int nPos = raw_content.find(' ', 4);
+	size_t nPos = raw_content.find(' ', 4);
 	// if we are under 3, there is something wrong, the URI needs to start at position 3 => 'GET /somequerystring'
 	if (nPos < 4)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "HttpRequest with malformed GET");

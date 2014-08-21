@@ -95,11 +95,15 @@ namespace tissuestack
 				const std::array<const unsigned short, 3> getRGBMapForGrayValue(const unsigned short & gray) const;
 				const std::string getColorMapId() const;
 				void dumpColorMapToDebugLog() const;
+				const std::string toJson(bool originalColorMapContents = true) const;
 			private:
 				const std::string _colormap_id;
 				std::array<unsigned short[3], 256> _gray_indexed_rgb_mapping;
 				explicit TissueStackColorMap(const std::string & filename);
 				explicit TissueStackColorMap(const TissueStackLabelLookup * label_lookup_file);
+				void marshallColorMapContentsIntoJson(const std::vector<std::array<float, 4> > & colorMapRanges);
+				void marshallLookupFileContentsIntoJson();
+				std::string _colorMapFileContentAsJson;
 		};
 
 		class TissueStackColorMapStore final
@@ -112,6 +116,7 @@ namespace tissuestack
 		    	const TissueStackColorMap * findColorMap(const std::string & id) const;
 		    	void addOrReplaceColorMap(const TissueStackColorMap * colorMap);
 		    	void addOrReplaceColorMap(const TissueStackLabelLookup * labelLookup);
+		    	const std::string toJson(bool originalColorMapContents = true) const;
 		    	void dumpAllColorMapsToDebugLog() const;
 			private:
 		    	TissueStackColorMapStore();

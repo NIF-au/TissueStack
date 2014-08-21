@@ -81,10 +81,32 @@ void tissuestack::imaging::TissueStackColorMapStore::purgeInstance()
 			 tissuestack::imaging::TissueStackColorMap::fromLabelLookup(labelLookup);
 }
 
- void tissuestack::imaging::TissueStackColorMapStore::dumpAllColorMapsToDebugLog() const
- {
+const std::string tissuestack::imaging::TissueStackColorMapStore::toJson(bool originalColorMapContents) const
+{
+	if (this->_color_maps.empty())
+		return "";
+
+	std::ostringstream json;
+	json << "{";
+	unsigned short i=0;
+
+	for (auto entry = this->_color_maps.begin(); entry != this->_color_maps.end(); ++entry)
+	{
+		if (i !=0)
+			json << ",";
+
+		json << entry->second->toJson(originalColorMapContents);
+		i++;
+	}
+	json << "}";
+
+	return json.str();
+}
+
+void tissuestack::imaging::TissueStackColorMapStore::dumpAllColorMapsToDebugLog() const
+{
 	for (auto entry = this->_color_maps.begin(); entry != this->_color_maps.end(); ++entry)
 		entry->second->dumpColorMapToDebugLog();
- }
+}
 
 tissuestack::imaging::TissueStackColorMapStore * tissuestack::imaging::TissueStackColorMapStore::_instance = nullptr;

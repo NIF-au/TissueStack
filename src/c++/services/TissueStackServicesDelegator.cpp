@@ -5,6 +5,8 @@ tissuestack::services::TissueStackServicesDelegator::TissueStackServicesDelegato
 	// register some standard services
 	this->_registeredServices[tissuestack::services::ConfigurationService::SUB_SERVICE_ID] =
 			new tissuestack::services::ConfigurationService();
+	this->_registeredServices[tissuestack::services::ColorMapService::SUB_SERVICE_ID] =
+			new tissuestack::services::ColorMapService();
 }
 
 tissuestack::services::TissueStackServicesDelegator::~TissueStackServicesDelegator()

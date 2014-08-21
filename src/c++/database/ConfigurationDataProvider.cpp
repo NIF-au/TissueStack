@@ -29,12 +29,12 @@ const tissuestack::database::Configuration * tissuestack::database::Configuratio
 	return ret;
 }
 
-const std::vector<tissuestack::database::Configuration *> tissuestack::database::ConfigurationDataProvider::queryAllConfigurations()
+const std::vector<const tissuestack::database::Configuration *> tissuestack::database::ConfigurationDataProvider::queryAllConfigurations()
 {
 	const std::string sql =
 			"SELECT * FROM configuration;";
 
-	std::vector<tissuestack::database::Configuration *> ret;
+	std::vector<const tissuestack::database::Configuration *> ret;
 
 	const pqxx::result results =
 			tissuestack::database::TissueStackPostgresConnector::instance()->executeNonTransactionalQuery(sql);

@@ -57,7 +57,7 @@ namespace tissuestack
 				ConfigurationDataProvider(const ConfigurationDataProvider&) = delete;
 				ConfigurationDataProvider() = delete;
 				static const Configuration * queryConfigurationById(const std::string name);
-				static const std::vector<tissuestack::database::Configuration *> queryAllConfigurations();
+				static const std::vector<const tissuestack::database::Configuration *> queryAllConfigurations();
 			private:
 				static inline tissuestack::database::Configuration * readResult(pqxx::result::const_iterator result);
 		};
