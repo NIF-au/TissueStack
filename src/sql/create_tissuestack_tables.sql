@@ -47,6 +47,10 @@ CREATE TABLE dataset
   filename VARCHAR(250) NOT NULL,
   description TEXT,
   lookup_id bigint,
+  is_tiled CHAR(1) NOT NULL DEFAULT 'F',
+  zoom_levels TEXT NOT NULL DEFAULT '[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2.00]',
+  one_to_one_zoom_level INTEGER NOT NULL DEFAULT 3,
+  resolution_mm NUMERIC(18,10),
   CONSTRAINT dataset_pk PRIMARY KEY (id),
   CONSTRAINT dataset_lookup_fk FOREIGN KEY (lookup_id) REFERENCES dataset_values_lookup (id),
   CONSTRAINT dataset_filename_unique UNIQUE (filename)

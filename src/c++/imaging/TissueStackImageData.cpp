@@ -1,4 +1,8 @@
 #include "imaging.h"
+#include "database.h"
+
+tissuestack::imaging::TissueStackImageData::TissueStackImageData(const unsigned long long int id) :
+	_format(tissuestack::imaging::FORMAT::DATABASE), _database_id(id) {}
 
 tissuestack::imaging::TissueStackImageData::~TissueStackImageData()
 {
@@ -57,6 +61,12 @@ const tissuestack::imaging::TissueStackImageData * tissuestack::imaging::TissueS
 
 	// if not recognized by extension, we'll assume it's raw and if not the raw constructor will tell us otherwise
 	return new tissuestack::imaging::TissueStackRawData(filename);
+}
+
+const tissuestack::imaging::TissueStackImageData * tissuestack::imaging::TissueStackImageData::fromDataBaseRecordWithId(
+		const unsigned long long id)
+{
+	return tissuestack::database::DataSetDataProvider::queryById(id);
 }
 
 tissuestack::imaging::TissueStackImageData::TissueStackImageData(const std::string & filename)

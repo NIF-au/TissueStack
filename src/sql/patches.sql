@@ -35,3 +35,10 @@ ALTER TABLE dataset_values_lookup ADD CONSTRAINT dataset_values_lookup_fk FOREIG
 UPDATE configuration SET value='107374182400',description='the maximum number of bytes allowed to upload in one go: 100 gig by default' WHERE name='max_upload_size';
 -- constraint to disallow self references 
 ALTER TABLE dataset_lookup_mapping ADD CONSTRAINT dataset_lookup_mapping_no_self_references CHECK(dataset_id <> associated_dataset_id);
+-- this will enable raw file querying with less data base lookup since most info is already on the server side in memory
+-- these parameters while on a dimension level are really the same for all planes in practice,
+-- hence redundant and belonging to the data set as a whole
+ALTER TABLE dataset ADD COLUMN is_tiled CHAR(1) NOT NULL DEFAULT 'F';
+ALTER TABLE dataset ADD COLUMN zoom_levels TEXT NOT NULL DEFAULT '[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2.00]';
+ALTER TABLE dataset ADD COLUMN one_to_one_zoom_level INTEGER NOT NULL DEFAULT 3;
+ALTER TABLE dataset ADD COLUMN resolution_mm NUMERIC(18,10);

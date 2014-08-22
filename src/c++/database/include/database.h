@@ -8,6 +8,11 @@
 
 namespace tissuestack
 {
+	namespace imaging
+	{
+		class TissueStackImageData;
+	}
+
 	namespace database
 	{
 		class TissueStackPostgresConnector final
@@ -60,6 +65,16 @@ namespace tissuestack
 				static const std::vector<const tissuestack::database::Configuration *> queryAllConfigurations();
 			private:
 				static inline tissuestack::database::Configuration * readResult(pqxx::result::const_iterator result);
+		};
+
+		class DataSetDataProvider final
+		{
+			public:
+				DataSetDataProvider & operator=(const DataSetDataProvider&) = delete;
+				DataSetDataProvider(const DataSetDataProvider&) = delete;
+				DataSetDataProvider() = delete;
+				static const std::vector<const tissuestack::imaging::TissueStackImageData *> queryAll();
+				static const tissuestack::imaging::TissueStackImageData * queryById(const unsigned long long int id);
 		};
 	}
 }

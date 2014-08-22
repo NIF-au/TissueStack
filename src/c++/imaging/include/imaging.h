@@ -39,9 +39,10 @@ namespace tissuestack
 
 		enum FORMAT
 		{
-			MINC    = 1,	// BACKWARDS COMPATIBILITY FOR MINC
-			NIFTI 	= 2,	// BACKWARDS COMPATIBILITY FOR NIFTI
-			RAW		= 3
+			MINC    	= 1,	// BACKWARDS COMPATIBILITY FOR MINC
+			NIFTI 		= 2,	// BACKWARDS COMPATIBILITY FOR NIFTI
+			RAW			= 3,	// TISSUESTACK FORMAT
+			DATABASE	= 4		// DATABASE RECORD IMAGE DATA
 		};
 
 		enum RAW_TYPE
@@ -158,6 +159,7 @@ namespace tissuestack
 				TissueStackImageData & operator=(const TissueStackImageData&) = delete;
 				TissueStackImageData(const TissueStackImageData&) = delete;
 				static const TissueStackImageData * fromFile(const std::string & filename);
+				static const TissueStackImageData * fromDataBaseRecordWithId(const unsigned long long int id);
 				virtual ~TissueStackImageData();
 				const std::string getFileName() const;
 				virtual const bool isRaw() const = 0;
@@ -173,6 +175,7 @@ namespace tissuestack
 				const int getFileDescriptor();
 				void initializeWidthAndHeightForDimensions();
 			protected:
+				explicit TissueStackImageData(const long long unsigned int id);
 				explicit TissueStackImageData(const std::string & filename);
 				TissueStackImageData(const std::string & filename, FORMAT format);
 				const std::unordered_map<char, const TissueStackDataDimension *> getDimensionMap() const;
@@ -194,6 +197,7 @@ namespace tissuestack
 				std::vector<float> _steps;
 				std::unordered_map<char, const TissueStackDataDimension *> _dimensions;
 				FILE * _file_handle = nullptr;
+				unsigned long long int _database_id = 0;
 		};
 
 		class TissueStackRawData final : public TissueStackImageData
@@ -214,6 +218,17 @@ namespace tissuestack
 				unsigned long long int _supposedFileSizeInButes = 0;
 				RAW_TYPE	_raw_type = RAW_TYPE::UCHAR_8_BIT;
 				RAW_FILE_VERSION _raw_version = RAW_FILE_VERSION::LEGACY;
+		};
+
+		class TissueStackDataBaseData final : public TissueStackImageData
+		{
+			public:
+				~TissueStackDataBaseData();
+				const bool isRaw() const;
+			private:
+				friend class TissueStackImageData;
+				friend class tissuestack::database::DataSetDataProvider;
+				explicit TissueStackDataBaseData(const unsigned long long int id);
 		};
 
 		class TissueStackNiftiData final : public TissueStackImageData
@@ -251,6 +266,7 @@ namespace tissuestack
 				~TissueStackDataSet();
 				static const TissueStackDataSet * fromFile(const std::string & filename);
 				static const TissueStackDataSet * fromTissueStackImageData(const TissueStackImageData * image_data);
+				static const TissueStackDataSet * fromDataBaseRecordWithId(const unsigned long long id);
 				const TissueStackImageData * getImageData() const;
 				const DataSetStatus getStatus() const;
 				const std::string getDataSetId() const;

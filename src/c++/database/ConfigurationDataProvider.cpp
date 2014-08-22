@@ -25,7 +25,6 @@ const tissuestack::database::Configuration * tissuestack::database::Configuratio
 		ret = tissuestack::database::ConfigurationDataProvider::readResult(conf);
 		break;
 	}
-	tissuestack::logging::TissueStackLogger::instance()->debug("Value:\n%s\n", ret->getValue().c_str());
 	return ret;
 }
 
@@ -51,7 +50,7 @@ inline tissuestack::database::Configuration * tissuestack::database::Configurati
 		pqxx::result::const_iterator result)
 {
 	return 	new tissuestack::database::Configuration(
-			result[0].as<std::string>(),
-			result[1].as<std::string>(),
-			result[2].is_null() ? "" : result[2].as<std::string>());
+			result["name"].as<std::string>(),
+			result["value"].as<std::string>(),
+			result["description"].is_null() ? "" : result["description"].as<std::string>());
 }

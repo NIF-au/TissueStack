@@ -7,6 +7,8 @@ tissuestack::services::TissueStackServicesDelegator::TissueStackServicesDelegato
 			new tissuestack::services::ConfigurationService();
 	this->_registeredServices[tissuestack::services::ColorMapService::SUB_SERVICE_ID] =
 			new tissuestack::services::ColorMapService();
+	this->_registeredServices[tissuestack::services::DataSetConfigurationService::SUB_SERVICE_ID] =
+			new tissuestack::services::DataSetConfigurationService();
 }
 
 tissuestack::services::TissueStackServicesDelegator::~TissueStackServicesDelegator()

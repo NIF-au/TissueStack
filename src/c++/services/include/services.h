@@ -5,6 +5,7 @@
 #include "exceptions.h"
 #include "networking.h"
 #include "database.h"
+#include "imaging.h"
 
 namespace tissuestack
 {
@@ -65,6 +66,34 @@ namespace tissuestack
 				ColorMapService(const ColorMapService&) = delete;
 				ColorMapService();
 				~ColorMapService();
+
+				void checkRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
+				void streamResponse(
+						const tissuestack::networking::TissueStackServicesRequest * request,
+						const int file_descriptor) const;
+	 	};
+
+		class DataSetConfiguration final
+		{
+			public:
+				DataSetConfiguration & operator=(const DataSetConfiguration&) = delete;
+				DataSetConfiguration(const DataSetConfiguration&) = delete;
+				DataSetConfiguration();
+				~DataSetConfiguration();
+			private:
+				tissuestack::imaging::TissueStackDataSet * _data_set;
+				tissuestack::imaging::TissueStackLabelLookup * _label_lookup;
+				std::vector<DataSetConfiguration *> _associated_datasets;
+		};
+
+		class DataSetConfigurationService final : public TissueStackService
+		{
+			public:
+				static const std::string SUB_SERVICE_ID;
+				DataSetConfigurationService & operator=(const ColorMapService&) = delete;
+				DataSetConfigurationService(const ColorMapService&) = delete;
+				DataSetConfigurationService();
+				~DataSetConfigurationService();
 
 				void checkRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
 				void streamResponse(

@@ -26,6 +26,16 @@ const tissuestack::imaging::TissueStackDataSet * tissuestack::imaging::TissueSta
 	return new tissuestack::imaging::TissueStackDataSet(image_data);
 }
 
+const tissuestack::imaging::TissueStackDataSet * tissuestack::imaging::TissueStackDataSet::fromDataBaseRecordWithId(const unsigned long long id)
+{
+	if (id <=0)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "DataSet Record Id has to greated than 0");
+
+	// delegate
+	return tissuestack::imaging::TissueStackDataSet::fromTissueStackImageData(
+		tissuestack::imaging::TissueStackImageData::fromDataBaseRecordWithId(id));
+}
+
 const tissuestack::imaging::DataSetStatus tissuestack::imaging::TissueStackDataSet::getStatus() const
 {
 	return this->_status;
