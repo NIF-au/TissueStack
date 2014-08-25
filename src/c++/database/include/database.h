@@ -73,8 +73,19 @@ namespace tissuestack
 				DataSetDataProvider & operator=(const DataSetDataProvider&) = delete;
 				DataSetDataProvider(const DataSetDataProvider&) = delete;
 				DataSetDataProvider() = delete;
-				static const std::vector<const tissuestack::imaging::TissueStackImageData *> queryAll();
-				static const tissuestack::imaging::TissueStackImageData * queryById(const unsigned long long int id);
+				static const std::vector<const tissuestack::imaging::TissueStackImageData *> queryAll(
+						const bool includePlanes = false,
+						const unsigned short offset = 0,
+						const unsigned short max_records = MAX_RECORDS);
+				static const tissuestack::imaging::TissueStackImageData * queryById(
+						const unsigned long long int id,
+						const bool includePlanes = false);
+			private:
+				static const std::vector<const tissuestack::imaging::TissueStackImageData *> findResults(
+						const std::string sql, const bool includePlanes=false);
+				static const std::string SQL;
+				static const std::string ORDER_BY;
+				static const unsigned short MAX_RECORDS;
 		};
 	}
 }

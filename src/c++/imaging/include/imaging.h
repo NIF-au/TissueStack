@@ -159,7 +159,9 @@ namespace tissuestack
 				TissueStackImageData & operator=(const TissueStackImageData&) = delete;
 				TissueStackImageData(const TissueStackImageData&) = delete;
 				static const TissueStackImageData * fromFile(const std::string & filename);
-				static const TissueStackImageData * fromDataBaseRecordWithId(const unsigned long long int id);
+				static const TissueStackImageData * fromDataBaseRecordWithId(
+						const unsigned long long int id,
+						const bool includePlanes = false);
 				virtual ~TissueStackImageData();
 				const std::string getFileName() const;
 				virtual const bool isRaw() const = 0;
@@ -171,9 +173,20 @@ namespace tissuestack
 				const std::vector<float> getSteps() const;
 				const unsigned short getImageDataMinumum() const;
 				const unsigned short getImageDataMaximum() const;
+				const unsigned long long int getDataBaseId() const;
+				void setMembersFromDataBaseInformation(
+						bool is_tiled = false,
+						std::vector<float> zoom_levels = {0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2.00},
+						unsigned short one_to_one_zoom_level = 3,
+						float resolution_in_mm = 0);
+				const bool isTiled() const;
+				const std::vector<float> getZoomLevels() const;
+				const unsigned short getOneToOneZoomLevel() const;
+				const float getResolutionInMm() const;
 				void dumpImageDataIntoDebugLog() const;
 				const int getFileDescriptor();
 				void initializeWidthAndHeightForDimensions();
+				const std::string toJson() const;
 			protected:
 				explicit TissueStackImageData(const long long unsigned int id);
 				explicit TissueStackImageData(const std::string & filename);
@@ -198,6 +211,10 @@ namespace tissuestack
 				std::unordered_map<char, const TissueStackDataDimension *> _dimensions;
 				FILE * _file_handle = nullptr;
 				unsigned long long int _database_id = 0;
+				bool _is_tiled;
+				std::vector<float> _zoom_levels = {0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2.00};
+				unsigned short _one_to_one_zoom_level = 3;
+				float _resolution_in_mm;
 		};
 
 		class TissueStackRawData final : public TissueStackImageData
@@ -226,8 +243,6 @@ namespace tissuestack
 				~TissueStackDataBaseData();
 				const bool isRaw() const;
 			private:
-				friend class TissueStackImageData;
-				friend class tissuestack::database::DataSetDataProvider;
 				explicit TissueStackDataBaseData(const unsigned long long int id);
 		};
 
@@ -266,7 +281,9 @@ namespace tissuestack
 				~TissueStackDataSet();
 				static const TissueStackDataSet * fromFile(const std::string & filename);
 				static const TissueStackDataSet * fromTissueStackImageData(const TissueStackImageData * image_data);
-				static const TissueStackDataSet * fromDataBaseRecordWithId(const unsigned long long id);
+				static const TissueStackDataSet * fromDataBaseRecordWithId(
+						const unsigned long long id,
+						const bool includePlanes = false);
 				const TissueStackImageData * getImageData() const;
 				const DataSetStatus getStatus() const;
 				const std::string getDataSetId() const;
@@ -285,7 +302,7 @@ namespace tissuestack
 				static TissueStackDataSetStore * instance();
 		    	void purgeInstance();
 		    	const TissueStackDataSet * findDataSet(const std::string & id) const;
-		    	void addOrReplaceDataSet(const TissueStackDataSet * dataSet);
+		    	void addDataSet(const TissueStackDataSet * dataSet);
 		    	void dumpDataSetStoreIntoDebugLog() const;
 			private:
 		    	TissueStackDataSetStore();
@@ -424,7 +441,7 @@ namespace tissuestack
 						try
 						{
 							dataSet = tissuestack::imaging::TissueStackDataSet::fromFile(request->getDataSetLocation());
-							tissuestack::imaging::TissueStackDataSetStore::instance()->addOrReplaceDataSet(dataSet);
+							tissuestack::imaging::TissueStackDataSetStore::instance()->addDataSet(dataSet);
 						} catch (std::exception & bad)
 						{
 							tissuestack::logging::TissueStackLogger::instance()->error(

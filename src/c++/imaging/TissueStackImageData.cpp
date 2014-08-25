@@ -64,9 +64,9 @@ const tissuestack::imaging::TissueStackImageData * tissuestack::imaging::TissueS
 }
 
 const tissuestack::imaging::TissueStackImageData * tissuestack::imaging::TissueStackImageData::fromDataBaseRecordWithId(
-		const unsigned long long id)
+		const unsigned long long id, const bool includePlanes)
 {
-	return tissuestack::database::DataSetDataProvider::queryById(id);
+	return tissuestack::database::DataSetDataProvider::queryById(id, includePlanes);
 }
 
 tissuestack::imaging::TissueStackImageData::TissueStackImageData(const std::string & filename)
@@ -147,6 +147,11 @@ const unsigned short tissuestack::imaging::TissueStackImageData::getImageDataMax
 	return this->_global_max_value;
 }
 
+const unsigned long long int tissuestack::imaging::TissueStackImageData::getDataBaseId() const
+{
+	return this->_database_id;
+}
+
 void tissuestack::imaging::TissueStackImageData::setFormat(int original_format)
 {
 	switch (original_format)
@@ -169,6 +174,12 @@ void tissuestack::imaging::TissueStackImageData::setFormat(int original_format)
 const tissuestack::imaging::FORMAT tissuestack::imaging::TissueStackImageData::getFormat() const
 {
 	return this->_format;
+}
+
+const std::string tissuestack::imaging::TissueStackImageData::toJson() const
+{
+	// TODO: implement
+	return "";
 }
 
 const std::unordered_map<char, const tissuestack::imaging::TissueStackDataDimension *> tissuestack::imaging::TissueStackImageData::getDimensionMap() const
@@ -213,6 +224,41 @@ void tissuestack::imaging::TissueStackImageData::dumpDataDimensionInfoIntoDebugL
 {
 	for (const std::string dim : this->_dim_order)
 		this->getDimensionByLongName(dim)->dumpDataDimensionInfoIntoDebugLog();
+}
+
+void tissuestack::imaging::TissueStackImageData::setMembersFromDataBaseInformation(
+		bool is_tiled,
+		std::vector<float> zoom_levels,
+		unsigned short one_to_one_zoom_level,
+		float resolution_in_mm)
+{
+	this->_is_tiled = is_tiled;
+	if (!zoom_levels.empty())
+		this->_zoom_levels = zoom_levels;
+	this->_one_to_one_zoom_level = one_to_one_zoom_level;
+	if (resolution_in_mm > 0.0)
+		this->_resolution_in_mm = resolution_in_mm;
+}
+
+
+const bool tissuestack::imaging::TissueStackImageData::isTiled() const
+{
+	return this->_is_tiled;
+}
+
+const std::vector<float> tissuestack::imaging::TissueStackImageData::getZoomLevels() const
+{
+	return this->_zoom_levels;
+}
+
+const unsigned short tissuestack::imaging::TissueStackImageData::getOneToOneZoomLevel() const
+{
+	return this->_one_to_one_zoom_level;
+}
+
+const float tissuestack::imaging::TissueStackImageData::getResolutionInMm() const
+{
+	return this->_resolution_in_mm;
 }
 
 void tissuestack::imaging::TissueStackImageData::dumpImageDataIntoDebugLog() const

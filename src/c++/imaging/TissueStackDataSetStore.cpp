@@ -10,7 +10,7 @@ tissuestack::imaging::TissueStackDataSetStore::TissueStackDataSetStore()
 	try
 	{
 		tissuestack::logging::TissueStackLogger::instance()->info("Trying to import data set: %s...\n", f.c_str());
-		this->addOrReplaceDataSet(tissuestack::imaging::TissueStackDataSet::fromFile(f.c_str()));
+		this->addDataSet(tissuestack::imaging::TissueStackDataSet::fromFile(f.c_str()));
 		tissuestack::logging::TissueStackLogger::instance()->info("Import successful.\n");
 	} catch (std::exception & bad)
 	{
@@ -48,11 +48,13 @@ const tissuestack::imaging::TissueStackDataSet * tissuestack::imaging::TissueSta
 	}
 }
 
-void tissuestack::imaging::TissueStackDataSetStore::addOrReplaceDataSet(const tissuestack::imaging::TissueStackDataSet * dataSet)
+void tissuestack::imaging::TissueStackDataSetStore::addDataSet(const tissuestack::imaging::TissueStackDataSet * dataSet)
 {
- if (dataSet == nullptr) return;
+	if (dataSet == nullptr) return;
 
- this->_data_sets[dataSet->getDataSetId()] = dataSet;
+	if (this->findDataSet(dataSet->getDataSetId()) != nullptr) return; // we do not replace
+
+	this->_data_sets[dataSet->getDataSetId()] = dataSet;
 }
 
 void tissuestack::imaging::TissueStackDataSetStore::dumpDataSetStoreIntoDebugLog() const
