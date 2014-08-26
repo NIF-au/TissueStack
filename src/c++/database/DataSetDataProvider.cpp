@@ -99,10 +99,10 @@ const std::vector<const tissuestack::imaging::TissueStackImageData *> tissuestac
 	for (pqxx::result::const_iterator i_results = results.begin(); i_results != results.end(); ++i_results)
 	{
 		// read results and create ImageData
-		const tissuestack::imaging::TissueStackImageData * rec =
+		std::unique_ptr<const tissuestack::imaging::TissueStackImageData> rec(
 			new tissuestack::imaging::TissueStackDataBaseData(
 				i_results["id"].as<unsigned long long int>(),
-				i_results["filename"].as<std::string>());
+				i_results["filename"].as<std::string>()));
 
 		std::string zoom_levels =
 				i_results["zoom_levels"].is_null() ? "" :
@@ -117,14 +117,14 @@ const std::vector<const tissuestack::imaging::TissueStackImageData *> tissuestac
 		for (auto z : s_zoom_levels)
 			v_zoom_levels.push_back(static_cast<float>(atof(z.c_str())));
 
-		const_cast<tissuestack::imaging::TissueStackImageData *>(rec)->setMembersFromDataBaseInformation(
+		const_cast<tissuestack::imaging::TissueStackImageData *>(rec.get())->setMembersFromDataBaseInformation(
 			i_results["description"].is_null() ? "" : i_results["description"].as<std::string>(),
 			i_results["is_tiled"].as<bool>(),
 			v_zoom_levels,
 			i_results["one_to_one_zoom_level"].as<unsigned short>(),
 			i_results["resolution_mm"].is_null() ? 0.0 : i_results["resolution_mm"].as<float>()
 		);
-		v_results.push_back(rec);
+		v_results.push_back(rec.release());
 	}
 
 	return v_results;

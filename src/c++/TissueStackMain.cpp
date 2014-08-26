@@ -46,8 +46,16 @@ extern "C"
 
 int main(int argc, char * args[])
 {
-	tissuestack::TissueStackConfigurationParameters * Params =
-		tissuestack::TissueStackConfigurationParameters::instance();
+	tissuestack::TissueStackConfigurationParameters * Params = nullptr;
+	try
+	{
+		// instantiate default startup parameters
+		Params = tissuestack::TissueStackConfigurationParameters::instance();
+	} catch (std::exception & bad)
+	{
+		std::cerr << "Failed to instantiate default startup parameters!" << std::endl;
+		exit(-1);
+	}
 
 	// we have been given the location of a startup configuration file
 	if (argc > 1)
@@ -82,66 +90,18 @@ int main(int argc, char * args[])
 		}
 	}
 
-	std::unique_ptr<tissuestack::networking::Server<tissuestack::common::TissueStackProcessingStrategy> >
-				TissueStackServer;
-
 	tissuestack::logging::TissueStackLogger * Logger = nullptr;
-
 	try
 	{
+		// instantiate the logger
 		Logger = tissuestack::logging::TissueStackLogger::instance();
-		// create an instance of a tissue stack server and wrap it in a smart pointer
-		TissueStackServer.reset(
-				new tissuestack::networking::Server<tissuestack::common::TissueStackProcessingStrategy>(
-						strtoul(Params->getParameter("port").c_str() , NULL, 10)));
-	} catch (tissuestack::common::TissueStackException& ex) {
-		tissuestack::logging::TissueStackLogger::instance()->error(
-				"Failed to instantiate TissueStackServer with Default Strategy for the following reason: %s\n",
-				ex.what());
-		Params->purgeInstance();
-		Logger->purgeInstance();
-		exit(-1);
 	} catch (std::exception & bad)
 	{
-		Logger->error(
-				"Failed to instantiate TissueStackServer with Default Strategy for unexpected reason:\n%s\n", bad.what());
 		Params->purgeInstance();
-		Logger->purgeInstance();
+		std::cerr << "Failed to instantiate the logging mechanism!" << std::endl;
 		exit(-1);
 	}
-
-	try
-	{
-		// install the signal handler
-		install_signal_handler(TissueStackServer.get());
-	} catch (std::exception & bad)
-	{
-		Logger->error("Failed to install the signal handlers:\n%s\n", bad.what());
-		Params->purgeInstance();
-		Logger->purgeInstance();
-		exit(-1);
-	}
-
-	try
-	{
-		// start the server socket
-		TissueStackServer->start();
-	} catch (tissuestack::common::TissueStackServerException& ex) {
-		Logger->error(
-				"Failed to start the TissueStack SocketServer for the following reason: %s\n",
-				ex.what());
-		Params->purgeInstance();
-		Logger->purgeInstance();
-		exit(-1);
-	} catch (std::exception & bad)
-	{
-		Logger->error(
-				"Failed to start the TissueStack SocketServer for unexpected reason:\n%s\n", bad.what());
-		Params->purgeInstance();
-		Logger->purgeInstance();
-		exit(-1);
-	}
-
+	
 	try
 	{
 		// start database connection
@@ -149,6 +109,7 @@ int main(int argc, char * args[])
 		{
 			Logger->error("Database is not connected!\n");
 			tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
+			Params->purgeInstance();
 			Logger->purgeInstance();
 			exit(-1);
 		}
@@ -161,7 +122,6 @@ int main(int argc, char * args[])
 		exit(-1);
 	}
 
-	// instantiate singletons
 	try
 	{
 		tissuestack::common::RequestTimeStampStore::instance(); // for request time stamp checking
@@ -215,9 +175,40 @@ int main(int argc, char * args[])
 		exit(-1);
 	}
 
+	std::unique_ptr<tissuestack::networking::Server<tissuestack::common::TissueStackProcessingStrategy> >
+				TissueStackServer;
 	try
 	{
 		InitializeMagick(NULL);
+		// create an instance of a tissue stack server and wrap it in a smart pointer
+		TissueStackServer.reset(
+				new tissuestack::networking::Server<tissuestack::common::TissueStackProcessingStrategy>(
+						strtoul(Params->getParameter("port").c_str() , NULL, 10)));
+		// start the server socket
+		TissueStackServer->start();
+	} catch (std::exception & bad)
+	{
+		Logger->error(
+				"Failed to instantiate/start the TissueStackServer for the following reason:\n%s\n", bad.what());
+		Params->purgeInstance();
+		Logger->purgeInstance();
+		exit(-1);
+	}
+
+	try
+	{
+		// install the signal handler
+		install_signal_handler(TissueStackServer.get());
+	} catch (std::exception & bad)
+	{
+		Logger->error("Failed to install signal handlers: %s!\n",bad.what());
+		Params->purgeInstance();
+		Logger->purgeInstance();
+		exit(-1);
+	}
+		
+	try
+	{
 		// accept requests and process them until we receive a SIGSTOP
 		TissueStackServer->listen();
 	} catch (std::exception & bad)
