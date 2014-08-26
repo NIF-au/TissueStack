@@ -73,19 +73,6 @@ namespace tissuestack
 						const int file_descriptor) const;
 	 	};
 
-		class DataSetConfiguration final
-		{
-			public:
-				DataSetConfiguration & operator=(const DataSetConfiguration&) = delete;
-				DataSetConfiguration(const DataSetConfiguration&) = delete;
-				DataSetConfiguration();
-				~DataSetConfiguration();
-			private:
-				tissuestack::imaging::TissueStackDataSet * _data_set;
-				tissuestack::imaging::TissueStackLabelLookup * _label_lookup;
-				std::vector<DataSetConfiguration *> _associated_datasets;
-		};
-
 		class DataSetConfigurationService final : public TissueStackService
 		{
 			public:

@@ -57,6 +57,29 @@ const std::string tissuestack::utils::Misc::maskQuotesInJson(const std::string &
 	return in.str();
 }
 
+const std::string tissuestack::utils::Misc::eraseCharacterFromString(const std::string & someString, const char unwantedCharacter)
+{
+	std::ostringstream in;
+
+	for(char c : someString)
+		if (c != unwantedCharacter)
+			in << c;
+
+	return in.str();
+}
+
+
+const std::string tissuestack::utils::Misc::eliminateWhitespaceAndUnwantedEscapeCharacters(const std::string & someString)
+{
+	std::ostringstream in;
+
+	for(char c : someString)
+		if (c != ' ' &&  c != '\t' && c != '\r' && c != '\n')
+			in << c;
+
+	return in.str();
+}
+
 const std::vector<std::string> tissuestack::utils::Misc::tokenizeString(const std::string & some_string, const char delimiter)
 {
 	std::vector<std::string> tokens;

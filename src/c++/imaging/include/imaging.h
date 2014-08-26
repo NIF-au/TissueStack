@@ -133,6 +133,9 @@ namespace tissuestack
 						const unsigned long long int offset,
 						const unsigned long long int number_of_slices,
 						const unsigned long long int slice_size);
+				explicit TissueStackDataDimension(
+						const std::string & name,
+						const unsigned long long int number_of_slices);
 				TissueStackDataDimension(const TissueStackDataDimension&) = delete;
 				TissueStackDataDimension & operator=(const TissueStackDataDimension&) = delete;
 				const std::string getName() const;
@@ -174,11 +177,13 @@ namespace tissuestack
 				const unsigned short getImageDataMinumum() const;
 				const unsigned short getImageDataMaximum() const;
 				const unsigned long long int getDataBaseId() const;
+				const std::string getDescription() const;
 				void setMembersFromDataBaseInformation(
-						bool is_tiled = false,
-						std::vector<float> zoom_levels = {0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2.00},
-						unsigned short one_to_one_zoom_level = 3,
-						float resolution_in_mm = 0);
+						const std::string description = "",
+						const bool is_tiled = false,
+						const std::vector<float> zoom_levels = {0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2.00},
+						const unsigned short one_to_one_zoom_level = 3,
+						const float resolution_in_mm = 0);
 				const bool isTiled() const;
 				const std::vector<float> getZoomLevels() const;
 				const unsigned short getOneToOneZoomLevel() const;
@@ -186,9 +191,10 @@ namespace tissuestack
 				void dumpImageDataIntoDebugLog() const;
 				const int getFileDescriptor();
 				void initializeWidthAndHeightForDimensions();
-				const std::string toJson() const;
+				const std::string toJson(const bool includePlanes = false) const;
 			protected:
-				explicit TissueStackImageData(const long long unsigned int id);
+				friend class tissuestack::database::DataSetDataProvider;
+				explicit TissueStackImageData(const long long unsigned int id, const std::string filename = "");
 				explicit TissueStackImageData(const std::string & filename);
 				TissueStackImageData(const std::string & filename, FORMAT format);
 				const std::unordered_map<char, const TissueStackDataDimension *> getDimensionMap() const;
@@ -201,7 +207,8 @@ namespace tissuestack
 				void openFileHandle(bool close_open_handle = false);
 				void closeFileHandle();
 				void dumpDataDimensionInfoIntoDebugLog() const;
-				const std::string		_file_name;
+				const std::string _file_name;
+				std::string _description = "";
 				FORMAT _format;
 				unsigned short 	_global_min_value = 0;
 				unsigned short 	_global_max_value = 255;
@@ -243,7 +250,10 @@ namespace tissuestack
 				~TissueStackDataBaseData();
 				const bool isRaw() const;
 			private:
-				explicit TissueStackDataBaseData(const unsigned long long int id);
+				friend class tissuestack::database::DataSetDataProvider;
+				explicit TissueStackDataBaseData(
+						const unsigned long long int id,
+						const std::string filename = "");
 		};
 
 		class TissueStackNiftiData final : public TissueStackImageData
@@ -303,6 +313,7 @@ namespace tissuestack
 		    	void purgeInstance();
 		    	const TissueStackDataSet * findDataSet(const std::string & id) const;
 		    	void addDataSet(const TissueStackDataSet * dataSet);
+		    	void replaceDataSet(const tissuestack::imaging::TissueStackDataSet * dataSet);
 		    	void dumpDataSetStoreIntoDebugLog() const;
 			private:
 		    	TissueStackDataSetStore();

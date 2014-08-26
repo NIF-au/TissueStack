@@ -51,6 +51,8 @@ namespace tissuestack
     			const std::unordered_map<std::string, std::string> & map, std::string key);
     	static const std::string composeHttpResponse(
     			std::string status, std::string content_type, std::string content);
+    	static const std::string eraseCharacterFromString(const std::string & someString, const char unwantedCharacter);
+    	static const std::string eliminateWhitespaceAndUnwantedEscapeCharacters(const std::string & someString);
       private:
     	Misc();
     	Misc & operator=(const Misc&) = delete;

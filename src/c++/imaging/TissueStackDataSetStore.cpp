@@ -52,7 +52,20 @@ void tissuestack::imaging::TissueStackDataSetStore::addDataSet(const tissuestack
 {
 	if (dataSet == nullptr) return;
 
-	if (this->findDataSet(dataSet->getDataSetId()) != nullptr) return; // we do not replace
+	if (this->findDataSet(dataSet->getDataSetId()) != nullptr) return; // we do not replace in here
+
+	this->_data_sets[dataSet->getDataSetId()] = dataSet;
+}
+
+void tissuestack::imaging::TissueStackDataSetStore::replaceDataSet(const tissuestack::imaging::TissueStackDataSet * dataSet)
+{
+	if (dataSet == nullptr) return;
+
+	const tissuestack::imaging::TissueStackDataSet * existing =
+		this->findDataSet(dataSet->getDataSetId());
+
+	if (existing)
+		delete existing;
 
 	this->_data_sets[dataSet->getDataSetId()] = dataSet;
 }

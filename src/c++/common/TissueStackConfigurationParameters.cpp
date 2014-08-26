@@ -24,7 +24,7 @@ void tissuestack::TissueStackConfigurationParameters::readInConfigurationFile(co
 	std::string line;
 	while (std::getline(fileStream, line))
 	{
-		line = this->eliminateWhitespaceAndUnwantedEscapeCharacters(line);
+		line = tissuestack::utils::Misc::eliminateWhitespaceAndUnwantedEscapeCharacters(line);
 		if (line.empty() || line.at(0) == '#') continue;
 		const std::vector<std::string> tokens =
 				tissuestack::utils::Misc::tokenizeString(line, '=');
@@ -91,15 +91,5 @@ tissuestack::TissueStackConfigurationParameters::TissueStackConfigurationParamet
 	this->_parameters["db_password"] = new tissuestack::database::Configuration("db_password", "tissuestack");
 }
 
-const std::string tissuestack::TissueStackConfigurationParameters::eliminateWhitespaceAndUnwantedEscapeCharacters(const std::string & someString) const
-{
-	std::ostringstream in;
-
-	for(char c : someString)
-		if (c != ' ' &&  c != '\t' && c != '\r' && c != '\n')
-			in << c;
-
-	return in.str();
-}
 
 tissuestack::TissueStackConfigurationParameters * tissuestack::TissueStackConfigurationParameters::_instance = nullptr;

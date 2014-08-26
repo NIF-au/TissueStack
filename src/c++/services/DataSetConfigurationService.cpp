@@ -30,29 +30,38 @@ void tissuestack::services::DataSetConfigurationService::streamResponse(
 		dataSets =
 			tissuestack::database::DataSetDataProvider::queryAll();
 	else if (action.compare("QUERY") == 0)
-		dataSets.push_back(
-				tissuestack::database::DataSetDataProvider::queryById(
-						strtoull(request->getRequestParameter("ID").c_str(), NULL, 10)));
+	{
+		dataSets =
+			tissuestack::database::DataSetDataProvider::queryById(
+				strtoull(request->getRequestParameter("ID").c_str(), NULL, 10));
+	}
+
+	// we return if no results
+	if (dataSets.empty())
+	{
+		const std::string response =
+			tissuestack::utils::Misc::composeHttpResponse("200 OK", "application/json",
+				tissuestack::services::TissueStackServiceError::NO_RESULTS);
+		write(file_descriptor, response.c_str(), response.length());
+		return;
+	}
 
 	// if we have stuff in memory, take it from there, otherwise go back fishing in database
-	for (const tissuestack::imaging::TissueStackImageData * rec : dataSets)
+	for (unsigned int i=0;i<dataSets.size();i++)
 	{
+		const tissuestack::imaging::TissueStackImageData * rec = dataSets[i];
 		const tissuestack::imaging::TissueStackDataSet * foundDataSet =
 				tissuestack::imaging::TissueStackDataSetStore::instance()->findDataSet(rec->getFileName());
 		if (foundDataSet)
 		{
-			if (bIncludePlanes) // we'll use the image data from the global store and copy over the bits from the data base
-			{
-				const_cast<tissuestack::imaging::TissueStackImageData *>(foundDataSet->getImageData())->setMembersFromDataBaseInformation(
-					rec->isTiled(),
-					rec->getZoomLevels(),
-					rec->getOneToOneZoomLevel(),
-					rec->getResolutionInMm());
-				// swap pointers and delete the pointer to the db search results
-				const tissuestack::imaging::TissueStackImageData * tmp = rec;
-				rec = foundDataSet->getImageData();
-				delete tmp;
-			}
+			const_cast<tissuestack::imaging::TissueStackImageData *>(foundDataSet->getImageData())->setMembersFromDataBaseInformation(
+				rec->getDescription(),
+				rec->isTiled(),
+				rec->getZoomLevels(),
+				rec->getOneToOneZoomLevel(),
+				rec->getResolutionInMm());
+			delete rec;
+			dataSets[i] = foundDataSet->getImageData();
 			continue;
 		}
 
@@ -65,27 +74,21 @@ void tissuestack::services::DataSetConfigurationService::streamResponse(
 				"Data Set Record Missing!");
 		tissuestack::imaging::TissueStackDataSetStore::instance()->addDataSet(foundDataSet);
 
-		// swap pointers and delete the previous query pointers
-		const tissuestack::imaging::TissueStackImageData * tmp = rec;
-		rec = foundDataSet->getImageData();
-		delete tmp;
+		delete rec;
+		dataSets[i] = foundDataSet->getImageData();
 	}
 
 	// iterate over results and marshall them
 	std::ostringstream json;
-	if (!dataSets.empty() && dataSets[0] != nullptr)
+	json << "{ \"response\": [ ";
+	int i=0;
+	for (const tissuestack::imaging::TissueStackImageData * dataSet : dataSets)
 	{
-		json << "{ \"response\": [ ";
-		int i=0;
-		for (const tissuestack::imaging::TissueStackImageData * dataSet : dataSets)
-		{
-			if (i != 0) json << ",";
-			json << dataSet->toJson().c_str();
-			i++;
-		}
-		json << "] }";
-	} else
-		json << tissuestack::services::TissueStackServiceError::NO_RESULTS;
+		if (i != 0) json << ",";
+		json << dataSet->toJson(bIncludePlanes).c_str();
+		i++;
+	}
+	json << "] }";
 
 	const std::string response =
 			tissuestack::utils::Misc::composeHttpResponse("200 OK", "application/json", json.str());

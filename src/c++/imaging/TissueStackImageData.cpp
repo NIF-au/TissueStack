@@ -1,8 +1,9 @@
 #include "imaging.h"
 #include "database.h"
 
-tissuestack::imaging::TissueStackImageData::TissueStackImageData(const unsigned long long int id) :
-	_format(tissuestack::imaging::FORMAT::DATABASE), _database_id(id) {}
+tissuestack::imaging::TissueStackImageData::TissueStackImageData(
+		const unsigned long long int id, const std::string filename) :
+	_file_name(filename), _format(tissuestack::imaging::FORMAT::DATABASE), _database_id(id), _is_tiled(false), _resolution_in_mm(0) {}
 
 tissuestack::imaging::TissueStackImageData::~TissueStackImageData()
 {
@@ -66,7 +67,11 @@ const tissuestack::imaging::TissueStackImageData * tissuestack::imaging::TissueS
 const tissuestack::imaging::TissueStackImageData * tissuestack::imaging::TissueStackImageData::fromDataBaseRecordWithId(
 		const unsigned long long id, const bool includePlanes)
 {
-	return tissuestack::database::DataSetDataProvider::queryById(id, includePlanes);
+	const std::vector<const tissuestack::imaging::TissueStackImageData *>  ret =
+			tissuestack::database::DataSetDataProvider::queryById(id, includePlanes);
+	if (ret.empty()) return nullptr;
+
+	return ret[0];
 }
 
 tissuestack::imaging::TissueStackImageData::TissueStackImageData(const std::string & filename)
@@ -176,10 +181,24 @@ const tissuestack::imaging::FORMAT tissuestack::imaging::TissueStackImageData::g
 	return this->_format;
 }
 
-const std::string tissuestack::imaging::TissueStackImageData::toJson() const
+const std::string tissuestack::imaging::TissueStackImageData::toJson(const bool includePlanes) const
 {
-	// TODO: implement
-	return "";
+	std::ostringstream json;
+
+	json << "{ \"id\": " << std::to_string(this->_database_id);
+	json << ", \"filename\": \"" << this->_file_name << "\"";
+	if (!this->_description.empty())
+		json << ", \"description\": \"" << this->_description << "\"";
+
+	// TODO: add planes info!
+	if (includePlanes)
+	{
+
+	}
+
+	json << "}";
+
+	return json.str();
 }
 
 const std::unordered_map<char, const tissuestack::imaging::TissueStackDataDimension *> tissuestack::imaging::TissueStackImageData::getDimensionMap() const
@@ -227,11 +246,13 @@ void tissuestack::imaging::TissueStackImageData::dumpDataDimensionInfoIntoDebugL
 }
 
 void tissuestack::imaging::TissueStackImageData::setMembersFromDataBaseInformation(
-		bool is_tiled,
-		std::vector<float> zoom_levels,
-		unsigned short one_to_one_zoom_level,
-		float resolution_in_mm)
+		const std::string description,
+		const bool is_tiled,
+		const std::vector<float> zoom_levels,
+		const unsigned short one_to_one_zoom_level,
+		const float resolution_in_mm)
 {
+	this->_description = description;
 	this->_is_tiled = is_tiled;
 	if (!zoom_levels.empty())
 		this->_zoom_levels = zoom_levels;
@@ -240,6 +261,11 @@ void tissuestack::imaging::TissueStackImageData::setMembersFromDataBaseInformati
 		this->_resolution_in_mm = resolution_in_mm;
 }
 
+
+const std::string tissuestack::imaging::TissueStackImageData::getDescription() const
+{
+	return this->_description;
+}
 
 const bool tissuestack::imaging::TissueStackImageData::isTiled() const
 {

@@ -7,7 +7,15 @@ tissuestack::imaging::TissueStackDataDimension::TissueStackDataDimension(
 		const unsigned long long int slice_size) :
 		_name(name), _offset(offset), _numberOfSlices(number_of_slices),_sliceSize(slice_size), _width(0), _height(0)
 {
-	if (offset <=0 || number_of_slices <=0 || slice_size <=0)
+	if (name.empty() || offset <=0 || number_of_slices <=0 || slice_size <=0)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "DataDimension Initialization with a fishy number smaller or equal to 0!");
+}
+
+tissuestack::imaging::TissueStackDataDimension::TissueStackDataDimension(
+		const std::string & name,
+		const unsigned long long int number_of_slices) : _name(name), _offset(0), _numberOfSlices(number_of_slices), _sliceSize(0), _width(0), _height(0)
+{
+	if (name.empty() || number_of_slices <=0)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "DataDimension Initialization with a fishy number smaller or equal to 0!");
 }
 

@@ -77,13 +77,16 @@ namespace tissuestack
 						const bool includePlanes = false,
 						const unsigned short offset = 0,
 						const unsigned short max_records = MAX_RECORDS);
-				static const tissuestack::imaging::TissueStackImageData * queryById(
+				static const std::vector<const tissuestack::imaging::TissueStackImageData *> queryById(
 						const unsigned long long int id,
 						const bool includePlanes = false);
 			private:
 				static const std::vector<const tissuestack::imaging::TissueStackImageData *> findResults(
-						const std::string sql, const bool includePlanes=false);
+						const std::string sql);
+				static void findAndAddPlanes(
+						const unsigned long long int dataset_id, tissuestack::imaging::TissueStackImageData * imageData);
 				static const std::string SQL;
+				static const std::string SQL_PLANES;
 				static const std::string ORDER_BY;
 				static const unsigned short MAX_RECORDS;
 		};
