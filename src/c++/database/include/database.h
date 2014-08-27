@@ -23,6 +23,10 @@ namespace tissuestack
 				~TissueStackPostgresConnector();
 				static TissueStackPostgresConnector * instance();
 				const pqxx::result executeNonTransactionalQuery(const std::string sql);
+				const pqxx::result executePaginatedQuery(
+					const std::string sql,
+					const unsigned int from,
+					const unsigned int to);
 		    	void purgeInstance();
 		    	const bool isConnected() const;
 			private:
@@ -70,25 +74,27 @@ namespace tissuestack
 		class DataSetDataProvider final
 		{
 			public:
+				static const unsigned short MAX_RECORDS;
 				DataSetDataProvider & operator=(const DataSetDataProvider&) = delete;
 				DataSetDataProvider(const DataSetDataProvider&) = delete;
 				DataSetDataProvider() = delete;
 				static const std::vector<const tissuestack::imaging::TissueStackImageData *> queryAll(
 						const bool includePlanes = false,
-						const unsigned short offset = 0,
-						const unsigned short max_records = MAX_RECORDS);
+						const unsigned int offset = 0,
+						const unsigned int max_records = MAX_RECORDS);
 				static const std::vector<const tissuestack::imaging::TissueStackImageData *> queryById(
 						const unsigned long long int id,
 						const bool includePlanes = false);
 			private:
 				static const std::vector<const tissuestack::imaging::TissueStackImageData *> findResults(
-						const std::string sql);
+						const std::string sql,
+						const unsigned int from = 0,
+						const unsigned int to = MAX_RECORDS);
 				static void findAndAddPlanes(
 						const unsigned long long int dataset_id, tissuestack::imaging::TissueStackImageData * imageData);
 				static const std::string SQL;
 				static const std::string SQL_PLANES;
 				static const std::string ORDER_BY;
-				static const unsigned short MAX_RECORDS;
 		};
 	}
 }

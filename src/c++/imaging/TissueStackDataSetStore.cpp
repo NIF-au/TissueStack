@@ -48,6 +48,19 @@ const tissuestack::imaging::TissueStackDataSet * tissuestack::imaging::TissueSta
 	}
 }
 
+const tissuestack::imaging::TissueStackDataSet * tissuestack::imaging::TissueStackDataSetStore::findDataSetByDataBaseId(
+		const unsigned long long int id) const
+{
+	if (id == 0)
+		return nullptr;
+
+	for (auto dataSet : this->_data_sets)
+		if (dataSet.second->getImageData()->getDataBaseId() == id)
+			return dataSet.second;
+
+	return nullptr;
+}
+
 void tissuestack::imaging::TissueStackDataSetStore::addDataSet(const tissuestack::imaging::TissueStackDataSet * dataSet)
 {
 	if (dataSet == nullptr) return;

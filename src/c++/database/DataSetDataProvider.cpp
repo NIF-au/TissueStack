@@ -8,15 +8,14 @@ const std::string tissuestack::database::DataSetDataProvider::ORDER_BY = " ORDER
 const unsigned short tissuestack::database::DataSetDataProvider::MAX_RECORDS = 1000;
 
 const std::vector<const tissuestack::imaging::TissueStackImageData *> tissuestack::database::DataSetDataProvider::queryAll(
-		const bool includePlanes, const unsigned short offset, const unsigned short max_records)
+		const bool includePlanes, const unsigned int offset, const unsigned int max_records)
 {
-	// TODO: implement pagination and add associated data set query
 	const std::string sql =
 			tissuestack::database::DataSetDataProvider::SQL +
 			tissuestack::database::DataSetDataProvider::ORDER_BY + ";";
 
 	const std::vector<const tissuestack::imaging::TissueStackImageData *> res =
-			tissuestack::database::DataSetDataProvider::findResults(sql);
+			tissuestack::database::DataSetDataProvider::findResults(sql, offset, offset + max_records);
 
 	if (!includePlanes || res.empty()) return res;
 
@@ -57,6 +56,9 @@ const std::vector<const tissuestack::imaging::TissueStackImageData *> tissuestac
 	return results;
 }
 
+// TODO: implement findAssociatedPlanes & make use of data set store finder method using database id!
+//void tissuestack::database::DataSetDataProvider::findAssociatedDataSets
+
 void tissuestack::database::DataSetDataProvider::findAndAddPlanes(
 		const unsigned long long int dataset_id, tissuestack::imaging::TissueStackImageData * imageData)
 {
@@ -80,6 +82,7 @@ void tissuestack::database::DataSetDataProvider::findAndAddPlanes(
 	{
 		tissuestack::imaging::TissueStackDataDimension * rec =
 			new tissuestack::imaging::TissueStackDataDimension(
+				i_results["id"].as<unsigned long long int>(),
 				i_results["name"].as<std::string>(),
 				i_results["max_slices"].as<unsigned long long int>());
 		imageData->addDimension(rec);
@@ -87,10 +90,15 @@ void tissuestack::database::DataSetDataProvider::findAndAddPlanes(
 	imageData->initializeWidthAndHeightForDimensions();
 }
 
-const std::vector<const tissuestack::imaging::TissueStackImageData *> tissuestack::database::DataSetDataProvider::findResults(const std::string sql)
+const std::vector<const tissuestack::imaging::TissueStackImageData *> tissuestack::database::DataSetDataProvider::findResults(
+		const std::string sql,
+		const unsigned int from,
+		const unsigned int to)
 {
 	const pqxx::result results =
-			tissuestack::database::TissueStackPostgresConnector::instance()->executeNonTransactionalQuery(sql);
+			(from == 0 && to == tissuestack::database::DataSetDataProvider::MAX_RECORDS) ?
+			tissuestack::database::TissueStackPostgresConnector::instance()->executeNonTransactionalQuery(sql) :
+			tissuestack::database::TissueStackPostgresConnector::instance()->executePaginatedQuery(sql, from, to);
 
 	if (results.empty())
 		return std::vector<const tissuestack::imaging::TissueStackImageData *>();
@@ -118,6 +126,7 @@ const std::vector<const tissuestack::imaging::TissueStackImageData *> tissuestac
 			v_zoom_levels.push_back(static_cast<float>(atof(z.c_str())));
 
 		const_cast<tissuestack::imaging::TissueStackImageData *>(rec.get())->setMembersFromDataBaseInformation(
+			rec->getDataBaseId(),
 			i_results["description"].is_null() ? "" : i_results["description"].as<std::string>(),
 			i_results["is_tiled"].as<bool>(),
 			v_zoom_levels,

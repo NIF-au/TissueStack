@@ -77,6 +77,36 @@ const pqxx::result tissuestack::database::TissueStackPostgresConnector::executeN
 	}
 }
 
+const pqxx::result tissuestack::database::TissueStackPostgresConnector::executePaginatedQuery(
+		const std::string sql,
+		const unsigned int from,
+		const unsigned int to)
+{
+	try
+	{
+		pqxx::work work( *this->_connection );
+		pqxx::stateless_cursor<pqxx::cursor_base::read_only, pqxx::cursor_base::owned> cursor(
+				work, sql, "query_cursor", false );
+
+		const pqxx::result res = cursor.retrieve( from, to );
+		cursor.close();
+		return res;
+	} catch (std::exception & bad) { // check connectivity
+		if (!this->isConnected()) // we try it one more time
+		{
+			this->reconnect();
+			pqxx::work work( *this->_connection );
+			pqxx::stateless_cursor<pqxx::cursor_base::read_only, pqxx::cursor_base::owned> cursor(
+					work, sql, "query_cursor", false );
+
+			const pqxx::result res = cursor.retrieve( from, to );
+			cursor.close();
+			return res;
+		}
+		throw bad; // propagate (t'was not the connection, strangely enough)
+	}
+}
+
 void tissuestack::database::TissueStackPostgresConnector::reconnect()
 {
 	this->_connection = new pqxx::connection(this->_connectString);

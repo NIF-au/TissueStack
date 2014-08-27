@@ -246,12 +246,14 @@ void tissuestack::imaging::TissueStackImageData::dumpDataDimensionInfoIntoDebugL
 }
 
 void tissuestack::imaging::TissueStackImageData::setMembersFromDataBaseInformation(
+		const unsigned long long int id,
 		const std::string description,
 		const bool is_tiled,
 		const std::vector<float> zoom_levels,
 		const unsigned short one_to_one_zoom_level,
 		const float resolution_in_mm)
 {
+	this->_database_id = id,
 	this->_description = description;
 	this->_is_tiled = is_tiled;
 	if (!zoom_levels.empty())

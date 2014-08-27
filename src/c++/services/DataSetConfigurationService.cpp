@@ -21,14 +21,25 @@ void tissuestack::services::DataSetConfigurationService::streamResponse(
 {
 	const std::string action = request->getRequestParameter("ACTION", true);
 	const std::string includePlanes =
-			request->getRequestParameter("planes", true);
+			request->getRequestParameter("include_planes", true);
 	const bool bIncludePlanes =
 			(!includePlanes.empty() && includePlanes.compare("TRUE") == 0) ? true : false;
 
 	std::vector<const tissuestack::imaging::TissueStackImageData *> dataSets;
 	if (action.compare("ALL") == 0)
+	{
+		const std::string sOffset = request->getRequestParameter("OFFSET");
+		const std::string sMaxRecords = request->getRequestParameter("MAX_RECORDS");
+
+		const unsigned int offset =
+			sOffset.empty() ? 0 :
+				static_cast<unsigned int>(strtoull(sOffset.c_str(), NULL, 10));
+		const unsigned int max_records = sMaxRecords.empty() ? tissuestack::database::DataSetDataProvider::MAX_RECORDS :
+				static_cast<unsigned int>(strtoull(sMaxRecords.c_str(), NULL, 10));
+
 		dataSets =
-			tissuestack::database::DataSetDataProvider::queryAll();
+			tissuestack::database::DataSetDataProvider::queryAll(bIncludePlanes, offset, max_records);
+	}
 	else if (action.compare("QUERY") == 0)
 	{
 		dataSets =
@@ -51,10 +62,11 @@ void tissuestack::services::DataSetConfigurationService::streamResponse(
 	{
 		const tissuestack::imaging::TissueStackImageData * rec = dataSets[i];
 		const tissuestack::imaging::TissueStackDataSet * foundDataSet =
-				tissuestack::imaging::TissueStackDataSetStore::instance()->findDataSet(rec->getFileName());
+			tissuestack::imaging::TissueStackDataSetStore::instance()->findDataSet(rec->getFileName());
 		if (foundDataSet)
 		{
 			const_cast<tissuestack::imaging::TissueStackImageData *>(foundDataSet->getImageData())->setMembersFromDataBaseInformation(
+				rec->getDataBaseId(),
 				rec->getDescription(),
 				rec->isTiled(),
 				rec->getZoomLevels(),
@@ -67,8 +79,11 @@ void tissuestack::services::DataSetConfigurationService::streamResponse(
 
 		// we have a data set that solely exists in the data base, i.e. has no corresponding physical raw file
 		// let's query all of its info and then add it to the data set store
-		foundDataSet =
-				tissuestack::imaging::TissueStackDataSet::fromDataBaseRecordWithId(rec->getDataBaseId(), bIncludePlanes);
+		foundDataSet = // check whether we have already queried it once and added it to the memory store
+			tissuestack::imaging::TissueStackDataSetStore::instance()->findDataSetByDataBaseId(rec->getDataBaseId());
+		if (foundDataSet == nullptr) // we did not: fetch the records
+			foundDataSet =
+				tissuestack::imaging::TissueStackDataSet::fromDataBaseRecordWithId(rec->getDataBaseId(), true);
 		if (foundDataSet == nullptr)
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Data Set Record Missing!");

@@ -134,6 +134,7 @@ namespace tissuestack
 						const unsigned long long int number_of_slices,
 						const unsigned long long int slice_size);
 				explicit TissueStackDataDimension(
+						const long long unsigned int id,
 						const std::string & name,
 						const unsigned long long int number_of_slices);
 				TissueStackDataDimension(const TissueStackDataDimension&) = delete;
@@ -147,6 +148,7 @@ namespace tissuestack
 				void setWidthAndHeight(const std::array<unsigned int, 2> & widthAndHeight);
 				void dumpDataDimensionInfoIntoDebugLog() const;
 			private:
+				const unsigned long long int _id;
 				const std::string 	_name;
 				unsigned long long int 	_offset;
 				unsigned long long int 	_numberOfSlices;
@@ -179,6 +181,7 @@ namespace tissuestack
 				const unsigned long long int getDataBaseId() const;
 				const std::string getDescription() const;
 				void setMembersFromDataBaseInformation(
+						const unsigned long long int id = 0,
 						const std::string description = "",
 						const bool is_tiled = false,
 						const std::vector<float> zoom_levels = {0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2.00},
@@ -218,10 +221,10 @@ namespace tissuestack
 				std::unordered_map<char, const TissueStackDataDimension *> _dimensions;
 				FILE * _file_handle = nullptr;
 				unsigned long long int _database_id = 0;
-				bool _is_tiled;
+				bool _is_tiled = false;
 				std::vector<float> _zoom_levels = {0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2.00};
 				unsigned short _one_to_one_zoom_level = 3;
-				float _resolution_in_mm;
+				float _resolution_in_mm = 0;
 		};
 
 		class TissueStackRawData final : public TissueStackImageData
@@ -312,6 +315,7 @@ namespace tissuestack
 				static TissueStackDataSetStore * instance();
 		    	void purgeInstance();
 		    	const TissueStackDataSet * findDataSet(const std::string & id) const;
+		    	const TissueStackDataSet * findDataSetByDataBaseId(const unsigned long long int id) const;
 		    	void addDataSet(const TissueStackDataSet * dataSet);
 		    	void replaceDataSet(const tissuestack::imaging::TissueStackDataSet * dataSet);
 		    	void dumpDataSetStoreIntoDebugLog() const;
