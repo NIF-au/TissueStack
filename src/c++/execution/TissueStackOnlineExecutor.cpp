@@ -91,13 +91,17 @@ void tissuestack::execution::TissueStackOnlineExecutor::execute(std::string requ
 					"application/json",
 					tissuestack::services::TissueStackServiceError(invalidRequest).toJson());
 		else
+		{
+			tissuestack::logging::TissueStackLogger::instance()->error("Failed to execute Process: %s\n", invalidRequest.what());
 			response =
 				tissuestack::utils::Misc::composeHttpResponse(
 					"200 OK",
 					"application/json",
 					tissuestack::services::TissueStackServiceError(invalidRequest).toJson());
+		}
 	} catch (tissuestack::common::TissueStackException& ex)
 	{
+		tissuestack::logging::TissueStackLogger::instance()->error("Failed to execute Process: %s\n", ex.what());
 		response =
 			tissuestack::utils::Misc::composeHttpResponse(
 				"500 Internal Server Error",
@@ -105,6 +109,7 @@ void tissuestack::execution::TissueStackOnlineExecutor::execute(std::string requ
 				tissuestack::services::TissueStackServiceError(ex).toJson());
 	}  catch (std::exception & bad)
 	{
+		tissuestack::logging::TissueStackLogger::instance()->error("Failed to execute Process: %s\n", bad.what());
 		response =
 			tissuestack::utils::Misc::composeHttpResponse(
 				"500 Internal Server Error",
