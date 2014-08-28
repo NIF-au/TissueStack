@@ -56,16 +56,37 @@ namespace tissuestack
 			public:
 				TissueStackLabelLookup & operator=(const TissueStackLabelLookup&) = delete;
 				TissueStackLabelLookup(const TissueStackLabelLookup&) = delete;
+				~TissueStackLabelLookup();
 				static const TissueStackLabelLookup * fromFile(const std::string & filename);
-				void copyGrayIndexedRgbMapping(std::array<unsigned short[3], 256> & grayIndexedRgbMapping) const;
+				static const TissueStackLabelLookup * fromDataBaseId(
+						const unsigned long long int id,
+						const std::string & filename = "",
+						const std::string & content = "",
+						const tissuestack::database::AtlasInfo * atlasInfo = nullptr);
 				const std::string getLabel(const unsigned short & red, const unsigned short & green, const unsigned short & blue) const;
-				const std::string getLabelLookupId() const;
+				const std::string getLabelLookupId(bool fullPath=false) const;
+				const unsigned long long int getDataBaseId() const;
 				void dumpLabelLookupToDebugLog() const;
+				void releaseAtlasInfoPointer();
+				const std::string toJson() const;
 			private:
 				const std::string _labellookup_id;
+				unsigned long long int _database_id;
 				std::array<unsigned short[3], 256> _gray_indexed_rgb_mapping;
 				std::unordered_map<std::string, std::string> _label_lookups;
+				const tissuestack::database::AtlasInfo * _atlas_info;
+				friend class TissueStackColorMap;
+				void copyGrayIndexedRgbMapping(std::array<unsigned short[3], 256> & grayIndexedRgbMapping) const;
+				friend class tissuestack::database::DataSetDataProvider;
+				void setDataBaseInfo(
+					const unsigned long long int id,
+					const tissuestack::database::AtlasInfo * atlasInfo);
 				explicit TissueStackLabelLookup(const std::string & filename);
+				explicit TissueStackLabelLookup(
+					const unsigned long long int id,
+					const std::string & filename,
+					const std::string & content,
+					const tissuestack::database::AtlasInfo * atlasInfo);
 		};
 
 		class TissueStackLabelLookupStore final
@@ -76,6 +97,8 @@ namespace tissuestack
 				static TissueStackLabelLookupStore * instance();
 				void purgeInstance();
 				const TissueStackLabelLookup * findLabelLookup(const std::string & id) const;
+				const TissueStackLabelLookup * findLabelLookupByFullPath(const std::string & id) const;
+				const TissueStackLabelLookup * findLabelLookupByDataBaseId(const unsigned long long int id) const;
 				void addOrReplaceLabelLookup(const TissueStackLabelLookup * labelLookup);
 				const std::unordered_map<std::string, const tissuestack::imaging::TissueStackLabelLookup *> getAllLabelLookups() const;
 				void dumpAllLabelLookupsToDebugLog() const;
@@ -143,11 +166,14 @@ namespace tissuestack
 				const unsigned long long int getNumberOfSlices() const;
 				const unsigned long long int getSliceSize() const;
 				const unsigned long long int getOffset() const;
+				const std::string getTransformationMatrix() const;
 				const unsigned int getWidth() const;
 				const unsigned int getHeight() const;
-				void setWidthAndHeight(const std::array<unsigned int, 2> & widthAndHeight);
 				void dumpDataDimensionInfoIntoDebugLog() const;
 			private:
+				friend class TissueStackImageData;
+				void setWidthAndHeight(const std::array<unsigned int, 2> & widthAndHeight);
+				void setTransformationMatrix(const std::string transformationMatrix);
 				const unsigned long long int _id;
 				const std::string 	_name;
 				unsigned long long int 	_offset;
@@ -155,7 +181,7 @@ namespace tissuestack
 				unsigned long long int 	_sliceSize;
 				unsigned int _width;
 				unsigned int _height;
-
+				std::string _transformationMatrix;
 		};
 
 		class TissueStackImageData
@@ -186,15 +212,18 @@ namespace tissuestack
 						const bool is_tiled = false,
 						const std::vector<float> zoom_levels = {0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2.00},
 						const unsigned short one_to_one_zoom_level = 3,
-						const float resolution_in_mm = 0);
+						const float resolution_in_mm = 0,
+						const TissueStackLabelLookup * lookup = nullptr);
 				const bool isTiled() const;
 				const std::vector<float> getZoomLevels() const;
 				const unsigned short getOneToOneZoomLevel() const;
 				const float getResolutionInMm() const;
 				void dumpImageDataIntoDebugLog() const;
+				const TissueStackLabelLookup * getLookup() const;
 				const int getFileDescriptor();
-				void initializeWidthAndHeightForDimensions();
+				void initializeDimensions();
 				const std::string toJson(const bool includePlanes = false) const;
+				const std::string getZoomLevelsAsJson() const;
 			protected:
 				friend class tissuestack::database::DataSetDataProvider;
 				explicit TissueStackImageData(const long long unsigned int id, const std::string filename = "");
@@ -207,6 +236,7 @@ namespace tissuestack
 				void addStep(float step);
 			private:
 				void setWidthAndHeightByDimension(const std::string & dimension);
+				void setTransformationMatrixByDimension(const std::string & dimension);
 				void openFileHandle(bool close_open_handle = false);
 				void closeFileHandle();
 				void dumpDataDimensionInfoIntoDebugLog() const;
@@ -225,6 +255,7 @@ namespace tissuestack
 				std::vector<float> _zoom_levels = {0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2.00};
 				unsigned short _one_to_one_zoom_level = 3;
 				float _resolution_in_mm = 0;
+				const TissueStackLabelLookup * _lookup = nullptr;
 		};
 
 		class TissueStackRawData final : public TissueStackImageData
@@ -313,6 +344,8 @@ namespace tissuestack
 				TissueStackDataSetStore & operator=(const TissueStackDataSetStore&) = delete;
 				TissueStackDataSetStore(const TissueStackDataSetStore&) = delete;
 				static TissueStackDataSetStore * instance();
+				static void integrateDataBaseResultsIntoDataSetStore(
+						std::vector<const tissuestack::imaging::TissueStackImageData *> & dataSets);
 		    	void purgeInstance();
 		    	const TissueStackDataSet * findDataSet(const std::string & id) const;
 		    	const TissueStackDataSet * findDataSetByDataBaseId(const unsigned long long int id) const;
@@ -492,13 +525,15 @@ namespace tissuestack
 					return dataSet->getImageData();
 				}
 
-
 				void processQueryRequest(
 						const tissuestack::networking::TissueStackQueryRequest * request,
 						const int file_descriptor)
 				{
 					const TissueStackImageData * imageData =
 							this->processRequest(request, file_descriptor);
+
+					//TODO: have this return a string (json) and then write out response here
+
 					// perform query
 					this->_caching_strategy->performQuery(
 						file_descriptor,
@@ -537,6 +572,9 @@ namespace tissuestack
 							THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 									"The length of the image square has to range in betwenn 0 and 1280");
 					}
+
+					//TODO: have this return an image and then write it out to socket here
+					//NOTE: consider gzipped response
 
 					// perform extraction
 					this->_caching_strategy->extractImage(

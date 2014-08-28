@@ -57,41 +57,7 @@ void tissuestack::services::DataSetConfigurationService::streamResponse(
 		return;
 	}
 
-	// if we have stuff in memory, take it from there, otherwise go back fishing in database
-	for (unsigned int i=0;i<dataSets.size();i++)
-	{
-		const tissuestack::imaging::TissueStackImageData * rec = dataSets[i];
-		const tissuestack::imaging::TissueStackDataSet * foundDataSet =
-			tissuestack::imaging::TissueStackDataSetStore::instance()->findDataSet(rec->getFileName());
-		if (foundDataSet)
-		{
-			const_cast<tissuestack::imaging::TissueStackImageData *>(foundDataSet->getImageData())->setMembersFromDataBaseInformation(
-				rec->getDataBaseId(),
-				rec->getDescription(),
-				rec->isTiled(),
-				rec->getZoomLevels(),
-				rec->getOneToOneZoomLevel(),
-				rec->getResolutionInMm());
-			delete rec;
-			dataSets[i] = foundDataSet->getImageData();
-			continue;
-		}
-
-		// we have a data set that solely exists in the data base, i.e. has no corresponding physical raw file
-		// let's query all of its info and then add it to the data set store
-		foundDataSet = // check whether we have already queried it once and added it to the memory store
-			tissuestack::imaging::TissueStackDataSetStore::instance()->findDataSetByDataBaseId(rec->getDataBaseId());
-		if (foundDataSet == nullptr) // we did not: fetch the records
-			foundDataSet =
-				tissuestack::imaging::TissueStackDataSet::fromDataBaseRecordWithId(rec->getDataBaseId(), true);
-		if (foundDataSet == nullptr)
-			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-				"Data Set Record Missing!");
-		tissuestack::imaging::TissueStackDataSetStore::instance()->addDataSet(foundDataSet);
-
-		delete rec;
-		dataSets[i] = foundDataSet->getImageData();
-	}
+	tissuestack::imaging::TissueStackDataSetStore::integrateDataBaseResultsIntoDataSetStore(dataSets);
 
 	// iterate over results and marshall them
 	std::ostringstream json;

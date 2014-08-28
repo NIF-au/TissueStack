@@ -1,10 +1,18 @@
 #include "database.h"
 #include "imaging.h"
 
-const std::string tissuestack::database::DataSetDataProvider::SQL = "SELECT * FROM dataset ";
-const std::string tissuestack::database::DataSetDataProvider::SQL_PLANES = "SELECT * FROM dataset_planes ";
+const std::string tissuestack::database::DataSetDataProvider::SQL =
+	"SELECT PrimaryTable.id AS prim_id, PrimaryTable.filename, PrimaryTable.description, PrimaryTable.is_tiled,"
+		" PrimaryTable.zoom_levels, PrimaryTable.one_to_one_zoom_level, resolution_mm,"
+		" SecondaryTable.id AS sec_id, SecondaryTable.filename AS sec_filename, SecondaryTable.content,"
+		" TertiaryTable.id AS ter_id, TertiaryTable.atlas_prefix, TertiaryTable.atlas_description, TertiaryTable.atlas_query_url"
+		" FROM dataset AS PrimaryTable"
+		" LEFT JOIN dataset_values_lookup AS SecondaryTable ON SecondaryTable.id = PrimaryTable.lookup_id"
+		" LEFT JOIN atlas_info TertiaryTable ON SecondaryTable.atlas_association = TertiaryTable.id";
 
-const std::string tissuestack::database::DataSetDataProvider::ORDER_BY = " ORDER BY id ASC";
+const std::string tissuestack::database::DataSetDataProvider::SQL_PLANES = "SELECT * FROM dataset_planes AS PrimaryTable ";
+
+const std::string tissuestack::database::DataSetDataProvider::ORDER_BY = " ORDER BY PrimaryTable.id ASC";
 const unsigned short tissuestack::database::DataSetDataProvider::MAX_RECORDS = 1000;
 
 const std::vector<const tissuestack::imaging::TissueStackImageData *> tissuestack::database::DataSetDataProvider::queryAll(
@@ -33,7 +41,7 @@ const std::vector<const tissuestack::imaging::TissueStackImageData *> tissuestac
 {
 	const std::string sql =
 			tissuestack::database::DataSetDataProvider::SQL +
-			" WHERE id=" + std::to_string(id) + " " +
+			" WHERE PrimaryTable.id=" + std::to_string(id) + " " +
 			tissuestack::database::DataSetDataProvider::ORDER_BY + ";";
 
 	const std::vector<const tissuestack::imaging::TissueStackImageData *> results =
@@ -57,6 +65,7 @@ const std::vector<const tissuestack::imaging::TissueStackImageData *> tissuestac
 }
 
 // TODO: implement findAssociatedPlanes & make use of data set store finder method using database id!
+// make sure we only fetch them once and then have them stored in memory, also no dimensions needed for json but lookup!
 //void tissuestack::database::DataSetDataProvider::findAssociatedDataSets
 
 void tissuestack::database::DataSetDataProvider::findAndAddPlanes(
@@ -67,15 +76,12 @@ void tissuestack::database::DataSetDataProvider::findAndAddPlanes(
 
 	const std::string sql =
 		tissuestack::database::DataSetDataProvider::SQL_PLANES +
-		" WHERE dataset_id=" + std::to_string(dataset_id) + " " + tissuestack::database::DataSetDataProvider::ORDER_BY;
+		" WHERE PrimaryTable.dataset_id=" + std::to_string(dataset_id) + " " + tissuestack::database::DataSetDataProvider::ORDER_BY;
 
 	const pqxx::result results =
 			tissuestack::database::TissueStackPostgresConnector::instance()->executeNonTransactionalQuery(sql);
 
 	if (results.empty()) return;
-	if (results.size() > 1)
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-			"Unique key based search returned more than 1 record!");
 
 	// loop over planes and create dimension objects
 	for (pqxx::result::const_iterator i_results = results.begin(); i_results != results.end(); ++i_results)
@@ -87,7 +93,7 @@ void tissuestack::database::DataSetDataProvider::findAndAddPlanes(
 				i_results["max_slices"].as<unsigned long long int>());
 		imageData->addDimension(rec);
 	}
-	imageData->initializeWidthAndHeightForDimensions();
+	imageData->initializeDimensions();
 }
 
 const std::vector<const tissuestack::imaging::TissueStackImageData *> tissuestack::database::DataSetDataProvider::findResults(
@@ -109,7 +115,7 @@ const std::vector<const tissuestack::imaging::TissueStackImageData *> tissuestac
 		// read results and create ImageData
 		std::unique_ptr<const tissuestack::imaging::TissueStackImageData> rec(
 			new tissuestack::imaging::TissueStackDataBaseData(
-				i_results["id"].as<unsigned long long int>(),
+				i_results["prim_id"].as<unsigned long long int>(),
 				i_results["filename"].as<std::string>()));
 
 		std::string zoom_levels =
@@ -125,13 +131,60 @@ const std::vector<const tissuestack::imaging::TissueStackImageData *> tissuestac
 		for (auto z : s_zoom_levels)
 			v_zoom_levels.push_back(static_cast<float>(atof(z.c_str())));
 
+		// check for lookup info
+		std::unique_ptr<const tissuestack::imaging::TissueStackLabelLookup> associatedLookup(nullptr);
+		if (!i_results["sec_id"].is_null())
+		{
+			std::unique_ptr<const tissuestack::database::AtlasInfo> associatedAtlas(nullptr);
+			if (!i_results["ter_id"].is_null())
+				associatedAtlas.reset(
+					new tissuestack::database::AtlasInfo(
+						i_results["ter_id"].as<unsigned long long int>(),
+						i_results["atlas_prefix"].as<std::string>(),
+						i_results["atlas_description"].as<std::string>(),
+						i_results["atlas_query_url"].is_null() ? "" :
+							i_results["atlas_query_url"].as<std::string>()
+					));
+
+			const unsigned long long int lookup_id = i_results["sec_id"].as<unsigned long long int>();
+			const std::string label_lookup_file = i_results["sec_filename"].as<std::string>();
+
+			// check if we have already a lookup in memory
+			associatedLookup.reset(
+				tissuestack::imaging::TissueStackLabelLookupStore::instance()->findLabelLookupByFullPath(label_lookup_file));
+			if (associatedLookup.get() == nullptr)
+			{
+				// try to find it via the database id in memory
+				associatedLookup.reset(
+					tissuestack::imaging::TissueStackLabelLookupStore::instance()->findLabelLookupByDataBaseId(lookup_id));
+
+				if (associatedLookup.get() == nullptr) // last straw: go to database
+				{
+					associatedLookup.reset(
+						tissuestack::imaging::TissueStackLabelLookup::fromDataBaseId(
+							lookup_id,
+							label_lookup_file,
+							i_results["content"].is_null() ? "" :
+								i_results["content"].as<std::string>(),
+							associatedAtlas.release()));
+					// add it to the lookup store
+					tissuestack::imaging::TissueStackLabelLookupStore::instance()->addOrReplaceLabelLookup(associatedLookup.get());
+				}
+			} else
+			{
+				const_cast<tissuestack::imaging::TissueStackLabelLookup *>(associatedLookup.get())->setDataBaseInfo(
+					lookup_id, associatedAtlas.release());
+			}
+		}
+
 		const_cast<tissuestack::imaging::TissueStackImageData *>(rec.get())->setMembersFromDataBaseInformation(
 			rec->getDataBaseId(),
 			i_results["description"].is_null() ? "" : i_results["description"].as<std::string>(),
 			i_results["is_tiled"].as<bool>(),
 			v_zoom_levels,
 			i_results["one_to_one_zoom_level"].as<unsigned short>(),
-			i_results["resolution_mm"].is_null() ? 0.0 : i_results["resolution_mm"].as<float>()
+			i_results["resolution_mm"].is_null() ? 0.0 : i_results["resolution_mm"].as<float>(),
+			associatedLookup.release()
 		);
 		v_results.push_back(rec.release());
 	}

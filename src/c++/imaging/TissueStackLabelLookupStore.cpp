@@ -20,8 +20,9 @@ tissuestack::imaging::TissueStackLabelLookupStore::TissueStackLabelLookupStore()
 void tissuestack::imaging::TissueStackLabelLookupStore::purgeInstance()
 {
 	// walk through entries and clean them up
-	for (auto entry = this->_label_lookups.begin(); entry != this->_label_lookups.end(); ++entry)
-		delete entry->second;
+	for (auto entry : this->_label_lookups)
+		if (entry.second) delete entry.second;
+	this->_label_lookups.clear();
 
 	delete tissuestack::imaging::TissueStackLabelLookupStore::_instance;
 	tissuestack::imaging::TissueStackLabelLookupStore::_instance = nullptr;
@@ -46,13 +47,37 @@ void tissuestack::imaging::TissueStackLabelLookupStore::purgeInstance()
 		}
  }
 
- void tissuestack::imaging::TissueStackLabelLookupStore::addOrReplaceLabelLookup(const tissuestack::imaging::TissueStackLabelLookup * labelLookup)
- {
+const tissuestack::imaging::TissueStackLabelLookup * tissuestack::imaging::TissueStackLabelLookupStore::findLabelLookupByFullPath(
+		const std::string & id) const
+{
+	for (auto l : this->_label_lookups)
+		if (l.second->getLabelLookupId(true).compare(id) == 0)
+			return l.second;
+
+	return nullptr;
+}
+
+const tissuestack::imaging::TissueStackLabelLookup * tissuestack::imaging::TissueStackLabelLookupStore::findLabelLookupByDataBaseId(
+		const unsigned long long int id) const
+{
+	if (id == 0) return nullptr;
+
+	for (auto l : this->_label_lookups)
+		if (l.second->getDataBaseId() == id)
+			return l.second;
+
+	return nullptr;
+}
+
+
+void tissuestack::imaging::TissueStackLabelLookupStore::addOrReplaceLabelLookup(const tissuestack::imaging::TissueStackLabelLookup * labelLookup)
+{
 	 if (labelLookup == nullptr) return;
 
 	 this->_label_lookups[labelLookup->getLabelLookupId()] = labelLookup;
- }
- const std::unordered_map<std::string, const tissuestack::imaging::TissueStackLabelLookup *> tissuestack::imaging::TissueStackLabelLookupStore::getAllLabelLookups() const
+}
+
+const std::unordered_map<std::string, const tissuestack::imaging::TissueStackLabelLookup *> tissuestack::imaging::TissueStackLabelLookupStore::getAllLabelLookups() const
  {
 	 return this->_label_lookups;
  }

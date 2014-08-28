@@ -71,6 +71,28 @@ namespace tissuestack
 				static inline tissuestack::database::Configuration * readResult(pqxx::result::const_iterator result);
 		};
 
+		class AtlasInfo final
+		{
+			public:
+				AtlasInfo & operator=(const AtlasInfo&) = delete;
+				AtlasInfo(const AtlasInfo&) = delete;
+				AtlasInfo(const unsigned long long int id,
+					const std::string prefix,
+					const std::string description,
+					const std::string query_url);
+				const unsigned long long int getDataBaseId() const;
+				const std::string getPrefix() const;
+				const std::string getDescription() const;
+				const std::string getQueryUrl() const;
+				const std::string toJson() const;
+			private:
+				const unsigned long long int _id;
+				const std::string _prefix;
+				const std::string _description;
+				const std::string _query_url;
+		};
+
+
 		class DataSetDataProvider final
 		{
 			public:

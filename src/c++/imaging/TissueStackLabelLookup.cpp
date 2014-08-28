@@ -1,6 +1,36 @@
 #include "imaging.h"
 
-tissuestack::imaging::TissueStackLabelLookup::TissueStackLabelLookup(const std::string & filename) : _labellookup_id(filename)
+tissuestack::imaging::TissueStackLabelLookup::~TissueStackLabelLookup()
+{
+	if (this->_atlas_info)
+		delete this->_atlas_info;
+}
+
+tissuestack::imaging::TissueStackLabelLookup::TissueStackLabelLookup(
+	const unsigned long long int id,
+	const std::string & filename,
+	const std::string & content,
+	const tissuestack::database::AtlasInfo * atlasInfo) :
+	_labellookup_id(filename), _database_id(id), _atlas_info(atlasInfo)
+{
+	if (!content.empty())
+	{
+		std::string new_content = tissuestack::utils::Misc::eraseCharacterFromString(content, '{');
+		new_content = tissuestack::utils::Misc::eraseCharacterFromString(new_content, '}');
+		new_content = tissuestack::utils::Misc::eraseCharacterFromString(new_content, '"');
+		const std::vector<std::string> pairs = tissuestack::utils::Misc::tokenizeString(new_content, ',');
+		for (auto p : pairs)
+		{
+			const std::vector<std::string> nameValue =
+				tissuestack::utils::Misc::tokenizeString(p, ':');
+			if (nameValue.size() == 2)
+				this->_label_lookups[nameValue[0]] = nameValue[1];
+		}
+	}
+}
+
+tissuestack::imaging::TissueStackLabelLookup::TissueStackLabelLookup(const std::string & filename) :
+		_labellookup_id(filename), _database_id(0), _atlas_info(nullptr)
 {
 	tissuestack::logging::TissueStackLogger::instance()->info("Loading label lookup file %s\n", filename.c_str());
 
@@ -87,10 +117,17 @@ tissuestack::imaging::TissueStackLabelLookup::TissueStackLabelLookup(const std::
 			// add lookup entry
 			if (!label.empty())
 			{
-				std::ostringstream in;
-				in << red << "/" << green << "/" + blue;
-				std::string rgbTripleKey = in.str();
+				std::string rgbTripleKey = "" +
+					std::to_string(red) + "/" + std::to_string(green) + "/" + std::to_string(blue);
 				this->_label_lookups[rgbTripleKey] = label;
+
+				// try and add also the gray lookup but only if we don't overwrite an rgb lookup!
+				if (gray >=0 && this->getLabel(gray, gray, gray).empty())
+				{
+					rgbTripleKey = "" +
+						std::to_string(gray) + "/" + std::to_string(gray) + "/" + std::to_string(gray);
+					this->_label_lookups[rgbTripleKey] = label;
+				}
 			}
 		}
 		file_stream.close();
@@ -133,12 +170,28 @@ const tissuestack::imaging::TissueStackLabelLookup * tissuestack::imaging::Tissu
 	return new tissuestack::imaging::TissueStackLabelLookup(filename);
 }
 
-const std::string tissuestack::imaging::TissueStackLabelLookup::getLabelLookupId() const
+const tissuestack::imaging::TissueStackLabelLookup * tissuestack::imaging::TissueStackLabelLookup::fromDataBaseId(
+	const unsigned long long int id,
+	const std::string & filename,
+	const std::string & content,
+	const tissuestack::database::AtlasInfo * atlasInfo)
 {
+	return new tissuestack::imaging::TissueStackLabelLookup(id, filename, content, atlasInfo);
+}
+
+const std::string tissuestack::imaging::TissueStackLabelLookup::getLabelLookupId(bool fullPath) const
+{
+	if (fullPath) return this->_labellookup_id;
+
 	if (this->_labellookup_id.find(LABEL_LOOKUP_PATH) == 0)
 		return this->_labellookup_id.substr(strlen(LABEL_LOOKUP_PATH) + 1);
 
 	return this->_labellookup_id;
+}
+
+const unsigned long long int tissuestack::imaging::TissueStackLabelLookup::getDataBaseId() const
+{
+	return this->_database_id;
 }
 
 void tissuestack::imaging::TissueStackLabelLookup::dumpLabelLookupToDebugLog() const
@@ -150,4 +203,51 @@ void tissuestack::imaging::TissueStackLabelLookup::dumpLabelLookupToDebugLog() c
 		const std::string label = this->getLabel(rgb[0], rgb[1], rgb[2]);
 		tissuestack::logging::TissueStackLogger::instance()->debug("%u\t%u\t%u\t%s\n", rgb[0], rgb[1], rgb[2], label.c_str());
 	}
+}
+
+void tissuestack::imaging::TissueStackLabelLookup::releaseAtlasInfoPointer()
+{
+	this->_atlas_info = nullptr;
+}
+
+void tissuestack::imaging::TissueStackLabelLookup::setDataBaseInfo(
+		const unsigned long long int id,
+		const tissuestack::database::AtlasInfo * atlasInfo)
+{
+	this->_database_id =id;
+	if (atlasInfo == nullptr) return;
+
+	if (this->_atlas_info)
+		delete this->_atlas_info;
+	this->_atlas_info = atlasInfo;
+}
+
+const std::string tissuestack::imaging::TissueStackLabelLookup::toJson() const
+{
+	std::ostringstream json;
+	json << "{\"filename\": \"" << tissuestack::utils::Misc::maskQuotesInJson(this->_labellookup_id) << "\"";
+
+	if (this->_atlas_info)
+		json << ",\"associatedAtlas\": " << this->_atlas_info->toJson();
+
+	if (!this->_label_lookups.empty())
+	{
+		json << ", \"content\": \"{";
+		std::ostringstream innerJson;
+		int i=0;
+		for (auto rgb : this->_label_lookups)
+		{
+			if (i !=0)
+				innerJson << ",";
+
+			innerJson << "\"" << rgb.first << "\": " <<
+				"\"" << rgb.second << "\"";
+
+			i++;
+		}
+		json << tissuestack::utils::Misc::maskQuotesInJson(innerJson.str()) << "}\"";
+	}
+
+	json << "}";
+	return json.str();
 }

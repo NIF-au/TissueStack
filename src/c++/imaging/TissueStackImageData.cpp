@@ -9,7 +9,7 @@ tissuestack::imaging::TissueStackImageData::~TissueStackImageData()
 {
 	this->closeFileHandle();
 	for (auto dim : this->_dimensions)
-		delete dim.second;
+		if (dim.second) delete dim.second;
 	this->_dimensions.clear();
 }
 
@@ -84,10 +84,13 @@ tissuestack::imaging::TissueStackImageData::TissueStackImageData(
 		tissuestack::imaging::FORMAT format) :
 			_file_name(filename), _format(format) {}
 
-void tissuestack::imaging::TissueStackImageData::initializeWidthAndHeightForDimensions()
+void tissuestack::imaging::TissueStackImageData::initializeDimensions()
 {
 	for (auto dim : this->_dim_order)
+	{
 		this->setWidthAndHeightByDimension(dim);
+		this->setTransformationMatrixByDimension(dim);
+	}
 }
 
 void tissuestack::imaging::TissueStackImageData::setWidthAndHeightByDimension(const std::string & dimension)
@@ -117,6 +120,15 @@ void tissuestack::imaging::TissueStackImageData::setWidthAndHeightByDimension(co
 	const_cast<tissuestack::imaging::TissueStackDataDimension *>(
 			this->getDimensionByLongName(dimension))->setWidthAndHeight(
 					const_cast<const std::array<unsigned int,2> & >(widthAndHeight));
+}
+
+void tissuestack::imaging::TissueStackImageData::setTransformationMatrixByDimension(const std::string & dimension)
+{
+	// TODO: implement
+	std::string transformationMatrix = "";
+
+	const_cast<tissuestack::imaging::TissueStackDataDimension *>(
+			this->getDimensionByLongName(dimension))->setTransformationMatrix(transformationMatrix);
 }
 
 const std::string tissuestack::imaging::TissueStackImageData::getFileName() const
@@ -181,19 +193,58 @@ const tissuestack::imaging::FORMAT tissuestack::imaging::TissueStackImageData::g
 	return this->_format;
 }
 
+const std::string tissuestack::imaging::TissueStackImageData::getZoomLevelsAsJson() const
+{
+	if (this->_zoom_levels.empty()) // return default
+		return "[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2.00, 2.25, 2.5]";
+
+	std::ostringstream json;
+	json << "[";
+	int i=0;
+	for (auto z : this->_zoom_levels)
+	{
+		if (i != 0) json << ",";
+		json << std::to_string(z);
+		i++;
+	}
+	json << "]";
+
+	return json.str();
+}
+
 const std::string tissuestack::imaging::TissueStackImageData::toJson(const bool includePlanes) const
 {
 	std::ostringstream json;
 
 	json << "{ \"id\": " << std::to_string(this->_database_id);
-	json << ", \"filename\": \"" << this->_file_name << "\"";
+	json << ", \"filename\": \"" << tissuestack::utils::Misc::maskQuotesInJson(this->_file_name) << "\"";
 	if (!this->_description.empty())
 		json << ", \"description\": \"" << this->_description << "\"";
+	if (this->_lookup)
+		json << ", \"lookupValues\": " << this->_lookup->toJson();
 
-	// TODO: add planes info!
-	if (includePlanes)
+	if (includePlanes && !this->_dim_order.empty())
 	{
-
+		json << ", \"planes\": [ ";
+		int j=0;
+		for (auto p : this->_dim_order)
+		{
+			const tissuestack::imaging::TissueStackDataDimension * dim =
+				this->getDimensionByLongName(p);
+			if (j != 0) json << ",";
+			json << "{ \"name\": \"" << dim->getName()[0] << "\"";
+			json << ", \"maxSlices\": " << std::to_string(dim->getSliceSize());
+			json << ", \"maxX\": " << std::to_string(dim->getWidth());
+			json << ", \"maxY\": " << std::to_string(dim->getHeight());
+			json << ", \"isTiled\": " << (this->_is_tiled ? "true" : "false");
+			json << ", \"oneToOneZoomLevel\": " << std::to_string(this->_one_to_one_zoom_level);
+			json << ", \"resolutionMm\": " << std::to_string(this->_resolution_in_mm);
+			json << ", \"transformationMatrix\": \"" << dim->getTransformationMatrix() << "\"";
+			json << ", \"zoomLevels\": \"" << this->getZoomLevelsAsJson() << "\"";
+			json << "}";
+			j++;
+		}
+		json << "]";
 	}
 
 	json << "}";
@@ -251,7 +302,8 @@ void tissuestack::imaging::TissueStackImageData::setMembersFromDataBaseInformati
 		const bool is_tiled,
 		const std::vector<float> zoom_levels,
 		const unsigned short one_to_one_zoom_level,
-		const float resolution_in_mm)
+		const float resolution_in_mm,
+		const tissuestack::imaging::TissueStackLabelLookup * lookup)
 {
 	this->_database_id = id,
 	this->_description = description;
@@ -261,6 +313,8 @@ void tissuestack::imaging::TissueStackImageData::setMembersFromDataBaseInformati
 	this->_one_to_one_zoom_level = one_to_one_zoom_level;
 	if (resolution_in_mm > 0.0)
 		this->_resolution_in_mm = resolution_in_mm;
+	if (lookup)
+		this->_lookup = lookup;
 }
 
 
@@ -287,6 +341,11 @@ const unsigned short tissuestack::imaging::TissueStackImageData::getOneToOneZoom
 const float tissuestack::imaging::TissueStackImageData::getResolutionInMm() const
 {
 	return this->_resolution_in_mm;
+}
+
+const tissuestack::imaging::TissueStackLabelLookup * tissuestack::imaging::TissueStackImageData::getLookup() const
+{
+	return this->_lookup;
 }
 
 void tissuestack::imaging::TissueStackImageData::dumpImageDataIntoDebugLog() const

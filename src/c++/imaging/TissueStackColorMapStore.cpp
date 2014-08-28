@@ -41,7 +41,7 @@ void tissuestack::imaging::TissueStackColorMapStore::purgeInstance()
 {
 	// walk through entries and clean them up
 	for (auto entry = this->_color_maps.begin(); entry != this->_color_maps.end(); ++entry)
-		delete entry->second;
+		if (entry->second) delete entry->second;
 
 	delete tissuestack::imaging::TissueStackColorMapStore::_instance;
 	tissuestack::imaging::TissueStackColorMapStore::_instance = nullptr;

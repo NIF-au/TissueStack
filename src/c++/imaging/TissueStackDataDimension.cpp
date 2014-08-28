@@ -34,6 +34,16 @@ void tissuestack::imaging::TissueStackDataDimension::setWidthAndHeight(const std
 	this->_height = widthAndHeight[1];
 }
 
+void tissuestack::imaging::TissueStackDataDimension::setTransformationMatrix(const std::string transformationMatrix)
+{
+	this->_transformationMatrix = transformationMatrix;
+}
+
+const std::string tissuestack::imaging::TissueStackDataDimension::getTransformationMatrix() const
+{
+	return this->_transformationMatrix;
+}
+
 const unsigned int tissuestack::imaging::TissueStackDataDimension::getWidth() const
 {
 	return this->_width;

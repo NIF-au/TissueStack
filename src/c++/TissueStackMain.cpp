@@ -135,19 +135,6 @@ int main(int argc, char * args[])
 
 	try
 	{
-		tissuestack::imaging::TissueStackDataSetStore::instance(); // the data set store
-		//tissuestack::imaging::TissueStackDataSetStore::instance()->dumpDataSetStoreIntoDebugLog();
-	} catch (std::exception & bad)
-	{
-		tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
-		Logger->error("Could not instantiate TissueStackDataSetStore:\n%s\n", bad.what());
-		Params->purgeInstance();
-		Logger->purgeInstance();
-		exit(-1);
-	}
-
-	try
-	{
 		tissuestack::imaging::TissueStackLabelLookupStore::instance(); // for label lookups
 		//tissuestack::imaging::TissueStackLabelLookupStore::instance()->dumpAllLabelLookupsToDebugLog();
 	} catch (std::exception & bad)
@@ -170,6 +157,19 @@ int main(int argc, char * args[])
 		tissuestack::imaging::TissueStackDataSetStore::instance()->purgeInstance();
 		tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
 		Logger->error("Could not instantiate TissueStackLabelLookupStore:\n%s\n", bad.what());
+		Params->purgeInstance();
+		Logger->purgeInstance();
+		exit(-1);
+	}
+
+	try
+	{
+		tissuestack::imaging::TissueStackDataSetStore::instance(); // the data set store
+		//tissuestack::imaging::TissueStackDataSetStore::instance()->dumpDataSetStoreIntoDebugLog();
+	} catch (std::exception & bad)
+	{
+		tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
+		Logger->error("Could not instantiate TissueStackDataSetStore:\n%s\n", bad.what());
 		Params->purgeInstance();
 		Logger->purgeInstance();
 		exit(-1);

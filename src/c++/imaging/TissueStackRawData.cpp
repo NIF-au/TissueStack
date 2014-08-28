@@ -253,7 +253,7 @@ void tissuestack::imaging::TissueStackRawData::parseHeader(const std::string & h
 		));
 		j++;
 	}
-	this->initializeWidthAndHeightForDimensions();
+	this->initializeDimensions();
 }
 
 void tissuestack::imaging::TissueStackRawData::setRawVersion(int version)
