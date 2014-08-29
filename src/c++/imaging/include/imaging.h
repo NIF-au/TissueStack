@@ -365,17 +365,11 @@ namespace tissuestack
 				UncachedImageExtraction(const UncachedImageExtraction&) = delete;
 				UncachedImageExtraction();
 
-				void performQuery(
-					const int descriptor,
+				const std::array<unsigned long long int, 3> performQuery(
 					const tissuestack::imaging::TissueStackRawData * image,
 					const tissuestack::networking::TissueStackQueryRequest * request) const;
 
-				void extractImage(
-					const TissueStackRawData * image,
-					const tissuestack::networking::TissueStackImageRequest * request) const;
-
-				void extractImage(
-					const int descriptor,
+				const Image * extractImage(
 					const TissueStackRawData * image,
 					const tissuestack::networking::TissueStackImageRequest * request) const;
 
@@ -441,17 +435,11 @@ namespace tissuestack
 				explicit SimpleCacheHeuristics(const tissuestack::imaging::UncachedImageExtraction * image_extraction);
 				~SimpleCacheHeuristics();
 
-				void extractImage(
+				const Image * extractImage(
 					const TissueStackRawData * image,
 					const tissuestack::networking::TissueStackImageRequest * request) const;
 
-				void extractImage(
-					const int descriptor,
-					const TissueStackRawData * image,
-					const tissuestack::networking::TissueStackImageRequest * request) const;
-
-				void performQuery(
-					const int descriptor,
+				const std::array<unsigned long long int, 3> performQuery(
 					const tissuestack::imaging::TissueStackRawData * image,
 					const tissuestack::networking::TissueStackQueryRequest * request) const;
 
@@ -532,13 +520,25 @@ namespace tissuestack
 					const TissueStackImageData * imageData =
 							this->processRequest(request, file_descriptor);
 
-					//TODO: have this return a string (json) and then write out response here
-
 					// perform query
-					this->_caching_strategy->performQuery(
-						file_descriptor,
-						static_cast<const tissuestack::imaging::TissueStackRawData *>(imageData),
-						static_cast<const tissuestack::networking::TissueStackQueryRequest *>(request));
+					const std::array<unsigned long long int, 3> values =
+						this->_caching_strategy->performQuery(
+								static_cast<const tissuestack::imaging::TissueStackRawData *>(imageData),
+								static_cast<const tissuestack::networking::TissueStackQueryRequest *>(request));
+
+					// start json response
+					std::ostringstream response;
+					response << "{\"response\": {\""
+							<< imageData->getFileName() << "\" : ";
+
+					response << "{\"red\":" << std::to_string(values[0]);
+					response << ", \"green\":" << std::to_string(values[1]);
+					response << ", \"blue\":" << std::to_string(values[2]) << "}}}";
+
+					const std::string httpResponseHeader =
+						tissuestack::utils::Misc::composeHttpResponse(
+							"200 OK", "text/json", response.str());
+					write(file_descriptor, httpResponseHeader.c_str(), httpResponseHeader.length());
 				}
 
 				void processImageRequest(
@@ -573,14 +573,55 @@ namespace tissuestack
 									"The length of the image square has to range in betwenn 0 and 1280");
 					}
 
-					//TODO: have this return an image and then write it out to socket here
-					//NOTE: consider gzipped response
-
 					// perform extraction
-					this->_caching_strategy->extractImage(
-						file_descriptor,
-						static_cast<const tissuestack::imaging::TissueStackRawData *>(imageData),
-						request);
+					Image * img =
+						const_cast<Image *>(
+						this->_caching_strategy->extractImage(
+								static_cast<const tissuestack::imaging::TissueStackRawData *>(imageData),
+								request));
+
+					// timeout check
+					if (request->hasExpired())
+					{
+						DestroyImage(img);
+						THROW_TS_EXCEPTION(tissuestack::common::TissueStackObsoleteRequestException,
+							"Old Image Request!");
+					}
+
+					// this is the part were we start to serialize the output of our finished image work
+					std::string formatLowerCase =  request->getOutputImageFormat();
+					std::transform(formatLowerCase.begin(), formatLowerCase.end(), formatLowerCase.begin(), tolower);
+					strcpy(img->magick, formatLowerCase.c_str());
+					std::string image_format("image/");
+
+					// add the header beforehand
+					const std::string httpResponseHeader =
+							 tissuestack::utils::Misc::composeHttpResponse(
+									 "200 OK",
+									 image_format + formatLowerCase,
+									 ""
+					);
+
+					ExceptionInfo exception;
+					ImageInfo	*imgInfo = NULL;
+					GetExceptionInfo(&exception);
+					imgInfo = CloneImageInfo((ImageInfo *)NULL);
+					if (imgInfo == NULL)
+						THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+								"Could not create ImageInfo!");
+
+					//NOTE: consider gzipped response in the future
+					FILE * handle = fdopen(file_descriptor, "w");
+					imgInfo->file = handle;
+					write(file_descriptor, httpResponseHeader.c_str(), httpResponseHeader.length());
+					if (WriteImagesFile(imgInfo, img, handle, &exception) ==0)
+						tissuestack::logging::TissueStackLogger::instance()->error(
+								"Failed to write out image: %s\n", exception.reason);
+
+					// tidy up
+					if (img) DestroyImage(img);
+					if (imgInfo) DestroyImageInfo(imgInfo);
+					fclose(handle);
 				};
 
 			private:

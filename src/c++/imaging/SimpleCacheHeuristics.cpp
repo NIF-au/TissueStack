@@ -18,31 +18,21 @@ tissuestack::imaging::SimpleCacheHeuristics::~SimpleCacheHeuristics()
 		delete this->_uncached_extraction;
 }
 
-void tissuestack::imaging::SimpleCacheHeuristics::performQuery(
-						const int descriptor,
-						const tissuestack::imaging::TissueStackRawData * image,
-						const tissuestack::networking::TissueStackQueryRequest * request) const
+
+const std::array<unsigned long long int, 3> tissuestack::imaging::SimpleCacheHeuristics::performQuery(
+	const tissuestack::imaging::TissueStackRawData * image,
+	const tissuestack::networking::TissueStackQueryRequest * request) const
 {
 	// delegate
-	// TODO: implement
-	this->_uncached_extraction->performQuery(descriptor, image, request);
+	// TODO: implement cache
+	return this->_uncached_extraction->performQuery(image, request);
 }
 
-void tissuestack::imaging::SimpleCacheHeuristics::extractImage(
-						const TissueStackRawData * image,
-						const tissuestack::networking::TissueStackImageRequest * request) const
-{
-	// delegate
-	this->extractImage(-1, image, request);
-}
-
-void tissuestack::imaging::SimpleCacheHeuristics::extractImage(
-						const int descriptor,
-						const TissueStackRawData * image,
-						const tissuestack::networking::TissueStackImageRequest * request) const
+const Image *  tissuestack::imaging::SimpleCacheHeuristics::extractImage(
+	const TissueStackRawData * image,
+	const tissuestack::networking::TissueStackImageRequest * request) const
 {
 	// for now just delegate to uncached extraction
-	// TODO: implement
-
-	this->_uncached_extraction->extractImage(descriptor, image, request);
+	// TODO: implement cache
+	return this->_uncached_extraction->extractImage(image, request);
 }
