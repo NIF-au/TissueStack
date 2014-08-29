@@ -64,9 +64,13 @@ const std::vector<const tissuestack::imaging::TissueStackImageData *> tissuestac
 	return results;
 }
 
-// TODO: implement findAssociatedPlanes & make use of data set store finder method using database id!
-// make sure we only fetch them once and then have them stored in memory, also no dimensions needed for json but lookup!
-//void tissuestack::database::DataSetDataProvider::findAssociatedDataSets
+void tissuestack::database::DataSetDataProvider::findAssociatedDataSets(
+		const unsigned long long int dataset_id, tissuestack::imaging::TissueStackImageData * imageData)
+{
+	// TODO: implement findAssociatedPlanes & make use of data set store finder method using database id!
+	// make sure we only fetch them once and then have them stored in memory, also no dimensions needed for json but lookup!
+
+}
 
 void tissuestack::database::DataSetDataProvider::findAndAddPlanes(
 		const unsigned long long int dataset_id, tissuestack::imaging::TissueStackImageData * imageData)

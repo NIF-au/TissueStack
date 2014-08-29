@@ -112,6 +112,8 @@ namespace tissuestack
 						const std::string sql,
 						const unsigned int from = 0,
 						const unsigned int to = MAX_RECORDS);
+				static void findAssociatedDataSets(
+						const unsigned long long int dataset_id, tissuestack::imaging::TissueStackImageData * imageData);
 				static void findAndAddPlanes(
 						const unsigned long long int dataset_id, tissuestack::imaging::TissueStackImageData * imageData);
 				static const std::string SQL;
