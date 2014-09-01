@@ -370,10 +370,8 @@ void tissuestack::imaging::TissueStackImageData::setMembersFromDataBaseInformati
 	if (!zoom_levels.empty())
 		this->_zoom_levels = zoom_levels;
 	this->_one_to_one_zoom_level = one_to_one_zoom_level;
-	if (resolution_in_mm > 0.0)
-		this->_resolution_in_mm = resolution_in_mm;
-	if (lookup)
-		this->_lookup = lookup;
+	this->_resolution_in_mm = resolution_in_mm;
+	this->_lookup = lookup;
 }
 
 
