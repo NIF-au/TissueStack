@@ -255,7 +255,7 @@ const std::string tissuestack::imaging::TissueStackImageData::toJson(
 				this->getDimensionByLongName(p);
 			if (j != 0) json << ",";
 			json << "{ \"name\": \"" << dim->getName()[0] << "\"";
-			json << ", \"maxSlices\": " << std::to_string(dim->getSliceSize());
+			json << ", \"maxSlices\": " << std::to_string(dim->getNumberOfSlices());
 			json << ", \"maxX\": " << std::to_string(dim->getWidth());
 			json << ", \"maxY\": " << std::to_string(dim->getHeight());
 			json << ", \"isTiled\": " << (this->_is_tiled ? "true" : "false");
