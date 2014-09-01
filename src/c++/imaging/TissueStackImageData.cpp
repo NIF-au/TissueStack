@@ -212,6 +212,11 @@ const bool tissuestack::imaging::TissueStackImageData::hasNoAssociatedDataSets()
 	return this->_associated_data_sets.empty();
 }
 
+void tissuestack::imaging::TissueStackImageData::clearAssociatedDataSets()
+{
+	this->_associated_data_sets.clear();
+}
+
 const std::string tissuestack::imaging::TissueStackImageData::getZoomLevelsAsJson() const
 {
 	if (this->_zoom_levels.empty()) // return default
