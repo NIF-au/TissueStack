@@ -230,6 +230,7 @@ namespace tissuestack
 				const bool containsAssociatedDataSet(unsigned long long int dataset_id) const;
 				const bool hasZeroDimensions() const;
 				const bool hasNoAssociatedDataSets() const;
+				void clearAssociatedDataSets();
 			protected:
 				friend class tissuestack::database::DataSetDataProvider;
 				explicit TissueStackImageData(const long long unsigned int id, const std::string filename = "");
