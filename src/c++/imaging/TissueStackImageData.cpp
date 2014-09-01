@@ -193,6 +193,25 @@ const tissuestack::imaging::FORMAT tissuestack::imaging::TissueStackImageData::g
 	return this->_format;
 }
 
+const bool tissuestack::imaging::TissueStackImageData::containsAssociatedDataSet(unsigned long long int dataset_id) const
+{
+	for (auto a_ds : this->_associated_data_sets)
+		if (a_ds->getDataBaseId() == dataset_id)
+			return true;
+
+	return false;
+}
+
+const bool tissuestack::imaging::TissueStackImageData::hasZeroDimensions() const
+{
+	return this->_dim_order.empty();
+}
+
+const bool tissuestack::imaging::TissueStackImageData::hasNoAssociatedDataSets() const
+{
+	return this->_associated_data_sets.empty();
+}
+
 const std::string tissuestack::imaging::TissueStackImageData::getZoomLevelsAsJson() const
 {
 	if (this->_zoom_levels.empty()) // return default
@@ -212,7 +231,9 @@ const std::string tissuestack::imaging::TissueStackImageData::getZoomLevelsAsJso
 	return json.str();
 }
 
-const std::string tissuestack::imaging::TissueStackImageData::toJson(const bool includePlanes) const
+const std::string tissuestack::imaging::TissueStackImageData::toJson(
+		const bool includePlanes,
+		const bool dontDescendIntoAssociated) const
 {
 	std::ostringstream json;
 
@@ -223,6 +244,7 @@ const std::string tissuestack::imaging::TissueStackImageData::toJson(const bool 
 	if (this->_lookup)
 		json << ", \"lookupValues\": " << this->_lookup->toJson();
 
+	// data set dimensions
 	if (includePlanes && !this->_dim_order.empty())
 	{
 		json << ", \"planes\": [ ";
@@ -243,6 +265,31 @@ const std::string tissuestack::imaging::TissueStackImageData::toJson(const bool 
 			json << ", \"zoomLevels\": \"" << this->getZoomLevelsAsJson() << "\"";
 			json << "}";
 			j++;
+		}
+		json << "]";
+	}
+
+	// associated data sets
+	if (includePlanes && !dontDescendIntoAssociated)
+	{
+		json << ", \"associatedDataSets\": [";
+
+		if (!this->_associated_data_sets.empty())
+		{
+			int k=0;
+			for (auto a_ds : this->_associated_data_sets)
+			{
+				if (k != 0)
+					json << ",";
+				json << "{ \"associatedDataSet\": ";
+				json << a_ds->toJson(
+						false,
+						a_ds->containsAssociatedDataSet(this->getDataBaseId()));
+				json << ", \"datasetId\": ";
+				json << std::to_string(this->getDataBaseId());
+				json << "}";
+				k++;
+			}
 		}
 		json << "]";
 	}
@@ -294,6 +341,13 @@ void tissuestack::imaging::TissueStackImageData::dumpDataDimensionInfoIntoDebugL
 {
 	for (const std::string dim : this->_dim_order)
 		this->getDimensionByLongName(dim)->dumpDataDimensionInfoIntoDebugLog();
+}
+
+void tissuestack::imaging::TissueStackImageData::addAssociatedDataSet(
+	const tissuestack::imaging::TissueStackImageData * associatedDataSet)
+{
+	if (associatedDataSet)
+		this->_associated_data_sets.push_back(associatedDataSet);
 }
 
 void tissuestack::imaging::TissueStackImageData::setMembersFromDataBaseInformation(

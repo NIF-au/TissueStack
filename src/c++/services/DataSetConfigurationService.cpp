@@ -66,7 +66,7 @@ void tissuestack::services::DataSetConfigurationService::streamResponse(
 	for (const tissuestack::imaging::TissueStackImageData * dataSet : dataSets)
 	{
 		if (i != 0) json << ",";
-		json << dataSet->toJson(bIncludePlanes).c_str();
+		json << dataSet->toJson(bIncludePlanes, false).c_str();
 		i++;
 	}
 	json << "] }";

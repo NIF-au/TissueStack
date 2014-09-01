@@ -48,6 +48,13 @@ void tissuestack::imaging::TissueStackDataSet::dumpDataSetContentIntoDebugLog() 
 	this->_image_data->dumpImageDataIntoDebugLog();
 }
 
+void tissuestack::imaging::TissueStackDataSet::associateDataSets()
+{
+	if (this->_image_data->hasNoAssociatedDataSets())
+		tissuestack::database::DataSetDataProvider::findAssociatedDataSets(
+			this->_image_data->getDataBaseId(), const_cast<tissuestack::imaging::TissueStackImageData *>(this->_image_data));
+}
+
 const std::string tissuestack::imaging::TissueStackDataSet::getDataSetId() const
 {
 	return this->_image_data->getFileName();

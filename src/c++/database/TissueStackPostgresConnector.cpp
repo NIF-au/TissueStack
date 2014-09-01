@@ -73,7 +73,9 @@ const pqxx::result tissuestack::database::TissueStackPostgresConnector::executeN
 			pqxx::nontransaction non_transaction(*this->_connection);
 			return non_transaction.exec(sql);
 		}
-		throw bad; // propagate (t'was not the connection, strangely enough)
+		tissuestack::logging::TissueStackLogger::instance()->error("Failed to execute query: %s\n", bad.what());
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Failed to execute database query!");
 	}
 }
 

@@ -10,9 +10,13 @@ const std::string tissuestack::database::DataSetDataProvider::SQL =
 		" LEFT JOIN dataset_values_lookup AS SecondaryTable ON SecondaryTable.id = PrimaryTable.lookup_id"
 		" LEFT JOIN atlas_info TertiaryTable ON SecondaryTable.atlas_association = TertiaryTable.id";
 
-const std::string tissuestack::database::DataSetDataProvider::SQL_PLANES = "SELECT * FROM dataset_planes AS PrimaryTable ";
+const std::string tissuestack::database::DataSetDataProvider::SQL_PLANES =
+		"SELECT PrimaryTable.id AS prim_id, PrimaryTable.* FROM dataset_planes AS PrimaryTable ";
+const std::string tissuestack::database::DataSetDataProvider::SQL_ASSOCIATIONED_SETS =
+		"SELECT PrimaryTable.dataset_id AS prim_id, PrimaryTable.associated_dataset_id AS sec_id"
+		" FROM dataset_lookup_mapping AS PrimaryTable ";
 
-const std::string tissuestack::database::DataSetDataProvider::ORDER_BY = " ORDER BY PrimaryTable.id ASC";
+const std::string tissuestack::database::DataSetDataProvider::ORDER_BY = " ORDER BY prim_id ASC";
 const unsigned short tissuestack::database::DataSetDataProvider::MAX_RECORDS = 1000;
 
 const std::vector<const tissuestack::imaging::TissueStackImageData *> tissuestack::database::DataSetDataProvider::queryAll(
@@ -27,10 +31,24 @@ const std::vector<const tissuestack::imaging::TissueStackImageData *> tissuestac
 
 	if (!includePlanes || res.empty()) return res;
 
-	// integrate dimension/plane data
+	// integrate dimension/plane data, as well as associated data sets
 	for (auto data : res)
-		tissuestack::database::DataSetDataProvider::findAndAddPlanes(
-				data->getDataBaseId(), const_cast<tissuestack::imaging::TissueStackImageData *>(data));
+	{
+		tissuestack::imaging::TissueStackImageData * d = const_cast<tissuestack::imaging::TissueStackImageData *>(data);
+
+		try
+		{
+			if (data->hasZeroDimensions()) // no need to do this if we have all we need
+				tissuestack::database::DataSetDataProvider::findAndAddPlanes(
+					data->getDataBaseId(), d);
+		} catch (tissuestack::common::TissueStackException & query)
+		{
+			// if we fail here we have to erase the records
+			for (auto sub : res)
+				delete sub;
+			throw query; // propagate
+		}
+	}
 
 	return res;
 }
@@ -58,8 +76,21 @@ const std::vector<const tissuestack::imaging::TissueStackImageData *> tissuestac
 
 	// integrate dimension/plane data
 	if (includePlanes)
-		tissuestack::database::DataSetDataProvider::findAndAddPlanes(
-			results[0]->getDataBaseId(), const_cast<tissuestack::imaging::TissueStackImageData *>(results[0]));
+	{
+		const tissuestack::imaging::TissueStackImageData * hit = results[0];
+
+		try
+		{
+			if (hit->hasZeroDimensions()) // no need to do this if we have all we need
+				tissuestack::database::DataSetDataProvider::findAndAddPlanes(
+					hit->getDataBaseId(), const_cast<tissuestack::imaging::TissueStackImageData *>(hit));
+		} catch (tissuestack::common::TissueStackException & query)
+		{
+			// if we fail here we have to erase the record
+			delete hit;
+			throw query; // propagate
+		}
+	}
 
 	return results;
 }
@@ -67,9 +98,42 @@ const std::vector<const tissuestack::imaging::TissueStackImageData *> tissuestac
 void tissuestack::database::DataSetDataProvider::findAssociatedDataSets(
 		const unsigned long long int dataset_id, tissuestack::imaging::TissueStackImageData * imageData)
 {
-	// TODO: implement findAssociatedPlanes & make use of data set store finder method using database id!
-	// make sure we only fetch them once and then have them stored in memory, also no dimensions needed for json but lookup!
+	if (imageData == nullptr)
+		 return;
 
+	const std::string sql =
+		tissuestack::database::DataSetDataProvider::SQL_ASSOCIATIONED_SETS +
+		" WHERE PrimaryTable.dataset_id=" + std::to_string(dataset_id) + " " +
+		tissuestack::database::DataSetDataProvider::ORDER_BY + ";";
+
+	const pqxx::result results =
+			tissuestack::database::TissueStackPostgresConnector::instance()->executeNonTransactionalQuery(sql);
+
+	if (results.empty()) return;
+
+	// loop over results and link data sets
+	for (pqxx::result::const_iterator i_results = results.begin(); i_results != results.end(); ++i_results)
+	{
+		unsigned long long int associatedId =
+			i_results["sec_id"].as<unsigned long long int>();
+		const tissuestack::imaging::TissueStackDataSet * associatedDataSet  =
+			tissuestack::imaging::TissueStackDataSetStore::instance()->findDataSetByDataBaseId(associatedId);
+
+		if (associatedDataSet == nullptr) // last check
+		{
+			const tissuestack::imaging::TissueStackImageData * associatedImageData =
+				tissuestack::imaging::TissueStackImageData::fromDataBaseRecordWithId(associatedId, true);
+			if (associatedImageData)
+			{
+				std::vector<const tissuestack::imaging::TissueStackImageData *> tmp = {associatedImageData};
+				tissuestack::imaging::TissueStackDataSetStore::integrateDataBaseResultsIntoDataSetStore(tmp);
+				associatedDataSet =
+					tissuestack::imaging::TissueStackDataSetStore::instance()->findDataSetByDataBaseId(associatedId);
+			}
+		}
+		if (associatedDataSet) // add if we got something
+			imageData->addAssociatedDataSet(associatedDataSet->getImageData());
+	}
 }
 
 void tissuestack::database::DataSetDataProvider::findAndAddPlanes(
@@ -80,7 +144,8 @@ void tissuestack::database::DataSetDataProvider::findAndAddPlanes(
 
 	const std::string sql =
 		tissuestack::database::DataSetDataProvider::SQL_PLANES +
-		" WHERE PrimaryTable.dataset_id=" + std::to_string(dataset_id) + " " + tissuestack::database::DataSetDataProvider::ORDER_BY;
+		" WHERE PrimaryTable.dataset_id=" + std::to_string(dataset_id) + " "
+		+ tissuestack::database::DataSetDataProvider::ORDER_BY + ";";
 
 	const pqxx::result results =
 			tissuestack::database::TissueStackPostgresConnector::instance()->executeNonTransactionalQuery(sql);
@@ -92,7 +157,7 @@ void tissuestack::database::DataSetDataProvider::findAndAddPlanes(
 	{
 		tissuestack::imaging::TissueStackDataDimension * rec =
 			new tissuestack::imaging::TissueStackDataDimension(
-				i_results["id"].as<unsigned long long int>(),
+				i_results["prim_id"].as<unsigned long long int>(),
 				i_results["name"].as<std::string>(),
 				i_results["max_slices"].as<unsigned long long int>());
 		imageData->addDimension(rec);

@@ -206,6 +206,7 @@ namespace tissuestack
 				const unsigned short getImageDataMaximum() const;
 				const unsigned long long int getDataBaseId() const;
 				const std::string getDescription() const;
+				void addAssociatedDataSet(const TissueStackImageData * associatedDataSet);
 				void setMembersFromDataBaseInformation(
 						const unsigned long long int id = 0,
 						const std::string description = "",
@@ -222,8 +223,13 @@ namespace tissuestack
 				const TissueStackLabelLookup * getLookup() const;
 				const int getFileDescriptor();
 				void initializeDimensions();
-				const std::string toJson(const bool includePlanes = false) const;
+				const std::string toJson(
+					const bool includePlanes = false,
+					const bool dontDescendIntoAssociated = true) const;
 				const std::string getZoomLevelsAsJson() const;
+				const bool containsAssociatedDataSet(unsigned long long int dataset_id) const;
+				const bool hasZeroDimensions() const;
+				const bool hasNoAssociatedDataSets() const;
 			protected:
 				friend class tissuestack::database::DataSetDataProvider;
 				explicit TissueStackImageData(const long long unsigned int id, const std::string filename = "");
@@ -256,6 +262,7 @@ namespace tissuestack
 				unsigned short _one_to_one_zoom_level = 3;
 				float _resolution_in_mm = 0;
 				const TissueStackLabelLookup * _lookup = nullptr;
+				std::vector<const TissueStackImageData *> _associated_data_sets;
 		};
 
 		class TissueStackRawData final : public TissueStackImageData
@@ -332,6 +339,7 @@ namespace tissuestack
 				const DataSetStatus getStatus() const;
 				const std::string getDataSetId() const;
 				void dumpDataSetContentIntoDebugLog() const;
+				void associateDataSets();
 			private:
 				DataSetStatus _status = tissuestack::imaging::DataSetStatus::READY;
 				const TissueStackImageData * _image_data;

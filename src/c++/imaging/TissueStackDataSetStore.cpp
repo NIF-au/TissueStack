@@ -50,9 +50,10 @@ void tissuestack::imaging::TissueStackDataSetStore::integrateDataBaseResultsInto
 				rec->getLookup());
 			delete rec;
 			dataSets[i] = foundDataSet->getImageData();
+			// associate data sets
+			const_cast<tissuestack::imaging::TissueStackDataSet *>(foundDataSet)->associateDataSets();
 			continue;
 		}
-
 		// we have a data set that solely exists in the data base, i.e. has no corresponding physical raw file
 		// let's query all of its info and then add it to the data set store
 		foundDataSet = // check whether we have already queried it once and added it to the memory store
@@ -63,6 +64,8 @@ void tissuestack::imaging::TissueStackDataSetStore::integrateDataBaseResultsInto
 		if (foundDataSet == nullptr)
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Data Set Record Missing!");
+		// associate data sets
+		const_cast<tissuestack::imaging::TissueStackDataSet *>(foundDataSet)->associateDataSets();
 		tissuestack::imaging::TissueStackDataSetStore::instance()->addDataSet(foundDataSet);
 
 		delete rec;
