@@ -84,16 +84,48 @@ tissuestack::imaging::TissueStackImageData::TissueStackImageData(
 		tissuestack::imaging::FORMAT format) :
 			_file_name(filename), _format(format) {}
 
-void tissuestack::imaging::TissueStackImageData::initializeDimensions()
+void tissuestack::imaging::TissueStackImageData::initializeDimensions(const bool omitTransformationMatrix)
 {
+	const std::string identity = this->constructIdentityMatrixForDimensionNumber();
 	for (auto dim : this->_dim_order)
 	{
 		this->setWidthAndHeightByDimension(dim);
-		this->setTransformationMatrixByDimension(dim);
+		if (!omitTransformationMatrix)
+			this->setTransformationMatrixByDimension(dim);
+
+		// double check if we got something for a transformation matrix
+		tissuestack::imaging::TissueStackDataDimension * d =
+			const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimensionByLongName(dim));
+		if (d->getTransformationMatrix().empty())
+			d->setTransformationMatrix(identity);
 	}
 }
 
-void tissuestack::imaging::TissueStackImageData::setWidthAndHeightByDimension(const std::string & dimension)
+inline const std::string tissuestack::imaging::TissueStackImageData::constructIdentityMatrixForDimensionNumber() const
+{
+	const unsigned short numOfDimensions = this->_dim_order.size();
+
+	if (numOfDimensions < 2) return "[[1,0],[0,1]]";
+
+	std::ostringstream json;
+	json << "[";
+	for (unsigned short row=0;row<=numOfDimensions;row++)
+	{
+		if (row != 0) json << ",";
+		json << "[";
+		for (unsigned short col=0;col<=numOfDimensions;col++)
+		{
+			if (col != 0) json << ",";
+			json << (row == col ? "1" : "0");
+		}
+		json << "]";
+	}
+	json << "]";
+
+	return json.str();
+}
+
+inline void tissuestack::imaging::TissueStackImageData::setWidthAndHeightByDimension(const std::string & dimension)
 {
 	std::array<unsigned int,2> widthAndHeight = {{0, 0}};
 
@@ -122,13 +154,141 @@ void tissuestack::imaging::TissueStackImageData::setWidthAndHeightByDimension(co
 					const_cast<const std::array<unsigned int,2> & >(widthAndHeight));
 }
 
-void tissuestack::imaging::TissueStackImageData::setTransformationMatrixByDimension(const std::string & dimension)
+inline void tissuestack::imaging::TissueStackImageData::setTransformationMatrixByDimension(const std::string & dimension)
 {
-	// TODO: implement
-	std::string transformationMatrix = "";
+	tissuestack::imaging::TissueStackDataDimension * dim =
+		const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimensionByLongName(dimension));
 
-	const_cast<tissuestack::imaging::TissueStackDataDimension *>(
-			this->getDimensionByLongName(dimension))->setTransformationMatrix(transformationMatrix);
+	if (dim == nullptr)
+		dim->setTransformationMatrix(this->constructIdentityMatrixForDimensionNumber());
+
+	std::ostringstream transformationMatrix;
+	transformationMatrix << "[";
+
+	std::string tmp = "";
+	if (dimension.at(0) == 'x')
+	{
+		tmp =
+			this->setTransformationMatrixByDimension0(
+				0, this->getIndexForPlane('y'));
+		if (tmp.empty()) return;
+		transformationMatrix << tmp;
+		tmp =
+			this->setTransformationMatrixByDimension0(
+				1, this->getIndexForPlane('z'));
+		if (tmp.empty()) return;
+		transformationMatrix << "," << tmp;
+		tmp =
+			this->setTransformationMatrixByDimension0(
+				2, this->getIndexForPlane('x'));
+		if (tmp.empty()) return;
+		transformationMatrix << "," << tmp;
+		transformationMatrix << "," << this->getAdjointMatrix();
+	} else if (dimension.at(0) == 'y')
+	{
+		tmp =
+			this->setTransformationMatrixByDimension0(
+				0, this->getIndexForPlane('x'));
+		if (tmp.empty()) return;
+		transformationMatrix << tmp;
+		tmp =
+			this->setTransformationMatrixByDimension0(
+				1, this->getIndexForPlane('z'));
+		if (tmp.empty()) return;
+		transformationMatrix << "," << tmp;
+		tmp =
+			this->setTransformationMatrixByDimension0(
+				2, this->getIndexForPlane('y'));
+		if (tmp.empty()) return;
+		transformationMatrix << "," << tmp;
+		transformationMatrix << "," << this->getAdjointMatrix();
+	} else if (dimension.at(0) == 'z')
+	{
+		tmp =
+			this->setTransformationMatrixByDimension0(
+				0, this->getIndexForPlane('x'));
+		if (tmp.empty()) return;
+		transformationMatrix << tmp;
+		tmp =
+			this->setTransformationMatrixByDimension0(
+				1, this->getIndexForPlane('y'));
+		if (tmp.empty()) return;
+		transformationMatrix << "," << tmp;
+		tmp =
+			this->setTransformationMatrixByDimension0(
+				2, this->getIndexForPlane('z'));
+		if (tmp.empty()) return;
+		transformationMatrix << "," << tmp;
+		transformationMatrix << "," << this->getAdjointMatrix();
+	}
+
+	transformationMatrix << "]";
+	dim->setTransformationMatrix(transformationMatrix.str());
+}
+
+inline const std::string tissuestack::imaging::TissueStackImageData::getAdjointMatrix() const
+{
+	const unsigned short numberOfDims = this->_dim_order.size();
+	if (numberOfDims < 2)
+		return "[0, 1]";
+
+	std::ostringstream adjointMatrix;
+	adjointMatrix << "[";
+	for (unsigned short i=0;i<=numberOfDims;i++)
+	{
+		if (i !=0) adjointMatrix << ",";
+		if (i == numberOfDims)
+			adjointMatrix << "1";
+		else
+			adjointMatrix << "0";
+	}
+	adjointMatrix << "]";
+	return adjointMatrix.str();
+}
+
+inline const std::string tissuestack::imaging::TissueStackImageData::setTransformationMatrixByDimension0(
+	const short step_index,
+	const short index)
+{
+	if (index < 0 || step_index < 0
+		|| step_index >= static_cast<unsigned short>(this->_dim_order.size())
+		|| index >= static_cast<unsigned short>(this->getSteps().size())
+		|| index >= static_cast<unsigned short>(this->getCoordinates().size())) return "";
+
+	std::ostringstream transformationMatrix;
+	const unsigned short numberOfDimensions = this->_dim_order.size();
+	transformationMatrix << "[";
+
+	unsigned short i = 0;
+	while (i<=numberOfDimensions)
+	{
+		if (i != 0) transformationMatrix << ",";
+		if (i == step_index)
+			transformationMatrix << std::to_string(this->getSteps()[index]);
+		else if (i == numberOfDimensions)
+			transformationMatrix << std::to_string(this->getCoordinates()[index]);
+		else
+			transformationMatrix << "0";
+		i++;
+	}
+	transformationMatrix << "]";
+
+	return transformationMatrix.str();
+}
+
+inline const short tissuestack::imaging::TissueStackImageData::getIndexForPlane(const char plane) const
+{
+	if (plane == ' ') return -1;
+
+	short index = 0;
+	for (auto p : this->_dim_order)
+	{
+		if (plane == p.at(0))
+			return index;
+		index++;
+	}
+
+	return -1;
 }
 
 const std::string tissuestack::imaging::TissueStackImageData::getFileName() const

@@ -173,6 +173,7 @@ namespace tissuestack
 			private:
 				friend class TissueStackImageData;
 				void setWidthAndHeight(const std::array<unsigned int, 2> & widthAndHeight);
+				friend class tissuestack::database::DataSetDataProvider;
 				void setTransformationMatrix(const std::string transformationMatrix);
 				const unsigned long long int _id;
 				const std::string 	_name;
@@ -222,7 +223,7 @@ namespace tissuestack
 				void dumpImageDataIntoDebugLog() const;
 				const TissueStackLabelLookup * getLookup() const;
 				const int getFileDescriptor();
-				void initializeDimensions();
+				void initializeDimensions(const bool omitTransformationMatrix = false);
 				const std::string toJson(
 					const bool includePlanes = false,
 					const bool dontDescendIntoAssociated = true) const;
@@ -242,8 +243,13 @@ namespace tissuestack
 				void addCoordinate(float coord);
 				void addStep(float step);
 			private:
-				void setWidthAndHeightByDimension(const std::string & dimension);
-				void setTransformationMatrixByDimension(const std::string & dimension);
+				inline const std::string constructIdentityMatrixForDimensionNumber() const;
+				inline const std::string getAdjointMatrix() const;
+				inline void setWidthAndHeightByDimension(const std::string & dimension);
+				inline void setTransformationMatrixByDimension(const std::string & dimension);
+				inline const std::string setTransformationMatrixByDimension0(
+						const short step_index, const short index);
+				inline const short getIndexForPlane(const char plane) const;
 				void openFileHandle(bool close_open_handle = false);
 				void closeFileHandle();
 				void dumpDataDimensionInfoIntoDebugLog() const;

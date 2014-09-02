@@ -160,9 +160,11 @@ void tissuestack::database::DataSetDataProvider::findAndAddPlanes(
 				i_results["prim_id"].as<unsigned long long int>(),
 				i_results["name"].as<std::string>(),
 				i_results["max_slices"].as<unsigned long long int>());
+		rec->setTransformationMatrix(
+			i_results["transformation_matrix"].is_null() ? "" : i_results["transformation_matrix"].as<std::string>());
 		imageData->addDimension(rec);
 	}
-	imageData->initializeDimensions();
+	imageData->initializeDimensions(true);
 }
 
 const std::vector<const tissuestack::imaging::TissueStackImageData *> tissuestack::database::DataSetDataProvider::findResults(
