@@ -23,13 +23,26 @@ Image * tissuestack::imaging::UncachedImageExtraction::extractImageOnly(
 
 	// read the actual raw data to write out images later on
 	std::unique_ptr<unsigned char[]> data(new unsigned char[dataLength]);
-	memset(data.get(), '\0', dataLength);
+	//memset(data.get(), '\0', dataLength);
+	const int fd =
+		const_cast<tissuestack::imaging::TissueStackRawData *>(image)->getFileDescriptor();
+	lseek(
+		fd,
+		actualOffset,
+		SEEK_SET);
+	ssize_t bRead =
+		read(
+			fd,
+			static_cast<void *>(data.get()),
+			dataLength);
+	/*
 	ssize_t bRead =
 		pread64(
 			const_cast<tissuestack::imaging::TissueStackRawData *>(image)->getFileDescriptor(),
 			data.get(),
 			dataLength,
 			actualOffset);
+	*/
 	if (bRead != dataLength)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Failed to read entire slice from RAW file!");
@@ -133,14 +146,27 @@ const std::array<unsigned long long int, 3> tissuestack::imaging::UncachedImageE
 					static_cast<unsigned long long int>(request->getYCoordinate())*actualDimension->getWidth()*3 +
 					static_cast<unsigned long long int>(request->getXCoordinate()*3));
 
-		std::unique_ptr<unsigned char[]> data(new unsigned char[3]);
-		memset(data.get(), '\0', 3);
+		std::unique_ptr<unsigned char[]> data(new unsigned char[3] {'\0', '\0', '\0'});
+		//memset(data.get(), '\0', 3);
+		const int fd =
+			const_cast<tissuestack::imaging::TissueStackRawData *>(image)->getFileDescriptor();
+		lseek(
+			fd,
+			actualOffset,
+			SEEK_SET);
+		ssize_t bRead =
+			read(
+				fd,
+				static_cast<void *>(data.get()),
+				3);
+		/*
 		ssize_t bRead =
 			pread64(
 				const_cast<tissuestack::imaging::TissueStackRawData *>(image)->getFileDescriptor(),
 				data.get(),
 				3,
 				actualOffset);
+		*/
 		if (bRead != 3)
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 					"Failed to query slice within RAW file!");

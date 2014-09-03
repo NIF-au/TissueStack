@@ -4,8 +4,6 @@
 #include "logging.h"
 #include "exceptions.h"
 #include "utils.h"
-//#include "database.h"
-//#include "imaging.h"
 #include "parameters.h"
 
 #include <magick/api.h>
@@ -21,6 +19,8 @@ namespace tissuestack
 {
 	namespace common
 	{
+		static const std::string NO_RESULTS_JSON = "{\"response\": {\"noResults\": \"No results found\"}}";
+
 		class RequestTimeStampStore final
 		{
 			public:

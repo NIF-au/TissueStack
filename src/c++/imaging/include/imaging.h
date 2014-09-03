@@ -478,77 +478,97 @@ namespace tissuestack
 				};
 				ImageExtraction() : _caching_strategy(new CachingStrategy()) {};
 
-				const TissueStackImageData * processRequest(const tissuestack::networking::TissueStackImageRequest * request,
+				const std::vector<const TissueStackImageData *> processRequest(const tissuestack::networking::TissueStackImageRequest * request,
 						const int file_descriptor)
 				{
-					const tissuestack::imaging::TissueStackDataSet * dataSet =
-							tissuestack::imaging::TissueStackDataSetStore::instance()->findDataSet(request->getDataSetLocation());
-
-					// we have no associated data set, try to create one
-					if (dataSet == nullptr)
+					std::vector<const TissueStackImageData *> imageData;
+					for (auto dataSetFile : request->getDataSetLocations())
 					{
-						std::lock_guard<std::mutex> lock(this->_dataset_addition_mutex);
+						const tissuestack::imaging::TissueStackDataSet * dataSet =
+								tissuestack::imaging::TissueStackDataSetStore::instance()->findDataSet(dataSetFile);
 
-						try
+						// we have no associated data set, try to create one
+						if (dataSet == nullptr)
 						{
-							dataSet = tissuestack::imaging::TissueStackDataSet::fromFile(request->getDataSetLocation());
-							tissuestack::imaging::TissueStackDataSetStore::instance()->addDataSet(dataSet);
-						} catch (std::exception & bad)
-						{
-							tissuestack::logging::TissueStackLogger::instance()->error(
-									"Could not create data set from file '%s' for the following reason:\n%s\n",
-									request->getDataSetLocation().c_str(), bad.what());
-							THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
-									"Given dataset is not a compatible Tissue Stack Data Set!");
+							std::lock_guard<std::mutex> lock(this->_dataset_addition_mutex);
+
+							try
+							{
+								dataSet = tissuestack::imaging::TissueStackDataSet::fromFile(dataSetFile);
+								tissuestack::imaging::TissueStackDataSetStore::instance()->addDataSet(dataSet);
+							} catch (std::exception & bad)
+							{
+								tissuestack::logging::TissueStackLogger::instance()->error(
+										"Could not create data set from file '%s' for the following reason:\n%s\n",
+										dataSetFile.c_str(), bad.what());
+								THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+										"Given dataset is not a compatible Tissue Stack Data Set!");
+							}
 						}
+
+						// we only let RAW file requests go through
+						if (!dataSet->getImageData()->isRaw())
+							THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Only TissueStack Raw Files are allowed to be requested online!");
+
+						const TissueStackDataDimension * dimension  =
+								dataSet->getImageData()->getDimensionByLongName(request->getDimensionName());
+						if (dimension == nullptr)
+							THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+									"Image Dimension could not be found!");
+						if (request->getSliceNumber() < 0 || request->getSliceNumber() > dimension->getNumberOfSlices())
+							THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+									"Slice number requested is out of bounds!");
+						if (!request->isPreview()) // only for non preview requests
+						{
+							if (request->getXCoordinate() < 0)
+								THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+										"The 'x' (pixel) coordinate has to be a positive integer");
+							if (request->getYCoordinate() < 0)
+								THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+										"The 'y' (pixel) coordinate has to be a positive integer");
+						}
+
+						imageData.push_back(dataSet->getImageData());
 					}
 
-					// we only let RAW file requests go through
-					if (!dataSet->getImageData()->isRaw())
-						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Only TissueStack Raw Files are allowed to be requested online!");
-
-					const TissueStackDataDimension * dimension  =
-							dataSet->getImageData()->getDimensionByLongName(request->getDimensionName());
-					if (dimension == nullptr)
-						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
-								"Image Dimension could not be found!");
-					if (request->getSliceNumber() < 0 || request->getSliceNumber() > dimension->getNumberOfSlices())
-						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
-								"Slice number requested is out of bounds!");
-					if (!request->isPreview()) // only for non preview requests
-					{
-						if (request->getXCoordinate() < 0)
-							THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
-									"The 'x' (pixel) coordinate has to be a positive integer");
-						if (request->getYCoordinate() < 0)
-							THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
-									"The 'y' (pixel) coordinate has to be a positive integer");
-					}
-
-					return dataSet->getImageData();
+					return imageData;
 				}
 
 				void processQueryRequest(
 						const tissuestack::networking::TissueStackQueryRequest * request,
 						const int file_descriptor)
 				{
-					const TissueStackImageData * imageData =
-							this->processRequest(request, file_descriptor);
-
-					// perform query
-					const std::array<unsigned long long int, 3> values =
-						this->_caching_strategy->performQuery(
-								static_cast<const tissuestack::imaging::TissueStackRawData *>(imageData),
-								static_cast<const tissuestack::networking::TissueStackQueryRequest *>(request));
-
-					// start json response
 					std::ostringstream response;
-					response << "{\"response\": {\""
-							<< imageData->getFileName() << "\" : ";
 
-					response << "{\"red\":" << std::to_string(values[0]);
-					response << ", \"green\":" << std::to_string(values[1]);
-					response << ", \"blue\":" << std::to_string(values[2]) << "}}}";
+					const std::vector<const TissueStackImageData *> dataSets =
+						this->processRequest(request, file_descriptor);
+					if (dataSets.empty())
+						response << tissuestack::common::NO_RESULTS_JSON;
+					else
+					{
+						response << "{\"response\": {";
+
+						unsigned int i=0;
+						for (const TissueStackImageData * imageData : dataSets)
+						{
+							if (i !=0)
+								response << ",";
+
+							const std::array<unsigned long long int, 3> values =
+								this->_caching_strategy->performQuery(
+										static_cast<const tissuestack::imaging::TissueStackRawData *>(imageData),
+										static_cast<const tissuestack::networking::TissueStackQueryRequest *>(request));
+
+							response << "\""
+									<< imageData->getFileName() << "\" : ";
+
+							response << "{\"red\":" << std::to_string(values[0]);
+							response << ", \"green\":" << std::to_string(values[1]);
+							response << ", \"blue\":" << std::to_string(values[2]) << "}";
+							i++;
+						}
+						response << "}}";
+					}
 
 					const std::string httpResponseHeader =
 						tissuestack::utils::Misc::composeHttpResponse(
@@ -560,8 +580,14 @@ namespace tissuestack
 						const tissuestack::networking::TissueStackImageRequest * request,
 						const int file_descriptor)
 				{
-					const TissueStackImageData * imageData =
+					const std::vector<const TissueStackImageData *> dataSets =
 						this->processRequest(request, file_descriptor);
+					if (dataSets.empty())
+						THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+								"Query had no image data returned");
+
+					// Note: for now we work with only one image but in the future we can accumulate them
+					const TissueStackImageData * imageData = dataSets[0];
 
 					// some more checks regarding the validity of the image request parameters
 					if (request->getQualityFactor() <= 0.0 || request->getQualityFactor() > 1.0)
@@ -629,14 +655,18 @@ namespace tissuestack
 					FILE * handle = fdopen(file_descriptor, "w");
 					imgInfo->file = handle;
 					write(file_descriptor, httpResponseHeader.c_str(), httpResponseHeader.length());
-					if (WriteImagesFile(imgInfo, img, handle, &exception) ==0)
+					//if (WriteImagesFile(imgInfo, img, handle, &exception) ==0)
+					if (WriteImage(imgInfo, img) == MagickFail)
+					{
+						CatchException(&img->exception);
 						tissuestack::logging::TissueStackLogger::instance()->error(
-								"Failed to write out image: %s\n", exception.reason);
+								"Failed to write out image: %s\n", img->exception.reason);
+					}
 
 					// tidy up
 					if (img) DestroyImage(img);
 					if (imgInfo) DestroyImageInfo(imgInfo);
-					fclose(handle);
+					if (handle) fclose(handle);
 				};
 
 			private:

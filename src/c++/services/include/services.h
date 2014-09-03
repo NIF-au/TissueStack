@@ -6,6 +6,7 @@
 #include "networking.h"
 #include "database.h"
 #include "imaging.h"
+#include <memory>
 
 namespace tissuestack
 {
@@ -14,7 +15,6 @@ namespace tissuestack
 		class TissueStackServiceError
 		{
 			public:
-				static const std::string NO_RESULTS;
 				TissueStackServiceError & operator=(const TissueStackServiceError&) = delete;
 				TissueStackServiceError(const TissueStackServiceError&) = delete;
 				explicit TissueStackServiceError(const std::exception & exception);
@@ -77,8 +77,8 @@ namespace tissuestack
 		{
 			public:
 				static const std::string SUB_SERVICE_ID;
-				DataSetConfigurationService & operator=(const ColorMapService&) = delete;
-				DataSetConfigurationService(const ColorMapService&) = delete;
+				DataSetConfigurationService & operator=(const DataSetConfigurationService&) = delete;
+				DataSetConfigurationService(const DataSetConfigurationService&) = delete;
 				DataSetConfigurationService();
 				~DataSetConfigurationService();
 
@@ -86,6 +86,43 @@ namespace tissuestack
 				void streamResponse(
 						const tissuestack::networking::TissueStackServicesRequest * request,
 						const int file_descriptor) const;
+	 	};
+
+		class TissueStackAdminService final : public TissueStackService
+		{
+			public:
+				static const std::string SUB_SERVICE_ID;
+				TissueStackAdminService & operator=(const TissueStackAdminService&) = delete;
+				TissueStackAdminService(const TissueStackAdminService&) = delete;
+				TissueStackAdminService();
+				~TissueStackAdminService();
+
+				void checkRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
+				void streamResponse(
+						const tissuestack::networking::TissueStackServicesRequest * request,
+						const int file_descriptor) const;
+	 	};
+
+		class TissueStackSecurityService final : public TissueStackService
+		{
+			public:
+				static const std::string SUB_SERVICE_ID;
+				static const std::string DEFAULT_GLOBAL_ADMIN_PASSWORD_AS_SHA_2_HEX_STRING;
+				static const unsigned long long int DEFAULT_SESSION_TIMEOUT;
+				TissueStackSecurityService & operator=(const TissueStackSecurityService&) = delete;
+				TissueStackSecurityService(const TissueStackSecurityService&) = delete;
+				TissueStackSecurityService();
+				~TissueStackSecurityService();
+
+				void checkRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
+				void streamResponse(
+						const tissuestack::networking::TissueStackServicesRequest * request,
+						const int file_descriptor) const;
+				static const bool hasSessionExpired(const std::string session);
+			private:
+				const bool isAdminPassword(const std::string & password) const;
+				const bool setNewAdminPassword(const std::string & password) const;
+				const std::string encodeSHA256(const std::string & expression) const;
 	 	};
 
 		class TissueStackServicesDelegator final

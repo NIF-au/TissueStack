@@ -6,7 +6,7 @@ INCLUDE		=	-Iinclude
 
 LIB_PATH	=	
 
-LIBS		=	-lrt
+LIBS		=	-lrt -luuid
 
 LIB_NAME	=	libTissueStackUtils.so
 

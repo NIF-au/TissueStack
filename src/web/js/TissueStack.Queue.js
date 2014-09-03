@@ -134,7 +134,7 @@ TissueStack.Queue.prototype = {
 		this.lowResolutionPreviewDrawn = false;
 
 		if (this.latestDrawRequestTimestamp < 0 || timestamp < this.latestDrawRequestTimestamp) {
-			//console.info('Drawing preview for ' + this.canvas.getDataExtent().data_id + '[' + this.canvas.getDataExtent().getOriginalPlane() +  ']: ' + timestamp);
+			console.info('Drawing preview for ' + this.canvas.getDataExtent().data_id + '[' + this.canvas.getDataExtent().getOriginalPlane() +  ']: ' + timestamp);
 			this.lowResolutionPreviewDrawn = true;
 			return;
 		}
@@ -158,10 +158,8 @@ TissueStack.Queue.prototype = {
 		} 
 		
 		var dataSet = TissueStack.dataSetStore.getDataSetById(this.canvas.data_extent.data_id);
-		if (!dataSet) {
-			alert("Couldn't find data set with id: " + this.canvas.data_extent.data_id);
+		if (!dataSet) 
 			return;
-		}
 		
 		if (this.canvas.is_linked_dataset) {
 			this.eraseCanvasContent();
@@ -247,6 +245,9 @@ TissueStack.Queue.prototype = {
 			src += ("&id=" + this.canvas.sessionId);
 			src += ("&timestamp=" + timestamp);
 		}
+		if (_this.latestDrawRequestTimestamp < 0 || timestamp < _this.latestDrawRequestTimestamp)
+			return;
+
 		imageTile.src = src; 
 
 		this.canvas.displayLoadingProgress(0, 1, true);

@@ -42,7 +42,7 @@ void tissuestack::services::ColorMapService::streamResponse(
 	}
 	std::string sJson = json.str();
 	if (sJson.empty())
-		sJson = tissuestack::services::TissueStackServiceError::NO_RESULTS;
+		sJson = tissuestack::common::NO_RESULTS_JSON;
 
 	const std::string response =
 			tissuestack::utils::Misc::composeHttpResponse("200 OK", "application/json", sJson);

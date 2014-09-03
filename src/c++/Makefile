@@ -14,7 +14,7 @@ INCLUDE			=	-Icommon/include -Inetworking/include -Iexecution/include \
 
 LIB_PATH		=
 
-LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq
+LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid
 
 EXE_NAME		=	TissueStackImageServer
 

@@ -114,6 +114,9 @@ int main(int argc, char * args[])
 			exit(-1);
 		}
 		Logger->info("Database connection established!\n");
+		// clean up old sessions
+		tissuestack::database::SessionDataProvider::deleteSessions(
+			tissuestack::utils::System::getSystemTimeInMillis());
 	} catch (std::exception & bad)
 	{
 		Logger->error("Could not create databases connection:\n%s\n", bad.what());

@@ -126,7 +126,8 @@ TissueStack.Utils = {
 		return results;
 	}, loadColorMaps : function() {
 		TissueStack.Utils.sendAjaxRequest(
-				"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/colormaps/all", 'GET', true,
+				//"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/colormaps/all", 'GET', true,
+				"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/?service=services&sub_service=colormaps&action=all", 'GET', true,
 				function(data, textStatus, jqXHR) {
 					if (!data) {
 						alert("Failed To Load Colormaps ....");
@@ -476,8 +477,9 @@ TissueStack.Utils = {
 
 		// assemble what we have so far
 		var url = (host != "" ? (protocol + "://" + host.replace(/[_]/g,".")) : "");
-		var path = isTiled ? TissueStack.configuration['tile_directory'].value : TissueStack.configuration['image_service_proxy_path'].value;
-
+		var path = isTiled ? 
+			TissueStack.configuration['tile_directory'].value : TissueStack.configuration['image_service_proxy_path'].value;
+		
 		if (zoom == 1) slice = Math.floor(slice);
 		else slice = Math.ceil(slice);
 		
@@ -501,14 +503,21 @@ TissueStack.Utils = {
 			return url + row + '_' + col + ((colormap == 'grey' || colormap == 'gray') ? "" : ("_" + colormap)) + "." + image_extension + "?" + new Date().getTime();
 		} else {
 			// seems to work for server so why not use it
-		    url = url + "/" + path + "/?volume=" + filename + "&image_type=PNG&scale=" + zoom + "&dimension="
-		    	+ plane + "space" + "&slice=" + slice + "&colormap=" + colormap;
+		    //url = url + "/" + path + "/?volume=" + filename + "&image_type=PNG&scale=" + zoom + "&dimension="
+		    //	+ plane + "space" + "&slice=" + slice + "&colormap=" + colormap;
+			//if (is_preview) {
+			//	return url + "&quality=8";
+			//}
+
+		    url = url + "/" + path + "/?service=";
+		    if (is_preview)
+		    	url += "image_preview&quality=0.1";
+		    else
+		    	url += "image" + "&square=" + tile_size + '&y=' + col + "&x=" + row
+		    url += "&dataset=" + filename + "&image_type=PNG&scale=" + zoom + "&dimension="
+		    	+ plane + "&slice=" + slice + "&colormap=" + colormap;
 			
-			if (is_preview) {
-				return url + "&quality=8";
-			}
-			
-			return url  + "&quality=1&service=tiles&square=" + tile_size + '&y=' + col + "&x=" + row;
+			return url;
 		}
 	}, adjustBorderColorWhenMouseOver : function () {
 			if (TissueStack.phone || TissueStack.tablet) {
@@ -703,16 +712,23 @@ TissueStack.Utils = {
 			if (dataset.associatedDataSets && dataset.associatedDataSets.length > 0)
 				for (i=0;i<dataset.associatedDataSets.length;i++) {
 					files += (":" + dataset.associatedDataSets[i].associatedDataSet.filename);
+					/*
 					planes += (":" + canvas.getDataExtent().plane);
 					slices += (":" + Math.round(coords.z));
 					xes += (":" + Math.round(coords.x));
 					ys += (":" + Math.round(coords.y));
+					*/
 				}
 		
 		// assemble url
+		/*
 		var url = "/" + TissueStack.configuration['image_service_proxy_path'].value + "/?volume="
 					+ files + "&dimension=" + planes + "space&slice=" + slices + "&x=" + xes
 					+ "&y=" + ys + "&query=query";
+		*/
+		var url = "/" + TissueStack.configuration['image_service_proxy_path'].value + "/?service=query&dataset="
+		+ files + "&dimension=" + planes + "space&slice=" + slices + "&x=" + xes
+		+ "&y=" + ys;
 		
 		// in case of an error we rely on the canvas pixel querying
 		var errorHandler = function(canvas) {

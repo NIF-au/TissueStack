@@ -11,7 +11,7 @@ INCLUDE			=	-Iinclude -I../common/include -I../utils/include -I../execution/incl
 
 LIB_PATH		=
 
-LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq 
+LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto 
 
 LIB_NAME		=	libTissueStackConfigurationServices.so
 

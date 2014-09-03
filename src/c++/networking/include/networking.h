@@ -66,7 +66,7 @@ namespace tissuestack
 			TissueStackImageRequest(std::unordered_map<std::string, std::string> & request_parameters, bool is_preview);
 			const bool isObsolete() const;
 			const std::string getContent() const;
-			const std::string getDataSetLocation() const;
+			const std::vector<std::string> getDataSetLocations() const;
 			const std::string getDimensionName() const;
 			const unsigned int getSliceNumber() const;
 			const unsigned int getXCoordinate() const;
@@ -90,7 +90,7 @@ namespace tissuestack
 		private:
 			void setImageRequestMembersFromRequestParameters(const std::unordered_map<std::string, std::string> & request_parameters);
 			bool _is_preview = false;
-			std::string _dataset_location;
+			std::vector<std::string> _datasets;
 			std::string _dimension_name;
 			unsigned int _slice_number;
 			unsigned int _x_coordinate;

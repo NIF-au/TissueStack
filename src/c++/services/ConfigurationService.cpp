@@ -56,7 +56,7 @@ void tissuestack::services::ConfigurationService::streamResponse(
 		}
 		json << "] }";
 	} else
-		json << tissuestack::services::TissueStackServiceError::NO_RESULTS;
+		json << tissuestack::common::NO_RESULTS_JSON;
 
 	const std::string response =
 			tissuestack::utils::Misc::composeHttpResponse("200 OK", "application/json", json.str());

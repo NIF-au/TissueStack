@@ -38,7 +38,7 @@ void tissuestack::execution::ThreadPool::init()
 			while (!this->isStopFlagRaised())
 			{
 				std::unique_lock<std::mutex> lock_on_conditional_mutex(this->_conditional_mutex);
-				this->_notification_condition.wait(lock_on_conditional_mutex);
+				this->_notification_condition.wait_for(lock_on_conditional_mutex, std::chrono::milliseconds(10));
 
 				// fetch next item from the queue if not empty
 				if (this->hasNoTasksQueued())

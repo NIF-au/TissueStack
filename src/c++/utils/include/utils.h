@@ -3,6 +3,7 @@
 
 #include <thread>
 #include <iostream>
+#include <iomanip>
 #include <ctime>
 #include <sstream>
 #include <cstring>
@@ -17,6 +18,7 @@
 #include <vector>
 #include <stdexcept>
 #include <unordered_map>
+#include <uuid/uuid.h>
 
 namespace tissuestack
 {
@@ -33,6 +35,8 @@ namespace tissuestack
         static const bool directoryExists(const std::string& file_name);
         static const bool createDirectory(const std::string& directory, mode_t mode);
         static const std::string getSystemTimeFormatted(const std::string & format);
+        static const unsigned long long int getSystemTimeInMillis();
+        static const std::string generateUUID();
         static const std::vector<std::string> getFilesInDirectory(const std::string & directory);
       private:
         System();

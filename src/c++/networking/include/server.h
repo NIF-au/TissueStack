@@ -302,10 +302,20 @@ namespace tissuestack
 
 				this->_isRunning = false;
 
-				// deallocate global singleton objects and disconnect database
 				try
 				{
+					// clean up old sessions and disconnect database
+					tissuestack::database::SessionDataProvider::deleteSessions(
+						tissuestack::utils::System::getSystemTimeInMillis());
 					tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
+				} catch (...)
+				{
+					// can be safely ignored
+				}
+
+				try
+				{
+					// deallocate global singleton objects
 					tissuestack::TissueStackConfigurationParameters::instance()->purgeInstance();
 					tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
 					tissuestack::imaging::TissueStackDataSetStore::instance()->purgeInstance();
@@ -317,7 +327,14 @@ namespace tissuestack
 				}
 
 				tissuestack::logging::TissueStackLogger::instance()->info("Socket Server Shut Down Successfully.\n");
-				tissuestack::logging::TissueStackLogger::instance()->purgeInstance();
+				try
+				{
+					tissuestack::logging::TissueStackLogger::instance()->purgeInstance();
+				} catch (...)
+				{
+					// can be safely ignored
+				}
+
 				DestroyMagick();
 			};
 

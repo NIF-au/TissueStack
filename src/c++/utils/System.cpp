@@ -65,6 +65,28 @@ const bool tissuestack::utils::System::createDirectory(const std::string& direct
 	return true;
 }
 
+const unsigned long long int tissuestack::utils::System::getSystemTimeInMillis()
+{
+	auto time = std::chrono::system_clock::now();
+	auto since_epoch = time.time_since_epoch();
+	auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(since_epoch);
+
+	return static_cast<unsigned long long int>(millis.count());
+}
+
+const std::string tissuestack::utils::System::generateUUID() {
+	uuid_t uuid;
+	uuid_generate_time(uuid);
+
+	std::stringstream stream;
+	for(unsigned int i = 0; i < sizeof(uuid); i++)
+		stream << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned short>(uuid[i]);
+
+	return stream.str();
+}
+
+
+
 const std::string tissuestack::utils::System::getSystemTimeFormatted(const std::string & format)
 {
 	 char buff[100];

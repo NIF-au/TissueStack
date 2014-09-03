@@ -3,13 +3,7 @@
 
 tissuestack::database::TissueStackPostgresConnector::~TissueStackPostgresConnector()
 {
-	if (this->_connection)
-	{
-		if (this->_connection->is_open())
-			this->_connection->disconnect();
-		delete this->_connection;
-		this->_connection = nullptr;
-	}
+	this->disconnect();
 }
 
 tissuestack::database::TissueStackPostgresConnector::TissueStackPostgresConnector(
@@ -64,6 +58,9 @@ const pqxx::result tissuestack::database::TissueStackPostgresConnector::executeN
 {
 	try
 	{
+		if (!this->isConnected())
+			this->reconnect();
+
 		pqxx::nontransaction non_transaction(*this->_connection);
 		return non_transaction.exec(sql);
 	} catch (std::exception & bad) { // check connectivity
@@ -79,6 +76,32 @@ const pqxx::result tissuestack::database::TissueStackPostgresConnector::executeN
 	}
 }
 
+const unsigned long long int tissuestack::database::TissueStackPostgresConnector::executeTransaction(const std::string sql)
+{
+	try
+	{
+		if (!this->isConnected())
+			this->reconnect();
+
+		pqxx::work some_work(*this->_connection);
+		const pqxx::result result = some_work.exec( sql);
+		some_work.commit();
+		return result.affected_rows();
+	} catch (std::exception & bad) { // check connectivity
+		if (!this->isConnected()) // we try it one more time
+		{
+			this->reconnect();
+			pqxx::work some_work(*this->_connection);
+			const pqxx::result result = some_work.exec( sql);
+			some_work.commit();
+			return result.affected_rows();
+		}
+		tissuestack::logging::TissueStackLogger::instance()->error("Failed to execute transaction: %s\n", bad.what());
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Failed to execute database transaction!");
+	}
+}
+
 const pqxx::result tissuestack::database::TissueStackPostgresConnector::executePaginatedQuery(
 		const std::string sql,
 		const unsigned int from,
@@ -86,6 +109,9 @@ const pqxx::result tissuestack::database::TissueStackPostgresConnector::executeP
 {
 	try
 	{
+		if (!this->isConnected())
+			this->reconnect();
+
 		pqxx::work work( *this->_connection );
 		pqxx::stateless_cursor<pqxx::cursor_base::read_only, pqxx::cursor_base::owned> cursor(
 				work, sql, "query_cursor", false );
@@ -109,8 +135,23 @@ const pqxx::result tissuestack::database::TissueStackPostgresConnector::executeP
 	}
 }
 
+void tissuestack::database::TissueStackPostgresConnector::disconnect()
+{
+	if (this->_connection)
+	{
+		try {
+			if (this->_connection->is_open())
+				this->_connection->disconnect();
+		} catch(...) {} // anything happens here is disregarded
+		delete this->_connection;
+		this->_connection = nullptr;
+	}
+}
+
 void tissuestack::database::TissueStackPostgresConnector::reconnect()
 {
+	this->disconnect();
+
 	this->_connection = new pqxx::connection(this->_connectString);
 }
 

@@ -99,13 +99,18 @@ TissueStack.DataSetStore.prototype = {
 		if (!host) {
 			host = "localhost";
 		}
-		var url = (host == 'localhost' ? "" : "http://" + host) + "/" + TissueStack.configuration['restful_service_proxy_path'].value + "/data";
+		//var url = (host == 'localhost' ? "" : "http://" + host) + "/" + TissueStack.configuration['restful_service_proxy_path'].value + "/data";
+		var url = (host == 'localhost' ? "" : "http://" + host) + "/" +
+			TissueStack.configuration['restful_service_proxy_path'].value + "/?service=services&sub_service=data";
 		if (!id && host == "localhost") {
-			url += "/list?include_plane_data=true";
+			url += "&action=all&include_planes=true";
+			//url += "/list?include_plane_data=true";
 		} else if (!id && host != "localhost") {
-			url += "/list";
+			//url += "/list";
+			url += "&action=all";
 		} else if (id) {
-			url += ("/" + id);
+			//url += ("/" + id);
+			url += ("&action=query&id=" + id);
 		}
 		
 		_this = this;

@@ -23,6 +23,7 @@ namespace tissuestack
 				~TissueStackPostgresConnector();
 				static TissueStackPostgresConnector * instance();
 				const pqxx::result executeNonTransactionalQuery(const std::string sql);
+				const unsigned long long int executeTransaction(const std::string sql);
 				const pqxx::result executePaginatedQuery(
 					const std::string sql,
 					const unsigned int from,
@@ -31,6 +32,7 @@ namespace tissuestack
 		    	const bool isConnected() const;
 			private:
 		    	std::string _connectString;
+		    	void disconnect();
 		    	void reconnect();
 		    	TissueStackPostgresConnector(
 		    			const std::string host,
@@ -67,6 +69,8 @@ namespace tissuestack
 				ConfigurationDataProvider() = delete;
 				static const Configuration * queryConfigurationById(const std::string name);
 				static const std::vector<const tissuestack::database::Configuration *> queryAllConfigurations();
+				static const bool persistConfiguration(const tissuestack::database::Configuration * conf);
+				static const bool updateConfiguration(const tissuestack::database::Configuration * conf);
 			private:
 				static inline tissuestack::database::Configuration * readResult(pqxx::result::const_iterator result);
 		};
@@ -90,6 +94,21 @@ namespace tissuestack
 				const std::string _prefix;
 				const std::string _description;
 				const std::string _query_url;
+		};
+
+		class SessionDataProvider final
+		{
+			public:
+				SessionDataProvider & operator=(const SessionDataProvider&) = delete;
+				SessionDataProvider(const SessionDataProvider&) = delete;
+				SessionDataProvider() = delete;
+				static const bool addSession(const std::string session, const unsigned long long int expiry_in_millis);
+				static const bool hasSessionExpired(
+						const std::string session,
+						const unsigned long long int now,
+						const unsigned long long int extension = 0);
+				static const bool invalidateSession(const std::string session);
+				static void deleteSessions(const unsigned long long int expiry_in_millis);
 		};
 
 
