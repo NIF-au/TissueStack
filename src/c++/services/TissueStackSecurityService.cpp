@@ -1,6 +1,9 @@
+#include "networking.h"
+#include "imaging.h"
+#include "database.h"
 #include "services.h"
+
 #include <openssl/sha.h>
-#include <iomanip>
 
 const std::string tissuestack::services::TissueStackSecurityService::SUB_SERVICE_ID = "SECURITY";
 const std::string tissuestack::services::TissueStackSecurityService::DEFAULT_GLOBAL_ADMIN_PASSWORD_AS_SHA_2_HEX_STRING =

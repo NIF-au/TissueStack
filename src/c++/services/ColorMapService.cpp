@@ -1,5 +1,6 @@
-#include "services.h"
+#include "networking.h"
 #include "imaging.h"
+#include "services.h"
 
 const std::string tissuestack::services::ColorMapService::SUB_SERVICE_ID = "COLORMAPS";
 

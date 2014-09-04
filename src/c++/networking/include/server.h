@@ -1,13 +1,17 @@
 #ifndef	__SERVER_H__
 #define __SERVER_H__
 
-#include "tissuestack.h"
 #include "networking.h"
+#include "imaging.h"
 #include "execution.h"
+#include "database.h"
+#include "services.h"
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <sys/time.h>
+
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -321,6 +325,7 @@ namespace tissuestack
 					tissuestack::imaging::TissueStackDataSetStore::instance()->purgeInstance();
 					tissuestack::imaging::TissueStackLabelLookupStore::instance()->purgeInstance();
 					tissuestack::imaging::TissueStackColorMapStore::instance()->purgeInstance();
+					tissuestack::services::TissueStackTaskQueue::instance()->purgeInstance();
 				} catch (...)
 				{
 					// can be safely ignored

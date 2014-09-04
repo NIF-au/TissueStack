@@ -2,23 +2,35 @@
 #define __SYSTEM_H__
 
 #include <thread>
+
+#include <fstream>
 #include <iostream>
 #include <iomanip>
+
+#include <fcntl.h>
+
 #include <ctime>
 #include <sstream>
 #include <cstring>
+
 #include <unistd.h>
+
 #include <sys/types.h>
 #include <sys/sysinfo.h>
 #include <sys/stat.h>
+
 #include <dirent.h>
 #include <typeinfo>
 #include <cxxabi.h>
+
 #include <algorithm>
+
 #include <vector>
-#include <stdexcept>
 #include <unordered_map>
+
+#include <stdexcept>
 #include <uuid/uuid.h>
+
 
 namespace tissuestack
 {
@@ -34,9 +46,11 @@ namespace tissuestack
         static const bool fileExists(const std::string& file_name);
         static const bool directoryExists(const std::string& file_name);
         static const bool createDirectory(const std::string& directory, mode_t mode);
+        static const std::vector<std::string> readTextFileLineByLine(const std::string & file);
         static const std::string getSystemTimeFormatted(const std::string & format);
         static const unsigned long long int getSystemTimeInMillis();
         static const std::string generateUUID();
+        static const std::string generatePseudoRandomNumberAsString(const unsigned short digits);
         static const std::vector<std::string> getFilesInDirectory(const std::string & directory);
       private:
         System();

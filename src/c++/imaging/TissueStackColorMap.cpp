@@ -1,3 +1,4 @@
+#include "networking.h"
 #include "imaging.h"
 
 tissuestack::imaging::TissueStackColorMap::TissueStackColorMap(const std::string & filename) : _colormap_id(filename)

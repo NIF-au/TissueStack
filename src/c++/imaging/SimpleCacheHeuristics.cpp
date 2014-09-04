@@ -1,4 +1,6 @@
+#include "networking.h"
 #include "imaging.h"
+#include "database.h"
 
 tissuestack::imaging::SimpleCacheHeuristics::SimpleCacheHeuristics() :
 	tissuestack::imaging::SimpleCacheHeuristics::SimpleCacheHeuristics(new tissuestack::imaging::UncachedImageExtraction()) {}

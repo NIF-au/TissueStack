@@ -1,6 +1,7 @@
-#include "tissuestack.h"
 #include "execution.h"
 #include "networking.h"
+#include "imaging.h"
+#include "services.h"
 
 tissuestack::execution::TissueStackOnlineExecutor::~TissueStackOnlineExecutor()
 {

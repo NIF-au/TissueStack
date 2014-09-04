@@ -1,12 +1,7 @@
 #ifndef	__SERVICES_H__
 #define __SERVICES_H__
 
-#include "logging.h"
-#include "exceptions.h"
-#include "networking.h"
-#include "database.h"
-#include "imaging.h"
-#include <memory>
+#include "tissuestack.h"
 
 namespace tissuestack
 {
@@ -86,6 +81,123 @@ namespace tissuestack
 				void streamResponse(
 						const tissuestack::networking::TissueStackServicesRequest * request,
 						const int file_descriptor) const;
+	 	};
+
+		enum TissueStackTaskStatus
+		{
+			QUEUED = 0,
+			IN_PROCESS = 1,
+			FINISHED = 2,
+			CANCELLED = 3
+		};
+
+		enum TissueStackTaskType
+		{
+			CONVERSION = 0,
+			TILING = 1
+		};
+
+		class TissueStackTask
+		{
+			public:
+				TissueStackTask & operator=(const TissueStackTask&) = delete;
+				TissueStackTask(const TissueStackTask&) = delete;
+				TissueStackTask(const std::string id, const std::string input_file);
+
+				const std::string getId() const;
+				const float getProgress() const;
+				const TissueStackTaskStatus getStatus() const;
+				const unsigned long long int getSlicesDone() const;
+				const unsigned long long int getTotalSlices() const;
+
+				virtual const TissueStackTaskType getType() const = 0;
+				virtual void dumpTaskToDebugLog() const = 0;
+				virtual ~TissueStackTask();
+
+				const bool isInputDataRaw() const;
+				const tissuestack::imaging::TissueStackImageData * getInputImageData() const;
+			protected:
+				void setSlicesDone(const unsigned long long int slicesDone);
+				void setTotalSlices(const unsigned long long int totalSlices);
+			private:
+				const std::string _id;
+				const std::string _input_file;
+				TissueStackTaskStatus _status;
+				unsigned long long int _slices_done = 0;
+				unsigned long long int _total_slices = 0;
+				tissuestack::imaging::TissueStackImageData * _input_data = nullptr;
+		};
+
+		class TissueStackConversionTask : public TissueStackTask
+		{
+			public:
+				TissueStackConversionTask & operator=(const TissueStackTask&) = delete;
+				TissueStackConversionTask(const TissueStackTask&) = delete;
+				TissueStackConversionTask(
+					const std::string id,
+					const std::string input_file,
+					const std::string output_file = "");
+				~TissueStackConversionTask();
+				const std::string getOutFile() const;
+				const TissueStackTaskType getType() const;
+				void dumpTaskToDebugLog() const;
+			private:
+				const std::string _output_file;
+		};
+
+		class TissueStackTilingTask : public TissueStackTask
+		{
+			public:
+				TissueStackTilingTask & operator=(const TissueStackTilingTask&) = delete;
+				TissueStackTilingTask(const TissueStackTilingTask&) = delete;
+				TissueStackTilingTask(
+					const std::string id,
+					const std::string input_file,
+					const std::string tile_dir,
+					const std::vector<std::string> dimensions = {"x", "y", "z"},
+					const std::vector<float> zoom_factors = {0.25, 0.5, 1.0, 1.25, 1.5, 1.75, 2.0},
+					const std::string color_map = "grey",
+					const unsigned short square = 256,
+					const std::string image_format = "PNG");
+				~TissueStackTilingTask();
+				const TissueStackTaskType getType() const;
+				const std::string getParametersForTaskFile() const;
+				void dumpTaskToDebugLog() const;
+			private:
+				const std::string _tile_dir;
+				const std::vector<std::string> _dimensions;
+				const std::vector<float> _zoom_factors;
+				const std::string _color_map;
+				const unsigned short _square;
+				const std::string _image_format;
+		};
+
+		class TissueStackTaskQueue final
+		{
+			public:
+				TissueStackTaskQueue & operator=(const TissueStackTaskQueue&) = delete;
+				TissueStackTaskQueue(const TissueStackTaskQueue&) = delete;
+				~TissueStackTaskQueue();
+				static TissueStackTaskQueue * instance();
+				void addTask(const TissueStackTask * task);
+				void purgeInstance();
+				void dumpAllTasksToDebugLog() const;
+				const bool isBeingTiled(const std::string in_file);
+				const bool isBeingConverted(const std::string in_file);
+				const TissueStackTask * findTaskById(const std::string & id);
+				const std::string generateTaskId();
+			private:
+				TissueStackTaskQueue();
+				inline void buildTaskFromIndividualTaskFile(const std::string & task_file);
+				inline void writeBackToIndividualTasksFile(const tissuestack::services::TissueStackTask * task);
+				const std::vector<std::string> getTasksFromQueueFile();
+				void writeTasksToQueueFile();
+
+				std::mutex _queue_mutex;
+				std::mutex _tasks_mutex;
+				std::vector<const TissueStackTask *> _tasks;
+				static TissueStackTaskQueue * _instance;
+
 	 	};
 
 		class TissueStackAdminService final : public TissueStackService

@@ -1,9 +1,7 @@
 #ifndef	__DATABASE_H__
 #define __DATABASE_H__
 
-#include "logging.h"
-#include "exceptions.h"
-#include <iostream>
+#include "tissuestack.h"
 #include <pqxx/pqxx>
 
 namespace tissuestack
@@ -68,11 +66,11 @@ namespace tissuestack
 				ConfigurationDataProvider(const ConfigurationDataProvider&) = delete;
 				ConfigurationDataProvider() = delete;
 				static const Configuration * queryConfigurationById(const std::string name);
-				static const std::vector<const tissuestack::database::Configuration *> queryAllConfigurations();
-				static const bool persistConfiguration(const tissuestack::database::Configuration * conf);
-				static const bool updateConfiguration(const tissuestack::database::Configuration * conf);
+				static const std::vector<const Configuration *> queryAllConfigurations();
+				static const bool persistConfiguration(const Configuration * conf);
+				static const bool updateConfiguration(const Configuration * conf);
 			private:
-				static inline tissuestack::database::Configuration * readResult(pqxx::result::const_iterator result);
+				static inline Configuration * readResult(pqxx::result::const_iterator result);
 		};
 
 		class AtlasInfo final

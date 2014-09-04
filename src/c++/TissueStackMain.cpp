@@ -1,10 +1,5 @@
-#include "logging.h"
-#include "parameters.h"
-
+#include "tissuestack.h"
 #include "server.h"
-#include "networking.h"
-#include "execution.h"
-#include <memory>
 #include <signal.h>
 
 
@@ -133,6 +128,7 @@ int main(int argc, char * args[])
 		Logger->error("Could not instantiate RequestTimeStampStore:\n%s\n", bad.what());
 		Params->purgeInstance();
 		Logger->purgeInstance();
+		tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
 		exit(-1);
 	}
 
@@ -142,11 +138,11 @@ int main(int argc, char * args[])
 		//tissuestack::imaging::TissueStackLabelLookupStore::instance()->dumpAllLabelLookupsToDebugLog();
 	} catch (std::exception & bad)
 	{
-		tissuestack::imaging::TissueStackDataSetStore::instance()->purgeInstance();
-		tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
 		Logger->error("Could not instantiate TissueStackLabelLookupStore:\n%s\n", bad.what());
 		Params->purgeInstance();
 		Logger->purgeInstance();
+		tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
+		tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
 		exit(-1);
 	}
 
@@ -156,12 +152,12 @@ int main(int argc, char * args[])
 		//tissuestack::imaging::TissueStackColorMapStore::instance()->dumpAllColorMapsToDebugLog();
 	} catch (std::exception & bad)
 	{
-		tissuestack::imaging::TissueStackLabelLookupStore::instance()->purgeInstance();
-		tissuestack::imaging::TissueStackDataSetStore::instance()->purgeInstance();
-		tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
 		Logger->error("Could not instantiate TissueStackLabelLookupStore:\n%s\n", bad.what());
 		Params->purgeInstance();
 		Logger->purgeInstance();
+		tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
+		tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
+		tissuestack::imaging::TissueStackLabelLookupStore::instance()->purgeInstance();
 		exit(-1);
 	}
 
@@ -171,10 +167,30 @@ int main(int argc, char * args[])
 		//tissuestack::imaging::TissueStackDataSetStore::instance()->dumpDataSetStoreIntoDebugLog();
 	} catch (std::exception & bad)
 	{
-		tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
 		Logger->error("Could not instantiate TissueStackDataSetStore:\n%s\n", bad.what());
 		Params->purgeInstance();
 		Logger->purgeInstance();
+		tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
+		tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
+		tissuestack::imaging::TissueStackLabelLookupStore::instance()->purgeInstance();
+		tissuestack::imaging::TissueStackColorMapStore::instance()->purgeInstance();
+		exit(-1);
+	}
+
+	try
+	{
+		tissuestack::services::TissueStackTaskQueue::instance();
+		//tissuestack::services::TissueStackTaskQueue::instance()->dumpAllTasksToDebugLog();
+	} catch (std::exception & bad)
+	{
+		Logger->error("Could not instantiate TissueStackTaskQueue:\n%s\n", bad.what());
+		Params->purgeInstance();
+		Logger->purgeInstance();
+		tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
+		tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
+		tissuestack::imaging::TissueStackLabelLookupStore::instance()->purgeInstance();
+		tissuestack::imaging::TissueStackColorMapStore::instance()->purgeInstance();
+		tissuestack::imaging::TissueStackDataSetStore::instance()->purgeInstance();
 		exit(-1);
 	}
 
@@ -195,6 +211,12 @@ int main(int argc, char * args[])
 				"Failed to instantiate/start the TissueStackServer for the following reason:\n%s\n", bad.what());
 		Params->purgeInstance();
 		Logger->purgeInstance();
+		tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
+		tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
+		tissuestack::imaging::TissueStackLabelLookupStore::instance()->purgeInstance();
+		tissuestack::imaging::TissueStackColorMapStore::instance()->purgeInstance();
+		tissuestack::imaging::TissueStackDataSetStore::instance()->purgeInstance();
+		tissuestack::services::TissueStackTaskQueue::instance()->purgeInstance();
 		exit(-1);
 	}
 
@@ -205,8 +227,7 @@ int main(int argc, char * args[])
 	} catch (std::exception & bad)
 	{
 		Logger->error("Failed to install signal handlers: %s!\n",bad.what());
-		Params->purgeInstance();
-		Logger->purgeInstance();
+		TissueStackServer->stop();
 		exit(-1);
 	}
 		

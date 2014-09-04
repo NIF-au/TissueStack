@@ -8,12 +8,20 @@
 
 #include <magick/api.h>
 
-#include <iostream>
 #include <string>
+#include <cstring>
+
+#include <array>
 #include <unordered_map>
 #include <queue>
+#include <vector>
+
 #include <mutex>
 #include <memory>
+
+#include <algorithm>
+#include <functional>
+#include <typeinfo>
 
 namespace tissuestack
 {

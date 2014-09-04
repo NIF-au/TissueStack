@@ -1,13 +1,14 @@
 #ifndef	__TS_PARAMETERS_H__
 #define __TS_PARAMETERS_H__
 
-#include "logging.h"
-#include "database.h"
 #include <unordered_map>
-#include <fstream>
 
 namespace tissuestack
 {
+	namespace  database
+	{
+		class Configuration; // forward declaration
+	}
 	class TissueStackConfigurationParameters final
 	{
 		public:

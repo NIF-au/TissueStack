@@ -1,4 +1,6 @@
 #include "database.h"
+#include "networking.h"
+#include "imaging.h"
 
 const tissuestack::database::Configuration * tissuestack::database::ConfigurationDataProvider::queryConfigurationById(
 		const std::string name) {

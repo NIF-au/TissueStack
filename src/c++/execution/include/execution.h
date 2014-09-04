@@ -2,8 +2,6 @@
 #define __EXECUTION_H__
 
 #include "tissuestack.h"
-#include "services.h"
-#include "imaging.h"
 #include <condition_variable>
 #include <thread>
 #include <chrono>
@@ -14,6 +12,16 @@
 
 namespace tissuestack
 {
+	namespace imaging
+	{
+		class SimpleCacheHeuristics; // forward declarations
+		template <typename CachingStrategy>
+		class ImageExtraction;
+	}
+	namespace services
+	{
+	 class TissueStackServicesDelegator; // forward declaration
+	}
 	namespace execution
 	{
 		class WorkerThread : public std::thread

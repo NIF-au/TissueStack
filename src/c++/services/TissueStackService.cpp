@@ -1,3 +1,6 @@
+#include "networking.h"
+#include "imaging.h"
+#include "database.h"
 #include "services.h"
 
 tissuestack::services::TissueStackService::TissueStackService() {}

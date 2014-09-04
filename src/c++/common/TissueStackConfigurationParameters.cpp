@@ -1,4 +1,5 @@
 #include "parameters.h"
+#include "database.h"
 
 const std::string tissuestack::TissueStackConfigurationParameters::getParameter(const std::string & name) const
 {
@@ -19,13 +20,10 @@ tissuestack::TissueStackConfigurationParameters * tissuestack::TissueStackConfig
 
 void tissuestack::TissueStackConfigurationParameters::readInConfigurationFile(const std::string & configuration_file)
 {
-	std::ifstream fileStream;
-	fileStream.open(configuration_file.c_str(), std::ifstream::in);
-	std::string line;
-	while (std::getline(fileStream, line))
+	const std::vector<std::string> lines =
+		tissuestack::utils::System::readTextFileLineByLine(configuration_file);
+	for (auto line : lines)
 	{
-		line = tissuestack::utils::Misc::eliminateWhitespaceAndUnwantedEscapeCharacters(line);
-		if (line.empty() || line.at(0) == '#') continue;
 		const std::vector<std::string> tokens =
 				tissuestack::utils::Misc::tokenizeString(line, '=');
 		if (tokens.size() != 2)
@@ -35,7 +33,6 @@ void tissuestack::TissueStackConfigurationParameters::readInConfigurationFile(co
 			new tissuestack::database::Configuration(tokens[0], tokens[1]);
 		this->addOrReplaceConfiguration(conf);
 	}
-	fileStream.close();
 }
 
 inline tissuestack::database::Configuration * tissuestack::TissueStackConfigurationParameters::findConfiguration(const std::string & name) const

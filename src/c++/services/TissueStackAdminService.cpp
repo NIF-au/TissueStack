@@ -1,3 +1,6 @@
+#include "networking.h"
+#include "imaging.h"
+#include "database.h"
 #include "services.h"
 
 const std::string tissuestack::services::TissueStackAdminService::SUB_SERVICE_ID = "ADMIN";
@@ -37,6 +40,12 @@ void tissuestack::services::TissueStackAdminService::streamResponse(
 {
 	const std::string action = request->getRequestParameter("ACTION", true);
 
+	std::ostringstream json;
+
+	if (action.compare("UPLOAD_DIRECTORY") == 0)
+	{
+		json << "{ \"response\": \"";
+	}
 	// TODO: implement
 
 	/*

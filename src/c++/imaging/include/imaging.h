@@ -1,17 +1,25 @@
 #ifndef	__IMAGE_H__
 #define __IMAGE_H__
 
-#include "logging.h"
-#include "networking.h"
+#include "tissuestack.h"
 #include <stdio.h>
 #include <unistd.h>
-#include <memory.h>
 #include <array>
 #include <fstream>
-#include <unordered_map>
 
 namespace tissuestack
 {
+	namespace networking
+	{
+		// forward declarations
+		class TissueStackImageRequest;
+		class TissueStackQueryRequest;
+	}
+	namespace database
+	{
+		class AtlasInfo;
+		class DataSetDataProvider;
+	}
 	namespace imaging
 	{
 		/*
@@ -326,11 +334,6 @@ namespace tissuestack
 				TissueStackMincData(const std::string & filename);
 		};
 
-		enum class DataSetStatus
-		{
-			IN_CONVERSION, READY
-		};
-
 		class TissueStackDataSet final
 		{
 			public:
@@ -343,12 +346,10 @@ namespace tissuestack
 						const unsigned long long id,
 						const bool includePlanes = false);
 				const TissueStackImageData * getImageData() const;
-				const DataSetStatus getStatus() const;
 				const std::string getDataSetId() const;
 				void dumpDataSetContentIntoDebugLog() const;
 				void associateDataSets();
 			private:
-				DataSetStatus _status = tissuestack::imaging::DataSetStatus::READY;
 				const TissueStackImageData * _image_data;
 				TissueStackDataSet(const TissueStackImageData * image_data);
 		};

@@ -1,4 +1,5 @@
 #include "database.h"
+#include "networking.h"
 #include "imaging.h"
 
 const std::string tissuestack::database::DataSetDataProvider::SQL =

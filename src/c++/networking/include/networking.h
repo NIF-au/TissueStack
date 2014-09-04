@@ -6,16 +6,14 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-#include <algorithm>
-#include <functional>
-#include <typeinfo>
-#include <sstream>
-#include <cstring>
-#include <stdexcept>
-#include <vector>
-
 namespace tissuestack
 {
+	//forwards declarations
+	namespace services
+	{
+		class TissueStackConversionTask;
+		class TissueStackTilingTask;
+	}
   namespace networking
   {
 	class RawHttpRequest : public tissuestack::common::Request
@@ -126,6 +124,8 @@ namespace tissuestack
 			const bool isObsolete() const;
 			~TissueStackPreTilingRequest();
 			const std::string getContent() const;
+		private:
+			tissuestack::services::TissueStackTilingTask * _tiling = nullptr;
     };
 
     class TissueStackConversionRequest final : public tissuestack::common::Request
@@ -138,6 +138,8 @@ namespace tissuestack
 			const bool isObsolete() const;
 			~TissueStackConversionRequest();
 			const std::string getContent() const;
+		private:
+			tissuestack::services::TissueStackConversionTask * _conversion = nullptr;
     };
 
     class TissueStackServicesRequest final : public tissuestack::common::Request

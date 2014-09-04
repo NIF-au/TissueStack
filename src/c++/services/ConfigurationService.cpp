@@ -1,3 +1,6 @@
+#include "networking.h"
+#include "imaging.h"
+#include "database.h"
 #include "services.h"
 
 const std::string tissuestack::services::ConfigurationService::SUB_SERVICE_ID = "CONFIGURATION";
