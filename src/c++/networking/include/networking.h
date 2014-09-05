@@ -121,6 +121,7 @@ namespace tissuestack
     		TissueStackPreTilingRequest & operator=(const TissueStackPreTilingRequest&) = delete;
     		TissueStackPreTilingRequest(const TissueStackPreTilingRequest&) = delete;
 			explicit TissueStackPreTilingRequest(std::unordered_map<std::string, std::string> & request_parameters);
+			const tissuestack::services::TissueStackTilingTask * getTask(const bool nullOutPointer = false);
 			const bool isObsolete() const;
 			~TissueStackPreTilingRequest();
 			const std::string getContent() const;
@@ -136,6 +137,7 @@ namespace tissuestack
     		TissueStackConversionRequest(const TissueStackConversionRequest&) = delete;
 			explicit TissueStackConversionRequest(std::unordered_map<std::string, std::string> & request_parameters);
 			const bool isObsolete() const;
+			const tissuestack::services::TissueStackConversionTask * getTask(const bool nullOutPointer = false);
 			~TissueStackConversionRequest();
 			const std::string getContent() const;
 		private:

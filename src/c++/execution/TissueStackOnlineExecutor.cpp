@@ -75,7 +75,23 @@ void tissuestack::execution::TissueStackOnlineExecutor::execute(std::string requ
 			this->_serviesDelegator->processRequest(
 					static_cast<const tissuestack::networking::TissueStackServicesRequest *>(req.get()),
 					client_descriptor);
-
+		else if (req.get()->getType() == tissuestack::common::Request::Type::TS_CONVERSION)
+		{
+			// TODO: for now we add to the task queue
+			// think of a smart mechanism to fit it into threading
+			tissuestack::services::TissueStackTaskQueue::instance()->addTask(
+				(const_cast<tissuestack::networking::TissueStackConversionRequest *>(
+					(static_cast<
+							const tissuestack::networking::TissueStackConversionRequest *>(req.get()))))->getTask(true));
+		} else if (req.get()->getType() == tissuestack::common::Request::Type::TS_TILING)
+		{
+			// TODO: for now we add to the task queue
+			// think of a smart mechanism to fit it into threading
+			tissuestack::services::TissueStackTaskQueue::instance()->addTask(
+				(const_cast<tissuestack::networking::TissueStackPreTilingRequest *>(
+					(static_cast<
+					const tissuestack::networking::TissueStackPreTilingRequest *>(req.get()))))->getTask(true));
+		}
 	}  catch (tissuestack::common::TissueStackObsoleteRequestException& obsoleteRequest)
 	{
 		response =

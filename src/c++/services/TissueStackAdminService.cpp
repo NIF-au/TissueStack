@@ -16,14 +16,10 @@ tissuestack::services::TissueStackAdminService::TissueStackAdminService() {
 		std::vector<std::string>{ "SESSION" , "FILENAME"});
 	this->addMandatoryParametersForRequest("TOGGLE_TILING",
 		std::vector<std::string>{ "SESSION" , "ID", "FLAG"});
-	this->addMandatoryParametersForRequest("CONVERT",
-		std::vector<std::string>{ "SESSION" , "FILE"});
 	this->addMandatoryParametersForRequest("PROGRESS",
 		std::vector<std::string>{ "SESSION" , "TASK_ID"});
 	this->addMandatoryParametersForRequest("CANCEL",
 		std::vector<std::string>{ "SESSION" , "TASK_ID"});
-	this->addMandatoryParametersForRequest("TILE",
-		std::vector<std::string>{ "SESSION" , "FILE"});
 };
 
 tissuestack::services::TissueStackAdminService::~TissueStackAdminService() {};

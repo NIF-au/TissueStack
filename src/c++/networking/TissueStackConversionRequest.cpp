@@ -5,9 +5,18 @@
 const std::string tissuestack::networking::TissueStackConversionRequest::SERVICE = "CONVERSION";
 
 
-tissuestack::networking::TissueStackConversionRequest::~TissueStackConversionRequest() {}
+tissuestack::networking::TissueStackConversionRequest::~TissueStackConversionRequest()
+{
+	if (this->_conversion)
+		delete this->_conversion;
+}
 
 tissuestack::networking::TissueStackConversionRequest::TissueStackConversionRequest(std::unordered_map<std::string, std::string> & request_parameters) {
+	// we need a valid session
+	if (tissuestack::services::TissueStackSecurityService::hasSessionExpired(
+		tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "session")))
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Invalid Session! Please Log In.");
 
 	const std::string in_file =
 		tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "in_file");
@@ -24,6 +33,19 @@ tissuestack::networking::TissueStackConversionRequest::TissueStackConversionRequ
 	// we have passed all preliminary checks => assign us the new type
 	this->setType(tissuestack::common::Request::Type::TS_CONVERSION);
 
+}
+
+const tissuestack::services::TissueStackConversionTask *
+	tissuestack::networking::TissueStackConversionRequest::getTask(
+			const bool nullOutPointer)
+{
+	if (!nullOutPointer)
+		return this->_conversion;
+
+	const tissuestack::services::TissueStackConversionTask * cpy = this->_conversion;
+	this->_conversion = nullptr;
+
+	return cpy;
 }
 
 const bool tissuestack::networking::TissueStackConversionRequest::isObsolete() const

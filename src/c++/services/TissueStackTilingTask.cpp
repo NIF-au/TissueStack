@@ -8,23 +8,65 @@ tissuestack::services::TissueStackTilingTask::TissueStackTilingTask(
 	const std::string input_file,
 	const std::string tile_dir,
 	const std::vector<std::string> dimensions,
-	const std::vector<float> zoom_factors,
+	const std::vector<unsigned short> zoom_levels,
 	const std::string color_map,
 	const unsigned short square,
 	const std::string image_format) :
-	tissuestack::services::TissueStackTask(id, input_file),
-	_tile_dir(tile_dir),
-	_dimensions(dimensions),
-	_zoom_factors(zoom_factors),
-	_color_map(color_map),
-	_square(square),
-	_image_format(image_format)
+	tissuestack::services::TissueStackTask(id, input_file)
 {
 	if (!this->isInputDataRaw())
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"Tiling needs raw format data");
 
-	// TODO: more checks
+	// check tile directory
+	if (!tissuestack::utils::System::directoryExists(tile_dir))
+	{
+		// try to create it, if we fail we'll throw an exception
+		if (!tissuestack::utils::System::createDirectory(tile_dir, 755))
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Could not create tile directory!");
+	}
+	this->_tile_dir = tile_dir;
+
+	// check color map
+	if (color_map.compare("grey") != 0
+			&& color_map.compare("gray") != 0
+			&& tissuestack::imaging::TissueStackColorMapStore::instance()->findColorMap(color_map) == nullptr)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Could not find colormap!");
+	this->_color_map = color_map;
+
+	// check square length
+	if (square == 0 || square > 1024)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Square length should be in between 0 and 1024!");
+	this->_square = square;
+
+	// check image format
+	std::string pngOrJpeg = image_format;
+	std::transform(pngOrJpeg.begin(), pngOrJpeg.end(), pngOrJpeg.begin(), tolower);
+	if (pngOrJpeg.compare("png") != 0
+			&& pngOrJpeg.compare("jpg") != 0
+			&& pngOrJpeg.compare("jpeg") != 0)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Image format can only be png or jpg, png being preferred!");
+	this->_image_format = image_format;
+
+	// check dimensions
+	if (dimensions.empty())
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"We habe to have at least one dimension for tiling!");
+	for (auto d : dimensions)
+		if (this->getInputImageData()->getDimensionByLongName(d) == nullptr
+			&& this->getInputImageData()->getDimension(d.at(0)) == nullptr)
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Data Set to be tiled does not have requested dimension");
+	this->_dimensions = dimensions;
+	//check the zoom levels
+	if (zoom_levels.empty())
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"We habe to have at least one zoom level for tiling!");
+	this->_zoom_levels = zoom_levels;
 }
 
 tissuestack::services::TissueStackTilingTask::~TissueStackTilingTask() {}
@@ -36,11 +78,39 @@ const tissuestack::services::TissueStackTaskType tissuestack::services::TissueSt
 
 const std::string tissuestack::services::TissueStackTilingTask::getParametersForTaskFile() const
 {
-	// TODO: implement
-	return "";
+	std::ostringstream paramString;
+
+	paramString << this->_tile_dir << ":";
+
+	int j=0;
+	for (auto d : this->_dimensions)
+	{
+		if (j != 0)
+			paramString << ",";
+		paramString << d;
+		j++;
+	}
+
+	paramString << ":";
+	j=0;
+	for (auto z : this->_zoom_levels)
+	{
+		if (j != 0)
+			paramString << ",";
+		paramString << std::to_string(z);
+		j++;
+	}
+
+	paramString << ":" << this->_color_map << ":";
+	paramString << std::to_string(this->_square) << ":";
+	paramString << this->_image_format;
+
+	return paramString.str();
 }
 
 void tissuestack::services::TissueStackTilingTask::dumpTaskToDebugLog() const
 {
- // TODO: implement
+	tissuestack::logging::TissueStackLogger::instance()->debug(
+			"Tiling Task: %s => %s\n",
+			this->getInputImageData()->getFileName().c_str(), this->getParametersForTaskFile().c_str());
 }

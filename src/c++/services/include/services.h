@@ -142,7 +142,7 @@ namespace tissuestack
 				const TissueStackTaskType getType() const;
 				void dumpTaskToDebugLog() const;
 			private:
-				const std::string _output_file;
+				std::string _output_file;
 		};
 
 		class TissueStackTilingTask : public TissueStackTask
@@ -155,7 +155,7 @@ namespace tissuestack
 					const std::string input_file,
 					const std::string tile_dir,
 					const std::vector<std::string> dimensions = {"x", "y", "z"},
-					const std::vector<float> zoom_factors = {0.25, 0.5, 1.0, 1.25, 1.5, 1.75, 2.0},
+					const std::vector<unsigned short> zoom_levels = {0, 1, 2, 3, 4, 5, 6, 7},
 					const std::string color_map = "grey",
 					const unsigned short square = 256,
 					const std::string image_format = "PNG");
@@ -164,12 +164,12 @@ namespace tissuestack
 				const std::string getParametersForTaskFile() const;
 				void dumpTaskToDebugLog() const;
 			private:
-				const std::string _tile_dir;
-				const std::vector<std::string> _dimensions;
-				const std::vector<float> _zoom_factors;
-				const std::string _color_map;
-				const unsigned short _square;
-				const std::string _image_format;
+				std::string _tile_dir;
+				std::vector<std::string> _dimensions;
+				std::vector<unsigned short> _zoom_levels;
+				std::string _color_map;
+				unsigned short _square;
+				std::string _image_format;
 		};
 
 		class TissueStackTaskQueue final

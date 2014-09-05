@@ -50,7 +50,7 @@ const tissuestack::common::Request * const tissuestack::networking::TissueStackR
 
 	if (return_request == nullptr)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
-						"A TissueStack request has to be: 'IMAGE', 'IMAGE_PREVIEW, 'POINT_QUERY', 'TILING','CONVERSION' or 'SERVICES'!");
+						"A TissueStack request has to be: 'IMAGE', 'IMAGE_PREVIEW, 'QUERY', 'TILING','CONVERSION' or 'SERVICES'!");
 
 	// a general isObsolete check. for most but not all requests that equates to a superseded timestamp check
 	// for conversion/tiling, this can be used to catch duplicate conversion/tiling requests

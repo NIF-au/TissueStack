@@ -169,6 +169,29 @@ const std::string tissuestack::services::TissueStackTaskQueue::generateTaskId()
 	return id;
 }
 
+void tissuestack::services::TissueStackTaskQueue::addTask(const tissuestack::services::TissueStackTask * task)
+{
+	if ((task->getType() == tissuestack::services::TissueStackTaskType::CONVERSION &&
+			this->isBeingConverted(task->getId()))
+		|| (task->getType() == tissuestack::services::TissueStackTaskType::TILING &&
+			this->isBeingTiled(task->getId())))
+		{
+			// we are already being processed, not need to do anything
+			delete task;
+			return;
+		}
+
+	{
+		// this makes sure that we don't modify the tasks while we are doing this traversal
+		std::lock_guard<std::mutex> lock(this->_tasks_mutex);
+		// add the task to the queue and write its individual task file
+		this->writeBackToIndividualTasksFile(task);
+	}
+
+	// now update the queue file
+	this->writeTasksToQueueFile();
+}
+
 const tissuestack::services::TissueStackTask * tissuestack::services::TissueStackTaskQueue::findTaskById(const std::string & id)
 {
 	std::lock_guard<std::mutex> lock(this->_tasks_mutex);
@@ -213,7 +236,7 @@ inline void tissuestack::services::TissueStackTaskQueue::buildTaskFromIndividual
 	 * 		for conversion: the out file location
 	 * 		for tiling: the following information all separated by |
 	 *			tiling directory, dimension names (separated by ,)
-	 *			zoom factors (separated by ,), color map name,
+	 *			zoom levels (separated by ,), color map name,
 	 *			square length and image format
 	 * 4. line:
 	 *		'slice number' determining present progress uniquely
@@ -296,8 +319,32 @@ inline void tissuestack::services::TissueStackTaskQueue::buildTaskFromIndividual
 				params);
 		} else if (type != tissuestack::services::TissueStackTaskType::CONVERSION)
 		{
-			// TODO: dissect params before we can go on
+			const std::vector<std::string> tokens =
+				tissuestack::utils::Misc::tokenizeString(
+					tissuestack::utils::Misc::eliminateWhitespaceAndUnwantedEscapeCharacters(params), ':');
+			if (tokens.size() != 6)
+			{
+				tissuestack::logging::TissueStackLogger::instance()->error(
+							"Task File %s needs 6 tokens in line 3 for tiling!\n", task_id.c_str());
+					return;
+			}
+			const std::vector<std::string> dimensions =
+					tissuestack::utils::Misc::tokenizeString(tokens[1], ',');
+			const std::vector<std::string> zoom_levels =
+					tissuestack::utils::Misc::tokenizeString(tokens[2], ',');
+			std::vector<unsigned short> numLevels;
+			for (auto z : zoom_levels)
+				numLevels.push_back(static_cast<unsigned short>(atoi(z.c_str())));
 
+			aNewTask = new tissuestack::services::TissueStackTilingTask(
+				task_id,
+				in_file,
+				tokens[0],
+				dimensions,
+				numLevels,
+				tokens[3],
+				static_cast<unsigned short>(atoi(tokens[4].c_str())),
+				tokens[5]);
 		}
 
 		if (aNewTask)

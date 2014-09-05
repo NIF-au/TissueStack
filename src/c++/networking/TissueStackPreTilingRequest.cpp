@@ -4,25 +4,71 @@
 
 const std::string tissuestack::networking::TissueStackPreTilingRequest::SERVICE = "TILE";
 
-tissuestack::networking::TissueStackPreTilingRequest::~TissueStackPreTilingRequest() {}
+tissuestack::networking::TissueStackPreTilingRequest::~TissueStackPreTilingRequest()
+{
+	if (this->_tiling)
+		delete this->_tiling;
+}
 
 tissuestack::networking::TissueStackPreTilingRequest::TissueStackPreTilingRequest(std::unordered_map<std::string, std::string> & request_parameters) {
+	// we need a valid session
+	if (tissuestack::services::TissueStackSecurityService::hasSessionExpired(
+		tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "session")))
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Invalid Session! Please Log In.");
+
 	const std::string in_file =
-		tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "in_file");
+		tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "file");
 	if (in_file.empty())
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 			"Mandatory parameter 'in_file' was not supplied!");
+	const std::string tile_dir =
+		tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters,"tile_dir");
+	if (tile_dir.empty())
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+			"Mandatory parameter 'tile_dir' was not supplied!");
 
-	//TODO: gather all the params from the request
+	const std::vector<std::string> dimensions =
+		tissuestack::utils::Misc::tokenizeString(
+			tissuestack::utils::Misc::eliminateWhitespaceAndUnwantedEscapeCharacters(
+				tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters,"dimensions")), ',');
+	const std::vector<std::string> zoom_levels =
+		tissuestack::utils::Misc::tokenizeString(
+			tissuestack::utils::Misc::eliminateWhitespaceAndUnwantedEscapeCharacters(
+					tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters,"zoom")), ',');
+	std::vector<unsigned short> numLevels;
+	for (auto z : zoom_levels)
+		numLevels.push_back(static_cast<unsigned short>(atoi(z.c_str())));
+	const std::string tile_size =
+		tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters,"tile_size");
+
+	// this will perform more stringent checks
 	this->_tiling =
 		new tissuestack::services::TissueStackTilingTask(
 				tissuestack::services::TissueStackTaskQueue::instance()->generateTaskId(),
 			in_file,
-			"");
+			tile_dir,
+			dimensions,
+			numLevels,
+			tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters,"color_map"),
+			tile_size.empty() ? 256 : static_cast<unsigned int>(atoi(tile_size.c_str())),
+			tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters,"image_type"));
 
 	// we have passed all preliminary checks => assign us the new type
 	this->setType(tissuestack::common::Request::Type::TS_TILING);
 
+}
+const tissuestack::services::TissueStackTilingTask *
+	tissuestack::networking::TissueStackPreTilingRequest::getTask(
+			const bool nullOutPointer)
+{
+	if (!nullOutPointer)
+		return this->_tiling;
+
+	const tissuestack::services::TissueStackTilingTask * cpy = this->_tiling;
+	this->_tiling = nullptr;
+
+	return cpy;
 }
 
 const bool tissuestack::networking::TissueStackPreTilingRequest::isObsolete() const
