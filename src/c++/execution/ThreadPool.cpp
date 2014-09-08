@@ -3,7 +3,7 @@
 tissuestack::execution::ThreadPool::ThreadPool(short number_of_threads) :
 	_number_of_threads(number_of_threads)
 {
-	if (number_of_threads <=1)
+	if (number_of_threads <1)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "A Thread Pool with less than 1 threads is not of much use!");
 	this->_workers = new tissuestack::execution::WorkerThread*[number_of_threads];
 	tissuestack::logging::TissueStackLogger::instance()->info("Thread Pool Size: %u\n", number_of_threads);
@@ -65,7 +65,11 @@ void tissuestack::execution::ThreadPool::init()
 					std::hash<std::thread::id>()(std::this_thread::get_id()));
 			assigned_worker->stop();
 		};
+	this->init0(wait_loop);
+}
 
+void tissuestack::execution::ThreadPool::init0(std::function<void (tissuestack::execution::WorkerThread * assigned_worker)> & wait_loop)
+{
 	// start up the threads and put them in wait mode
 	int i=0;
 	while (i < this->_number_of_threads)

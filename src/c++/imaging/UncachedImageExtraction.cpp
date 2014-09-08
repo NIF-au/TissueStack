@@ -205,8 +205,9 @@ const std::array<unsigned long long int, 3> tissuestack::imaging::UncachedImageE
 }
 
 const Image * tissuestack::imaging::UncachedImageExtraction::extractImage(
-						const tissuestack::imaging::TissueStackRawData * image,
-						const tissuestack::networking::TissueStackImageRequest * request) const
+	const tissuestack::common::ProcessingStrategy * processing_strategy,
+	const tissuestack::imaging::TissueStackRawData * image,
+	const tissuestack::networking::TissueStackImageRequest * request) const
 {
 	Image * img =
 		this->extractImageOnly(
@@ -216,8 +217,9 @@ const Image * tissuestack::imaging::UncachedImageExtraction::extractImage(
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Could not create Image");
 
-	// timeout check
-	if (request->hasExpired())
+
+	// timeout/shutdown check
+	if (request->hasExpired() || processing_strategy->isStopFlagRaised())
 	{
 		DestroyImage(img);
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackObsoleteRequestException,

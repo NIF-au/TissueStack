@@ -17,10 +17,13 @@ namespace tissuestack
 		class SimpleCacheHeuristics; // forward declarations
 		template <typename CachingStrategy>
 		class ImageExtraction;
+		class PreTiler;
+		class RawConverter;
 	}
 	namespace services
 	{
-	 class TissueStackServicesDelegator; // forward declaration
+	 class TissueStackTask; // forward declarations
+	 class TissueStackServicesDelegator;
 	}
 	namespace execution
 	{
@@ -43,13 +46,14 @@ namespace tissuestack
 				explicit ThreadPool(short number_of_threads);
 				~ThreadPool();
 				short getNumberOfThreads() const;
-				void init();
-				void process(const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality);
-				void addTask(const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality);
-				const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * removeTask();
-				bool hasNoTasksQueued();
+				virtual void init();
+				virtual void process(const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality);
+				virtual void addTask(const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality);
+				virtual const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * removeTask();
+				virtual bool hasNoTasksQueued();
 				void stop();
-
+			protected:
+				void init0(std::function<void (tissuestack::execution::WorkerThread * assigned_worker)> & wait_loop);
 			private:
 				std::mutex _task_queue_mutex;
 				std::mutex _conditional_mutex;
@@ -57,6 +61,22 @@ namespace tissuestack
 				short _number_of_threads = 0;
 				WorkerThread ** _workers = nullptr;
 				std::queue<const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> *> _work_load;
+		};
+
+		class TissueStackTaskQueueExecutor: public ThreadPool
+		{
+			public:
+				TissueStackTaskQueueExecutor & operator=(const TissueStackTaskQueueExecutor&) = delete;
+				TissueStackTaskQueueExecutor(const TissueStackTaskQueueExecutor&) = delete;
+				explicit TissueStackTaskQueueExecutor();
+				void init();
+				void process(const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality);
+				void addTask(const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality);
+				const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * removeTask();
+				bool hasNoTasksQueued();
+			private:
+				std::mutex _conditional_mutex;
+				std::condition_variable _notification_condition;
 		};
 
 		class SimpleSequentialExecution: public tissuestack::common::ProcessingStrategy
@@ -92,13 +112,21 @@ namespace tissuestack
 				TissueStackOnlineExecutor & operator=(const TissueStackOnlineExecutor&) = delete;
 				TissueStackOnlineExecutor(const TissueStackOnlineExecutor&) = delete;
 				static TissueStackOnlineExecutor * instance();
-				void execute(std::string request, int client_descriptor);
+				void execute(
+					const tissuestack::common::ProcessingStrategy * processing_strategy,
+					std::string request,
+					int client_descriptor);
+				void executeTask(
+					const tissuestack::common::ProcessingStrategy * processing_strategy,
+					const tissuestack::services::TissueStackTask * task);
 				~TissueStackOnlineExecutor();
 			private:
 				TissueStackOnlineExecutor();
 				tissuestack::common::RequestFilter ** _filters = nullptr;
 				tissuestack::imaging::ImageExtraction<tissuestack::imaging::SimpleCacheHeuristics> * _imageExtractor = nullptr;
 				tissuestack::services::TissueStackServicesDelegator * _serviesDelegator = nullptr;
+				tissuestack::imaging::RawConverter * _tissueStackRawConverter = nullptr;
+				tissuestack::imaging::PreTiler * _tissueStackPreTiler = nullptr;
 				static TissueStackOnlineExecutor * _instance;
 
 		};

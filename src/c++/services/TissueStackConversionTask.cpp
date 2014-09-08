@@ -21,7 +21,7 @@ tissuestack::services::TissueStackConversionTask::TissueStackConversionTask(
 			this->_output_file = input_file + ".raw";
 		else
 			this->_output_file =
-				input_file.substr(0, input_file.length()-pos) + ".raw";
+				input_file.substr(0, pos) + ".raw";
 	} else
 	{
 		// if the file does not end in .raw, we'll append it
@@ -30,6 +30,12 @@ tissuestack::services::TissueStackConversionTask::TissueStackConversionTask(
 		else
 			this->_output_file = output_file;
 	}
+
+	// set total number of slices we have to work off
+	unsigned long long int totalSlices = 0;
+	for (auto d : this->getInputImageData()->getDimensionOrder())
+		totalSlices += this->getInputImageData()->getDimension(d.at(0))->getNumberOfSlices();
+	this->setTotalSlices(totalSlices);
 }
 
 tissuestack::services::TissueStackConversionTask::~TissueStackConversionTask() {}

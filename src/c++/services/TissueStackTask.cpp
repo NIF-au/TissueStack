@@ -57,9 +57,24 @@ const unsigned long long int tissuestack::services::TissueStackTask::getTotalSli
 	return this->_total_slices;
 }
 
+void tissuestack::services::TissueStackTask::setStatus(const tissuestack::services::TissueStackTaskStatus status)
+{
+	this->_status = status;
+}
+
+
 void tissuestack::services::TissueStackTask::setSlicesDone(const unsigned long long int slicesDone)
 {
 	this->_slices_done = slicesDone;
+}
+
+const bool tissuestack::services::TissueStackTask::incrementSlicesDone()
+{
+	++this->_slices_done;
+	if (this->_slices_done >= this->_total_slices)
+		return true;
+
+	return false;
 }
 
 void tissuestack::services::TissueStackTask::setTotalSlices(const unsigned long long int totalSlices)

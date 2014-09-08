@@ -88,7 +88,8 @@ namespace tissuestack
 			QUEUED = 0,
 			IN_PROCESS = 1,
 			FINISHED = 2,
-			CANCELLED = 3
+			CANCELLED = 3,
+			ERRONEOUS = 4
 		};
 
 		enum TissueStackTaskType
@@ -109,16 +110,19 @@ namespace tissuestack
 				const TissueStackTaskStatus getStatus() const;
 				const unsigned long long int getSlicesDone() const;
 				const unsigned long long int getTotalSlices() const;
-
+				void setStatus(const TissueStackTaskStatus status);
 				virtual const TissueStackTaskType getType() const = 0;
 				virtual void dumpTaskToDebugLog() const = 0;
 				virtual ~TissueStackTask();
-
 				const bool isInputDataRaw() const;
 				const tissuestack::imaging::TissueStackImageData * getInputImageData() const;
 			protected:
+				friend class TissueStackTaskQueue;
 				void setSlicesDone(const unsigned long long int slicesDone);
 				void setTotalSlices(const unsigned long long int totalSlices);
+				friend class tissuestack::imaging::PreTiler;
+				friend class tissuestack::imaging::RawConverter;
+				const bool incrementSlicesDone();
 			private:
 				const std::string _id;
 				const std::string _input_file;
@@ -185,11 +189,22 @@ namespace tissuestack
 				const bool isBeingTiled(const std::string in_file);
 				const bool isBeingConverted(const std::string in_file);
 				const TissueStackTask * findTaskById(const std::string & id);
+				const TissueStackTask * getNextTask(const bool set_processing_flag = true);
+				void flagTaskAsFinished(const std::string & task_id, const bool was_cancelled = false);
+				void flagTaskAsErroneous(const std::string & task_id);
+				void persistTaskProgress(const std::string & task_id);
 				const std::string generateTaskId();
 			private:
 				TissueStackTaskQueue();
 				inline void buildTaskFromIndividualTaskFile(const std::string & task_file);
 				inline void writeBackToIndividualTasksFile(const tissuestack::services::TissueStackTask * task);
+				inline void flagTask(
+						const tissuestack::services::TissueStackTask * hit,
+						const tissuestack::services::TissueStackTaskStatus status);
+				inline void flagUnaddedTask(
+						const tissuestack::services::TissueStackTask * hit,
+						const tissuestack::services::TissueStackTaskStatus status);
+				inline void eraseTask(const std::string & task_id);
 				const std::vector<std::string> getTasksFromQueueFile();
 				void writeTasksToQueueFile();
 

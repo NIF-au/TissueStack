@@ -20,6 +20,10 @@ namespace tissuestack
 		class AtlasInfo;
 		class DataSetDataProvider;
 	}
+	namespace services
+	{
+		class TissueStackTask; // forward declaration
+	}
 	namespace imaging
 	{
 		/*
@@ -386,6 +390,7 @@ namespace tissuestack
 					const tissuestack::networking::TissueStackQueryRequest * request) const;
 
 				const Image * extractImage(
+					const tissuestack::common::ProcessingStrategy * processing_strategy,
 					const TissueStackRawData * image,
 					const tissuestack::networking::TissueStackImageRequest * request) const;
 
@@ -452,6 +457,7 @@ namespace tissuestack
 				~SimpleCacheHeuristics();
 
 				const Image * extractImage(
+					const tissuestack::common::ProcessingStrategy * processing_strategy,
 					const TissueStackRawData * image,
 					const tissuestack::networking::TissueStackImageRequest * request) const;
 
@@ -578,6 +584,7 @@ namespace tissuestack
 				}
 
 				void processImageRequest(
+						const tissuestack::common::ProcessingStrategy * processing_strategy,
 						const tissuestack::networking::TissueStackImageRequest * request,
 						const int file_descriptor)
 				{
@@ -619,11 +626,12 @@ namespace tissuestack
 					Image * img =
 						const_cast<Image *>(
 						this->_caching_strategy->extractImage(
+								processing_strategy,
 								static_cast<const tissuestack::imaging::TissueStackRawData *>(imageData),
 								request));
 
-					// timeout check
-					if (request->hasExpired())
+					// timeout/shutdown check
+					if (request->hasExpired() || processing_strategy->isStopFlagRaised())
 					{
 						DestroyImage(img);
 						THROW_TS_EXCEPTION(tissuestack::common::TissueStackObsoleteRequestException,
@@ -673,6 +681,31 @@ namespace tissuestack
 			private:
 			 	std::mutex _dataset_addition_mutex;
 				CachingStrategy * _caching_strategy = nullptr;
+		};
+
+		class RawConverter final
+		{
+			public:
+				RawConverter & operator=(const RawConverter&) = delete;
+				RawConverter(const RawConverter&) = delete;
+				RawConverter();
+				void convert(
+					const tissuestack::common::ProcessingStrategy * processing_strategy,
+					const tissuestack::services::TissueStackConversionTask * conversion_task);
+		};
+
+		class PreTiler final
+		{
+			public:
+				PreTiler & operator=(const PreTiler&) = delete;
+				PreTiler(const PreTiler&) = delete;
+				PreTiler();
+				~PreTiler();
+				void preTile(
+					const tissuestack::common::ProcessingStrategy * processing_strategy,
+					const tissuestack::services::TissueStackTilingTask * pre_tiling_task);
+			private:
+				UncachedImageExtraction * _extractor = nullptr;
 		};
 	}
 }

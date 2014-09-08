@@ -1,4 +1,4 @@
-NAME			=	TissueStack Image Server
+NAME			=	TissueStack Server
 
 SRCS_COMMON		=	$(wildcard common/*.cpp)
 SRCS_NETWORKING	=	$(wildcard networking/*.cpp)
@@ -16,7 +16,7 @@ LIB_PATH		=
 
 LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid
 
-EXE_NAME		=	TissueStackImageServer
+EXE_NAME		=	TissueStackServer
 
 INSTALL_DIR		=	/tmp
 

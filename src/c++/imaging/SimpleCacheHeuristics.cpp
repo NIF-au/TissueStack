@@ -31,10 +31,11 @@ const std::array<unsigned long long int, 3> tissuestack::imaging::SimpleCacheHeu
 }
 
 const Image *  tissuestack::imaging::SimpleCacheHeuristics::extractImage(
+	const tissuestack::common::ProcessingStrategy * processing_strategy,
 	const TissueStackRawData * image,
 	const tissuestack::networking::TissueStackImageRequest * request) const
 {
 	// for now just delegate to uncached extraction
 	// TODO: implement cache
-	return this->_uncached_extraction->extractImage(image, request);
+	return this->_uncached_extraction->extractImage(processing_strategy, image, request);
 }

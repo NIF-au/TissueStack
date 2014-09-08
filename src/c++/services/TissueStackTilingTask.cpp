@@ -19,13 +19,10 @@ tissuestack::services::TissueStackTilingTask::TissueStackTilingTask(
 			"Tiling needs raw format data");
 
 	// check tile directory
-	if (!tissuestack::utils::System::directoryExists(tile_dir))
-	{
-		// try to create it, if we fail we'll throw an exception
-		if (!tissuestack::utils::System::createDirectory(tile_dir, 755))
+	if (!tissuestack::utils::System::directoryExists(tile_dir) &&
+		!tissuestack::utils::System::createDirectory(tile_dir, 0755))
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Could not create tile directory!");
-	}
 	this->_tile_dir = tile_dir;
 
 	// check color map
@@ -66,7 +63,18 @@ tissuestack::services::TissueStackTilingTask::TissueStackTilingTask(
 	if (zoom_levels.empty())
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"We habe to have at least one zoom level for tiling!");
+	for (auto z : zoom_levels)
+		if (z > 25)
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"We only allow zoom level between 0 and 25 for tiling!");
+
 	this->_zoom_levels = zoom_levels;
+
+	// set total number of slices we have to work off
+	unsigned long long int totalSlices = 0;
+	for (auto d : dimensions)
+		totalSlices += this->getInputImageData()->getDimension(d.at(0))->getNumberOfSlices();
+	this->setTotalSlices(totalSlices);
 }
 
 tissuestack::services::TissueStackTilingTask::~TissueStackTilingTask() {}

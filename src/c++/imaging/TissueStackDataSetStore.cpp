@@ -4,8 +4,10 @@
 
 tissuestack::imaging::TissueStackDataSetStore::TissueStackDataSetStore()
 {
-	if (!tissuestack::utils::System::directoryExists(DATASET_PATH))
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Data Store Directory does NOT exist!");
+	if (!tissuestack::utils::System::directoryExists(DATASET_PATH) &&
+		!tissuestack::utils::System::createDirectory(DATASET_PATH, 0755))
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Could not create data store directory!");
 
 	const std::vector<std::string> fileList = tissuestack::utils::System::getFilesInDirectory(DATASET_PATH);
 	for (std::string f : fileList)

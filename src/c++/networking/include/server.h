@@ -102,7 +102,7 @@ namespace tissuestack
     				  {
     					try
     					{
-    						this->_executor->execute(request_data, request_descriptor);
+    						this->_executor->execute(_this, request_data, request_descriptor);
     						this->removeDescriptorFromList(request_descriptor, true);
     					}  catch (std::exception& bad)
     					{
@@ -200,7 +200,7 @@ namespace tissuestack
     	public:
 			static const unsigned short PORT = 4242;
 			static const unsigned short MAX_CONNECTIONS_ALLOWED = 128;
-			static const unsigned short SHUTDOWN_TIMEOUT_IN_SECONDS = 5;
+			static const unsigned short SHUTDOWN_TIMEOUT_IN_SECONDS = 10;
 
 			Server & operator=(const Server&) = delete;
 			Server(const Server&) = delete;
@@ -325,7 +325,8 @@ namespace tissuestack
 					tissuestack::imaging::TissueStackDataSetStore::instance()->purgeInstance();
 					tissuestack::imaging::TissueStackLabelLookupStore::instance()->purgeInstance();
 					tissuestack::imaging::TissueStackColorMapStore::instance()->purgeInstance();
-					tissuestack::services::TissueStackTaskQueue::instance()->purgeInstance();
+					if (tissuestack::services::TissueStackTaskQueue::instance())
+						tissuestack::services::TissueStackTaskQueue::instance()->purgeInstance();
 				} catch (...)
 				{
 					// can be safely ignored

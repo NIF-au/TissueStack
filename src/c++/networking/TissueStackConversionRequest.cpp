@@ -19,16 +19,16 @@ tissuestack::networking::TissueStackConversionRequest::TissueStackConversionRequ
 				"Invalid Session! Please Log In.");
 
 	const std::string in_file =
-		tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "in_file");
+		tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "file");
 	if (in_file.empty())
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
-			"Mandatory parameter 'in_file' was not supplied!");
+			"Mandatory parameter 'file' was not supplied!");
 
 	this->_conversion =
 		new tissuestack::services::TissueStackConversionTask(
 				tissuestack::services::TissueStackTaskQueue::instance()->generateTaskId(),
 			in_file,
-			tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "out_file"));
+			tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "new_raw_file"));
 
 	// we have passed all preliminary checks => assign us the new type
 	this->setType(tissuestack::common::Request::Type::TS_CONVERSION);

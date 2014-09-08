@@ -3,18 +3,22 @@
 
 tissuestack::imaging::TissueStackLabelLookupStore::TissueStackLabelLookupStore()
 {
-	if (!tissuestack::utils::System::directoryExists(LABEL_LOOKUP_PATH))
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Label Lookup Directory does NOT exist!");
+	if (!tissuestack::utils::System::directoryExists(LABEL_LOOKUP_PATH) &&
+		!tissuestack::utils::System::createDirectory(LABEL_LOOKUP_PATH, 0755))
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Could not create label lookup directory!");
 
 	const std::vector<std::string> fileList = tissuestack::utils::System::getFilesInDirectory(LABEL_LOOKUP_PATH);
 	for (std::string f : fileList)
-	try
 	{
-		this->addOrReplaceLabelLookup(tissuestack::imaging::TissueStackLabelLookup::fromFile(f.c_str()));
-	} catch (std::exception & bad)
-	{
-		tissuestack::logging::TissueStackLogger::instance()->error(
+		try
+		{
+			this->addOrReplaceLabelLookup(tissuestack::imaging::TissueStackLabelLookup::fromFile(f.c_str()));
+		} catch (std::exception & bad)
+		{
+			tissuestack::logging::TissueStackLogger::instance()->error(
 				"Could not load lookup file '%s' for the following reason:\n%s\n", f.c_str(), bad.what());
+		}
 	}
 }
 

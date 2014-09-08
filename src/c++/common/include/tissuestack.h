@@ -91,6 +91,7 @@ namespace tissuestack
 			protected:
 				ProcessingStrategy();
 				void setRunningFlag(bool isRunning);
+				void setOfflineStrategyFlag();
 				void raiseStopFlag();
 				void resetStopFlag();
 			public:
@@ -102,9 +103,11 @@ namespace tissuestack
 				void virtual stop() = 0;
 				bool isRunning() const;
 				bool isStopFlagRaised() const;
+				bool isOnlineStrategy() const;
 			private:
 				bool _stopFlagRaised = false;
 				bool _isRunning = false;
+				bool _isOnline = true;
 		};
 
 		template<typename ProcessorImplementation>
@@ -164,6 +167,7 @@ namespace tissuestack
 				void stop();
 			private:
 				ProcessingStrategy	* _default_strategy;
+				ProcessingStrategy * _task_queue_executor;
 		};
 
 		class RequestFilter

@@ -3,9 +3,10 @@
 tissuestack::logging::TissueStackLogger::TissueStackLogger() : _log_path("///opt///tissuestack///logs")
 {
 	// check if path exists and create it if necessary
-	if (!tissuestack::utils::System::directoryExists(this->_log_path))
-		if (!tissuestack::utils::System::createDirectory(this->_log_path, 0775))
-			THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException, "Unable to create the log path!");
+	if (!tissuestack::utils::System::directoryExists(this->_log_path) &&
+		!tissuestack::utils::System::createDirectory(this->_log_path, 0775))
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException,
+				"Unable to create the log path!");
 
 	// create and open files
 	this->_info_log = fopen(std::string(this->_log_path + "/info.log").c_str(), "a");
@@ -32,6 +33,8 @@ void tissuestack::logging::TissueStackLogger::log(FILE * log_file, const char * 
 	fprintf(log_file, "[%s]\t ", timestamp.c_str());
 
 	vfprintf(log_file, log_args, args);
+	if (log_args && strlen(log_args) > 0 && log_args[strlen(log_args)-1] != '\n')
+		fprintf(log_file, "\n");
 	fflush(log_file);
 }
 

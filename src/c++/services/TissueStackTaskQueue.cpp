@@ -6,42 +6,56 @@
 
 tissuestack::services::TissueStackTaskQueue::TissueStackTaskQueue()
 {
-	if (!tissuestack::utils::System::directoryExists(TASKS_PATH))
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Tasks Directory does NOT exist!");
+
+	if (!tissuestack::utils::System::directoryExists(TASKS_PATH) &&
+		!tissuestack::utils::System::createDirectory(TASKS_PATH, 0755))
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Could not create tasks directory!");
 
 	// read in all task files listed in the queue file
 	const std::vector<std::string> tasksIds = this->getTasksFromQueueFile();
 
 	// walk through the list and build the task objects based on the task file content
 	// this makes sure that we don't modify the tasks while we are populating
-	std::lock_guard<std::mutex> lock(this->_tasks_mutex);
-	for (auto id : tasksIds)
-		this->buildTaskFromIndividualTaskFile(id);
+	{
+		std::lock_guard<std::mutex> lock(this->_tasks_mutex);
+		for (auto id : tasksIds)
+			this->buildTaskFromIndividualTaskFile(id);
+	}
+
+	// because things might have changed already (unsuccessful imports) we write back
+	this->writeTasksToQueueFile();
 }
 
 tissuestack::services::TissueStackTaskQueue::~TissueStackTaskQueue() {}
 
 void tissuestack::services::TissueStackTaskQueue::purgeInstance()
 {
-	// before we destroy everything, persist it to disk
-	this->writeTasksToQueueFile();
-
-	// this makes sure that we don't modify the tasks while we are doing this traversal
-	std::lock_guard<std::mutex> lock(this->_tasks_mutex);
-
-	// walk through entries, persist their state and clean them up
-	for (auto task : this->_tasks)
+	if (tissuestack::services::TissueStackTaskQueue::_instance)
 	{
-		if (task == nullptr)
-			continue;
 
-		this->writeBackToIndividualTasksFile(task);
-		delete task;
+		// before we destroy everything, persist it to disk
+		this->writeTasksToQueueFile();
+
+		// this makes sure that we don't modify the tasks while we are doing this traversal
+		{
+			std::lock_guard<std::mutex> lock(this->_tasks_mutex);
+
+			// walk through entries, persist their state and clean them up
+			for (auto task : this->_tasks)
+			{
+				if (task == nullptr)
+					continue;
+
+				this->writeBackToIndividualTasksFile(task);
+				delete task;
+			}
+			this->_tasks.clear();
+		}
+
+		delete tissuestack::services::TissueStackTaskQueue::_instance;
+		tissuestack::services::TissueStackTaskQueue::_instance = nullptr;
 	}
-	this->_tasks.clear();
-
-	delete tissuestack::services::TissueStackTaskQueue::_instance;
-	tissuestack::services::TissueStackTaskQueue::_instance = nullptr;
 }
 
 tissuestack::services::TissueStackTaskQueue * tissuestack::services::TissueStackTaskQueue::instance()
@@ -52,7 +66,35 @@ tissuestack::services::TissueStackTaskQueue * tissuestack::services::TissueStack
 	return tissuestack::services::TissueStackTaskQueue::_instance;
 }
 
-void tissuestack::services::TissueStackTaskQueue::writeBackToIndividualTasksFile(const tissuestack::services::TissueStackTask * task)
+void tissuestack::services::TissueStackTaskQueue::persistTaskProgress(const std::string & task_id)
+{
+	const tissuestack::services::TissueStackTask * hit =
+		this->findTaskById(task_id);
+	if (hit == nullptr)
+		return;
+
+	std::lock_guard<std::mutex> lock(this->_tasks_mutex);
+	this->writeBackToIndividualTasksFile(hit);
+}
+
+inline void tissuestack::services::TissueStackTaskQueue::eraseTask(const std::string & task_id)
+{
+	unsigned int i = 0;
+	for (auto task : this->_tasks)
+	{
+		if (task->getId().compare(task_id) == 0)
+		{
+			delete task;
+			break;
+		}
+
+		i++;
+	}
+	if (i < this->_tasks.size())
+		this->_tasks.erase(this->_tasks.begin()+i);
+}
+
+inline void tissuestack::services::TissueStackTaskQueue::writeBackToIndividualTasksFile(const tissuestack::services::TissueStackTask * task)
 {
 	if (task == nullptr) return;
 
@@ -88,7 +130,65 @@ void tissuestack::services::TissueStackTaskQueue::writeBackToIndividualTasksFile
 		tissuestack::logging::TissueStackLogger::instance()->error(
 			"Could not write into individual task file %s\n", task->getId().c_str());
 	close(fd);
+
+	// rename if we are done or cancelled
+	if (task->getStatus() == tissuestack::services::TissueStackTaskStatus::CANCELLED)
+		rename(taskFile.c_str(), (taskFile + ".cancelled").c_str());
+	else if (task->getStatus() == tissuestack::services::TissueStackTaskStatus::FINISHED)
+		rename(taskFile.c_str(), (taskFile + ".done").c_str());
+	else if (task->getStatus() == tissuestack::services::TissueStackTaskStatus::ERRONEOUS)
+		rename(taskFile.c_str(), (taskFile + ".error").c_str());
 }
+
+void tissuestack::services::TissueStackTaskQueue::flagTaskAsFinished(const std::string & task_id, const bool was_cancelled)
+{
+	const tissuestack::services::TissueStackTask * hit =
+		this->findTaskById(task_id);
+
+	if (hit == nullptr) return;
+
+	this->flagTask(hit,
+		was_cancelled ? tissuestack::services::TissueStackTaskStatus::CANCELLED :
+			tissuestack::services::TissueStackTaskStatus::FINISHED);
+}
+
+void tissuestack::services::TissueStackTaskQueue::flagTaskAsErroneous(const std::string & task_id)
+{
+	const tissuestack::services::TissueStackTask * hit =
+		this->findTaskById(task_id);
+
+	if (hit == nullptr) return;
+	this->flagTask(hit, tissuestack::services::TissueStackTaskStatus::ERRONEOUS);
+}
+
+inline void tissuestack::services::TissueStackTaskQueue::flagTask(
+		const tissuestack::services::TissueStackTask * hit,
+		const tissuestack::services::TissueStackTaskStatus status)
+{
+	if (hit == nullptr) return;
+
+	{
+		std::lock_guard<std::mutex> lock(this->_tasks_mutex);
+
+		const_cast<tissuestack::services::TissueStackTask *>(hit)->setStatus(status);
+		this->writeBackToIndividualTasksFile(hit);
+		this->eraseTask(hit->getId());
+	}
+
+	this->writeTasksToQueueFile();
+}
+
+inline void tissuestack::services::TissueStackTaskQueue::flagUnaddedTask(
+		const tissuestack::services::TissueStackTask * hit,
+		const tissuestack::services::TissueStackTaskStatus status)
+{
+	if (hit == nullptr) return;
+
+	const_cast<tissuestack::services::TissueStackTask *>(hit)->setStatus(status);
+	this->writeBackToIndividualTasksFile(hit);
+	delete hit;
+}
+
 
 void tissuestack::services::TissueStackTaskQueue::writeTasksToQueueFile()
 {
@@ -177,6 +277,7 @@ void tissuestack::services::TissueStackTaskQueue::addTask(const tissuestack::ser
 			this->isBeingTiled(task->getId())))
 		{
 			// we are already being processed, not need to do anything
+			tissuestack::logging::TissueStackLogger::instance()->debug("WE ARE BEING TILED/CONVERTED !!!\n");
 			delete task;
 			return;
 		}
@@ -184,6 +285,8 @@ void tissuestack::services::TissueStackTaskQueue::addTask(const tissuestack::ser
 	{
 		// this makes sure that we don't modify the tasks while we are doing this traversal
 		std::lock_guard<std::mutex> lock(this->_tasks_mutex);
+		this->_tasks.push_back(task);
+
 		// add the task to the queue and write its individual task file
 		this->writeBackToIndividualTasksFile(task);
 	}
@@ -201,6 +304,19 @@ const tissuestack::services::TissueStackTask * tissuestack::services::TissueStac
 			return t;
 
 	return nullptr;
+}
+
+const tissuestack::services::TissueStackTask * tissuestack::services::TissueStackTaskQueue::getNextTask(const bool set_processing_flag)
+{
+	std::lock_guard<std::mutex> lock(this->_tasks_mutex);
+
+	if (this->_tasks.empty()) return nullptr;
+
+	if (set_processing_flag)
+		const_cast<tissuestack::services::TissueStackTask *>(this->_tasks[0])->setStatus(
+			tissuestack::services::TissueStackTaskStatus::IN_PROCESS);
+
+	return this->_tasks[0];
 }
 
 const bool tissuestack::services::TissueStackTaskQueue::isBeingConverted(const std::string in_file)
@@ -283,22 +399,9 @@ inline void tissuestack::services::TissueStackTaskQueue::buildTaskFromIndividual
 		lineNumber++;
 	}
 
-	// some checks
-	if (type != tissuestack::services::TissueStackTaskType::CONVERSION ||
+	// preliminary check
+	if (type != tissuestack::services::TissueStackTaskType::CONVERSION &&
 			type != tissuestack::services::TissueStackTaskType::TILING)
-	{
-		tissuestack::logging::TissueStackLogger::instance()->error(
-				"Task File %s is neither conversion, nor tiling!\n", task_id.c_str());
-		return;
-	}
-
-	if (sliceProgress > totalSlices) // we cannot have more progress than total work...
-	{
-		tissuestack::logging::TissueStackLogger::instance()->error(
-				"Task File %s is neither conversion, nor tiling!\n", task_id.c_str());
-		return;
-	}
-	if (sliceProgress == totalSlices) // we are finished and need not be added any more...
 	{
 		tissuestack::logging::TissueStackLogger::instance()->error(
 				"Task File %s is neither conversion, nor tiling!\n", task_id.c_str());
@@ -311,13 +414,13 @@ inline void tissuestack::services::TissueStackTaskQueue::buildTaskFromIndividual
 	{
 		tissuestack::services::TissueStackTask * aNewTask = nullptr;
 
-		if (type != tissuestack::services::TissueStackTaskType::CONVERSION)
+		if (type == tissuestack::services::TissueStackTaskType::CONVERSION)
 		{
 			aNewTask = new tissuestack::services::TissueStackConversionTask(
 				task_id,
 				in_file,
 				params);
-		} else if (type != tissuestack::services::TissueStackTaskType::CONVERSION)
+		} else if (type == tissuestack::services::TissueStackTaskType::TILING)
 		{
 			const std::vector<std::string> tokens =
 				tissuestack::utils::Misc::tokenizeString(
@@ -347,8 +450,28 @@ inline void tissuestack::services::TissueStackTaskQueue::buildTaskFromIndividual
 				tokens[5]);
 		}
 
+		// some more checks for the progress/total figures
+		if (sliceProgress > totalSlices) // we cannot have more progress than total work...
+		{
+			tissuestack::logging::TissueStackLogger::instance()->error(
+					"Task File %s: the progress is greater than the total!", task_id.c_str());
+			this->flagUnaddedTask(aNewTask, tissuestack::services::TissueStackTaskStatus::ERRONEOUS);
+			return;
+		}
+		if (sliceProgress == totalSlices) // we are finished and need not be added any more...
+		{
+			tissuestack::logging::TissueStackLogger::instance()->error(
+					"Task File %s: we have already reached 100% !", task_id.c_str());
+			this->flagUnaddedTask(aNewTask, tissuestack::services::TissueStackTaskStatus::FINISHED);
+			return;
+		}
+
 		if (aNewTask)
+		{
+			aNewTask->setSlicesDone(sliceProgress);
+			aNewTask->setTotalSlices(totalSlices);
 			this->_tasks.push_back(aNewTask);
+		}
 	} catch(std::exception & bad)
 	{
 		tissuestack::logging::TissueStackLogger::instance()->error(

@@ -2,7 +2,7 @@
 #include "imaging.h"
 #include "services.h"
 
-const std::string tissuestack::networking::TissueStackPreTilingRequest::SERVICE = "TILE";
+const std::string tissuestack::networking::TissueStackPreTilingRequest::SERVICE = "TILING";
 
 tissuestack::networking::TissueStackPreTilingRequest::~TissueStackPreTilingRequest()
 {
@@ -21,7 +21,7 @@ tissuestack::networking::TissueStackPreTilingRequest::TissueStackPreTilingReques
 		tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "file");
 	if (in_file.empty())
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
-			"Mandatory parameter 'in_file' was not supplied!");
+			"Mandatory parameter 'file' was not supplied!");
 	const std::string tile_dir =
 		tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters,"tile_dir");
 	if (tile_dir.empty())
@@ -42,6 +42,11 @@ tissuestack::networking::TissueStackPreTilingRequest::TissueStackPreTilingReques
 	const std::string tile_size =
 		tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters,"tile_size");
 
+	const std::string colormap =
+		tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters,"color_map");
+	const std::string image_format =
+		tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters,"image_type");
+
 	// this will perform more stringent checks
 	this->_tiling =
 		new tissuestack::services::TissueStackTilingTask(
@@ -50,9 +55,9 @@ tissuestack::networking::TissueStackPreTilingRequest::TissueStackPreTilingReques
 			tile_dir,
 			dimensions,
 			numLevels,
-			tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters,"color_map"),
+			colormap.empty() ? "grey" : colormap,
 			tile_size.empty() ? 256 : static_cast<unsigned int>(atoi(tile_size.c_str())),
-			tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters,"image_type"));
+			image_format.empty() ? "png" : image_format);
 
 	// we have passed all preliminary checks => assign us the new type
 	this->setType(tissuestack::common::Request::Type::TS_TILING);
