@@ -4,6 +4,7 @@ std::unordered_map<std::string, std::string> tissuestack::networking::HttpReques
 {
 		{"%20", " "}, // blank
 		{"%26", "&"}, // &
+		{"%27", "'"}, // '
 		{"%25", "%"}, // %
 		{"%3D", "="}, // =
 		{"%2B", "+"}, // +
@@ -139,6 +140,7 @@ inline void tissuestack::networking::HttpRequest::partiallyURIDecodeString(std::
 	std::ostringstream in;
 	int cursor = 0;
 	int length = potentially_uri_encoded_string.length();
+
 	while (cursor < length)
 	{
 		if (potentially_uri_encoded_string[cursor] == '%' && cursor+2 < length) // encountered potential uri encodeing

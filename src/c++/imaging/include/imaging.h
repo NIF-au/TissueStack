@@ -251,6 +251,7 @@ namespace tissuestack
 				explicit TissueStackImageData(const std::string & filename);
 				TissueStackImageData(const std::string & filename, FORMAT format);
 				void setDataBaseId(const unsigned long long int id);
+				void setDescription(const std::string description);
 				const std::unordered_map<char, const TissueStackDataDimension *> getDimensionMap() const;
 				void setFormat(int original_format);
 				void addDimension(TissueStackDataDimension * dimension);

@@ -127,7 +127,9 @@ namespace tissuestack
 				static void findAssociatedDataSets(
 						const unsigned long long int dataset_id, tissuestack::imaging::TissueStackImageData * imageData);
 				static const bool setIsTiledFlag(const unsigned long long int id, const bool is_tiled);
-				static const unsigned short addDataSet(const tissuestack::imaging::TissueStackImageData * dataSet);
+				static const unsigned short addDataSet(
+					const tissuestack::imaging::TissueStackImageData * dataSet,
+					const std::string & description);
 				static const bool eraseDataSet(const unsigned long long int id);
 			private:
 				static const std::vector<const tissuestack::imaging::TissueStackImageData *> findResults(

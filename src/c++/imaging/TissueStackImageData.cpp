@@ -550,6 +550,11 @@ const std::string tissuestack::imaging::TissueStackImageData::getDescription() c
 	return this->_description;
 }
 
+void tissuestack::imaging::TissueStackImageData::setDescription(const std::string description)
+{
+	this->_description = description;
+}
+
 const bool tissuestack::imaging::TissueStackImageData::isTiled() const
 {
 	return this->_is_tiled;

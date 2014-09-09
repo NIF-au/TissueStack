@@ -127,6 +127,7 @@ const std::string tissuestack::services::TissueStackAdminService::handleDataSetA
 	const tissuestack::networking::TissueStackServicesRequest * request) const
 {
 	const std::string fileName = request->getRequestParameter("FILENAME");
+	const std::string description = request->getRequestParameter("DESCRIPTION");
 
 	// check for existing file in data directory
 	if (!tissuestack::utils::System::fileExists(fileName))
@@ -155,7 +156,8 @@ const std::string tissuestack::services::TissueStackAdminService::handleDataSetA
 		if (!dataSet->isRaw())
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Only .raw files can be added!");
 
-		if (tissuestack::database::DataSetDataProvider::addDataSet(dataSet.get()) != (dataSet->getNumberOfDimensions() + 1))
+		if (tissuestack::database::DataSetDataProvider::addDataSet(
+				dataSet.get(), description) != (dataSet->getNumberOfDimensions() + 1))
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Failed to persist all dimensions of the data set!");
 

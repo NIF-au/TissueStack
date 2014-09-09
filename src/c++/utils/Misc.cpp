@@ -65,7 +65,7 @@ const std::string tissuestack::utils::Misc::sanitizeSqlQuote(const std::string &
 	for (char c : quoted_value)
 	{
 		if (c == '\'')
-			in << "\'\'";
+			in << "''";
 		else
 			in << c;
 	}

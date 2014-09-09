@@ -192,7 +192,8 @@ const bool tissuestack::database::DataSetDataProvider::eraseDataSet(const unsign
 	return false;
 }
 
-const unsigned short tissuestack::database::DataSetDataProvider::addDataSet(const tissuestack::imaging::TissueStackImageData * dataSet)
+const unsigned short tissuestack::database::DataSetDataProvider::addDataSet(
+		const tissuestack::imaging::TissueStackImageData * dataSet, const std::string & description)
 {
 	// request a new id
 	const pqxx::result results =
@@ -203,6 +204,10 @@ const unsigned short tissuestack::database::DataSetDataProvider::addDataSet(cons
 
 	const_cast<tissuestack::imaging::TissueStackImageData *>(dataSet)->setDataBaseId(
 		results[0][0].as<unsigned long long int>());
+
+	if (!description.empty())
+		const_cast<tissuestack::imaging::TissueStackImageData *>(dataSet)->setDescription(description);
+
 	const std::string db_id = std::to_string(dataSet->getDataBaseId());
 
 	std::vector<std::string> sqls;
