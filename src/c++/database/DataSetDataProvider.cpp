@@ -168,6 +168,97 @@ void tissuestack::database::DataSetDataProvider::findAndAddPlanes(
 	imageData->initializeDimensions(true);
 }
 
+const bool tissuestack::database::DataSetDataProvider::setIsTiledFlag(const unsigned long long int id, const bool is_tiled)
+{
+	const std::string sql =
+		std::string("UPDATE dataset SET is_tiled='") +
+			(is_tiled ? "T" : "F") + "'"
+			" WHERE id=" +
+			 std::to_string(id) + ";";
+	if (tissuestack::database::TissueStackPostgresConnector::instance()->executeTransaction({sql}) == 1)
+		return true;
+
+	return false;
+}
+
+const bool tissuestack::database::DataSetDataProvider::eraseDataSet(const unsigned long long int id)
+{
+	const std::string sql =
+		std::string("DELETE FROM dataset WHERE id=") +
+			 std::to_string(id) + ");";
+	if (tissuestack::database::TissueStackPostgresConnector::instance()->executeTransaction({sql}) == 1)
+		return true;
+
+	return false;
+}
+
+const unsigned short tissuestack::database::DataSetDataProvider::addDataSet(const tissuestack::imaging::TissueStackImageData * dataSet)
+{
+	// request a new id
+	const pqxx::result results =
+		tissuestack::database::TissueStackPostgresConnector::instance()->executeNonTransactionalQuery(
+			"SELECT NEXTVAL('dataset_id_seq'::regclass);");
+	if (results.empty())
+		return 0;
+
+	const_cast<tissuestack::imaging::TissueStackImageData *>(dataSet)->setDataBaseId(
+		results[0][0].as<unsigned long long int>());
+	const std::string db_id = std::to_string(dataSet->getDataBaseId());
+
+	std::vector<std::string> sqls;
+
+	std::ostringstream tmpSql;
+
+	// main table insert
+	tmpSql << "INSERT INTO dataset (id, filename";
+	if (!dataSet->getDescription().empty())
+		tmpSql << ",description";
+	tmpSql << ") VALUES (" << db_id << ",'"
+		<< dataSet->getFileName()
+		<< "'";
+	if (!dataSet->getDescription().empty())
+		tmpSql << ",'"
+			<< tissuestack::utils::Misc::sanitizeSqlQuote(dataSet->getDescription())
+			<< "'";
+	tmpSql << ");";
+
+	sqls.push_back(tmpSql.str());
+	tmpSql.str("");
+	tmpSql.clear();
+
+	// dimensions/planes table insert
+	const std::vector<std::string> dims = dataSet->getDimensionOrder();
+	for (auto d : dims)
+	{
+		const tissuestack::imaging::TissueStackDataDimension * dim =
+			dataSet->getDimensionByLongName(d);
+		tmpSql << "INSERT INTO dataset_planes (id, dataset_id, is_tiled, zoom_levels, name,"
+			<< " max_x, max_y, max_slices, one_to_one_zoom_level, transformation_matrix,"
+			<< " resolution_mm) VALUES(DEFAULT,"
+			<< db_id << ",'"
+			<< (dataSet->isTiled() ? "T" : "F")
+			<< "','" << dataSet->getZoomLevelsAsJson()
+			<< "','" << dim->getName().at(0)
+			<< "',";
+		tmpSql << std::to_string(dim->getWidth())
+			<< "," << std::to_string(dim->getHeight())
+			<< "," << std::to_string(dim->getNumberOfSlices())
+			<< "," << std::to_string(dataSet->getOneToOneZoomLevel())
+			<< ",'" << dim->getTransformationMatrix()
+			<< "',";
+		if (dataSet->getResolutionInMm() == 0)
+			tmpSql << "NULL";
+		else
+			tmpSql << std::to_string(dataSet->getResolutionInMm());
+		tmpSql << ");";
+		sqls.push_back(tmpSql.str());
+		tmpSql.str("");
+		tmpSql.clear();
+	}
+
+	return tissuestack::database::TissueStackPostgresConnector::instance()->executeTransaction(sqls);
+}
+
 const std::vector<const tissuestack::imaging::TissueStackImageData *> tissuestack::database::DataSetDataProvider::findResults(
 		const std::string sql,
 		const unsigned int from,

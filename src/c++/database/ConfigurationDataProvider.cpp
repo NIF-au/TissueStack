@@ -40,7 +40,7 @@ const bool tissuestack::database::ConfigurationDataProvider::persistConfiguratio
 			+ conf->getValue() + "', "
 			+ (conf->getDescription().empty() ? "NULL" : ("'" + conf->getDescription() + "'"))
 			+ ");";
-	if (tissuestack::database::TissueStackPostgresConnector::instance()->executeTransaction(sql) == 1)
+	if (tissuestack::database::TissueStackPostgresConnector::instance()->executeTransaction({sql}) == 1)
 		return true;
 
 	return false;
@@ -55,7 +55,7 @@ const bool tissuestack::database::ConfigurationDataProvider::updateConfiguration
 			+ conf->getValue() + "'"
 			+ " WHERE name='"
 			+ conf->getName() + "';";
-	if (tissuestack::database::TissueStackPostgresConnector::instance()->executeTransaction(sql) == 1)
+	if (tissuestack::database::TissueStackPostgresConnector::instance()->executeTransaction({sql}) == 1)
 		return true;
 
 	return false;

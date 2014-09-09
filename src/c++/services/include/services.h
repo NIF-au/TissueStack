@@ -186,6 +186,7 @@ namespace tissuestack
 				void addTask(const TissueStackTask * task);
 				void purgeInstance();
 				void dumpAllTasksToDebugLog() const;
+				const bool doesTaskExistForDataSet(const std::string & name);
 				const bool isBeingTiled(const std::string in_file);
 				const bool isBeingConverted(const std::string in_file);
 				const TissueStackTask * findTaskById(const std::string & id);
@@ -228,6 +229,15 @@ namespace tissuestack
 				void streamResponse(
 						const tissuestack::networking::TissueStackServicesRequest * request,
 						const int file_descriptor) const;
+			private:
+				const std::string handleSetTilingRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
+				const std::string handleTaskCancellationRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
+				const std::string handleUploadRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
+				const std::string handleDataSetAdditionRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
+				const std::string handleUploadDirectoryRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
+				const std::string handleDataSetRawFilesRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
+				const std::string handleUploadProgressRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
+				const std::string handleProgressRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
 	 	};
 
 		class TissueStackSecurityService final : public TissueStackService

@@ -76,25 +76,47 @@ const pqxx::result tissuestack::database::TissueStackPostgresConnector::executeN
 	}
 }
 
-const unsigned long long int tissuestack::database::TissueStackPostgresConnector::executeTransaction(const std::string sql)
+const unsigned long long int tissuestack::database::TissueStackPostgresConnector::executeTransaction(const std::vector<std::string> sql)
 {
 	try
 	{
 		if (!this->isConnected())
 			this->reconnect();
 
+		if (sql.empty()) return 0;
+
+		unsigned long long int affectedRows = 0;
+
 		pqxx::work some_work(*this->_connection);
-		const pqxx::result result = some_work.exec( sql);
+
+		pqxx::result result;
+		for (auto s : sql)
+		{
+			tissuestack::logging::TissueStackLogger::instance()->debug("Executing SQL: %s", s.c_str());
+			result = some_work.exec(s);
+			affectedRows += result.affected_rows();
+		}
 		some_work.commit();
-		return result.affected_rows();
+
+		return affectedRows;
 	} catch (std::exception & bad) { // check connectivity
 		if (!this->isConnected()) // we try it one more time
 		{
 			this->reconnect();
 			pqxx::work some_work(*this->_connection);
-			const pqxx::result result = some_work.exec( sql);
+
+			unsigned long long int affectedRows = 0;
+
+			pqxx::result result;
+			for (auto s : sql)
+			{
+				result = some_work.exec(s);
+				affectedRows += result.affected_rows();
+			}
+
 			some_work.commit();
-			return result.affected_rows();
+
+			return affectedRows;
 		}
 		tissuestack::logging::TissueStackLogger::instance()->error("Failed to execute transaction: %s\n", bad.what());
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,

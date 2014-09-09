@@ -238,6 +238,21 @@ void tissuestack::services::TissueStackTaskQueue::writeTasksToQueueFile()
 	unlink((taskFile + ".old").c_str());
 }
 
+const bool tissuestack::services::TissueStackTaskQueue::doesTaskExistForDataSet(const std::string & name)
+{
+	if (this->_tasks.empty() || name.empty()) return false;
+
+	// this makes sure that we don't modify the tasks while we are doing this traversal
+	std::lock_guard<std::mutex> lock(this->_tasks_mutex);
+
+	for (auto t : this->_tasks)
+		if ((t->getInputImageData()->getFileName().compare(name) == 0))
+			return true;
+
+	return false;
+}
+
+
 const bool tissuestack::services::TissueStackTaskQueue::isBeingTiled(const std::string in_file)
 {
 	if (in_file.empty() || !tissuestack::utils::System::fileExists(in_file)) return false;

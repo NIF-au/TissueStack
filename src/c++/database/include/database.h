@@ -21,7 +21,7 @@ namespace tissuestack
 				~TissueStackPostgresConnector();
 				static TissueStackPostgresConnector * instance();
 				const pqxx::result executeNonTransactionalQuery(const std::string sql);
-				const unsigned long long int executeTransaction(const std::string sql);
+				const unsigned long long int executeTransaction(const std::vector<std::string> sql);
 				const pqxx::result executePaginatedQuery(
 					const std::string sql,
 					const unsigned int from,
@@ -126,6 +126,9 @@ namespace tissuestack
 						const bool includePlanes = false);
 				static void findAssociatedDataSets(
 						const unsigned long long int dataset_id, tissuestack::imaging::TissueStackImageData * imageData);
+				static const bool setIsTiledFlag(const unsigned long long int id, const bool is_tiled);
+				static const unsigned short addDataSet(const tissuestack::imaging::TissueStackImageData * dataSet);
+				static const bool eraseDataSet(const unsigned long long int id);
 			private:
 				static const std::vector<const tissuestack::imaging::TissueStackImageData *> findResults(
 						const std::string sql,

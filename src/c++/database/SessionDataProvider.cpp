@@ -12,7 +12,7 @@ const bool tissuestack::database::SessionDataProvider::addSession(
 				+ session + "',"
 				+ std::to_string(expiry_in_millis)
 				+ ");";
-		if (tissuestack::database::TissueStackPostgresConnector::instance()->executeTransaction(sql) == 1)
+		if (tissuestack::database::TissueStackPostgresConnector::instance()->executeTransaction({sql}) == 1)
 			return true;
 	}
 	catch(const std::exception & bad)
@@ -52,7 +52,7 @@ const bool tissuestack::database::SessionDataProvider::hasSessionExpired(
 					+ std::to_string(now+extension)
 					+ " WHERE id='"
 					+ session + "';";
-			tissuestack::database::TissueStackPostgresConnector::instance()->executeTransaction(sql);
+			tissuestack::database::TissueStackPostgresConnector::instance()->executeTransaction({sql});
 
 			return false;
 		} catch(const std::exception & bad)
@@ -77,7 +77,7 @@ const bool tissuestack::database::SessionDataProvider::invalidateSession(
 		const std::string sql =
 			"DELETE FROM session WHERE id='"
 				+ session + "';";
-		if (tissuestack::database::TissueStackPostgresConnector::instance()->executeTransaction(sql) == 1)
+		if (tissuestack::database::TissueStackPostgresConnector::instance()->executeTransaction({sql}) == 1)
 			return true;
 	} catch(const std::exception & bad)
 	{
@@ -94,7 +94,7 @@ void tissuestack::database::SessionDataProvider::deleteSessions(
 		const std::string sql =
 			"DELETE FROM session WHERE expiry < "
 				+ std::to_string(expiry_in_millis) + ";";
-		tissuestack::database::TissueStackPostgresConnector::instance()->executeTransaction(sql);
+		tissuestack::database::TissueStackPostgresConnector::instance()->executeTransaction({sql});
 	} catch(const std::exception & bad)
 	{
 		tissuestack::logging::TissueStackLogger::instance()->error("Failed to clean up expired sessions: %s\n", bad.what());

@@ -38,8 +38,8 @@ const float tissuestack::services::TissueStackTask::getProgress() const
 	if (this->_total_slices == 0)
 		return 0;
 
-	return static_cast<float>(this->_slices_done) /
-		static_cast<float>(this->_total_slices);
+	return (static_cast<float>(this->_slices_done) /
+		static_cast<float>(this->_total_slices)) * static_cast<float>(100);
 }
 
 const tissuestack::services::TissueStackTaskStatus tissuestack::services::TissueStackTask::getStatus() const

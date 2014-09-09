@@ -219,6 +219,7 @@ namespace tissuestack
 				const unsigned short getImageDataMaximum() const;
 				const unsigned long long int getDataBaseId() const;
 				const std::string getDescription() const;
+				const unsigned short getNumberOfDimensions() const;
 				void addAssociatedDataSet(const TissueStackImageData * associatedDataSet);
 				void setMembersFromDataBaseInformation(
 						const unsigned long long int id = 0,
@@ -249,6 +250,7 @@ namespace tissuestack
 				explicit TissueStackImageData(const long long unsigned int id, const std::string filename = "");
 				explicit TissueStackImageData(const std::string & filename);
 				TissueStackImageData(const std::string & filename, FORMAT format);
+				void setDataBaseId(const unsigned long long int id);
 				const std::unordered_map<char, const TissueStackDataDimension *> getDimensionMap() const;
 				void setFormat(int original_format);
 				void addDimension(TissueStackDataDimension * dimension);
@@ -369,6 +371,8 @@ namespace tissuestack
 		    	void purgeInstance();
 		    	const TissueStackDataSet * findDataSet(const std::string & id) const;
 		    	const TissueStackDataSet * findDataSetByDataBaseId(const unsigned long long int id) const;
+		    	void removeDataSetByDataBaseId(const unsigned long long int id);
+		    	const std::vector<std::string> getRawFileDataSetFiles() const;
 		    	void addDataSet(const TissueStackDataSet * dataSet);
 		    	void replaceDataSet(const tissuestack::imaging::TissueStackDataSet * dataSet);
 		    	void dumpDataSetStoreIntoDebugLog() const;
@@ -692,6 +696,11 @@ namespace tissuestack
 				void convert(
 					const tissuestack::common::ProcessingStrategy * processing_strategy,
 					const tissuestack::services::TissueStackConversionTask * conversion_task);
+			private:
+				const bool hasBeenCancelledOrShutDown(
+					const tissuestack::common::ProcessingStrategy * processing_strategy,
+					std::unique_ptr<const tissuestack::services::TissueStackConversionTask> & ptr_converter_task) const;
+
 		};
 
 		class PreTiler final
@@ -705,6 +714,9 @@ namespace tissuestack
 					const tissuestack::common::ProcessingStrategy * processing_strategy,
 					const tissuestack::services::TissueStackTilingTask * pre_tiling_task);
 			private:
+				const bool hasBeenCancelledOrShutDown(
+					const tissuestack::common::ProcessingStrategy * processing_strategy,
+					std::unique_ptr<const tissuestack::services::TissueStackTilingTask> & ptr_pretiling_task) const;
 				UncachedImageExtraction * _extractor = nullptr;
 		};
 	}

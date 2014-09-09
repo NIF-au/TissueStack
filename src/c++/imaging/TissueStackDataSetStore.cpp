@@ -101,6 +101,17 @@ tissuestack::imaging::TissueStackDataSetStore * tissuestack::imaging::TissueStac
 	return tissuestack::imaging::TissueStackDataSetStore::_instance;
 }
 
+const std::vector<std::string> tissuestack::imaging::TissueStackDataSetStore::getRawFileDataSetFiles() const
+{
+	std::vector<std::string> ret;
+
+	for (auto ds : this->_data_sets)
+		if (ds.second->getImageData()->isRaw())
+			ret.push_back(ds.first);
+
+	return ret;
+}
+
 const tissuestack::imaging::TissueStackDataSet * tissuestack::imaging::TissueStackDataSetStore::findDataSet(const std::string & id) const
 {
 	try
@@ -123,6 +134,20 @@ const tissuestack::imaging::TissueStackDataSet * tissuestack::imaging::TissueSta
 			return dataSet.second;
 
 	return nullptr;
+}
+
+void tissuestack::imaging::TissueStackDataSetStore::removeDataSetByDataBaseId(const unsigned long long int id)
+{
+	std::string key = "";
+	for (auto dataSet : this->_data_sets)
+		if (dataSet.second->getImageData()->getDataBaseId() == id)
+		{
+			key = dataSet.first;
+			delete dataSet.second;
+			break;
+		}
+	if (!key.empty())
+		this->_data_sets.erase(key);
 }
 
 void tissuestack::imaging::TissueStackDataSetStore::addDataSet(const tissuestack::imaging::TissueStackDataSet * dataSet)
