@@ -276,11 +276,12 @@ TissueStack.Admin.prototype = {
 				_this.replaceErrorMessage(message);
 			};
 
+			/*
 			// check session validity beforehand
 			if (!_this.checkSessionValidity(_this.session)) {
 				errorHandling2("Error: Invalid Session! Please Log In.");
 				return false;
-			}
+			}*/
 			 
 			// extract file name and start upload monitor
 			var filename = $.trim($('#filename_1').val());
@@ -305,6 +306,7 @@ TissueStack.Admin.prototype = {
 						failedQueryAttempts--;
 					};
 					
+					/*
 					// the periodic request
 					progressUpdater = setInterval(function () {
 						TissueStack.Utils.sendAjaxRequest(
@@ -348,13 +350,15 @@ TissueStack.Admin.prototype = {
 								}
 							);  
 						}, 1500);
+						*/
 				}
 			}
 			
 			// the actual submit for the file upload
 			$(this).ajaxSubmit({ 	
-				url : "/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/upload/json?session=" + _this.session,
-				dataType : "json",
+				//url : "/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/upload/json?session=" + _this.session,
+				url : "/" + TissueStack.configuration['restful_service_proxy_path'].value + "/?service=services&sub_service=admin&action=upload&session=459f7c56388e11e4b580002421b8aff5",
+				dataType : "text",
 				success: function(data, textStatus, jqXHR) {
 					if (!data.response && !data.error) {
 						errorHandling2("No File Submission!");

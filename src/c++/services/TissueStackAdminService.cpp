@@ -120,7 +120,13 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadRe
 	const tissuestack::networking::TissueStackServicesRequest * request) const
 {
 	//TODO: implement
-	return "NOT IMPLEMENTED";
+	// keep reading and checking upload limit
+	// extract boundary and content length which we take to be the total length
+	// we keep a .upload_file_name.progress file which we query for upload progress!
+	// check file name and if it exists already (overwrite flag ...)
+
+	tissuestack::logging::TissueStackLogger::instance()->debug("UPLOAD: \n%s", request->getFileUploadStart().c_str());
+	return request->getFileUploadStart();
 }
 
 const std::string tissuestack::services::TissueStackAdminService::handleDataSetAdditionRequest(
@@ -255,10 +261,15 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadDi
 		}
 
 		const unsigned int pos = f.find_last_of("/");
-		if (pos != std::string::npos)
-			results.push_back(f.substr(pos+1));
-		else
-			results.push_back(f);
+		const std::string tmp =
+			(pos != std::string::npos) ?
+				f.substr(pos+1) :
+				f;
+
+		if (tmp.at(0) == '.') // no hidden files
+			continue;
+
+		results.push_back(tmp);
 	}
 
 	std::ostringstream json;

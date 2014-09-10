@@ -32,7 +32,7 @@ namespace tissuestack
     		fd_set _master_descriptors;
 
   		public:
-        	static const unsigned short MAX_REQUEST_LENGTH_IN_BYTES = 1024;
+    		static const unsigned long long int BUFFER_SIZE = 1024;
 
     		ServerSocketSelector(const tissuestack::networking::Server<ProcessorImplementation> * server) :
     			_server(server) {
@@ -161,24 +161,11 @@ namespace tissuestack
 								}
 							} else // we are ready to receive from an existing client connection
 							{
-								char data_buffer[MAX_REQUEST_LENGTH_IN_BYTES+1];
+								char data_buffer[BUFFER_SIZE+1];
 								ssize_t bytesReceived = recv(i, data_buffer, sizeof(data_buffer), 0);
-								if (bytesReceived <= 0 || bytesReceived > MAX_REQUEST_LENGTH_IN_BYTES) { // NOK case
-
-									/*
-									 * //client close which we will ignore from now on
-									 * if (bytesReceived == 0 &&
-									 *		!this->_server->isStopping())
-									 *			tissuestack::logging::TissueStackLogger::instance()->error("Client closed connection!\n");
-									 *  else
-									 */
-									if (bytesReceived < 0 &&
-											!this->_server->isStopping())
-										tissuestack::logging::TissueStackLogger::instance()->error("Data Receive error!\n");
-									else if (bytesReceived > MAX_REQUEST_LENGTH_IN_BYTES &&
-											!this->_server->isStopping()) // for now we have a limit
-										tissuestack::logging::TissueStackLogger::instance()->error("Exceeded Request Size Allowed: %u !!\n", MAX_REQUEST_LENGTH_IN_BYTES );
-
+								if (bytesReceived <= 0 &&
+										!this->_server->isStopping()) { // NOK case
+									tissuestack::logging::TissueStackLogger::instance()->error("Data Receive error!\n");
 									this->removeDescriptorFromList(i, true);
 								}
 								else // OK case

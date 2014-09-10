@@ -92,7 +92,7 @@ const unsigned long long int tissuestack::database::TissueStackPostgresConnector
 		pqxx::result result;
 		for (auto s : sql)
 		{
-			tissuestack::logging::TissueStackLogger::instance()->debug("Executing SQL: %s", s.c_str());
+			//tissuestack::logging::TissueStackLogger::instance()->debug("Executing SQL: %s", s.c_str());
 			result = some_work.exec(s);
 			affectedRows += result.affected_rows();
 		}

@@ -33,15 +33,27 @@ tissuestack::networking::HttpRequest::HttpRequest(const RawHttpRequest * const r
 		preliminarySanityCheck.applyFilter(raw_request);
 	}
 
-	// we go on to dissect the GET request, we really don't care for any other http method
 	const std::string raw_content = raw_request->getContent();
-	size_t nPos = raw_content.find(' ', 4);
-	// if we are under 3, there is something wrong, the URI needs to start at position 3 => 'GET /somequerystring'
-	if (nPos < 4)
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "HttpRequest with malformed GET");
+
+	// check if we have an upload
+	if (raw_content.find("POST") == 0 &&
+			raw_content.find("service=services") != std::string::npos &&
+			raw_content.find("sub_service=admin") != std::string::npos &&
+			raw_content.find("action=upload") != std::string::npos)
+	{
+		this->_isFileUpload = true;
+		this->_fileUploadStart = raw_content;
+	}
+
+	unsigned int start = this->isFileUpload() ? 5 : 4;
+	// we go on to dissect the GET/POST request, we really don't care for any other http method
+	size_t nPos = raw_content.find(' ', start);
+	// if we are under 3/4, there is something wrong, the URI needs to start at position 3/4 => 'GET/POST /somequerystring'
+	if (nPos < start)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "HttpRequest with malformed GET/POST");
 
 	// now cut out query string
-	this->_query_string = raw_content.substr(4,nPos-4);
+	this->_query_string = raw_content.substr(start,nPos-start);
 
 	// find start of actual query string and prune anything up to and including ?
 	nPos = this->_query_string.find('?');
@@ -157,13 +169,20 @@ inline void tissuestack::networking::HttpRequest::partiallyURIDecodeString(std::
 	potentially_uri_encoded_string.replace(0, length, in.str());
 }
 
-const std::string tissuestack::networking::HttpRequest::getParameter(std::string name) const
+const std::string tissuestack::networking::HttpRequest::getParameter(std::string name, const bool convertToUpperCase) const
 {
 	try
 	{
 		// upper case for better comparison
 		std::transform(name.begin(), name.end(), name.begin(), toupper);
-		return this->_parameters.at(name);
+
+		if (!convertToUpperCase)
+			return this->_parameters.at(name);
+
+		std::string value = this->_parameters.at(name);
+		std::transform(value.begin(), value.end(), value.begin(), toupper);
+
+		return value;
 	} catch (const std::out_of_range& ignored) { }
 	return std::string("");
 }
@@ -184,6 +203,11 @@ const std::string tissuestack::networking::HttpRequest::getContent() const
 	return this->_query_string;
 }
 
+const std::string tissuestack::networking::HttpRequest::getFileUploadStart() const
+{
+	return this->_fileUploadStart;
+}
+
 std::unordered_map<std::string, std::string> tissuestack::networking::HttpRequest::getParameterMap() const
 {
 	return this->_parameters;
@@ -193,4 +217,9 @@ const bool tissuestack::networking::HttpRequest::isObsolete() const
 {
 	// at this level we are false by default
 	return false;
+}
+
+const bool tissuestack::networking::HttpRequest::isFileUpload() const
+{
+	return this->_isFileUpload;
 }
