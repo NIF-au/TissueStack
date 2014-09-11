@@ -64,7 +64,7 @@ tissuestack::execution::TissueStackOnlineExecutor * tissuestack::execution::Tiss
 
 void tissuestack::execution::TissueStackOnlineExecutor::execute(
 		const tissuestack::common::ProcessingStrategy * processing_strategy,
-		std::string request,
+		const std::string request,
 		int client_descriptor)
 {
 	std::string response = "";
@@ -91,6 +91,7 @@ void tissuestack::execution::TissueStackOnlineExecutor::execute(
 					client_descriptor);
 		else if (req.get()->getType() == tissuestack::common::Request::Type::TS_SERVICES) /* SERVICES REQUEST */
 			this->_serviesDelegator->processRequest(
+					processing_strategy,
 					static_cast<const tissuestack::networking::TissueStackServicesRequest *>(req.get()),
 					client_descriptor);
 		else if (req.get()->getType() == tissuestack::common::Request::Type::TS_CONVERSION ||
@@ -121,6 +122,7 @@ void tissuestack::execution::TissueStackOnlineExecutor::execute(
 			if (bytes < 0)
 				tissuestack::logging::TissueStackLogger::instance()->error(
 					"Error Sending 500 Internal Server Error: %s \n", strerror(errno));
+			return;
 		}
 	}  catch (tissuestack::common::TissueStackObsoleteRequestException& obsoleteRequest) /* ERRONEOUS REQUESTS */
 	{
@@ -145,7 +147,16 @@ void tissuestack::execution::TissueStackOnlineExecutor::execute(
 					"200 OK",
 					"application/json",
 					tissuestack::services::TissueStackServiceError(invalidRequest).toJson());
+			shutdown(client_descriptor, SHUT_RD);
 		}
+	}  catch (tissuestack::common::TissueStackFileUploadException& uploadException)
+	{
+		tissuestack::logging::TissueStackLogger::instance()->error("Failed to upload a file: %s\n", uploadException.what());
+		response =
+			tissuestack::utils::Misc::composeHttpResponse(
+				"413 Request Entity Too Large",
+				"application/json",
+				tissuestack::services::TissueStackServiceError(uploadException).toJson());
 	} catch (tissuestack::common::TissueStackException& ex)
 	{
 		tissuestack::logging::TissueStackLogger::instance()->error("Failed to execute Process: %s\n", ex.what());
@@ -168,6 +179,7 @@ void tissuestack::execution::TissueStackOnlineExecutor::execute(
 		return;
 
 	// sending error message
+	shutdown(client_descriptor, SHUT_RD);
 	ssize_t  bytes = send(client_descriptor, response.c_str(), response.length(), 0);
 	if (bytes < 0)
 		tissuestack::logging::TissueStackLogger::instance()->error(

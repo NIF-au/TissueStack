@@ -24,6 +24,7 @@ void tissuestack::services::ConfigurationService::checkRequest(
 }
 
 void tissuestack::services::ConfigurationService::streamResponse(
+		const tissuestack::common::ProcessingStrategy * processing_strategy,
 		const tissuestack::networking::TissueStackServicesRequest * request,
 		const int file_descriptor) const
 {

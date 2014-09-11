@@ -24,8 +24,8 @@ void tissuestack::execution::TissueStackTaskQueueExecutor::init()
 				std::unique_lock<std::mutex> lock_on_conditional_mutex(this->_conditional_mutex);
 				this->_notification_condition.wait_for(lock_on_conditional_mutex, std::chrono::milliseconds(100));
 
-				if (tissuestack::services::TissueStackTaskQueue::instance() == nullptr)
-					continue;
+				if (tissuestack::services::TissueStackTaskQueue::doesInstanceExist())
+					break;
 
 				// fetch next item from the globale task queue
 				tissuestack::services::TissueStackTask * next_task =
@@ -48,17 +48,18 @@ void tissuestack::execution::TissueStackTaskQueueExecutor::init()
 void tissuestack::execution::TissueStackTaskQueueExecutor::process(
 		const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality)
 {
-	// this does not nothing, we run all the time and take our input from the global task queue
+	if (functionality)
+		delete functionality;
 }
 
 void tissuestack::execution::TissueStackTaskQueueExecutor::addTask(const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality)
 {
-	// this does not nothing, we run all the time and take our input from the global task queue
+	if (functionality)
+		delete functionality;
 }
 
 const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * tissuestack::execution::TissueStackTaskQueueExecutor::removeTask()
 {
-	// this does not nothing, we run all the time and take our input from the global task queue
 	return nullptr;
 }
 

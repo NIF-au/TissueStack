@@ -40,6 +40,13 @@ namespace tissuestack
 			explicit TissueStackApplicationException(std::string what);
     };
 
+    class TissueStackFileUploadException : public TissueStackApplicationException
+    {
+    	public:
+			explicit TissueStackFileUploadException(std::string what);
+    };
+
+
     class TissueStackInvalidRequestException : public TissueStackApplicationException
     {
     	public:

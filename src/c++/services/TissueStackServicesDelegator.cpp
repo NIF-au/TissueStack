@@ -25,6 +25,7 @@ tissuestack::services::TissueStackServicesDelegator::~TissueStackServicesDelegat
 }
 
 void tissuestack::services::TissueStackServicesDelegator::processRequest(
+		const tissuestack::common::ProcessingStrategy * processing_strategy,
 		const tissuestack::networking::TissueStackServicesRequest * request,
 		const int file_descriptor)
 {
@@ -35,6 +36,6 @@ void tissuestack::services::TissueStackServicesDelegator::processRequest(
 			"Failed to find a registered sub service to deal with this request!");
 
 	subService->checkRequest(request);
-	subService->streamResponse(request, file_descriptor);
+	subService->streamResponse(processing_strategy, request, file_descriptor);
 }
 

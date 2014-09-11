@@ -38,6 +38,7 @@ namespace tissuestack
 
 				static RequestTimeStampStore * instance();
 
+				static const bool doesInstanceExist();
 				void purgeInstance();
 
 				const bool doesIdExist(const unsigned long long int id);
@@ -98,12 +99,12 @@ namespace tissuestack
 				ProcessingStrategy & operator=(const ProcessingStrategy&) = delete;
 				ProcessingStrategy(const ProcessingStrategy&) = delete;
 				virtual ~ProcessingStrategy();
-				void virtual init() = 0;
-				void virtual process(const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality) = 0;
-				void virtual stop() = 0;
+				virtual void init() = 0;
+				virtual void process(const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality) = 0;
+				virtual void stop() = 0;
 				bool isRunning() const;
 				bool isStopFlagRaised() const;
-				bool isOnlineStrategy() const;
+				virtual bool isOnlineStrategy() const;
 			private:
 				bool _stopFlagRaised = false;
 				bool _isRunning = false;

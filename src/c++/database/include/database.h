@@ -20,6 +20,7 @@ namespace tissuestack
 				TissueStackPostgresConnector(const TissueStackPostgresConnector&) = delete;
 				~TissueStackPostgresConnector();
 				static TissueStackPostgresConnector * instance();
+				static const bool doesInstanceExist();
 				const pqxx::result executeNonTransactionalQuery(const std::string sql);
 				const unsigned long long int executeTransaction(const std::vector<std::string> sql);
 				const pqxx::result executePaginatedQuery(

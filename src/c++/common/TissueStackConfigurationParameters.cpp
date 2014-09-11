@@ -18,6 +18,11 @@ tissuestack::TissueStackConfigurationParameters * tissuestack::TissueStackConfig
 	return tissuestack::TissueStackConfigurationParameters::_instance;
 }
 
+const bool tissuestack::TissueStackConfigurationParameters::doesInstanceExist()
+{
+	return (tissuestack::TissueStackConfigurationParameters::_instance != nullptr);
+}
+
 void tissuestack::TissueStackConfigurationParameters::readInConfigurationFile(const std::string & configuration_file)
 {
 	const std::vector<std::string> lines =

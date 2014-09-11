@@ -107,6 +107,7 @@ namespace tissuestack
 				TissueStackLabelLookupStore & operator=(const TissueStackLabelLookupStore&) = delete;
 				TissueStackLabelLookupStore(const TissueStackLabelLookupStore&) = delete;
 				static TissueStackLabelLookupStore * instance();
+				static const bool doesInstanceExist();
 				void purgeInstance();
 				const TissueStackLabelLookup * findLabelLookup(const std::string & id) const;
 				const TissueStackLabelLookup * findLabelLookupByFullPath(const std::string & id) const;
@@ -148,6 +149,7 @@ namespace tissuestack
 				TissueStackColorMapStore & operator=(const TissueStackColorMapStore&) = delete;
 				TissueStackColorMapStore(const TissueStackColorMapStore&) = delete;
 				static TissueStackColorMapStore * instance();
+				static const bool doesInstanceExist();
 		    	void purgeInstance();
 		    	const TissueStackColorMap * findColorMap(const std::string & id) const;
 		    	void addOrReplaceColorMap(const TissueStackColorMap * colorMap);
@@ -370,6 +372,7 @@ namespace tissuestack
 				static void integrateDataBaseResultsIntoDataSetStore(
 						std::vector<const tissuestack::imaging::TissueStackImageData *> & dataSets);
 		    	void purgeInstance();
+		    	static const bool doesInstanceExist();
 		    	const TissueStackDataSet * findDataSet(const std::string & id) const;
 		    	const TissueStackDataSet * findDataSetByDataBaseId(const unsigned long long int id) const;
 		    	void removeDataSetByDataBaseId(const unsigned long long int id);

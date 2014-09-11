@@ -23,6 +23,11 @@ tissuestack::imaging::TissueStackDataSetStore::TissueStackDataSetStore()
 	}
 }
 
+const bool tissuestack::imaging::TissueStackDataSetStore::doesInstanceExist()
+{
+	return (tissuestack::imaging::TissueStackDataSetStore::_instance != nullptr);
+}
+
 void tissuestack::imaging::TissueStackDataSetStore::purgeInstance()
 {
 	// walk through entries and clean them up

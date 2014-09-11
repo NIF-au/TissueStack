@@ -32,6 +32,7 @@ void tissuestack::services::TissueStackSecurityService::checkRequest(
 }
 
 void tissuestack::services::TissueStackSecurityService::streamResponse(
+		const tissuestack::common::ProcessingStrategy * processing_strategy,
 		const tissuestack::networking::TissueStackServicesRequest * request,
 		const int file_descriptor) const
 {

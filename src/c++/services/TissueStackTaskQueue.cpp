@@ -29,6 +29,11 @@ tissuestack::services::TissueStackTaskQueue::TissueStackTaskQueue()
 
 tissuestack::services::TissueStackTaskQueue::~TissueStackTaskQueue() {}
 
+const bool tissuestack::services::TissueStackTaskQueue::doesInstanceExist()
+{
+	return (tissuestack::services::TissueStackTaskQueue::_instance != nullptr);
+}
+
 void tissuestack::services::TissueStackTaskQueue::purgeInstance()
 {
 	if (tissuestack::services::TissueStackTaskQueue::_instance)

@@ -28,6 +28,7 @@ namespace tissuestack
 				virtual ~TissueStackService();
 				virtual void checkRequest(const tissuestack::networking::TissueStackServicesRequest * request) const = 0;
 				virtual void streamResponse(
+						const tissuestack::common::ProcessingStrategy * processing_strategy,
 						const tissuestack::networking::TissueStackServicesRequest * request,
 						const int file_descriptor) const = 0;
 			protected:
@@ -49,6 +50,7 @@ namespace tissuestack
 
 				void checkRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
 				void streamResponse(
+						const tissuestack::common::ProcessingStrategy * processing_strategy,
 						const tissuestack::networking::TissueStackServicesRequest * request,
 						const int file_descriptor) const;
 	 	};
@@ -64,6 +66,7 @@ namespace tissuestack
 
 				void checkRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
 				void streamResponse(
+						const tissuestack::common::ProcessingStrategy * processing_strategy,
 						const tissuestack::networking::TissueStackServicesRequest * request,
 						const int file_descriptor) const;
 	 	};
@@ -79,6 +82,7 @@ namespace tissuestack
 
 				void checkRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
 				void streamResponse(
+						const tissuestack::common::ProcessingStrategy * processing_strategy,
 						const tissuestack::networking::TissueStackServicesRequest * request,
 						const int file_descriptor) const;
 	 	};
@@ -185,6 +189,7 @@ namespace tissuestack
 				static TissueStackTaskQueue * instance();
 				void addTask(const TissueStackTask * task);
 				void purgeInstance();
+				static const bool doesInstanceExist();
 				void dumpAllTasksToDebugLog() const;
 				const bool doesTaskExistForDataSet(const std::string & name);
 				const bool isBeingTiled(const std::string in_file);
@@ -227,17 +232,36 @@ namespace tissuestack
 
 				void checkRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
 				void streamResponse(
+						const tissuestack::common::ProcessingStrategy * processing_strategy,
 						const tissuestack::networking::TissueStackServicesRequest * request,
 						const int file_descriptor) const;
 			private:
+				static const unsigned int BUFFER_SIZE;
 				const std::string handleSetTilingRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
 				const std::string handleTaskCancellationRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
-				const std::string handleUploadRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
+				const std::string handleUploadRequest(
+					const tissuestack::common::ProcessingStrategy * processing_strategy,
+					const tissuestack::networking::TissueStackServicesRequest * request,
+					int fd);
 				const std::string handleDataSetAdditionRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
 				const std::string handleUploadDirectoryRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
 				const std::string handleDataSetRawFilesRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
 				const std::string handleUploadProgressRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
 				const std::string handleProgressRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
+				const bool readAndStoreFileUploadData(
+					const tissuestack::common::ProcessingStrategy * processing_strategy,
+					int socketDescriptor,
+					int uploadFileDescriptor,
+					unsigned int start,
+					const std::string firstPartOfStream,
+					const unsigned long long int supposedFileSize,
+					const std::string boundary);
+				int createUploadFiles(const std::string file_name, const unsigned long long int supposedFileSize);
+				inline const std::string readHeaderFromRequest(
+					const std::string httpMessage,
+					const std::string header,
+					unsigned int & endOfHeader) const;
+				std::mutex _uploadProgress;
 	 	};
 
 		class TissueStackSecurityService final : public TissueStackService
@@ -253,6 +277,7 @@ namespace tissuestack
 
 				void checkRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
 				void streamResponse(
+						const tissuestack::common::ProcessingStrategy * processing_strategy,
 						const tissuestack::networking::TissueStackServicesRequest * request,
 						const int file_descriptor) const;
 				static const bool hasSessionExpired(const std::string session);
@@ -271,6 +296,7 @@ namespace tissuestack
 				~TissueStackServicesDelegator();
 
 				void processRequest(
+					const tissuestack::common::ProcessingStrategy * processing_strategy,
 					const tissuestack::networking::TissueStackServicesRequest * request,
 					const int file_descriptor);
 			private:

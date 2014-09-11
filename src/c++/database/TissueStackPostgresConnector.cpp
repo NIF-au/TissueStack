@@ -39,6 +39,11 @@ void tissuestack::database::TissueStackPostgresConnector::purgeInstance()
 	tissuestack::database::TissueStackPostgresConnector::_instance = nullptr;
 }
 
+const bool tissuestack::database::TissueStackPostgresConnector::doesInstanceExist()
+{
+	return (tissuestack::database::TissueStackPostgresConnector::_instance != nullptr);
+}
+
 tissuestack::database::TissueStackPostgresConnector * tissuestack::database::TissueStackPostgresConnector::instance()
  {
 	if (tissuestack::database::TissueStackPostgresConnector::_instance == nullptr)

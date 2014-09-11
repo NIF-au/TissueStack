@@ -13,6 +13,7 @@ namespace tissuestack
 	{
 		public:
 			const std::string getParameter(const std::string & name) const;
+			static const bool doesInstanceExist();
 			static TissueStackConfigurationParameters * instance();
 			void readInConfigurationFile(const std::string & configuration_file);
 			void purgeInstance();

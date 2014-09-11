@@ -68,7 +68,7 @@ void tissuestack::execution::ThreadPool::init()
 	this->init0(wait_loop);
 }
 
-void tissuestack::execution::ThreadPool::init0(std::function<void (tissuestack::execution::WorkerThread * assigned_worker)> & wait_loop)
+void tissuestack::execution::ThreadPool::init0(std::function<void (tissuestack::execution::WorkerThread * assigned_worker)> wait_loop)
 {
 	// start up the threads and put them in wait mode
 	int i=0;

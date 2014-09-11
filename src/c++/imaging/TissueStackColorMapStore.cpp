@@ -50,6 +50,11 @@ void tissuestack::imaging::TissueStackColorMapStore::purgeInstance()
 	tissuestack::imaging::TissueStackColorMapStore::_instance = nullptr;
 }
 
+const bool tissuestack::imaging::TissueStackColorMapStore::doesInstanceExist()
+{
+	return (tissuestack::imaging::TissueStackColorMapStore::_instance != nullptr);
+}
+
  tissuestack::imaging::TissueStackColorMapStore * tissuestack::imaging::TissueStackColorMapStore::instance()
  {
 	if (tissuestack::imaging::TissueStackColorMapStore::_instance == nullptr)
@@ -73,12 +78,18 @@ void tissuestack::imaging::TissueStackColorMapStore::purgeInstance()
  {
 	 if (colorMap == nullptr) return;
 
+	 if (this->findColorMap(colorMap->getColorMapId()))
+		 delete this->_color_maps[colorMap->getColorMapId()];
+
 	 this->_color_maps[colorMap->getColorMapId()] = colorMap;
  }
 
  void tissuestack::imaging::TissueStackColorMapStore::addOrReplaceColorMap(const tissuestack::imaging::TissueStackLabelLookup * labelLookup)
 {
 	 if (labelLookup == nullptr) return;
+
+	 if (this->findColorMap(labelLookup->getLabelLookupId()))
+		 delete this->_color_maps[labelLookup->getLabelLookupId()];
 
 	 this->_color_maps[labelLookup->getLabelLookupId()] =
 			 tissuestack::imaging::TissueStackColorMap::fromLabelLookup(labelLookup);

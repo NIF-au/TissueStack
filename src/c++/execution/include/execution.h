@@ -53,7 +53,7 @@ namespace tissuestack
 				virtual bool hasNoTasksQueued();
 				void stop();
 			protected:
-				void init0(std::function<void (tissuestack::execution::WorkerThread * assigned_worker)> & wait_loop);
+				void init0(std::function<void (tissuestack::execution::WorkerThread * assigned_worker)> wait_loop);
 			private:
 				std::mutex _task_queue_mutex;
 				std::mutex _conditional_mutex;
@@ -114,7 +114,7 @@ namespace tissuestack
 				static TissueStackOnlineExecutor * instance();
 				void execute(
 					const tissuestack::common::ProcessingStrategy * processing_strategy,
-					std::string request,
+					const std::string request,
 					int client_descriptor);
 				void executeTask(
 					const tissuestack::common::ProcessingStrategy * processing_strategy,

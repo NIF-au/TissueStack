@@ -19,6 +19,7 @@ void tissuestack::services::DataSetConfigurationService::checkRequest(
 }
 
 void tissuestack::services::DataSetConfigurationService::streamResponse(
+		const tissuestack::common::ProcessingStrategy * processing_strategy,
 		const tissuestack::networking::TissueStackServicesRequest * request,
 		const int file_descriptor) const
 {

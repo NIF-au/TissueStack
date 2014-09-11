@@ -46,6 +46,12 @@ tissuestack::logging::TissueStackLogger::~TissueStackLogger()
 	fclose(this->_debug_log);
 };
 
+const bool tissuestack::logging::TissueStackLogger::doesInstanceExist()
+{
+	return (tissuestack::logging::TissueStackLogger::_instance != nullptr);
+}
+
+
  tissuestack::logging::TissueStackLogger * tissuestack::logging::TissueStackLogger::instance()
  {
 	if (tissuestack::logging::TissueStackLogger::_instance == nullptr)

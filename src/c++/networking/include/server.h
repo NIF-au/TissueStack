@@ -32,7 +32,7 @@ namespace tissuestack
     		fd_set _master_descriptors;
 
   		public:
-    		static const unsigned long long int BUFFER_SIZE = 1024;
+    		static const unsigned long long int BUFFER_SIZE = 2048;
 
     		ServerSocketSelector(const tissuestack::networking::Server<ProcessorImplementation> * server) :
     			_server(server) {
@@ -161,10 +161,12 @@ namespace tissuestack
 								}
 							} else // we are ready to receive from an existing client connection
 							{
-								char data_buffer[BUFFER_SIZE+1];
+								char data_buffer[BUFFER_SIZE];
 								ssize_t bytesReceived = recv(i, data_buffer, sizeof(data_buffer), 0);
+								 // NOK case
 								if (bytesReceived <= 0 &&
-										!this->_server->isStopping()) { // NOK case
+										!this->_server->isStopping())
+								{
 									tissuestack::logging::TissueStackLogger::instance()->error("Data Receive error!\n");
 									this->removeDescriptorFromList(i, true);
 								}
@@ -200,7 +202,7 @@ namespace tissuestack
 				if (this->_isRunning)
 					this->stop();
 
-				if (_processor) delete _processor;
+				if (this->_processor) delete this->_processor;
 			};
 
 			int getServerSocket() const
@@ -292,32 +294,6 @@ namespace tissuestack
 				close(this->_server_socket);
 
 				this->_isRunning = false;
-
-				try
-				{
-					// clean up old sessions and disconnect database
-					tissuestack::database::SessionDataProvider::deleteSessions(
-						tissuestack::utils::System::getSystemTimeInMillis());
-					tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
-				} catch (...)
-				{
-					// can be safely ignored
-				}
-
-				try
-				{
-					// deallocate global singleton objects
-					tissuestack::TissueStackConfigurationParameters::instance()->purgeInstance();
-					tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
-					tissuestack::imaging::TissueStackDataSetStore::instance()->purgeInstance();
-					tissuestack::imaging::TissueStackLabelLookupStore::instance()->purgeInstance();
-					tissuestack::imaging::TissueStackColorMapStore::instance()->purgeInstance();
-					if (tissuestack::services::TissueStackTaskQueue::instance())
-						tissuestack::services::TissueStackTaskQueue::instance()->purgeInstance();
-				} catch (...)
-				{
-					// can be safely ignored
-				}
 
 				tissuestack::logging::TissueStackLogger::instance()->info("Socket Server Shut Down Successfully.\n");
 				try

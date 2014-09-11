@@ -10,6 +10,11 @@ tissuestack::common::RequestTimeStampStore * tissuestack::common::RequestTimeSta
 	return tissuestack::common::RequestTimeStampStore::_instance;
 }
 
+const bool tissuestack::common::RequestTimeStampStore::doesInstanceExist()
+{
+	return (tissuestack::common::RequestTimeStampStore::_instance != nullptr);
+}
+
 void tissuestack::common::RequestTimeStampStore::purgeInstance()
 {
 	delete tissuestack::common::RequestTimeStampStore::_instance;

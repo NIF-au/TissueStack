@@ -357,8 +357,8 @@ TissueStack.Admin.prototype = {
 			// the actual submit for the file upload
 			$(this).ajaxSubmit({ 	
 				//url : "/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/upload/json?session=" + _this.session,
-				url : "/" + TissueStack.configuration['restful_service_proxy_path'].value + "/?service=services&sub_service=admin&action=upload&session=459f7c56388e11e4b580002421b8aff5",
-				dataType : "text",
+				url : "/" + TissueStack.configuration['restful_service_proxy_path'].value + "/?service=services&sub_service=admin&action=upload&session=0577b6a839a511e4a706002421b8aff5",
+				//dataType : "json",
 				success: function(data, textStatus, jqXHR) {
 					if (!data.response && !data.error) {
 						errorHandling2("No File Submission!");

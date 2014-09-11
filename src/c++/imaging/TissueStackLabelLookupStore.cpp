@@ -22,6 +22,11 @@ tissuestack::imaging::TissueStackLabelLookupStore::TissueStackLabelLookupStore()
 	}
 }
 
+const bool tissuestack::imaging::TissueStackLabelLookupStore::doesInstanceExist()
+{
+	return (tissuestack::imaging::TissueStackLabelLookupStore::_instance != nullptr);
+}
+
 void tissuestack::imaging::TissueStackLabelLookupStore::purgeInstance()
 {
 	// walk through entries and clean them up
