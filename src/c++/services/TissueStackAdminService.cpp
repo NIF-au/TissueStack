@@ -129,16 +129,7 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadRe
 {
 	// extract content type & content length & content disposition
 	unsigned int streamPointer = 0;
-	const std::string httpStreamFrame = request->getFileUploadStart();
-
-	const std::string contentLength =
-		this->readHeaderFromRequest(httpStreamFrame, "Content-Length:", streamPointer).substr(15);
-	unsigned long long int contentLengthInBytes =
-		strtoull(tissuestack::utils::Misc::eliminateWhitespaceAndUnwantedEscapeCharacters(
-			contentLength).c_str(), NULL, 10);
-	if (contentLengthInBytes == 0)
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackFileUploadException,
-			"Content-Length of file upload is 0!");
+	std::string httpStreamFrame = request->getFileUploadStart();
 
 	const std::string contentType =
 		this->readHeaderFromRequest(httpStreamFrame, "Content-Type:", streamPointer);
@@ -148,8 +139,43 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadRe
 				"File Upload is not multipart with a defined boundary!");
 	const std::string boundary = std::string("\r\n\r\n--") + contentType.substr(pos+9) + "--";
 
+	std::string contentLength =
+		this->readHeaderFromRequest(httpStreamFrame, "Content-Length:", streamPointer);
+	if (contentLength.empty() &&
+			httpStreamFrame.length() < tissuestack::services::TissueStackAdminService::BUFFER_SIZE)
+	{
+		// it seems we have to read more ...
+		httpStreamFrame = this->readAnotherBufferFromSocketAsString(socketDescriptor);
+		tissuestack::logging::TissueStackLogger::instance()->error("Reading more: \n%s", httpStreamFrame.c_str());
+		contentLength =
+			this->readHeaderFromRequest(httpStreamFrame, "Content-Length:", streamPointer);
+	}
+
+	if (contentLength.empty())
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackFileUploadException,
+			"Could not find header 'Content-Length' of file upload!");
+
+	unsigned long long int contentLengthInBytes =
+		strtoull(tissuestack::utils::Misc::eliminateWhitespaceAndUnwantedEscapeCharacters(
+			contentLength.substr(15)).c_str(), NULL, 10);
+	if (contentLengthInBytes == 0)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackFileUploadException,
+			"Content-Length of file upload is 0!");
+
 	std::string contentDisposition =
 		this->readHeaderFromRequest(httpStreamFrame, "Content-Disposition:", streamPointer);
+	if (contentDisposition.empty() &&
+			httpStreamFrame.length() < tissuestack::services::TissueStackAdminService::BUFFER_SIZE)
+	{
+		// it seems we have to read more ...
+		httpStreamFrame = this->readAnotherBufferFromSocketAsString(socketDescriptor);
+		contentDisposition =
+				this->readHeaderFromRequest(httpStreamFrame, "Content-Disposition:", streamPointer).substr(15);
+	}
+	if (contentDisposition.empty())
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackFileUploadException,
+			"Could not find header 'Content-Disposition' of file upload!");
+
 	pos = contentDisposition.find("filename=");
 	if (pos == std::string::npos)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackFileUploadException,
@@ -175,30 +201,28 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadRe
 	// create a temporary upload file to store progress
 	int uploadFileDescriptor = this->createUploadFiles(fileName, contentLengthInBytes);
 
-	// read the actual file data
-	if (!this->readAndStoreFileUploadData(
-		processing_strategy,
-		socketDescriptor,
-		uploadFileDescriptor,
-		streamPointer,
-		httpStreamFrame,
-		contentLengthInBytes,
-		boundary))
-	{
-		// we have been cancelled, delete the incomplete file
-		unlink((std::string(UPLOAD_PATH) + "/" + fileName).c_str());
-		unlink((std::string(UPLOAD_PATH) + "/." + fileName + ".upload").c_str());
-		return "{ \"response\": \"Upload of file '" + fileName + "' cancelled!\"}";
-	};
+		if (!this->readAndStoreFileUploadData(
+			processing_strategy,
+			fileName,
+			socketDescriptor,
+			uploadFileDescriptor,
+			streamPointer,
+			httpStreamFrame,
+			contentLengthInBytes,
+			boundary))
+		{
+			// we have been cancelled, delete the incomplete file
+			unlink((std::string(UPLOAD_PATH) + "/" + fileName).c_str());
+			unlink((std::string(UPLOAD_PATH) + "/." + fileName + ".upload").c_str());
+			return "{ \"response\": \"Upload of file '" + fileName + "' cancelled!\"}";
+		};
 
-	return "{ \"response\": \"Upload of file '" + fileName + "' finished\"}";
+		return "{ \"response\": \"Upload of file '" + fileName + "' finished\"}";
 }
 
 int tissuestack::services::TissueStackAdminService::createUploadFiles(
 	const std::string file_name, const unsigned long long int supposedFileSize)
 {
-	std::lock_guard<std::mutex> lock(this->_uploadProgress);
-
 	int fd =
 		open((std::string(UPLOAD_PATH) + "/." + file_name + ".upload" ).c_str(),
 		O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -222,6 +246,7 @@ int tissuestack::services::TissueStackAdminService::createUploadFiles(
 
 const bool tissuestack::services::TissueStackAdminService::readAndStoreFileUploadData(
 	const tissuestack::common::ProcessingStrategy * processing_strategy,
+	const std::string filename,
 	int socketDescriptor,
 	int uploadFileDescriptor,
 	unsigned int start,
@@ -239,36 +264,49 @@ const bool tissuestack::services::TissueStackAdminService::readAndStoreFileUploa
 	// read till start of actual message
 	while (bytesReceived > 0)
 	{
+		if (tmp.size() < tissuestack::services::TissueStackAdminService::BUFFER_SIZE)
+			bytesReceived = 0;
+
 		unsigned int actualStart =
 				tmp.find("\r\n\r\n", start);
 		if (actualStart != std::string::npos)
 		{
 			tmp =  tmp.substr(actualStart+4);
 			write(uploadFileDescriptor, tmp.c_str(), tmp.size());
-			totalBytesOfFileUpload += tmp.size();
-
-			if (firstPartOfStream.size() < tissuestack::services::TissueStackAdminService::BUFFER_SIZE)
-				bytesReceived = 0;
-
+			totalBytesOfFileUpload += static_cast<unsigned long long int>(tmp.size());
 			break;
 		}
 
-		if (firstPartOfStream.size() < tissuestack::services::TissueStackAdminService::BUFFER_SIZE)
-		{
-			bytesReceived = 0;
+		if (tmp.size() < tissuestack::services::TissueStackAdminService::BUFFER_SIZE)
 			break;
-		}
+
 		// read more
-		char buffer[tissuestack::services::TissueStackAdminService::BUFFER_SIZE];
-		bytesReceived = recv(socketDescriptor, buffer, sizeof(buffer), 0);
-		if (bytesReceived > 0)
-			tmp = std::string(buffer, bytesReceived);
-
+		tmp = readAnotherBufferFromSocketAsString(socketDescriptor);
+		if (tmp.empty())
+			bytesReceived = 0;
 	}
 
-	// read rest
+	unsigned long long int lastWriteAtBytes = totalBytesOfFileUpload;
+
+	/*
+	// read rest which has to be done in non blocking mode !!!
+	if (!tissuestack::utils::System::makeSocketNonBlocking(socketDescriptor))
+		tissuestack::logging::TissueStackLogger::instance()->error("Could not make client socket non blocking!");
+
+	fd_set file_upload_descriptor;
+	FD_ZERO(&file_upload_descriptor);
+	FD_SET(socketDescriptor, &file_upload_descriptor);
+	*/
+
 	while (bytesReceived > 0)
 	{
+		/*
+		int ret = select(socketDescriptor + 1, &file_upload_descriptor, NULL, NULL, NULL);
+		if (ret <= 0) break;
+
+		if (!FD_ISSET(socketDescriptor, &file_upload_descriptor)) continue;
+		*/
+
 		if (processing_strategy->isStopFlagRaised())
 			return false;
 
@@ -276,20 +314,44 @@ const bool tissuestack::services::TissueStackAdminService::readAndStoreFileUploa
 		bytesReceived = recv(socketDescriptor, buffer, sizeof(buffer), 0);
 		if (bytesReceived > 0)
 		{
-			//TODO: update progress file every so often
-			// mutex access
-			// implement private read/write method
 			write(uploadFileDescriptor, buffer, bytesReceived);
-			totalBytesOfFileUpload += bytesReceived;
+			totalBytesOfFileUpload += static_cast<unsigned long long int>(bytesReceived);
+
+			if (bytesReceived < tissuestack::services::TissueStackAdminService::BUFFER_SIZE &&
+					((totalBytesOfFileUpload + tissuestack::services::TissueStackAdminService::BUFFER_SIZE) > supposedFileSize))
+				break;
+		}
+
+		// write progress update every MB
+		if ((totalBytesOfFileUpload-lastWriteAtBytes) > static_cast<unsigned long long int>(1024* 1000))
+		{
+			this->writeUploadProgress(filename, totalBytesOfFileUpload, supposedFileSize);
+			lastWriteAtBytes = totalBytesOfFileUpload;
 		}
 	}
 
-	if (totalBytesOfFileUpload > boundary.size())
-		ftruncate(uploadFileDescriptor, totalBytesOfFileUpload-boundary.size());
-
+	if (totalBytesOfFileUpload > static_cast<unsigned long long int>(boundary.size()))
+	{
+		unsigned long long int actualSize =
+			totalBytesOfFileUpload-boundary.length();
+		if (ftruncate(uploadFileDescriptor, actualSize) != 0)
+			return false;
+		this->writeUploadProgress(filename, actualSize, actualSize);
+	}
 	close(uploadFileDescriptor);
 
 	return true;
+}
+
+inline std::string tissuestack::services::TissueStackAdminService::readAnotherBufferFromSocketAsString(
+	int socketDescriptor) const
+{
+	char buffer[tissuestack::services::TissueStackAdminService::BUFFER_SIZE];
+	ssize_t bytesReceived = recv(socketDescriptor, buffer, sizeof(buffer), 0);
+	if (bytesReceived > 0)
+		return std::string(buffer, bytesReceived);
+
+	return "";
 }
 
 const std::string tissuestack::services::TissueStackAdminService::handleDataSetAdditionRequest(
@@ -298,24 +360,34 @@ const std::string tissuestack::services::TissueStackAdminService::handleDataSetA
 	const std::string fileName = request->getRequestParameter("FILENAME");
 	const std::string description = request->getRequestParameter("DESCRIPTION");
 
-	// check for existing file in data directory
-	if (!tissuestack::utils::System::fileExists(fileName))
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-			"Data Set file does not exist!");
-
-	const unsigned int pos = fileName.find_last_of("/");
+	const size_t pos = fileName.find_last_of("/");
 	std::string finalDestination = DATASET_PATH;
+	std::string absoluteFileName = fileName;
 	if (pos != std::string::npos)
 		finalDestination += ("/" + fileName.substr(pos+1));
 	else
+	{
 		finalDestination += ("/" + fileName);
+		absoluteFileName = std::string(UPLOAD_PATH) + "/" + fileName;
+	}
+
+	// check for existing file in data directory
+	if (!tissuestack::utils::System::fileExists(absoluteFileName))
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Data Set file does not exist!");
 
 	if (tissuestack::imaging::TissueStackDataSetStore::instance()->findDataSet(finalDestination))
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Data Set referring to same file exists already!");
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Data Set referring to same file exists already!");
 
 	// move raw file !
-	if (rename(fileName.c_str(), finalDestination.c_str()) != 0)
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Could not move data set!");
+	int status = rename(absoluteFileName.c_str(), finalDestination.c_str());
+	if (status != 0)
+	{
+		tissuestack::logging::TissueStackLogger::instance()->error("Failed to mv file: %s", strerror(errno));
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Could not move data set: This could be due to lack of permissions or upload and data directory residing in different partitions!");
+	}
 
 	std::unique_ptr<const tissuestack::imaging::TissueStackImageData> dataSet;
 	unsigned long long int id = 0;
@@ -360,7 +432,7 @@ const std::string tissuestack::services::TissueStackAdminService::handleDataSetA
 			// ignored
 		}
 		// undo moving of file
-		rename(finalDestination.c_str(), fileName.c_str());
+		rename(finalDestination.c_str(), absoluteFileName.c_str());
 
 		tissuestack::logging::TissueStackLogger::instance()->error(
 			"Failed to persist data set: %s", e.what());
@@ -432,6 +504,10 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadDi
 		if (tmp.at(0) == '.') // no hidden files
 			continue;
 
+		// if we have a file in upload progress => don't show it
+		if (tissuestack::utils::System::fileExists(std::string(UPLOAD_PATH) + "/." + tmp + ".upload"))
+			continue;
+
 		results.push_back(tmp);
 	}
 
@@ -492,10 +568,50 @@ const std::string tissuestack::services::TissueStackAdminService::handleDataSetR
 const std::string tissuestack::services::TissueStackAdminService::handleUploadProgressRequest(
 	const tissuestack::networking::TissueStackServicesRequest * request) const
 {
-	//TODO: implement
-	//unlink((std::string(UPLOAD_PATH) + "/." + fileName + ".upload" ).c_str());
+	const std::string filename = request->getRequestParameter("FILE");
 
-	return "NOT IMPLEMENTED";
+	int fd = -1;
+	{
+		fd =
+			open((std::string(UPLOAD_PATH) + "/." + filename + ".upload" ).c_str(),
+			O_RDONLY, 0644);
+		if (fd <= 0)
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Could not open temporary upload progress file!");
+	}
+
+	char buffer[tissuestack::services::TissueStackAdminService::BUFFER_SIZE];
+	ssize_t bytesRead = read(fd, buffer, tissuestack::services::TissueStackAdminService::BUFFER_SIZE);
+	if (bytesRead <= 0)
+		return std::string("{\"response\": {\"filename\": \"") +
+			filename + "\", \"progress\": -1}}";
+
+	const std::string progress =
+		tissuestack::utils::Misc::eliminateWhitespaceAndUnwantedEscapeCharacters(
+			std::string(buffer, bytesRead));
+	close(fd);
+
+
+	const std::vector<std::string> tokens =
+		tissuestack::utils::Misc::tokenizeString(progress, '/');
+	if (tokens.size() != 2)
+		return std::string("{\"response\": {\"filename\": \"") +
+			filename + "\", \"progress\": -1}}";
+
+	float fProgress = 0;
+	// we are finished
+	if (tokens[0].compare(tokens[1]) == 0)
+	{
+		unlink((std::string(UPLOAD_PATH) + "/." + filename + ".upload").c_str());
+		fProgress = 100;
+	} else
+		fProgress =
+			static_cast<float>(atof(tokens[0].c_str()) / atof(tokens[1].c_str())) *
+				static_cast<float>(100);
+
+	return std::string("{\"response\": {\"filename\": \"") +
+			filename + "\", \"progress\":" +
+			std::to_string(fProgress) + "}}";
 }
 
 const std::string tissuestack::services::TissueStackAdminService::handleProgressRequest(
@@ -516,6 +632,29 @@ const std::string tissuestack::services::TissueStackAdminService::handleProgress
 
 }
 
+inline void tissuestack::services::TissueStackAdminService::writeUploadProgress(
+		const std::string filename,
+		const unsigned long long int partial,
+		const unsigned long long int total
+	) const
+{
+	{
+		int fd =
+			open((std::string(UPLOAD_PATH) + "/." + filename + ".upload" ).c_str(),
+			O_WRONLY | O_CREAT | O_TRUNC, 0644);
+		if (fd <= 0)
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Could not write temporary upload progress file!");
+		const std::string progress =
+			std::to_string(partial) + "/" + std::to_string(total) + "\n";
+		if (write(fd, progress.c_str(), progress.size()) < 0)
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Could not write content of upload progress file!");
+		close(fd);
+	}
+}
+
+
 inline const std::string tissuestack::services::TissueStackAdminService::readHeaderFromRequest(
 	const std::string httpMessage,
 	const std::string header,
@@ -523,8 +662,7 @@ inline const std::string tissuestack::services::TissueStackAdminService::readHea
 {
 	unsigned long int pos = httpMessage.find(header);
 	if (pos == std::string::npos)
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackFileUploadException,
-			"Http Header is missing for valid file upload!");
+		return "";
 
 	unsigned int posEnd = httpMessage.find("\r\n", pos);
 	if (posEnd == std::string::npos)

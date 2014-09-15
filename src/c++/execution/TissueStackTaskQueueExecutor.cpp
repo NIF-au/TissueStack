@@ -21,8 +21,7 @@ void tissuestack::execution::TissueStackTaskQueueExecutor::init()
 
 			while (!this->isStopFlagRaised())
 			{
-				std::unique_lock<std::mutex> lock_on_conditional_mutex(this->_conditional_mutex);
-				this->_notification_condition.wait_for(lock_on_conditional_mutex, std::chrono::milliseconds(100));
+				std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
 				if (tissuestack::services::TissueStackTaskQueue::doesInstanceExist())
 					break;

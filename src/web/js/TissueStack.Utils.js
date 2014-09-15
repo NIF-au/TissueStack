@@ -126,8 +126,7 @@ TissueStack.Utils = {
 		return results;
 	}, loadColorMaps : function() {
 		TissueStack.Utils.sendAjaxRequest(
-				//"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/colormaps/all", 'GET', true,
-				"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/?service=services&sub_service=colormaps&action=all", 'GET', true,
+				"/" + TissueStack.configuration['server_proxy_path'].value + "/?service=services&sub_service=colormaps&action=all", 'GET', true,
 				function(data, textStatus, jqXHR) {
 					if (!data) {
 						alert("Failed To Load Colormaps ....");
@@ -478,7 +477,7 @@ TissueStack.Utils = {
 		// assemble what we have so far
 		var url = (host != "" ? (protocol + "://" + host.replace(/[_]/g,".")) : "");
 		var path = isTiled ? 
-			TissueStack.configuration['tile_directory'].value : TissueStack.configuration['image_service_proxy_path'].value;
+			TissueStack.configuration['tile_directory'].value : TissueStack.configuration['server_proxy_path'].value;
 		
 		if (zoom == 1) slice = Math.floor(slice);
 		else slice = Math.ceil(slice);
@@ -712,21 +711,10 @@ TissueStack.Utils = {
 			if (dataset.associatedDataSets && dataset.associatedDataSets.length > 0)
 				for (i=0;i<dataset.associatedDataSets.length;i++) {
 					files += (":" + dataset.associatedDataSets[i].associatedDataSet.filename);
-					/*
-					planes += (":" + canvas.getDataExtent().plane);
-					slices += (":" + Math.round(coords.z));
-					xes += (":" + Math.round(coords.x));
-					ys += (":" + Math.round(coords.y));
-					*/
 				}
 		
 		// assemble url
-		/*
-		var url = "/" + TissueStack.configuration['image_service_proxy_path'].value + "/?volume="
-					+ files + "&dimension=" + planes + "space&slice=" + slices + "&x=" + xes
-					+ "&y=" + ys + "&query=query";
-		*/
-		var url = "/" + TissueStack.configuration['image_service_proxy_path'].value + "/?service=query&dataset="
+		var url = "/" + TissueStack.configuration['server_proxy_path'].value + "/?service=query&dataset="
 		+ files + "&dimension=" + planes + "space&slice=" + slices + "&x=" + xes
 		+ "&y=" + ys;
 		

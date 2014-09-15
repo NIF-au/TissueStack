@@ -19,13 +19,13 @@ if (typeof(TissueStack) == 'undefined') {
 };
 
 TissueStack.configuration = {
-		restful_service_proxy_path : 
-			{ 	value: "backend", 
-				description: "restful java service proxy path (relative to the application''s web root directory)"
-			},
-		image_service_proxy_path :
-		{ 	value: "image_service",
-			description: "image service proxy path (relative to the application''s web root directory)"
+		server_proxy_path : 
+		{ 	value: "server", 
+			description: "tissue stack server proxy path (relative to the application''s web root directory)"
+		},
+		tile_directory :
+		{ 	value: "tile_directory", 
+			description: "tissue stack tile directory (relative to the application''s web root directory)"
 		}
 };
 TissueStack.debug = true;

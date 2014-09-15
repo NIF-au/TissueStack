@@ -258,8 +258,13 @@ const bool tissuestack::services::TissueStackTaskQueue::doesTaskExistForDataSet(
 }
 
 
-const bool tissuestack::services::TissueStackTaskQueue::isBeingTiled(const std::string in_file)
+const bool tissuestack::services::TissueStackTaskQueue::isBeingTiled(
+		const tissuestack::services::TissueStackTilingTask * check_t)
 {
+	if (check_t == nullptr)
+		return false;
+
+	const std::string in_file = check_t->getInputImageData()->getFileName();
 	if (in_file.empty() || !tissuestack::utils::System::fileExists(in_file)) return false;
 
 	// this makes sure that we don't modify the tasks while we are doing this traversal
@@ -270,7 +275,8 @@ const bool tissuestack::services::TissueStackTaskQueue::isBeingTiled(const std::
 		if ((t->getInputImageData()->getFileName().compare(in_file) == 0)
 				&& t->getType() == tissuestack::services::TissueStackTaskType::TILING
 				&& (t->getStatus() == tissuestack::services::TissueStackTaskStatus::QUEUED ||
-						t->getStatus() == tissuestack::services::TissueStackTaskStatus::IN_PROCESS))
+						t->getStatus() == tissuestack::services::TissueStackTaskStatus::IN_PROCESS)
+				&& static_cast<const tissuestack::services::TissueStackTilingTask *>(t)->includesZoomLevel(check_t))
 			return true;
 	}
 
@@ -294,10 +300,10 @@ void tissuestack::services::TissueStackTaskQueue::addTask(const tissuestack::ser
 	if ((task->getType() == tissuestack::services::TissueStackTaskType::CONVERSION &&
 			this->isBeingConverted(task->getId()))
 		|| (task->getType() == tissuestack::services::TissueStackTaskType::TILING &&
-			this->isBeingTiled(task->getId())))
+			this->isBeingTiled(static_cast<const tissuestack::services::TissueStackTilingTask *>(task))))
 		{
 			// we are already being processed, not need to do anything
-			tissuestack::logging::TissueStackLogger::instance()->debug("WE ARE BEING TILED/CONVERTED !!!\n");
+			//tissuestack::logging::TissueStackLogger::instance()->debug("WE ARE BEING TILED/CONVERTED !!!\n");
 			delete task;
 			return;
 		}

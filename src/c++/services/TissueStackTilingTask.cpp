@@ -79,6 +79,27 @@ tissuestack::services::TissueStackTilingTask::TissueStackTilingTask(
 
 tissuestack::services::TissueStackTilingTask::~TissueStackTilingTask() {}
 
+const std::vector<unsigned short> tissuestack::services::TissueStackTilingTask::getZoomLevels() const
+{
+	return this->_zoom_levels;
+}
+
+const bool tissuestack::services::TissueStackTilingTask::includesZoomLevel(
+		const tissuestack::services::TissueStackTilingTask * anotherTask) const
+{
+	if (anotherTask == nullptr) return false;
+
+	const std::vector<unsigned short> anotherTasksZoomLevels =
+		anotherTask->getZoomLevels();
+
+	for (auto another_z : anotherTasksZoomLevels)
+		for (auto z : this->_zoom_levels)
+			if (z == another_z)
+				return true;
+
+	return false;
+}
+
 const tissuestack::services::TissueStackTaskType tissuestack::services::TissueStackTilingTask::getType() const
 {
 	return tissuestack::services::TissueStackTaskType::TILING;

@@ -154,3 +154,16 @@ const std::vector<std::string> tissuestack::utils::System::getFilesInDirectory(c
 
 	return files;
 }
+
+const bool tissuestack::utils::System::makeSocketNonBlocking(int socket_fd)
+{
+	int flags = fcntl(socket_fd, F_GETFL, 0);
+	if (flags < 0)
+		return false;
+
+	fcntl(socket_fd, F_SETFL, flags | O_NONBLOCK);
+	if (flags < 0)
+		return false;
+
+	return true;
+}

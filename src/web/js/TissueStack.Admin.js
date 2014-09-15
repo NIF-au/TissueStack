@@ -82,14 +82,15 @@ TissueStack.Admin.prototype = {
 		 	}
 		 	
 	 		TissueStack.Utils.sendAjaxRequest(
- 				"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/security/new_session/json?password="+ password, 'GET', true,
+ 				"/" + TissueStack.configuration['server_proxy_path'].value +
+ 				"/?service=services&sub_service=security&action=new_session&password="+ password, 'GET', true,
  				function(data, textStatus, jqXHR) {
 					if (!data.response && !data.error) {
 						_this.replaceErrorMessage("Did not receive any session, neither lose session ....");
 						return;
 					}	
 					if (data.error) {
-						var message = "Session Error: " + (data.error.message ? data.error.message : " no more session available. Please login again.");
+						var message = "Session Error: " + (data.error.description ? data.error.description : " no more session available. Please login again.");
 						_this.replaceErrorMessage(message);
 						return;
 					}	
@@ -135,15 +136,16 @@ TissueStack.Admin.prototype = {
 		 	}
 		 	
 	 		TissueStack.Utils.sendAjaxRequest(
- 				"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/security/passwd/json?old_passwd="+ old_password
- 				+ "&new_passwd=" + new_password, 'GET', true,
+	 				"/" + TissueStack.configuration['server_proxy_path'].value +
+	 				"/?service=services&sub_service=security&action=passwd&old_passwd="+ old_password
+	 				+ "&new_passwd=" + new_password, 'GET', true,
  				function(data, textStatus, jqXHR) {
 					if (!data.response && !data.error) {
 						_this.replaceErrorMessage("Serious Backend Error!");
 						return;
 					}	
 					if (data.error) {
-						var message = "Failed to change Password: " + (data.error.message ? data.error.message : " Try again...");
+						var message = "Failed to change Password: " + (data.error.description ? data.error.description : " Try again...");
 						_this.replaceErrorMessage(message);
 						return;
 					}	
@@ -231,16 +233,19 @@ TissueStack.Admin.prototype = {
 	displayUploadDirectory : function (){
 		//var _this = this;  
 	     $(".file_radio_list").show(function(){
-	    	 var url = "/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/";
+	    	 var url = "/" + TissueStack.configuration['server_proxy_path'].value + 
+	    	 	"/?service=services&sub_service=admin&action=";
 	    	 var action = $('input[name=radio_task]:checked').val();
 	    	 if (typeof(action) == 'string' && action === 'PreTile')
 	    		 url += "data_set_raw_files";
 	    	 else url += "upload_directory";
 
 	    	 // complete url setting filter params
-	    	url += ("/json");
-	    	if (typeof(action) == 'string' && action === 'AddDataSet') url += "?display_raw_only=true";
-	    	if (typeof(action) == 'string' && action === 'Convert') url += "?display_conversion_formats_only=true";
+	    	//url += ("/json");
+	    	//if (typeof(action) == 'string' && action === 'AddDataSet') url += "?display_raw_only=true";
+	    	//if (typeof(action) == 'string' && action === 'Convert') url += "?display_conversion_formats_only=true";
+	    	 if (typeof(action) == 'string' && action === 'AddDataSet') url += "&display_raw_only=true";
+	    	 if (typeof(action) == 'string' && action === 'Convert') url += "&display_conversion_formats_only=true";
 	    	$("#directory_name").html((typeof(action) == 'string' && action === 'PreTile') ? "Data Sets" : "Upload Directory");
 	    	
 	      	TissueStack.Utils.sendAjaxRequest(url, "GET", true,function(result) {
@@ -276,89 +281,95 @@ TissueStack.Admin.prototype = {
 				_this.replaceErrorMessage(message);
 			};
 
-			/*
+			// extract file name and start upload monitor
+			var filename = $.trim($('#filename_1').val());
+			var progressUpdater = null;
+			if (filename == '') {
+				errorHandling2("Error: Please select a file for upload!");
+				return false;
+			}
+
 			// check session validity beforehand
 			if (!_this.checkSessionValidity(_this.session)) {
 				errorHandling2("Error: Invalid Session! Please Log In.");
 				return false;
-			}*/
-			 
-			// extract file name and start upload monitor
-			var filename = $.trim($('#filename_1').val());
-			var progressUpdater = null;
-			if (filename != '') {
-				var slashPos = filename.lastIndexOf('\\');
-				if (slashPos < 0)
-					slashPos = filename.lastIndexOf('/');
-				if (slashPos >= 0) {
-					// reset to zero percent 
-			        bar.width('0%');
-			        percent.html('0%');
-			        // extract file name without fake path
-					filename = filename.substring(slashPos+1);
+			}
 
-					// we query periodically and abort after 5 failed communications
-					var failedQueryAttempts = 5;
-					var error_handling = function() {
-						if (failedQueryAttempts <= 0) {
-							if (progressUpdater) clearInterval(progressUpdater);
-						}
-						failedQueryAttempts--;
-					};
-					
-					/*
-					// the periodic request
-					progressUpdater = setInterval(function () {
-						TissueStack.Utils.sendAjaxRequest(
-								"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/upload_progress/json?file="+ filename,
-								'GET', true,
-								function(data, textStatus, jqXHR) {
-									if ((!data.response && !data.error)
-											|| data.error || data.response.noResults) {
-										error_handling();
-										return;
-									}
-	
-									try {
-										var progress = data.response.progress;
-							
-										//  we are finished: cancel progress monitor
-										if (progress >= 100 ) {
-									    	bar.width('100%');
-									    	percent.html('100%');
-											if (progressUpdater) clearInterval(progressUpdater);
-											_this.displayUploadDirectory();
-											_this.replaceErrorMessage("File Has Been Successfully Uploaded!");
-											$('.error_message').css("background", "#32CD32");
-											
-											return;
-										}
-										
-										// update percent
-								    	var percentVal = progress + '%';
-								    	bar.width(percentVal);
-								    	percent.html(percentVal);
-								    	// reset failed counter
-										failedQueryAttempts = 5;
-									} catch (anything) {
-										error_handling();
-									}
-								},
-								function(jqXHR, textStatus, errorThrown) {
+			var slashPos = filename.lastIndexOf('\\');
+			if (slashPos < 0)
+				slashPos = filename.lastIndexOf('/');
+			if (slashPos >= 0) {
+				// reset to zero percent 
+		        bar.width('0%');
+		        percent.html('0%');
+		        // extract file name without fake path
+				filename = filename.substring(slashPos+1);
+
+				// we query periodically and abort after 5 failed communications
+				var failedQueryAttempts = 5;
+				var error_handling = function() {
+					if (failedQueryAttempts <= 0) {
+						if (progressUpdater) clearInterval(progressUpdater);
+						percent.html('Failed to upload File!');
+						_this.replaceErrorMessage("Failed to upload file. It may be connectivity...");
+					}
+					failedQueryAttempts--;
+				};
+				
+				// the periodic request
+				progressUpdater = setInterval(function () {
+					TissueStack.Utils.sendAjaxRequest(
+							"/" + TissueStack.configuration['server_proxy_path'].value + "/?service=services&sub_service=admin&action=upload_progress&&file=" + filename,
+							'GET', true,
+							function(data, textStatus, jqXHR) {
+								if ((!data.response && !data.error)
+										|| data.error || data.response.noResults) {
 									error_handling();
 									return;
 								}
-							);  
-						}, 1500);
-						*/
-				}
+
+								try {
+									var progress = data.response.progress;
+						
+									// file may not have been there due to periodic writing
+									if (progress == -1)
+										return;
+									
+									//  we are finished: cancel progress monitor
+									if (progress >= 100 ) {
+								    	bar.width('100%');
+								    	percent.html('100%');
+										if (progressUpdater) clearInterval(progressUpdater);
+										_this.displayUploadDirectory();
+										_this.replaceErrorMessage("File Has Been Successfully Uploaded!");
+										$('.error_message').css("background", "#32CD32");
+										
+										return;
+									}
+									
+									// update percent
+							    	var percentVal = progress + '%';
+							    	bar.width(percentVal);
+							    	percent.html(percentVal);
+							    	// reset failed counter
+									failedQueryAttempts = 5;
+								} catch (anything) {
+									error_handling();
+								}
+							},
+							function(jqXHR, textStatus, errorThrown) {
+								error_handling();
+								return;
+							}
+						);  
+					}, 1500);
 			}
 			
 			// the actual submit for the file upload
 			$(this).ajaxSubmit({ 	
-				//url : "/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/upload/json?session=" + _this.session,
-				url : "/" + TissueStack.configuration['restful_service_proxy_path'].value + "/?service=services&sub_service=admin&action=upload&session=0577b6a839a511e4a706002421b8aff5",
-				//dataType : "json",
+				url : "/" + TissueStack.configuration['server_proxy_path'].value +
+					"/?service=services&sub_service=admin&action=upload&session=" + _this.session,
+				dataType : "json",
 				success: function(data, textStatus, jqXHR) {
 					if (!data.response && !data.error) {
 						errorHandling2("No File Submission!");
@@ -366,7 +377,7 @@ TissueStack.Admin.prototype = {
 					}
 					
 					if (data.error) {
-						errorHandling2("Error: " + (data.error.message ? data.error.message : " No File Submission!"));
+						errorHandling2("Error: " + (data.error.description ? data.error.description : " No File Submission!"));
 						return false;
 					}
 					
@@ -432,7 +443,6 @@ TissueStack.Admin.prototype = {
 			var fileSelected = false;
 			
 			var task_zoom_level = eval(TissueStack.configuration.default_zoom_levels.value).length;
-			var preview = [true, false];
 			
 			var successHandler = null;
 			
@@ -461,63 +471,68 @@ TissueStack.Admin.prototype = {
 				  		// don't be confused by the outer loop, it will only apply for pre-tile
 			  			if (action != "PreTile" && i > 0) break;
 			  			
-			  			for (var j=0;j<preview.length;j++) {
-							// the url to contact (will be completed by whatever action we want to carry out
-							var url = "/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/";
-		
-					  		// don't be confused by the outer loop, it will only apply for pre-tile
-				  			if (action != "PreTile" && !preview[j]) break;
-		
-							// set the individual bits for the selected action 
-							if(action == "AddDataSet") {
-								// we have an additional description existence check here
-		 						var msgDescription = $('#txtDesc').val();
-		 						if (msgDescription == ""){
-		 							_this.replaceErrorMessage("Please Add Description Before Adding New Data Set!");
-		 							return;
-		 						}
-								
-								url += ("add_dataset/json?session=" + _this.session + "&filename=" + uploaded_file.value + "&description=" + msgDescription);
-								successHandler = _this.addDataSetSuccessHandler;
-							} else if(action == "Convert") {
-								url += ("convert/json?session=" + _this.session + "&file=" + TissueStack.configuration['upload_directory'].value + "/" + uploaded_file.value);
-								actonType = TissueStack.Tasks.ReverseTypeLookupTable["Conversion"];
-								successHandler = _this.conversionAndPreTileSuccessHandler;
-							} else if(action == "PreTile") {
-								url += ("tile/json?session=" + _this.session	+ "&file=" + TissueStack.configuration['data_directory'].value + "/" 
-										+ uploaded_file.value
-										+ "&tile_dir=" + TissueStack.configuration['server_tile_directory'].value
-										+ "&dimensions=0,0,0,0,0,0"	+ "&zoom=" + i + "&preview=" + preview[j]);
-								actonType = TissueStack.Tasks.ReverseTypeLookupTable["Tiling"];
-								successHandler = _this.conversionAndPreTileSuccessHandler;
-							}
-		
-					  		// send ajax request
-					 		TissueStack.Utils.sendAjaxRequest(url, 'GET', true,
-								function(data, textStatus, jqXHR) {
-									if (!data.response && !data.error) {
-										_this.replaceErrorMessage("No Response Data Returned!");
-										return;
-									}
-									if (data.error) {
-										var message = "Error: " + (data.error.message ? data.error.message : " Action wasn't performed!");
-										_this.replaceErrorMessage(message);				
-										return;
-									}
-									if (data.response.noResults) {
-										_this.replaceErrorMessage("No Results!");
-										return;
-									}
-			
-									if (successHandler)
-										successHandler(_this, data.response, uploaded_file.value, actonType, actionStatus, i);
-								},
-								function(jqXHR, textStatus, errorThrown) {
-									_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
+						// the url to contact (will be completed by whatever action we want to carry out
+						var url = "/" + TissueStack.configuration['server_proxy_path'].value +
+							"/?service=";
+	
+						// set the individual bits for the selected action 
+						if(action == "AddDataSet") {
+							// we have an additional description existence check here
+	 						var msgDescription = $('#txtDesc').val();
+	 						if (msgDescription == ""){
+	 							_this.replaceErrorMessage("Please Add Description Before Adding New Data Set!");
+	 							return;
+	 						}
+							
+							//url += ("add_dataset/json?session=" + _this.session + "&filename=" + uploaded_file.value + "&description=" + msgDescription);
+	 						url += 
+	 							("services&sub_service=admin&action=add_dataset&session=" + 
+	 								_this.session + "&filename=" + uploaded_file.value + "&description=" + msgDescription);
+							successHandler = _this.addDataSetSuccessHandler;
+						} else if(action == "Convert") {
+							url += ("conversion&session=" + _this.session + "&file=" + TissueStack.configuration['server_proxy_path'].value + "/" + uploaded_file.value);
+							actonType = TissueStack.Tasks.ReverseTypeLookupTable["Conversion"];
+							successHandler = _this.conversionAndPreTileSuccessHandler;
+						} else if(action == "PreTile") {
+							url += ("tiling&session=" + _this.session	+ "&file=" + TissueStack.configuration['data_directory'].value + "/" 
+									+ uploaded_file.value
+									+ "&tile_dir=" + TissueStack.configuration['server_tile_directory'].value
+									+ "&dimensions=x,y,z" + "&zoom=" + i);
+							
+							actonType = TissueStack.Tasks.ReverseTypeLookupTable["Tiling"];
+							successHandler = _this.conversionAndPreTileSuccessHandler;
+						}
+	
+				  		// send ajax request
+				 		TissueStack.Utils.sendAjaxRequest(url, 'GET', true,
+							function(data, textStatus, jqXHR) {
+								if (!data.response && !data.error) {
+									_this.replaceErrorMessage("No Response Data Returned!");
 									return;
 								}
-							);
-			  			}
+								if (data.error) {
+									var message = "Error: " + (data.error.description ? data.error.description : " Action wasn't performed!");
+									_this.replaceErrorMessage(message);				
+									return;
+								}
+								if (data.response.noResults) {
+									_this.replaceErrorMessage("No Results!");
+									return;
+								}
+		
+								if (successHandler)
+									successHandler(_this, data.response, uploaded_file.value, actonType, actionStatus, i);
+							},
+							function(jqXHR, textStatus, errorThrown) {
+								if (jqXHR.status == 408) {
+									_this.replaceErrorMessage("Task has become obsolete!");
+									return
+								}
+								_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
+								return;
+							}
+						);
+
 			  		}
 		  		}
 		  	});
@@ -638,9 +653,9 @@ TissueStack.Admin.prototype = {
 		var _this = this;
 		$('#cancel_' + id).click(function() {
 		   TissueStack.Utils.sendAjaxRequest(
-				"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/cancel/json?" +
-				"session=" + _this.session +
-				"&task_id=" + id,
+				"/" + TissueStack.configuration['server_proxy_path'].value +
+					"/?service=services&sub_service=admin&action=cancel" +
+				"&session=" + _this.session + "&task_id=" + id,
 				'GET', true,
 				function(data, textStatus, jqXHR) {
 					if (!data.response && !data.error) {
@@ -648,7 +663,7 @@ TissueStack.Admin.prototype = {
 						return;
 					}
 					if (data.error) {
-						var message = "Error: " + (data.error.message ? data.error.message : " No Task ID Applied");
+						var message = "Error: " + (data.error.description ? data.error.description : " No Task ID Applied");
 						// no task id message
 						if (message.indexOf(id) > 0)
 							markTaskAsCanceledAndStopChecking(_this, id);
@@ -678,7 +693,8 @@ TissueStack.Admin.prototype = {
 		
 		this.queue_handles[id] = setInterval(function () {
 			TissueStack.Utils.sendAjaxRequest(
-				"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/progress/json?task_id="+ id,
+				"/" + TissueStack.configuration['server_proxy_path'].value +
+					"/?service=services&sub_service=admin&action=progress&task_id=" + id,
 				'GET', true,
 				function(data, textStatus, jqXHR) {
 					if (!data.response && !data.error) {
@@ -688,7 +704,7 @@ TissueStack.Admin.prototype = {
 						return;
 					}
 					if (data.error) {
-						var message = "Error: " + (data.error.message ? data.error.message : " No DataSet Selected!");
+						var message = "Error: " + (data.error.description ? data.error.description : " No DataSet Selected!");
 						_this.replaceErrorMessage(message);
 						_this.stopTaskProgressCheck(id);
 						$('#task_status_' + id).html("Back End Error. Retry later (Refresh Page)!");
@@ -744,8 +760,9 @@ TissueStack.Admin.prototype = {
 		if (!__this.session || !id) return;
 		
 		TissueStack.Utils.sendAjaxRequest(
-			"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/admin/toggle_tiling/json?" +
-			"session=" + __this.session + "&id=" + id + "&flag=" + flag,
+			"/" + TissueStack.configuration['server_proxy_path'].value +
+				"/?service=services&sub_service=admin&action=toggle_tiling" +
+			"&session=" + __this.session + "&id=" + id + "&flag=" + flag,
 			'GET', true,
 			function(data, textStatus, jqXHR) {
 				// truly we don't care
@@ -799,7 +816,8 @@ TissueStack.Admin.prototype = {
 		var isValid = false;
 
 		TissueStack.Utils.sendAjaxRequest(
-			"/" + TissueStack.configuration['restful_service_proxy_path'].value + "/security/check_session/json?session="+ session_token,
+	    	"/" + TissueStack.configuration['server_proxy_path'].value + 
+	    	 	"/?service=services&sub_service=security&action=check_session&session=" + session_token,
 			'GET', false,
 			function(data, textStatus, jqXHR) {
 				if ((!data.response && !data.error) || data.error) {

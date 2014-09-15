@@ -123,7 +123,7 @@ tissuestack::imaging::TissueStackColorMap::TissueStackColorMap(const std::string
 
 		tissuestack::logging::TissueStackLogger::instance()->info("Finished Loading color map file.\n");
 	}	catch (tissuestack::common::TissueStackException & ex) {
-		tissuestack::logging::TissueStackLogger::instance()->debug("%s\n", ex.what());
+		tissuestack::logging::TissueStackLogger::instance()->error("%s\n", ex.what());
 		file_stream.close();
 		throw ex;
 	}	catch (std::exception & ex) {

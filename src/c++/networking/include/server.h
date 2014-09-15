@@ -49,17 +49,6 @@ namespace tissuestack
     				delete this->_executor;
     		};
 
-			void makeSocketNonBlocking(int socket_fd)
-			{
-				int flags = fcntl(socket_fd, F_GETFL, 0);
-				if (flags < 0)
-					perror("fcntl(F_GETFL)");
-
-				fcntl(socket_fd, F_SETFL, flags | O_NONBLOCK);
-				if (flags < 0)
-					perror("fcntl(F_GETFL)");
-			}
-
 			void addToFileDescriptorList(int fd)
 			{
 				std::lock_guard<std::mutex> lock(this->_select_mutex);

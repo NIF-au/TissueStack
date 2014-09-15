@@ -14,7 +14,7 @@ tissuestack::networking::TissueStackPreTilingRequest::TissueStackPreTilingReques
 	// we need a valid session
 	if (tissuestack::services::TissueStackSecurityService::hasSessionExpired(
 		tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "session")))
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 				"Invalid Session! Please Log In.");
 
 	const std::string in_file =
@@ -79,8 +79,7 @@ const tissuestack::services::TissueStackTilingTask *
 const bool tissuestack::networking::TissueStackPreTilingRequest::isObsolete() const
 {
 	// a tiling request is regarded obsolete if there is another one running for the same raw file!
-	return tissuestack::services::TissueStackTaskQueue::instance()->isBeingTiled(
-		this->_tiling->getInputImageData()->getFileName());
+	return tissuestack::services::TissueStackTaskQueue::instance()->isBeingTiled(this->_tiling);
 }
 
 const std::string tissuestack::networking::TissueStackPreTilingRequest::getContent() const

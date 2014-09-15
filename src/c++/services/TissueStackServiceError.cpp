@@ -33,6 +33,8 @@ const std::string tissuestack::services::TissueStackServiceError::toJson() const
 			sException = sWhat.substr(iPos, sWhat.length()-iPos);
 		}
 	}
+	if (sDescription.find("ERROR: ") == 0) // remove leading ERROR: term
+		sDescription = sDescription.substr(7);
 	json << tissuestack::utils::Misc::maskQuotesInJson(sException) << "\", \"description\": \"";
 	json << tissuestack::utils::Misc::maskQuotesInJson(sDescription) << "\"}}";
 

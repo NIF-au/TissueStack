@@ -117,12 +117,6 @@ void tissuestack::execution::TissueStackOnlineExecutor::execute(
 					"200 OK",
 					"application/json",
 					response);
-
-			ssize_t  bytes = send(client_descriptor, response.c_str(), response.length(), 0);
-			if (bytes < 0)
-				tissuestack::logging::TissueStackLogger::instance()->error(
-					"Error Sending 500 Internal Server Error: %s \n", strerror(errno));
-			return;
 		}
 	}  catch (tissuestack::common::TissueStackObsoleteRequestException& obsoleteRequest) /* ERRONEOUS REQUESTS */
 	{
@@ -157,6 +151,14 @@ void tissuestack::execution::TissueStackOnlineExecutor::execute(
 				"413 Request Entity Too Large",
 				"application/json",
 				tissuestack::services::TissueStackServiceError(uploadException).toJson());
+	} catch (tissuestack::common::TissueStackApplicationException& ex)
+	{
+		tissuestack::logging::TissueStackLogger::instance()->error("Failed to execute Process: %s\n", ex.what());
+		response =
+			tissuestack::utils::Misc::composeHttpResponse(
+				"200 OK",
+				"application/json",
+				tissuestack::services::TissueStackServiceError(ex).toJson());
 	} catch (tissuestack::common::TissueStackException& ex)
 	{
 		tissuestack::logging::TissueStackLogger::instance()->error("Failed to execute Process: %s\n", ex.what());
@@ -176,14 +178,17 @@ void tissuestack::execution::TissueStackOnlineExecutor::execute(
 	}
 
 	if (response.empty())
+	{
+		close(client_descriptor);
 		return;
+	}
 
 	// sending error message
-	shutdown(client_descriptor, SHUT_RD);
 	ssize_t  bytes = send(client_descriptor, response.c_str(), response.length(), 0);
 	if (bytes < 0)
 		tissuestack::logging::TissueStackLogger::instance()->error(
 			"Error Sending 500 Internal Server Error: %s \n", strerror(errno));
+	close(client_descriptor);
 }
 
 void tissuestack::execution::TissueStackOnlineExecutor::executeTask(

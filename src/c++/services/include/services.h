@@ -168,9 +168,12 @@ namespace tissuestack
 					const unsigned short square = 256,
 					const std::string image_format = "PNG");
 				~TissueStackTilingTask();
+				const bool includesZoomLevel(const tissuestack::services::TissueStackTilingTask * anotherTask) const;
 				const TissueStackTaskType getType() const;
 				const std::string getParametersForTaskFile() const;
 				void dumpTaskToDebugLog() const;
+			protected:
+				const std::vector<unsigned short> getZoomLevels() const;
 			private:
 				std::string _tile_dir;
 				std::vector<std::string> _dimensions;
@@ -192,7 +195,7 @@ namespace tissuestack
 				static const bool doesInstanceExist();
 				void dumpAllTasksToDebugLog() const;
 				const bool doesTaskExistForDataSet(const std::string & name);
-				const bool isBeingTiled(const std::string in_file);
+				const bool isBeingTiled(const tissuestack::services::TissueStackTilingTask * check_t);
 				const bool isBeingConverted(const std::string in_file);
 				const TissueStackTask * findTaskById(const std::string & id);
 				const TissueStackTask * getNextTask(const bool set_processing_flag = true);
@@ -250,6 +253,7 @@ namespace tissuestack
 				const std::string handleProgressRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
 				const bool readAndStoreFileUploadData(
 					const tissuestack::common::ProcessingStrategy * processing_strategy,
+					const std::string filename,
 					int socketDescriptor,
 					int uploadFileDescriptor,
 					unsigned int start,
@@ -261,7 +265,12 @@ namespace tissuestack
 					const std::string httpMessage,
 					const std::string header,
 					unsigned int & endOfHeader) const;
-				std::mutex _uploadProgress;
+				inline void writeUploadProgress(
+						const std::string filename,
+						const unsigned long long int partial,
+						const unsigned long long int total
+					) const;
+				inline std::string readAnotherBufferFromSocketAsString(int socketDescriptor) const;
 	 	};
 
 		class TissueStackSecurityService final : public TissueStackService

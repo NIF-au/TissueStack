@@ -52,6 +52,7 @@ namespace tissuestack
         static const std::string generateUUID();
         static const std::string generatePseudoRandomNumberAsString(const unsigned short digits);
         static const std::vector<std::string> getFilesInDirectory(const std::string & directory);
+        static const bool makeSocketNonBlocking(int socket_fd);
       private:
         System();
         System & operator=(const System&) = delete;

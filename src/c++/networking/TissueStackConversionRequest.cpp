@@ -15,7 +15,7 @@ tissuestack::networking::TissueStackConversionRequest::TissueStackConversionRequ
 	// we need a valid session
 	if (tissuestack::services::TissueStackSecurityService::hasSessionExpired(
 		tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "session")))
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 				"Invalid Session! Please Log In.");
 
 	const std::string in_file =

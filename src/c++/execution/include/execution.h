@@ -56,8 +56,6 @@ namespace tissuestack
 				void init0(std::function<void (tissuestack::execution::WorkerThread * assigned_worker)> wait_loop);
 			private:
 				std::mutex _task_queue_mutex;
-				std::mutex _conditional_mutex;
-				std::condition_variable _notification_condition;
 				short _number_of_threads = 0;
 				WorkerThread ** _workers = nullptr;
 				std::queue<const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> *> _work_load;
@@ -76,7 +74,6 @@ namespace tissuestack
 				bool hasNoTasksQueued();
 			private:
 				std::mutex _conditional_mutex;
-				std::condition_variable _notification_condition;
 		};
 
 		class SimpleSequentialExecution: public tissuestack::common::ProcessingStrategy

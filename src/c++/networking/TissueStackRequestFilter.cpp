@@ -22,7 +22,6 @@ const tissuestack::common::Request * const tissuestack::networking::TissueStackR
 			static_cast<const tissuestack::networking::HttpRequest * const>(request);
 	//httpRequest->dumpParametersIntoDebugLog();
 
-
 	// we need a service parameter at a minimum
 	std::string service = httpRequest->getParameter("SERVICE");
 	if (service.empty())

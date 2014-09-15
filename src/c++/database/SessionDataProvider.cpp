@@ -8,7 +8,8 @@ const bool tissuestack::database::SessionDataProvider::addSession(
 		if (session.empty() || expiry_in_millis == 0) return false;
 
 		const std::string sql =
-			"INSERT INTO session (id, expiry) VALUES('"
+			std::string(
+			"INSERT INTO session (id, expiry) VALUES('")
 				+ session + "',"
 				+ std::to_string(expiry_in_millis)
 				+ ");";
@@ -30,10 +31,10 @@ const bool tissuestack::database::SessionDataProvider::hasSessionExpired(
 	try
 	{
 		std::string sql =
-			"SELECT * FROM session WHERE id='"
+			std::string("SELECT * FROM session WHERE id='")
 				+ session + "';";
 		const pqxx::result result =
-			tissuestack::database::TissueStackPostgresConnector::instance()->executeNonTransactionalQuery(sql);
+			tissuestack::database::TissueStackPostgresConnector::instance()->executeNonTransactionalQuery({sql});
 		if (result.size() != 1) return true;
 
 		const unsigned long long int present_expiry = result[0]["expiry"].as<unsigned long long int>();
@@ -48,7 +49,7 @@ const bool tissuestack::database::SessionDataProvider::hasSessionExpired(
 		try
 		{
 			sql =
-				"UPDATE session SET expiry="
+					std::string("UPDATE session SET expiry=")
 					+ std::to_string(now+extension)
 					+ " WHERE id='"
 					+ session + "';";
@@ -75,7 +76,7 @@ const bool tissuestack::database::SessionDataProvider::invalidateSession(
 	try
 	{
 		const std::string sql =
-			"DELETE FROM session WHERE id='"
+				std::string("DELETE FROM session WHERE id='")
 				+ session + "';";
 		if (tissuestack::database::TissueStackPostgresConnector::instance()->executeTransaction({sql}) == 1)
 			return true;
@@ -92,7 +93,7 @@ void tissuestack::database::SessionDataProvider::deleteSessions(
 	try
 	{
 		const std::string sql =
-			"DELETE FROM session WHERE expiry < "
+				std::string("DELETE FROM session WHERE expiry < ")
 				+ std::to_string(expiry_in_millis) + ";";
 		tissuestack::database::TissueStackPostgresConnector::instance()->executeTransaction({sql});
 	} catch(const std::exception & bad)
