@@ -239,7 +239,7 @@ namespace tissuestack
 						const tissuestack::networking::TissueStackServicesRequest * request,
 						const int file_descriptor) const;
 			private:
-				static const unsigned int BUFFER_SIZE;
+				static unsigned long long int FILE_UPLOAD_LIMIT;
 				const std::string handleSetTilingRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
 				const std::string handleTaskCancellationRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
 				const std::string handleUploadRequest(

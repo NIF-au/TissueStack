@@ -4,8 +4,7 @@
 #include "services.h"
 
 const std::string tissuestack::services::TissueStackAdminService::SUB_SERVICE_ID = "ADMIN";
-const unsigned int tissuestack::services::TissueStackAdminService::BUFFER_SIZE = 2048;
-
+unsigned long long int tissuestack::services::TissueStackAdminService::FILE_UPLOAD_LIMIT = 10000000000; // ~ 10 gig by default
 tissuestack::services::TissueStackAdminService::TissueStackAdminService() {
 	/* do not need session */
 	this->addMandatoryParametersForRequest("UPLOAD_DIRECTORY", std::vector<std::string>{});
@@ -142,11 +141,10 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadRe
 	std::string contentLength =
 		this->readHeaderFromRequest(httpStreamFrame, "Content-Length:", streamPointer);
 	if (contentLength.empty() &&
-			httpStreamFrame.length() < tissuestack::services::TissueStackAdminService::BUFFER_SIZE)
+			httpStreamFrame.length() < tissuestack::common::SOCKET_READ_BUFFER_SIZE)
 	{
 		// it seems we have to read more ...
 		httpStreamFrame = this->readAnotherBufferFromSocketAsString(socketDescriptor);
-		tissuestack::logging::TissueStackLogger::instance()->error("Reading more: \n%s", httpStreamFrame.c_str());
 		contentLength =
 			this->readHeaderFromRequest(httpStreamFrame, "Content-Length:", streamPointer);
 	}
@@ -165,7 +163,7 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadRe
 	std::string contentDisposition =
 		this->readHeaderFromRequest(httpStreamFrame, "Content-Disposition:", streamPointer);
 	if (contentDisposition.empty() &&
-			httpStreamFrame.length() < tissuestack::services::TissueStackAdminService::BUFFER_SIZE)
+			httpStreamFrame.length() < tissuestack::common::SOCKET_READ_BUFFER_SIZE)
 	{
 		// it seems we have to read more ...
 		httpStreamFrame = this->readAnotherBufferFromSocketAsString(socketDescriptor);
@@ -200,6 +198,12 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadRe
 
 	// create a temporary upload file to store progress
 	int uploadFileDescriptor = this->createUploadFiles(fileName, contentLengthInBytes);
+
+	std::unique_ptr<const tissuestack::database::Configuration> max_upload_size(
+		tissuestack::database::ConfigurationDataProvider::queryConfigurationById("max_upload_size"));
+	if (max_upload_size)
+		tissuestack::services::TissueStackAdminService::FILE_UPLOAD_LIMIT =
+			strtoull(max_upload_size->getValue().c_str(), NULL, 10);
 
 		if (!this->readAndStoreFileUploadData(
 			processing_strategy,
@@ -264,7 +268,7 @@ const bool tissuestack::services::TissueStackAdminService::readAndStoreFileUploa
 	// read till start of actual message
 	while (bytesReceived > 0)
 	{
-		if (tmp.size() < tissuestack::services::TissueStackAdminService::BUFFER_SIZE)
+		if (tmp.size() < tissuestack::common::SOCKET_READ_BUFFER_SIZE)
 			bytesReceived = 0;
 
 		unsigned int actualStart =
@@ -277,7 +281,7 @@ const bool tissuestack::services::TissueStackAdminService::readAndStoreFileUploa
 			break;
 		}
 
-		if (tmp.size() < tissuestack::services::TissueStackAdminService::BUFFER_SIZE)
+		if (tmp.size() < tissuestack::common::SOCKET_READ_BUFFER_SIZE)
 			break;
 
 		// read more
@@ -288,37 +292,20 @@ const bool tissuestack::services::TissueStackAdminService::readAndStoreFileUploa
 
 	unsigned long long int lastWriteAtBytes = totalBytesOfFileUpload;
 
-	/*
-	// read rest which has to be done in non blocking mode !!!
-	if (!tissuestack::utils::System::makeSocketNonBlocking(socketDescriptor))
-		tissuestack::logging::TissueStackLogger::instance()->error("Could not make client socket non blocking!");
-
-	fd_set file_upload_descriptor;
-	FD_ZERO(&file_upload_descriptor);
-	FD_SET(socketDescriptor, &file_upload_descriptor);
-	*/
-
 	while (bytesReceived > 0)
 	{
-		/*
-		int ret = select(socketDescriptor + 1, &file_upload_descriptor, NULL, NULL, NULL);
-		if (ret <= 0) break;
-
-		if (!FD_ISSET(socketDescriptor, &file_upload_descriptor)) continue;
-		*/
-
 		if (processing_strategy->isStopFlagRaised())
 			return false;
 
-		char buffer[tissuestack::services::TissueStackAdminService::BUFFER_SIZE];
+		char buffer[tissuestack::common::SOCKET_READ_BUFFER_SIZE];
 		bytesReceived = recv(socketDescriptor, buffer, sizeof(buffer), 0);
 		if (bytesReceived > 0)
 		{
 			write(uploadFileDescriptor, buffer, bytesReceived);
 			totalBytesOfFileUpload += static_cast<unsigned long long int>(bytesReceived);
 
-			if (bytesReceived < tissuestack::services::TissueStackAdminService::BUFFER_SIZE &&
-					((totalBytesOfFileUpload + tissuestack::services::TissueStackAdminService::BUFFER_SIZE) > supposedFileSize))
+			if (bytesReceived < tissuestack::common::SOCKET_READ_BUFFER_SIZE &&
+					((totalBytesOfFileUpload + tissuestack::common::SOCKET_READ_BUFFER_SIZE) > supposedFileSize))
 				break;
 		}
 
@@ -328,6 +315,9 @@ const bool tissuestack::services::TissueStackAdminService::readAndStoreFileUploa
 			this->writeUploadProgress(filename, totalBytesOfFileUpload, supposedFileSize);
 			lastWriteAtBytes = totalBytesOfFileUpload;
 		}
+
+		if (totalBytesOfFileUpload > tissuestack::services::TissueStackAdminService::FILE_UPLOAD_LIMIT)
+			return false;
 	}
 
 	if (totalBytesOfFileUpload > static_cast<unsigned long long int>(boundary.size()))
@@ -346,7 +336,7 @@ const bool tissuestack::services::TissueStackAdminService::readAndStoreFileUploa
 inline std::string tissuestack::services::TissueStackAdminService::readAnotherBufferFromSocketAsString(
 	int socketDescriptor) const
 {
-	char buffer[tissuestack::services::TissueStackAdminService::BUFFER_SIZE];
+	char buffer[tissuestack::common::SOCKET_READ_BUFFER_SIZE];
 	ssize_t bytesReceived = recv(socketDescriptor, buffer, sizeof(buffer), 0);
 	if (bytesReceived > 0)
 		return std::string(buffer, bytesReceived);
@@ -576,12 +566,12 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadPr
 			open((std::string(UPLOAD_PATH) + "/." + filename + ".upload" ).c_str(),
 			O_RDONLY, 0644);
 		if (fd <= 0)
-			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackFileUploadException,
 				"Could not open temporary upload progress file!");
 	}
 
-	char buffer[tissuestack::services::TissueStackAdminService::BUFFER_SIZE];
-	ssize_t bytesRead = read(fd, buffer, tissuestack::services::TissueStackAdminService::BUFFER_SIZE);
+	char buffer[tissuestack::common::SOCKET_READ_BUFFER_SIZE];
+	ssize_t bytesRead = read(fd, buffer, tissuestack::common::SOCKET_READ_BUFFER_SIZE);
 	if (bytesRead <= 0)
 		return std::string("{\"response\": {\"filename\": \"") +
 			filename + "\", \"progress\": -1}}";

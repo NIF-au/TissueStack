@@ -141,14 +141,13 @@ void tissuestack::execution::TissueStackOnlineExecutor::execute(
 					"200 OK",
 					"application/json",
 					tissuestack::services::TissueStackServiceError(invalidRequest).toJson());
-			shutdown(client_descriptor, SHUT_RD);
 		}
 	}  catch (tissuestack::common::TissueStackFileUploadException& uploadException)
 	{
 		tissuestack::logging::TissueStackLogger::instance()->error("Failed to upload a file: %s\n", uploadException.what());
 		response =
 			tissuestack::utils::Misc::composeHttpResponse(
-				"413 Request Entity Too Large",
+				"200 OK",
 				"application/json",
 				tissuestack::services::TissueStackServiceError(uploadException).toJson());
 	} catch (tissuestack::common::TissueStackApplicationException& ex)

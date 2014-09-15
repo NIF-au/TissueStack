@@ -310,8 +310,10 @@ TissueStack.Admin.prototype = {
 				var error_handling = function() {
 					if (failedQueryAttempts <= 0) {
 						if (progressUpdater) clearInterval(progressUpdater);
-						percent.html('Failed to upload File!');
-						_this.replaceErrorMessage("Failed to upload file. It may be connectivity...");
+						if(percent.html() != 'Failed to upload File!') {
+							percent.html('Failed to upload File!');
+							_this.replaceErrorMessage("Failed to upload file. It may be connectivity or you exceeded the upload limit (10GB) !");
+		 				}
 					}
 					failedQueryAttempts--;
 				};
@@ -387,7 +389,8 @@ TissueStack.Admin.prototype = {
 					}
 				},
 				error: function(jqXHR, textStatus, errorThrown) {
-					_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
+					percent.html('Failed to upload File!');
+					_this.replaceErrorMessage("Failed to upload file. It may be connectivity or you exceeded the upload limit (10GB)!");
 					return false;
 				}
 			});

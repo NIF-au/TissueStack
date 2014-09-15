@@ -32,8 +32,6 @@ namespace tissuestack
     		fd_set _master_descriptors;
 
   		public:
-    		static const unsigned long long int BUFFER_SIZE = 2048;
-
     		ServerSocketSelector(const tissuestack::networking::Server<ProcessorImplementation> * server) :
     			_server(server) {
   				if (server == nullptr || server->isStopping() || !server->isRunning())
@@ -150,7 +148,7 @@ namespace tissuestack
 								}
 							} else // we are ready to receive from an existing client connection
 							{
-								char data_buffer[BUFFER_SIZE];
+								char data_buffer[tissuestack::common::SOCKET_READ_BUFFER_SIZE];
 								ssize_t bytesReceived = recv(i, data_buffer, sizeof(data_buffer), 0);
 								 // NOK case
 								if (bytesReceived <= 0 &&

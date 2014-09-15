@@ -28,6 +28,7 @@ namespace tissuestack
 	namespace common
 	{
 		static const std::string NO_RESULTS_JSON = "{\"response\": {\"noResults\": \"No results found\"}}";
+		static const unsigned int SOCKET_READ_BUFFER_SIZE = 2048;
 
 		class RequestTimeStampStore final
 		{
