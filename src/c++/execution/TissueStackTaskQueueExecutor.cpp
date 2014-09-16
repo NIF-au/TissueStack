@@ -23,7 +23,7 @@ void tissuestack::execution::TissueStackTaskQueueExecutor::init()
 			{
 				std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-				if (tissuestack::services::TissueStackTaskQueue::doesInstanceExist())
+				if (!tissuestack::services::TissueStackTaskQueue::doesInstanceExist())
 					break;
 
 				// fetch next item from the globale task queue

@@ -402,6 +402,24 @@ namespace tissuestack
 					const TissueStackRawData * image,
 					const tissuestack::networking::TissueStackImageRequest * request) const;
 
+				Image * extractImageForPreTiling(
+					const tissuestack::imaging::TissueStackRawData * image,
+					const tissuestack::imaging::TissueStackDataDimension * actualDimension,
+					const unsigned int sliceNumber) const;
+
+				Image * getImageTileForPreTiling(
+						Image * img,
+						const unsigned int xCoordinate,
+						const unsigned int yCoordinate,
+						const unsigned int squareLength) const;
+
+				Image * applyPreTilingProcessing(
+					Image * img,
+					const std::string color_map_name,
+					unsigned long int & width,
+					unsigned long int & height,
+					const float scaleFactor) const;
+
 				Image * extractImageOnly(
 					const TissueStackRawData * image,
 					const tissuestack::networking::TissueStackImageRequest * request) const;
@@ -411,7 +429,17 @@ namespace tissuestack
 					const TissueStackRawData * image,
 					const tissuestack::networking::TissueStackImageRequest * request) const;
 
+				Image * degradeImage(
+					Image * img,
+					const unsigned int width,
+					const unsigned int height,
+					const float quality_factor) const;
 			private:
+				inline unsigned char * readRawSlice(
+					const tissuestack::imaging::TissueStackRawData * image,
+					const tissuestack::imaging::TissueStackDataDimension * actualDimension,
+					const unsigned int sliceNumber) const;
+
 				void inline changeContrast(
 					Image * img,
 					const unsigned short minimum,
@@ -432,13 +460,20 @@ namespace tissuestack
 					const unsigned int width,
 					const unsigned int height) const;
 
-				inline Image * degradeImage(
+				inline Image * degradeImage0(
 					Image * img,
 					const unsigned int width,
 					const unsigned int height,
 					const float quality_factor) const;
 
 				inline Image * convertAnythingToRgbImage(Image * img) const;
+
+				inline Image * getImageTile0(
+						Image * img,
+						const unsigned int xCoordinate,
+						const unsigned int yCoordinate,
+						const unsigned int squareLength,
+						const bool keepOriginalIntact) const;
 
 				inline Image * getImageTile(
 					Image * img,
@@ -718,9 +753,24 @@ namespace tissuestack
 					const tissuestack::common::ProcessingStrategy * processing_strategy,
 					const tissuestack::services::TissueStackTilingTask * pre_tiling_task);
 			private:
-				const bool hasBeenCancelledOrShutDown(
+				inline const bool hasBeenCancelledOrShutDown(
 					const tissuestack::common::ProcessingStrategy * processing_strategy,
 					std::unique_ptr<const tissuestack::services::TissueStackTilingTask> & ptr_pretiling_task) const;
+
+				inline void loopOverDimensions(
+						const tissuestack::common::ProcessingStrategy * processing_strategy,
+						std::unique_ptr<const tissuestack::services::TissueStackTilingTask> & ptr_pretiling_task) const;
+
+				inline void writeImageToFile(
+					Image * img,
+					const std::string & tile_dir,
+					const unsigned int slice_number,
+					const std::string & color_map,
+					const bool is_preview,
+					const std::string & format,
+					const unsigned int x = 0,
+					const unsigned int y = 0) const;
+
 				UncachedImageExtraction * _extractor = nullptr;
 		};
 	}

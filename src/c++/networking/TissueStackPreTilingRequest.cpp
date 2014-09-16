@@ -22,11 +22,18 @@ tissuestack::networking::TissueStackPreTilingRequest::TissueStackPreTilingReques
 	if (in_file.empty())
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 			"Mandatory parameter 'file' was not supplied!");
-	const std::string tile_dir =
+	const tissuestack::imaging::TissueStackDataSet * foundDataSet =
+		tissuestack::imaging::TissueStackDataSetStore::instance()->findDataSet(in_file);
+	if (foundDataSet == nullptr || foundDataSet->getImageData()->getDataBaseId() == 0)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+			"Could not find associated dataset to retrieve database id!");
+
+	std::string tile_dir =
 		tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters,"tile_dir");
 	if (tile_dir.empty())
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 			"Mandatory parameter 'tile_dir' was not supplied!");
+	tile_dir = tile_dir + "/" + std::to_string(foundDataSet->getImageData()->getDataBaseId());
 
 	const std::vector<std::string> dimensions =
 		tissuestack::utils::Misc::tokenizeString(

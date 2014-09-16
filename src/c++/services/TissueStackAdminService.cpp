@@ -613,13 +613,39 @@ const std::string tissuestack::services::TissueStackAdminService::handleProgress
 	const tissuestack::services::TissueStackTask * hit =
 		tissuestack::services::TissueStackTaskQueue::instance()->findTaskById(task_id);
 	if (hit == nullptr)
+	{
+		// check if we happen to be finished, cancelled or erroneous
+		const std::string pathToFile = std::string(TASKS_PATH) + "/" + task_id;
+
+		if (tissuestack::utils::System::fileExists(pathToFile + ".done"))
+			return
+				std::string("{\"response\": {\"filename\": \"") +
+					task_id + "\", \"progress\": 100, \"status\": " +
+					std::to_string(tissuestack::services::TissueStackTaskStatus::FINISHED) +
+					"}}";
+
+		if (tissuestack::utils::System::fileExists(pathToFile + ".cancelled"))
+			return
+				std::string("{\"response\": {\"filename\": \"") +
+					task_id + "\", \"status\": " +
+					std::to_string(tissuestack::services::TissueStackTaskStatus::CANCELLED) +
+					"}}";
+
+		if (tissuestack::utils::System::fileExists(pathToFile + ".error"))
+			return
+				std::string("{\"response\": {\"filename\": \"") +
+					task_id + "\", \"status\": " +
+					std::to_string(tissuestack::services::TissueStackTaskStatus::ERRONEOUS) +
+					"}}";
+
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"Task does not exist!");
+	}
 
 	return std::string("{\"response\": {\"filename\": \"") +
 		hit->getInputImageData()->getFileName() + "\", \"progress\":" +
-		std::to_string(hit->getProgress()) + "}}";
-
+		std::to_string(hit->getProgress()) + ", \"status\": " +
+		std::to_string(hit->getStatus()) + "}}";
 }
 
 inline void tissuestack::services::TissueStackAdminService::writeUploadProgress(

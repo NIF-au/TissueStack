@@ -64,24 +64,48 @@ tissuestack::services::TissueStackTilingTask::TissueStackTilingTask(
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"We habe to have at least one zoom level for tiling!");
 	for (auto z : zoom_levels)
-		if (z > 25)
+		if (z > this->getInputImageData()->getZoomLevels().size())
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-				"We only allow zoom level between 0 and 25 for tiling!");
-
+				"Requested zoom level exceeds zoom factor size!");
 	this->_zoom_levels = zoom_levels;
 
 	// set total number of slices we have to work off
 	unsigned long long int totalSlices = 0;
 	for (auto d : dimensions)
 		totalSlices += this->getInputImageData()->getDimension(d.at(0))->getNumberOfSlices();
-	this->setTotalSlices(totalSlices);
+	this->setTotalSlices(totalSlices * static_cast<unsigned long long int>(this->_zoom_levels.size()));
 }
 
 tissuestack::services::TissueStackTilingTask::~TissueStackTilingTask() {}
 
+const std::string tissuestack::services::TissueStackTilingTask::getImageFormat() const
+{
+	return this->_image_format;
+}
+
+const std::string tissuestack::services::TissueStackTilingTask::getColorMap() const
+{
+	return this->_color_map;
+}
+
+const std::string tissuestack::services::TissueStackTilingTask::getTileDir() const
+{
+	return this->_tile_dir;
+}
+
+const unsigned int tissuestack::services::TissueStackTilingTask::getSquareLength() const
+{
+	return this->_square;
+}
+
 const std::vector<unsigned short> tissuestack::services::TissueStackTilingTask::getZoomLevels() const
 {
 	return this->_zoom_levels;
+}
+
+const std::vector<std::string> tissuestack::services::TissueStackTilingTask::getDimensions() const
+{
+	return this->_dimensions;
 }
 
 const bool tissuestack::services::TissueStackTilingTask::includesZoomLevel(

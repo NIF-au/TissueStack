@@ -18,6 +18,7 @@
 
 #include <mutex>
 #include <memory>
+#include <atomic>
 
 #include <algorithm>
 #include <functional>

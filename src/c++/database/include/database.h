@@ -28,11 +28,24 @@ namespace tissuestack
 					const unsigned int from,
 					const unsigned int to);
 		    	void purgeInstance();
-		    	const bool isConnected() const;
+		    	const bool isTransConnected() const;
+		    	const bool isNonTransBackupConnected() const;
+		    	const bool isNonTransConnected(const unsigned short index);
 			private:
+		    	static const unsigned short MAX_NON_TRANSACTIONAL_CONNECTIONS = 5;
+		    	std::atomic_bool _busyNonTransactionalConnections[MAX_NON_TRANSACTIONAL_CONNECTIONS];
+		    	std::mutex _transactionMutex;
+		    	std::mutex _non_transactionMutex;
 		    	std::string _connectString;
-		    	void disconnect();
-		    	void reconnect();
+		    	void disconnectTransConnection();
+		    	void disconnectNonTransBackupConnection();
+		    	void disconnectNonTransConnections(const bool forceDisconnect = false);
+		    	void disconnectNonTransConnection(const unsigned short index, const bool forceDisconnect = false);
+		    	void reconnectTransConnection();
+		    	void reconnectNonTransConnections();
+		    	void reconnectNonTransBackupConnection();
+		    	void reconnectNonTransConnection(const unsigned short index);
+		    	const unsigned short findNextIdleNonTransConnection();
 		    	TissueStackPostgresConnector(
 		    			const std::string host,
 		    			const short port,
@@ -40,7 +53,9 @@ namespace tissuestack
 		    			const std::string user,
 		    			const std::string password);
 				static TissueStackPostgresConnector * _instance;
-				pqxx::connection * _connection = nullptr;
+				std::vector<pqxx::connection *> _non_trans_connections;
+				pqxx::connection * _trans_connection = nullptr;
+				pqxx::connection * _non_trans_backup_connection = nullptr;
 	 	};
 
 		class Configuration final

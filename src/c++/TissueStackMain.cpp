@@ -158,7 +158,9 @@ int main(int argc, char * args[])
 	try
 	{
 		// start database connection
-		if (!tissuestack::database::TissueStackPostgresConnector::instance()->isConnected())
+		if (!tissuestack::database::TissueStackPostgresConnector::instance()->isTransConnected()
+				|| !tissuestack::database::TissueStackPostgresConnector::instance()->isNonTransConnected(0)
+				|| !tissuestack::database::TissueStackPostgresConnector::instance()->isNonTransBackupConnected())
 		{
 			Logger->error("Database is not connected!\n");
 			//tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();

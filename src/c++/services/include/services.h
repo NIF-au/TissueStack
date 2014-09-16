@@ -173,7 +173,13 @@ namespace tissuestack
 				const std::string getParametersForTaskFile() const;
 				void dumpTaskToDebugLog() const;
 			protected:
+				friend class tissuestack::imaging::PreTiler;
 				const std::vector<unsigned short> getZoomLevels() const;
+				const std::vector<std::string> getDimensions() const;
+				const std::string getImageFormat() const;
+				const std::string getColorMap() const;
+				const std::string getTileDir() const;
+				const unsigned int getSquareLength() const;
 			private:
 				std::string _tile_dir;
 				std::vector<std::string> _dimensions;
