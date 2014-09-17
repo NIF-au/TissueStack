@@ -131,8 +131,8 @@ const unsigned long long int tissuestack::database::TissueStackPostgresConnector
 			//tissuestack::logging::TissueStackLogger::instance()->debug("Executing SQL: %s", s.c_str());
 			result = some_work.exec(s);
 			affectedRows += result.affected_rows();
-			some_work.commit();
 		}
+		some_work.commit();
 
 		return affectedRows;
 	} catch (std::exception & bad) { // check connectivity

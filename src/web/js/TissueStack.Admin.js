@@ -767,6 +767,7 @@ TissueStack.Admin.prototype = {
 				function(jqXHR, textStatus, errorThrown) {
 					_this.replaceErrorMessage("Error connecting to backend: " + textStatus + " " + errorThrown);
 					$('#task_status_' + id).html("Back End Error. Retry later (Refresh Page)!");
+					_this.stopTaskProgressCheck(id);
 					return;
 				}
 			);  

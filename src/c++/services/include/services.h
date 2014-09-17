@@ -200,13 +200,17 @@ namespace tissuestack
 				void purgeInstance();
 				static const bool doesInstanceExist();
 				void dumpAllTasksToDebugLog() const;
-				const bool doesTaskExistForDataSet(const std::string & name);
+				const bool doesTaskExistForDataSet(const std::string & name,
+						const bool is_being_tiled_check = false, const bool is_being_converted_check = false);
 				const bool isBeingTiled(const tissuestack::services::TissueStackTilingTask * check_t);
 				const bool isBeingConverted(const std::string in_file);
 				const TissueStackTask * findTaskById(const std::string & id);
 				const TissueStackTask * getNextTask(const bool set_processing_flag = true);
-				void flagTaskAsFinished(const std::string & task_id, const bool was_cancelled = false);
-				void flagTaskAsErroneous(const std::string & task_id);
+				void flagTaskAsFinished(
+						const std::string & task_id,
+						const bool was_cancelled = false,
+						const bool erase_task = true);
+				void flagTaskAsErroneous(const std::string & task_id, const bool erase_task = true);
 				void persistTaskProgress(const std::string & task_id);
 				const std::string generateTaskId();
 			private:
@@ -215,7 +219,8 @@ namespace tissuestack
 				inline void writeBackToIndividualTasksFile(const tissuestack::services::TissueStackTask * task);
 				inline void flagTask(
 						const tissuestack::services::TissueStackTask * hit,
-						const tissuestack::services::TissueStackTaskStatus status);
+						const tissuestack::services::TissueStackTaskStatus status,
+						const bool erase_task = true);
 				inline void flagUnaddedTask(
 						const tissuestack::services::TissueStackTask * hit,
 						const tissuestack::services::TissueStackTaskStatus status);

@@ -755,11 +755,11 @@ namespace tissuestack
 			private:
 				inline const bool hasBeenCancelledOrShutDown(
 					const tissuestack::common::ProcessingStrategy * processing_strategy,
-					std::unique_ptr<const tissuestack::services::TissueStackTilingTask> & ptr_pretiling_task) const;
+					const tissuestack::services::TissueStackTilingTask * pretiling_task) const;
 
 				inline void loopOverDimensions(
 						const tissuestack::common::ProcessingStrategy * processing_strategy,
-						std::unique_ptr<const tissuestack::services::TissueStackTilingTask> & ptr_pretiling_task) const;
+						const tissuestack::services::TissueStackTilingTask * pretiling_task) const;
 
 				inline void writeImageToFile(
 					Image * img,

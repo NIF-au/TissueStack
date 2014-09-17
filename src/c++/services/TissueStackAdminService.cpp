@@ -114,7 +114,7 @@ const std::string tissuestack::services::TissueStackAdminService::handleTaskCanc
 		hit->getInputImageData()->getFileName();
 	const std::string progress = std::to_string(hit->getProgress());
 	// cancel
-	tissuestack::services::TissueStackTaskQueue::instance()->flagTaskAsFinished(task_id, true);
+	tissuestack::services::TissueStackTaskQueue::instance()->flagTaskAsFinished(task_id, true, false);
 
 	return std::string("{\"response\": {\"filename\": \"") +
 		fileName + "\", \"progress\":" +
@@ -459,7 +459,7 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadDi
 
 	for (auto f : filesInUploadDirectory)
 	{
-		if (tissuestack::services::TissueStackTaskQueue::instance()->doesTaskExistForDataSet(f))
+		if (tissuestack::services::TissueStackTaskQueue::instance()->doesTaskExistForDataSet(f, false, true))
 			continue;
 
 		if (bDisplayRawOnly)
@@ -528,7 +528,7 @@ const std::string tissuestack::services::TissueStackAdminService::handleDataSetR
 
 	for (auto ds : dataSets)
 	{
-		if (tissuestack::services::TissueStackTaskQueue::instance()->doesTaskExistForDataSet(ds))
+		if (tissuestack::services::TissueStackTaskQueue::instance()->doesTaskExistForDataSet(ds, true, false))
 			continue;
 
 		const unsigned int pos = ds.find_last_of("/");
