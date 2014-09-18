@@ -1,3 +1,6 @@
+#include "networking.h"
+#include "imaging.h"
+#include "database.h"
 #include "services.h"
 
 const std::string tissuestack::services::ConfigurationService::SUB_SERVICE_ID = "CONFIGURATION";
@@ -21,6 +24,7 @@ void tissuestack::services::ConfigurationService::checkRequest(
 }
 
 void tissuestack::services::ConfigurationService::streamResponse(
+		const tissuestack::common::ProcessingStrategy * processing_strategy,
 		const tissuestack::networking::TissueStackServicesRequest * request,
 		const int file_descriptor) const
 {
@@ -56,7 +60,7 @@ void tissuestack::services::ConfigurationService::streamResponse(
 		}
 		json << "] }";
 	} else
-		json << tissuestack::services::TissueStackServiceError::NO_RESULTS;
+		json << tissuestack::common::NO_RESULTS_JSON;
 
 	const std::string response =
 			tissuestack::utils::Misc::composeHttpResponse("200 OK", "application/json", json.str());

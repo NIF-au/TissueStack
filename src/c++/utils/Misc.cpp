@@ -2,7 +2,7 @@
 
 tissuestack::utils::Misc::Misc() {}
 
-const std::string tissuestack::utils::Misc::convertCharPointerToString(char * some_characters)
+const std::string tissuestack::utils::Misc::convertCharPointerToString(const char * some_characters)
 {
 	if (some_characters == nullptr) return std::string("");
 
@@ -56,6 +56,22 @@ const std::string tissuestack::utils::Misc::maskQuotesInJson(const std::string &
 	}
 	return in.str();
 }
+
+const std::string tissuestack::utils::Misc::sanitizeSqlQuote(const std::string & quoted_value)
+{
+	if (quoted_value.empty()) return quoted_value;
+
+	std::ostringstream in;
+	for (char c : quoted_value)
+	{
+		if (c == '\'')
+			in << "''";
+		else
+			in << c;
+	}
+	return in.str();
+}
+
 
 const std::string tissuestack::utils::Misc::eraseCharacterFromString(const std::string & someString, const char unwantedCharacter)
 {

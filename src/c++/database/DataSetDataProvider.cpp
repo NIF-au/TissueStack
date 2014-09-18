@@ -1,9 +1,10 @@
 #include "database.h"
+#include "networking.h"
 #include "imaging.h"
 
 const std::string tissuestack::database::DataSetDataProvider::SQL =
-	"SELECT PrimaryTable.id AS prim_id, PrimaryTable.filename, PrimaryTable.description, PrimaryTable.is_tiled,"
-		" PrimaryTable.zoom_levels, PrimaryTable.one_to_one_zoom_level, resolution_mm,"
+	"SELECT PrimaryTable.id AS prim_id, PrimaryTable.filename, PrimaryTable.description, PrimaryTable.lookup_id,"
+		" PrimaryTable.is_tiled, PrimaryTable.zoom_levels, PrimaryTable.one_to_one_zoom_level, resolution_mm,"
 		" SecondaryTable.id AS sec_id, SecondaryTable.filename AS sec_filename, SecondaryTable.content,"
 		" TertiaryTable.id AS ter_id, TertiaryTable.atlas_prefix, TertiaryTable.atlas_description, TertiaryTable.atlas_query_url"
 		" FROM dataset AS PrimaryTable"
@@ -167,6 +168,102 @@ void tissuestack::database::DataSetDataProvider::findAndAddPlanes(
 	imageData->initializeDimensions(true);
 }
 
+const bool tissuestack::database::DataSetDataProvider::setIsTiledFlag(const unsigned long long int id, const bool is_tiled)
+{
+	const std::string sql =
+		std::string("UPDATE dataset SET is_tiled='") +
+			(is_tiled ? "T" : "F") + "'"
+			" WHERE id=" +
+			 std::to_string(id) + ";";
+	if (tissuestack::database::TissueStackPostgresConnector::instance()->executeTransaction({sql}) == 1)
+		return true;
+
+	return false;
+}
+
+const bool tissuestack::database::DataSetDataProvider::eraseDataSet(const unsigned long long int id)
+{
+	const std::string sql =
+		std::string("DELETE FROM dataset WHERE id=") +
+			 std::to_string(id) + ");";
+	if (tissuestack::database::TissueStackPostgresConnector::instance()->executeTransaction({sql}) == 1)
+		return true;
+
+	return false;
+}
+
+const unsigned short tissuestack::database::DataSetDataProvider::addDataSet(
+		const tissuestack::imaging::TissueStackImageData * dataSet, const std::string & description)
+{
+	// request a new id
+	const pqxx::result results =
+		tissuestack::database::TissueStackPostgresConnector::instance()->executeNonTransactionalQuery(
+			"SELECT NEXTVAL('dataset_id_seq'::regclass);");
+	if (results.empty())
+		return 0;
+
+	const_cast<tissuestack::imaging::TissueStackImageData *>(dataSet)->setDataBaseId(
+		results[0][0].as<unsigned long long int>());
+
+	if (!description.empty())
+		const_cast<tissuestack::imaging::TissueStackImageData *>(dataSet)->setDescription(description);
+
+	const std::string db_id = std::to_string(dataSet->getDataBaseId());
+
+	std::vector<std::string> sqls;
+
+	std::ostringstream tmpSql;
+
+	// main table insert
+	tmpSql << "INSERT INTO dataset (id, filename";
+	if (!dataSet->getDescription().empty())
+		tmpSql << ",description";
+	tmpSql << ") VALUES (" << db_id << ",'"
+		<< dataSet->getFileName()
+		<< "'";
+	if (!dataSet->getDescription().empty())
+		tmpSql << ",'"
+			<< tissuestack::utils::Misc::sanitizeSqlQuote(dataSet->getDescription())
+			<< "'";
+	tmpSql << ");";
+
+	sqls.push_back(tmpSql.str());
+	tmpSql.str("");
+	tmpSql.clear();
+
+	// dimensions/planes table insert
+	const std::vector<std::string> dims = dataSet->getDimensionOrder();
+	for (auto d : dims)
+	{
+		const tissuestack::imaging::TissueStackDataDimension * dim =
+			dataSet->getDimensionByLongName(d);
+		tmpSql << "INSERT INTO dataset_planes (id, dataset_id, is_tiled, zoom_levels, name,"
+			<< " max_x, max_y, max_slices, one_to_one_zoom_level, transformation_matrix,"
+			<< " resolution_mm) VALUES(DEFAULT,"
+			<< db_id << ",'"
+			<< (dataSet->isTiled() ? "T" : "F")
+			<< "','" << dataSet->getZoomLevelsAsJson()
+			<< "','" << dim->getName().at(0)
+			<< "',";
+		tmpSql << std::to_string(dim->getWidth())
+			<< "," << std::to_string(dim->getHeight())
+			<< "," << std::to_string(dim->getNumberOfSlices())
+			<< "," << std::to_string(dataSet->getOneToOneZoomLevel())
+			<< ",'" << dim->getTransformationMatrix()
+			<< "',";
+		if (dataSet->getResolutionInMm() == 0)
+			tmpSql << "NULL";
+		else
+			tmpSql << std::to_string(dataSet->getResolutionInMm());
+		tmpSql << ");";
+		sqls.push_back(tmpSql.str());
+		tmpSql.str("");
+		tmpSql.clear();
+	}
+
+	return tissuestack::database::TissueStackPostgresConnector::instance()->executeTransaction(sqls);
+}
+
 const std::vector<const tissuestack::imaging::TissueStackImageData *> tissuestack::database::DataSetDataProvider::findResults(
 		const std::string sql,
 		const unsigned int from,
@@ -202,49 +299,50 @@ const std::vector<const tissuestack::imaging::TissueStackImageData *> tissuestac
 		for (auto z : s_zoom_levels)
 			v_zoom_levels.push_back(static_cast<float>(atof(z.c_str())));
 
-		// check for lookup info
-		std::unique_ptr<const tissuestack::imaging::TissueStackLabelLookup> associatedLookup(nullptr);
-		if (!i_results["sec_id"].is_null())
+		// do we have a lookup ?
+		const tissuestack::imaging::TissueStackLabelLookup * associatedLookup = nullptr;
+		if (!i_results["lookup_id"].is_null())
 		{
-			std::unique_ptr<const tissuestack::database::AtlasInfo> associatedAtlas(nullptr);
-			if (!i_results["ter_id"].is_null())
-				associatedAtlas.reset(
-					new tissuestack::database::AtlasInfo(
-						i_results["ter_id"].as<unsigned long long int>(),
-						i_results["atlas_prefix"].as<std::string>(),
-						i_results["atlas_description"].as<std::string>(),
-						i_results["atlas_query_url"].is_null() ? "" :
-							i_results["atlas_query_url"].as<std::string>()
-					));
-
 			const unsigned long long int lookup_id = i_results["sec_id"].as<unsigned long long int>();
 			const std::string label_lookup_file = i_results["sec_filename"].as<std::string>();
 
-			// check if we have already a lookup in memory
-			associatedLookup.reset(
-				tissuestack::imaging::TissueStackLabelLookupStore::instance()->findLabelLookupByFullPath(label_lookup_file));
-			if (associatedLookup.get() == nullptr)
+			// check for lookup info
+			associatedLookup =
+				tissuestack::imaging::TissueStackLabelLookupStore::instance()->findLabelLookupByFullPath(label_lookup_file);
+
+			if (associatedLookup == nullptr)
 			{
 				// try to find it via the database id in memory
-				associatedLookup.reset(
-					tissuestack::imaging::TissueStackLabelLookupStore::instance()->findLabelLookupByDataBaseId(lookup_id));
+				associatedLookup =
+					tissuestack::imaging::TissueStackLabelLookupStore::instance()->findLabelLookupByDataBaseId(lookup_id);
 
-				if (associatedLookup.get() == nullptr) // last straw: go to database
+				if (associatedLookup == nullptr) // last straw: use database query results
 				{
-					associatedLookup.reset(
+					associatedLookup =
 						tissuestack::imaging::TissueStackLabelLookup::fromDataBaseId(
 							lookup_id,
 							label_lookup_file,
 							i_results["content"].is_null() ? "" :
 								i_results["content"].as<std::string>(),
-							associatedAtlas.release()));
+							nullptr);
 					// add it to the lookup store
-					tissuestack::imaging::TissueStackLabelLookupStore::instance()->addOrReplaceLabelLookup(associatedLookup.get());
+					tissuestack::imaging::TissueStackLabelLookupStore::instance()->addOrReplaceLabelLookup(associatedLookup);
 				}
-			} else
+			}
+
+			const tissuestack::database::AtlasInfo * associatedAtlas = nullptr;
+			if (!i_results["ter_id"].is_null())
 			{
-				const_cast<tissuestack::imaging::TissueStackLabelLookup *>(associatedLookup.get())->setDataBaseInfo(
-					lookup_id, associatedAtlas.release());
+				associatedAtlas =
+					new tissuestack::database::AtlasInfo(
+						i_results["ter_id"].as<unsigned long long int>(),
+						i_results["atlas_prefix"].as<std::string>(),
+						i_results["atlas_description"].as<std::string>(),
+						i_results["atlas_query_url"].is_null() ? "" :
+							i_results["atlas_query_url"].as<std::string>());
+
+				const_cast<tissuestack::imaging::TissueStackLabelLookup *>(associatedLookup)->setDataBaseInfo(
+					lookup_id, associatedAtlas);
 			}
 		}
 
@@ -255,7 +353,7 @@ const std::vector<const tissuestack::imaging::TissueStackImageData *> tissuestac
 			v_zoom_levels,
 			i_results["one_to_one_zoom_level"].as<unsigned short>(),
 			i_results["resolution_mm"].is_null() ? 0.0 : i_results["resolution_mm"].as<float>(),
-			associatedLookup.release()
+			associatedLookup
 		);
 		v_results.push_back(rec.release());
 	}

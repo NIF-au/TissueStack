@@ -2,21 +2,35 @@
 #define __SYSTEM_H__
 
 #include <thread>
+
+#include <fstream>
 #include <iostream>
+#include <iomanip>
+
+#include <fcntl.h>
+
 #include <ctime>
 #include <sstream>
 #include <cstring>
+
 #include <unistd.h>
+
 #include <sys/types.h>
 #include <sys/sysinfo.h>
 #include <sys/stat.h>
+
 #include <dirent.h>
 #include <typeinfo>
 #include <cxxabi.h>
+
 #include <algorithm>
+
 #include <vector>
-#include <stdexcept>
 #include <unordered_map>
+
+#include <stdexcept>
+#include <uuid/uuid.h>
+
 
 namespace tissuestack
 {
@@ -32,8 +46,13 @@ namespace tissuestack
         static const bool fileExists(const std::string& file_name);
         static const bool directoryExists(const std::string& file_name);
         static const bool createDirectory(const std::string& directory, mode_t mode);
+        static const std::vector<std::string> readTextFileLineByLine(const std::string & file);
         static const std::string getSystemTimeFormatted(const std::string & format);
+        static const unsigned long long int getSystemTimeInMillis();
+        static const std::string generateUUID();
+        static const std::string generatePseudoRandomNumberAsString(const unsigned short digits);
         static const std::vector<std::string> getFilesInDirectory(const std::string & directory);
+        static const bool makeSocketNonBlocking(int socket_fd);
       private:
         System();
         System & operator=(const System&) = delete;
@@ -44,13 +63,14 @@ namespace tissuestack
     {
       public:
     	static const std::string maskQuotesInJson(const std::string & json);
-        static const std::string convertCharPointerToString(char * some_characters);
+        static const std::string convertCharPointerToString(const char * some_characters);
     	static const std::string demangleTypeIdName(const char * mangeledIdName);
     	static const std::vector<std::string> tokenizeString(const std::string & some_string, const char delimiter);
     	static const std::string findUnorderedMapEntryWithUpperCaseStringKey(
     			const std::unordered_map<std::string, std::string> & map, std::string key);
     	static const std::string composeHttpResponse(
     			std::string status, std::string content_type, std::string content);
+    	static const std::string sanitizeSqlQuote(const std::string & quoted_value);
     	static const std::string eraseCharacterFromString(const std::string & someString, const char unwantedCharacter);
     	static const std::string eliminateWhitespaceAndUnwantedEscapeCharacters(const std::string & someString);
       private:

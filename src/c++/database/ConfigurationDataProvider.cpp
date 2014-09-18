@@ -1,4 +1,6 @@
 #include "database.h"
+#include "networking.h"
+#include "imaging.h"
 
 const tissuestack::database::Configuration * tissuestack::database::ConfigurationDataProvider::queryConfigurationById(
 		const std::string name) {
@@ -26,6 +28,37 @@ const tissuestack::database::Configuration * tissuestack::database::Configuratio
 		break;
 	}
 	return ret;
+}
+
+const bool tissuestack::database::ConfigurationDataProvider::persistConfiguration(const tissuestack::database::Configuration * conf)
+{
+	if (conf == nullptr) return false;
+
+	const std::string sql =
+		"INSERT INTO configuration (name, value, description) VALUES('"
+			+ conf->getName() + "','"
+			+ conf->getValue() + "', "
+			+ (conf->getDescription().empty() ? "NULL" : ("'" + conf->getDescription() + "'"))
+			+ ");";
+	if (tissuestack::database::TissueStackPostgresConnector::instance()->executeTransaction({sql}) == 1)
+		return true;
+
+	return false;
+}
+
+const bool tissuestack::database::ConfigurationDataProvider::updateConfiguration(const tissuestack::database::Configuration * conf)
+{
+	if (conf == nullptr) return false;
+
+	const std::string sql =
+		"UPDATE configuration SET value='"
+			+ conf->getValue() + "'"
+			+ " WHERE name='"
+			+ conf->getName() + "';";
+	if (tissuestack::database::TissueStackPostgresConnector::instance()->executeTransaction({sql}) == 1)
+		return true;
+
+	return false;
 }
 
 const std::vector<const tissuestack::database::Configuration *> tissuestack::database::ConfigurationDataProvider::queryAllConfigurations()

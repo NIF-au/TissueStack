@@ -1,9 +1,7 @@
 #ifndef	__DATABASE_H__
 #define __DATABASE_H__
 
-#include "logging.h"
-#include "exceptions.h"
-#include <iostream>
+#include "tissuestack.h"
 #include <pqxx/pqxx>
 
 namespace tissuestack
@@ -22,16 +20,32 @@ namespace tissuestack
 				TissueStackPostgresConnector(const TissueStackPostgresConnector&) = delete;
 				~TissueStackPostgresConnector();
 				static TissueStackPostgresConnector * instance();
+				static const bool doesInstanceExist();
 				const pqxx::result executeNonTransactionalQuery(const std::string sql);
+				const unsigned long long int executeTransaction(const std::vector<std::string> sql);
 				const pqxx::result executePaginatedQuery(
 					const std::string sql,
 					const unsigned int from,
 					const unsigned int to);
 		    	void purgeInstance();
-		    	const bool isConnected() const;
+		    	const bool isTransConnected() const;
+		    	const bool isNonTransBackupConnected() const;
+		    	const bool isNonTransConnected(const unsigned short index);
 			private:
+		    	static const unsigned short MAX_NON_TRANSACTIONAL_CONNECTIONS = 5;
+		    	std::atomic_bool _busyNonTransactionalConnections[MAX_NON_TRANSACTIONAL_CONNECTIONS];
+		    	std::mutex _transactionMutex;
+		    	std::mutex _non_transactionMutex;
 		    	std::string _connectString;
-		    	void reconnect();
+		    	void disconnectTransConnection();
+		    	void disconnectNonTransBackupConnection();
+		    	void disconnectNonTransConnections(const bool forceDisconnect = false);
+		    	void disconnectNonTransConnection(const unsigned short index, const bool forceDisconnect = false);
+		    	void reconnectTransConnection();
+		    	void reconnectNonTransConnections();
+		    	void reconnectNonTransBackupConnection();
+		    	void reconnectNonTransConnection(const unsigned short index);
+		    	const unsigned short findNextIdleNonTransConnection();
 		    	TissueStackPostgresConnector(
 		    			const std::string host,
 		    			const short port,
@@ -39,7 +53,9 @@ namespace tissuestack
 		    			const std::string user,
 		    			const std::string password);
 				static TissueStackPostgresConnector * _instance;
-				pqxx::connection * _connection = nullptr;
+				std::vector<pqxx::connection *> _non_trans_connections;
+				pqxx::connection * _trans_connection = nullptr;
+				pqxx::connection * _non_trans_backup_connection = nullptr;
 	 	};
 
 		class Configuration final
@@ -66,9 +82,11 @@ namespace tissuestack
 				ConfigurationDataProvider(const ConfigurationDataProvider&) = delete;
 				ConfigurationDataProvider() = delete;
 				static const Configuration * queryConfigurationById(const std::string name);
-				static const std::vector<const tissuestack::database::Configuration *> queryAllConfigurations();
+				static const std::vector<const Configuration *> queryAllConfigurations();
+				static const bool persistConfiguration(const Configuration * conf);
+				static const bool updateConfiguration(const Configuration * conf);
 			private:
-				static inline tissuestack::database::Configuration * readResult(pqxx::result::const_iterator result);
+				static inline Configuration * readResult(pqxx::result::const_iterator result);
 		};
 
 		class AtlasInfo final
@@ -92,6 +110,21 @@ namespace tissuestack
 				const std::string _query_url;
 		};
 
+		class SessionDataProvider final
+		{
+			public:
+				SessionDataProvider & operator=(const SessionDataProvider&) = delete;
+				SessionDataProvider(const SessionDataProvider&) = delete;
+				SessionDataProvider() = delete;
+				static const bool addSession(const std::string session, const unsigned long long int expiry_in_millis);
+				static const bool hasSessionExpired(
+						const std::string session,
+						const unsigned long long int now,
+						const unsigned long long int extension = 0);
+				static const bool invalidateSession(const std::string session);
+				static void deleteSessions(const unsigned long long int expiry_in_millis);
+		};
+
 
 		class DataSetDataProvider final
 		{
@@ -109,6 +142,11 @@ namespace tissuestack
 						const bool includePlanes = false);
 				static void findAssociatedDataSets(
 						const unsigned long long int dataset_id, tissuestack::imaging::TissueStackImageData * imageData);
+				static const bool setIsTiledFlag(const unsigned long long int id, const bool is_tiled);
+				static const unsigned short addDataSet(
+					const tissuestack::imaging::TissueStackImageData * dataSet,
+					const std::string & description);
+				static const bool eraseDataSet(const unsigned long long int id);
 			private:
 				static const std::vector<const tissuestack::imaging::TissueStackImageData *> findResults(
 						const std::string sql,

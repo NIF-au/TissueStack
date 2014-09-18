@@ -1,3 +1,4 @@
+#include "networking.h"
 #include "imaging.h"
 
 const bool tissuestack::imaging::TissueStackMincData::isRaw() const

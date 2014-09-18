@@ -1,5 +1,6 @@
-#include "services.h"
+#include "networking.h"
 #include "imaging.h"
+#include "services.h"
 
 const std::string tissuestack::services::ColorMapService::SUB_SERVICE_ID = "COLORMAPS";
 
@@ -19,6 +20,7 @@ void tissuestack::services::ColorMapService::checkRequest(
 }
 
 void tissuestack::services::ColorMapService::streamResponse(
+		const tissuestack::common::ProcessingStrategy * processing_strategy,
 		const tissuestack::networking::TissueStackServicesRequest * request,
 		const int file_descriptor) const
 {
@@ -42,7 +44,7 @@ void tissuestack::services::ColorMapService::streamResponse(
 	}
 	std::string sJson = json.str();
 	if (sJson.empty())
-		sJson = tissuestack::services::TissueStackServiceError::NO_RESULTS;
+		sJson = tissuestack::common::NO_RESULTS_JSON;
 
 	const std::string response =
 			tissuestack::utils::Misc::composeHttpResponse("200 OK", "application/json", sJson);

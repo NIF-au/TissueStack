@@ -1,3 +1,4 @@
+#include "networking.h"
 #include "imaging.h"
 #include "database.h"
 
@@ -324,6 +325,11 @@ const unsigned short tissuestack::imaging::TissueStackImageData::getImageDataMax
 	return this->_global_max_value;
 }
 
+void tissuestack::imaging::TissueStackImageData::setDataBaseId(const unsigned long long int id)
+{
+	this->_database_id = id;
+}
+
 const unsigned long long int tissuestack::imaging::TissueStackImageData::getDataBaseId() const
 {
 	return this->_database_id;
@@ -534,10 +540,19 @@ void tissuestack::imaging::TissueStackImageData::setMembersFromDataBaseInformati
 	this->_lookup = lookup;
 }
 
+const unsigned short tissuestack::imaging::TissueStackImageData::getNumberOfDimensions() const
+{
+	return this->_dim_order.size();
+}
 
 const std::string tissuestack::imaging::TissueStackImageData::getDescription() const
 {
 	return this->_description;
+}
+
+void tissuestack::imaging::TissueStackImageData::setDescription(const std::string description)
+{
+	this->_description = description;
 }
 
 const bool tissuestack::imaging::TissueStackImageData::isTiled() const

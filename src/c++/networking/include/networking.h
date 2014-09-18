@@ -6,16 +6,14 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-#include <algorithm>
-#include <functional>
-#include <typeinfo>
-#include <sstream>
-#include <cstring>
-#include <stdexcept>
-#include <vector>
-
 namespace tissuestack
 {
+	//forwards declarations
+	namespace services
+	{
+		class TissueStackConversionTask;
+		class TissueStackTilingTask;
+	}
   namespace networking
   {
 	class RawHttpRequest : public tissuestack::common::Request
@@ -39,11 +37,13 @@ namespace tissuestack
     		explicit HttpRequest(const RawHttpRequest * const raw_request);
     		explicit HttpRequest(const RawHttpRequest * const raw_request, const bool suppress_filter);
     		~HttpRequest();
-    		const std::string getParameter(std::string name) const;
+    		const std::string getParameter(std::string name, const bool convertToUpperCase = false) const;
     		void dumpParametersIntoDebugLog() const;
     		const std::string getContent() const;
+    		const std::string getFileUploadStart() const;
     		std::unordered_map<std::string, std::string> getParameterMap() const;
     		const bool isObsolete() const;
+    		const bool isFileUpload() const;
     	private:
     		inline void addQueryParameter(std::string & key, std::string value);
     		inline void partiallyURIDecodeString(std::string& potentially_uri_encoded_string);
@@ -53,6 +53,8 @@ namespace tissuestack
     		std::unordered_map<std::string, std::string> _parameters;
     		std::string _query_string = "";
     		static std::unordered_map<std::string,std::string> MinimalURIDecodingTable;
+    		bool _isFileUpload = false;
+    		std::string _fileUploadStart = "";
     };
 
     class TissueStackImageRequest : public tissuestack::common::Request
@@ -66,7 +68,7 @@ namespace tissuestack
 			TissueStackImageRequest(std::unordered_map<std::string, std::string> & request_parameters, bool is_preview);
 			const bool isObsolete() const;
 			const std::string getContent() const;
-			const std::string getDataSetLocation() const;
+			const std::vector<std::string> getDataSetLocations() const;
 			const std::string getDimensionName() const;
 			const unsigned int getSliceNumber() const;
 			const unsigned int getXCoordinate() const;
@@ -90,7 +92,7 @@ namespace tissuestack
 		private:
 			void setImageRequestMembersFromRequestParameters(const std::unordered_map<std::string, std::string> & request_parameters);
 			bool _is_preview = false;
-			std::string _dataset_location;
+			std::vector<std::string> _datasets;
 			std::string _dimension_name;
 			unsigned int _slice_number;
 			unsigned int _x_coordinate;
@@ -123,9 +125,12 @@ namespace tissuestack
     		TissueStackPreTilingRequest & operator=(const TissueStackPreTilingRequest&) = delete;
     		TissueStackPreTilingRequest(const TissueStackPreTilingRequest&) = delete;
 			explicit TissueStackPreTilingRequest(std::unordered_map<std::string, std::string> & request_parameters);
+			const tissuestack::services::TissueStackTilingTask * getTask(const bool nullOutPointer = false);
 			const bool isObsolete() const;
 			~TissueStackPreTilingRequest();
 			const std::string getContent() const;
+		private:
+			tissuestack::services::TissueStackTilingTask * _tiling = nullptr;
     };
 
     class TissueStackConversionRequest final : public tissuestack::common::Request
@@ -136,8 +141,11 @@ namespace tissuestack
     		TissueStackConversionRequest(const TissueStackConversionRequest&) = delete;
 			explicit TissueStackConversionRequest(std::unordered_map<std::string, std::string> & request_parameters);
 			const bool isObsolete() const;
+			const tissuestack::services::TissueStackConversionTask * getTask(const bool nullOutPointer = false);
 			~TissueStackConversionRequest();
 			const std::string getContent() const;
+		private:
+			tissuestack::services::TissueStackConversionTask * _conversion = nullptr;
     };
 
     class TissueStackServicesRequest final : public tissuestack::common::Request
@@ -146,15 +154,18 @@ namespace tissuestack
     		static const std::string SERVICE;
     		TissueStackServicesRequest & operator=(const TissueStackServicesRequest&) = delete;
     		TissueStackServicesRequest(const TissueStackServicesRequest&) = delete;
-			explicit TissueStackServicesRequest(std::unordered_map<std::string, std::string> & request_parameters);
+			explicit TissueStackServicesRequest(
+				std::unordered_map<std::string, std::string> & request_parameters, const std::string file_upload_start = "");
 			const bool isObsolete() const;
 			~TissueStackServicesRequest();
 			const std::string getRequestParameter(const std::string & which, const bool convertUpperCase = false) const;
 			const std::string getSubService() const;
 			const std::string getContent() const;
+			const std::string getFileUploadStart() const;
 		private:
 			std::unordered_map<std::string, std::string> _request_parameters;
 			std::string _subService;
+			std::string _file_upload_start;
     };
 
     class HttpRequestSanityFilter : public tissuestack::common::RequestFilter

@@ -1,3 +1,6 @@
+#include "networking.h"
+#include "imaging.h"
+#include "database.h"
 #include "services.h"
 
 tissuestack::services::TissueStackService::TissueStackService() {}
@@ -29,6 +32,6 @@ void tissuestack::services::TissueStackService::checkMandatoryRequestParameters(
 						"Mandatory parameter " + p + " is missing!");
 	} catch (std::out_of_range & not_found) {
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
-				"The action parameter does not have associated mandatory parameters !");
+				"The action parameter does not exist!");
 	}
 }

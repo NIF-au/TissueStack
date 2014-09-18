@@ -1,4 +1,6 @@
+#include "networking.h"
 #include "imaging.h"
+#include "database.h"
 
 tissuestack::imaging::TissueStackLabelLookup::~TissueStackLabelLookup()
 {
@@ -32,7 +34,8 @@ tissuestack::imaging::TissueStackLabelLookup::TissueStackLabelLookup(
 tissuestack::imaging::TissueStackLabelLookup::TissueStackLabelLookup(const std::string & filename) :
 		_labellookup_id(filename), _database_id(0), _atlas_info(nullptr)
 {
-	tissuestack::logging::TissueStackLogger::instance()->info("Loading label lookup file %s\n", filename.c_str());
+	if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
+		tissuestack::logging::TissueStackLogger::instance()->info("Loading label lookup file %s\n", filename.c_str());
 
 	std::string line = "";
 	std::ifstream file_stream;
@@ -132,7 +135,8 @@ tissuestack::imaging::TissueStackLabelLookup::TissueStackLabelLookup(const std::
 		}
 		file_stream.close();
 
-		tissuestack::logging::TissueStackLogger::instance()->info("Finished Loading label lookup file.\n");
+		if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
+			tissuestack::logging::TissueStackLogger::instance()->info("Finished Loading label lookup file.\n");
 	}	catch (tissuestack::common::TissueStackException & ex) {
 		file_stream.close();
 		throw ex;
@@ -196,12 +200,14 @@ const unsigned long long int tissuestack::imaging::TissueStackLabelLookup::getDa
 
 void tissuestack::imaging::TissueStackLabelLookup::dumpLabelLookupToDebugLog() const
 {
-	tissuestack::logging::TissueStackLogger::instance()->debug("Dumping Label Lookup: %s\n", this->getLabelLookupId().c_str());
+	if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
+		tissuestack::logging::TissueStackLogger::instance()->debug("Dumping Label Lookup: %s\n", this->getLabelLookupId().c_str());
 
 	for (auto rgb : this->_gray_indexed_rgb_mapping)
 	{
 		const std::string label = this->getLabel(rgb[0], rgb[1], rgb[2]);
-		tissuestack::logging::TissueStackLogger::instance()->debug("%u\t%u\t%u\t%s\n", rgb[0], rgb[1], rgb[2], label.c_str());
+		if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
+			tissuestack::logging::TissueStackLogger::instance()->debug("%u\t%u\t%u\t%s\n", rgb[0], rgb[1], rgb[2], label.c_str());
 	}
 }
 

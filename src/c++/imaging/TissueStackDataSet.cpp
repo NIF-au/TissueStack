@@ -1,10 +1,9 @@
+#include "networking.h"
 #include "imaging.h"
+#include "database.h"
 
 tissuestack::imaging::TissueStackDataSet::TissueStackDataSet(
-		const TissueStackImageData * image_data) : _image_data(image_data)
-{
-	//TODO: change status if we are being worked on
-}
+		const TissueStackImageData * image_data) : _image_data(image_data) {}
 
 tissuestack::imaging::TissueStackDataSet::~TissueStackDataSet()
 {
@@ -36,11 +35,6 @@ const tissuestack::imaging::TissueStackDataSet * tissuestack::imaging::TissueSta
 	// delegate
 	return tissuestack::imaging::TissueStackDataSet::fromTissueStackImageData(
 		tissuestack::imaging::TissueStackImageData::fromDataBaseRecordWithId(id, includePlanes));
-}
-
-const tissuestack::imaging::DataSetStatus tissuestack::imaging::TissueStackDataSet::getStatus() const
-{
-	return this->_status;
 }
 
 void tissuestack::imaging::TissueStackDataSet::dumpDataSetContentIntoDebugLog() const

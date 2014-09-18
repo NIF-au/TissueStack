@@ -10,6 +10,11 @@ tissuestack::common::RequestTimeStampStore * tissuestack::common::RequestTimeSta
 	return tissuestack::common::RequestTimeStampStore::_instance;
 }
 
+const bool tissuestack::common::RequestTimeStampStore::doesInstanceExist()
+{
+	return (tissuestack::common::RequestTimeStampStore::_instance != nullptr);
+}
+
 void tissuestack::common::RequestTimeStampStore::purgeInstance()
 {
 	delete tissuestack::common::RequestTimeStampStore::_instance;
@@ -75,6 +80,10 @@ inline const unsigned long long int tissuestack::common::RequestTimeStampStore::
 	timestampAsAString.append(tmp, deltaOfDigits);
 
 	unsigned long long int paddedTimeStamp = strtoull(timestampAsAString.c_str(), NULL, 10);
+	// this is a stability measure against hand-crafted ids/timestamps
+	// as well as rare asynchronous mishaps when reloading the tissuestack front end
+	if (id > paddedTimeStamp)
+		return 0;
 
 	return paddedTimeStamp-id;
 }

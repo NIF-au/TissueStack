@@ -1,8 +1,15 @@
+#include "networking.h"
+#include "imaging.h"
+#include "database.h"
 #include "services.h"
 
 tissuestack::services::TissueStackServicesDelegator::TissueStackServicesDelegator()
 {
 	// register some standard services
+	this->_registeredServices[tissuestack::services::TissueStackSecurityService::SUB_SERVICE_ID] =
+			new tissuestack::services::TissueStackSecurityService();
+	this->_registeredServices[tissuestack::services::TissueStackAdminService::SUB_SERVICE_ID] =
+			new tissuestack::services::TissueStackAdminService();
 	this->_registeredServices[tissuestack::services::ConfigurationService::SUB_SERVICE_ID] =
 			new tissuestack::services::ConfigurationService();
 	this->_registeredServices[tissuestack::services::ColorMapService::SUB_SERVICE_ID] =
@@ -18,6 +25,7 @@ tissuestack::services::TissueStackServicesDelegator::~TissueStackServicesDelegat
 }
 
 void tissuestack::services::TissueStackServicesDelegator::processRequest(
+		const tissuestack::common::ProcessingStrategy * processing_strategy,
 		const tissuestack::networking::TissueStackServicesRequest * request,
 		const int file_descriptor)
 {
@@ -28,6 +36,6 @@ void tissuestack::services::TissueStackServicesDelegator::processRequest(
 			"Failed to find a registered sub service to deal with this request!");
 
 	subService->checkRequest(request);
-	subService->streamResponse(request, file_descriptor);
+	subService->streamResponse(processing_strategy, request, file_descriptor);
 }
 

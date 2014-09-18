@@ -14,6 +14,8 @@ extern "C"
 	#define COLORMAP_PATH CONCAT_APP_PATH("colormaps")
 	#define LOG_PATH CONCAT_APP_PATH("logs")
 	#define LABEL_LOOKUP_PATH CONCAT_APP_PATH("lookup")
+	#define TASKS_PATH CONCAT_APP_PATH("tasks")
+	#define UPLOAD_PATH CONCAT_APP_PATH("upload")
 }
 
 #endif	/* __GLOBALS_H__ */

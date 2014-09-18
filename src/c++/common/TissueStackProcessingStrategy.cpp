@@ -1,6 +1,7 @@
 #include "execution.h"
 
-tissuestack::common::TissueStackProcessingStrategy::TissueStackProcessingStrategy() : _default_strategy(nullptr)
+tissuestack::common::TissueStackProcessingStrategy::TissueStackProcessingStrategy() :
+	_task_queue_executor(new tissuestack::execution::TissueStackTaskQueueExecutor())
 {
 	// depending on the number of cores, we use 75% rounded up
 	if (tissuestack::utils::System::getNumberOfCores() > 1)
@@ -14,13 +15,16 @@ tissuestack::common::TissueStackProcessingStrategy::TissueStackProcessingStrateg
 tissuestack::common::TissueStackProcessingStrategy::~TissueStackProcessingStrategy()
 {
 	delete this->_default_strategy;
+	delete this->_task_queue_executor;
 };
 
 void tissuestack::common::TissueStackProcessingStrategy::init()
 {
 	// delegate
 	this->_default_strategy->init();
-	if (this->_default_strategy->isRunning())
+	this->_task_queue_executor->init();
+	if (this->_default_strategy->isRunning() &&
+			this->_task_queue_executor->isRunning())
 		this->setRunningFlag(true);
 };
 
@@ -35,9 +39,11 @@ void tissuestack::common::TissueStackProcessingStrategy::stop()
 {
 	// delegate
 	if (this->_default_strategy->isRunning())
-	{
 		this->_default_strategy->stop();
-		if (!this->_default_strategy->isRunning())
+	if (this->_task_queue_executor->isRunning())
+		this->_task_queue_executor->stop();
+
+	if (!this->_default_strategy->isRunning() &&
+			!this->_task_queue_executor->isRunning())
 			this->setRunningFlag(false);
-	}
 };

@@ -1,9 +1,13 @@
+#include "networking.h"
 #include "imaging.h"
+#include "database.h"
 
 tissuestack::imaging::TissueStackDataSetStore::TissueStackDataSetStore()
 {
-	if (!tissuestack::utils::System::directoryExists(DATASET_PATH))
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Data Store Directory does NOT exist!");
+	if (!tissuestack::utils::System::directoryExists(DATASET_PATH) &&
+		!tissuestack::utils::System::createDirectory(DATASET_PATH, 0755))
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Could not create data store directory!");
 
 	const std::vector<std::string> fileList = tissuestack::utils::System::getFilesInDirectory(DATASET_PATH);
 	for (std::string f : fileList)
@@ -17,6 +21,11 @@ tissuestack::imaging::TissueStackDataSetStore::TissueStackDataSetStore()
 		tissuestack::logging::TissueStackLogger::instance()->error(
 				"Could not import data set file '%s' for the following reason:\n%s\n", f.c_str(), bad.what());
 	}
+}
+
+const bool tissuestack::imaging::TissueStackDataSetStore::doesInstanceExist()
+{
+	return (tissuestack::imaging::TissueStackDataSetStore::_instance != nullptr);
 }
 
 void tissuestack::imaging::TissueStackDataSetStore::purgeInstance()
@@ -97,6 +106,17 @@ tissuestack::imaging::TissueStackDataSetStore * tissuestack::imaging::TissueStac
 	return tissuestack::imaging::TissueStackDataSetStore::_instance;
 }
 
+const std::vector<std::string> tissuestack::imaging::TissueStackDataSetStore::getRawFileDataSetFiles() const
+{
+	std::vector<std::string> ret;
+
+	for (auto ds : this->_data_sets)
+		if (ds.second->getImageData()->isRaw())
+			ret.push_back(ds.first);
+
+	return ret;
+}
+
 const tissuestack::imaging::TissueStackDataSet * tissuestack::imaging::TissueStackDataSetStore::findDataSet(const std::string & id) const
 {
 	try
@@ -119,6 +139,20 @@ const tissuestack::imaging::TissueStackDataSet * tissuestack::imaging::TissueSta
 			return dataSet.second;
 
 	return nullptr;
+}
+
+void tissuestack::imaging::TissueStackDataSetStore::removeDataSetByDataBaseId(const unsigned long long int id)
+{
+	std::string key = "";
+	for (auto dataSet : this->_data_sets)
+		if (dataSet.second->getImageData()->getDataBaseId() == id)
+		{
+			key = dataSet.first;
+			delete dataSet.second;
+			break;
+		}
+	if (!key.empty())
+		this->_data_sets.erase(key);
 }
 
 void tissuestack::imaging::TissueStackDataSetStore::addDataSet(const tissuestack::imaging::TissueStackDataSet * dataSet)

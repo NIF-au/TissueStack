@@ -1,51 +1,99 @@
-#include "logging.h"
-#include "parameters.h"
-
+#include "tissuestack.h"
 #include "server.h"
-#include "networking.h"
-#include "execution.h"
-#include <memory>
 #include <signal.h>
 
 
-extern "C"
+void cleanUp()
 {
-	// global pointer to give signal handler chance to call server stop
-	tissuestack::networking::Server<tissuestack::common::TissueStackProcessingStrategy> * _ts_server_instance = nullptr;
-
-	void handle_signals(int sig) {
-		switch (sig) {
-			case SIGHUP:
-			case SIGQUIT:
-			case SIGTERM:
-			case SIGINT:
-			_ts_server_instance->stop();
-			break;
-		}
-	};
-
-	void install_signal_handler(tissuestack::networking::Server<tissuestack::common::TissueStackProcessingStrategy> * ts_server_instance)
+	try
 	{
-		if (ts_server_instance == nullptr) return;
-		_ts_server_instance = ts_server_instance;
+		// clean up old sessions and disconnect database
+		tissuestack::database::SessionDataProvider::deleteSessions(
+			tissuestack::utils::System::getSystemTimeInMillis());
 
-		struct sigaction act;
-		int i;
+		if (tissuestack::database::TissueStackPostgresConnector::doesInstanceExist())
+			tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
+	} catch (...)
+	{
+		// can be safely ignored
+	}
 
-		act.sa_handler = handle_signals;
-		sigemptyset(&act.sa_mask);
-		act.sa_flags = 0;
-		i = 1;
-		while (i < 32) {
-			if (i != 11)
-				sigaction(i, &act, nullptr);
-			i++;
-		}
-	};
+	try
+	{
+		// deallocate global singleton objects
+		if (tissuestack::TissueStackConfigurationParameters::doesInstanceExist())
+			tissuestack::TissueStackConfigurationParameters::instance()->purgeInstance();
+
+		if (tissuestack::common::RequestTimeStampStore::doesInstanceExist())
+			tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
+
+		if (tissuestack::imaging::TissueStackDataSetStore::doesInstanceExist())
+			tissuestack::imaging::TissueStackDataSetStore::instance()->purgeInstance();
+
+		if (tissuestack::imaging::TissueStackLabelLookupStore::doesInstanceExist())
+			tissuestack::imaging::TissueStackLabelLookupStore::instance()->purgeInstance();
+
+		if (tissuestack::imaging::TissueStackColorMapStore::doesInstanceExist())
+			tissuestack::imaging::TissueStackColorMapStore::instance()->purgeInstance();
+
+		if (tissuestack::services::TissueStackTaskQueue::doesInstanceExist())
+			tissuestack::services::TissueStackTaskQueue::instance()->purgeInstance();
+
+		if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
+			tissuestack::logging::TissueStackLogger::instance()->purgeInstance();
+
+	} catch (...)
+	{
+		// can be safely ignored
+	}
+	DestroyMagick();
 }
+
+// global pointer to give signal handler chance to call server stop
+std::unique_ptr<tissuestack::networking::Server<tissuestack::common::TissueStackProcessingStrategy> >
+			TissueStackServer;
+
+void handle_signals(int sig) {
+	switch (sig) {
+		case SIGHUP:
+		case SIGQUIT:
+		case SIGTERM:
+		case SIGINT:
+			if (TissueStackServer) TissueStackServer->stop();
+			cleanUp();
+			break;
+	}
+};
+
+void install_signal_handler()
+{
+	struct sigaction act;
+	int i;
+
+	act.sa_handler = handle_signals;
+	sigemptyset(&act.sa_mask);
+	act.sa_flags = 0;
+	i = 1;
+	while (i < 32) {
+		if (i != 11)
+			sigaction(i, &act, nullptr);
+		i++;
+	}
+};
+
 
 int main(int argc, char * args[])
 {
+	try
+	{
+		// install the signal handler
+		install_signal_handler();
+	} catch (std::exception & bad)
+	{
+		std::cerr << "Failed to install signal handlers!" << std::endl;
+		exit(-1);
+	}
+
 	tissuestack::TissueStackConfigurationParameters * Params = nullptr;
 	try
 	{
@@ -73,7 +121,8 @@ int main(int argc, char * args[])
 				"\t# Configuration database name\n\tdb_name=tissuestack\n" <<
 				"\t# Configuration database user\n\tdb_user=tissuestack\n" <<
 				"\t# Configuration database password\n\tdb_password=tissuestack\n\n" << std::endl;
-			Params->purgeInstance();
+			//Params->purgeInstance();
+			cleanUp();
 			exit(-1);
 		}
 
@@ -85,7 +134,8 @@ int main(int argc, char * args[])
 		{
 			std::cerr << "Failed to read passed in configuration file: " <<
 					parseError.what() << std::endl;
-			Params->purgeInstance();
+			//Params->purgeInstance();
+			cleanUp();
 			exit(-1);
 		}
 	}
@@ -97,7 +147,8 @@ int main(int argc, char * args[])
 		Logger = tissuestack::logging::TissueStackLogger::instance();
 	} catch (std::exception & bad)
 	{
-		Params->purgeInstance();
+		//Params->purgeInstance();
+		cleanUp();
 		std::cerr << "Failed to instantiate the logging mechanism!" << std::endl;
 		exit(-1);
 	}
@@ -105,20 +156,25 @@ int main(int argc, char * args[])
 	try
 	{
 		// start database connection
-		if (!tissuestack::database::TissueStackPostgresConnector::instance()->isConnected())
+		if (!tissuestack::database::TissueStackPostgresConnector::instance()->isTransConnected()
+				|| !tissuestack::database::TissueStackPostgresConnector::instance()->isNonTransConnected(0)
+				|| !tissuestack::database::TissueStackPostgresConnector::instance()->isNonTransBackupConnected())
 		{
 			Logger->error("Database is not connected!\n");
-			tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
-			Params->purgeInstance();
-			Logger->purgeInstance();
+			//tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
+			//Params->purgeInstance();
+			//Logger->purgeInstance();
+			cleanUp();
 			exit(-1);
 		}
 		Logger->info("Database connection established!\n");
+		// clean up old sessions
+		tissuestack::database::SessionDataProvider::deleteSessions(
+			tissuestack::utils::System::getSystemTimeInMillis());
 	} catch (std::exception & bad)
 	{
 		Logger->error("Could not create databases connection:\n%s\n", bad.what());
-		Params->purgeInstance();
-		Logger->purgeInstance();
+		cleanUp();
 		exit(-1);
 	}
 
@@ -128,8 +184,8 @@ int main(int argc, char * args[])
 	} catch (std::exception & bad)
 	{
 		Logger->error("Could not instantiate RequestTimeStampStore:\n%s\n", bad.what());
-		Params->purgeInstance();
-		Logger->purgeInstance();
+		cleanUp();
+		//tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
 		exit(-1);
 	}
 
@@ -139,11 +195,8 @@ int main(int argc, char * args[])
 		//tissuestack::imaging::TissueStackLabelLookupStore::instance()->dumpAllLabelLookupsToDebugLog();
 	} catch (std::exception & bad)
 	{
-		tissuestack::imaging::TissueStackDataSetStore::instance()->purgeInstance();
-		tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
 		Logger->error("Could not instantiate TissueStackLabelLookupStore:\n%s\n", bad.what());
-		Params->purgeInstance();
-		Logger->purgeInstance();
+		cleanUp();
 		exit(-1);
 	}
 
@@ -153,12 +206,8 @@ int main(int argc, char * args[])
 		//tissuestack::imaging::TissueStackColorMapStore::instance()->dumpAllColorMapsToDebugLog();
 	} catch (std::exception & bad)
 	{
-		tissuestack::imaging::TissueStackLabelLookupStore::instance()->purgeInstance();
-		tissuestack::imaging::TissueStackDataSetStore::instance()->purgeInstance();
-		tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
 		Logger->error("Could not instantiate TissueStackLabelLookupStore:\n%s\n", bad.what());
-		Params->purgeInstance();
-		Logger->purgeInstance();
+		cleanUp();
 		exit(-1);
 	}
 
@@ -168,15 +217,22 @@ int main(int argc, char * args[])
 		//tissuestack::imaging::TissueStackDataSetStore::instance()->dumpDataSetStoreIntoDebugLog();
 	} catch (std::exception & bad)
 	{
-		tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
 		Logger->error("Could not instantiate TissueStackDataSetStore:\n%s\n", bad.what());
-		Params->purgeInstance();
-		Logger->purgeInstance();
+		cleanUp();
 		exit(-1);
 	}
 
-	std::unique_ptr<tissuestack::networking::Server<tissuestack::common::TissueStackProcessingStrategy> >
-				TissueStackServer;
+	try
+	{
+		tissuestack::services::TissueStackTaskQueue::instance();
+		//tissuestack::services::TissueStackTaskQueue::instance()->dumpAllTasksToDebugLog();
+	} catch (std::exception & bad)
+	{
+		Logger->error("Could not instantiate TissueStackTaskQueue:\n%s\n", bad.what());
+		cleanUp();
+		exit(-1);
+	}
+
 	try
 	{
 		InitializeMagick(NULL);
@@ -190,23 +246,10 @@ int main(int argc, char * args[])
 	{
 		Logger->error(
 				"Failed to instantiate/start the TissueStackServer for the following reason:\n%s\n", bad.what());
-		Params->purgeInstance();
-		Logger->purgeInstance();
+		cleanUp();
 		exit(-1);
 	}
 
-	try
-	{
-		// install the signal handler
-		install_signal_handler(TissueStackServer.get());
-	} catch (std::exception & bad)
-	{
-		Logger->error("Failed to install signal handlers: %s!\n",bad.what());
-		Params->purgeInstance();
-		Logger->purgeInstance();
-		exit(-1);
-	}
-		
 	try
 	{
 		// accept requests and process them until we receive a SIGSTOP
@@ -216,6 +259,7 @@ int main(int argc, char * args[])
 		if (!TissueStackServer->isStopping())
 			Logger->error("TissueStackServer listen() was aborted for the following reason:\n%s\n", bad.what());
 		TissueStackServer->stop();
+		cleanUp();
 		exit(-1);
 	}
 }

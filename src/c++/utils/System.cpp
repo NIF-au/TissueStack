@@ -65,6 +65,60 @@ const bool tissuestack::utils::System::createDirectory(const std::string& direct
 	return true;
 }
 
+const std::vector<std::string> tissuestack::utils::System::readTextFileLineByLine(const std::string & file)
+{
+	if (file.empty() || !tissuestack::utils::System::fileExists(file))
+		return {};
+
+	std::ifstream fileStream;
+	fileStream.open(file.c_str(), std::ifstream::in);
+	std::string line;
+	std::vector<std::string> lines;
+	while (std::getline(fileStream, line))
+	{
+		line = tissuestack::utils::Misc::eliminateWhitespaceAndUnwantedEscapeCharacters(line);
+		if (line.empty() || line.at(0) == '#') continue;
+		lines.push_back(line);
+	}
+	fileStream.close();
+
+	return lines;
+}
+
+const unsigned long long int tissuestack::utils::System::getSystemTimeInMillis()
+{
+	auto time = std::chrono::system_clock::now();
+	auto since_epoch = time.time_since_epoch();
+	auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(since_epoch);
+
+	return static_cast<unsigned long long int>(millis.count());
+}
+
+const std::string tissuestack::utils::System::generateUUID() {
+	uuid_t uuid;
+	uuid_generate_time(uuid);
+
+	std::stringstream stream;
+	for(unsigned int i = 0; i < sizeof(uuid); i++)
+		stream << std::hex << std::setw(2) << std::setfill('0') << static_cast<unsigned short>(uuid[i]);
+
+	return stream.str();
+}
+
+const std::string tissuestack::utils::System::generatePseudoRandomNumberAsString(const unsigned short digits)
+{
+	if (digits > 10) return "";
+
+	srand (static_cast<unsigned int>(time(NULL)));
+	unsigned long long int modulo = pow10(digits);
+	std::string pseudoRandomNumber = std::to_string(rand () % modulo);
+
+	for (unsigned short p=pseudoRandomNumber.length();p<digits;p++)
+		pseudoRandomNumber.append("0");
+
+	return pseudoRandomNumber;
+}
+
 const std::string tissuestack::utils::System::getSystemTimeFormatted(const std::string & format)
 {
 	 char buff[100];
@@ -99,4 +153,17 @@ const std::vector<std::string> tissuestack::utils::System::getFilesInDirectory(c
 	if (dir) closedir(dir);
 
 	return files;
+}
+
+const bool tissuestack::utils::System::makeSocketNonBlocking(int socket_fd)
+{
+	int flags = fcntl(socket_fd, F_GETFL, 0);
+	if (flags < 0)
+		return false;
+
+	fcntl(socket_fd, F_SETFL, flags | O_NONBLOCK);
+	if (flags < 0)
+		return false;
+
+	return true;
 }

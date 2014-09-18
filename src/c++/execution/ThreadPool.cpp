@@ -3,7 +3,7 @@
 tissuestack::execution::ThreadPool::ThreadPool(short number_of_threads) :
 	_number_of_threads(number_of_threads)
 {
-	if (number_of_threads <=1)
+	if (number_of_threads <1)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "A Thread Pool with less than 1 threads is not of much use!");
 	this->_workers = new tissuestack::execution::WorkerThread*[number_of_threads];
 	tissuestack::logging::TissueStackLogger::instance()->info("Thread Pool Size: %u\n", number_of_threads);
@@ -37,8 +37,7 @@ void tissuestack::execution::ThreadPool::init()
 
 			while (!this->isStopFlagRaised())
 			{
-				std::unique_lock<std::mutex> lock_on_conditional_mutex(this->_conditional_mutex);
-				this->_notification_condition.wait(lock_on_conditional_mutex);
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
 				// fetch next item from the queue if not empty
 				if (this->hasNoTasksQueued())
@@ -65,7 +64,11 @@ void tissuestack::execution::ThreadPool::init()
 					std::hash<std::thread::id>()(std::this_thread::get_id()));
 			assigned_worker->stop();
 		};
+	this->init0(wait_loop);
+}
 
+void tissuestack::execution::ThreadPool::init0(std::function<void (tissuestack::execution::WorkerThread * assigned_worker)> wait_loop)
+{
 	// start up the threads and put them in wait mode
 	int i=0;
 	while (i < this->_number_of_threads)
@@ -86,20 +89,14 @@ void tissuestack::execution::ThreadPool::process(
 	// dispatch functionality to the pool, only if we are running,
 	// haven't received a stop flag and the closure is not null
 	if (this->isRunning() && !this->isStopFlagRaised() && functionality)
-	{
 		this->addTask(functionality);
-		this->_notification_condition.notify_one();
-	}
 }
 
 void tissuestack::execution::ThreadPool::stop()
 {
 	// raise stop flag to prevent new requests from being processed
 	if (this->isRunning() && !this->isStopFlagRaised())
-	{
 		this->raiseStopFlag();
-		this->_notification_condition.notify_all();
-	}
 
 	// loop over all threads and check if they are down
 	int i = 0;

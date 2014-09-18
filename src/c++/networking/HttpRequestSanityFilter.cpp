@@ -25,13 +25,18 @@ const tissuestack::common::Request * const tissuestack::networking::HttpRequestS
 	if (raw_content.length() < 10)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "applyFilter was called with incomplete http request");
 
-	// for tissuestack we are not interested in any NON GET type of requests
-	if (raw_content.find("GET") != 0)
+	// apart from a file upload we are not interested in any NON GET type of requests
+	if (!(raw_content.find("POST") == 0 &&
+		raw_content.find("service=services") != std::string::npos &&
+		raw_content.find("sub_service=admin") != std::string::npos &&
+		raw_content.find("action=upload") != std::string::npos) &&
+			raw_content.find("GET") != 0)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Tissue Stack only wants to deal with GET requests");
 
 	// annoying favicon
 	if (raw_content.find("favicon.ico") != std::string::npos)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Tissue Stack does not like favicon.ico requests");
+
 
 	// we are good => return a proper HttpRequest instance
 	return new tissuestack::networking::HttpRequest(static_cast<const tissuestack::networking::RawHttpRequest * const>(request), true);;

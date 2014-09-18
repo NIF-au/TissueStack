@@ -1,13 +1,17 @@
 #ifndef	__SERVER_H__
 #define __SERVER_H__
 
-#include "tissuestack.h"
 #include "networking.h"
+#include "imaging.h"
 #include "execution.h"
+#include "database.h"
+#include "services.h"
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <sys/time.h>
+
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -28,8 +32,6 @@ namespace tissuestack
     		fd_set _master_descriptors;
 
   		public:
-        	static const unsigned short MAX_REQUEST_LENGTH_IN_BYTES = 1024;
-
     		ServerSocketSelector(const tissuestack::networking::Server<ProcessorImplementation> * server) :
     			_server(server) {
   				if (server == nullptr || server->isStopping() || !server->isRunning())
@@ -44,17 +46,6 @@ namespace tissuestack
     			if (this->_executor)
     				delete this->_executor;
     		};
-
-			void makeSocketNonBlocking(int socket_fd)
-			{
-				int flags = fcntl(socket_fd, F_GETFL, 0);
-				if (flags < 0)
-					perror("fcntl(F_GETFL)");
-
-				fcntl(socket_fd, F_SETFL, flags | O_NONBLOCK);
-				if (flags < 0)
-					perror("fcntl(F_GETFL)");
-			}
 
 			void addToFileDescriptorList(int fd)
 			{
@@ -98,7 +89,7 @@ namespace tissuestack
     				  {
     					try
     					{
-    						this->_executor->execute(request_data, request_descriptor);
+    						this->_executor->execute(_this, request_data, request_descriptor);
     						this->removeDescriptorFromList(request_descriptor, true);
     					}  catch (std::exception& bad)
     					{
@@ -157,24 +148,13 @@ namespace tissuestack
 								}
 							} else // we are ready to receive from an existing client connection
 							{
-								char data_buffer[MAX_REQUEST_LENGTH_IN_BYTES+1];
+								char data_buffer[tissuestack::common::SOCKET_READ_BUFFER_SIZE];
 								ssize_t bytesReceived = recv(i, data_buffer, sizeof(data_buffer), 0);
-								if (bytesReceived <= 0 || bytesReceived > MAX_REQUEST_LENGTH_IN_BYTES) { // NOK case
-
-									/*
-									 * //client close which we will ignore from now on
-									 * if (bytesReceived == 0 &&
-									 *		!this->_server->isStopping())
-									 *			tissuestack::logging::TissueStackLogger::instance()->error("Client closed connection!\n");
-									 *  else
-									 */
-									if (bytesReceived < 0 &&
-											!this->_server->isStopping())
-										tissuestack::logging::TissueStackLogger::instance()->error("Data Receive error!\n");
-									else if (bytesReceived > MAX_REQUEST_LENGTH_IN_BYTES &&
-											!this->_server->isStopping()) // for now we have a limit
-										tissuestack::logging::TissueStackLogger::instance()->error("Exceeded Request Size Allowed: %u !!\n", MAX_REQUEST_LENGTH_IN_BYTES );
-
+								 // NOK case
+								if (bytesReceived <= 0 &&
+										!this->_server->isStopping())
+								{
+									tissuestack::logging::TissueStackLogger::instance()->error("Data Receive error!\n");
 									this->removeDescriptorFromList(i, true);
 								}
 								else // OK case
@@ -196,7 +176,7 @@ namespace tissuestack
     	public:
 			static const unsigned short PORT = 4242;
 			static const unsigned short MAX_CONNECTIONS_ALLOWED = 128;
-			static const unsigned short SHUTDOWN_TIMEOUT_IN_SECONDS = 5;
+			static const unsigned short SHUTDOWN_TIMEOUT_IN_SECONDS = 10;
 
 			Server & operator=(const Server&) = delete;
 			Server(const Server&) = delete;
@@ -209,7 +189,7 @@ namespace tissuestack
 				if (this->_isRunning)
 					this->stop();
 
-				if (_processor) delete _processor;
+				if (this->_processor) delete this->_processor;
 			};
 
 			int getServerSocket() const
@@ -302,23 +282,15 @@ namespace tissuestack
 
 				this->_isRunning = false;
 
-				// deallocate global singleton objects and disconnect database
+				tissuestack::logging::TissueStackLogger::instance()->info("Socket Server Shut Down Successfully.\n");
 				try
 				{
-					tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
-					tissuestack::TissueStackConfigurationParameters::instance()->purgeInstance();
-					tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
-					tissuestack::imaging::TissueStackDataSetStore::instance()->purgeInstance();
-					tissuestack::imaging::TissueStackLabelLookupStore::instance()->purgeInstance();
-					tissuestack::imaging::TissueStackColorMapStore::instance()->purgeInstance();
+					tissuestack::logging::TissueStackLogger::instance()->purgeInstance();
 				} catch (...)
 				{
 					// can be safely ignored
 				}
 
-				tissuestack::logging::TissueStackLogger::instance()->info("Socket Server Shut Down Successfully.\n");
-				tissuestack::logging::TissueStackLogger::instance()->purgeInstance();
-				DestroyMagick();
 			};
 
     	private:

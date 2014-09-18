@@ -4,7 +4,7 @@
 INSERT INTO configuration VALUES('version', '1.4', 'version');
 INSERT INTO configuration VALUES('session_timeout_minutes', '15', 'The session timeout given in minutes');
 INSERT INTO configuration VALUES('admin_passwd', '101ee9fe7aceaa8bea949e75a529d796da02e08bced78c6c4dde60768183fa14', 'Admin Password');
-INSERT INTO configuration VALUES('image_service_proxy_path', 'image_service', 'image service proxy path (relative to the application''s web root directory)');
+INSERT INTO configuration VALUES('server_proxy_path', 'image_service', 'server proxy path (relative to the application''s web root directory)');
 INSERT INTO configuration VALUES('tile_directory', 'tiles', 'tile directory (relative to the application''s web root directory)');
 INSERT INTO configuration VALUES('server_tile_directory', '/opt/tissuestack/tiles', 'server side tile directory for pre-tiling');
 INSERT INTO configuration VALUES('upload_directory', '/opt/tissuestack/upload', 'upload directory (absolute system path on server)');
@@ -13,7 +13,7 @@ INSERT INTO configuration VALUES('colormaps_directory', '/opt/tissuestack/colorm
 INSERT INTO configuration VALUES('tasks_queue_file', '/opt/tissuestack/tasks/general', 'task queue file (absolute system path on server)');
 INSERT INTO configuration VALUES('data_directory', '/opt/tissuestack/data', 'data directory (absolute system path on server)');
 INSERT INTO configuration VALUES('ands_dataset_xml', '/opt/tissuestack/ands/datasets.xml', 'ands data set xml');
-INSERT INTO configuration VALUES('max_upload_size', '107374182400', 'the maximum number of bytes allowed to upload in one go. A gig by default');
+INSERT INTO configuration VALUES('max_upload_size', '10000000000', 'the maximum number of bytes allowed to upload in one go');
 INSERT INTO configuration VALUES('default_drawing_interval', '250', 'default drawing interval');
 INSERT INTO configuration VALUES('default_zoom_levels', '[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75]', 'default zoom levels');
 INSERT INTO configuration VALUES('color_maps', 

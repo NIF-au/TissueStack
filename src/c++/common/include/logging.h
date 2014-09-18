@@ -25,6 +25,7 @@ namespace tissuestack
     		std::mutex _log_mutex;
     	public:
  			~TissueStackLogger();
+ 			static const bool doesInstanceExist();
     		static TissueStackLogger * instance();
     		static void purgeInstance();
      		TissueStackLogger & operator=(const TissueStackLogger&) = delete;

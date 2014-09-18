@@ -1,7 +1,7 @@
+#include "networking.h"
+#include "imaging.h"
+#include "database.h"
 #include "services.h"
-
-const std::string tissuestack::services::TissueStackServiceError::NO_RESULTS =
-		"{\"response\": {\"noResults\": \"No results found\"}}";
 
 tissuestack::services::TissueStackServiceError::TissueStackServiceError(
 		const std::exception & exception) : _exception(std::string(exception.what())) {}
@@ -33,6 +33,8 @@ const std::string tissuestack::services::TissueStackServiceError::toJson() const
 			sException = sWhat.substr(iPos, sWhat.length()-iPos);
 		}
 	}
+	if (sDescription.find("ERROR: ") == 0) // remove leading ERROR: term
+		sDescription = sDescription.substr(7);
 	json << tissuestack::utils::Misc::maskQuotesInJson(sException) << "\", \"description\": \"";
 	json << tissuestack::utils::Misc::maskQuotesInJson(sDescription) << "\"}}";
 

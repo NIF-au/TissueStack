@@ -34,12 +34,12 @@ TissueStack.DataSetOverlay = function(id, canvas, protocol, host, dataset_id, da
 	this.dataset_plane_id = dataset_plane_id;
 	this.host = host;
 	this.dataSetHost = dataSetHost;
-	this.mappingsUrl = protocol + "://" + host + "/" + TissueStack.configuration['restful_service_proxy_path'].value
+	this.mappingsUrl = protocol + "://" + host + "/" + TissueStack.configuration['server_proxy_path'].value
 	+ "/overlays/id_mapping_for_slice/" + this.dataset_id + "/" + this.dataset_plane_id + "/" + this.type;
 	this.overlayUrl = 
-		protocol + "://" + host + "/" + TissueStack.configuration['restful_service_proxy_path'].value + "/overlays/overlay/";
+		protocol + "://" + host + "/" + TissueStack.configuration['server_proxy_path'].value + "/overlays/overlay/";
 	this.dataSetUrl = 
-		protocol + "://" + host + "/" + TissueStack.configuration['restful_service_proxy_path'].value + "/data/";
+		protocol + "://" + host + "/" + TissueStack.configuration['server_proxy_path'].value + "/data/";
 
 	// create canvas element
 	this.createCanvasElement();

@@ -1,3 +1,4 @@
+#include "networking.h"
 #include "imaging.h"
 
 tissuestack::imaging::TissueStackDataDimension::TissueStackDataDimension(

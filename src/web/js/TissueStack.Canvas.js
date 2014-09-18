@@ -15,6 +15,7 @@
  * along with TissueStack.  If not, see <http://www.gnu.org/licenses/>.
  */
 TissueStack.Canvas = function(data_extent, canvas_id, dataset_id, include_cross_hair, is_linked_dataset) {
+	this.sessionId = TissueStack.Utils.generateSessionId();
 	// assemble data set id
 	this.dataset_id = typeof(dataset_id) != "string" ? "" : dataset_id;
 	this.setDataExtent(data_extent);
@@ -33,7 +34,6 @@ TissueStack.Canvas = function(data_extent, canvas_id, dataset_id, include_cross_
 	this.contrast = null; // a shared instance of a contrast slider
 	// make parent and ourselves visible
 	this.getCanvasElement().parent().removeClass("hidden");
-	this.sessionId = TissueStack.Utils.generateSessionId();
 };
 
 TissueStack.Canvas.prototype = {

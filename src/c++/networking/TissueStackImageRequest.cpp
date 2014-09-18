@@ -10,11 +10,18 @@ void tissuestack::networking::TissueStackImageRequest::setDataSetFromRequestPara
 {
 	std::string value = tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "dataset");
 	if (value.empty())
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Mandatory parameter 'dataset' was not supplied!");
-	this->_dataset_location = value;
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+			"Mandatory parameter 'dataset' was not supplied!");
 
-	if (!tissuestack::utils::System::fileExists(this->_dataset_location))
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException, "Parameter 'dataset' does not represent an existing file!");
+	this->_datasets = tissuestack::utils::Misc::tokenizeString(value, ':');
+	if (this->_datasets.empty())
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+			"Mandatory parameter 'dataset' was not supplied!");
+
+	for (auto ds : this->_datasets)
+		if (!tissuestack::utils::System::fileExists(ds))
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+			"Parameter 'dataset' does not represent an existing file!");
 }
 
 void tissuestack::networking::TissueStackImageRequest::setTimeStampInfoFromRequestParameters(
@@ -241,9 +248,9 @@ const std::string tissuestack::networking::TissueStackImageRequest::getColorMapN
 	return this->_color_map_name;
 }
 
-const std::string tissuestack::networking::TissueStackImageRequest::getDataSetLocation() const
+const std::vector<std::string> tissuestack::networking::TissueStackImageRequest::getDataSetLocations() const
 {
-	return this->_dataset_location;
+	return this->_datasets;
 }
 
 const std::string tissuestack::networking::TissueStackImageRequest::getDimensionName() const

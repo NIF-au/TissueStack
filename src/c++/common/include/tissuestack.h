@@ -4,23 +4,33 @@
 #include "logging.h"
 #include "exceptions.h"
 #include "utils.h"
-//#include "database.h"
-//#include "imaging.h"
 #include "parameters.h"
 
 #include <magick/api.h>
 
-#include <iostream>
 #include <string>
+#include <cstring>
+
+#include <array>
 #include <unordered_map>
 #include <queue>
+#include <vector>
+
 #include <mutex>
 #include <memory>
+#include <atomic>
+
+#include <algorithm>
+#include <functional>
+#include <typeinfo>
 
 namespace tissuestack
 {
 	namespace common
 	{
+		static const std::string NO_RESULTS_JSON = "{\"response\": {\"noResults\": \"No results found\"}}";
+		static const unsigned int SOCKET_READ_BUFFER_SIZE = 2048;
+
 		class RequestTimeStampStore final
 		{
 			public:
@@ -30,6 +40,7 @@ namespace tissuestack
 
 				static RequestTimeStampStore * instance();
 
+				static const bool doesInstanceExist();
 				void purgeInstance();
 
 				const bool doesIdExist(const unsigned long long int id);
@@ -82,21 +93,24 @@ namespace tissuestack
 		{
 			protected:
 				ProcessingStrategy();
-				void setRunningFlag(bool isRunning);
+				void setOfflineStrategyFlag();
 				void raiseStopFlag();
 				void resetStopFlag();
 			public:
 				ProcessingStrategy & operator=(const ProcessingStrategy&) = delete;
 				ProcessingStrategy(const ProcessingStrategy&) = delete;
 				virtual ~ProcessingStrategy();
-				void virtual init() = 0;
-				void virtual process(const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality) = 0;
-				void virtual stop() = 0;
+				virtual void init() = 0;
+				virtual void process(const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality) = 0;
+				virtual void stop() = 0;
 				bool isRunning() const;
 				bool isStopFlagRaised() const;
+				void setRunningFlag(bool isRunning);
+				virtual bool isOnlineStrategy() const;
 			private:
 				bool _stopFlagRaised = false;
 				bool _isRunning = false;
+				bool _isOnline = true;
 		};
 
 		template<typename ProcessorImplementation>
@@ -156,6 +170,7 @@ namespace tissuestack
 				void stop();
 			private:
 				ProcessingStrategy	* _default_strategy;
+				ProcessingStrategy * _task_queue_executor;
 		};
 
 		class RequestFilter
