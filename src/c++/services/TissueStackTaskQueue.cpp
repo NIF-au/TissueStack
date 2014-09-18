@@ -543,7 +543,6 @@ inline void tissuestack::services::TissueStackTaskQueue::buildTaskFromIndividual
 
 		if (aNewTask)
 		{
-			std::cout << "Restored Progress: " << std::to_string(sliceProgress) << std::endl;
 			aNewTask->setSlicesDone(sliceProgress);
 			aNewTask->setTotalSlices(totalSlices);
 			this->_tasks.push_back(aNewTask);

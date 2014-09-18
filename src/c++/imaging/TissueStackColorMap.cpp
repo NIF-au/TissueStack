@@ -3,7 +3,8 @@
 
 tissuestack::imaging::TissueStackColorMap::TissueStackColorMap(const std::string & filename) : _colormap_id(filename)
 {
-	tissuestack::logging::TissueStackLogger::instance()->info("Loading color map file %s\n", filename.c_str());
+	if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
+		tissuestack::logging::TissueStackLogger::instance()->info("Loading color map file %s\n", filename.c_str());
 
 	std::string line = "";
 	std::ifstream file_stream;
@@ -121,9 +122,11 @@ tissuestack::imaging::TissueStackColorMap::TissueStackColorMap(const std::string
 
 		this->marshallColorMapContentsIntoJson(colorMapRanges);
 
-		tissuestack::logging::TissueStackLogger::instance()->info("Finished Loading color map file.\n");
+		if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
+			tissuestack::logging::TissueStackLogger::instance()->info("Finished Loading color map file.\n");
 	}	catch (tissuestack::common::TissueStackException & ex) {
-		tissuestack::logging::TissueStackLogger::instance()->error("%s\n", ex.what());
+		if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
+			tissuestack::logging::TissueStackLogger::instance()->error("%s\n", ex.what());
 		file_stream.close();
 		throw ex;
 	}	catch (std::exception & ex) {
@@ -137,7 +140,8 @@ tissuestack::imaging::TissueStackColorMap::TissueStackColorMap(const tissuestack
 {
 	label_lookup_file->copyGrayIndexedRgbMapping(this->_gray_indexed_rgb_mapping);
 	this->marshallLookupFileContentsIntoJson();
-	tissuestack::logging::TissueStackLogger::instance()->info("Copied color map file from lookup file: %s\n",
+	if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
+		tissuestack::logging::TissueStackLogger::instance()->info("Copied color map file from lookup file: %s\n",
 			label_lookup_file->getLabelLookupId().c_str());
 }
 
@@ -242,10 +246,12 @@ const std::string tissuestack::imaging::TissueStackColorMap::toJson(bool origina
 
 void tissuestack::imaging::TissueStackColorMap::dumpColorMapToDebugLog() const
 {
-	tissuestack::logging::TissueStackLogger::instance()->debug("Dumping Color Map: %s\n", this->getColorMapId().c_str());
+	if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
+		tissuestack::logging::TissueStackLogger::instance()->debug("Dumping Color Map: %s\n", this->getColorMapId().c_str());
 
 	for (auto rgb : this->_gray_indexed_rgb_mapping)
 	{
-		tissuestack::logging::TissueStackLogger::instance()->debug("%u\t%u\t%u\n", rgb[0], rgb[1], rgb[2]);
+		if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
+			tissuestack::logging::TissueStackLogger::instance()->debug("%u\t%u\t%u\n", rgb[0], rgb[1], rgb[2]);
 	}
 }

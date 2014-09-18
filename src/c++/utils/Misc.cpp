@@ -2,7 +2,7 @@
 
 tissuestack::utils::Misc::Misc() {}
 
-const std::string tissuestack::utils::Misc::convertCharPointerToString(char * some_characters)
+const std::string tissuestack::utils::Misc::convertCharPointerToString(const char * some_characters)
 {
 	if (some_characters == nullptr) return std::string("");
 

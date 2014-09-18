@@ -16,10 +16,14 @@ tissuestack::imaging::TissueStackColorMapStore::TissueStackColorMapStore()
 			this->addOrReplaceColorMap(tissuestack::imaging::TissueStackColorMap::fromFile(f.c_str()));
 		} catch (std::exception & bad)
 		{
-			tissuestack::logging::TissueStackLogger::instance()->error(
+			if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
+				tissuestack::logging::TissueStackLogger::instance()->error(
 					"Could not load color map file '%s' for the following reason:\n%s\n", f.c_str(), bad.what());
 		}
 	}
+
+	if (!tissuestack::imaging::TissueStackLabelLookupStore::doesInstanceExist())
+		return;
 
 	// add to that the discrete color maps of the label lookups
 	const std::unordered_map<std::string, const tissuestack::imaging::TissueStackLabelLookup *> lookups =
@@ -33,7 +37,8 @@ tissuestack::imaging::TissueStackColorMapStore::TissueStackColorMapStore()
 			this->addOrReplaceColorMap(lookup.second);
 		} catch (std::exception & bad)
 		{
-			tissuestack::logging::TissueStackLogger::instance()->error(
+			if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
+				tissuestack::logging::TissueStackLogger::instance()->error(
 					"Could not load color map from lookup file '%s' for the following reason:\n%s\n",
 					lookup.second->getLabelLookupId().c_str(), bad.what());
 		}

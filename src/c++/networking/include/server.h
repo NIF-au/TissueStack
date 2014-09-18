@@ -291,7 +291,6 @@ namespace tissuestack
 					// can be safely ignored
 				}
 
-				DestroyMagick();
 			};
 
     	private:

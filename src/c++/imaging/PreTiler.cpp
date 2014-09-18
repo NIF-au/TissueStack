@@ -43,6 +43,8 @@ void tissuestack::imaging::PreTiler::preTile(
 		{
 			if (processing_strategy->isOnlineStrategy())
 				ptr_pretiling_task.release();
+			else
+				const_cast<tissuestack::common::ProcessingStrategy *>(processing_strategy)->setRunningFlag(false);
 
 			return;
 		}
@@ -57,7 +59,10 @@ void tissuestack::imaging::PreTiler::preTile(
 				fileName.c_str(),
 				params.c_str());
 		} else
+		{
 			std::cout << "Finished Tiling: " << fileName << " => " << params << std::endl;
+			const_cast<tissuestack::common::ProcessingStrategy *>(processing_strategy)->setRunningFlag(false);
+		}
 	} catch (const std::exception & bad)
 	{
 		// flag task as error
@@ -71,7 +76,10 @@ void tissuestack::imaging::PreTiler::preTile(
 			tissuestack::services::TissueStackTaskQueue::instance()->flagTaskAsErroneous(
 				ptr_pretiling_task.release()->getId());
 		} else
-			std::cout << "Error Tiling: " << bad.what() << std::endl;
+		{
+			std::cerr << "Error Tiling: " << bad.what() << std::endl;
+			const_cast<tissuestack::common::ProcessingStrategy *>(processing_strategy)->setRunningFlag(false);
+		}
 	}
 }
 
@@ -106,12 +114,13 @@ inline void tissuestack::imaging::PreTiler::loopOverDimensions(
 		if (resumed && processing_strategy->isOnlineStrategy() &&
 			pretiling_task->getSlicesDone() >= accDimSliceNumber)
 		{
-			std::cout << "Skipped dimension: " << std::to_string(accDimSliceNumber) << std::endl;
 			dimSliceOffset = accDimSliceNumber;
 			continue;
 		}
 
 		unsigned long long int zoomSliceOffset = dimSliceOffset;
+		unsigned long long int accNumber = zoomSliceOffset;
+
 		// loop over all slices in the dimension
 		for (unsigned int sliceNumber = 0; sliceNumber < actualDimension->getNumberOfSlices(); sliceNumber++)
 		{
@@ -121,12 +130,16 @@ inline void tissuestack::imaging::PreTiler::loopOverDimensions(
 						static_cast<unsigned long long int>(zoom_levels.size());
 
 			// resume at a previously interrupted point
-			if (resumed && processing_strategy->isOnlineStrategy() &&
-				pretiling_task->getSlicesDone() >= accZoomSliceNumber)
+			if (resumed && processing_strategy->isOnlineStrategy())
 			{
-				std::cout << "Skipped zoom: " << std::to_string(accZoomSliceNumber) << std::endl;
-				zoomSliceOffset = accZoomSliceNumber;
-				continue;
+				if (pretiling_task->getSlicesDone() >= accZoomSliceNumber)
+				{
+					zoomSliceOffset = accZoomSliceNumber;
+					accNumber = zoomSliceOffset;
+					continue;
+				}
+				if (pretiling_task->getSlicesDone() >= accNumber)
+					resumed = false;
 			}
 
 			// shutdown/cancellation check
@@ -148,8 +161,6 @@ inline void tissuestack::imaging::PreTiler::loopOverDimensions(
 
 			if (img)
 			{
-				unsigned long long int accNumber = zoomSliceOffset;
-
 				// now loop over all zoom levels
 				for (auto zoom : zoom_levels)
 				{
@@ -158,15 +169,11 @@ inline void tissuestack::imaging::PreTiler::loopOverDimensions(
 					{
 						if (pretiling_task->getSlicesDone() >= accNumber)
 						{
-							std::cout << "Skipped acc: " << std::to_string(accNumber) << std::endl;
 							++accNumber;
-							DestroyImage(img);
 							continue;
 						}
-						// TODO: watch resumed !!
 						resumed = false;
 					}
-					std::cout << "RESUMED!!!" << std::to_string(pretiling_task->getSlicesDone()) << std::endl;
 
 					// check/create tile sub directory
 					const std::string subDir =
@@ -185,9 +192,20 @@ inline void tissuestack::imaging::PreTiler::loopOverDimensions(
 					unsigned long int width = actualDimension->getWidth();
 					unsigned long int height = actualDimension->getHeight();
 
-					img =
+					ExceptionInfo exception;
+					GetExceptionInfo(&exception);
+					Image * img_processed =
+						CloneImage(img, 0, 0, 1, &exception);
+					if (img_processed == NULL)
+					{
+						DestroyImage(img);
+							THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+								"Could not clone image for processsing!");
+					}
+
+					img_processed =
 						this->_extractor->applyPreTilingProcessing(
-							img,
+							img_processed,
 							pretiling_task->getColorMap(),
 							width,
 							height,
@@ -198,6 +216,7 @@ inline void tissuestack::imaging::PreTiler::loopOverDimensions(
 					if (this->hasBeenCancelledOrShutDown(processing_strategy, pretiling_task))
 					{
 						DestroyImage(img);
+						DestroyImage(img_processed);
 						return;
 					}
 
@@ -224,7 +243,7 @@ inline void tissuestack::imaging::PreTiler::loopOverDimensions(
 						{
 							Image * tile =
 								this->_extractor->getImageTileForPreTiling(
-									img, x, y, pretiling_task->getSquareLength());
+									img_processed, x, y, pretiling_task->getSquareLength());
 							if (tile)
 							{
 								this->writeImageToFile(
@@ -245,18 +264,19 @@ inline void tissuestack::imaging::PreTiler::loopOverDimensions(
 					if (this->hasBeenCancelledOrShutDown(processing_strategy, pretiling_task))
 					{
 						DestroyImage(img);
+						DestroyImage(img_processed);
 						return;
 					}
 
 					// generate preview last
-					img =
+					img_processed =
 						this->_extractor->degradeImage(
-							img,
+							img_processed,
 							width,
 							height,
 							0.1);
 					this->writeImageToFile(
-						img,
+						img_processed,
 						subDir,
 						sliceNumber,
 						pretiling_task->getColorMap(),
@@ -274,16 +294,31 @@ inline void tissuestack::imaging::PreTiler::loopOverDimensions(
 						if (processing_strategy->isOnlineStrategy())
 							tissuestack::services::TissueStackTaskQueue::instance()->persistTaskProgress(
 									pretiling_task->getId());
-						//else
+						else
 							std::cout << "Progress:\t" <<
 								std::to_string(pretiling_task->getSlicesDone()) << "\t["
 								<< std::to_string(pretiling_task->getTotalSlices()) << "]\t => "
 								<< std::to_string(pretiling_task->getProgress()) << "%\r";
 
-						if (finished) return; // this should be kind of superfluous
+						if (finished)
+						{
+							if (!processing_strategy->isOnlineStrategy())
+								std::cout << "Progress:\t" <<
+									std::to_string(pretiling_task->getSlicesDone()) << "\t["
+									<< std::to_string(pretiling_task->getTotalSlices()) << "]\t => "
+									<< std::to_string(pretiling_task->getProgress()) << "%\r\n";
+
+							if (img) DestroyImage(img);
+							return;
+						}
+					} else
+					{
+						if (img) DestroyImage(img);
+						return;
 					}
 				}
 			}
+			if (img) DestroyImage(img);
 		}
 
 	}

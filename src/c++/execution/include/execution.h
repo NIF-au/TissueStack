@@ -127,6 +127,37 @@ namespace tissuestack
 				static TissueStackOnlineExecutor * _instance;
 
 		};
+
+		class TissueStackOfflineExecutor final : public tissuestack::common::ProcessingStrategy
+		{
+			public:
+				TissueStackOfflineExecutor & operator=(const TissueStackOfflineExecutor&) = delete;
+				TissueStackOfflineExecutor(const TissueStackOfflineExecutor&) = delete;
+				static TissueStackOfflineExecutor * instance();
+
+				void preTile(
+					const std::string & in_file,
+					const std::string & tile_dir,
+					const std::vector<std::string> & dimensions,
+					const std::vector<unsigned short> & zoom_levels,
+					const std::string & colormap);
+
+				void convert(
+					const std::string & in_file,
+					const std::string & out_file);
+
+				void init();
+				void process(const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality) ;
+				void stop();
+				~TissueStackOfflineExecutor();
+			private:
+				static const unsigned short SHUTDOWN_TIMEOUT_IN_SECONDS = 15;
+				TissueStackOfflineExecutor();
+				tissuestack::imaging::RawConverter * _tissueStackRawConverter = nullptr;
+				tissuestack::imaging::PreTiler * _tissueStackPreTiler = nullptr;
+				static TissueStackOfflineExecutor * _instance;
+		};
+
 	}
 }
 

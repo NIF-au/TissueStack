@@ -28,6 +28,7 @@ tissuestack::services::TissueStackTilingTask::TissueStackTilingTask(
 	// check color map
 	if (color_map.compare("grey") != 0
 			&& color_map.compare("gray") != 0
+			&& tissuestack::imaging::TissueStackColorMapStore::doesInstanceExist()
 			&& tissuestack::imaging::TissueStackColorMapStore::instance()->findColorMap(color_map) == nullptr)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"Could not find colormap!");

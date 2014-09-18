@@ -477,7 +477,6 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::scaleImage(
 	DestroyImage(tmp);
 	if (img == NULL)
 	{
-		CatchException(&exception);
 		DestroyImage(img);
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Image Extraction: Failed to scale image!");

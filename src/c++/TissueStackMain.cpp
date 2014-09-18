@@ -46,13 +46,12 @@ void cleanUp()
 	{
 		// can be safely ignored
 	}
+	DestroyMagick();
 }
 
 // global pointer to give signal handler chance to call server stop
 std::unique_ptr<tissuestack::networking::Server<tissuestack::common::TissueStackProcessingStrategy> >
 			TissueStackServer;
-
-//tissuestack::networking::Server<tissuestack::common::TissueStackProcessingStrategy> * _ts_server_instance = nullptr;
 
 void handle_signals(int sig) {
 	switch (sig) {
@@ -67,7 +66,6 @@ void handle_signals(int sig) {
 };
 
 void install_signal_handler()
-	//tissuestack::networking::Server<tissuestack::common::TissueStackProcessingStrategy> * ts_server_instance)
 {
 	struct sigaction act;
 	int i;
@@ -176,8 +174,6 @@ int main(int argc, char * args[])
 	} catch (std::exception & bad)
 	{
 		Logger->error("Could not create databases connection:\n%s\n", bad.what());
-		//Params->purgeInstance();
-		//Logger->purgeInstance();
 		cleanUp();
 		exit(-1);
 	}
@@ -188,8 +184,6 @@ int main(int argc, char * args[])
 	} catch (std::exception & bad)
 	{
 		Logger->error("Could not instantiate RequestTimeStampStore:\n%s\n", bad.what());
-		//Params->purgeInstance();
-		//Logger->purgeInstance();
 		cleanUp();
 		//tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
 		exit(-1);
@@ -202,10 +196,6 @@ int main(int argc, char * args[])
 	} catch (std::exception & bad)
 	{
 		Logger->error("Could not instantiate TissueStackLabelLookupStore:\n%s\n", bad.what());
-		//Params->purgeInstance();
-		//Logger->purgeInstance();
-		//tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
-		//tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
 		cleanUp();
 		exit(-1);
 	}
@@ -217,11 +207,6 @@ int main(int argc, char * args[])
 	} catch (std::exception & bad)
 	{
 		Logger->error("Could not instantiate TissueStackLabelLookupStore:\n%s\n", bad.what());
-		//Params->purgeInstance();
-		//Logger->purgeInstance();
-		//tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
-		//tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
-		//tissuestack::imaging::TissueStackLabelLookupStore::instance()->purgeInstance();
 		cleanUp();
 		exit(-1);
 	}
@@ -233,12 +218,6 @@ int main(int argc, char * args[])
 	} catch (std::exception & bad)
 	{
 		Logger->error("Could not instantiate TissueStackDataSetStore:\n%s\n", bad.what());
-		//Params->purgeInstance();
-		//Logger->purgeInstance();
-		//tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
-		//tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
-		//tissuestack::imaging::TissueStackLabelLookupStore::instance()->purgeInstance();
-		//tissuestack::imaging::TissueStackColorMapStore::instance()->purgeInstance();
 		cleanUp();
 		exit(-1);
 	}
@@ -250,13 +229,6 @@ int main(int argc, char * args[])
 	} catch (std::exception & bad)
 	{
 		Logger->error("Could not instantiate TissueStackTaskQueue:\n%s\n", bad.what());
-		//Params->purgeInstance();
-		//Logger->purgeInstance();
-		//tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
-		//tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
-		//tissuestack::imaging::TissueStackLabelLookupStore::instance()->purgeInstance();
-		//tissuestack::imaging::TissueStackColorMapStore::instance()->purgeInstance();
-		//tissuestack::imaging::TissueStackDataSetStore::instance()->purgeInstance();
 		cleanUp();
 		exit(-1);
 	}
@@ -274,16 +246,6 @@ int main(int argc, char * args[])
 	{
 		Logger->error(
 				"Failed to instantiate/start the TissueStackServer for the following reason:\n%s\n", bad.what());
-		/*
-		Params->purgeInstance();
-		Logger->purgeInstance();
-		tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
-		tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
-		tissuestack::imaging::TissueStackLabelLookupStore::instance()->purgeInstance();
-		tissuestack::imaging::TissueStackColorMapStore::instance()->purgeInstance();
-		tissuestack::imaging::TissueStackDataSetStore::instance()->purgeInstance();
-		tissuestack::services::TissueStackTaskQueue::instance()->purgeInstance();
-		*/
 		cleanUp();
 		exit(-1);
 	}

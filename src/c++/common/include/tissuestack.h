@@ -93,7 +93,6 @@ namespace tissuestack
 		{
 			protected:
 				ProcessingStrategy();
-				void setRunningFlag(bool isRunning);
 				void setOfflineStrategyFlag();
 				void raiseStopFlag();
 				void resetStopFlag();
@@ -106,6 +105,7 @@ namespace tissuestack
 				virtual void stop() = 0;
 				bool isRunning() const;
 				bool isStopFlagRaised() const;
+				void setRunningFlag(bool isRunning);
 				virtual bool isOnlineStrategy() const;
 			private:
 				bool _stopFlagRaised = false;

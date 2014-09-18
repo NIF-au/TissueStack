@@ -16,8 +16,9 @@ tissuestack::imaging::TissueStackLabelLookupStore::TissueStackLabelLookupStore()
 			this->addOrReplaceLabelLookup(tissuestack::imaging::TissueStackLabelLookup::fromFile(f.c_str()));
 		} catch (std::exception & bad)
 		{
-			tissuestack::logging::TissueStackLogger::instance()->error(
-				"Could not load lookup file '%s' for the following reason:\n%s\n", f.c_str(), bad.what());
+			if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
+				tissuestack::logging::TissueStackLogger::instance()->error(
+						"Could not load lookup file '%s' for the following reason:\n%s\n", f.c_str(), bad.what());
 		}
 	}
 }

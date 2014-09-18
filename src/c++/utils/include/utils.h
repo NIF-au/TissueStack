@@ -63,7 +63,7 @@ namespace tissuestack
     {
       public:
     	static const std::string maskQuotesInJson(const std::string & json);
-        static const std::string convertCharPointerToString(char * some_characters);
+        static const std::string convertCharPointerToString(const char * some_characters);
     	static const std::string demangleTypeIdName(const char * mangeledIdName);
     	static const std::vector<std::string> tokenizeString(const std::string & some_string, const char delimiter);
     	static const std::string findUnorderedMapEntryWithUpperCaseStringKey(
