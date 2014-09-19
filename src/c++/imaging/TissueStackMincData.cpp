@@ -10,6 +10,7 @@ tissuestack::imaging::TissueStackMincData::TissueStackMincData(const std::string
 		tissuestack::imaging::TissueStackImageData(filename, tissuestack::imaging::FORMAT::MINC)
 {
 	// TODO: check mincness and set other properties
+	// generate a raw file header and call setHeader()
 }
 
 tissuestack::imaging::TissueStackMincData::~TissueStackMincData()

@@ -6,10 +6,14 @@ tissuestack::imaging::RawConverter::RawConverter(){}
 
 void tissuestack::imaging::RawConverter::convert(
 	const tissuestack::common::ProcessingStrategy * processing_strategy,
-	const tissuestack::services::TissueStackConversionTask * converter_task)
+	const tissuestack::services::TissueStackConversionTask * converter_task,
+	const std::string dimension,
+	const bool writeHeader)
 {
 	// this will be useful for offline tools to not need to keep track of pointer
 	std::unique_ptr<const tissuestack::services::TissueStackConversionTask> ptr_converter_task(converter_task);
+
+	//TODO: implement: write header if dimension = "" or if writeHeader is set
 
 	try
 	{

@@ -40,6 +40,27 @@ tissuestack::services::TissueStackConversionTask::TissueStackConversionTask(
 
 tissuestack::services::TissueStackConversionTask::~TissueStackConversionTask() {}
 
+const unsigned long long int tissuestack::services::TissueStackConversionTask::getFutureRawFileSize() const
+{
+	return static_cast<unsigned long long int>(this->getInputImageData()->getHeader().size())
+			+ this->calculatePureDataSize();
+}
+
+const unsigned long long int tissuestack::services::TissueStackConversionTask::calculatePureDataSize() const
+{
+	const std::vector<std::string> dims = this->getInputImageData()->getDimensionOrder();
+	unsigned long long int size = 0;
+	for (auto d : dims)
+	{
+		const tissuestack::imaging::TissueStackDataDimension * dim =
+			this->getInputImageData()->getDimensionByLongName(d);
+		if (dim)
+			size += (dim->getSliceSize() * dim->getNumberOfSlices());
+	}
+
+	return size * static_cast<unsigned long long int>(3); // for RGB channels
+}
+
 const std::string tissuestack::services::TissueStackConversionTask::getOutFile() const
 {
 	return this->_output_file;

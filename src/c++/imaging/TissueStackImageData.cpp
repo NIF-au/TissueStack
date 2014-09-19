@@ -615,3 +615,13 @@ const std::vector<std::string> tissuestack::imaging::TissueStackImageData::getDi
 {
 	return this->_dim_order;
 }
+
+void tissuestack::imaging::TissueStackImageData::setHeader(const std::string header)
+{
+	this->_header = header;
+}
+
+const std::string tissuestack::imaging::TissueStackImageData::getHeader() const
+{
+	return this->_header;
+}

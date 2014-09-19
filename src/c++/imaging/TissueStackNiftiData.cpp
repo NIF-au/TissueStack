@@ -15,6 +15,7 @@ tissuestack::imaging::TissueStackNiftiData::TissueStackNiftiData(const std::stri
 		tissuestack::imaging::TissueStackImageData(filename, tissuestack::imaging::FORMAT::NIFTI)
 {
 	// TODO: check niftiness and set other properties
+	// generate a raw file header and call setHeader()
 }
 
 tissuestack::imaging::TissueStackNiftiData::~TissueStackNiftiData()

@@ -49,6 +49,10 @@ namespace tissuestack
         static const std::vector<std::string> readTextFileLineByLine(const std::string & file);
         static const std::string getSystemTimeFormatted(const std::string & format);
         static const unsigned long long int getSystemTimeInMillis();
+        static const bool touchFile(
+        	const std::string & file,
+        	const unsigned long long int size_in_bytes,
+        	const bool overwriteExistingFile = false);
         static const std::string generateUUID();
         static const std::string generatePseudoRandomNumberAsString(const unsigned short digits);
         static const std::vector<std::string> getFilesInDirectory(const std::string & directory);

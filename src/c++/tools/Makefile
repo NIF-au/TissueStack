@@ -43,15 +43,15 @@ OBJS_CONVERTER	=	$(SRCS_CONVERTER:%.cpp=%.o)
 all:	compile install
 
 compile:	$(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_DATABASE) $(OBJS_IMAGING) \
-			$(OBJS_EXECUTION)  $(OBJS_SERVICES) $(OBJS_UTILS) $(OBJS_TILER) $(OBJS_CONVERTER)
+			$(OBJS_EXECUTION)  $(OBJS_SERVICES) $(OBJS_UTILS)
 	@echo -e "\tCompiling \"$(NAME)\" => $(TILER_EXE_NAME)"
 	@$(CC)   $(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_EXECUTION) $(OBJS_DATABASE) \
-							$(OBJS_SERVICES) $(OBJS_IMAGING) $(OBJS_UTILS) $(OBJS_TILER) \
+							$(OBJS_SERVICES) $(OBJS_IMAGING) $(OBJS_UTILS) $(SRCS_TILER) \
 							`GraphicsMagick-config --cppflags --libs --ldflags` -o $(TILER_EXE_NAME) \
 							$(LIBS) $(FLAGS) $(INCLUDE)
 	@echo -e "\tCompiling \"$(NAME)\" => $(CONVERTER_EXE_NAME)"
 	@$(CC)   $(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_EXECUTION) $(OBJS_DATABASE) \
-							$(OBJS_SERVICES) $(OBJS_IMAGING) $(OBJS_UTILS) $(OBJS_CONVERTER) \
+							$(OBJS_SERVICES) $(OBJS_IMAGING) $(OBJS_UTILS) $(SRCS_CONVERTER) \
 							`GraphicsMagick-config --cppflags --libs --ldflags` -o $(CONVERTER_EXE_NAME) \
 							$(LIBS) $(FLAGS) $(INCLUDE)
 

@@ -1,4 +1,4 @@
-#include "execution.h"
+	#include "execution.h"
 #include "networking.h"
 #include "imaging.h"
 #include "services.h"
@@ -62,23 +62,23 @@ void tissuestack::execution::TissueStackOfflineExecutor::preTile(
 }
 
 void tissuestack::execution::TissueStackOfflineExecutor::convert(
-	const std::string & in_file,
-	const std::string & out_file)
+	const tissuestack::services::TissueStackConversionTask * task,
+	const std::string dimension,
+	const bool writeHeader)
 {
 	try
 	{
+		if (task == nullptr)
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackNullPointerException,
+				"I'm missing an instance of a conversion task!");
+
 		// delegate to Converter
-		this->_tissueStackRawConverter->convert(
-			this, new tissuestack::services::TissueStackConversionTask(
-				"0",
-				in_file,
-				out_file));
+		this->_tissueStackRawConverter->convert(this, task, dimension, writeHeader);
 	} catch (const std::exception& ex)
 	{
 		std::cerr << "Failed to convert: " << ex.what() << std::endl;
 	}
 }
-
 void tissuestack::execution::TissueStackOfflineExecutor::process(const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality)
 {
 	// unused for offline
@@ -91,8 +91,6 @@ void tissuestack::execution::TissueStackOfflineExecutor::init()
 
 void tissuestack::execution::TissueStackOfflineExecutor::stop()
 {
-
-	std::cerr << "\nReceived Crtl + C!" << std::endl;
 
 	this->raiseStopFlag();
 	this->setRunningFlag(false);

@@ -211,6 +211,7 @@ namespace tissuestack
 				virtual ~TissueStackImageData();
 				const std::string getFileName() const;
 				virtual const bool isRaw() const = 0;
+				const std::string getHeader() const;
 				const FORMAT getFormat() const ;
 				const TissueStackDataDimension * getDimension(const char dimension_letter) const;
 				const TissueStackDataDimension * getDimensionByLongName(const std::string & dimension) const;
@@ -254,6 +255,7 @@ namespace tissuestack
 				TissueStackImageData(const std::string & filename, FORMAT format);
 				void setDataBaseId(const unsigned long long int id);
 				void setDescription(const std::string description);
+				void setHeader(const std::string);
 				const std::unordered_map<char, const TissueStackDataDimension *> getDimensionMap() const;
 				void setFormat(int original_format);
 				void addDimension(TissueStackDataDimension * dimension);
@@ -287,6 +289,7 @@ namespace tissuestack
 				float _resolution_in_mm = 0;
 				const TissueStackLabelLookup * _lookup = nullptr;
 				std::vector<const TissueStackImageData *> _associated_data_sets;
+				std::string _header = "";
 		};
 
 		class TissueStackRawData final : public TissueStackImageData
@@ -732,9 +735,13 @@ namespace tissuestack
 				RawConverter & operator=(const RawConverter&) = delete;
 				RawConverter(const RawConverter&) = delete;
 				RawConverter();
+
 				void convert(
 					const tissuestack::common::ProcessingStrategy * processing_strategy,
-					const tissuestack::services::TissueStackConversionTask * conversion_task);
+					const tissuestack::services::TissueStackConversionTask * conversion_task,
+					const std::string dimension = "",
+					const bool writeHeader = true);
+
 			private:
 				const bool hasBeenCancelledOrShutDown(
 					const tissuestack::common::ProcessingStrategy * processing_strategy,

@@ -47,6 +47,7 @@ void handle_signals(int sig) {
 		case SIGQUIT:
 		case SIGTERM:
 		case SIGINT:
+			std::cerr << "\nReceived Crtl + C!" << std::endl;
 			OfflineExecutor->stop();
 			std::cerr << "Waiting 5 seconds to abort tiling properly!" << std::endl;
 			sleep(5);
