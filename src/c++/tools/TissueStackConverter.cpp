@@ -167,14 +167,16 @@ int		main(int argc, char **argv)
 					exit(EXIT_FAILURE);
 			   }
 
+			   // TODO: uncomment
 			   // now touch a file to be as big as we need it for the final conversion product
+			   /*
 			   if (!tissuestack::utils::System::touchFile(
 					out_file, conversion->getFutureRawFileSize()))
 			   {
 				   std::cerr << "Failed to convert: Unable to touch future RAW file!" << std::endl;
 					cleanUp();
 					exit(EXIT_FAILURE);
-			   }
+			   }*/
 		   }
 		} catch (const std::exception & any)
 		{
@@ -186,7 +188,7 @@ int		main(int argc, char **argv)
 		}
 
 		// our strategy is that we use processes in cases where there are at least 3 cores
-		if (dimensions.size() < 3 || tissuestack::utils::System::getNumberOfCores() < 3)
+		if (dimensions.size() < 3 || tissuestack::utils::System::getNumberOfCores() < 13)
 		{
 		   try
 		   {

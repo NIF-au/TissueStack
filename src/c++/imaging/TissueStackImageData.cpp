@@ -50,14 +50,17 @@ const tissuestack::imaging::TissueStackImageData * tissuestack::imaging::TissueS
 	if (!tissuestack::utils::System::fileExists(filename))
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Image file does not exist!");
 
-	// check extension
-	size_t position = filename.rfind(".nii");
+	// check extension (case insensitive)
+	std::string fileNameAllUpperCase = filename;
+	std::transform(fileNameAllUpperCase.begin(), fileNameAllUpperCase.end(), fileNameAllUpperCase.begin(), toupper);
+
+	size_t position = fileNameAllUpperCase.rfind(".NII");
 	if (position + 4 == filename.length())
 		return new TissueStackNiftiData(filename);
-	position = filename.rfind(".nii.gz");
+	position = fileNameAllUpperCase.rfind(".NII.GZ");
 	if (position + 7 == filename.length())
 		return new TissueStackNiftiData(filename);
-	position = filename.rfind(".mnc");
+	position = fileNameAllUpperCase.rfind(".MNC");
 	if (position + 4 == filename.length())
 		return new TissueStackMincData(filename);
 
@@ -99,6 +102,19 @@ void tissuestack::imaging::TissueStackImageData::initializeDimensions(const bool
 			const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimensionByLongName(dim));
 		if (d->getTransformationMatrix().empty())
 			d->setTransformationMatrix(identity);
+	}
+}
+
+void tissuestack::imaging::TissueStackImageData::initializeOffsetsForNonRawFiles()
+{
+	unsigned long long int offset = this->_header.length();
+	for (auto dim : this->_dim_order)
+	{
+		tissuestack::imaging::TissueStackDataDimension * d =
+			const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimensionByLongName(dim));
+		d->setSliceSizeFromGivenWidthAndHeight();
+		offset += (d->getSliceSize() * d->getNumberOfSlices() * static_cast<unsigned long long int>(3));
+		d->setOffSet(offset);
 	}
 }
 
@@ -304,6 +320,14 @@ const tissuestack::imaging::TissueStackDataDimension * tissuestack::imaging::Tis
 	return this->getDimension(dimension.at(0));
 }
 
+const tissuestack::imaging::TissueStackDataDimension * tissuestack::imaging::TissueStackImageData::getDimensionByOrderIndex(const unsigned short index) const
+{
+	if (index+1 > static_cast<unsigned short>(this->_dim_order.size()))
+		return nullptr;
+
+	return this->getDimensionByLongName(this->_dim_order[index]);
+}
+
 const tissuestack::imaging::TissueStackDataDimension * tissuestack::imaging::TissueStackImageData::getDimension(const char dimension_letter) const
 {
 	try
@@ -481,7 +505,7 @@ void tissuestack::imaging::TissueStackImageData::addDimension(tissuestack::imagi
 
 	if (this->getDimensionByLongName(dimension->getName()))
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-				"2 dimensions with same starting letter cannot be added twice. Just a convention for technical convenience, sorry..");
+			"2 dimensions with same starting letter cannot be added twice. Just a convention for technical convenience, sorry..");
 
 	this->_dim_order.push_back(dimension->getName());
 
@@ -624,4 +648,56 @@ void tissuestack::imaging::TissueStackImageData::setHeader(const std::string hea
 const std::string tissuestack::imaging::TissueStackImageData::getHeader() const
 {
 	return this->_header;
+}
+
+void tissuestack::imaging::TissueStackImageData::generateRawHeader()
+{
+	std::ostringstream header;
+
+	header << "@IaMraW@"; // "raw magic"
+	header << "V"; // we add a version
+	header << std::to_string(tissuestack::imaging::RAW_FILE_VERSION::V1);
+	header << "|"; // close of version and start with actual meta-data
+
+	if (this->_dimensions.empty())
+		THROW_TS_EXCEPTION(
+			tissuestack::common::TissueStackApplicationException,
+			"Cannot generate raw header for 0 dimension image data!");
+
+	unsigned short i =0;
+	for (auto dim : this->_dimensions) // slice numbers
+	{
+		header << std::to_string(dim.second->getNumberOfSlices());
+		if (i < this->_dimensions.size()-1) header << ":";
+		i++;
+	}
+	header << "|";
+	i =0;
+	for (auto coord : this->_coordinates) // coords
+	{
+		header << std::to_string(coord);
+		if (i < this->_coordinates.size()-1) header << ":";
+		i++;
+	}
+	header << "|";
+	i =0;
+	for (auto step : this->_steps) // steps
+	{
+		header << std::to_string(step);
+		if (i < this->_steps.size()-1) header << ":";
+		i++;
+	}
+	header << "|";
+	i =0;
+	for (auto name : this->_dim_order) // dimension names
+	{
+		header << name;
+		if (i < this->_dim_order.size()-1) header << ":";
+		i++;
+	}
+	header << "|"; // finish off with original format
+	header << std::to_string(this->_format);
+	header << "|";
+
+	this->_header = header.str();
 }

@@ -90,26 +90,7 @@ tissuestack::imaging::TissueStackRawData::TissueStackRawData(const std::string &
 	const std::string fullHeader(extendedHeader, headerLength-1);
 
 	// delegate parsing
-	//tissuestack::logging::TissueStackLogger::instance()->info("Parsing header information for RAW file: %s...\n", filename.c_str());
 	this->parseHeader(fullHeader);
-
-	// calculate the supposed file size
-	this->_supposedFileSizeInButes = this->_totalHeaderLength;
-
-	for (auto dim : this->getDimensionMap())
-	{
-		const TissueStackDataDimension * d = dim.second; // LEGACY UNSIGNED CHAR HAS 1 BYTE REPRESENTATION
-		if (this->_raw_version == tissuestack::imaging::RAW_FILE_VERSION::LEGACY
-					&& this->_raw_type == tissuestack::imaging::RAW_TYPE::UCHAR_8_BIT)
-			this->_supposedFileSizeInButes +=
-					static_cast<unsigned long long int>((d->getNumberOfSlices()*d->getSliceSize()));
-		else // LEGACY 3BYTE RGB and V1 RESPRESENTATION
-			this->_supposedFileSizeInButes +=
-					static_cast<unsigned long long int>(
-							static_cast<unsigned long long int>(3) *
-							static_cast<unsigned long long int>((d->getNumberOfSlices()*d->getSliceSize())));
-
-	}
 }
 
 void tissuestack::imaging::TissueStackRawData::parseHeader(const std::string & header)
@@ -298,9 +279,4 @@ const unsigned long long int tissuestack::imaging::TissueStackRawData::getFileSi
 		return 0;
 
 	return buf.st_size;
-}
-
-const unsigned long long int tissuestack::imaging::TissueStackRawData::getSupposedFileSizeInBytes() const
-{
-	return this->_supposedFileSizeInButes;
 }

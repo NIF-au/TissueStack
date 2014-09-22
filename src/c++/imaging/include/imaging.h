@@ -184,9 +184,11 @@ namespace tissuestack
 				const unsigned int getWidth() const;
 				const unsigned int getHeight() const;
 				void dumpDataDimensionInfoIntoDebugLog() const;
+				void setSliceSizeFromGivenWidthAndHeight();
 			private:
 				friend class TissueStackImageData;
 				void setWidthAndHeight(const std::array<unsigned int, 2> & widthAndHeight);
+				void setOffSet(const unsigned long long int offSet);
 				friend class tissuestack::database::DataSetDataProvider;
 				void setTransformationMatrix(const std::string transformationMatrix);
 				const unsigned long long int _id;
@@ -215,6 +217,7 @@ namespace tissuestack
 				const FORMAT getFormat() const ;
 				const TissueStackDataDimension * getDimension(const char dimension_letter) const;
 				const TissueStackDataDimension * getDimensionByLongName(const std::string & dimension) const;
+				const TissueStackDataDimension * getDimensionByOrderIndex(const unsigned short index) const;
 				const std::vector<std::string> getDimensionOrder() const;
 				const std::vector<float> getCoordinates() const;
 				const std::vector<float> getSteps() const;
@@ -240,6 +243,7 @@ namespace tissuestack
 				const TissueStackLabelLookup * getLookup() const;
 				const int getFileDescriptor();
 				void initializeDimensions(const bool omitTransformationMatrix = false);
+				void initializeOffsetsForNonRawFiles();
 				const std::string toJson(
 					const bool includePlanes = false,
 					const bool dontDescendIntoAssociated = true) const;
@@ -261,6 +265,7 @@ namespace tissuestack
 				void addDimension(TissueStackDataDimension * dimension);
 				void addCoordinate(float coord);
 				void addStep(float step);
+				void generateRawHeader();
 			private:
 				inline const std::string constructIdentityMatrixForDimensionNumber() const;
 				inline const std::string getAdjointMatrix() const;
@@ -298,7 +303,6 @@ namespace tissuestack
 				~TissueStackRawData();
 				const bool isRaw() const;
 				const unsigned long long int getFileSizeInBytes() const;
-				const unsigned long long int getSupposedFileSizeInBytes() const;
 				const RAW_TYPE getType() const;
 			private:
 				void setRawType(int type);
@@ -307,7 +311,6 @@ namespace tissuestack
 				explicit TissueStackRawData(const std::string & filename);
 				void parseHeader(const std::string & header);
 				unsigned int _totalHeaderLength = 0;
-				unsigned long long int _supposedFileSizeInButes = 0;
 				RAW_TYPE	_raw_type = RAW_TYPE::UCHAR_8_BIT;
 				RAW_FILE_VERSION _raw_version = RAW_FILE_VERSION::LEGACY;
 		};
@@ -341,7 +344,15 @@ namespace tissuestack
 			public:
 				~TissueStackMincData();
 				const bool isRaw() const;
+				const bool isColor() const;
+				const mitype_t getMincType() const;
+				const misize_t getMincTypeSize() const;
+				const mihandle_t getMincHandle() const;
 			private:
+				bool _is_color = false;
+				mihandle_t _volume = NULL;
+				mitype_t _minc_type;
+				misize_t _minc_type_size;
 				friend class TissueStackImageData;
 				TissueStackMincData(const std::string & filename);
 		};
@@ -741,11 +752,26 @@ namespace tissuestack
 					const tissuestack::services::TissueStackConversionTask * conversion_task,
 					const std::string dimension = "",
 					const bool writeHeader = true);
-
 			private:
-				const bool hasBeenCancelledOrShutDown(
+				inline void convertSlice(
+					const tissuestack::imaging::TissueStackMincData * minc,
+					const unsigned long int slice_number,
+					const short dimension_number) const;
+				inline void convertSlice(
+					const tissuestack::imaging::TissueStackNiftiData * nifti,
+					const unsigned long int slice_number,
+					const short dimension_number) const;
+
+				inline void loopOverDimensions(
+						const tissuestack::common::ProcessingStrategy * processing_strategy,
+						const tissuestack::services::TissueStackConversionTask * converter_task,
+						const std::string & dimension) const;
+
+				inline const bool hasBeenCancelledOrShutDown(
 					const tissuestack::common::ProcessingStrategy * processing_strategy,
-					std::unique_ptr<const tissuestack::services::TissueStackConversionTask> & ptr_converter_task) const;
+					const tissuestack::services::TissueStackConversionTask * converter_task) const;
+
+				int _file_descriptor = -1;
 
 		};
 

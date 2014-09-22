@@ -10,12 +10,15 @@ SRCS_UTILS		=	$(wildcard ../utils/*.cpp)
 SRCS_TILER		=	TissueStackPreTiler.cpp
 SRCS_CONVERTER	=	TissueStackConverter.cpp
 
-INCLUDE			=	-I../common/include -I../networking/include -I../execution/include \
-					-I../imaging/include -I../utils/include -I../database/include -I../services/include
+INCLUDE			=	-Iinclude -I/usr/include -I/usr/local/include \
+					-I../common/include -I../execution/include \
+					-I../database/include -I../services/include \
+					-I../networking/include -I../imaging/include \
+					-I../utils/include
 
 LIB_PATH		=
 
-LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid
+LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid -lhdf5 -lminc2 
 
 TILER_EXE_NAME		=	TissueStackPreTiler
 CONVERTER_EXE_NAME	=	TissueStackConverter

@@ -7,6 +7,7 @@
 #include "parameters.h"
 
 #include <magick/api.h>
+#include <minc2.h>
 
 #include <string>
 #include <cstring>
