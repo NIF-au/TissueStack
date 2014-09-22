@@ -579,7 +579,7 @@ namespace tissuestack
 						if (dimension == nullptr)
 							THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 									"Image Dimension could not be found!");
-						if (request->getSliceNumber() < 0 || request->getSliceNumber() > dimension->getNumberOfSlices())
+						if (request->getSliceNumber() < 0 || request->getSliceNumber() >= dimension->getNumberOfSlices())
 							THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 									"Slice number requested is out of bounds!");
 						if (!request->isPreview()) // only for non preview requests

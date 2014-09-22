@@ -450,7 +450,7 @@ const std::string tissuestack::imaging::TissueStackImageData::toJson(
 				this->getDimensionByLongName(p);
 			if (j != 0) json << ",";
 			json << "{ \"name\": \"" << dim->getName()[0] << "\"";
-			json << ", \"maxSlices\": " << std::to_string(dim->getNumberOfSlices());
+			json << ", \"maxSlices\": " << std::to_string(dim->getNumberOfSlices()-1);
 			json << ", \"maxX\": " << std::to_string(dim->getWidth());
 			json << ", \"maxY\": " << std::to_string(dim->getHeight());
 			json << ", \"isTiled\": " << (this->_is_tiled ? "true" : "false");
@@ -652,17 +652,17 @@ const std::string tissuestack::imaging::TissueStackImageData::getHeader() const
 
 void tissuestack::imaging::TissueStackImageData::generateRawHeader()
 {
-	std::ostringstream header;
-
-	header << "@IaMraW@"; // "raw magic"
-	header << "V"; // we add a version
-	header << std::to_string(tissuestack::imaging::RAW_FILE_VERSION::V1);
-	header << "|"; // close of version and start with actual meta-data
+	const std::string headerBeginning =
+		std::string("@IaMraW@V") +
+		std::to_string(tissuestack::imaging::RAW_FILE_VERSION::V1) +
+		"|";
 
 	if (this->_dimensions.empty())
 		THROW_TS_EXCEPTION(
 			tissuestack::common::TissueStackApplicationException,
 			"Cannot generate raw header for 0 dimension image data!");
+
+	std::ostringstream header;
 
 	unsigned short i =0;
 	for (auto dim : this->_dimensions) // slice numbers
@@ -699,5 +699,9 @@ void tissuestack::imaging::TissueStackImageData::generateRawHeader()
 	header << std::to_string(this->_format);
 	header << "|";
 
-	this->_header = header.str();
+	const std::string headerString  = header.str();
+
+	this->_header = headerBeginning +
+		std::to_string(headerString.length()) +
+		"|" + headerString;
 }
