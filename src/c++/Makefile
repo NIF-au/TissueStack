@@ -9,12 +9,16 @@ SRCS_SERVICES	=	$(wildcard services/*.cpp)
 SRCS_UTILS		=	$(wildcard utils/*.cpp)
 SRCS			=	$(wildcard *.cpp)
 
-INCLUDE			=	-Icommon/include -Inetworking/include -Iexecution/include \
-					-Iimaging/include -Iutils/include -Idatabase/include -Iservices/include
+INCLUDE			=	-Iinclude -I/usr/include/nifti \
+					-Icommon/include -Iexecution/include \
+					-Idatabase/include -Iservices/include \
+					-Inetworking/include -Iimaging/include \
+					-Iutils/include
 
 LIB_PATH		=
 
-LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid
+LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid \
+					-lminc2 -lhdf5 -lniftiio -lz -lznz -lm
 
 EXE_NAME		=	TissueStackServer
 

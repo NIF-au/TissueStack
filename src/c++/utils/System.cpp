@@ -94,6 +94,45 @@ const unsigned long long int tissuestack::utils::System::getSystemTimeInMillis()
 	return static_cast<unsigned long long int>(millis.count());
 }
 
+
+const bool tissuestack::utils::System::touchFile(
+	const std::string & file,
+	const unsigned long long int size_in_bytes,
+	const bool overwriteExistingFile)
+{
+	if (!overwriteExistingFile && tissuestack::utils::System::fileExists(file))
+		return false;
+
+	int fd = open(file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	if (fd <= 0)
+		return false;
+
+	// we write zeroes in 100 MB chunks or less
+	const unsigned int BUFFER_SIZE = 1024 * 1000 * 100;
+	char * buffer = new char[BUFFER_SIZE];
+	memset(buffer, 0, BUFFER_SIZE);
+
+	unsigned long long int bytesLeft = size_in_bytes;
+	while (bytesLeft > 0)
+	{
+		unsigned int bytesToBeWritten =
+			bytesLeft >= BUFFER_SIZE ? BUFFER_SIZE : bytesLeft;
+		if ((write(fd, buffer, bytesToBeWritten)) != bytesToBeWritten)
+		{
+			delete [] buffer;
+			close(fd);
+			unlink(file.c_str());
+			return false;
+		}
+		bytesLeft = bytesLeft-bytesToBeWritten;
+	}
+
+	delete [] buffer;
+	close(fd);
+
+	return true;
+}
+
 const std::string tissuestack::utils::System::generateUUID() {
 	uuid_t uuid;
 	uuid_generate_time(uuid);

@@ -23,6 +23,7 @@ namespace tissuestack
 	namespace services
 	{
 	 class TissueStackTask; // forward declarations
+	 class TissueStackConversionTask; // forward declarations
 	 class TissueStackServicesDelegator;
 	}
 	namespace execution
@@ -143,8 +144,9 @@ namespace tissuestack
 					const std::string & colormap);
 
 				void convert(
-					const std::string & in_file,
-					const std::string & out_file);
+					const tissuestack::services::TissueStackConversionTask * task,
+					const std::string dimension = "",
+					const bool writeHeader = true);
 
 				void init();
 				void process(const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality) ;

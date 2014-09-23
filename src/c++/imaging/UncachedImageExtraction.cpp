@@ -11,10 +11,12 @@ inline unsigned char * tissuestack::imaging::UncachedImageExtraction::readRawSli
 		const tissuestack::imaging::TissueStackDataDimension * actualDimension,
 		const unsigned int sliceNumber) const
 {
+	unsigned long long int multiplier = 1;
+	if (image->getType() != tissuestack::imaging::RAW_TYPE::UCHAR_8_BIT)
+		multiplier = 3;
+
 	long long int dataLength =
-			actualDimension->getSliceSize() *
-			static_cast<long long int>(
-					(image->getType() == tissuestack::imaging::RAW_TYPE::UCHAR_8_BIT) ? 1 : 3);
+			actualDimension->getSliceSize() * multiplier;
 	unsigned long long int actualOffset =
 			actualDimension->getOffset() +
 				static_cast<unsigned long long int>(sliceNumber) * static_cast<unsigned long long int>(dataLength);
@@ -32,14 +34,6 @@ inline unsigned char * tissuestack::imaging::UncachedImageExtraction::readRawSli
 			fd,
 			static_cast<void *>(data.get()),
 			dataLength);
-	/*
-	ssize_t bRead =
-		pread64(
-			const_cast<tissuestack::imaging::TissueStackRawData *>(image)->getFileDescriptor(),
-			data.get(),
-			dataLength,
-			actualOffset);
-	*/
 
 	if (bRead != dataLength)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
@@ -202,21 +196,27 @@ const std::array<unsigned long long int, 3> tissuestack::imaging::UncachedImageE
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"Image Query: Coordinate (x/y) exceeds the width/height of the image slice!");
 
-	long long int dataLength =
-			actualDimension->getSliceSize() *
-			static_cast<long long int>(
-					(image->getType() == tissuestack::imaging::RAW_TYPE::UCHAR_8_BIT) ? 1 : 3);
-	unsigned long long int actualOffset =
-			actualDimension->getOffset() +
-				static_cast<unsigned long long int>(request->getSliceNumber()) * static_cast<unsigned long long int>(dataLength);
-
 	std::array<unsigned long long int, 3> pixel_value;
-	if (image->getFormat() == tissuestack::imaging::FORMAT::RAW)
+	if ((image->getRawVersion() == tissuestack::imaging::RAW_FILE_VERSION::LEGACY &&
+			image->getFormat() == tissuestack::imaging::FORMAT::RAW) ||
+			image->getRawVersion() == tissuestack::imaging::RAW_FILE_VERSION::V1)
 	{
+
+		unsigned long long int multiplier = 1;
+		if (image->getType() != tissuestack::imaging::RAW_TYPE::UCHAR_8_BIT)
+			multiplier = 3;
+		long long int dataLength =
+				actualDimension->getSliceSize() * multiplier;
+		// set slice offset
+		unsigned long long int actualOffset =
+				actualDimension->getOffset() +
+					static_cast<unsigned long long int>(request->getSliceNumber()) * static_cast<unsigned long long int>(dataLength);
+		// set position within slice
 		actualOffset +=
 			static_cast<unsigned long long int>(
-					static_cast<unsigned long long int>(request->getYCoordinate())*actualDimension->getWidth()*3 +
-					static_cast<unsigned long long int>(request->getXCoordinate()*3));
+					static_cast<unsigned long long int>(
+						request->getYCoordinate())*actualDimension->getWidth()*multiplier +
+					static_cast<unsigned long long int>(request->getXCoordinate()*multiplier));
 
 		std::unique_ptr<unsigned char[]> data(new unsigned char[3] {'\0', '\0', '\0'});
 		//memset(data.get(), '\0', 3);
@@ -231,14 +231,7 @@ const std::array<unsigned long long int, 3> tissuestack::imaging::UncachedImageE
 				fd,
 				static_cast<void *>(data.get()),
 				3);
-		/*
-		ssize_t bRead =
-			pread64(
-				const_cast<tissuestack::imaging::TissueStackRawData *>(image)->getFileDescriptor(),
-				data.get(),
-				3,
-				actualOffset);
-		*/
+
 		if (bRead != 3)
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 					"Failed to query slice within RAW file!");
@@ -383,7 +376,6 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::createImageFromDat
 		if (img == NULL)
 		{
 			CatchException(&exception);
-			DestroyImage(img);
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 					"Image Extraction: Failed to flip image to make it backward compatible!");
 		}

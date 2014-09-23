@@ -298,16 +298,10 @@ inline void tissuestack::imaging::PreTiler::loopOverDimensions(
 							std::cout << "Progress:\t" <<
 								std::to_string(pretiling_task->getSlicesDone()) << "\t["
 								<< std::to_string(pretiling_task->getTotalSlices()) << "]\t => "
-								<< std::to_string(pretiling_task->getProgress()) << "%\r";
+								<< std::to_string(pretiling_task->getProgress()) << "%\r" << std::flush;
 
 						if (finished)
 						{
-							if (!processing_strategy->isOnlineStrategy())
-								std::cout << "Progress:\t" <<
-									std::to_string(pretiling_task->getSlicesDone()) << "\t["
-									<< std::to_string(pretiling_task->getTotalSlices()) << "]\t => "
-									<< std::to_string(pretiling_task->getProgress()) << "%\r\n";
-
 							if (img) DestroyImage(img);
 							return;
 						}

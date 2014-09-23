@@ -149,8 +149,11 @@ namespace tissuestack
 				const std::string getOutFile() const;
 				const TissueStackTaskType getType() const;
 				void dumpTaskToDebugLog() const;
+				const unsigned long long int getFutureRawFileSize() const;
+				const unsigned long long int calculatePureDataSize() const;
 			private:
 				std::string _output_file;
+				std::string _raw_header;
 		};
 
 		class TissueStackTilingTask : public TissueStackTask

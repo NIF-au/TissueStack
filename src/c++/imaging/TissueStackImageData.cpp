@@ -50,14 +50,17 @@ const tissuestack::imaging::TissueStackImageData * tissuestack::imaging::TissueS
 	if (!tissuestack::utils::System::fileExists(filename))
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Image file does not exist!");
 
-	// check extension
-	size_t position = filename.rfind(".nii");
+	// check extension (case insensitive)
+	std::string fileNameAllUpperCase = filename;
+	std::transform(fileNameAllUpperCase.begin(), fileNameAllUpperCase.end(), fileNameAllUpperCase.begin(), toupper);
+
+	size_t position = fileNameAllUpperCase.rfind(".NII");
 	if (position + 4 == filename.length())
 		return new TissueStackNiftiData(filename);
-	position = filename.rfind(".nii.gz");
+	position = fileNameAllUpperCase.rfind(".NII.GZ");
 	if (position + 7 == filename.length())
 		return new TissueStackNiftiData(filename);
-	position = filename.rfind(".mnc");
+	position = fileNameAllUpperCase.rfind(".MNC");
 	if (position + 4 == filename.length())
 		return new TissueStackMincData(filename);
 
@@ -99,6 +102,19 @@ void tissuestack::imaging::TissueStackImageData::initializeDimensions(const bool
 			const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimensionByLongName(dim));
 		if (d->getTransformationMatrix().empty())
 			d->setTransformationMatrix(identity);
+	}
+}
+
+void tissuestack::imaging::TissueStackImageData::initializeOffsetsForNonRawFiles()
+{
+	unsigned long long int offset = this->_header.length();
+	for (auto dim : this->_dim_order)
+	{
+		tissuestack::imaging::TissueStackDataDimension * d =
+			const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimensionByLongName(dim));
+		d->setSliceSizeFromGivenWidthAndHeight();
+		d->setOffSet(offset);
+		offset += (d->getSliceSize() * d->getNumberOfSlices() * static_cast<unsigned long long int>(3));
 	}
 }
 
@@ -304,6 +320,14 @@ const tissuestack::imaging::TissueStackDataDimension * tissuestack::imaging::Tis
 	return this->getDimension(dimension.at(0));
 }
 
+const tissuestack::imaging::TissueStackDataDimension * tissuestack::imaging::TissueStackImageData::getDimensionByOrderIndex(const unsigned short index) const
+{
+	if (index+1 > static_cast<unsigned short>(this->_dim_order.size()))
+		return nullptr;
+
+	return this->getDimensionByLongName(this->_dim_order[index]);
+}
+
 const tissuestack::imaging::TissueStackDataDimension * tissuestack::imaging::TissueStackImageData::getDimension(const char dimension_letter) const
 {
 	try
@@ -426,7 +450,7 @@ const std::string tissuestack::imaging::TissueStackImageData::toJson(
 				this->getDimensionByLongName(p);
 			if (j != 0) json << ",";
 			json << "{ \"name\": \"" << dim->getName()[0] << "\"";
-			json << ", \"maxSlices\": " << std::to_string(dim->getNumberOfSlices());
+			json << ", \"maxSlices\": " << std::to_string(dim->getNumberOfSlices()-1);
 			json << ", \"maxX\": " << std::to_string(dim->getWidth());
 			json << ", \"maxY\": " << std::to_string(dim->getHeight());
 			json << ", \"isTiled\": " << (this->_is_tiled ? "true" : "false");
@@ -481,10 +505,9 @@ void tissuestack::imaging::TissueStackImageData::addDimension(tissuestack::imagi
 
 	if (this->getDimensionByLongName(dimension->getName()))
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-				"2 dimensions with same starting letter cannot be added twice. Just a convention for technical convenience, sorry..");
+			"2 dimensions with same starting letter cannot be added twice. Just a convention for technical convenience, sorry..");
 
 	this->_dim_order.push_back(dimension->getName());
-
 	this->_dimensions[dimension->getName().at(0)] = dimension;
 }
 
@@ -614,4 +637,69 @@ void tissuestack::imaging::TissueStackImageData::dumpImageDataIntoDebugLog() con
 const std::vector<std::string> tissuestack::imaging::TissueStackImageData::getDimensionOrder() const
 {
 	return this->_dim_order;
+}
+
+void tissuestack::imaging::TissueStackImageData::setHeader(const std::string header)
+{
+	this->_header = header;
+}
+
+const std::string tissuestack::imaging::TissueStackImageData::getHeader() const
+{
+	return this->_header;
+}
+
+void tissuestack::imaging::TissueStackImageData::generateRawHeader()
+{
+	const std::string headerBeginning =
+		std::string("@IaMraW@V") +
+		std::to_string(tissuestack::imaging::RAW_FILE_VERSION::V1) +
+		"|";
+
+	if (this->_dimensions.empty())
+		THROW_TS_EXCEPTION(
+			tissuestack::common::TissueStackApplicationException,
+			"Cannot generate raw header for 0 dimension image data!");
+
+	std::ostringstream header;
+
+	unsigned short i =0;
+	for (i=0; i < this->_dim_order.size();i++) // slice numbers
+	{
+		header << std::to_string(this->getDimensionByOrderIndex(i)->getNumberOfSlices());
+		if (i < this->_dim_order.size()-1) header << ":";
+	}
+	header << "|";
+	i =0;
+	for (auto coord : this->_coordinates) // coords
+	{
+		header << std::to_string(coord);
+		if (i < this->_coordinates.size()-1) header << ":";
+		i++;
+	}
+	header << "|";
+	i =0;
+	for (auto step : this->_steps) // steps
+	{
+		header << std::to_string(step);
+		if (i < this->_steps.size()-1) header << ":";
+		i++;
+	}
+	header << "|";
+	i =0;
+	for (auto name : this->_dim_order) // dimension names
+	{
+		header << name;
+		if (i < this->_dim_order.size()-1) header << ":";
+		i++;
+	}
+	header << "|"; // finish off with original format
+	header << std::to_string(this->_format);
+	header << "|";
+
+	const std::string headerString  = header.str();
+
+	this->_header = headerBeginning +
+		std::to_string(headerString.length()) +
+		"|" + headerString;
 }

@@ -8,8 +8,8 @@ tissuestack::imaging::TissueStackDataDimension::TissueStackDataDimension(
 		const unsigned long long int slice_size) :
 		_id(0), _name(name), _offset(offset), _numberOfSlices(number_of_slices),_sliceSize(slice_size), _width(0), _height(0)
 {
-	if (name.empty() || offset <=0 || number_of_slices <=0 || slice_size <=0)
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "DataDimension Initialization with a fishy number smaller or equal to 0!");
+	if (name.empty() || number_of_slices <=0)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "DataDimension Initialization with either 0 slices or empty name or both!");
 }
 
 tissuestack::imaging::TissueStackDataDimension::TissueStackDataDimension(
@@ -74,8 +74,18 @@ void tissuestack::imaging::TissueStackDataDimension::dumpDataDimensionInfoIntoDe
 {
 	std::ostringstream in;
 
-	in << "Dimension: " << this->_name << " => # " << this->_numberOfSlices
+	in << "Dimension: " << this->_name << " => # " << this->getNumberOfSlices()
 			<< " (" << this->_sliceSize << " px) @ " << this->_offset;
 
 	tissuestack::logging::TissueStackLogger::instance()->debug("%s\n", in.str().c_str());
+}
+
+void tissuestack::imaging::TissueStackDataDimension::setSliceSizeFromGivenWidthAndHeight()
+{
+	this->_sliceSize = this->_height * this->_width;
+}
+
+void tissuestack::imaging::TissueStackDataDimension::setOffSet(const unsigned long long int offSet)
+{
+	this->_offset = offSet;
 }

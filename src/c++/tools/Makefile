@@ -10,12 +10,16 @@ SRCS_UTILS		=	$(wildcard ../utils/*.cpp)
 SRCS_TILER		=	TissueStackPreTiler.cpp
 SRCS_CONVERTER	=	TissueStackConverter.cpp
 
-INCLUDE			=	-I../common/include -I../networking/include -I../execution/include \
-					-I../imaging/include -I../utils/include -I../database/include -I../services/include
+INCLUDE			=	-Iinclude -I/usr/include/nifti \
+					-I../common/include -I../execution/include \
+					-I../database/include -I../services/include \
+					-I../networking/include -I../imaging/include \
+					-I../utils/include
 
 LIB_PATH		=
 
-LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid
+LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid \
+					-lminc2 -lhdf5 -lniftiio -lz -lznz -lm
 
 TILER_EXE_NAME		=	TissueStackPreTiler
 CONVERTER_EXE_NAME	=	TissueStackConverter
@@ -43,15 +47,15 @@ OBJS_CONVERTER	=	$(SRCS_CONVERTER:%.cpp=%.o)
 all:	compile install
 
 compile:	$(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_DATABASE) $(OBJS_IMAGING) \
-			$(OBJS_EXECUTION)  $(OBJS_SERVICES) $(OBJS_UTILS) $(OBJS_TILER) $(OBJS_CONVERTER)
+			$(OBJS_EXECUTION)  $(OBJS_SERVICES) $(OBJS_UTILS)
 	@echo -e "\tCompiling \"$(NAME)\" => $(TILER_EXE_NAME)"
 	@$(CC)   $(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_EXECUTION) $(OBJS_DATABASE) \
-							$(OBJS_SERVICES) $(OBJS_IMAGING) $(OBJS_UTILS) $(OBJS_TILER) \
+							$(OBJS_SERVICES) $(OBJS_IMAGING) $(OBJS_UTILS) $(SRCS_TILER) \
 							`GraphicsMagick-config --cppflags --libs --ldflags` -o $(TILER_EXE_NAME) \
 							$(LIBS) $(FLAGS) $(INCLUDE)
 	@echo -e "\tCompiling \"$(NAME)\" => $(CONVERTER_EXE_NAME)"
 	@$(CC)   $(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_EXECUTION) $(OBJS_DATABASE) \
-							$(OBJS_SERVICES) $(OBJS_IMAGING) $(OBJS_UTILS) $(OBJS_CONVERTER) \
+							$(OBJS_SERVICES) $(OBJS_IMAGING) $(OBJS_UTILS) $(SRCS_CONVERTER) \
 							`GraphicsMagick-config --cppflags --libs --ldflags` -o $(CONVERTER_EXE_NAME) \
 							$(LIBS) $(FLAGS) $(INCLUDE)
 

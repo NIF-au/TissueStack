@@ -11,15 +11,24 @@ tissuestack::imaging::TissueStackDataSetStore::TissueStackDataSetStore()
 
 	const std::vector<std::string> fileList = tissuestack::utils::System::getFilesInDirectory(DATASET_PATH);
 	for (std::string f : fileList)
-	try
 	{
-		tissuestack::logging::TissueStackLogger::instance()->info("Trying to import data set: %s...\n", f.c_str());
-		this->addDataSet(tissuestack::imaging::TissueStackDataSet::fromFile(f.c_str()));
-		tissuestack::logging::TissueStackLogger::instance()->info("Import successful.\n");
-	} catch (std::exception & bad)
-	{
-		tissuestack::logging::TissueStackLogger::instance()->error(
-				"Could not import data set file '%s' for the following reason:\n%s\n", f.c_str(), bad.what());
+		std::string fAllUpperCase = f;
+		std::transform(fAllUpperCase.begin(), fAllUpperCase.end(), fAllUpperCase.begin(), toupper);
+
+		// we want only .raw in our data set store
+		if (fAllUpperCase.length() > 3 && fAllUpperCase.substr(fAllUpperCase.length()-4).compare(".RAW") != 0)
+			continue;
+
+		try
+		{
+			tissuestack::logging::TissueStackLogger::instance()->info("Trying to import data set: %s...\n", f.c_str());
+			this->addDataSet(tissuestack::imaging::TissueStackDataSet::fromFile(f.c_str()));
+			tissuestack::logging::TissueStackLogger::instance()->info("Import successful.\n");
+		} catch (std::exception & bad)
+		{
+			tissuestack::logging::TissueStackLogger::instance()->error(
+					"Could not import data set file '%s' for the following reason:\n%s\n", f.c_str(), bad.what());
+		}
 	}
 }
 

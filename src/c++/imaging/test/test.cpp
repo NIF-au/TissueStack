@@ -1,3 +1,4 @@
+#include "networking.h"
 #include "imaging.h"
 
 #include <iostream>
@@ -8,7 +9,8 @@ int main(int argc, char * args[])
 
   threeImages[0] =
 		  const_cast<tissuestack::imaging::TissueStackImageData *>(
-				  tissuestack::imaging::TissueStackImageData::fromFile("/opt/Neuro Datasets/00-normal-model-nonsym.raw"));
+				  tissuestack::imaging::TissueStackImageData::fromFile("/opt/tissuestack/data/00-normal-model-nonsym.mnc"));
+
   threeImages[1] =
 		  const_cast<tissuestack::imaging::TissueStackImageData *>(
 				  tissuestack::imaging::TissueStackImageData::fromFile("/data/workspace/nifticlib-2.0.0/Testing/Data/ATestReferenceImageForReadingAndWriting.nii.gz"));
@@ -34,6 +36,7 @@ int main(int argc, char * args[])
 	  }
 	  delete threeImages[i];
   }
+
   delete [] threeImages;
 
 

@@ -184,9 +184,11 @@ namespace tissuestack
 				const unsigned int getWidth() const;
 				const unsigned int getHeight() const;
 				void dumpDataDimensionInfoIntoDebugLog() const;
+				void setSliceSizeFromGivenWidthAndHeight();
 			private:
 				friend class TissueStackImageData;
 				void setWidthAndHeight(const std::array<unsigned int, 2> & widthAndHeight);
+				void setOffSet(const unsigned long long int offSet);
 				friend class tissuestack::database::DataSetDataProvider;
 				void setTransformationMatrix(const std::string transformationMatrix);
 				const unsigned long long int _id;
@@ -211,9 +213,11 @@ namespace tissuestack
 				virtual ~TissueStackImageData();
 				const std::string getFileName() const;
 				virtual const bool isRaw() const = 0;
+				const std::string getHeader() const;
 				const FORMAT getFormat() const ;
 				const TissueStackDataDimension * getDimension(const char dimension_letter) const;
 				const TissueStackDataDimension * getDimensionByLongName(const std::string & dimension) const;
+				const TissueStackDataDimension * getDimensionByOrderIndex(const unsigned short index) const;
 				const std::vector<std::string> getDimensionOrder() const;
 				const std::vector<float> getCoordinates() const;
 				const std::vector<float> getSteps() const;
@@ -239,6 +243,7 @@ namespace tissuestack
 				const TissueStackLabelLookup * getLookup() const;
 				const int getFileDescriptor();
 				void initializeDimensions(const bool omitTransformationMatrix = false);
+				void initializeOffsetsForNonRawFiles();
 				const std::string toJson(
 					const bool includePlanes = false,
 					const bool dontDescendIntoAssociated = true) const;
@@ -254,11 +259,13 @@ namespace tissuestack
 				TissueStackImageData(const std::string & filename, FORMAT format);
 				void setDataBaseId(const unsigned long long int id);
 				void setDescription(const std::string description);
+				void setHeader(const std::string);
 				const std::unordered_map<char, const TissueStackDataDimension *> getDimensionMap() const;
 				void setFormat(int original_format);
 				void addDimension(TissueStackDataDimension * dimension);
 				void addCoordinate(float coord);
 				void addStep(float step);
+				void generateRawHeader();
 			private:
 				inline const std::string constructIdentityMatrixForDimensionNumber() const;
 				inline const std::string getAdjointMatrix() const;
@@ -287,6 +294,7 @@ namespace tissuestack
 				float _resolution_in_mm = 0;
 				const TissueStackLabelLookup * _lookup = nullptr;
 				std::vector<const TissueStackImageData *> _associated_data_sets;
+				std::string _header = "";
 		};
 
 		class TissueStackRawData final : public TissueStackImageData
@@ -295,8 +303,8 @@ namespace tissuestack
 				~TissueStackRawData();
 				const bool isRaw() const;
 				const unsigned long long int getFileSizeInBytes() const;
-				const unsigned long long int getSupposedFileSizeInBytes() const;
 				const RAW_TYPE getType() const;
+				const RAW_FILE_VERSION getRawVersion() const;
 			private:
 				void setRawType(int type);
 				void setRawVersion(int version);
@@ -304,7 +312,6 @@ namespace tissuestack
 				explicit TissueStackRawData(const std::string & filename);
 				void parseHeader(const std::string & header);
 				unsigned int _totalHeaderLength = 0;
-				unsigned long long int _supposedFileSizeInButes = 0;
 				RAW_TYPE	_raw_type = RAW_TYPE::UCHAR_8_BIT;
 				RAW_FILE_VERSION _raw_version = RAW_FILE_VERSION::LEGACY;
 		};
@@ -326,11 +333,18 @@ namespace tissuestack
 			public:
 				~TissueStackNiftiData();
 				const bool isRaw() const;
-				const bool isColor();
+				const bool isColor() const;
+				const nifti_image * getNiftiHandle() const;
+				const double getMin() const;
+				const double getMax() const;
 			private:
+				void setGlobalMinMax();
 				friend class TissueStackImageData;
 				TissueStackNiftiData(const std::string & filename);
 				bool _is_color = false;
+				nifti_image * _volume;
+				double _min = INFINITY;
+				double _max = -INFINITY;
 		};
 
 		class TissueStackMincData final : public TissueStackImageData
@@ -338,7 +352,15 @@ namespace tissuestack
 			public:
 				~TissueStackMincData();
 				const bool isRaw() const;
+				const bool isColor() const;
+				const mitype_t getMincType() const;
+				const misize_t getMincTypeSize() const;
+				const mihandle_t getMincHandle() const;
 			private:
+				bool _is_color = false;
+				mihandle_t _volume = NULL;
+				mitype_t _minc_type;
+				misize_t _minc_type_size;
 				friend class TissueStackImageData;
 				TissueStackMincData(const std::string & filename);
 		};
@@ -565,7 +587,7 @@ namespace tissuestack
 						if (dimension == nullptr)
 							THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 									"Image Dimension could not be found!");
-						if (request->getSliceNumber() < 0 || request->getSliceNumber() > dimension->getNumberOfSlices())
+						if (request->getSliceNumber() < 0 || request->getSliceNumber() >= dimension->getNumberOfSlices())
 							THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 									"Slice number requested is out of bounds!");
 						if (!request->isPreview()) // only for non preview requests
@@ -732,13 +754,53 @@ namespace tissuestack
 				RawConverter & operator=(const RawConverter&) = delete;
 				RawConverter(const RawConverter&) = delete;
 				RawConverter();
+
 				void convert(
 					const tissuestack::common::ProcessingStrategy * processing_strategy,
-					const tissuestack::services::TissueStackConversionTask * conversion_task);
+					const tissuestack::services::TissueStackConversionTask * conversion_task,
+					const std::string dimension = "",
+					const bool writeHeader = true);
 			private:
-				const bool hasBeenCancelledOrShutDown(
+				inline void convertSlice(
+					const tissuestack::imaging::TissueStackMincData * minc,
+					const unsigned long int slice_number,
+					const short dimension_number) const;
+				inline void convertSlice(
+					const tissuestack::imaging::TissueStackNiftiData * nifti,
+					const unsigned long int slice_number,
+					const short dimension_number) const;
+
+				inline void loopOverDimensions(
+						const tissuestack::common::ProcessingStrategy * processing_strategy,
+						const tissuestack::services::TissueStackConversionTask * converter_task,
+						const std::string & dimension) const;
+
+				inline void iteratOverPixelsAndConvert(
+					void * in,
+					unsigned char * out,
+					const unsigned long long int size,
+					const nifti_image * nifti,
+					const double min,
+					const double max,
+					const bool isRgb,
+					const unsigned short rgb_channel) const;
+
+				inline unsigned long long mapUnsignedValue(
+					const unsigned char fromBitRange,
+					const unsigned char toBitRange,
+					const unsigned long long value) const;
+
+				inline void reorientNiftiSlice(
+					const tissuestack::imaging::TissueStackNiftiData * nifti,
+					const tissuestack::imaging::TissueStackDataDimension * dim,
+					unsigned char * out,
+					const unsigned long int slice_number = 0) const;
+
+				inline const bool hasBeenCancelledOrShutDown(
 					const tissuestack::common::ProcessingStrategy * processing_strategy,
-					std::unique_ptr<const tissuestack::services::TissueStackConversionTask> & ptr_converter_task) const;
+					const tissuestack::services::TissueStackConversionTask * converter_task) const;
+
+				int _file_descriptor = -1;
 
 		};
 

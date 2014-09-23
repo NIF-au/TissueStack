@@ -16,17 +16,17 @@ const tissuestack::imaging::RAW_TYPE tissuestack::imaging::TissueStackRawData::g
 	return this->_raw_type;
 }
 
+const tissuestack::imaging::RAW_FILE_VERSION tissuestack::imaging::TissueStackRawData::getRawVersion() const
+{
+	return this->_raw_version;
+}
+
 tissuestack::imaging::TissueStackRawData::TissueStackRawData(const std::string & filename) :
 		tissuestack::imaging::TissueStackImageData(filename, tissuestack::imaging::FORMAT::MINC)
 {
-	char header[15];
-	memset(header, '\0', 15);
-	int bRead = pread(this->getFileDescriptor(), header, 15, 0);
-
-	// first a general header test
-	// read failed, try again
-	if (bRead <= 0)
-		bRead = pread(this->getFileDescriptor(), header, 15, 0);
+	char header[20];
+	memset(header, '\0', 20);
+	int bRead = pread(this->getFileDescriptor(), header, 20, 0);
 	if (bRead <= 0)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Supposed RAW file could not be read!");
 
@@ -38,7 +38,7 @@ tissuestack::imaging::TissueStackRawData::TissueStackRawData(const std::string &
 
 	if (header[8] == 'V') // we have a non legacy raw file, extract exact version
 	{
-		while (i < 15)
+		while (i < 20)
 		{
 			if (header[i] == '|')
 			{
@@ -51,19 +51,18 @@ tissuestack::imaging::TissueStackRawData::TissueStackRawData(const std::string &
 		if (versionLength <=0)
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Non Legacy RAW file need to have a version number!");
 
-		char tmp[versionLength];
-		memset(tmp, '\0', versionLength);
+		char tmp[versionLength+1];
+		memset(tmp, '\0', versionLength+1);
+		for (unsigned int x=0;x<versionLength;x++)
+			tmp[x] = header[8 + x+pipePos-startOfLengthInformation];
 		this->setRawVersion(atoi(tmp));
-		startOfLengthInformation = pipePos;
+		this->setRawType(tissuestack::imaging::RAW_TYPE::RGB_24BIT);
+		startOfLengthInformation = pipePos+1;
 	}
 
-	// read in rest of header after finding its length
-	memset(header, '\0', 15);
-	bRead = pread(this->getFileDescriptor(), header, 15, startOfLengthInformation);
-	if (bRead <= 0)
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Could not read header length of RAW file!");
-	i = 0; pipePos = -1;
-	while (i < 15)
+	// find header length
+	i = startOfLengthInformation; pipePos = -1;
+	while (i < 20)
 	{
 		if (header[i] == '|')
 		{
@@ -75,41 +74,28 @@ tissuestack::imaging::TissueStackRawData::TissueStackRawData(const std::string &
 	if (pipePos <=0)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Could not read header length of RAW file!");
 
-	char tmp[pipePos+2];
-	memcpy(tmp, header, pipePos+1);
-	tmp[pipePos+1] = '\0';
-	int headerLength = atoi(tmp);
+	unsigned short headerLengthDigits = pipePos-startOfLengthInformation;
+	if (headerLengthDigits <=0)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Header length has zero digits!");
+
+	char tmp[headerLengthDigits+1];
+	memset(tmp, '\0', headerLengthDigits+1);
+	for (unsigned int x=0;x<headerLengthDigits;x++)
+		tmp[x] = header[startOfLengthInformation + x];
+	int headerLength = atoi(&tmp[0]);
 
 	char extendedHeader[headerLength];
 	memset(extendedHeader, '\0', headerLength);
-	bRead = pread(this->getFileDescriptor(), extendedHeader, headerLength-1, startOfLengthInformation + pipePos + 1);
+	bRead = pread(this->getFileDescriptor(), extendedHeader, headerLength-1, pipePos + 1);
 	if (bRead <= 0)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Could not read header content of RAW file!");
 
-	this->_totalHeaderLength = static_cast<unsigned int>(startOfLengthInformation + pipePos + 1 + headerLength);
+	this->_totalHeaderLength = static_cast<unsigned int>(pipePos + 1 + headerLength);
 	const std::string fullHeader(extendedHeader, headerLength-1);
 
 	// delegate parsing
-	//tissuestack::logging::TissueStackLogger::instance()->info("Parsing header information for RAW file: %s...\n", filename.c_str());
 	this->parseHeader(fullHeader);
-
-	// calculate the supposed file size
-	this->_supposedFileSizeInButes = this->_totalHeaderLength;
-
-	for (auto dim : this->getDimensionMap())
-	{
-		const TissueStackDataDimension * d = dim.second; // LEGACY UNSIGNED CHAR HAS 1 BYTE REPRESENTATION
-		if (this->_raw_version == tissuestack::imaging::RAW_FILE_VERSION::LEGACY
-					&& this->_raw_type == tissuestack::imaging::RAW_TYPE::UCHAR_8_BIT)
-			this->_supposedFileSizeInButes +=
-					static_cast<unsigned long long int>((d->getNumberOfSlices()*d->getSliceSize()));
-		else // LEGACY 3BYTE RGB and V1 RESPRESENTATION
-			this->_supposedFileSizeInButes +=
-					static_cast<unsigned long long int>(
-							static_cast<unsigned long long int>(3) *
-							static_cast<unsigned long long int>((d->getNumberOfSlices()*d->getSliceSize())));
-
-	}
 }
 
 void tissuestack::imaging::TissueStackRawData::parseHeader(const std::string & header)
@@ -136,8 +122,11 @@ void tissuestack::imaging::TissueStackRawData::parseHeader(const std::string & h
 		{
 			case 0:
 				// LEGACY RAW: the number of dimensions
-				numOfDims = atoi(t.c_str());
-				break;
+				if (this->_raw_version == tissuestack::imaging::RAW_FILE_VERSION::LEGACY)
+				{
+					numOfDims = atoi(t.c_str());
+					break;
+				}
 			case 1:
 				// the dimensions
 				tmpTokenString = tissuestack::utils::Misc::tokenizeString(t, ':');
@@ -171,6 +160,10 @@ void tissuestack::imaging::TissueStackRawData::parseHeader(const std::string & h
 				} else if (count == 4) // for a V1 and up: we have them all in there
 				{
 					tmpTokenString = tissuestack::utils::Misc::tokenizeString(t, ':');
+					count=5; // fast forward to 5 to stay compatible with switch logic
+				} else if (count == 5) // for a V1 and up: the original format
+				{
+					this->setFormat(atoi(t.c_str()));
 					count=6; // fast forward to 6 to stay compatible with switch logic
 				}
 				break;
@@ -178,10 +171,6 @@ void tissuestack::imaging::TissueStackRawData::parseHeader(const std::string & h
 				// LEGACY RAW: redundant short dim names which we skip
 				if (this->_raw_version == tissuestack::imaging::RAW_FILE_VERSION::LEGACY)
 					break;
-
-				// for V1 RAW: here is the original format
-				if (this->_raw_version == tissuestack::imaging::RAW_FILE_VERSION::V1)
-					this->setFormat(atoi(t.c_str()));
 				break;
 			case 8: // LEGACY RAW: dimension short names (redundant and unused)
 			case 9:
@@ -217,6 +206,11 @@ void tissuestack::imaging::TissueStackRawData::parseHeader(const std::string & h
 			this->_totalHeaderLength,
 			this->_totalHeaderLength
 	};
+
+	unsigned long long int multiplier = 1;
+	if (this->getType() != tissuestack::imaging::RAW_TYPE::UCHAR_8_BIT)
+		multiplier = 3;
+
 	for (std::string s : tmpTokenString)
 	{
 		unsigned long long int sliceSize = 0;
@@ -237,13 +231,10 @@ void tissuestack::imaging::TissueStackRawData::parseHeader(const std::string & h
 			k++;
 		}
 		// keep track of dimension offset
-		// and take into account the raw type (8 vs 24 bit representation)
 		if (j>0)
 			offset[j] =
 				offset[j-1] +
-				sliceSize*static_cast<long long unsigned int>(dims[j])*
-				static_cast<unsigned long long int>(
-						this->_raw_type == tissuestack::imaging::RAW_TYPE::UCHAR_8_BIT ? 1 : 3);
+				sliceSize * static_cast<long long unsigned int>(dims[j]) * multiplier;
 
 		this->addDimension(
 				new tissuestack::imaging::TissueStackDataDimension(
@@ -298,9 +289,4 @@ const unsigned long long int tissuestack::imaging::TissueStackRawData::getFileSi
 		return 0;
 
 	return buf.st_size;
-}
-
-const unsigned long long int tissuestack::imaging::TissueStackRawData::getSupposedFileSizeInBytes() const
-{
-	return this->_supposedFileSizeInButes;
 }
