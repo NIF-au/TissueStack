@@ -304,6 +304,7 @@ namespace tissuestack
 				const bool isRaw() const;
 				const unsigned long long int getFileSizeInBytes() const;
 				const RAW_TYPE getType() const;
+				const RAW_FILE_VERSION getRawVersion() const;
 			private:
 				void setRawType(int type);
 				void setRawVersion(int version);
@@ -332,11 +333,18 @@ namespace tissuestack
 			public:
 				~TissueStackNiftiData();
 				const bool isRaw() const;
-				const bool isColor();
+				const bool isColor() const;
+				const nifti_image * getNiftiHandle() const;
+				const double getMin() const;
+				const double getMax() const;
 			private:
+				void setGlobalMinMax();
 				friend class TissueStackImageData;
 				TissueStackNiftiData(const std::string & filename);
 				bool _is_color = false;
+				nifti_image * _volume;
+				double _min = INFINITY;
+				double _max = -INFINITY;
 		};
 
 		class TissueStackMincData final : public TissueStackImageData
@@ -766,6 +774,27 @@ namespace tissuestack
 						const tissuestack::common::ProcessingStrategy * processing_strategy,
 						const tissuestack::services::TissueStackConversionTask * converter_task,
 						const std::string & dimension) const;
+
+				inline void iteratOverPixelsAndConvert(
+					void * in,
+					unsigned char * out,
+					const unsigned long long int size,
+					const nifti_image * nifti,
+					const double min,
+					const double max,
+					const bool isRgb,
+					const unsigned short rgb_channel) const;
+
+				inline unsigned long long mapUnsignedValue(
+					const unsigned char fromBitRange,
+					const unsigned char toBitRange,
+					const unsigned long long value) const;
+
+				inline void reorientNiftiSlice(
+					const tissuestack::imaging::TissueStackNiftiData * nifti,
+					const tissuestack::imaging::TissueStackDataDimension * dim,
+					unsigned char * out,
+					const unsigned long int slice_number = 0) const;
 
 				inline const bool hasBeenCancelledOrShutDown(
 					const tissuestack::common::ProcessingStrategy * processing_strategy,

@@ -7,7 +7,10 @@
 #include "parameters.h"
 
 #include <magick/api.h>
+#include <nifti1_io.h>
 #include <minc2.h>
+
+#include <math.h>
 
 #include <string>
 #include <cstring>

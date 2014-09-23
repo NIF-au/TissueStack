@@ -46,8 +46,8 @@ void handle_signals(int sig) {
 				std::cerr << "\nReceived Crtl + C!" << std::endl;
 
 			OfflineExecutor->stop();
-			cleanUp();
-			exit(EXIT_FAILURE);
+			//cleanUp();
+			//exit(EXIT_FAILURE);
 			break;
 	}
 };
@@ -70,6 +70,7 @@ void install_signal_handler()
 
 int		main(int argc, char **argv)
 {
+	parent = getpid();
 
 	std::string in_file = "";
 	std::string out_file = "";
@@ -152,7 +153,7 @@ int		main(int argc, char **argv)
 			   dimensions = conversion->getInputImageData()->getDimensionOrder();
 			   if (dimensions.empty()) // check if we have dimensions
 			   {
-				   std::cerr << "Failed to convert: Data Set has 0 dimensions!" << std::endl;
+					std::cerr << "Failed to convert: Data Set has 0 dimensions!" << std::endl;
 					cleanUp();
 					exit(EXIT_FAILURE);
 			   }
@@ -187,6 +188,8 @@ int		main(int argc, char **argv)
 			exit(EXIT_FAILURE);
 		}
 
+	    // TODO: change to 3 core and test processes
+		// TODO: test online and resume
 		// our strategy is that we use processes in cases where there are at least 3 cores
 		if (dimensions.size() < 3 || tissuestack::utils::System::getNumberOfCores() < 13)
 		{
@@ -207,7 +210,6 @@ int		main(int argc, char **argv)
 		}
 
 		// we fork for each dimension
-		parent = getpid();
 		unsigned short i=0;
 		for (auto & p : pids)
 		{

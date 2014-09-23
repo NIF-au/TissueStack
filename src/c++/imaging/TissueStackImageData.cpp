@@ -113,8 +113,8 @@ void tissuestack::imaging::TissueStackImageData::initializeOffsetsForNonRawFiles
 		tissuestack::imaging::TissueStackDataDimension * d =
 			const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimensionByLongName(dim));
 		d->setSliceSizeFromGivenWidthAndHeight();
-		offset += (d->getSliceSize() * d->getNumberOfSlices() * static_cast<unsigned long long int>(3));
 		d->setOffSet(offset);
+		offset += (d->getSliceSize() * d->getNumberOfSlices() * static_cast<unsigned long long int>(3));
 	}
 }
 
@@ -508,7 +508,6 @@ void tissuestack::imaging::TissueStackImageData::addDimension(tissuestack::imagi
 			"2 dimensions with same starting letter cannot be added twice. Just a convention for technical convenience, sorry..");
 
 	this->_dim_order.push_back(dimension->getName());
-
 	this->_dimensions[dimension->getName().at(0)] = dimension;
 }
 
@@ -665,11 +664,10 @@ void tissuestack::imaging::TissueStackImageData::generateRawHeader()
 	std::ostringstream header;
 
 	unsigned short i =0;
-	for (auto dim : this->_dimensions) // slice numbers
+	for (i=0; i < this->_dim_order.size();i++) // slice numbers
 	{
-		header << std::to_string(dim.second->getNumberOfSlices());
-		if (i < this->_dimensions.size()-1) header << ":";
-		i++;
+		header << std::to_string(this->getDimensionByOrderIndex(i)->getNumberOfSlices());
+		if (i < this->_dim_order.size()-1) header << ":";
 	}
 	header << "|";
 	i =0;

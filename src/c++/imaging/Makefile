@@ -8,14 +8,15 @@ SRCS_SERVICES	=	$(wildcard ../services/*.cpp)
 SRCS_UTILS		=	$(wildcard ../utils/*.cpp)
 SRCS			=	$(wildcard *.cpp)
 
-INCLUDE			=	-Iinclude \
+INCLUDE			=	-Iinclude -I/usr/include/nifti \
 					-I../common/include -I../execution/include \
 					-I../database/include -I../services/include \
 					-I../networking/include -I../utils/include
 
 LIB_PATH		=
 
-LIBS			=	-lrt -ldl -lpqxx -lpq -lcrypto -luuid -lminc2 -lhdf5
+LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid \
+					-lminc2 -lhdf5 -lniftiio -lz -lznz -lm
 
 LIB_NAME		=	libTissueStackImaging.so
 
