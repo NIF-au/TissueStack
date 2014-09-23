@@ -74,7 +74,7 @@ void tissuestack::imaging::TissueStackDataDimension::dumpDataDimensionInfoIntoDe
 {
 	std::ostringstream in;
 
-	in << "Dimension: " << this->_name << " => # " << this->_numberOfSlices
+	in << "Dimension: " << this->_name << " => # " << this->getNumberOfSlices()
 			<< " (" << this->_sliceSize << " px) @ " << this->_offset;
 
 	tissuestack::logging::TissueStackLogger::instance()->debug("%s\n", in.str().c_str());

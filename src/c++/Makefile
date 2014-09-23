@@ -10,10 +10,10 @@ SRCS_UTILS		=	$(wildcard utils/*.cpp)
 SRCS			=	$(wildcard *.cpp)
 
 INCLUDE			=	-Iinclude -I/usr/include -I/usr/local/include \
-					-I../common/include -I../execution/include \
-					-I../database/include -I../services/include \
-					-I../networking/include -I../imaging/include \
-					-I../utils/include
+					-Icommon/include -Iexecution/include \
+					-Idatabase/include -Iservices/include \
+					-Inetworking/include -Iimaging/include \
+					-Iutils/include
 
 LIB_PATH		=
 
