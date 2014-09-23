@@ -15,7 +15,7 @@ tissuestack::imaging::TissueStackMincData::TissueStackMincData(const std::string
 		tissuestack::imaging::TissueStackImageData(filename, tissuestack::imaging::FORMAT::MINC)
 {
 	// open file
-	int result = miopen_volume(filename.c_str(), MI2_OPEN_RDWR, &this->_volume);
+	int result = miopen_volume(filename.c_str(), MI2_OPEN_READ, &this->_volume);
 	if (result != MI_NOERROR)
 		THROW_TS_EXCEPTION(
 			tissuestack::common::TissueStackApplicationException,

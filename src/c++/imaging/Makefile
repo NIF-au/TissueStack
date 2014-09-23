@@ -8,7 +8,7 @@ SRCS_SERVICES	=	$(wildcard ../services/*.cpp)
 SRCS_UTILS		=	$(wildcard ../utils/*.cpp)
 SRCS			=	$(wildcard *.cpp)
 
-INCLUDE			=	-Iinclude -I/usr/include -I/usr/local/include \
+INCLUDE			=	-Iinclude \
 					-I../common/include -I../execution/include \
 					-I../database/include -I../services/include \
 					-I../networking/include -I../utils/include

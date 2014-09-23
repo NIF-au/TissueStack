@@ -148,7 +148,7 @@ inline void tissuestack::imaging::RawConverter::loopOverDimensions(
 		}
 
 		unsigned long long int accNumber = dimOffset;
-		for (unsigned long int sliceNumber = 0; sliceNumber < dim->getNumberOfSlices(); sliceNumber++) // the slice loop
+		for (unsigned long long int sliceNumber = 0; sliceNumber < dim->getNumberOfSlices(); sliceNumber++) // the slice loop
 		{
 			// resume at a previously interrupted point
 			if (resumed && processing_strategy->isOnlineStrategy())
@@ -274,11 +274,19 @@ inline void tissuestack::imaging::RawConverter::convertSlice(
 	}
 	std::cout << "Slice Size: " << std::to_string(slice_size) << std::endl;
 
-	unsigned char * buffer = new unsigned char[slice_size];
-	//memset(buffer, 0, slice_size * minc->getMincTypeSize());
+	void * buffer = malloc(static_cast<size_t>(slice_size * minc->getMincTypeSize()));
+	//memset(buffer, 0, slice_size);
 
 	// read hyperslab as unsigned byte and let minc do the dirty deeds of conversion
 	int result =
+			/*
+		miget_voxel_value_hyperslab(
+			minc->getMincHandle(),
+			minc->getMincType(),
+			starts,
+			counts,
+			buffer);
+	*/
 		miget_real_value_hyperslab(
 			minc->getMincHandle(),
 			MI_TYPE_UBYTE,
@@ -288,7 +296,7 @@ inline void tissuestack::imaging::RawConverter::convertSlice(
 	if (result != MI_NOERROR)
 	{
 		std::cout << std::to_string(result) << std::endl;
-		delete [] buffer;
+		free(buffer);
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"Minc => Raw Conversion failed: Could not read hyperslab!");
 	}
@@ -300,12 +308,12 @@ inline void tissuestack::imaging::RawConverter::convertSlice(
 	{
 		newImage[i * 3 + 0] =
 			newImage[i * 3 + 1] =
-				newImage[i * 3 + 2] = buffer[i];
+				newImage[i * 3 + 2] = static_cast<unsigned short *>(buffer)[i];
 
 		//if (rgb_channel < 0) out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] = val;
 		//else out[i * 3 + rgb_channel] = val;
 	}
-	delete [] buffer;
+	free(buffer);
 
 	ExceptionInfo exception;
 	GetExceptionInfo(&exception);
