@@ -22,32 +22,47 @@
 #include "services.h"
 
 #include <signal.h>
+#include <sys/prctl.h>
 #include <getopt.h>
 #include <sys/wait.h>
-
-void cleanUp()
-{
-	DestroyMagick();
-}
 
 std::unique_ptr<tissuestack::execution::TissueStackOfflineExecutor> OfflineExecutor(
 		tissuestack::execution::TissueStackOfflineExecutor::instance());
 
+static std::string out_file = "";
 static pid_t parent = -1;
 static std::vector<pid_t> pids = {-1,-1,-1};
+static short number_of_children_running = 0;
 
 void handle_signals(int sig) {
 	switch (sig) {
 		case SIGHUP:
-		case SIGQUIT:
-		case SIGTERM:
+			if (getpid() == parent) break;
 		case SIGINT:
+		case SIGQUIT:
+		case SIGABRT:
+		case SIGKILL:
+		case SIGTERM:
 			if (getpid() == parent)
-				std::cerr << "\nReceived Crtl + C!" << std::endl;
-
-			OfflineExecutor->stop();
-			//cleanUp();
-			//exit(EXIT_FAILURE);
+			{
+				sleep(2);
+				std::cerr << "\nConversion Process Received Crtl + C!\n" << std::flush;
+			}
+			else
+				kill(parent, SIGINT);
+			if (!out_file.empty())
+				unlink(out_file.c_str());
+			exit(EXIT_FAILURE);
+		case SIGCHLD:
+			if (getpid() == parent)
+			{
+				number_of_children_running--;
+				break;
+			}
+			if (!out_file.empty())
+				unlink(out_file.c_str());
+			exit(EXIT_FAILURE);
+		default:
 			break;
 	}
 };
@@ -73,7 +88,6 @@ int		main(int argc, char **argv)
 	parent = getpid();
 
 	std::string in_file = "";
-	std::string out_file = "";
 
 	int c = 0;
 	while (1)
@@ -154,7 +168,6 @@ int		main(int argc, char **argv)
 			   if (dimensions.empty()) // check if we have dimensions
 			   {
 					std::cerr << "Failed to convert: Data Set has 0 dimensions!" << std::endl;
-					cleanUp();
 					exit(EXIT_FAILURE);
 			   }
 
@@ -164,66 +177,61 @@ int		main(int argc, char **argv)
 				   std::cerr <<
 						"Failed to convert: Unable to touch future RAW file because of already existing file!"
 						<< std::endl;
-					cleanUp();
 					exit(EXIT_FAILURE);
 			   }
-
-			   // TODO: uncomment
-			   // now touch a file to be as big as we need it for the final conversion product
-			   /*
-			   if (!tissuestack::utils::System::touchFile(
-					out_file, conversion->getFutureRawFileSize()))
-			   {
-				   std::cerr << "Failed to convert: Unable to touch future RAW file!" << std::endl;
-					cleanUp();
-					exit(EXIT_FAILURE);
-			   }*/
 		   }
 		} catch (const std::exception & any)
 		{
 			if (conversion) delete conversion;
 
 			std::cerr << "Failed to convert: " << any.what() << std::endl;
-			cleanUp();
 			exit(EXIT_FAILURE);
 		}
 
-	    // TODO: change to 3 core and test processes
-		// TODO: test online and resume
 		// our strategy is that we use processes in cases where there are at least 3 cores
-		if (dimensions.size() < 3 || tissuestack::utils::System::getNumberOfCores() < 13)
+		if (dimensions.size() < 3 || tissuestack::utils::System::getNumberOfCores() < 3)
 		{
-		   try
+			try
 		   {
 			   // delegate to the offline executor
 				OfflineExecutor->convert(conversion);
-				cleanUp();
 				exit(EXIT_SUCCESS);
 		   } catch (const std::exception & any)
 			{
 				if (conversion) delete conversion;
 
 				std::cerr << "Failed to convert: " << any.what() << std::endl;
-				cleanUp();
 				exit(EXIT_FAILURE);
 			}
 		}
 
-		// we fork for each dimension
-		unsigned short i=0;
-		for (auto & p : pids)
+		// now touch a file to be as big as we need it for the final conversion product
+		std::cout << "Touching file for multi-process conversion (1 process per dimension)..." << std::endl;
+		if (!tissuestack::utils::System::touchFile(
+				out_file, conversion->getFutureRawFileSize()))
 		{
-		   if (i >= dimensions.size())
-			   continue;
+			std::cerr << "Failed to convert: Unable to touch future RAW file!" << std::endl;
+			exit(EXIT_FAILURE);
+		}
+		std::cout << "Created raw file for multi-process conversion." << std::endl;
 
-		   p = fork();
-		   if (p == -1) // ERROR
+		// we fork for each dimension
+		number_of_children_running =
+			dimensions.size() > pids.size() ? pids.size() : dimensions.size();
+		for (unsigned short i=0; i<number_of_children_running;i++)
+		{
+		   pids[0] = fork();
+		   if (pids[0] == -1) // ERROR
 		   {
 			   std::cerr << "Failed to fork child processes to convert data!" << std::endl;
+			   unlink(out_file.c_str());
+			   if (conversion) delete conversion;
 			   exit(EXIT_FAILURE);
 		   }
-		   else if (p == 0) // CHILD
+		   else if (pids[0] == 0) // CHILD
 		   {
+			   prctl(PR_SET_PDEATHSIG, SIGHUP);
+
 			   try
 			   {
 				   // delegate to the offline executor
@@ -231,54 +239,24 @@ int		main(int argc, char **argv)
 						conversion,
 						dimensions[i],
 						i == 0 ? true : false); // first dimension will write header
-					cleanUp();
 					exit(EXIT_SUCCESS);
 			   } catch (const std::exception & any)
 				{
-					if (conversion) delete conversion;
-
-					std::cerr << "Child Process failed to convert: " << any.what() << std::endl;
-					cleanUp();
+					std::cerr << "Failed to convert: " << any.what() << std::endl;
 					exit(EXIT_FAILURE);
 				}
 		   }
-		   i++;
 		}
 
 		// ONLY PARENT IS ALLOWED TO GET TO HERE !
 
 		// the periodic check whether the children have terminated or not
-		unsigned short numberOfActiveChildren = dimensions.size();
-		while (true)
-		{
-			for (auto p : pids)
-			{
-				int status;
-				if (p > 0 && waitpid(p, &status, WNOHANG) < 0)
-				{
-					numberOfActiveChildren--;
-
-					if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
-					{
-						std::cerr << "\nOne of our child processes terminated abnormally" << std::endl;
-						std::cerr << "Conversion Failed!"  << std::endl;
-						cleanUp();
-						exit(EXIT_FAILURE);
-					}
-				}
-			}
-			if (numberOfActiveChildren <= 0)
-				break;
-
+		while (number_of_children_running > 0)
 			sleep(1);
-		}
-
+		 std::cout << "\nConversion finished successfully." << std::endl;
 	} catch (const std::exception & any)
 	{
 		std::cerr << "Failed to convert: " << any.what() << std::endl;
 	}
-
-	cleanUp();
-
 	exit(0);
 }

@@ -19,7 +19,8 @@ void tissuestack::imaging::RawConverter::convert(
 		const std::string outFile = converter_task->getOutFile();
 
 		// open our out file for writing and perform some basic checks
-		if (dimension.empty())
+		if ((!processing_strategy->isOnlineStrategy() && dimension.empty()) || // offline (not multi processed)
+				(processing_strategy->isOnlineStrategy() && converter_task->getSlicesDone() == 0)) // online (not resume)
 			this->_file_descriptor = open(outFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
 		else
 			this->_file_descriptor = open(outFile.c_str(), O_WRONLY);
@@ -28,8 +29,9 @@ void tissuestack::imaging::RawConverter::convert(
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Could not open out file for RAW conversion!");
 
-		// write header (if requested)
-		if (dimension.empty() || (!dimension.empty() && writeHeader))
+		// write header if: online (not resumed), offline (not multi processed) or offline (multi processed + write header flag)
+		if ((!processing_strategy->isOnlineStrategy() && (dimension.empty() || (!dimension.empty() && writeHeader))) ||
+				(processing_strategy->isOnlineStrategy() && converter_task->getSlicesDone() == 0))
 		{
 			if (converter_task->getInputImageData()->getHeader().empty())
 				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
@@ -45,6 +47,14 @@ void tissuestack::imaging::RawConverter::convert(
 					"Could not write header for RAW conversion!");
 		}
 
+		// in the case of an offline multi-process we have to fast-forward to the desired offset
+		if (!processing_strategy->isOnlineStrategy() && !dimension.empty())
+		{
+			lseek(this->_file_descriptor,
+				converter_task->getInputImageData()->getDimensionByLongName(dimension)->getOffset(),
+				SEEK_SET);
+		}
+
 		// shutdown/cancellation check
 		if (this->hasBeenCancelledOrShutDown(processing_strategy, converter_task))
 		{
@@ -58,10 +68,10 @@ void tissuestack::imaging::RawConverter::convert(
 		// tell us that we are starting now
 		if (processing_strategy->isOnlineStrategy())
 			tissuestack::logging::TissueStackLogger::instance()->info(
-				"Staring Conversion: %s => %s",
+				"Starting/Resuming Conversion: %s => %s",
 				fileName.c_str(),
 				outFile.c_str());
-		else
+		else if (dimension.empty())
 			std::cout << "Starting Conversion: " << fileName << " => " << outFile << std::endl;
 
 		// the dimension loop
@@ -73,7 +83,7 @@ void tissuestack::imaging::RawConverter::convert(
 				ptr_converter_task.release();
 			else
 			{
-				const_cast<tissuestack::common::ProcessingStrategy *>(processing_strategy)->setRunningFlag(false);
+				const_cast<tissuestack::common::ProcessingStrategy *>(processing_strategy)->stop();
 				close(this->_file_descriptor);
 				// we erase our partial work !
 				unlink(converter_task->getOutFile().c_str());
@@ -83,14 +93,17 @@ void tissuestack::imaging::RawConverter::convert(
 		}
 
 		if (processing_strategy->isOnlineStrategy())
+		{
+			tissuestack::services::TissueStackTaskQueue::instance()->flagTaskAsFinished(
+				ptr_converter_task.release()->getId());
+
 			tissuestack::logging::TissueStackLogger::instance()->info(
 				"Finished Conversion: %s => %s",
 				fileName.c_str(),
 				outFile.c_str());
-		else
+		}
+		else if (dimension.empty())
 			std::cout << "Finished Conversion: " << fileName << " => " << outFile << std::endl;
-			const_cast<tissuestack::common::ProcessingStrategy *>(processing_strategy)->setRunningFlag(false);
-
 	} catch (const std::exception & bad)
 	{
 		close(this->_file_descriptor);
@@ -163,6 +176,10 @@ inline void tissuestack::imaging::RawConverter::loopOverDimensions(
 					++accNumber;
 					continue;
 				}
+				// fast forward file position
+				unsigned long long int toBeContinuedAt =
+					dim->getOffset() + sliceNumber * dim->getSliceSize() * 3;
+				lseek(this->_file_descriptor, toBeContinuedAt, SEEK_SET);
 				resumed = false;
 			}
 
@@ -195,21 +212,24 @@ inline void tissuestack::imaging::RawConverter::loopOverDimensions(
 			if (processing_strategy->isOnlineStrategy())
 				tissuestack::services::TissueStackTaskQueue::instance()->persistTaskProgress(
 					converter_task->getId());
-			else
+			else if (!processing_strategy->isOnlineStrategy() && dimension.empty())
 			{
 				const std::string output =
 					std::string("Progress:\t") +
 					std::to_string(converter_task->getSlicesDone()) + "\t[" +
 					std::to_string(converter_task->getTotalSlices()) + "]\t => " +
 					std::to_string(converter_task->getProgress()) + "%\r";
-
-				std::string newLines = "";
-				if (!dimension.empty())
-				{
-					for (unsigned short i=0;i<order;i++)
-						newLines += "\n";
-				}
-				std::cout << newLines << output << std::flush;
+				std::cout << output << std::flush;
+			}
+			else if (!processing_strategy->isOnlineStrategy() && !dimension.empty())
+			{
+				std::string output = "";
+				for (unsigned short pos=0;pos<order;pos++)
+					output += "\t\t\t";
+				output += (dim->getName() + ": ");
+				output += std::to_string(converter_task->getSlicesDone());
+				output += (" [" + std::to_string(dim->getNumberOfSlices()) + "]");
+				std::cout << output << "\r" << std::flush;
 			}
 
 			if (finished)
@@ -238,7 +258,13 @@ inline const bool tissuestack::imaging::RawConverter::hasBeenCancelledOrShutDown
 						tissuestack::services::TissueStackTaskStatus::CANCELLED
 					|| converter_task->getStatus() ==
 							tissuestack::services::TissueStackTaskStatus::ERRONEOUS)))
+	{
+		close(this->_file_descriptor);
+		// we erase our partial work !
+		unlink(converter_task->getOutFile().c_str());
+
 		return true;
+	}
 
 	return false;
 }

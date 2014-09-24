@@ -31,7 +31,7 @@ void tissuestack::imaging::PreTiler::preTile(
 		const std::string params = pre_tiling_task->getParametersForTaskFile();
 		if (processing_strategy->isOnlineStrategy())
 			tissuestack::logging::TissueStackLogger::instance()->info(
-				"Starting Tiling: %s => %s",
+				"Starting/Resuming Tiling: %s => %s",
 				fileName.c_str(),
 				params.c_str());
 		else
