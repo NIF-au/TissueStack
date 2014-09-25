@@ -114,9 +114,9 @@ void tissuestack::imaging::RawConverter::convert(
 		if (processing_strategy->isOnlineStrategy())
 		{
 			tissuestack::logging::TissueStackLogger::instance()->error(
-				"Failed to convert: %s => %s",
+				"Failed to convert: %s => %s: %s",
 				converter_task->getInputImageData()->getFileName().c_str(),
-				converter_task->getOutFile().c_str());
+				converter_task->getOutFile().c_str(), bad.what());
 
 			tissuestack::services::TissueStackTaskQueue::instance()->flagTaskAsErroneous(
 				ptr_converter_task.release()->getId());
@@ -143,6 +143,20 @@ inline void tissuestack::imaging::RawConverter::loopOverDimensions(
 	unsigned long long int dimOffset = 0;
 	unsigned long long int accSliceNumber = 0;
 
+	mihandle_t volume = NULL;
+	if (converter_task->getInputImageData()->getFormat() == tissuestack::imaging::FORMAT::MINC)
+	{
+		int result =
+			miopen_volume(
+				converter_task->getInputImageData()->getFileName().c_str(),
+				MI2_OPEN_READ,
+				&volume);
+		if (result != MI_NOERROR)
+			THROW_TS_EXCEPTION(
+				tissuestack::common::TissueStackApplicationException,
+				"Failed to open supposed MINC file!");
+	}
+
 	unsigned short order = 0;
 	for (auto d : dimensionsToBeConverted) // the dimension loop
 	{
@@ -162,8 +176,10 @@ inline void tissuestack::imaging::RawConverter::loopOverDimensions(
 			converter_task->getSlicesDone() >= accSliceNumber)
 		{
 			dimOffset = accSliceNumber;
+			order++;
 			continue;
 		}
+
 
 		unsigned long long int accNumber = dimOffset;
 		for (unsigned long long int sliceNumber = 0; sliceNumber < dim->getNumberOfSlices(); sliceNumber++) // the slice loop
@@ -188,6 +204,7 @@ inline void tissuestack::imaging::RawConverter::loopOverDimensions(
 				this->convertSlice(
 					static_cast<const tissuestack::imaging::TissueStackMincData *>(
 						converter_task->getInputImageData()),
+						volume,
 						sliceNumber,
 						order);
 			else if (converter_task->getInputImageData()->getFormat() == tissuestack::imaging::FORMAT::NIFTI)
@@ -202,7 +219,10 @@ inline void tissuestack::imaging::RawConverter::loopOverDimensions(
 
 			// shutdown/cancellation check
 			if (this->hasBeenCancelledOrShutDown(processing_strategy, converter_task))
+			{
+				if (volume) miclose_volume(volume);
 				return;
+			}
 
 			// increment slice progress
 			const bool finished =
@@ -237,6 +257,7 @@ inline void tissuestack::imaging::RawConverter::loopOverDimensions(
 		}
 		order++;
 	}
+	if (volume) miclose_volume(volume);
 }
 
 inline const bool tissuestack::imaging::RawConverter::hasBeenCancelledOrShutDown(
@@ -272,6 +293,7 @@ inline const bool tissuestack::imaging::RawConverter::hasBeenCancelledOrShutDown
 
 inline void tissuestack::imaging::RawConverter::convertSlice(
 	const tissuestack::imaging::TissueStackMincData * minc,
+	const mihandle_t & minc_handle,
 	const unsigned long int slice_number,
 	const short dimension_number) const
 {
@@ -295,91 +317,67 @@ inline void tissuestack::imaging::RawConverter::convertSlice(
 		starts[i] = (i == dimension_number) ? slice_number : 0;
 		if (i<3)
 		{
-			counts[i] = 1;
 			if (i != dimension_number && minc->getDimensionByOrderIndex(i))
 				counts[i] = minc->getDimensionByOrderIndex(i)->getNumberOfSlices();
+			else
+				counts[i] = 1;
 		}
-		else counts[i] = 1;
-		std::cout << "start[ " << std::to_string(i) << "] => " << std::to_string(starts[i]) << std::endl;
-		std::cout << "counts[ " << std::to_string(i) << "] => " << std::to_string(counts[i]) << std::endl;
+		else
+		{
+			starts[i] = 0;
+			counts[i] = 1;
+		}
 	}
-	std::cout << "Slice Size: " << std::to_string(slice_size) << std::endl;
 
-	void * buffer = malloc(static_cast<size_t>(slice_size * minc->getMincTypeSize()));
-	//memset(buffer, 0, slice_size);
 
-	// read hyperslab as unsigned byte and let minc do the dirty deeds of conversion
-	int result =
-			/*
-		miget_voxel_value_hyperslab(
-			minc->getMincHandle(),
-			minc->getMincType(),
-			starts,
-			counts,
-			buffer);
-	*/
-		miget_real_value_hyperslab(
-			minc->getMincHandle(),
-			MI_TYPE_UBYTE,
-			starts,
-			counts,
-			buffer);
-	if (result != MI_NOERROR)
-	{
-		std::cout << std::to_string(result) << std::endl;
-		free(buffer);
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-			"Minc => Raw Conversion failed: Could not read hyperslab!");
-	}
+
+	unsigned short rgbTotal = (minc->isColor() ? 3 : 1);
+	unsigned char * buffer = new unsigned char[slice_size];
 
 	unsigned long long int new_image_slice_size = dim->getSliceSize() * 3;
 	unsigned char * newImage = new unsigned char[new_image_slice_size];
 
-	for (unsigned long long int i = 0; i < slice_size; i++)
+	for (unsigned short rgbChannel = 0; rgbChannel < rgbTotal; rgbChannel++)
 	{
-		newImage[i * 3 + 0] =
-			newImage[i * 3 + 1] =
-				newImage[i * 3 + 2] = static_cast<unsigned short *>(buffer)[i];
+		if (rgbChannel > 0)
+			starts[numOfDims-1] = rgbChannel;
 
-		//if (rgb_channel < 0) out[i * 3 + 0] = out[i * 3 + 1] = out[i * 3 + 2] = val;
-		//else out[i * 3 + rgb_channel] = val;
+		// read hyperslab as unsigned byte and let minc do the dirty deeds of conversion
+		int result =
+			miget_real_value_hyperslab(
+				minc_handle,
+				MI_TYPE_UBYTE,
+				starts,
+				counts,
+				buffer);
+		if (result != MI_NOERROR)
+		{
+			delete [] buffer;
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Minc => Raw Conversion failed: Could not read hyperslab!");
+		}
+
+		for (unsigned long long int i = 0; i < slice_size; i++)
+		{
+			if (!minc->isColor())
+				newImage[i * 3 + 0] =
+					newImage[i * 3 + 1] =
+						newImage[i * 3 + 2] = buffer[i];
+			else
+				newImage[i * 3 + rgbChannel] = buffer[i];
+		}
 	}
-	free(buffer);
+	delete [] buffer;
 
-	ExceptionInfo exception;
-	GetExceptionInfo(&exception);
+	this->reorientMincSlice(minc, dim, newImage, 0);
 
-	Image * img = ConstituteImage(
-		dim->getWidth(),
-		dim->getHeight(),
-		"RGB", CharPixel,
-		newImage, &exception);
+	// write out into new raw file
+	ssize_t bytesWritten =
+		write(this->_file_descriptor, newImage, new_image_slice_size);
 	delete [] newImage;
-	// sanity check: was graphics magick able to create an image based on what we gave it?
-	if (img == NULL)
-	{
-		CatchException(&exception);
+	if (bytesWritten != static_cast<ssize_t>(new_image_slice_size))
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-			"Could not constitute Image!");
-	}
-	ImageInfo * imgInfo = CloneImageInfo((ImageInfo *)NULL);
-
-	const std::string fileName =
-		std::string("/tmp/") +
-		dim->getName().substr(0, 1) +
-		"_" + std::to_string(slice_number) + ".png";
-	strcpy(img->filename, fileName.c_str());
-
-	if (WriteImage(imgInfo, img) == MagickFail)
-	{
-		CatchException(&img->exception);
-		tissuestack::logging::TissueStackLogger::instance()->error(
-				"Failed to write out image: %s\n", img->exception.reason);
-	}
-
-	// tidy up
-	if (img) DestroyImage(img);
-	if (imgInfo) DestroyImageInfo(imgInfo);
+			"Minc Conversion: written bytes do not match expected bytes!");
 
 }
 
@@ -646,6 +644,151 @@ inline void tissuestack::imaging::RawConverter::reorientNiftiSlice(
 			THROW_TS_EXCEPTION(
 				tissuestack::common::TissueStackApplicationException,
 				"NIFTI conversion: Failed to get image pixels!");
+	}
+
+	// sync with data
+	for (unsigned long long int j = 0; j < dim->getSliceSize(); j++)
+	{
+		// graphicsmagic quantum depth correction
+		if (QuantumDepth != 8 && img->depth == QuantumDepth)
+		{
+			data_out[j * 3 + 0] =
+				static_cast<unsigned char>(
+					this->mapUnsignedValue(img->depth, 8, pixels[j].red));
+			data_out[j * 3 + 1] =
+				static_cast<unsigned char>(
+					this->mapUnsignedValue(img->depth, 8, pixels[j].green));
+			data_out[j * 3 + 2] =
+				static_cast<unsigned char>(
+					this->mapUnsignedValue(img->depth, 8, pixels[j].blue));
+			continue;
+		} // no correction needed
+		data_out[j * 3 + 0] = (unsigned char) pixels[j].red;
+		data_out[j * 3 + 1] = (unsigned char) pixels[j].green;
+		data_out[j * 3 + 2] = (unsigned char) pixels[j].blue;
+	}
+
+	ImageInfo * imgInfo = NULL;
+	if (slice_number != 0)
+	{
+		imgInfo = CloneImageInfo((ImageInfo *)NULL);
+		const std::string fileName =
+			std::string("/tmp/") +
+			dim->getName().substr(0, 1) +
+			"_" + std::to_string(slice_number) + ".png";
+		strcpy(img->filename, fileName.c_str());
+
+		if (WriteImage(imgInfo, img) == MagickFail)
+		{
+			CatchException(&img->exception);
+			tissuestack::logging::TissueStackLogger::instance()->error(
+					"Failed to write out image: %s\n", img->exception.reason);
+		}
+	}
+
+	// tidy up
+	if (img) DestroyImage(img);
+	if (imgInfo) DestroyImageInfo(imgInfo);
+}
+
+inline void tissuestack::imaging::RawConverter::reorientMincSlice(
+	const tissuestack::imaging::TissueStackMincData * minc,
+	const tissuestack::imaging::TissueStackDataDimension * dim,
+	unsigned char * data_out,
+	const unsigned long int slice_number) const
+{
+	const std::vector<std::string> dimsOrder =
+		minc->getDimensionOrder();
+
+	ExceptionInfo exception;
+	GetExceptionInfo(&exception);
+	Image * img = NULL;
+	Image * tmp = NULL;
+
+    if ((dimsOrder[0].at(0) == 'y' && dimsOrder[1].at(0) == 'z' && dimsOrder[2].at(0) == 'x' && dim->getName().at(0) == 'x') ||
+        (dimsOrder[0].at(0) == 'z' && dimsOrder[1].at(0) == 'x' && dimsOrder[2].at(0) == 'y' && dim->getName().at(0) == 'z') ||
+        (dimsOrder[0].at(0) == 'x' && dimsOrder[1].at(0) == 'z' && dimsOrder[2].at(0) == 'y' && (dim->getName().at(0) == 'z' || dim->getName().at(0) == 'y')) ||
+        (dimsOrder[0].at(0) == 'x' && dimsOrder[1].at(0) == 'y' && dimsOrder[2].at(0) == 'z') ||
+        (dimsOrder[0].at(0) == 'y' && dimsOrder[1].at(0) == 'x' && dimsOrder[2].at(0) == 'z' && (dim->getName().at(0) == 'y' || dim->getName().at(0) == 'x')))
+    {
+    	img =
+    		ConstituteImage(dim->getHeight(), dim->getWidth(), "RGB", CharPixel, data_out, &exception);
+
+    	if (img == NULL)
+    	{
+    		delete [] data_out;
+    		CatchException(&exception);
+    		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+    			"Could not constitute Image!");
+    	}
+
+    	if ((dimsOrder[0].at(0) == 'x' && dimsOrder[1].at(0) == 'z' && dimsOrder[2].at(0) == 'y' &&
+    	        		(dim->getName().at(0) == 'z' || dim->getName().at(0) == 'y')))
+    	{
+			tmp = img;
+			img = RotateImage(img, 90, &exception);
+			DestroyImage(tmp);
+			if (img == NULL)
+			{
+				delete [] data_out;
+				CatchException(&exception);
+				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+					"Could not rotate Image!");
+			}
+    	} else
+    	{
+			tmp = img;
+			img = RotateImage(img, -90, &exception);
+			if (img == NULL)
+			{
+				delete [] data_out;
+				CatchException(&exception);
+				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+					"Could not rotate Image!");
+			}
+    	}
+    } else
+    {
+    	img = ConstituteImage(
+			dim->getWidth(),
+			dim->getHeight(),
+			"RGB", CharPixel,
+			data_out, &exception);
+
+    	if (img == NULL)
+    	{
+    		delete [] data_out;
+    		CatchException(&exception);
+    		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+    			"Could not constitute Image!");
+    	}
+    }
+
+	if ((dimsOrder[0].at(0) == 'x' && dimsOrder[1].at(0) == 'z' && dimsOrder[2].at(0) == 'y')
+		 && (dim->getName().at(0) == 'z' || dim->getName().at(0) == 'y'))
+	{
+		tmp = img;
+		img = FlipImage(img, &exception);
+		DestroyImage(tmp);
+		if (img == NULL)
+		{
+			delete [] data_out;
+			CatchException(&exception);
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Could not flop Image!");
+		}
+	}
+
+	// extract pixel info, looping over values
+	PixelPacket * pixels = GetImagePixels(img, 0, 0, dim->getWidth(), dim->getHeight());
+	if (pixels == NULL)
+	{
+		delete [] data_out;
+		if (img != NULL) DestroyImage(img);
+		if (img == NULL)
+			THROW_TS_EXCEPTION(
+				tissuestack::common::TissueStackApplicationException,
+				"MINC conversion: Failed to get image pixels!");
 	}
 
 	// sync with data

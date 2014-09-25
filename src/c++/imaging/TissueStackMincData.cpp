@@ -15,7 +15,8 @@ tissuestack::imaging::TissueStackMincData::TissueStackMincData(const std::string
 		tissuestack::imaging::TissueStackImageData(filename, tissuestack::imaging::FORMAT::MINC)
 {
 	// open file
-	int result = miopen_volume(filename.c_str(), MI2_OPEN_READ, &this->_volume);
+	mihandle_t volume = NULL;
+	int result = miopen_volume(filename.c_str(), MI2_OPEN_READ, &volume);
 	if (result != MI_NOERROR)
 		THROW_TS_EXCEPTION(
 			tissuestack::common::TissueStackApplicationException,
@@ -24,8 +25,8 @@ tissuestack::imaging::TissueStackMincData::TissueStackMincData(const std::string
 	// extract dimension number
 	int numberOfDimensions = 0;
 	result = miget_volume_dimension_count(
-			this->_volume,
-			MI_DIMCLASS_SPATIAL,
+			volume,
+			MI_DIMCLASS_ANY,
 			MI_DIMATTR_ALL,
 			&numberOfDimensions);
 	if (result != MI_NOERROR)
@@ -36,31 +37,16 @@ tissuestack::imaging::TissueStackMincData::TissueStackMincData(const std::string
 	if (numberOfDimensions > 3) // for now we assume anything greater to be the RGB channels
 		this->_is_color = true;
 
-	// extract some additional minc meta info
-	result =
-		miget_data_type(this->_volume, &this->_minc_type);
-	if (result != MI_NOERROR)
-		THROW_TS_EXCEPTION(
-			tissuestack::common::TissueStackApplicationException,
-			"Failed to extract data type of MINC file!");
-
-	result =
-			miget_data_type_size(this->_volume, &this->_minc_type_size);
-	if (result != MI_NOERROR)
-		THROW_TS_EXCEPTION(
-			tissuestack::common::TissueStackApplicationException,
-			"Failed to extract data type size of MINC file!");
-
 	// get the volume dimensions
 	midimhandle_t dimensions[numberOfDimensions > 3 ? 3 : numberOfDimensions];
 	result =
 		miget_volume_dimensions(
-			this->_volume,
+			volume,
 			MI_DIMCLASS_SPATIAL,
 			MI_DIMATTR_ALL,
 			MI_DIMORDER_FILE,
 			numberOfDimensions,
-			&dimensions[0]);
+			dimensions);
 	if (result == MI_ERROR)
 		THROW_TS_EXCEPTION(
 			tissuestack::common::TissueStackApplicationException,
@@ -138,26 +124,11 @@ tissuestack::imaging::TissueStackMincData::TissueStackMincData(const std::string
 	// further dimension info initialization
 	this->initializeDimensions(true);
 	this->initializeOffsetsForNonRawFiles();
-}
 
-const mitype_t tissuestack::imaging::TissueStackMincData::getMincType() const
-{
-	return this->_minc_type;
+	miclose_volume(volume);
 }
-
-const misize_t tissuestack::imaging::TissueStackMincData::getMincTypeSize() const
-{
-	return this->_minc_type_size;
-}
-
-const mihandle_t tissuestack::imaging::TissueStackMincData::getMincHandle() const
-{
-	return this->_volume;
-}
-
 
 tissuestack::imaging::TissueStackMincData::~TissueStackMincData()
 {
-	if (this->_volume)
-		miclose_volume(this->_volume);
+
 }
