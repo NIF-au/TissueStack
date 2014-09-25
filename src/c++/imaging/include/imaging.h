@@ -355,12 +355,9 @@ namespace tissuestack
 				const bool isColor() const;
 				const mitype_t getMincType() const;
 				const misize_t getMincTypeSize() const;
-				const mihandle_t getMincHandle() const;
+				const mihandle_t & getMincHandle() const;
 			private:
 				bool _is_color = false;
-				mihandle_t _volume = NULL;
-				mitype_t _minc_type;
-				misize_t _minc_type_size;
 				friend class TissueStackImageData;
 				TissueStackMincData(const std::string & filename);
 		};
@@ -763,6 +760,7 @@ namespace tissuestack
 			private:
 				inline void convertSlice(
 					const tissuestack::imaging::TissueStackMincData * minc,
+					const mihandle_t & minc_handle,
 					const unsigned long int slice_number,
 					const short dimension_number) const;
 				inline void convertSlice(
@@ -792,6 +790,12 @@ namespace tissuestack
 
 				inline void reorientNiftiSlice(
 					const tissuestack::imaging::TissueStackNiftiData * nifti,
+					const tissuestack::imaging::TissueStackDataDimension * dim,
+					unsigned char * out,
+					const unsigned long int slice_number = 0) const;
+
+				inline void reorientMincSlice(
+					const tissuestack::imaging::TissueStackMincData * minc,
 					const tissuestack::imaging::TissueStackDataDimension * dim,
 					unsigned char * out,
 					const unsigned long int slice_number = 0) const;

@@ -493,7 +493,7 @@ TissueStack.Admin.prototype = {
 	 								_this.session + "&filename=" + uploaded_file.value + "&description=" + msgDescription);
 							successHandler = _this.addDataSetSuccessHandler;
 						} else if(action == "Convert") {
-							url += ("conversion&session=" + _this.session + "&file=" + TissueStack.configuration['server_proxy_path'].value + "/" + uploaded_file.value);
+							url += ("conversion&session=" + _this.session + "&file=" + TissueStack.configuration['upload_directory'].value + "/" + uploaded_file.value);
 							actonType = TissueStack.Tasks.ReverseTypeLookupTable["Conversion"];
 							successHandler = _this.conversionAndPreTileSuccessHandler;
 						} else if(action == "PreTile") {

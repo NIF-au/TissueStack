@@ -50,11 +50,8 @@ const tissuestack::services::TissueStackConversionTask *
 
 const bool tissuestack::networking::TissueStackConversionRequest::isObsolete() const
 {
-	// we regard a conversion request 'obsolete' if there exists an output file by that very same name
-	// or a running conversion task that works on that file already
-	if (tissuestack::utils::System::fileExists(this->_conversion->getOutFile()))
-		return true;
-
+	// we regard a conversion request 'obsolete'
+	//if there exists a running conversion task that works on that file
 	return tissuestack::services::TissueStackTaskQueue::instance()->isBeingConverted(
 		this->_conversion->getInputImageData()->getFileName());
 }
