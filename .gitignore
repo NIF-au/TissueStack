@@ -16,7 +16,6 @@ libtool
 target
 autom4te.cache
 *.scan
-*.tar.gz
 aclocal.m4
 configure
 Build (GNU)
