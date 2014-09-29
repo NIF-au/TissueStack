@@ -44,7 +44,7 @@ OBJS_CONVERTER	=	$(SRCS_CONVERTER:%.cpp=%.o)
 	@echo -e "\tCompiling \"$(NAME)\" => [$(@)]"
 	@$(CC) -c $(LIBS) $(FLAGS) $(INCLUDE) `GraphicsMagick-config --cppflags --libs --ldflags` -o $@ -fPIC -pie $<
 
-all:	compile install
+all: clean compile install
 
 compile:	$(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_DATABASE) $(OBJS_IMAGING) \
 			$(OBJS_EXECUTION)  $(OBJS_SERVICES) $(OBJS_UTILS)
@@ -60,10 +60,16 @@ compile:	$(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_DATABASE) $(OBJS_IMAGING) \
 							$(LIBS) $(FLAGS) $(INCLUDE)
 
 install:
-	@if [ -f $(TILER_EXE_NAME) ]; then mv $(TILER_EXE_NAME) $(INSTALL_DIR); fi;
-	@echo -e "\n\tInstalled \"$(TILER_EXE_NAME)\" into \"$(INSTALL_DIR)\"\n"
-	@if [ -f $(CONVERTER_EXE_NAME) ]; then mv $(CONVERTER_EXE_NAME) $(INSTALL_DIR); fi;
-	@echo -e "\n\tInstalled \"$(CONVERTER_EXE_NAME)\" into \"$(INSTALL_DIR)\"\n"
+	@echo -e "\n\tInstalling $(NAME) (requires super user priviledges):"
+	@echo -e "\t-----------------------------------------------\n"
+	@sudo mkdir -p $(BINS_PATH)
+	@echo -e "\tInstalling '$(TILER_EXE_NAME)' executable into: $(BINS_PATH)."
+	@if [ ! -f $(TILER_EXE_NAME) ]; then echo "\nExecutable '$(TILER_EXE_NAME)' does not exist!"; fi;
+	@sudo cp $(TILER_EXE_NAME) $(BINS_PATH)/$(TILER_EXE_NAME)
+	@echo -e "\tInstalling '$(CONVERTER_EXE_NAME)' executable into: $(BINS_PATH)."
+	@if [ ! -f $(CONVERTER_EXE_NAME) ]; then echo "\nExecutable '$(CONVERTER_EXE_NAME)' does not exist!"; fi;
+	@sudo cp $(CONVERTER_EXE_NAME) $(BINS_PATH)/$(CONVERTER_EXE_NAME)
+	@echo -e "\n\tFinished installation of $(NAME).\n"  
 
 clean:
 	@rm -rf *.o *.so *~ core $(CONVERTER_EXE_NAME) $(TILER_EXE_NAME)
