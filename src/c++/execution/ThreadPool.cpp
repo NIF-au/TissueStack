@@ -37,7 +37,8 @@ void tissuestack::execution::ThreadPool::init()
 
 			while (!this->isStopFlagRaised())
 			{
-				std::this_thread::sleep_for(std::chrono::milliseconds(10));
+				//std::this_thread::sleep_for(std::chrono::milliseconds(10));
+				usleep(10000); // 10,000 micro seconds /10 milli seconds
 
 				// fetch next item from the queue if not empty
 				if (this->hasNoTasksQueued())
