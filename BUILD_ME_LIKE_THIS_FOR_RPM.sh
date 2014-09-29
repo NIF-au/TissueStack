@@ -1,11 +1,6 @@
 #!/bin/sh
 clear
 
-if [ $# -eq 0 ]; then
-	echo "No Version Number supplied. Please call the script like this: BUILD_ME_LIKE_THIS_FOR_RPM.sh 1.1"
-	exit -1
-fi
-
 echo "Setting up development tree in $HOME"
 rm -rf $HOME/rpmbuild
 rpmdev-setuptree
@@ -14,29 +9,16 @@ if [ $? -ne 0 ]; then
 	exit -1
 fi
 
+export TISSUESTACK_BUILD_VERSION=1.5
+
 CURRENT_DIR=`pwd`
 
-SOURCE_TAR_DIR=/tmp/tissuestack-$1.tar.gz
-SOURCE_TAR_DIR_CONTENT=$SOURCE_TAR_DIR/tissuestack-$1
+echo "Calling TissueStack make with target dist"
+cd $CURRENT_DIR/src/c++;make dist
 
-rm -rf $SOURCE_TAR_DIR
-mkdir -p $SOURCE_TAR_DIR_CONTENT
-
-cp -r data $SOURCE_TAR_DIR_CONTENT
-cp -r packaging $SOURCE_TAR_DIR_CONTENT
-cp -r src $SOURCE_TAR_DIR_CONTENT
-cp Makefile $SOURCE_TAR_DIR_CONTENT
-cp pom.xml $SOURCE_TAR_DIR_CONTENT
-rm -rf */.git
-rm -rf */*/.git
-
-cd $SOURCE_TAR_DIR
-echo "Building source tar.gz (see file list: /tmp/tissuestack-$1.tar.gz.log)"
-tar cvzf tissuestack-$1.tar.gz tissuestack-$1 > /tmp/tissuestack-$1.tar.gz.log
-cd $CURRENT_DIR
-
-cp -f rpm/tissuestack.spec $HOME/rpmbuild/SPECS 
-cp -rf $SOURCE_TAR_DIR/tissuestack-$1.tar.gz $HOME/rpmbuild/SOURCES/
+echo "Copying spec file and source tar"
+cp -f $CURRENT_DIR/rpm/tissuestack.spec $HOME/rpmbuild/SPECS 
+#cp -f /tmp/tissuestack_build/tissuestack-$TISSUESTACK_BUILD_VERSION.tar.gz $HOME/rpmbuild/SOURCES
 cd $HOME/rpmbuild/SPECS/
 
 echo "Calling RPM build now ..."
