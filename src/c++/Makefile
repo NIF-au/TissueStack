@@ -98,12 +98,12 @@ install: compile
 clean:
 	@rm -rf *.o *.so *~ core $(EXE_NAME)
 	@rm -rf common/*.o common/*.so common/core
-	@make --no-print-directory -C utils/ clean > /dev/null
-	@make --no-print-directory -C database/ clean > /dev/null
-	@make --no-print-directory -C services/ clean > /dev/null
-	@make --no-print-directory -C networking/ clean > /dev/null
-	@make --no-print-directory -C imaging/ clean > /dev/null
-	@make --no-print-directory -C execution/ clean > /dev/null
+	@rm -rf utils/*.o utils/*.so utils/*~ utils/core
+	@rm -rf database/*.o database/*.so database/*~ utils/core
+	@rm -rf services/*.o services/*.so services/*~ services/core
+	@rm -rf networking/*.o networking/*.so networking/*~ networking/core
+	@rm -rf imaging/*.o imaging/*.so imaging/*~ imaging/core
+	@rm -rf execution/*.o execution/*.so execution/*~ utils/core
 	@make --no-print-directory -C tools/ clean > /dev/null
 	@echo -e "\n\tCleaned \"$(NAME)\"\n"
 	
