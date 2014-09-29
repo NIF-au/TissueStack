@@ -4,7 +4,7 @@
 INSERT INTO configuration VALUES('version', '1.4', 'version');
 INSERT INTO configuration VALUES('session_timeout_minutes', '15', 'The session timeout given in minutes');
 INSERT INTO configuration VALUES('admin_passwd', '101ee9fe7aceaa8bea949e75a529d796da02e08bced78c6c4dde60768183fa14', 'Admin Password');
-INSERT INTO configuration VALUES('server_proxy_path', 'image_service', 'server proxy path (relative to the application''s web root directory)');
+INSERT INTO configuration VALUES('server_proxy_path', 'server', 'server proxy path (relative to the application''s web root directory)');
 INSERT INTO configuration VALUES('tile_directory', 'tiles', 'tile directory (relative to the application''s web root directory)');
 INSERT INTO configuration VALUES('server_tile_directory', '/opt/tissuestack/tiles', 'server side tile directory for pre-tiling');
 INSERT INTO configuration VALUES('upload_directory', '/opt/tissuestack/upload', 'upload directory (absolute system path on server)');

@@ -11,8 +11,8 @@ License:	GPLv3+
 URL:		https://github.com/NIF-au/TissueStack
 Source:		%{name}-%{version}.tar.gz	
 
-BuildRequires:	minc nifticlib-devel GraphicsMagick-devel gtk2-devel unixODBC-devel
-Requires:	minc nifticlib GraphicsMagick gtk2 unixODBC postgresql-server httpd
+BuildRequires:	minc nifticlib-devel GraphicsMagick-devel unixODBC-devel
+Requires:	minc nifticlib GraphicsMagick unixODBC postgresql-server httpd
 Provides:	libTissueStack.so()(64bit) libodbcinst.so()(64bit) libodbc.so()(64bit)
 
 %description
@@ -53,9 +53,6 @@ chmod 666 /tmp/pre-install.log
 /etc/init.d/tissuestack stop &>> /tmp/pre-install.log
 service httpd stop  &>> /tmp/uninstall.log
 rm -rf /opt/tissuestack/web/* &>> /tmp/pre-install.log
-rm -rf /opt/tissuestack/jdk* &>> /tmp/pre-install.log
-rm -rf /opt/tissuestack/apache-tomcat-* &>> /tmp/pre-install.log
-rm -rf /tmp/tissue_stack_communication &>> /tmp/pre-install.log
 exit 0
 
 %preun
@@ -83,10 +80,8 @@ useradd -c "tissuestack" -m -d /opt/tissuestack -s /bin/bash -U tissuestack &>> 
 chown tissuestack:tissuestack /opt/tissuestack &>> /tmp/post-install.log
 for dirs in `find /opt/tissuestack/* -prune -type d`;do
 	if  [ $dirs = "/opt/tissuestack/tiles" ]; then
-		chmod g+wr,o+wr $dirs &>> /tmp/post-install.log
 		chown tissuestack:tissuestack $dirs &>> /tmp/post-install.log
 	else
-		chmod -R g+wr,o+wr $dirs &>> /tmp/post-install.log
 		chown -R tissuestack:tissuestack $dirs &>> /tmp/post-install.log
 		chown -R -H -h tissuestack:tissuestack $dirs &>> /tmp/post-install.log
 	fi
@@ -118,9 +113,6 @@ if [ $HTTP_VERSION -gt 23 ]; then sed -i 's/#Require all granted/Require all gra
 mv /etc/httpd/conf.d/welcome.conf /etc/httpd/conf.d/welcome.conf.disabled &>> /tmp/post-install.log
 if [ `iptables -S | grep -e "-A INPUT -i lo -j ACCEPT" | wc -c` -eq 0 ]; then
         iptables -I INPUT 1 -i lo -p all -j ACCEPT &>> /tmp/post-install.log
-fi
-if [ `iptables -S | grep -e "-A INPUT -p tcp -m tcp --dport 8080 -j DROP" | wc -c` -eq 0 ]; then
-        iptables -A INPUT -p tcp --destination-port 8080 -j DROP &>> /tmp/post-install.log
 fi
 if [ `iptables -S | grep -e "-A INPUT -p tcp -m tcp --dport 4242 -j DROP" | wc -c` -eq 0 ]; then
         iptables -A INPUT -p tcp --destination-port 4242 -j DROP &>> /tmp/post-install.log

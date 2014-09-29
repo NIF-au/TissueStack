@@ -460,13 +460,20 @@ TissueStack.Admin.prototype = {
 					
 					// quick preliminary for file type: data set additions and tiling are only allowed for raw,
 					// conversions should be nifti or minc
-					if ((uploaded_file.value.lastIndexOf(".nii") > 0 || uploaded_file.value.lastIndexOf(".mnc") > 0)
-							&& action != "Convert") {
-						_this.replaceErrorMessage("Formats .nii and .mnc need to be converted to .raw first!");				
+					if (uploaded_file.value.length < 4)
+					{
+						_this.replaceErrorMessage("File Name needs an extension!");
 						return;
-					} else if (uploaded_file.value.lastIndexOf(".raw") > 0
+					}
+					var ext = uploaded_file.value.substr(uploaded_file.value.length-4);
+					ext = ext.toLowerCase();
+					if (ext != ".raw"
+							&& action != "Convert") {
+						_this.replaceErrorMessage("Formats other than .raw need to be converted to .raw first!");				
+						return;
+					} else if (ext == ".raw"
 							&& (action != "PreTile" && action != "AddDataSet") ) {
-						_this.replaceErrorMessage("Conversion needs a .nii or .mnc file as input!");				
+						_this.replaceErrorMessage("Conversion needs a format other than .raw as input!");				
 						return;
 					}
 						

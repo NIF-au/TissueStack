@@ -1,8 +1,6 @@
 #ifndef	__TS_PARAMETERS_H__
 #define __TS_PARAMETERS_H__
 
-#include <unordered_map>
-
 namespace tissuestack
 {
 	namespace  database

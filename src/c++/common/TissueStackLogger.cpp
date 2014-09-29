@@ -1,6 +1,6 @@
 #include "logging.h"
 
-tissuestack::logging::TissueStackLogger::TissueStackLogger() : _log_path("///opt///tissuestack///logs")
+tissuestack::logging::TissueStackLogger::TissueStackLogger() : _log_path(LOG_PATH)
 {
 	// check if path exists and create it if necessary
 	if (!tissuestack::utils::System::directoryExists(this->_log_path) &&

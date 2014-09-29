@@ -126,6 +126,11 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadRe
 	const tissuestack::networking::TissueStackServicesRequest * request,
 	int socketDescriptor)
 {
+	if (!tissuestack::utils::System::directoryExists(UPLOAD_PATH) &&
+			!tissuestack::utils::System::createDirectory(UPLOAD_PATH, 0755))
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Could not create upload directory!");
+
 	// extract content type & content length & content disposition
 	unsigned int streamPointer = 0;
 	std::string httpStreamFrame = request->getFileUploadStart();
@@ -558,6 +563,11 @@ const std::string tissuestack::services::TissueStackAdminService::handleDataSetR
 const std::string tissuestack::services::TissueStackAdminService::handleUploadProgressRequest(
 	const tissuestack::networking::TissueStackServicesRequest * request) const
 {
+	if (!tissuestack::utils::System::directoryExists(UPLOAD_PATH) &&
+			!tissuestack::utils::System::createDirectory(UPLOAD_PATH, 0755))
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Could not create upload directory!");
+
 	const std::string filename = request->getRequestParameter("FILE");
 
 	int fd = -1;

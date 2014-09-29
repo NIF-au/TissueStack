@@ -1,5 +1,5 @@
-#include "parameters.h"
 #include "database.h"
+#include "parameters.h"
 
 const std::string tissuestack::TissueStackConfigurationParameters::getParameter(const std::string & name) const
 {

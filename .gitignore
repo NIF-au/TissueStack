@@ -22,7 +22,9 @@ configure
 Build (GNU)
 .autotools
 *.esproj
-TissueStackImageServer
+TissueStackServer
+TissueStackPreTiler
+TissueStackConverter
 binaries
 *.war
 bin

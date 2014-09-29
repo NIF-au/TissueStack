@@ -1,6 +1,12 @@
+tissuestack (1.5) stable; urgency=low
+
+  * VERSION 1.5 
+
+ -- Harald Waxenegger <harald@cai-george.cai.uq.edu.au>  Mon, 29 Sep 2014 15:42:45 +1000
+
 tissuestack (1.4) stable; urgency=low
 
-  * VERSION 1.4 
+  * new VERSION 1.4 
 
  -- Harald Waxenegger <harald@cai-george.cai.uq.edu.au>  Fri, 11 Apr 2014 15:42:45 +1000
 

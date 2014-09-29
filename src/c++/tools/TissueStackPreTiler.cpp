@@ -170,7 +170,7 @@ int		main(int argc, char **argv)
 			tissuestack::utils::Misc::tokenizeString(
 				tissuestack::utils::Misc::eliminateWhitespaceAndUnwantedEscapeCharacters(dimensions), ',');
 		if (dims.empty()) // use x,y,z as defaults
-			dims = {{"xspace", "yspace", "zspace"}};
+			dims = {"xspace", "yspace", "zspace"};
 
 		// extract comma separated zooms
 		std::vector<std::string> zooms =
