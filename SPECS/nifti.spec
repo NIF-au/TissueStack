@@ -4,6 +4,7 @@
 Name:		nifticlib
 Version:	2.0
 Release:	0%{?dist}
+Source:         %{name}-%{version}.tar.gz
 Summary:	The NIFTI C Library
 
 Group:		Graphics
@@ -20,25 +21,19 @@ The NIFTI C Library, Version 2.0.0.
 %setup -q
 
 %build
-rm -rf /tmp/nifticlib
 make clean
 make install
 
 %install
 mkdir -p %{buildroot}%{_prefix}
-cp -r /tmp/nifticlib/%{version}.%{release}/* %{buildroot}%{_prefix}
+cp -r  %{_builddir}/%{name}-%{version}/%{name}/%{version}.0/* %{buildroot}%{_prefix}
 # stupid rpath stripping
-for file in %{buildroot}%{_prefix}/bin/*; do echo "Stripping $file"; if [ `file $file | grep -i elf | wc -c` -ne 0 ]; then chrpath --delete $file; fi; done;
+for file in %{buildroot}%{_prefix}/bin/*; do if [ `file $file | grep -i elf | wc -c` -ne 0 ]; then chrpath --delete $file; fi; done;
 
 %files
 %{_prefix}/bin/*
 %{_prefix}/lib/*
 %{_prefix}/include/*
-
-#%doc
-
-%clean
-rm -rf /tmp/nifticlib
 
 %post -p /sbin/ldconfig
 %postun -p /sbin/ldconfig

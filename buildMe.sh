@@ -14,7 +14,7 @@ if [ $REDHAT_RPM_CONFIG -eq 0 ]; then
 	exit -1
 fi;
 
-cp -f SPECS/minc*.spec $HOME/rpmbuild/SPECS 
+cp -f SPECS/nifti.spec $HOME/rpmbuild/SPECS 
 cp -rf SOURCES/* $HOME/rpmbuild/SOURCES/
 cd $HOME/rpmbuild/SPECS/
 
