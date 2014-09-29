@@ -2,7 +2,7 @@
 %global debug_package %{nil}
 %global __os_install_post /usr/lib/rpm/brp-compress %{nil}
 Name:		tissuestack
-Version:	1.4
+Version:	1.5
 Release:	0%{?dist}
 Summary:	The TissueStack Application
 
@@ -13,28 +13,17 @@ Source:		%{name}-%{version}.tar.gz
 
 BuildRequires:	minc nifticlib-devel GraphicsMagick-devel unixODBC-devel
 Requires:	minc nifticlib GraphicsMagick unixODBC postgresql-server httpd
-Provides:	libTissueStack.so()(64bit) libodbcinst.so()(64bit) libodbc.so()(64bit)
+Provides:	libodbcinst.so()(64bit) libodbc.so()(64bit)
 
 %description
 Tissue Stack is an open source web based image viewer which allows the user to view 3D data as 2D cross sections. While at its core it's modelled after GIS web mapping applications, it's intended use is for neuro-imaging. Tissue Stack aims at serving its data as image tiles which can be both pre-tiled in advance or created on the fly by extracting from the original source file. The used file formats will be anything that is supported by the MINC Tool Kit (http://www.bic.mni.mcgill.ca/ServicesSoftware/ServicesSoftwareMincToolKit) as well as the nifti format(http://nifti.nimh.nih.gov/).
 
 %prep
-%setup -q
+tar xvzf /tmp/%{name}_build/%{name}-%{version}.tar.gz
 
 %build
-echo "Entering build stage (see: /tmp/%{name}-%{version}-rpm-build.log)"
-make clean > /tmp/%{name}-%{version}-rpm-build.log
-make dist VERSION=%{version} >> /tmp/%{name}-%{version}-rpm-build.log
-echo "Completed build stage"
-
-%install
-echo "Entering install stage (see: /tmp/%{name}-%{version}-rpm-build.log)"
-cd %{buildroot}; tar xvzf /tmp/%{name}_build/%{name}-%{version}.tar.gz >> /tmp/%{name}-%{version}-rpm-build.log
-mv %{buildroot}/pre-install.sh /tmp
-mv %{buildroot}/post-install.sh /tmp
-mv %{buildroot}/pre-uninstall.sh /tmp
-mv %{buildroot}/post-uninstall.sh /tmp
-echo "Completed install stage"
+mkdir -p %{buildroot}
+cp -r * %{buildroot}
 
 %files
 /etc/profile.d/*
