@@ -30,7 +30,7 @@ make install
 cp -r /tmp/minc_build/* %{buildroot}
 cp -r %{_builddir}/%{name}-%{version}/usr/* %{buildroot}%{_prefix}
 # stupid rpath stripping
-for file in %{buildroot}%{_prefix}/bin/*; do if [ `file $file | grep -i elf | wc -c` -ne 0 ]; then chrpath --delete $file; fi; done;
+for file in %{buildroot}%{_prefix}/bin/*; do echo "Stripping $file"; if [ `file $file | grep -i elf | wc -c` -ne 0 ]; then chrpath --delete $file; fi; done;
 
 %files
 %{_prefix}/bin/*
