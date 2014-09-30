@@ -590,10 +590,10 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadPr
 	{
 		fd =
 			open((std::string(UPLOAD_PATH) + "/." + filename + ".upload" ).c_str(),
-			O_RDONLY, 0644);
+			O_RDONLY);
 		if (fd <= 0)
-			THROW_TS_EXCEPTION(tissuestack::common::TissueStackFileUploadException,
-				"Could not open temporary upload progress file!");
+			return std::string("{\"response\": {\"filename\": \"") +
+					filename + "\", \"progress\": -1}}";
 	}
 
 	char buffer[tissuestack::common::SOCKET_READ_BUFFER_SIZE];
