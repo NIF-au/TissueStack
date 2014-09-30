@@ -19,13 +19,13 @@
 tissuestack::common::TissueStackProcessingStrategy::TissueStackProcessingStrategy() :
 	_task_queue_executor(new tissuestack::execution::TissueStackTaskQueueExecutor())
 {
-	// depending on the number of cores, we use 75% rounded up
-	if (tissuestack::utils::System::getNumberOfCores() > 1)
+	// from 2 cores we use 75% rounded up
+	if (tissuestack::utils::System::getNumberOfCores() > 2)
 	{
 		this->_default_strategy = new tissuestack::execution::ThreadPool(
 				static_cast<short>(ceil(tissuestack::utils::System::getNumberOfCores() * 0.75)));
-	} else // or sequentially execute with only one meager core
-		this->_default_strategy = new tissuestack::execution::SimpleSequentialExecution();
+	} else
+		this->_default_strategy = new tissuestack::execution::ThreadPool(2);
 };
 
 tissuestack::common::TissueStackProcessingStrategy::~TissueStackProcessingStrategy()
