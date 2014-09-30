@@ -19,7 +19,7 @@ INCLUDE			=	-Iinclude -I/usr/include/nifti \
 LIB_PATH		=
 
 LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid \
-					-lminc2 -lniftiio -lm
+					-lminc2 -lniftiio -lm -lznz
 
 TILER_EXE_NAME		=	TissueStackPreTiler
 CONVERTER_EXE_NAME	=	TissueStackConverter
