@@ -297,7 +297,6 @@ const Image * tissuestack::imaging::UncachedImageExtraction::extractImage(
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Could not create Image");
 
-
 	// timeout/shutdown check
 	if (request->hasExpired() || processing_strategy->isStopFlagRaised())
 	{
@@ -406,7 +405,6 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::createImageFromDat
 		if (img == NULL)
 		{
 			CatchException(&exception);
-			DestroyImage(img);
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 					"Image Extraction: Failed to flop image to make it backward compatible!");
 		}
@@ -444,7 +442,6 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::degradeImage0(
 	if (img == NULL)
 	{
 		CatchException(&exception);
-		DestroyImage(img);
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Image Extraction: Failed to adjust quality!");
 	}
@@ -459,7 +456,6 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::degradeImage0(
 	if (img == NULL)
 	{
 		CatchException(&exception);
-		DestroyImage(img);
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Image Extraction: Failed to adjust quality!");
 	}
@@ -484,11 +480,8 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::scaleImage(
 			&exception);
 	DestroyImage(tmp);
 	if (img == NULL)
-	{
-		DestroyImage(img);
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Image Extraction: Failed to scale image!");
-	}
 
 	return img;
 }
@@ -659,7 +652,7 @@ void inline tissuestack::imaging::UncachedImageExtraction::applyColorMap(
 			tissuestack::imaging::TissueStackColorMapStore::instance()->findColorMap(color_map_name);
 	if (colorMap == nullptr)
 	{
-		DestroyImage(img);
+		if (img) DestroyImage(img);
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"Colormap Application: Could not find color map!");
 	}
@@ -671,7 +664,7 @@ void inline tissuestack::imaging::UncachedImageExtraction::applyColorMap(
 	if (pixels == NULL)
 	{
 		CatchException(&exception);
-		DestroyImage(img);
+		if (img) DestroyImage(img);
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"Colormap Application: Could not obtain pixels from image!");
 	}
@@ -766,7 +759,6 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::getImageTile0(
 	if (img == NULL)
 	{
 		CatchException(&exception);
-		DestroyImage(img);
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Image Extraction: Failed to crop image to get tile!");
 	}

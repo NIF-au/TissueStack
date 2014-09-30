@@ -327,7 +327,17 @@ const bool tissuestack::services::TissueStackAdminService::readAndStoreFileUploa
 
 			if (bytesReceived < tissuestack::common::SOCKET_READ_BUFFER_SIZE &&
 					((totalBytesOfFileUpload + tissuestack::common::SOCKET_READ_BUFFER_SIZE) > supposedFileSize))
-				break;
+			{
+				//this is a check to see if we need to go in those rare cases when there is more
+				// let's wait a second, just to be sure ...
+				sleep(1);
+				int moreBytes = 0;
+				if ( ioctl (socketDescriptor, FIONREAD, &moreBytes) < 0 )
+					break;
+
+				if (moreBytes == 0)
+					break;
+			}
 		}
 
 		// write progress update every MB
