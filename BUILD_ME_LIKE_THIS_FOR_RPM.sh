@@ -24,7 +24,10 @@ if [ $IS_CENTOS_6_X -gt 0 ]; then
 	        echo "Then run: 'yum install devtoolset-1.1-gcc devtoolset-1.1-gcc-c++'"
 	        exit -1
 	fi;
-	scl enable devtoolset-1.1 bash
+	echo -e "\nIMPORTANT:\n"
+	echo "if the build fails with a message similar to these below, execute the line 'scl enable devtoolset-1.1 bash' prior to running this script"
+	echo "cc1plus: error: unrecognized command line option -std=c++11"
+	echo -e "cc1plus: error: unrecognized command line option -std=gnu++11\n"
 fi;
 
 export TISSUESTACK_BUILD_VERSION=1.5
@@ -33,6 +36,10 @@ CURRENT_DIR=`pwd`
 
 echo "Calling TissueStack make with target dist"
 cd $CURRENT_DIR/src/c++;make dist
+if [ $? -ne 0 ]; then
+	echo "Build was NOT successful"
+	exit -1
+fi;
 
 echo "Copying spec file and source tar"
 cp -f $CURRENT_DIR/rpm/tissuestack.spec $HOME/rpmbuild/SPECS 
