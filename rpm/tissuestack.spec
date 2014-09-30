@@ -11,9 +11,8 @@ License:	GPLv3+
 URL:		https://github.com/NIF-au/TissueStack
 Source:		%{name}-%{version}.tar.gz	
 
-BuildRequires:	minc nifticlib-devel GraphicsMagick-devel unixODBC-devel
-Requires:	minc nifticlib GraphicsMagick unixODBC postgresql-server httpd
-Provides:	libodbcinst.so()(64bit) libodbc.so()(64bit)
+BuildRequires:	minc GraphicsMagick-devel
+Requires:	minc nifticlib GraphicsMagick postgresql-server httpd
 
 %description
 Tissue Stack is an open source web based image viewer which allows the user to view 3D data as 2D cross sections. While at its core it's modelled after GIS web mapping applications, it's intended use is for neuro-imaging. Tissue Stack aims at serving its data as image tiles which can be both pre-tiled in advance or created on the fly by extracting from the original source file. The used file formats will be anything that is supported by the MINC Tool Kit (http://www.bic.mni.mcgill.ca/ServicesSoftware/ServicesSoftwareMincToolKit) as well as the nifti format(http://nifti.nimh.nih.gov/).
