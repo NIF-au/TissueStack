@@ -465,7 +465,7 @@ TissueStack.Admin.prototype = {
 		TissueStack.Utils.sendAjaxRequest(
 			"/" + TissueStack.configuration['server_proxy_path'].value +
 			"/?service=services&sub_service=admin&action=file_exists&file=" +
-			TissueStack.configuration['upload_directory'].value + "/" + filename +
+			TissueStack.configuration['data_directory'].value + "/" + filename +
 			"&session=" + __this.session,
 			'GET', false,
 			function(data, textStatus, jqXHR) {
