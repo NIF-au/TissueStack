@@ -481,7 +481,7 @@ TissueStack.Admin.prototype = {
 				    if (new_filename == null)
 				        return false;
 				    new_filename = new_filename.trim();
-				    if (new_filename.length < 4 || new_filename.substring(new_filename.length-4) != '.raw') { 
+				    if (new_filename.length < 5 || new_filename.substring(new_filename.length-4) != '.raw') { 
 				    	__this.replaceErrorMessage("New file name needs to be non-empty with extension .raw");
 				    	new_filename=null;
 				        return false;

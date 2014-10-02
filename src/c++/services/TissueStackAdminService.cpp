@@ -527,8 +527,8 @@ const std::string tissuestack::services::TissueStackAdminService::handleFileRena
 	std::string new_file = request->getRequestParameter("NEW_FILE");
 
 	// we only allow this to happen in the upload directory
-	if ((file.find(UPLOAD_PATH) == std::string::npos &&
-			new_file.find(UPLOAD_PATH) == std::string::npos) ||
+	if (file.find(UPLOAD_PATH) == std::string::npos ||
+			new_file.find(UPLOAD_PATH) == std::string::npos ||
 			file.find("..") != std::string::npos)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 			"Only files in the upload directory are allowed to be renamed!");
@@ -536,6 +536,12 @@ const std::string tissuestack::services::TissueStackAdminService::handleFileRena
 	if (!tissuestack::utils::System::fileExists(file))
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 			"File does not exist!");
+
+	new_file = tissuestack::utils::Misc::eliminateWhitespaceAndUnwantedEscapeCharacters(new_file);
+	if (new_file.length() < 5 ||
+			new_file.substr(new_file.length()-4).compare(".raw") != 0)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"New file name needs to be non-empty with extension .raw");
 
 	if (rename(file.c_str(), new_file.c_str()) < 0)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
