@@ -8,8 +8,10 @@ if [ $? -ne 0 ]; then
 	exit -1
 fi;
 
+IS_SUSE=`cat /etc/*-release | grep -i "suse"| wc -c`
+
 REDHAT_RPM_CONFIG=`yum list installed | grep "redhat-rpm-config" | wc -l`
-if [ $REDHAT_RPM_CONFIG -eq 0 ]; then
+if [ $IS_SUSE -eq 0 ] && [ $REDHAT_RPM_CONFIG -eq 0 ]; then
 	echo "Install redhat-rpm-config first!"
 	exit -1
 fi;
