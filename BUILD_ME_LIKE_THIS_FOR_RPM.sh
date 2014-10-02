@@ -9,10 +9,12 @@ if [ $? -ne 0 ]; then
 	exit -1
 fi
 
-REDHAT_RPM_CONFIG=`yum list installed | grep "redhat-rpm-config" | wc -c`
-if [ $REDHAT_RPM_CONFIG -eq 0 ]; then
-        echo "Install redhat-rpm-config first!"
-        exit -1
+IS_SUSE=`cat /etc/*-release | grep -i "suse"| wc -c`
+
+REDHAT_RPM_CONFIG=`yum list installed | grep "redhat-rpm-config" | wc -l`
+if [ $IS_SUSE -eq 0 ] && [ $REDHAT_RPM_CONFIG -eq 0 ]; then
+	echo "Install redhat-rpm-config first!"
+	exit -1
 fi;
 
 IS_CENTOS_6_X=`cat /etc/*-release | grep -i "centos release 6."| wc -c`
