@@ -29,3 +29,5 @@ binaries
 *.war
 bin
 test
+*~
+~
