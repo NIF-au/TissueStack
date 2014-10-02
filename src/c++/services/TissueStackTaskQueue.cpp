@@ -418,10 +418,16 @@ const bool tissuestack::services::TissueStackTaskQueue::isBeingConverted(const s
 
 	for (auto t : this->_tasks)
 	{
-		if ((t->getInputImageData()->getFileName().compare(in_file) == 0)
-				&& t->getType() == tissuestack::services::TissueStackTaskType::CONVERSION
-				&& (t->getStatus() == tissuestack::services::TissueStackTaskStatus::QUEUED ||
-						t->getStatus() == tissuestack::services::TissueStackTaskStatus::IN_PROCESS))
+		if (t->getType() != tissuestack::services::TissueStackTaskType::CONVERSION)
+			continue;
+
+		const tissuestack::services::TissueStackConversionTask * conv_task =
+			static_cast<const tissuestack::services::TissueStackConversionTask *>(t);
+
+		if ((conv_task->getInputImageData()->getFileName().compare(in_file) == 0 ||
+				conv_task->getOutFile().compare(in_file) == 0)
+				&& (conv_task->getStatus() == tissuestack::services::TissueStackTaskStatus::QUEUED ||
+						conv_task->getStatus() == tissuestack::services::TissueStackTaskStatus::IN_PROCESS))
 			return true;
 	}
 

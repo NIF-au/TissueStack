@@ -38,6 +38,12 @@ tissuestack::services::TissueStackAdminService::TissueStackAdminService() {
 		std::vector<std::string>{ "SESSION" , "ID", "FLAG"});
 	this->addMandatoryParametersForRequest("CANCEL",
 		std::vector<std::string>{ "SESSION" , "TASK_ID"});
+	this->addMandatoryParametersForRequest("FILE_EXISTS",
+		std::vector<std::string>{ "SESSION", "FILE"});
+	this->addMandatoryParametersForRequest("FILE_DELETE",
+		std::vector<std::string>{ "SESSION", "FILE"});
+	this->addMandatoryParametersForRequest("FILE_RENAME",
+		std::vector<std::string>{ "SESSION", "FILE", "NEW_FILE"});
 };
 
 tissuestack::services::TissueStackAdminService::~TissueStackAdminService() {};
@@ -88,6 +94,12 @@ void tissuestack::services::TissueStackAdminService::streamResponse(
 					file_descriptor);
 		else if (action.compare("ADD_DATASET") == 0)
 			json = this->handleDataSetAdditionRequest(request);
+		else if (action.compare("FILE_EXISTS") == 0)
+			json = this->handleFileExistenceRequest(request);
+		else if (action.compare("FILE_DELETE") == 0)
+			json = this->handleFileDeletionRequest(request);
+		else if (action.compare("FILE_RENAME") == 0)
+			json = this->handleFileRenameRequest(request);
 	}
 
 	const std::string response =
@@ -469,6 +481,70 @@ const std::string tissuestack::services::TissueStackAdminService::handleDataSetA
 	return json;
 }
 
+const std::string tissuestack::services::TissueStackAdminService::handleFileExistenceRequest(const tissuestack::networking::TissueStackServicesRequest * request) const
+{
+	std::string file = request->getRequestParameter("FILE");
+
+	// we only allow this to happen in the upload and data directory
+	if ((file.find(UPLOAD_PATH) == std::string::npos &&
+			file.find(DATASET_PATH) == std::string::npos) ||
+			file.find("..") != std::string::npos)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+			"Only files in the data and upload directory are allowed to be queried!");
+
+	if (tissuestack::utils::System::fileExists(file))
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+			"File exists already!");
+
+	return tissuestack::common::NO_RESULTS_JSON;
+}
+
+const std::string tissuestack::services::TissueStackAdminService::handleFileDeletionRequest(const tissuestack::networking::TissueStackServicesRequest * request) const
+{
+	std::string file = request->getRequestParameter("FILE");
+
+	// we only allow this to happen in the upload and data directory
+	if ((file.find(UPLOAD_PATH) == std::string::npos &&
+			file.find(DATASET_PATH) == std::string::npos) ||
+			file.find("..") != std::string::npos)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+			"Only files in the data and upload directory are allowed to be deleted!");
+
+	if (!tissuestack::utils::System::fileExists(file))
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+			"File does not exist!");
+
+	if (unlink(file.c_str()) < 0)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Could not unlink file!");
+
+	return tissuestack::common::NO_RESULTS_JSON;
+}
+
+const std::string tissuestack::services::TissueStackAdminService::handleFileRenameRequest(const tissuestack::networking::TissueStackServicesRequest * request) const
+{
+	std::string file = request->getRequestParameter("FILE");
+	std::string new_file = request->getRequestParameter("NEW_FILE");
+
+	// we only allow this to happen in the upload directory
+	if ((file.find(UPLOAD_PATH) == std::string::npos &&
+			new_file.find(UPLOAD_PATH) == std::string::npos) ||
+			file.find("..") != std::string::npos)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+			"Only files in the upload directory are allowed to be renamed!");
+
+	if (!tissuestack::utils::System::fileExists(file))
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+			"File does not exist!");
+
+	if (rename(file.c_str(), new_file.c_str()) < 0)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Could not rename file!");
+
+	return tissuestack::common::NO_RESULTS_JSON;
+}
+
+
 const std::string tissuestack::services::TissueStackAdminService::handleUploadDirectoryRequest(
 	const tissuestack::networking::TissueStackServicesRequest * request) const
 {
@@ -493,28 +569,25 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadDi
 		if (tissuestack::services::TissueStackTaskQueue::instance()->doesTaskExistForDataSet(f, false, true))
 			continue;
 
-		if (bDisplayRawOnly)
-		{
-			if (f.length() < 4)
+		if (f.length() < 4)
+			continue;
+
+		std::string ext = f.substr(f.length()-4);
+		std::transform(ext.begin(), ext.end(), ext.begin(), toupper);
+
+		if (bDisplayRawOnly &&
+				(!(ext.compare(".RAW") == 0)))
 				continue;
 
-			if (!(f.substr(f.length()-4).compare(".raw") == 0
-					|| f.substr(f.length()-4).compare(".RAW") == 0))
-				continue;
-		}
-
-		if (bDisplayConversionFormatsOnly)
-		{
-			if (f.length() < 4)
-				continue;
-			std::string ext = f.substr(f.length()-4);
-			std::transform(ext.begin(), ext.end(), ext.begin(), toupper);
-
-			if (!(ext.compare(".MNC") == 0
+		if (bDisplayConversionFormatsOnly &&
+			(!(ext.compare(".MNC") == 0
 					|| ext.compare(".NII") == 0
-					|| ext.compare("I.GZ") == 0))
+					|| ext.compare("I.GZ") == 0)))
 				continue;
-		}
+
+		// don't show files that are at the moment being converted
+		if (ext.compare(".RAW") == 0 && tissuestack::services::TissueStackTaskQueue::instance()->isBeingConverted(f))
+			continue;
 
 		const unsigned int pos = f.find_last_of("/");
 		const std::string tmp =
