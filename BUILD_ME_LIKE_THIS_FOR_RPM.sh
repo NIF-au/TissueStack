@@ -44,9 +44,13 @@ if [ $? -ne 0 ]; then
 fi;
 
 echo "Copying spec file and source tar"
-cp -f $CURRENT_DIR/rpm/tissuestack.spec $HOME/rpmbuild/SPECS 
+cp -f $CURRENT_DIR/rpm/*.spec $HOME/rpmbuild/SPECS 
 #cp -f /tmp/tissuestack_build/tissuestack-$TISSUESTACK_BUILD_VERSION.tar.gz $HOME/rpmbuild/SOURCES
 cd $HOME/rpmbuild/SPECS/
 
 echo "Calling RPM build now ..."
-rpmbuild -bb tissuestack.spec
+if [ $IS_SUSE -eq 0 ]; then
+	rpmbuild -bb tissuestack.spec
+else
+	rpmbuild -bb tissuestack_suse.spec
+fi;
