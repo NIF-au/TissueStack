@@ -102,13 +102,22 @@ sed -i 's/##ERROR_LOG##/\/var\/log\/apache2\/tissuestack-error.log/g' /etc/apach
 HTTP_VERSION=`httpd2 -v | grep "Apache/" | cut -f2 -d "/" | cut -f1 -d " " | cut -f1,2 -d "." | sed 's/\.//g'` &>> /tmp/post-install.log
 if [ $HTTP_VERSION -gt 23 ]; then sed -i 's/#Require all granted/Require all granted/g' /etc/httpd/conf.d/tissuestack.conf; fi &>> /tmp/post-install.log
 touch /etc/apache2/sysconfig.d/include.conf
-echo "
-LoadModule headers_module                 /usr/lib64/apache2-prefork/mod_headers.so
-LoadModule proxy_module                   /usr/lib64/apache2-prefork/mod_proxy.so
-LoadModule proxy_http_module              /usr/lib64/apache2-prefork/mod_proxy_http.so
-LoadModule proxy_connect_module           /usr/lib64/apache2-prefork/mod_proxy_connect.so
-" >> /etc/apache2/sysconfig.d/loadmodule.conf
-a2enmod headers proxy proxy_http prox_connect
+if [ `grep headers_module /etc/apache2/sysconfig.d/loadmodule.conf | wc -c` -eq 0 ]; then
+	echo "LoadModule headers_module /usr/lib64/apache2-prefork/mod_headers.so" >> /etc/apache2/sysconfig.d/loadmodule.conf
+	a2enmod headers
+fi;	 
+if [ `grep proxy_module /etc/apache2/sysconfig.d/loadmodule.conf | wc -c` -eq 0 ]; then
+	echo "LoadModule proxy_module /usr/lib64/apache2-prefork/mod_proxy.so" >> /etc/apache2/sysconfig.d/loadmodule.conf
+	a2enmod proxy
+fi;	 
+if [ `grep proxy_connect /etc/apache2/sysconfig.d/loadmodule.conf | wc -c` -eq 0 ]; then
+	echo "LoadModule proxy_connect /usr/lib64/apache2-prefork/mod_proxy_connect.so" >> /etc/apache2/sysconfig.d/loadmodule.conf
+	a2enmod proxy_connect
+fi;	 
+if [ `grep proxy_http /etc/apache2/sysconfig.d/loadmodule.conf | wc -c` -eq 0 ]; then
+	echo "LoadModule proxy_http /usr/lib64/apache2-prefork/mod_proxy_http.so" >> /etc/apache2/sysconfig.d/loadmodule.conf
+	a2enmod proxy_http
+fi;	 
 if [ `iptables -S | grep -e "-A INPUT -i lo -j ACCEPT" | wc -c` -eq 0 ]; then
         iptables -I INPUT 1 -i lo -p all -j ACCEPT &>> /tmp/post-install.log
 fi
