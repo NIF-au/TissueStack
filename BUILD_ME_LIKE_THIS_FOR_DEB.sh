@@ -14,8 +14,8 @@ cp -rf $CURRENT_DIR/deb/* $BUILD_DIR/tissuestack-$TISSUESTACK_BUILD_VERSION/debi
 echo "Calling TissueStack make with target dist"
 cd $CURRENT_DIR/src/c++;make dist
 
-echo "Copying over created dist tar.gz"
-cp -f /tmp/tissuestack_build/tissuestack-${TISSUESTACK_BUILD_VERSION}.tar.gz $BUILD_DIR
+echo "Believe it or not we have to wait for tar to finish off..."
+sleep 5
 
 echo "Starting DEBIAN package build now ..."
 cd $BUILD_DIR/tissuestack-$TISSUESTACK_BUILD_VERSION
