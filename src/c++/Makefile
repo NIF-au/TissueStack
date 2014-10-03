@@ -150,7 +150,7 @@ dist: all
 	" > $(BUILD_SRC_PATH)$(DATA_PATH)/sql/update_$(APP_NAME)_config.sql;
 
 	@echo -e "\tCreating environment script containing the desired paths..."
-	@ echo -e "#!/bin/bash\n\
+	@ echo "#!/bin/bash\n\
 	TISSUE_STACK_HOME=$(DATA_PATH)\n\
 	IMAGE_SERVER_EXE=$(BINS_PATH)/$(EXE_NAME)\n\
 	PATH=\$$PATH:$(BINS_PATH)\n\
