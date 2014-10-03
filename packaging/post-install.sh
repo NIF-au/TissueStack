@@ -30,7 +30,7 @@ sed -i "s/##DOC_ROOT##/$ESCAPED_STRING\/web/g" /etc/apache2/sites-available/tiss
 sed -i 's/##ERROR_LOG##/\/var\/log\/apache2\/tissuestack-error.log/g' /etc/apache2/sites-available/tissuestack.conf &>> /tmp/post-install.log
 APACHE_VERSION=`apache2 -v | grep "Apache/" | cut -f2 -d "/" | cut -f1 -d " " | cut -f1,2 -d "." | sed 's/\.//g'` &>> /tmp/post-install.log
 if [ $APACHE_VERSION -gt 23 ]; then sed -i 's/#Require all granted/Require all granted/g' /etc/apache2/sites-available/tissuestack.conf; fi &>> /tmp/post-install.log
-a2ensite tissuestack &>> /tmp/post-install.log
+a2ensite tissuestack.org &>> /tmp/post-install.log
 a2dissite 000-default &>> /tmp/post-install.log
 a2enmod headers proxy proxy_http &>> /tmp/post-install.log
 /etc/init.d/apache2 restart &>> /tmp/post-install.log
