@@ -122,12 +122,12 @@ dist: all
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/conf
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/colormaps
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/sql
-	@mkdir -p $(EPHEMERAL_STORAGE)/$(NAME)/data
-	@ln -s $(EPHEMERAL_STORAGE)/$(NAME)/data $(BUILD_SRC_PATH)$(DATA_PATH)/data
-	@mkdir -p $(EPHEMERAL_STORAGE)/$(NAME)/tiles
-	@ln -s $(EPHEMERAL_STORAGE)/$(NAME)/tiles $(BUILD_SRC_PATH)$(DATA_PATH)/tiles
-	@mkdir -p $(EPHEMERAL_STORAGE)/$(NAME)/upload
-	@ln -s $(EPHEMERAL_STORAGE)/$(NAME)/upload $(BUILD_SRC_PATH)$(DATA_PATH)/upload
+	@mkdir -p $(EPHEMERAL_STORAGE)/$(APP_NAME)/data
+	@ln -s $(EPHEMERAL_STORAGE)/$(APP_NAME)/data $(BUILD_SRC_PATH)$(DATA_PATH)/data
+	@mkdir -p $(EPHEMERAL_STORAGE)/$(APP_NAME)/tiles
+	@ln -s $(EPHEMERAL_STORAGE)/$(APP_NAME)/tiles $(BUILD_SRC_PATH)$(DATA_PATH)/tiles
+	@mkdir -p $(EPHEMERAL_STORAGE)/$(APP_NAME)/upload
+	@ln -s $(EPHEMERAL_STORAGE)/$(APP_NAME)/upload $(BUILD_SRC_PATH)$(DATA_PATH)/upload
 	@ echo "This is a binary build" > $(BUILD_SRC_PATH)/readme.txt
 
 	@echo -e "\tCopying over Tissue Stack Image Server & Tools executables"
