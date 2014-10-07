@@ -37,6 +37,11 @@ CHECK_SIZE=`stat -c%s /tmp/build_mod_load`
 if [ $CHECK_SIZE -ne 0 ]; then echo -e "FAILED\nERROR: Could not locate needed libjpeg-turbo package (>=1.2.0). Please install it and load it: 'module load libjpeg-turbo' !!!!!\n"
 fi
 
+module load gcc 2> /tmp/build_mod_load
+CHECK_SIZE=`stat -c%s /tmp/build_mod_load`
+if [ $CHECK_SIZE -ne 0 ]; then echo -e "FAILED\nERROR: Could not locate needed gcc package (>=4.9.1). Please install it and load it: 'module load gcc' !!!!!\n"
+fi
+
 module load tissuestack 2> /tmp/build_mod_load
 
 rm -rf /tmp/build_mod_load
