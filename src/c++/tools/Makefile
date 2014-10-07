@@ -21,6 +21,8 @@ LIB_PATH		=
 LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid \
 					-lminc2 -lniftiio -lm -lznz
 
+BINS_PATH		?= /tmp
+
 TILER_EXE_NAME		=	TissueStackPreTiler
 CONVERTER_EXE_NAME	=	TissueStackConverter
 
