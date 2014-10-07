@@ -54,8 +54,8 @@ compile:	$(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_DATABASE) $(OBJS_IMAGING) \
 	@echo -e "\tCompiling \"$(NAME)\" => $(TILER_EXE_NAME)"
 	@$(CC)   $(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_EXECUTION) $(OBJS_DATABASE) \
 							$(OBJS_SERVICES) $(OBJS_IMAGING) $(OBJS_UTILS) $(SRCS_TILER) \
-							`GraphicsMagick-config --cppflags --libs --ldflags` -o $(TILER_EXE_NAME) \
-							$(LIBS) $(FLAGS) $(INCLUDE)
+							$(LIB_PATH) $(LIBS) $(FLAGS) $(INCLUDE) \
+							`GraphicsMagick-config --cppflags --libs` -o $(TILER_EXE_NAME)
 	@echo -e "\tCompiling \"$(NAME)\" => $(CONVERTER_EXE_NAME)"
 	@$(CC)   $(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_EXECUTION) $(OBJS_DATABASE) \
 							$(OBJS_SERVICES) $(OBJS_IMAGING) $(OBJS_UTILS) $(SRCS_CONVERTER) \
