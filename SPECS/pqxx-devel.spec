@@ -20,12 +20,13 @@ The PQXX postgres C++ connector, Version 4.0.1
 %setup -q
 
 %build
-./configure CXXFLAGS=-lpthread
-make install
+./configure CXXFLAGS=-lpthread --prefix=%{buildroot}%{_prefix}/local/pqxx
+make
 
 %install
+make install
 # stupid rpath stripping
-#for file in %{buildroot}%{_prefix}/bin/*; do if [ `file $file | grep -i elf | wc -c` -ne 0 ]; then chrpath --delete $file; fi; done;
+#for file in %{buildroot}%{_prefix}/local/pqxx/bin/*; do if [ `file $file | grep -i elf | wc -c` -ne 0 ]; then chrpath --delete $file; fi; done;
 
 %files
 /usr/local/pqxx/bin/*
