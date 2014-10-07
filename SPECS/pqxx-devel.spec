@@ -21,7 +21,7 @@ The PQXX postgres C++ connector, Version 4.0.1
 %setup -q
 
 %build
-make clean
+./configure AM_LDFLAGS=-lpthread
 make install
 
 %install
