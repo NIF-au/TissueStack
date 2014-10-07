@@ -10,11 +10,11 @@ SRCS_UTILS		=	$(wildcard ../utils/*.cpp)
 SRCS_TILER		=	TissueStackPreTiler.cpp
 SRCS_CONVERTER	=	TissueStackConverter.cpp
 
-INCLUDE			=	-Iinclude \
-					-Icommon/include -Iexecution/include \
-					-Idatabase/include -Iservices/include \
-					-Inetworking/include -Iimaging/include \
-					-Iutils/include \
+INCLUDE			=	-I../include \
+					-I../common/include -I../execution/include \
+					-I../database/include -I../services/include \
+					-I../networking/include -I../imaging/include \
+					-I../utils/include \
 					-I/usr/local/graphicsmagick/1.3.18/include/GraphicsMagick \
 					-I/usr/local/minc/2.1.0/include \
 					-I/usr/local/nifticlib/2.0.0/include
