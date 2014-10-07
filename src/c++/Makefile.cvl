@@ -92,10 +92,10 @@ compile:	$(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_DATABASE) $(OBJS_IMAGING) \
 							`GraphicsMagick-config --cppflags --libs` -o $(EXE_NAME)
 
 compile-tools:
-	@make -f Makefile.cvl --no-print-directory -C tools compile-tools
+	@make -f Makefile.cvl --no-print-directory -C tools compile
 
 install-tools:
-	@make -f Makefile.cvl --no-print-directory -C tools install-tools
+	@make -f Makefile.cvl --no-print-directory -C tools install
 	
 install: compile
 	@echo -e "\n\tInstalling $(NAME) (requires super user priviledges):"
