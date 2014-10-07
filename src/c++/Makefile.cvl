@@ -141,7 +141,7 @@ dist: all
 	@echo -e "\tCopying over tissue stack start/conf scripts [error logs: $(BUILD_PATH)/logs/*.log]..."
 	@cp -f $(PACKAGING_CONFIG_PATH)/$(APP_NAME)-httpd.conf $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(APP_NAME).conf &>> $(BUILD_PATH)/logs/$(APP_NAME)_copy.log
 	@cp -f $(PACKAGING_CONFIG_PATH)/$(APP_NAME)_modules.sh $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(APP_NAME)_modules.sh &>> $(BUILD_PATH)/logs/$(APP_NAME)_copy.log
-	@cp -f $(PACKAGING_CONFIG_PATH)/$(APP_NAME)_rpm_init.sh $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(APP_NAME)_init.sh &>> $(BUILD_PATH)/logs/$(APP_NAME)_copy.log; \
+	@cp -f $(PACKAGING_CONFIG_PATH)/$(APP_NAME)_rpm_init.sh $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(APP_NAME)_init.sh &>> $(BUILD_PATH)/logs/$(APP_NAME)_copy.log
 	@cp -f $(PACKAGING_CONFIG_PATH)/$(APP_NAME).sh $(BUILD_SRC_PATH)$(BINS_PATH)/$(APP_NAME) &>> $(BUILD_PATH)/logs/$(APP_NAME)_copy.log
 	@chmod 755 $(BUILD_SRC_PATH)$(BINS_PATH)/$(APP_NAME)
 
@@ -170,10 +170,9 @@ dist: all
 	IMAGE_SERVER_EXE=$(BINS_PATH)/$(EXE_NAME)\n\
 	PATH=\$$PATH:$(BINS_PATH)\n\
 	HDF5_DISABLE_VERSION_CHECK=1\n\
-	export HDF5_DISABLE_VERSION_CHECK TISSUE_STACK_HOME IMAGE_SERVER_EXE PATH" > $(BUILD_SRC_PATH)$(BINS_PATH)/$(APP_NAME)_env.sh;
+	export HDF5_DISABLE_VERSION_CHECK TISSUE_STACK_HOME IMAGE_SERVER_EXE PATH" > $(BUILD_SRC_PATH)$(BINS_PATH)/$(APP_NAME)_env.sh
 	@chmod 755 $(BUILD_SRC_PATH)$(BINS_PATH)/$(APP_NAME)_env.sh
 
-	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/conf
 	@echo -e "\tCopying over pre,post and uninstall scripts for packaging ...\n"
 	@cp -f $(PACKAGING_CONFIG_PATH)/pre-install-cvl.sh $(BUILD_SRC_PATH)/pre-install.sh
 	@chmod 755 $(BUILD_SRC_PATH)/pre-install.sh
