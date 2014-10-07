@@ -173,16 +173,16 @@ dist: all
 	export HDF5_DISABLE_VERSION_CHECK TISSUE_STACK_HOME IMAGE_SERVER_EXE PATH" > $(BUILD_SRC_PATH)$(BINS_PATH)/$(APP_NAME)_env.sh;
 	@chmod 755 $(BUILD_SRC_PATH)$(BINS_PATH)/$(APP_NAME)_env.sh
 
-	mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/conf
-	echo -e "\tCopying over pre,post and uninstall scripts for packaging ..."
-	cp -f $(PACKAGING_CONFIG_PATH)/pre-install-cvl.sh $(BUILD_SRC_PATH)/pre-install.sh
-	chmod 755 $(BUILD_SRC_PATH)/pre-install.sh
-	cp -f $(PACKAGING_CONFIG_PATH)/post-install-cvl.sh $(BUILD_SRC_PATH)/post-install.sh
-	chmod 755 $(BUILD_SRC_PATH)/post-install.sh
-	cp -f $(PACKAGING_CONFIG_PATH)/pre-uninstall-cvl.sh $(BUILD_SRC_PATH)/pre-uninstall.sh
-	chmod 755 $(BUILD_SRC_PATH)/pre-uninstall.sh
-	cp -f $(PACKAGING_CONFIG_PATH)/post-uninstall-cvl.sh $(BUILD_SRC_PATH)/post-uninstall.sh
-	chmod 755 $(BUILD_SRC_PATH)/post-uninstall.sh
+	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/conf
+	@echo -e "\tCopying over pre,post and uninstall scripts for packaging ...\n"
+	@cp -f $(PACKAGING_CONFIG_PATH)/pre-install-cvl.sh $(BUILD_SRC_PATH)/pre-install.sh
+	@chmod 755 $(BUILD_SRC_PATH)/pre-install.sh
+	@cp -f $(PACKAGING_CONFIG_PATH)/post-install-cvl.sh $(BUILD_SRC_PATH)/post-install.sh
+	@chmod 755 $(BUILD_SRC_PATH)/post-install.sh
+	@cp -f $(PACKAGING_CONFIG_PATH)/pre-uninstall-cvl.sh $(BUILD_SRC_PATH)/pre-uninstall.sh
+	@chmod 755 $(BUILD_SRC_PATH)/pre-uninstall.sh
+	@cp -f $(PACKAGING_CONFIG_PATH)/post-uninstall-cvl.sh $(BUILD_SRC_PATH)/post-uninstall.sh
+	@chmod 755 $(BUILD_SRC_PATH)/post-uninstall.sh
 		
 	@echo -e "\tZipping up everything [log: $(BUILD_PATH)/logs/$(APP_NAME)_tar.log ]..."
 	@cd $(BUILD_SRC_PATH); tar cvzf $(BUILD_PATH)/$(DIST_NAME) * &> $(BUILD_PATH)/logs/$(APP_NAME)_tar.log
