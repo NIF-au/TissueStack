@@ -11,7 +11,6 @@ Group:		Database
 License:	GPLv3+
 URL:		http://pqxx.org/
 
-BuildRequires:	chrpath
 Requires:	postgresql-devel
 
 %description
@@ -25,15 +24,13 @@ The PQXX postgres C++ connector, Version 4.0.1
 make install
 
 %install
-mkdir -p %{buildroot}%{_prefix}
-cp -r  %{_builddir}/%{name}-%{version}/%{name}/%{version}.0/* %{buildroot}%{_prefix}
 # stupid rpath stripping
-for file in %{buildroot}%{_prefix}/bin/*; do if [ `file $file | grep -i elf | wc -c` -ne 0 ]; then chrpath --delete $file; fi; done;
+#for file in %{buildroot}%{_prefix}/bin/*; do if [ `file $file | grep -i elf | wc -c` -ne 0 ]; then chrpath --delete $file; fi; done;
 
 %files
-%{_prefix}/bin/*
-%{_prefix}/lib/*
-%{_prefix}/include/*
+/usr/local/pqxx/bin/*
+/usr/local/pqxx/lib/*
+/usr/local/pqxx/include/*
 
 %post -p /sbin/ldconfig
 %postun -p /sbin/ldconfig
