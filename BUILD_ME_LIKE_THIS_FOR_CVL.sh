@@ -26,13 +26,15 @@ echo -e "\n\n*******************************************************************
 echo -e "!!! THIS BUILD OF TISSUE STACK BUILDS FOR THE PARTICULAR NEEDS OF CVL e.g MODULES AND README.TXT !!!"
 echo -e "*********************************************************************************************************\n\n"
 
-source packaging/conf/tissuestack_modules.sh
+source packaging/tissuestack_modules.sh
 
+cd src/c++
 echo -n "Cleaning..."
 make -f Makefile.cvl clean > /dev/null
 echo -e "Finished Cleaning.\n"
 
 make -f Makefile.cvl dist
+cd ../..
 if [ $? -ne 0 ]; then
 exit -1
 fi

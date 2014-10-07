@@ -9,13 +9,18 @@ SRCS_SERVICES	=	$(wildcard services/*.cpp)
 SRCS_UTILS		=	$(wildcard utils/*.cpp)
 SRCS			=	$(wildcard *.cpp)
 
-INCLUDE			=	-Iinclude -I/usr/include/nifti \
+INCLUDE			=	-Iinclude \
 					-Icommon/include -Iexecution/include \
 					-Idatabase/include -Iservices/include \
 					-Inetworking/include -Iimaging/include \
-					-Iutils/include
+					-Iutils/include \
+					-I/usr/local/graphicsmagick/1.3.18/include/GraphicsMagick \
+					-I/usr/local/minc/2.1.0/include \
+					-I/usr/local/nifticlib/2.0.0/include
 
-LIB_PATH		=
+LIB_PATH		=	-L/usr/local/graphicsmagick/1.3.18/lib \
+					-L/usr/local/minc/2.1.0/lib \
+					-L/usr/local/nifticlib/2.0.0/lib
 
 LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid \
 					-lminc2 -lniftiio -lm -lznz
@@ -62,7 +67,7 @@ all:	clean prepare compile install compile-tools install-tools
 
 %.o: %.cpp
 	@echo -e "\tCompiling \"$(NAME)\" => [$(@)]"
-	@$(CC) -DAPPLICATION_PATH='"$(DATA_PATH)"' -c $(LIBS) $(FLAGS) $(INCLUDE) `GraphicsMagick-config --cppflags --libs --ldflags` -o $@ -fPIC -pie $<
+	@$(CC) -DAPPLICATION_PATH='"$(DATA_PATH)"' -c $(LIBS) $(FLAGS) $(INCLUDE) `GraphicsMagick-config --cppflags --libs` -o $@ -fPIC -pie $<
 	
 prepare:
 	@if [ ! -f /etc/profile.d/modules.sh ]; then echo "ERROR: Modules package is not installed !!!!!"; exit -1; fi;
@@ -83,17 +88,24 @@ compile:	$(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_DATABASE) $(OBJS_IMAGING) \
 	@echo -e "\tCompiling \"$(NAME)\" => $(EXE_NAME)"
 	@$(CC) -DAPPLICATION_PATH='"$(DATA_PATH)"' $(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_EXECUTION) $(OBJS_DATABASE) \
 							$(OBJS_SERVICES) $(OBJS_IMAGING) $(OBJS_UTILS) $(OBJS) \
-							`GraphicsMagick-config --cppflags --libs --ldflags` -o $(EXE_NAME) \
-							$(LIBS) $(FLAGS) $(INCLUDE)
+							$(LIB_PATH) $(LIBS) $(FLAGS) $(INCLUDE) \
+							`GraphicsMagick-config --cppflags --libs` -o $(EXE_NAME)
 
 compile-tools:
-	@make -f Makefile --no-print-directory compile-tools
+	@make -f Makefile.cvl --no-print-directory -C tools compile-tools
 
 install-tools:
-	@make -f Makefile --no-print-directory install-tools
+	@make -f Makefile.cvl --no-print-directory -C tools install-tools
 	
 install: compile
-	@make -f Makefile --no-print-directory install > /dev/null
+	@echo -e "\n\tInstalling $(NAME) (requires super user priviledges):"
+	@echo -e "\t-----------------------------------------------\n"
+	@echo -e "\tInstalling '$(EXE_NAME)' executable into: $(BINS_PATH)."
+	@sudo rm -rf $(BINS_PATH)
+	@sudo mkdir -p $(BINS_PATH)
+	@if [ ! -f $(EXE_NAME) ]; then echo "\nExecutable '$(EXE_NAME)' does not exist!"; fi;
+	@sudo cp $(EXE_NAME) $(BINS_PATH)/$(EXE_NAME)
+	@echo -e "\n\tFinished installation of $(NAME).\n"  
         
 clean:
 	@make -f Makefile --no-print-directory clean > /dev/null
