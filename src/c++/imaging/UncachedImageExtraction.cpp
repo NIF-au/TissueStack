@@ -58,7 +58,7 @@ inline unsigned char * tissuestack::imaging::UncachedImageExtraction::readRawSli
 	return data.release();
 }
 
-Image * tissuestack::imaging::UncachedImageExtraction::extractImageOnly(
+const unsigned char * tissuestack::imaging::UncachedImageExtraction::extractImageOnly(
 		const tissuestack::imaging::TissueStackRawData * image,
 		const tissuestack::networking::TissueStackImageRequest * request) const
 {
@@ -73,11 +73,7 @@ Image * tissuestack::imaging::UncachedImageExtraction::extractImageOnly(
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackObsoleteRequestException,
 			"Old Image Request!");
 
-	return
-		this->createImageFromDataRead(
-			image,
-			actualDimension,
-			data.get());
+	return data.release();
 }
 
 Image * tissuestack::imaging::UncachedImageExtraction::extractImageForPreTiling(
@@ -92,7 +88,7 @@ Image * tissuestack::imaging::UncachedImageExtraction::extractImageForPreTiling(
 				sliceNumber));
 
 	return
-		this->createImageFromDataRead(
+		this->createImageFromDataRead0(
 			image,
 			actualDimension,
 			data.get());
@@ -260,10 +256,7 @@ const std::array<unsigned long long int, 3> tissuestack::imaging::UncachedImageE
 	}
 
 	Image * img =
-		this->extractImageOnly(image, request);
-	if (img == NULL)
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-				"Could not create Image");
+		this->extractImage(image, request);
 
 	PixelPacket pixels =
 		GetOnePixel(
@@ -284,40 +277,43 @@ const std::array<unsigned long long int, 3> tissuestack::imaging::UncachedImageE
 	return pixel_value;
 }
 
-const Image * tissuestack::imaging::UncachedImageExtraction::extractImage(
-	const tissuestack::common::ProcessingStrategy * processing_strategy,
+Image * tissuestack::imaging::UncachedImageExtraction::extractImage(
 	const tissuestack::imaging::TissueStackRawData * image,
 	const tissuestack::networking::TissueStackImageRequest * request) const
 {
-	Image * img =
+	const unsigned char * data =
 		this->extractImageOnly(
 			image,
 			request);
+	if (data == nullptr)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Could not extract image data");
+
+	// determine some parameters for data reading
+	const tissuestack::imaging::TissueStackDataDimension * actualDimension =
+			image->getDimensionByLongName(request->getDimensionName());
+
+	Image * img =
+		this->createImageFromDataRead0(
+		image,
+		actualDimension,
+		data);
 	if (img == NULL)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Could not create Image");
 
-	// timeout/shutdown check
-	if (request->hasExpired() || processing_strategy->isStopFlagRaised())
-	{
-		DestroyImage(img);
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackObsoleteRequestException,
-			"Old Image Request!");
-	}
-
-	img =
-		this->applyPostExtractionTasks(
-			img,
-			image,
-			request);
-	if (img == NULL)
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-			"Could not apply post extraction tasks to image");
-
 	return img;
 }
 
-inline Image * tissuestack::imaging::UncachedImageExtraction::createImageFromDataRead(
+Image * tissuestack::imaging::UncachedImageExtraction::createImageFromDataRead(
+		const tissuestack::imaging::TissueStackRawData * image,
+		const tissuestack::imaging::TissueStackDataDimension * actualDimension,
+		const unsigned char * data) const
+{
+	return this->createImageFromDataRead0(image, actualDimension, data);
+}
+
+inline Image * tissuestack::imaging::UncachedImageExtraction::createImageFromDataRead0(
 		const tissuestack::imaging::TissueStackRawData * image,
 		const tissuestack::imaging::TissueStackDataDimension * actualDimension,
 		const unsigned char * data) const
@@ -628,7 +624,11 @@ void inline tissuestack::imaging::UncachedImageExtraction::changeContrast(
 	}
 }
 
-inline unsigned long long tissuestack::imaging::UncachedImageExtraction::mapUnsignedValue(const unsigned char fromBitRange, const unsigned char toBitRange, const unsigned long long value) const {
+unsigned long long tissuestack::imaging::UncachedImageExtraction::mapUnsignedValue(const unsigned char fromBitRange, const unsigned char toBitRange, const unsigned long long value) const
+{
+	return this->mapUnsignedValue0(fromBitRange, toBitRange, value);
+}
+inline unsigned long long tissuestack::imaging::UncachedImageExtraction::mapUnsignedValue0(const unsigned char fromBitRange, const unsigned char toBitRange, const unsigned long long value) const {
 	// cap at 64 bits
 	if (fromBitRange > 64 || toBitRange > 64) return 0;
 

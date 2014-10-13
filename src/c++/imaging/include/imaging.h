@@ -432,8 +432,7 @@ namespace tissuestack
 					const tissuestack::imaging::TissueStackRawData * image,
 					const tissuestack::networking::TissueStackQueryRequest * request) const;
 
-				const Image * extractImage(
-					const tissuestack::common::ProcessingStrategy * processing_strategy,
+				Image * extractImage(
 					const TissueStackRawData * image,
 					const tissuestack::networking::TissueStackImageRequest * request) const;
 
@@ -455,7 +454,7 @@ namespace tissuestack
 					unsigned long int & height,
 					const float scaleFactor) const;
 
-				Image * extractImageOnly(
+				const unsigned char * extractImageOnly(
 					const TissueStackRawData * image,
 					const tissuestack::networking::TissueStackImageRequest * request) const;
 
@@ -469,6 +468,16 @@ namespace tissuestack
 					const unsigned int width,
 					const unsigned int height,
 					const float quality_factor) const;
+
+				Image * createImageFromDataRead(
+					const tissuestack::imaging::TissueStackRawData * image,
+					const tissuestack::imaging::TissueStackDataDimension * actualDimension,
+					const unsigned char * data) const;
+
+				unsigned long long mapUnsignedValue(
+					const unsigned char fromBitRange,
+					const unsigned char toBitRange,
+					const unsigned long long value) const;
 			private:
 				inline unsigned char * readRawSlice(
 					const tissuestack::imaging::TissueStackRawData * image,
@@ -514,12 +523,12 @@ namespace tissuestack
 					Image * img,
 					const tissuestack::networking::TissueStackImageRequest * request) const;
 
-				inline Image * createImageFromDataRead(
+				inline Image * createImageFromDataRead0(
 					const tissuestack::imaging::TissueStackRawData * image,
 					const tissuestack::imaging::TissueStackDataDimension * actualDimension,
 					const unsigned char * data) const;
 
-				inline unsigned long long mapUnsignedValue(
+				inline unsigned long long mapUnsignedValue0(
 					const unsigned char fromBitRange,
 					const unsigned char toBitRange,
 					const unsigned long long value) const;
@@ -538,6 +547,20 @@ namespace tissuestack
 					const tissuestack::common::ProcessingStrategy * processing_strategy,
 					const TissueStackRawData * image,
 					const tissuestack::networking::TissueStackImageRequest * request) const;
+
+				Image * applyPostExtractionTasks(
+						Image * img,
+						const tissuestack::imaging::TissueStackRawData * image,
+						const tissuestack::networking::TissueStackImageRequest * request) const;
+
+				const unsigned char * findCacheHit(
+					const TissueStackRawData * image,
+					const tissuestack::networking::TissueStackImageRequest * request) const;
+
+				const bool addToCache(
+					const unsigned char * data,
+					const TissueStackRawData * image,
+					const tissuestack::networking::TissueStackImageRequest * request);
 
 				const std::array<unsigned long long int, 3> performQuery(
 					const tissuestack::imaging::TissueStackRawData * image,
@@ -715,6 +738,16 @@ namespace tissuestack
 						THROW_TS_EXCEPTION(tissuestack::common::TissueStackObsoleteRequestException,
 							"Old Image Request!");
 					}
+
+					// apply post processing
+					img =
+						this->_caching_strategy->applyPostExtractionTasks(
+						img,
+						static_cast<const tissuestack::imaging::TissueStackRawData *>(imageData),
+						request);
+					if (img == NULL)
+						THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+							"Could not apply post extraction tasks to image");
 
 					// this is the part were we start to serialize the output of our finished image work
 					std::string formatLowerCase =  request->getOutputImageFormat();
