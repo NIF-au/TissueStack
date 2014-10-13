@@ -10,7 +10,7 @@ ModuleFileDescription="tissuestack"
 #
 # Package release number.
 #
-PACKAGE_RELEASE="4.0.6"
+PACKAGE_RELEASE="4.0.7"
 PACKAGE_VERSION="1.5"
 
 #
@@ -22,7 +22,7 @@ SOURCE_BUILD_FLAG="ON"
 # Set RPM package dependency requires, using following string format and 
 # delimited by ",". <package1 >= version, package2 >= version, .....>
 #
-RPM_PACKAGE_REQUIRES="postgresql-server >= 8.4, httpd >= 2.1"
+RPM_PACKAGE_REQUIRES="postgresql-server >= 8.4, httpd >= 2.1, cvl-gcc4_9_1"
 
 #
 # Source configure file.
