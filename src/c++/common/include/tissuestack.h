@@ -201,6 +201,52 @@ namespace tissuestack
 				virtual ~RequestFilter();
 				virtual const Request * const applyFilter(const Request * const) const = 0;
 		};
+
+		class SliceCacheEntry final
+		{
+			public:
+				SliceCacheEntry & operator=(const SliceCacheEntry&) = delete;
+				SliceCacheEntry(const SliceCacheEntry&) = delete;
+				~SliceCacheEntry();
+				SliceCacheEntry(const unsigned char * cache_data);
+
+				const unsigned char * getCacheData();
+				const unsigned long long int getAccessCount() const;
+				const unsigned long long int getTimeStampForLastAccess() const;
+			private:
+				const unsigned char * _cache_data;
+				unsigned long long int _timestamp_accessed;
+				unsigned long long int _access_count;
+		};
+
+		class TissueStackSliceCache final
+		{
+			public:
+				static const unsigned long long int MINIMUM_FREE_RAM_IN_BYTES;
+				TissueStackSliceCache & operator=(const TissueStackSliceCache&) = delete;
+				TissueStackSliceCache(const TissueStackSliceCache&) = delete;
+				~TissueStackSliceCache();
+
+				static TissueStackSliceCache * instance();
+				static const bool doesInstanceExist();
+				void purgeInstance();
+
+				const bool isBeingCleanedUp() const;
+				void cleanUpCache();
+				const bool addCacheEntry(
+					const std::string dataset, const std::string dimension, const unsigned long long int slice, const unsigned char * data);
+				const unsigned char * findCacheEntry(
+					const std::string dataset, const std::string dimension, const unsigned long long int slice);
+
+			private:
+				TissueStackSliceCache();
+				bool _is_being_cleaned;
+				std::mutex _cache_mutex;
+				std::unordered_map<std::string, // data set indexed by file name
+					std::unordered_map<std::string, // dimension indexed by dimension name
+						std::unordered_map<unsigned long long int, SliceCacheEntry *> > > _cache_entries; // cache entries indexed by slice number
+				static TissueStackSliceCache * _instance;
+		};
 	}
 }
 

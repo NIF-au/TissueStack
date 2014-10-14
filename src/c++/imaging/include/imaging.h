@@ -429,6 +429,7 @@ namespace tissuestack
 				UncachedImageExtraction();
 
 				const std::array<unsigned long long int, 3> performQuery(
+					const tissuestack::common::ProcessingStrategy * processing_strategy,
 					const tissuestack::imaging::TissueStackRawData * image,
 					const tissuestack::networking::TissueStackQueryRequest * request) const;
 
@@ -557,12 +558,15 @@ namespace tissuestack
 					const TissueStackRawData * image,
 					const tissuestack::networking::TissueStackImageRequest * request) const;
 
-				const bool addToCache(
-					const unsigned char * data,
-					const TissueStackRawData * image,
-					const tissuestack::networking::TissueStackImageRequest * request);
+				void addToCache(
+					const tissuestack::common::ProcessingStrategy * processing_strategy,
+					const std::string dataset,
+					const std::string dimension,
+					const unsigned long long int slice,
+					const unsigned char * data) const;
 
 				const std::array<unsigned long long int, 3> performQuery(
+					const tissuestack::common::ProcessingStrategy * processing_strategy,
 					const tissuestack::imaging::TissueStackRawData * image,
 					const tissuestack::networking::TissueStackQueryRequest * request) const;
 
@@ -643,6 +647,7 @@ namespace tissuestack
 				}
 
 				void processQueryRequest(
+						const tissuestack::common::ProcessingStrategy * processing_strategy,
 						const tissuestack::networking::TissueStackQueryRequest * request,
 						const int file_descriptor)
 				{
@@ -664,6 +669,7 @@ namespace tissuestack
 
 							const std::array<unsigned long long int, 3> values =
 								this->_caching_strategy->performQuery(
+										processing_strategy,
 										static_cast<const tissuestack::imaging::TissueStackRawData *>(imageData),
 										static_cast<const tissuestack::networking::TissueStackQueryRequest *>(request));
 

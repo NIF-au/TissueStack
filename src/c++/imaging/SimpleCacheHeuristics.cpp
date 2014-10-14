@@ -38,6 +38,7 @@ tissuestack::imaging::SimpleCacheHeuristics::~SimpleCacheHeuristics()
 
 
 const std::array<unsigned long long int, 3> tissuestack::imaging::SimpleCacheHeuristics::performQuery(
+	const tissuestack::common::ProcessingStrategy * processing_strategy,
 	const tissuestack::imaging::TissueStackRawData * image,
 	const tissuestack::networking::TissueStackQueryRequest * request) const
 {
@@ -49,23 +50,19 @@ const std::array<unsigned long long int, 3> tissuestack::imaging::SimpleCacheHeu
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"Image Query: Coordinate (x/y) exceeds the width/height of the image slice!");
 
+	bool needsToBeAddedToCache = false;
+
 	const unsigned char * cache_data =
 		this->findCacheHit(image, request);
-
-	bool wasAddedToCache = true;
 
 	// TODO: do cache stats (perhaps include it in findCacheHit as increment)
 	if (cache_data == nullptr)
 	{
+		needsToBeAddedToCache = true;
 		cache_data = this->_uncached_extraction->extractImageOnly(image, request);
 		if (cache_data == nullptr)
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 					"Could not extract image data");
-
-		// potentially add to cache store
-		wasAddedToCache =
-			const_cast<tissuestack::imaging::SimpleCacheHeuristics *>(this)->addToCache(
-				cache_data, image, request);
 	}
 
 	std::array<unsigned long long int, 3> pixel_value;
@@ -112,8 +109,13 @@ const std::array<unsigned long long int, 3> tissuestack::imaging::SimpleCacheHeu
 		DestroyImage(img);
 	}
 
-	// delete if not cached
-	if (!wasAddedToCache) delete [] cache_data;
+	if (needsToBeAddedToCache)
+		this->addToCache(
+			processing_strategy,
+			image->getFileName(),
+			request->getDimensionName(),
+			request->getSliceNumber(),
+			cache_data);
 
 	return pixel_value;
 }
@@ -131,23 +133,19 @@ const Image *  tissuestack::imaging::SimpleCacheHeuristics::extractImage(
 	const TissueStackRawData * image,
 	const tissuestack::networking::TissueStackImageRequest * request) const
 {
+	bool needsToBeAddedToCache = false;
+
 	const unsigned char * cache_data =
 		this->findCacheHit(image, request);
-
-	bool wasAddedToCache = true;
 
 	// TODO: do cache stats (perhaps include it in findCacheHit as increment)
 	if (cache_data == nullptr)
 	{
+		needsToBeAddedToCache = true;
 		cache_data = this->_uncached_extraction->extractImageOnly(image, request);
 		if (cache_data == nullptr)
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 					"Could not extract image data");
-
-		// potentially add to cache store
-		wasAddedToCache =
-			const_cast<tissuestack::imaging::SimpleCacheHeuristics *>(this)->addToCache(
-				cache_data, image, request);
 	}
 
 	const tissuestack::imaging::TissueStackDataDimension * actualDimension =
@@ -156,27 +154,48 @@ const Image *  tissuestack::imaging::SimpleCacheHeuristics::extractImage(
 	Image * img =
 		this->_uncached_extraction->createImageFromDataRead(image, actualDimension, cache_data);
 
-	// delete if not cached
-	if (!wasAddedToCache) delete [] cache_data;
+	if (needsToBeAddedToCache)
+		this->addToCache(
+			processing_strategy,
+			image->getFileName(),
+			request->getDimensionName(),
+			request->getSliceNumber(),
+			cache_data);
 
 	return img;
+}
+
+void tissuestack::imaging::SimpleCacheHeuristics::addToCache(
+	const tissuestack::common::ProcessingStrategy * processing_strategy,
+	const std::string dataset,
+	const std::string dimension,
+	const unsigned long long int slice,
+	const unsigned char * data) const
+{
+	// we do this asynchronously ...
+	const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * f = new
+			std::function<void (const tissuestack::common::ProcessingStrategy * _this)>(
+		  [dataset, dimension, slice, data] (const tissuestack::common::ProcessingStrategy * _this)
+		  {
+			try
+			{
+				if (!tissuestack::common::TissueStackSliceCache::instance()->addCacheEntry(
+							dataset, dimension, slice, data))
+					delete [] data;
+
+			}  catch (std::exception& bad)
+			{
+				tissuestack::logging::TissueStackLogger::instance()->error("Could not add data to cache: %s\n", bad.what());
+			}
+		  });
+	const_cast<tissuestack::common::ProcessingStrategy *>(processing_strategy)->process(f);
 }
 
 const unsigned char * tissuestack::imaging::SimpleCacheHeuristics::findCacheHit(
 	const TissueStackRawData * image,
 	const tissuestack::networking::TissueStackImageRequest * request) const
 {
-	//TODO: has to be mutexed
-	// TODO: implement
-	return nullptr;
-}
-
-const bool tissuestack::imaging::SimpleCacheHeuristics::addToCache(
-	const unsigned char * data,
-	const TissueStackRawData * image,
-	const tissuestack::networking::TissueStackImageRequest * request)
-{
-	//TODO: has to be mutexed
-	// TODO: implement
-	return false;
+	return
+		tissuestack::common::TissueStackSliceCache::instance()->findCacheEntry(
+			image->getFileName(), request->getDimensionName(), request->getSliceNumber());
 }

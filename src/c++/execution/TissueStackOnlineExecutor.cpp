@@ -103,6 +103,7 @@ void tissuestack::execution::TissueStackOnlineExecutor::execute(
 					client_descriptor);
 		else if (req.get()->getType() == tissuestack::common::Request::Type::TS_QUERY) /* QUERY REQUEST */
 			this->_imageExtractor->processQueryRequest(
+					processing_strategy,
 					static_cast<const tissuestack::networking::TissueStackQueryRequest *>(req.get()),
 					client_descriptor);
 		else if (req.get()->getType() == tissuestack::common::Request::Type::TS_SERVICES) /* SERVICES REQUEST */

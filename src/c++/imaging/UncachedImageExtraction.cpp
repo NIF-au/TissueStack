@@ -197,8 +197,9 @@ Image * tissuestack::imaging::UncachedImageExtraction::applyPostExtractionTasks(
 }
 
 const std::array<unsigned long long int, 3> tissuestack::imaging::UncachedImageExtraction::performQuery(
-						const tissuestack::imaging::TissueStackRawData * image,
-						const tissuestack::networking::TissueStackQueryRequest * request) const
+	const tissuestack::common::ProcessingStrategy * processing_strategy,
+	const tissuestack::imaging::TissueStackRawData * image,
+	const tissuestack::networking::TissueStackQueryRequest * request) const
 {
 	const tissuestack::imaging::TissueStackDataDimension * actualDimension =
 			image->getDimensionByLongName(request->getDimensionName());

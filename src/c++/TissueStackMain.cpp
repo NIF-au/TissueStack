@@ -55,6 +55,9 @@ void cleanUp()
 		if (tissuestack::services::TissueStackTaskQueue::doesInstanceExist())
 			tissuestack::services::TissueStackTaskQueue::instance()->purgeInstance();
 
+		if (tissuestack::common::TissueStackSliceCache::doesInstanceExist())
+			tissuestack::common::TissueStackSliceCache::instance()->purgeInstance();
+
 		if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
 			tissuestack::logging::TissueStackLogger::instance()->purgeInstance();
 
@@ -245,6 +248,16 @@ int main(int argc, char * args[])
 	} catch (std::exception & bad)
 	{
 		Logger->error("Could not instantiate TissueStackTaskQueue:\n%s\n", bad.what());
+		cleanUp();
+		exit(-1);
+	}
+
+	try
+	{
+		tissuestack::common::TissueStackSliceCache::instance();
+	} catch (std::exception & bad)
+	{
+		Logger->error("Could not instantiate TissueStackSliceCache:\n%s\n", bad.what());
 		cleanUp();
 		exit(-1);
 	}
