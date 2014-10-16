@@ -89,12 +89,12 @@ namespace tissuestack
 
     			if (descriptor <= 0) return;
 
+    			// remove from descriptor list
+				FD_CLR(descriptor, &this->_master_descriptors);
+
 				// close connection (if demanded)
     			if (close_connection)
     				close(descriptor);
-
-    			// remove from descriptor list
-				FD_CLR(descriptor, &this->_master_descriptors);
     		};
 
     		void dispatchRequest(int request_descriptor, const std::string request_data)

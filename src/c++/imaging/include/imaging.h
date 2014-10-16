@@ -415,6 +415,7 @@ namespace tissuestack
 		    	void addDataSet(const TissueStackDataSet * dataSet);
 		    	void replaceDataSet(const tissuestack::imaging::TissueStackDataSet * dataSet);
 		    	void dumpDataSetStoreIntoDebugLog() const;
+		    	const std::vector<const TissueStackRawData *> getDataSetList() const;
 			private:
 		    	TissueStackDataSetStore();
 		    	std::unordered_map<std::string, const TissueStackDataSet *> _data_sets;
@@ -535,6 +536,76 @@ namespace tissuestack
 					const unsigned long long value) const;
 		};
 
+		class SliceCacheEntry final
+		{
+			public:
+				SliceCacheEntry & operator=(const SliceCacheEntry&) = delete;
+				SliceCacheEntry(const SliceCacheEntry&) = delete;
+				~SliceCacheEntry();
+				SliceCacheEntry(const unsigned char * cache_data);
+
+				const unsigned char * getCacheData();
+				const unsigned long long int getAccessCount() const;
+				const unsigned long long int getTimeStampForLastAccess() const;
+			private:
+				const unsigned char * _cache_data;
+				unsigned long long int _timestamp_accessed;
+				unsigned long long int _access_count;
+		};
+
+		class DataSetSliceCache final
+		{
+			public:
+				DataSetSliceCache & operator=(const SliceCacheEntry&) = delete;
+				DataSetSliceCache(const SliceCacheEntry&) = delete;
+				~DataSetSliceCache();
+				DataSetSliceCache(const TissueStackRawData * image);
+
+				SliceCacheEntry * getSlice(const unsigned long int slice) const;
+				const bool setSlice(const unsigned long int slice, SliceCacheEntry *  cache_data);
+				const bool isSliceCached(const unsigned long int slice) const;
+				void eraseSlice(const unsigned long int slice);
+				const unsigned long int getNumberOfCachedSlices() const;
+			private:
+				unsigned long int _numberOfCachedSlices = 0;
+				SliceCacheEntry ** _cache = nullptr;
+		};
+
+		class TissueStackSliceCache final
+		{
+			public:
+				static const unsigned long long int MINIMUM_FREE_RAM_IN_BYTES;
+				TissueStackSliceCache & operator=(const TissueStackSliceCache&) = delete;
+				TissueStackSliceCache(const TissueStackSliceCache&) = delete;
+				~TissueStackSliceCache();
+
+				static TissueStackSliceCache * instance();
+				static const bool doesInstanceExist();
+				void purgeInstance();
+
+				const bool isBeingCleanedUp() const;
+				void cleanUpCache();
+				const bool addCacheEntry(
+					const std::string dataset, const unsigned long int slice, const unsigned char * data);
+				const unsigned char * findCacheEntry(
+					const std::string dataset, const unsigned long int slice);
+
+			private:
+				static const unsigned long long int SECOND_IN_MILLIS;
+				static const unsigned long long int MINUTE_IN_MILLIS;
+				static const unsigned long long int HOUR_IN_MILLIS;
+				static const unsigned long long int DAY_IN_MILLIS;
+				static const unsigned long long int WEEK_IN_MILLIS;
+				static const unsigned long long int MONTH_IN_MILLIS;
+
+				TissueStackSliceCache();
+				bool _is_being_cleaned;
+				bool _is_empty;
+				std::mutex _cache_mutex;
+				std::unordered_map<std::string, DataSetSliceCache * > _cache;
+				static TissueStackSliceCache * _instance;
+		};
+
 		class SimpleCacheHeuristics final
 		{
 			public:
@@ -560,9 +631,8 @@ namespace tissuestack
 
 				void addToCache(
 					const tissuestack::common::ProcessingStrategy * processing_strategy,
-					const std::string dataset,
-					const std::string dimension,
-					const unsigned long long int slice,
+					const TissueStackRawData * image,
+					const tissuestack::networking::TissueStackImageRequest * request,
 					const unsigned char * data) const;
 
 				const std::array<unsigned long long int, 3> performQuery(
@@ -755,6 +825,14 @@ namespace tissuestack
 						THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 							"Could not apply post extraction tasks to image");
 
+					// timeout/shutdown check
+					if (request->hasExpired() || processing_strategy->isStopFlagRaised())
+					{
+						DestroyImage(img);
+						THROW_TS_EXCEPTION(tissuestack::common::TissueStackObsoleteRequestException,
+							"Old Image Request!");
+					}
+
 					// this is the part were we start to serialize the output of our finished image work
 					std::string formatLowerCase =  request->getOutputImageFormat();
 					std::transform(formatLowerCase.begin(), formatLowerCase.end(), formatLowerCase.begin(), tolower);
@@ -778,21 +856,36 @@ namespace tissuestack
 								"Could not create ImageInfo!");
 
 					//NOTE: consider gzipped response in the future
-					FILE * handle = fdopen(file_descriptor, "w");
-					imgInfo->file = handle;
+					//FILE * handle = fdopen(file_descriptor, "w");
+					//imgInfo->file = handle;
 					write(file_descriptor, httpResponseHeader.c_str(), httpResponseHeader.length());
+
 					//if (WriteImagesFile(imgInfo, img, handle, &exception) ==0)
-					if (WriteImage(imgInfo, img) == MagickFail)
+					/*if (WriteImage(imgInfo, img) == MagickFail)
 					{
 						CatchException(&img->exception);
 						tissuestack::logging::TissueStackLogger::instance()->error(
 								"Failed to write out image: %s\n", img->exception.reason);
-					}
+					}*/
 
-					// tidy up
+					size_t length = 0;
+					void * memImg = ImageToBlob(imgInfo, img, &length, &img->exception);
 					if (img) DestroyImage(img);
 					if (imgInfo) DestroyImageInfo(imgInfo);
-					if (handle) fclose(handle);
+
+					if (length==0)
+					{
+						CatchException(&img->exception);
+						THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+							"Failed to write image to memory!");
+					}
+					write(file_descriptor,
+						memImg,
+						length);
+					if (memImg) free(memImg);
+					//fflush(handle);
+					// tidy up
+					//if (handle) fclose(handle);
 				};
 
 			private:

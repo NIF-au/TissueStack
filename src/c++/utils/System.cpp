@@ -35,7 +35,7 @@ const unsigned long long int tissuestack::utils::System::getTotalRam()
       static_cast<unsigned long long int>(memInfo.totalram) * memInfo.mem_unit);
 }
 
-const unsigned long long int tissuestack::utils::System::getUsedRam()
+const unsigned long long int tissuestack::utils::System::getFreeRam()
 {
   struct sysinfo memInfo;
   sysinfo (&memInfo);
@@ -43,10 +43,10 @@ const unsigned long long int tissuestack::utils::System::getUsedRam()
       static_cast<unsigned long long int>(memInfo.freeram) * memInfo.mem_unit);
 }
 
-const unsigned long long int tissuestack::utils::System::getFreeRam()
+const unsigned long long int tissuestack::utils::System::getUsedRam()
 {
   return static_cast<const unsigned long long int>(
-     tissuestack::utils::System::getTotalRam() - tissuestack::utils::System::getUsedRam()
+     tissuestack::utils::System::getTotalRam() - tissuestack::utils::System::getFreeRam()
   );
 }
 

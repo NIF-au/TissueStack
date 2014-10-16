@@ -55,8 +55,8 @@ void cleanUp()
 		if (tissuestack::services::TissueStackTaskQueue::doesInstanceExist())
 			tissuestack::services::TissueStackTaskQueue::instance()->purgeInstance();
 
-		if (tissuestack::common::TissueStackSliceCache::doesInstanceExist())
-			tissuestack::common::TissueStackSliceCache::instance()->purgeInstance();
+		if (tissuestack::imaging::TissueStackSliceCache::doesInstanceExist())
+			tissuestack::imaging::TissueStackSliceCache::instance()->purgeInstance();
 
 		if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
 			tissuestack::logging::TissueStackLogger::instance()->purgeInstance();
@@ -78,6 +78,7 @@ void handle_signals(int sig) {
 		case SIGQUIT:
 		case SIGTERM:
 		case SIGINT:
+			std::cout << "Received ShutDown Signal. Please be patient while we clean up..." << std::endl;
 			if (TissueStackServer) TissueStackServer->stop();
 			cleanUp();
 			break;
@@ -248,16 +249,6 @@ int main(int argc, char * args[])
 	} catch (std::exception & bad)
 	{
 		Logger->error("Could not instantiate TissueStackTaskQueue:\n%s\n", bad.what());
-		cleanUp();
-		exit(-1);
-	}
-
-	try
-	{
-		tissuestack::common::TissueStackSliceCache::instance();
-	} catch (std::exception & bad)
-	{
-		Logger->error("Could not instantiate TissueStackSliceCache:\n%s\n", bad.what());
 		cleanUp();
 		exit(-1);
 	}

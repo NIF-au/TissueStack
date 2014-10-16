@@ -206,7 +206,17 @@ void tissuestack::imaging::TissueStackDataSetStore::dumpDataSetStoreIntoDebugLog
 {
 	for (auto entry : this->_data_sets)
 		entry.second->dumpDataSetContentIntoDebugLog();
+}
 
+const std::vector<const tissuestack::imaging::TissueStackRawData *> tissuestack::imaging::TissueStackDataSetStore::getDataSetList() const
+{
+	std::vector<const tissuestack::imaging::TissueStackRawData *> list;
+
+	for (auto entry : this->_data_sets)
+		if (entry.second->getImageData()->isRaw())
+			list.push_back(static_cast<const tissuestack::imaging::TissueStackRawData *>(entry.second->getImageData()));
+
+	return list;
 }
 
 tissuestack::imaging::TissueStackDataSetStore * tissuestack::imaging::TissueStackDataSetStore::_instance = nullptr;

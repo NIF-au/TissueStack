@@ -94,6 +94,22 @@ namespace tissuestack
 				std::mutex _conditional_mutex;
 		};
 
+		class TissueStackSliceCacheCleaner: public ThreadPool
+		{
+			public:
+				TissueStackSliceCacheCleaner & operator=(const TissueStackSliceCacheCleaner&) = delete;
+				TissueStackSliceCacheCleaner(const TissueStackSliceCacheCleaner&) = delete;
+				explicit TissueStackSliceCacheCleaner();
+				void init();
+				void process(const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality);
+				void addTask(const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality);
+				const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * removeTask();
+				bool hasNoTasksQueued();
+			private:
+				std::mutex _conditional_mutex;
+		};
+
+
 		class SimpleSequentialExecution: public tissuestack::common::ProcessingStrategy
 		{
 			public:
