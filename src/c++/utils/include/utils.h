@@ -47,6 +47,7 @@
 #include <stdexcept>
 #include <uuid/uuid.h>
 
+#include <zlib.h>
 
 namespace tissuestack
 {
@@ -89,10 +90,14 @@ namespace tissuestack
     	static const std::string findUnorderedMapEntryWithUpperCaseStringKey(
     			const std::unordered_map<std::string, std::string> & map, std::string key);
     	static const std::string composeHttpResponse(
-    			std::string status, std::string content_type, std::string content);
+    			const std::string status,
+    			const std::string content_type,
+    			const std::string content,
+    			const bool gzipped = false);
     	static const std::string sanitizeSqlQuote(const std::string & quoted_value);
     	static const std::string eraseCharacterFromString(const std::string & someString, const char unwantedCharacter);
     	static const std::string eliminateWhitespaceAndUnwantedEscapeCharacters(const std::string & someString);
+    	static const bool streamGzippedDataToDescriptor(unsigned char * data, const unsigned int length, const int descriptor);
       private:
     	Misc();
     	Misc & operator=(const Misc&) = delete;

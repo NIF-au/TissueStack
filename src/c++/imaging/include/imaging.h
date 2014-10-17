@@ -844,7 +844,8 @@ namespace tissuestack
 							 tissuestack::utils::Misc::composeHttpResponse(
 									 "200 OK",
 									 image_format + formatLowerCase,
-									 ""
+									 "",
+									 true
 					);
 
 					ExceptionInfo exception;
@@ -855,21 +856,23 @@ namespace tissuestack
 						THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 								"Could not create ImageInfo!");
 
-					//NOTE: consider gzipped response in the future
-					//FILE * handle = fdopen(file_descriptor, "w");
-					//imgInfo->file = handle;
 					write(file_descriptor, httpResponseHeader.c_str(), httpResponseHeader.length());
 
-					//if (WriteImagesFile(imgInfo, img, handle, &exception) ==0)
-					/*if (WriteImage(imgInfo, img) == MagickFail)
-					{
-						CatchException(&img->exception);
-						tissuestack::logging::TissueStackLogger::instance()->error(
+					/*
+						FILE * handle = fdopen(file_descriptor, "w");
+						imgInfo->file = handle;
+
+						if (WriteImage(imgInfo, img) == MagickFail)
+						{
+							CatchException(&img->exception);
+							tissuestack::logging::TissueStackLogger::instance()->error(
 								"Failed to write out image: %s\n", img->exception.reason);
-					}*/
+						}
+					*/
 
 					size_t length = 0;
-					void * memImg = ImageToBlob(imgInfo, img, &length, &img->exception);
+					unsigned char * memImg =
+						static_cast<unsigned char *>(ImageToBlob(imgInfo, img, &length, &img->exception));
 					if (img) DestroyImage(img);
 					if (imgInfo) DestroyImageInfo(imgInfo);
 
@@ -879,13 +882,17 @@ namespace tissuestack
 						THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 							"Failed to write image to memory!");
 					}
-					write(file_descriptor,
-						memImg,
-						length);
+
+					bool failedToGZip = !tissuestack::utils::Misc::streamGzippedDataToDescriptor(
+						memImg, length, file_descriptor);
 					if (memImg) free(memImg);
-					//fflush(handle);
-					// tidy up
-					//if (handle) fclose(handle);
+					if (failedToGZip)
+						THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+							"Failed to gzip image response!");
+					/*
+						fflush(handle);
+						if (handle) fclose(handle);
+					*/
 				};
 
 			private:

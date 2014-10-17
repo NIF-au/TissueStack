@@ -167,7 +167,7 @@ const std::string tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseSt
 }
 
 const std::string tissuestack::utils::Misc::composeHttpResponse(
-		std::string status, std::string content_type, std::string content)
+		const std::string status, const std::string content_type, const std::string content, const bool gzipped)
 {
 	const std::string CR_LF = "\r\n";
 	std::ostringstream response;
@@ -178,6 +178,7 @@ const std::string tissuestack::utils::Misc::composeHttpResponse(
 	response << "Server: Tissue Stack Image Server" <<  CR_LF; // Server header
 	response << "Accept-Ranges: bytes" << CR_LF; // Accept-Ranges header
 	response << "Content-Type: " << content_type << CR_LF; // Content-Type header
+	if (gzipped) response << "Content-Encoding: gzip" << CR_LF; // if gzipped
 	response << "Last-Modified: Thu, 20 May 2004 21:12:11 GMT" << CR_LF; // last modified header in the past
 	response << "Access-Control-Allow-Origin: *" << CR_LF; // allow cross origin requests
 
@@ -188,4 +189,54 @@ const std::string tissuestack::utils::Misc::composeHttpResponse(
 	} else response <<  CR_LF;
 
 	return response.str();
+}
+
+const bool tissuestack::utils::Misc::streamGzippedDataToDescriptor(unsigned char * data, const unsigned int length, const int descriptor)
+{
+	const unsigned int CHUNK = 16384;
+	unsigned char out[CHUNK];
+	z_stream strm;
+	int ret = 0;
+
+	// initialize
+	strm.zalloc = Z_NULL;
+	strm.zfree  = Z_NULL;
+	strm.opaque = Z_NULL;
+	ret = deflateInit2(
+		&strm, Z_DEFAULT_COMPRESSION, Z_DEFLATED, 15 | 16, 8, Z_DEFAULT_STRATEGY);
+	if (ret < 0)
+		return false;
+
+	strm.next_in = data;
+	strm.avail_in = length;
+	int flush = Z_NO_FLUSH;
+	bool finished = false;
+	do
+	{
+		if (strm.avail_out != 0)
+		{
+			flush = Z_FINISH;
+			finished = true;
+		}
+
+		strm.next_out = out;
+		strm.avail_out = CHUNK;
+
+		ret = deflate(&strm, flush);
+		if (ret < 0)
+			return false;
+
+		 const unsigned int bytesToBeWritten =
+			CHUNK - strm.avail_out;
+
+		 ssize_t bWritten =
+			write(descriptor, out, bytesToBeWritten);
+
+		 if (bWritten != bytesToBeWritten)
+			 return false;
+	} while (strm.avail_out == 0 || !finished);
+
+	deflateEnd (& strm);
+
+	return true;
 }

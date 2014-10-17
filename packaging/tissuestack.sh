@@ -62,6 +62,6 @@ fi
 echo -e "\nNow start everything again ... (Check following output for errors during during Tissue Stack startup!!) \n"
 
 $IMAGE_SERVER_EXE &
-if [ $! -lt 1 ] && [ $? -lt 0 ]; then exit -1;fi
+if [ $! -lt 1 ]; then exit -1;fi
 
 exit 1
