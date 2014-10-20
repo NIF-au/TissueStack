@@ -94,6 +94,7 @@ psql -f /opt/tissuestack/sql/create_tissuestack_config.sql tissuestack &>> /tmp/
 psql -f /opt/tissuestack/sql/update_tissuestack_config.sql tissuestack &>> /tmp/post-install.log
 EOF
 "
+APACHE_PORT=80
 chkconfig httpd on &>> /tmp/post-install.log
 echo "/opt/tissuestack" > /tmp/escaped.string
 sed -i 's/\//\\\//g' /tmp/escaped.string &>> /tmp/post-install.log
@@ -101,11 +102,17 @@ ESCAPED_STRING=`cat /tmp/escaped.string` &>> /tmp/post-install.log
 cp -f /opt/tissuestack/conf/tissuestack.conf /etc/httpd/conf.d/tissuestack.conf &>> /tmp/post-install.log
 sed -i "s/##DOC_ROOT##/$ESCAPED_STRING\/web/g" /etc/httpd/conf.d/tissuestack.conf &>> /tmp/post-install.log
 sed -i 's/##ERROR_LOG##/\/var\/log\/httpd\/tissuestack-error.log/g' /etc/httpd/conf.d/tissuestack.conf &>> /tmp/post-install.log
+if [ $APACHE_PORT -ne 80 ]; then sed -i "s/*:80/*:$APACHE_PORT/g" /etc/httpd/conf.d/tissuestack.conf; fi &>> /tmp/post-install.log
 HTTP_VERSION=`httpd -v | grep "Apache/" | cut -f2 -d "/" | cut -f1 -d " " | cut -f1,2 -d "." | sed 's/\.//g'` &>> /tmp/post-install.log
 if [ $HTTP_VERSION -gt 23 ]; then sed -i 's/#Require all granted/Require all granted/g' /etc/httpd/conf.d/tissuestack.conf; fi &>> /tmp/post-install.log
 mv /etc/httpd/conf.d/welcome.conf /etc/httpd/conf.d/welcome.conf.disabled &>> /tmp/post-install.log
+if [ $APACHE_PORT -ne 80 ]; then sed -i "s/Listen 80/Listen $APACHE_PORT/g" /etc/httpd/conf/httpd.conf; fi &>> /tmp/post-install.log
+sed -i "s/##DOC_ROOT##/$ESCAPED_STRING\/web/g" /etc/httpd/conf.d/tissuestack.conf &>> /tmp/post-install.log
 if [ `iptables -S | grep -e "-A INPUT -i lo -j ACCEPT" | wc -c` -eq 0 ]; then
         iptables -I INPUT 1 -i lo -p all -j ACCEPT &>> /tmp/post-install.log
+fi
+if [ $APACHE_PORT -ne 80 ] && [ `iptables -S | grep -e "-A INPUT -p tcp -m tcp --dport $APACHE_PORT -j DROP" | wc -c` -eq 0 ]; then
+        iptables -A INPUT -p tcp --destination-port $APACHE_PORT -j DROP &>> /tmp/post-install.log
 fi
 if [ `iptables -S | grep -e "-A INPUT -p tcp -m tcp --dport 4242 -j DROP" | wc -c` -eq 0 ]; then
         iptables -A INPUT -p tcp --destination-port 4242 -j DROP &>> /tmp/post-install.log

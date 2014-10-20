@@ -48,6 +48,11 @@ cp -f $CURRENT_DIR/rpm/*.spec $HOME/rpmbuild/SPECS
 #cp -f /tmp/tissuestack_build/tissuestack-$TISSUESTACK_BUILD_VERSION.tar.gz $HOME/rpmbuild/SOURCES
 cd $HOME/rpmbuild/SPECS/
 
+# alter the standard apache port
+if [ $# -ne 0 ]; then
+	sed -i "s/APACHE_PORT=80/APACHE_PORT=$1/g" tissuestack.spec
+fi
+
 echo "Calling RPM build now ..."
 if [ $IS_SUSE -eq 0 ]; then
 	rpmbuild -bb tissuestack.spec
