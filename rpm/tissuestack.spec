@@ -113,9 +113,6 @@ sed -i "s/##DOC_ROOT##/$ESCAPED_STRING\/web/g" /etc/httpd/conf.d/tissuestack.con
 if [ `iptables -S | grep -e "-A INPUT -i lo -j ACCEPT" | wc -c` -eq 0 ]; then
         iptables -I INPUT 1 -i lo -p all -j ACCEPT &>> /tmp/post-install.log
 fi
-if [ $APACHE_PORT -ne 80 ] && [ `iptables -S | grep -e "-A INPUT -p tcp -m tcp --dport $APACHE_PORT -j DROP" | wc -c` -eq 0 ]; then
-        iptables -A INPUT -p tcp --destination-port $APACHE_PORT -j DROP &>> /tmp/post-install.log
-fi
 if [ `iptables -S | grep -e "-A INPUT -p tcp -m tcp --dport 4242 -j DROP" | wc -c` -eq 0 ]; then
         iptables -A INPUT -p tcp --destination-port 4242 -j DROP &>> /tmp/post-install.log
 fi
