@@ -20,7 +20,7 @@ The PQXX postgres C++ connector, Version 4.0.1
 %setup -q
 
 %build
-./configure CXXFLAGS=-lpthread --prefix=%{buildroot}%{_prefix}/local/pqxx
+./configure CXXFLAGS=-lpthread --prefix=%{buildroot}%{_prefix}/local/pqxx --enable-shared
 make
 
 %install
