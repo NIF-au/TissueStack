@@ -25,8 +25,8 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/select.h>
 #include <sys/time.h>
+#include <sys/epoll.h>
 
 #include <unistd.h>
 #include <arpa/inet.h>
@@ -36,6 +36,7 @@ namespace tissuestack
 {
   namespace networking
   {
+  	  static const unsigned short MAX_CONNECTIONS = 1024;
   	  template <typename ProcessorImplementation> class Server;
 
 	  template <typename ProcessorImplementation>
@@ -44,15 +45,13 @@ namespace tissuestack
   	  	  private:
     		const tissuestack::networking::Server<ProcessorImplementation> * _server;
     		tissuestack::execution::TissueStackOnlineExecutor * _executor = nullptr;
-    		std::mutex _select_mutex;
-    		fd_set _master_descriptors;
 
   		public:
     		ServerSocketSelector(const tissuestack::networking::Server<ProcessorImplementation> * server) :
     			_server(server) {
   				if (server == nullptr || server->isStopping() || !server->isRunning())
   					THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException,
-  							"ServerSocket was either handed a null instance of a server object or the server is stopping/not running anyway!");
+  						"ServerSocket was either handed a null instance of a server object or the server is stopping/not running anyway!");
 
   				this->_executor = tissuestack::execution::TissueStackOnlineExecutor::instance();
   			};
@@ -61,40 +60,6 @@ namespace tissuestack
     		{
     			if (this->_executor)
     				delete this->_executor;
-    		};
-
-			void addToFileDescriptorList(int fd)
-			{
-				std::lock_guard<std::mutex> lock(this->_select_mutex);
-
-				if (fd <= 0) return;
-
-				FD_SET(fd, &this->_master_descriptors);
-			}
-
-			bool fileDescriptorHasChanged(int fd)
-			{
-		    	std::lock_guard<std::mutex> lock(this->_select_mutex);
-
-		    	if (fd <= 0) return false;
-
-		    	if (FD_ISSET(fd, &this->_master_descriptors)) return true;
-
-		    	return false;
-			}
-
-    		void removeDescriptorFromList(int descriptor, bool close_connection)
-    		{
-    			std::lock_guard<std::mutex> lock(this->_select_mutex);
-
-    			if (descriptor <= 0) return;
-
-    			// remove from descriptor list
-				FD_CLR(descriptor, &this->_master_descriptors);
-
-				// close connection (if demanded)
-    			if (close_connection)
-    				close(descriptor);
     		};
 
     		void dispatchRequest(int request_descriptor, const std::string request_data)
@@ -106,83 +71,109 @@ namespace tissuestack
     					try
     					{
     						this->_executor->execute(_this, request_data, request_descriptor);
-    						this->removeDescriptorFromList(request_descriptor, true);
+    						close(request_descriptor);
     					}  catch (std::exception& bad)
     					{
     						// close connection and log error
-    						this->removeDescriptorFromList(request_descriptor, true);
+    						close(request_descriptor);
     						tissuestack::logging::TissueStackLogger::instance()->error("Something bad happened: %s\n", bad.what());
     					}
     				  });
     			this->_server->_processor->process(f);
       		};
 
-  			void startSelectLoop()
+  			void startEventLoop()
   			{
-				// clear the descriptors
-				FD_ZERO(&this->_master_descriptors);
-				// maximum file descriptor
-				int max_fd;
+				struct epoll_event  epollEvent;
 
-				// add the server socket to the master set and set it as the maximum descriptor
-				this->addToFileDescriptorList(this->_server->getServerSocket());
-				max_fd = this->_server->getServerSocket();
+				// create the epoll 'controller'
+				int epollController = epoll_create(1);
+				if(epollController == -1)
+  					THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException,
+  						"Failed to start EPOLLing!");
 
-  				// loop until we received stop
-				while (this->_server->isRunning() && !this->_server->isStopping())
+				epollEvent.data.fd = this->_server->getServerSocket(); // our server socket
+				epollEvent.events = EPOLLIN | EPOLLET; // for READS only
+
+				if (epoll_ctl (epollController, EPOLL_CTL_ADD, epollEvent.data.fd, &epollEvent) == -1)
+  					THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException,
+  						"Failed to start EPOLLing!");
+
+				// loop for events until we stop the server
+				while(this->_server->isRunning() && !this->_server->isStopping())
 				{
-  					int ret = select(max_fd + 1, &this->_master_descriptors, NULL, NULL, NULL);
-  					if (ret == -1)
-  					{
-  						if (this->_server->isStopping()) break;
-  						tissuestack::logging::TissueStackLogger::instance()->error("ServerSocket select returned -1\n");
-  					}
+					struct epoll_event clientEvents[tissuestack::networking::MAX_CONNECTIONS];
+					int numEvents =
+						epoll_wait(
+							epollController,
+							clientEvents,
+							tissuestack::networking::MAX_CONNECTIONS,
+							-1);
 
-					// check existing descriptor list
-					for (int i = 0; i <= max_fd; i++)
+					// loop over event client triggered events ...
+					for (int i = 0; i < numEvents; i++)
 					{
-						if (this->fileDescriptorHasChanged(i)) // something happened
+						// something went wrong when epolling ...
+						if ((clientEvents[i].events & EPOLLERR) ||
+								(clientEvents[i].events & EPOLLHUP) ||
+								(!(clientEvents[i].events & EPOLLIN)))
 						{
-							if (i == this->_server->getServerSocket())  // we have a new client connecting
+    						tissuestack::logging::TissueStackLogger::instance()->error("client epoll error!");
+							close(clientEvents[i].data.fd);
+							continue;
+						}
+
+						// first case: we have a new client connecting
+						if ((clientEvents[i].events & EPOLLIN) &&
+								(clientEvents[i].data.fd == this->_server->getServerSocket()))
+						{
+							struct sockaddr_in new_client;
+							unsigned int addrlen = sizeof(new_client);
+
+							// accept new client
+							int new_fd = accept(this->_server->getServerSocket(), (struct sockaddr *) &new_client, &addrlen);
+
+							// check accept status
+							if (new_fd  == -1 ) { // NOK
+								if (!this->_server->isStopping())
+									tissuestack::logging::TissueStackLogger::instance()->error("Failed to accept client connection!\n");
+							} else
 							{
-				  				struct sockaddr_in new_client;
-				  				unsigned int addrlen = sizeof(new_client);
-				  				// accept new client
-								int new_fd = accept(this->_server->getServerSocket(), (struct sockaddr *) &new_client, &addrlen);
-
-								// check accept status
-								if (new_fd  == -1 ) { // NOK
-									if (!this->_server->isStopping())
-										tissuestack::logging::TissueStackLogger::instance()->error("Failed to accept client connection!\n");
-								} else
-								{
-									this->addToFileDescriptorList(new_fd);
-
-									if (new_fd > max_fd) // keep track of the maximum
-  										max_fd = new_fd;
-
-								}
-							} else // we are ready to receive from an existing client connection
-							{
-								char data_buffer[tissuestack::common::SOCKET_READ_BUFFER_SIZE];
-								ssize_t bytesReceived = recv(i, data_buffer, sizeof(data_buffer), 0);
-								 // NOK case
-								if (bytesReceived <= 0 &&
-										!this->_server->isStopping())
-								{
-									tissuestack::logging::TissueStackLogger::instance()->error("Data Receive error!\n");
-									this->removeDescriptorFromList(i, true);
-								}
-								else // OK case
-								{
-									this->removeDescriptorFromList(i, false);
-									this->dispatchRequest(i, std::string(data_buffer, bytesReceived));
-								}
+								struct epoll_event ev;
+								ev.data.fd = new_fd;
+								ev.events = EPOLLIN | EPOLLET; //  read, edge triggered
+								if (epoll_ctl(epollController, EPOLL_CTL_ADD, new_fd, &ev) == -1) {
+									tissuestack::logging::TissueStackLogger::instance()->error("epoll ctl read from new client failed!");
+								continue;
 							}
 						}
+					} else // else: we have data to be read from one of the connecting clients
+					{
+						char data_buffer[tissuestack::common::SOCKET_READ_BUFFER_SIZE];
+						ssize_t bytesReceived = recv(clientEvents[i].data.fd, data_buffer, sizeof(data_buffer), 0);
+
+						// NOK case
+						if (bytesReceived <= 0 &&
+						!this->_server->isStopping())
+							close(clientEvents[i].data.fd);
+						else // OK case
+						{
+							int fd = clientEvents[i].data.fd;
+
+							// we need to explicitly remove the file uploads from sending more events ...
+							if (raw_content.find("POST") == 0 &&
+								raw_content.find("service=services") != std::string::npos &&
+								raw_content.find("sub_service=admin") != std::string::npos &&
+								raw_content.find("action=upload") != std::string::npos)
+								epoll_ctl (epollController, EPOLL_CTL_DEL, fd, NULL);
+
+							this->dispatchRequest(fd, raw_content);
+						}
 					}
-				}
-  			};
+				} // end event loop
+			} // end polling loop
+			close(epollController); // close polling controller
+  		};
   	};
 
   	template <typename ProcessorImplementation>
@@ -191,7 +182,6 @@ namespace tissuestack
  		friend class tissuestack::networking::ServerSocketSelector<ProcessorImplementation>;
     	public:
 			static const unsigned short PORT = 4242;
-			static const unsigned short MAX_CONNECTIONS_ALLOWED = 128;
 			static const unsigned short SHUTDOWN_TIMEOUT_IN_SECONDS = 10;
 
 			Server & operator=(const Server&) = delete;
@@ -223,6 +213,17 @@ namespace tissuestack
 				return this->_stopRaised;
 			}
 
+			void makeSocketNonBlocking(int socket_fd)
+			{
+					int flags = fcntl(socket_fd, F_GETFL, 0);
+					if (flags < 0)
+						THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException, "Failed to make socket non-blocking!");
+
+					fcntl(socket_fd, F_SETFL, flags | O_NONBLOCK);
+					if (flags < 0)
+						THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException, "Failed to make socket non-blocking!");
+			}
+
 			void start()
 			{
 				tissuestack::logging::TissueStackLogger::instance()->info("Starting Up Socket Server...\n");
@@ -236,6 +237,8 @@ namespace tissuestack
 				if(setsockopt(this->_server_socket, SOL_SOCKET, SO_REUSEADDR, &optVal, sizeof(optVal)) != 0)
 					THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException, "Failed to change server socket options!");
 
+				this->makeSocketNonBlocking(this->_server_socket);
+
 				//bind server socket to address
 				sockaddr_in server_address;
 				std::memset(&server_address, 0, sizeof(server_address));
@@ -247,7 +250,7 @@ namespace tissuestack
 					THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException, "Failed to bind server socket!");
 
 				//listen on server socket with a pre-defined maximum of allowed connections to be queued
-				if(::listen(this->_server_socket, tissuestack::networking::Server<ProcessorImplementation>::MAX_CONNECTIONS_ALLOWED) < 0)
+				if(::listen(this->_server_socket, tissuestack::networking::MAX_CONNECTIONS) < 0)
 					THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException, "Failed to listen on server socket!");
 
 				this->_isRunning = true;
@@ -262,7 +265,7 @@ namespace tissuestack
 				this->_processor->init();
 				// delegate to the selector class
 				tissuestack::networking::ServerSocketSelector<ProcessorImplementation> SocketSelector(this);
-				SocketSelector.startSelectLoop();
+				SocketSelector.startEventLoop();
 			};
 
 			void stop()
