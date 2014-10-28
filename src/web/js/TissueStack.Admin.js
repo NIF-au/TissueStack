@@ -292,16 +292,12 @@ TissueStack.Admin.prototype = {
 				return false;
 			}
 
+			// remove potential fake path
 			var slashPos = filename.lastIndexOf('\\');
 			if (slashPos < 0)
 				slashPos = filename.lastIndexOf('/');
-			if (slashPos < 0)
-			{
-				errorHandling2("Error: Could not extract filename for upload");
-				return false;
-			}
-   			// extract file name without fake path
-			filename = filename.substring(slashPos+1);
+			if (slashPos > 0)
+				filename = filename.substring(slashPos+1);
 
 			// check existence of file in upload beforehand
 			var stopExecution = _this.checkExistenceOfFileInUploadDirectory(_this, filename);
