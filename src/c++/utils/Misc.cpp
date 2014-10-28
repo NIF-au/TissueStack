@@ -209,6 +209,9 @@ const bool tissuestack::utils::Misc::streamGzippedDataToDescriptor(unsigned char
 
 	strm.next_in = data;
 	strm.avail_in = length;
+	strm.next_out = out;
+	strm.avail_out = CHUNK;
+
 	int flush = Z_NO_FLUSH;
 	bool finished = false;
 	do
