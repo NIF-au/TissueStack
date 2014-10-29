@@ -19,7 +19,7 @@ INCLUDE			=	-Iinclude -I/usr/include/nifti \
 LIB_PATH		=
 
 LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid \
-					-lminc2 -lniftiio -lm -lznz
+					-lminc2 -lniftiio -lm -lz -lznz
 
 BINS_PATH		?= /tmp
 

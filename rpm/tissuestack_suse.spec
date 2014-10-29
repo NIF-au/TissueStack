@@ -127,6 +127,8 @@ fi
 if [ `iptables -S | grep -e "-A INPUT -p tcp -m tcp --dport 5432 -j DROP" | wc -c` -eq 0 ]; then
         iptables -A INPUT -p tcp --destination-port 5432 -j DROP &>> /tmp/post-install.log
 fi
+setsebool -P httpd_can_network_connect 1
+setsebool -P httpd_enable_homedirs 1
 iptables-save &>> /tmp/post-install.log
 httpd2 -k restart &>> /tmp/post-install.log
 cp -f /opt/tissuestack/conf/tissuestack_init.sh /etc/init.d/tissuestack &>> /tmp/post-install.log

@@ -126,7 +126,7 @@ const unsigned char *  tissuestack::imaging::TissueStackSliceCache::findCacheEnt
 	const std::string dataset, const unsigned long int slice)
 {
 	if (this->isBeingCleanedUp() || dataset.empty() || this->_is_empty)
-		return false;
+		return nullptr;
 
 	std::lock_guard<std::mutex> lock(this->_cache_mutex);
 
