@@ -68,10 +68,6 @@ namespace tissuestack
 				const bool checkForExpiredEntry(
 						const unsigned long long int id,
 						const unsigned long long int timestamp);
-
-				void addTimeStamp(
-						const unsigned long long int id,
-						const unsigned long long int timestamp);
 			private:
 				inline const unsigned long long int calculateTimeDifference(
 						const unsigned long long int id,

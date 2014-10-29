@@ -141,8 +141,6 @@ TissueStack.InitUserInterface = function (initOpts) {
 			continue; 
 		}
 		
-		var now = new Date().getTime();
-		
 		// crate a contrast slider per data set
 		var contrast = null;
 		if (!dataSet.lookupValues) {
@@ -254,6 +252,8 @@ TissueStack.InitUserInterface = function (initOpts) {
 			}
 			
 			plane.eraseCanvasContent();
+			
+			var now = new Date().getTime();
 			
 			plane.queue.drawLowResolutionPreview(now);
 			plane.queue.drawRequestAfterLowResolutionPreview(null, now);

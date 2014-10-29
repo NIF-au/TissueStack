@@ -52,16 +52,19 @@ const bool tissuestack::common::RequestTimeStampStore::checkForExpiredEntry(
 		old_difference = tissuestack::common::RequestTimeStampStore::_timestamps.at(id);
 	}  catch (const std::out_of_range& key_does_not_exist)
 	{
+		tissuestack::common::RequestTimeStampStore::_timestamps[id] =
+			this->calculateTimeDifference(id, timestamp);
 		return false;
 	}
 
 	const unsigned long long int new_difference = this->calculateTimeDifference(id, timestamp);
 	if (new_difference < old_difference)
-	{
-		//tissuestack::logging::TissueStackLogger::instance()->debug(
-		//		"EXPIRED: Id: %llu\tTime: %llu\tOld Delta:%llu\tNew Delta:%llu\n", id, timestamp, old_difference, new_difference);
 		return true;
-	}
+
+	// update timestamp
+	if (new_difference > old_difference)
+		tissuestack::common::RequestTimeStampStore::_timestamps[id] =
+				new_difference;
 
 	return false;
 }
@@ -89,7 +92,8 @@ inline const unsigned long long int tissuestack::common::RequestTimeStampStore::
 	unsigned short numberOfIdDigits = std::to_string(id).length();
 	unsigned short numberOfTimestampDigits = timestampAsAString.length();
 	short deltaOfDigits = numberOfIdDigits-numberOfTimestampDigits;
-	if (deltaOfDigits <= 0) return 0;
+	if (deltaOfDigits <= 0)
+		return 0;
 
 	char tmp[deltaOfDigits];
 	memset(tmp, '9', deltaOfDigits);
@@ -102,28 +106,6 @@ inline const unsigned long long int tissuestack::common::RequestTimeStampStore::
 		return 0;
 
 	return paddedTimeStamp-id;
-}
-
-void tissuestack::common::RequestTimeStampStore::addTimeStamp(
-		const unsigned long long int id,
-		const unsigned long long int timestamp)
-{
-	if (id == 0 || timestamp == 0 || this->doesIdExist(id))
-		return;
-
-	std::lock_guard<std::mutex> lock(this->_timestamp_mutex);
-
-	// let's add the new diff
-	const unsigned long long int diff = this->calculateTimeDifference(id, timestamp);
-
-	//tissuestack::logging::TissueStackLogger::instance()->debug(
-	//		"ADDED: Id: %llu\tTime: %llu\tDelta:%llu\n", id, timestamp, diff);
-
-	// perhaps we need to clear the hash map
-	if (tissuestack::common::RequestTimeStampStore::_timestamps.size() >= tissuestack::common::RequestTimeStampStore::MAX_ENTRIES)
-		tissuestack::common::RequestTimeStampStore::_timestamps.clear();
-
-	tissuestack::common::RequestTimeStampStore::_timestamps[id] = diff;
 }
 
 tissuestack::common::RequestTimeStampStore * tissuestack::common::RequestTimeStampStore::_instance = nullptr;

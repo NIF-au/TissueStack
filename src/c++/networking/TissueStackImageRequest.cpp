@@ -242,9 +242,6 @@ tissuestack::networking::TissueStackImageRequest::TissueStackImageRequest(std::u
 
 const bool tissuestack::networking::TissueStackImageRequest::isObsolete() const
 {
-	tissuestack::common::RequestTimeStampStore::instance()->addTimeStamp(this->_request_id, this->_request_timestamp);
-
-	// delegate
 	return this->hasExpired();
 }
 
