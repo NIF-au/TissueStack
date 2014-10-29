@@ -39,8 +39,8 @@ ALTER TABLE dataset_lookup_mapping ADD CONSTRAINT dataset_lookup_mapping_no_self
 -- these parameters while on a dimension level are really the same for all planes in practice,
 -- hence redundant and belonging to the data set as a whole
 ALTER TABLE dataset ADD COLUMN is_tiled CHAR(1) NOT NULL DEFAULT 'F';
-ALTER TABLE dataset ADD COLUMN zoom_levels TEXT NOT NULL DEFAULT '[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2.00]';
+ALTER TABLE dataset ADD COLUMN zoom_levels TEXT NOT NULL DEFAULT '[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2.00, 2.25, 2.5]';
 ALTER TABLE dataset ADD COLUMN one_to_one_zoom_level INTEGER NOT NULL DEFAULT 3;
 ALTER TABLE dataset ADD COLUMN resolution_mm NUMERIC(18,10);
 UPDATE configuration SET value='server',description='server proxy path (relative to the application''s web root directory)' WHERE name='server_proxy_path';
-UPDATE configuration SET value='[0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]',description='default zoom levels' WHERE name='default_zoom_levels';
+UPDATE configuration SET value='[0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5]',description='default zoom levels' WHERE name='default_zoom_levels';

@@ -15,7 +15,7 @@ INSERT INTO configuration VALUES('data_directory', '/opt/tissuestack/data', 'dat
 INSERT INTO configuration VALUES('ands_dataset_xml', '/opt/tissuestack/ands/datasets.xml', 'ands data set xml');
 INSERT INTO configuration VALUES('max_upload_size', '10000000000', 'the maximum number of bytes allowed to upload in one go');
 INSERT INTO configuration VALUES('default_drawing_interval', '250', 'default drawing interval');
-INSERT INTO configuration VALUES('default_zoom_levels', '[0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]', 'default zoom levels');
+INSERT INTO configuration VALUES('default_zoom_levels', '[0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5]', 'default zoom levels');
 INSERT INTO configuration VALUES('color_maps', 
 	'{"grey" : [[0, 0, 0, 0],[1, 1, 1, 1]],
 	"hot" 		: [[0, 0, 0, 0],

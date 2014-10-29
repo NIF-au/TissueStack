@@ -247,7 +247,7 @@ namespace tissuestack
 						const unsigned long long int id = 0,
 						const std::string description = "",
 						const bool is_tiled = false,
-						const std::vector<float> zoom_levels = {0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2.00},
+						const std::vector<float> zoom_levels = {0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2.00, 2.25, 2.5},
 						const unsigned short one_to_one_zoom_level = 3,
 						const float resolution_in_mm = 0,
 						const TissueStackLabelLookup * lookup = nullptr);
@@ -305,7 +305,7 @@ namespace tissuestack
 				FILE * _file_handle = nullptr;
 				unsigned long long int _database_id = 0;
 				bool _is_tiled = false;
-				std::vector<float> _zoom_levels = {0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2.00};
+				std::vector<float> _zoom_levels = {0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2.00, 2.25, 2.5};
 				unsigned short _one_to_one_zoom_level = 3;
 				float _resolution_in_mm = 0;
 				const TissueStackLabelLookup * _lookup = nullptr;
