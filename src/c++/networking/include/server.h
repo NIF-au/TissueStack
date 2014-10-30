@@ -151,11 +151,22 @@ namespace tissuestack
 							char data_buffer[tissuestack::common::SOCKET_READ_BUFFER_SIZE];
 							ssize_t bytesReceived = recv(fd, data_buffer, sizeof(data_buffer), 0);
 							std::string raw_content = "";
+							std::ostringstream dataInputStream;
 
 							if (bytesReceived > 0)
 							{
 
 								raw_content = std::string(data_buffer, bytesReceived);
+								dataInputStream << raw_content;
+								// double check whether we got that first line
+								while (raw_content.find("\r\n") == std::string::npos)
+								{
+									// read again until we do...
+									bytesReceived = recv(fd, data_buffer, sizeof(data_buffer), 0);
+									raw_content = std::string(data_buffer, bytesReceived);
+									dataInputStream << raw_content;
+								}
+								raw_content = dataInputStream.str();
 								// we need to explicitly remove the file uploads from sending more events ...
 								if (raw_content.find("POST") == 0 &&
 									raw_content.find("service=services") != std::string::npos &&
@@ -165,9 +176,6 @@ namespace tissuestack
 								else
 								{
 									// read till we have EAGAIN
-									std::ostringstream dataInputStream;
-									dataInputStream << raw_content;
-
 									while ((bytesReceived = recv(fd, data_buffer, sizeof(data_buffer), 0)) > 0)
 									{
 										raw_content = std::string(data_buffer, bytesReceived);

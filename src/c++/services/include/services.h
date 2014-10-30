@@ -292,7 +292,7 @@ namespace tissuestack
 					unsigned int start,
 					const std::string firstPartOfStream,
 					const unsigned long long int supposedFileSize,
-					const std::string boundary);
+					const unsigned int boundaryLength);
 				int createUploadFiles(const std::string file_name, const unsigned long long int supposedFileSize);
 				inline const std::string readHeaderFromRequest(
 					const std::string httpMessage,

@@ -237,24 +237,25 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadRe
 	if (max_upload_size)
 		tissuestack::services::TissueStackAdminService::FILE_UPLOAD_LIMIT =
 			strtoull(max_upload_size->getValue().c_str(), NULL, 10);
+	const unsigned int boundaryLength = boundary.length();
 
-		if (!this->readAndStoreFileUploadData(
-			processing_strategy,
-			fileName,
-			socketDescriptor,
-			uploadFileDescriptor,
-			streamPointer,
-			httpStreamFrame,
-			contentLengthInBytes,
-			boundary))
-		{
-			// we have been cancelled, delete the incomplete file
-			unlink((std::string(UPLOAD_PATH) + "/" + fileName).c_str());
-			unlink((std::string(UPLOAD_PATH) + "/." + fileName + ".upload").c_str());
-			return "{ \"response\": \"Upload of file '" + fileName + "' cancelled!\"}";
-		};
+	if (!this->readAndStoreFileUploadData(
+		processing_strategy,
+		fileName,
+		socketDescriptor,
+		uploadFileDescriptor,
+		streamPointer,
+		httpStreamFrame,
+		contentLengthInBytes - boundaryLength,
+		boundaryLength))
+	{
+		// we have been cancelled, delete the incomplete file
+		unlink((std::string(UPLOAD_PATH) + "/" + fileName).c_str());
+		unlink((std::string(UPLOAD_PATH) + "/." + fileName + ".upload").c_str());
+		return "{ \"response\": \"Upload of file '" + fileName + "' cancelled!\"}";
+	};
 
-		return "{ \"response\": \"Upload of file '" + fileName + "' finished\"}";
+	return "{ \"response\": \"Upload of file '" + fileName + "' finished\"}";
 }
 
 int tissuestack::services::TissueStackAdminService::createUploadFiles(
@@ -289,7 +290,7 @@ const bool tissuestack::services::TissueStackAdminService::readAndStoreFileUploa
 	unsigned int start,
 	const std::string firstPartOfStream,
 	const unsigned long long int supposedFileSize,
-	const std::string boundary)
+	const unsigned int boundaryLength)
 {
 	std::string tmp = firstPartOfStream;
 	unsigned long long int totalBytesOfFileUpload = 0;
@@ -316,14 +317,23 @@ const bool tissuestack::services::TissueStackAdminService::readAndStoreFileUploa
 
 	unsigned long long int lastWriteAtBytes = totalBytesOfFileUpload;
 
+	short eagainFailures = 0;
 	while (true)
 	{
 		if (totalBytesOfFileUpload > tissuestack::services::TissueStackAdminService::FILE_UPLOAD_LIMIT)
 			return false;
-
+	
+		errno = 0;
 		tmp = readAnotherBufferFromSocketAsString(processing_strategy, socketDescriptor);
-		if (tmp.empty())
-			break;
+		if (tmp.empty() && errno == EAGAIN)
+		{
+			if (eagainFailures == 2)
+				break;
+			eagainFailures++;
+			sleep(1);
+			continue;
+		}
+		eagainFailures = 0;
 
 		write(uploadFileDescriptor, tmp.c_str(), tmp.size());
 		totalBytesOfFileUpload += static_cast<unsigned long long int>(tmp.size());
@@ -336,10 +346,11 @@ const bool tissuestack::services::TissueStackAdminService::readAndStoreFileUploa
 	}
 
 	bool ret = false;
-	if (totalBytesOfFileUpload > static_cast<unsigned long long int>(boundary.size()))
+	const unsigned long long int delta = llabs(supposedFileSize-totalBytesOfFileUpload);
+	if (delta < 250)
 	{
 		unsigned long long int actualSize =
-			totalBytesOfFileUpload-boundary.length();
+			totalBytesOfFileUpload - boundaryLength;
 		if (ftruncate(uploadFileDescriptor, actualSize) != 0)
 			return false;
 		this->writeUploadProgress(filename, actualSize, actualSize);
