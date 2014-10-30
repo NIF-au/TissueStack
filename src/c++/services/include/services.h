@@ -303,7 +303,9 @@ namespace tissuestack
 						const unsigned long long int partial,
 						const unsigned long long int total
 					) const;
-				inline std::string readAnotherBufferFromSocketAsString(int socketDescriptor) const;
+				inline std::string readAnotherBufferFromSocketAsString(
+					const tissuestack::common::ProcessingStrategy * processing_strategy,
+					int socketDescriptor) const;
 	 	};
 
 		class TissueStackSecurityService final : public TissueStackService

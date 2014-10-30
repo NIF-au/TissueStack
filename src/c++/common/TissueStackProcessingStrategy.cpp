@@ -20,13 +20,18 @@ tissuestack::common::TissueStackProcessingStrategy::TissueStackProcessingStrateg
 	_task_queue_executor(new tissuestack::execution::TissueStackTaskQueueExecutor()),
 	_slice_cache_cleaner(new tissuestack::execution::TissueStackSliceCacheCleaner())
 {
-	// from 2 cores we use 75% rounded up
-	if (tissuestack::utils::System::getNumberOfCores() > 2)
-	{
-		this->_default_strategy = new tissuestack::execution::ThreadPool(
-				static_cast<short>(ceil(tissuestack::utils::System::getNumberOfCores() * 0.75)));
-	} else
-		this->_default_strategy = new tissuestack::execution::ThreadPool(2);
+	unsigned int cores = tissuestack::utils::System::getNumberOfCores();
+
+	// heck let's be greedy
+	short numberOfThreads = 5;
+	if (cores > 2 && cores <= 5)
+		numberOfThreads = 10;
+	else if (cores > 5 && cores <= 10)
+		numberOfThreads = 15;
+	else if (cores > 10)
+		numberOfThreads = 20;
+
+	this->_default_strategy = new tissuestack::execution::ThreadPool(numberOfThreads);
 };
 
 tissuestack::common::TissueStackProcessingStrategy::~TissueStackProcessingStrategy()

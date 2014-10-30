@@ -22,6 +22,7 @@
 #include "execution.h"
 #include "database.h"
 #include "services.h"
+#include "utils.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -30,7 +31,6 @@
 
 #include <unistd.h>
 #include <arpa/inet.h>
-#include <fcntl.h>
 
 namespace tissuestack
 {
@@ -71,7 +71,6 @@ namespace tissuestack
     					try
     					{
     						this->_executor->execute(_this, request_data, request_descriptor);
-    						close(request_descriptor);
     					}  catch (std::exception& bad)
     					{
     						// close connection and log error
@@ -84,25 +83,25 @@ namespace tissuestack
 
   			void startEventLoop()
   			{
-				struct epoll_event  epollEvent;
-
 				// create the epoll 'controller'
 				int epollController = epoll_create(1);
 				if(epollController == -1)
   					THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException,
   						"Failed to start EPOLLing!");
 
+				struct epoll_event  epollEvent;
 				epollEvent.data.fd = this->_server->getServerSocket(); // our server socket
-				epollEvent.events = EPOLLIN | EPOLLET; // for READS only
+				epollEvent.events = EPOLLIN; // for READS only
 
 				if (epoll_ctl (epollController, EPOLL_CTL_ADD, epollEvent.data.fd, &epollEvent) == -1)
   					THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException,
   						"Failed to start EPOLLing!");
 
+				struct epoll_event clientEvents[tissuestack::networking::MAX_CONNECTIONS];
+
 				// loop for events until we stop the server
 				while(this->_server->isRunning() && !this->_server->isStopping())
 				{
-					struct epoll_event clientEvents[tissuestack::networking::MAX_CONNECTIONS];
 					int numEvents =
 						epoll_wait(
 							epollController,
@@ -117,61 +116,70 @@ namespace tissuestack
 						if ((clientEvents[i].events & EPOLLERR) ||
 								(clientEvents[i].events & EPOLLHUP) ||
 								(!(clientEvents[i].events & EPOLLIN)))
-						{
-    						tissuestack::logging::TissueStackLogger::instance()->error("client epoll error!");
-							close(clientEvents[i].data.fd);
 							continue;
-						}
 
-						// first case: we have a new client connecting
-						if ((clientEvents[i].events & EPOLLIN) &&
-								(clientEvents[i].data.fd == this->_server->getServerSocket()))
+						// we have a new client connecting
+						if (clientEvents[i].data.fd == this->_server->getServerSocket())
 						{
 							struct sockaddr_in new_client;
 							unsigned int addrlen = sizeof(new_client);
 
 							// accept new client
 							int new_fd = accept(this->_server->getServerSocket(), (struct sockaddr *) &new_client, &addrlen);
+							if (!tissuestack::utils::System::makeSocketNonBlocking(new_fd))
+								THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException, "Failed to make server socket non-blocking!");
 
 							// check accept status
-							if (new_fd  == -1 ) { // NOK
+							if (new_fd  == -1 )  // NOK
+							{
 								if (!this->_server->isStopping())
 									tissuestack::logging::TissueStackLogger::instance()->error("Failed to accept client connection!\n");
 							} else
 							{
 								struct epoll_event ev;
 								ev.data.fd = new_fd;
-								ev.events = EPOLLIN | EPOLLET; //  read, edge triggered
-								if (epoll_ctl(epollController, EPOLL_CTL_ADD, new_fd, &ev) == -1) {
-									tissuestack::logging::TissueStackLogger::instance()->error("epoll ctl read from new client failed!");
+								ev.events = EPOLLIN; //  read
+								if (epoll_ctl(epollController, EPOLL_CTL_ADD, new_fd, &ev) == -1)
+									THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException,
+										"Failed to add client to epoll list!");
 								continue;
 							}
-						}
-					} else // else: we have data to be read from one of the connecting clients
-					{
-						char data_buffer[tissuestack::common::SOCKET_READ_BUFFER_SIZE];
-						ssize_t bytesReceived = recv(clientEvents[i].data.fd, data_buffer, sizeof(data_buffer), 0);
-
-						// NOK case
-						if (bytesReceived <= 0 &&
-						!this->_server->isStopping())
-							close(clientEvents[i].data.fd);
-						else // OK case
+						}	else // else: we have data to be read from one of the connecting clients
 						{
+							// do an initial read with a pre-defined buffer size
 							int fd = clientEvents[i].data.fd;
+							char data_buffer[tissuestack::common::SOCKET_READ_BUFFER_SIZE];
+							ssize_t bytesReceived = recv(fd, data_buffer, sizeof(data_buffer), 0);
+							std::string raw_content = "";
 
-							// we need to explicitly remove the file uploads from sending more events ...
-							if (raw_content.find("POST") == 0 &&
-								raw_content.find("service=services") != std::string::npos &&
-								raw_content.find("sub_service=admin") != std::string::npos &&
-								raw_content.find("action=upload") != std::string::npos)
-								epoll_ctl (epollController, EPOLL_CTL_DEL, fd, NULL);
+							if (bytesReceived > 0)
+							{
 
-							this->dispatchRequest(fd, raw_content);
+								raw_content = std::string(data_buffer, bytesReceived);
+								// we need to explicitly remove the file uploads from sending more events ...
+								if (raw_content.find("POST") == 0 &&
+									raw_content.find("service=services") != std::string::npos &&
+									raw_content.find("sub_service=admin") != std::string::npos &&
+									raw_content.find("action=upload") != std::string::npos)
+									epoll_ctl (epollController, EPOLL_CTL_DEL, fd, NULL);
+								else
+								{
+									// read till we have EAGAIN
+									std::ostringstream dataInputStream;
+									dataInputStream << raw_content;
+
+									while ((bytesReceived = recv(fd, data_buffer, sizeof(data_buffer), 0)) > 0)
+									{
+										raw_content = std::string(data_buffer, bytesReceived);
+										dataInputStream << raw_content;
+									}
+									raw_content = dataInputStream.str();
+								}
+								this->dispatchRequest(fd, raw_content);
+							}
 						}
-					}
-				} // end event loop
-			} // end polling loop
+					} // end event loop
+				} // end polling loop
 			close(epollController); // close polling controller
   		};
   	};
@@ -213,17 +221,6 @@ namespace tissuestack
 				return this->_stopRaised;
 			}
 
-			void makeSocketNonBlocking(int socket_fd)
-			{
-					int flags = fcntl(socket_fd, F_GETFL, 0);
-					if (flags < 0)
-						THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException, "Failed to make socket non-blocking!");
-
-					fcntl(socket_fd, F_SETFL, flags | O_NONBLOCK);
-					if (flags < 0)
-						THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException, "Failed to make socket non-blocking!");
-			}
-
 			void start()
 			{
 				tissuestack::logging::TissueStackLogger::instance()->info("Starting Up Socket Server...\n");
@@ -237,7 +234,8 @@ namespace tissuestack
 				if(setsockopt(this->_server_socket, SOL_SOCKET, SO_REUSEADDR, &optVal, sizeof(optVal)) != 0)
 					THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException, "Failed to change server socket options!");
 
-				this->makeSocketNonBlocking(this->_server_socket);
+				if (!tissuestack::utils::System::makeSocketNonBlocking(this->_server_socket))
+					THROW_TS_EXCEPTION(tissuestack::common::TissueStackServerException, "Failed to make server socket non-blocking!");
 
 				//bind server socket to address
 				sockaddr_in server_address;
