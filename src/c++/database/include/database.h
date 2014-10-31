@@ -55,8 +55,8 @@ namespace tissuestack
 		    	std::string _connectString;
 		    	void disconnectTransConnection();
 		    	void disconnectNonTransBackupConnection();
-		    	void disconnectNonTransConnections(const bool forceDisconnect = false);
-		    	void disconnectNonTransConnection(const unsigned short index, const bool forceDisconnect = false);
+		    	void disconnectNonTransConnections();
+		    	void disconnectNonTransConnection(const unsigned short index);
 		    	void reconnectTransConnection();
 		    	void reconnectNonTransConnections();
 		    	void reconnectNonTransBackupConnection();

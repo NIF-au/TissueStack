@@ -24,8 +24,9 @@ void cleanUp()
 	try
 	{
 		// clean up old sessions and disconnect database
-		tissuestack::database::SessionDataProvider::deleteSessions(
-			tissuestack::utils::System::getSystemTimeInMillis());
+		if (tissuestack::database::TissueStackPostgresConnector::doesInstanceExist())
+			tissuestack::database::SessionDataProvider::deleteSessions(
+				tissuestack::utils::System::getSystemTimeInMillis());
 
 		if (tissuestack::database::TissueStackPostgresConnector::doesInstanceExist())
 			tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
@@ -95,7 +96,13 @@ void install_signal_handler()
 	act.sa_flags = 0;
 	i = 1;
 	while (i < 32) {
-		if (i != 11)
+		if (i == SIGPIPE)
+		{
+			signal(SIGPIPE, SIG_IGN);
+			i++;
+			continue;
+		}
+		if (i != SIGSEGV)
 			sigaction(i, &act, nullptr);
 		i++;
 	}
@@ -141,8 +148,7 @@ int main(int argc, char * args[])
 				"\t# Configuration database name\n\tdb_name=tissuestack\n" <<
 				"\t# Configuration database user\n\tdb_user=tissuestack\n" <<
 				"\t# Configuration database password\n\tdb_password=tissuestack\n\n" << std::endl;
-			//Params->purgeInstance();
-			cleanUp();
+			Params->purgeInstance();
 			exit(-1);
 		}
 
@@ -154,8 +160,7 @@ int main(int argc, char * args[])
 		{
 			std::cerr << "Failed to read passed in configuration file: " <<
 					parseError.what() << std::endl;
-			//Params->purgeInstance();
-			cleanUp();
+			Params->purgeInstance();
 			exit(-1);
 		}
 	}
@@ -167,9 +172,8 @@ int main(int argc, char * args[])
 		Logger = tissuestack::logging::TissueStackLogger::instance();
 	} catch (std::exception & bad)
 	{
-		//Params->purgeInstance();
-		cleanUp();
 		std::cerr << "Failed to instantiate the logging mechanism!" << std::endl;
+		Params->purgeInstance();
 		exit(-1);
 	}
 	
@@ -180,11 +184,11 @@ int main(int argc, char * args[])
 				|| !tissuestack::database::TissueStackPostgresConnector::instance()->isNonTransConnected(0)
 				|| !tissuestack::database::TissueStackPostgresConnector::instance()->isNonTransBackupConnected())
 		{
-			Logger->error("Database is not connected!\n");
-			//tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
-			//Params->purgeInstance();
-			//Logger->purgeInstance();
-			cleanUp();
+			std::cerr << "Failed to initialize database connector!" << std::endl;
+			if (tissuestack::database::TissueStackPostgresConnector::doesInstanceExist())
+				tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
+			Params->purgeInstance();
+			Logger->purgeInstance();
 			exit(-1);
 		}
 		Logger->info("Database connection established!\n");
@@ -193,19 +197,25 @@ int main(int argc, char * args[])
 			tissuestack::utils::System::getSystemTimeInMillis());
 	} catch (std::exception & bad)
 	{
-		Logger->error("Could not create databases connection:\n%s\n", bad.what());
-		cleanUp();
+		std::cerr << "Failed to initialize database connector!" << std::endl;
+		Logger->error("Could not initialize database connector:\n%s\n", bad.what());
+		if (tissuestack::database::TissueStackPostgresConnector::doesInstanceExist())
+			tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
+		Params->purgeInstance();
+		Logger->purgeInstance();
 		exit(-1);
 	}
+
+	InitializeMagick(NULL);
 
 	try
 	{
 		tissuestack::common::RequestTimeStampStore::instance(); // for request time stamp checking
 	} catch (std::exception & bad)
 	{
+		std::cerr << "Could not instantiate RequestTimeStampStore!" << std::endl;
 		Logger->error("Could not instantiate RequestTimeStampStore:\n%s\n", bad.what());
 		cleanUp();
-		//tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
 		exit(-1);
 	}
 
@@ -215,6 +225,7 @@ int main(int argc, char * args[])
 		//tissuestack::imaging::TissueStackLabelLookupStore::instance()->dumpAllLabelLookupsToDebugLog();
 	} catch (std::exception & bad)
 	{
+		std::cerr << "Could not instantiate TissueStackLabelLookupStore!" << std::endl;
 		Logger->error("Could not instantiate TissueStackLabelLookupStore:\n%s\n", bad.what());
 		cleanUp();
 		exit(-1);
@@ -226,7 +237,8 @@ int main(int argc, char * args[])
 		//tissuestack::imaging::TissueStackColorMapStore::instance()->dumpAllColorMapsToDebugLog();
 	} catch (std::exception & bad)
 	{
-		Logger->error("Could not instantiate TissueStackLabelLookupStore:\n%s\n", bad.what());
+		std::cerr << "Could not instantiate TissueStackColorMapStore!" << std::endl;
+		Logger->error("Could not instantiate TissueStackColorMapStore:\n%s\n", bad.what());
 		cleanUp();
 		exit(-1);
 	}
@@ -237,6 +249,7 @@ int main(int argc, char * args[])
 		//tissuestack::imaging::TissueStackDataSetStore::instance()->dumpDataSetStoreIntoDebugLog();
 	} catch (std::exception & bad)
 	{
+		std::cerr << "Could not instantiate TissueStackDataSetStore!" << std::endl;
 		Logger->error("Could not instantiate TissueStackDataSetStore:\n%s\n", bad.what());
 		cleanUp();
 		exit(-1);
@@ -248,6 +261,7 @@ int main(int argc, char * args[])
 		//tissuestack::services::TissueStackTaskQueue::instance()->dumpAllTasksToDebugLog();
 	} catch (std::exception & bad)
 	{
+		std::cerr << "Could not instantiate TissueStackTaskQueue!" << std::endl;
 		Logger->error("Could not instantiate TissueStackTaskQueue:\n%s\n", bad.what());
 		cleanUp();
 		exit(-1);
@@ -255,7 +269,6 @@ int main(int argc, char * args[])
 
 	try
 	{
-		InitializeMagick(NULL);
 		// create an instance of a tissue stack server and wrap it in a smart pointer
 		TissueStackServer.reset(
 				new tissuestack::networking::Server<tissuestack::common::TissueStackProcessingStrategy>(
@@ -264,6 +277,7 @@ int main(int argc, char * args[])
 		TissueStackServer->start();
 	} catch (std::exception & bad)
 	{
+		std::cerr << "Failed to instantiate/start the TissueStackServer!" << std::endl;
 		Logger->error(
 				"Failed to instantiate/start the TissueStackServer for the following reason:\n%s\n", bad.what());
 		cleanUp();
@@ -277,7 +291,10 @@ int main(int argc, char * args[])
 	} catch (std::exception & bad)
 	{
 		if (!TissueStackServer->isStopping())
+		{
+			std::cerr << "issueStackServer listen() was aborted!" << std::endl;
 			Logger->error("TissueStackServer listen() was aborted for the following reason:\n%s\n", bad.what());
+		}
 		TissueStackServer->stop();
 		cleanUp();
 		exit(-1);

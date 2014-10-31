@@ -392,7 +392,7 @@ TissueStack.Embedded.prototype = {
 				}
 				
 				if (data.error) {
-					var message = "Application Error: " + (data.error.message ? data.error.message : " no more info available. check logs.");
+					var message = "Application Error: " + (data.error.description ? data.error.description : " no more info available. check logs.");
 					_this.writeErrorMessageIntoDiv(message);
 					return;
 				}
@@ -441,7 +441,7 @@ TissueStack.Embedded.prototype = {
 				}
 				
 				if (data.error) {
-					var message = "Application Error: " + (data.error.message ? data.error.message : " no more info available. check logs.");
+					var message = "Application Error: " + (data.error.description ? data.error.description : " no more info available. check logs.");
 					alert(message);
 					return;
 				}

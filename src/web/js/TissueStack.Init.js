@@ -14,48 +14,115 @@
  * You should have received a copy of the GNU General Public License
  * along with TissueStack.  If not, see <http://www.gnu.org/licenses/>.
  */
-TissueStack.Init = function (afterLoadingRoutine) {
-	TissueStack.LoadDataBaseConfiguration();
-	
-	// hide second jquery coordinate search button  
-	if (TissueStack.desktop) {
-		$('#dataset_2_center_point_in_canvas').closest('.ui-btn').hide();
-	}
-
-	// prepare color maps
-	TissueStack.Utils.loadColorMaps();
-
-	// add phone menu for page navigation
-	if (TissueStack.phone) {
-		new TissueStack.PhoneMenu();
-	}
-
-	// create data store and load it with backend data
-	TissueStack.dataSetStore = new TissueStack.DataSetStore(afterLoadingRoutine);
-	
-	// handle window resizing
-	$(window).resize(function() {
-		// this needs to be checked in cases where the resize fires before the creation of the dataSetNavigation
-		if (typeof(TissueStack.dataSetNavigation) == "undefined" || typeof(TissueStack.dataSetNavigation.selectedDataSets) == 'undefined') {
-			return;
-		} 
+TissueStack.Init = function () {
+	var afterLoadingRoutine = function() {
+		// create an instance of the navigation
+		TissueStack.dataSetNavigation = new TissueStack.DataSetNavigation();
 		
-		var dataSetCount = TissueStack.dataSetNavigation.selectedDataSets.count;
-		var now = new Date().getTime();
-		TissueStack.lastWindowResizing = now;
+		// see if we have received initial values for data set incl. coords and zoom level
+		var initOpts = TissueStack.Utils.readQueryStringFromAddressBar();
+		if (initOpts) TissueStack.configuration['initOpts'] = initOpts;
 		
-		setTimeout(function() {
-			if (now < TissueStack.lastWindowResizing) return;
-			TissueStack.Utils.adjustScreenContentToActualScreenSize(dataSetCount);
-			// set new canvas dimensions
-			for (var i=0;i<dataSetCount;i++) {
-				var dataSet = TissueStack.dataSetStore.getDataSetById(TissueStack.dataSetNavigation.selectedDataSets["dataset_" + (i+1)]);
-				for (var plane in dataSet.planes) {
-					dataSet.planes[plane].resizeCanvas(TissueStack.lastWindowResizing);
-				}
+		// display the first data set received from the backend list unless a particular was requested or the requested one does not exist
+		if (TissueStack.configuration['initOpts'] && TissueStack.configuration['initOpts']['ds'] 
+				&& TissueStack.dataSetStore.getDataSetById('localhost_' + TissueStack.configuration['initOpts']['ds'])) {
+			if (TissueStack.desktop)
+				TissueStack.dataSetNavigation.getDynaTreeObject().selectKey("localhost_" + TissueStack.configuration['initOpts']['ds']);
+			else
+				TissueStack.dataSetNavigation.addDataSet(TissueStack.dataSetStore.getDataSetById('localhost_' + TissueStack.configuration['initOpts']['ds']).id, 0);
+		} else if (TissueStack.dataSetStore && TissueStack.dataSetStore.datasetCount && TissueStack.dataSetStore.datasetCount > 0){
+			var ds = TissueStack.dataSetStore.getDataSetByIndex(0);
+			if (TissueStack.desktop) TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(ds.id); 
+			else TissueStack.dataSetNavigation.addDataSet(ds.id, 0);
+		}
+		if (TissueStack.dataSetStore && TissueStack.dataSetStore.datasetCount && TissueStack.dataSetStore.datasetCount > 1) TissueStack.dataSetNavigation.showDataSet(1);
+		
+		// initialize ui and events
+		if (!TissueStack.desktop) { // avoid double binding
+			TissueStack.InitUserInterface();
+			TissueStack.BindDataSetDependentEvents();
+		}
+		TissueStack.BindGlobalEvents();
+		if (TissueStack.configuration['initOpts']) TissueStack.applyUserParameters();
+
+		// add admin functionality to all versions
+		TissueStack.admin = new TissueStack.Admin();
+	};
+
+	TissueStack.Utils.sendAjaxRequest(
+		"/" + TissueStack.configuration['server_proxy_path'].value +
+		"/?service=services&sub_service=configuration&action=all", 'GET', false,
+		function(data, textStatus, jqXHR) {
+			if (!data.response && !data.error) {
+				alert("Did not receive anyting, neither success nor error ....");
+				return;
 			}
-		}, 250);
-	});
+			
+			if (data.error) {
+				var message = "Application Error: " + (data.error.description ? data.error.description : " no more info available. check logs.");
+				alert(message);
+				return;
+			}
+			
+			if (data.response.noResults) {
+				alert("No configuration info found in database");
+				return;
+			}
+			var configuration = data.response;
+			
+			for (var x=0;x<configuration.length;x++) {
+				if (!configuration[x] || !configuration[x].name || $.trim(!configuration[x].name.length) == 0) {
+					continue;
+				}
+				TissueStack.configuration[configuration[x].name] = {};
+				TissueStack.configuration[configuration[x].name].value = configuration[x].value;
+				TissueStack.configuration[configuration[x].name].description = configuration[x].description ? configuration[x].description : "";
+			};
+			
+			// hide second jquery coordinate search button  
+			if (TissueStack.desktop) {
+				$('#dataset_2_center_point_in_canvas').closest('.ui-btn').hide();
+			}
+		
+			// prepare color maps
+			TissueStack.Utils.loadColorMaps();
+		
+			// add phone menu for page navigation
+			if (TissueStack.phone) {
+				new TissueStack.PhoneMenu();
+			}
+		
+			// create data store and load it with backend data
+			TissueStack.dataSetStore = new TissueStack.DataSetStore(afterLoadingRoutine);
+			
+			// handle window resizing
+			$(window).resize(function() {
+				// this needs to be checked in cases where the resize fires before the creation of the dataSetNavigation
+				if (typeof(TissueStack.dataSetNavigation) == "undefined" || typeof(TissueStack.dataSetNavigation.selectedDataSets) == 'undefined') {
+					return;
+				} 
+				
+				var dataSetCount = TissueStack.dataSetNavigation.selectedDataSets.count;
+				var now = new Date().getTime();
+				TissueStack.lastWindowResizing = now;
+				
+				setTimeout(function() {
+					if (now < TissueStack.lastWindowResizing) return;
+					TissueStack.Utils.adjustScreenContentToActualScreenSize(dataSetCount);
+					// set new canvas dimensions
+					for (var i=0;i<dataSetCount;i++) {
+						var dataSet = TissueStack.dataSetStore.getDataSetById(TissueStack.dataSetNavigation.selectedDataSets["dataset_" + (i+1)]);
+						for (var plane in dataSet.planes) {
+							dataSet.planes[plane].resizeCanvas(TissueStack.lastWindowResizing);
+						}
+					}
+				}, 250);
+			});
+		},
+		function(jqXHR, textStatus, errorThrown) {
+			alert("Error connecting to backend: " + textStatus + " " + errorThrown);
+		}
+	);
 };
 
 TissueStack.InitUserInterface = function (initOpts) {
@@ -325,7 +392,7 @@ TissueStack.BindGlobalEvents = function () {
 				}
 				
 				if (data.error) {
-					var message = "Application Error: " + (data.error.message ? data.error.message : " no more info available. check logs.");
+					var message = "Application Error: " + (data.error.description ? data.error.description : " no more info available. check logs.");
 					alert(message);
 					return;
 				}
@@ -354,44 +421,6 @@ TissueStack.BindGlobalEvents = function () {
 			}
 		);
 	});
-};
-
-TissueStack.LoadDataBaseConfiguration = function() {
-	// we do this one synchronously
-	TissueStack.Utils.sendAjaxRequest(
-		"/" + TissueStack.configuration['server_proxy_path'].value +
-		"/?service=services&sub_service=configuration&action=all", 'GET', false,
-		function(data, textStatus, jqXHR) {
-			if (!data.response && !data.error) {
-				alert("Did not receive anyting, neither success nor error ....");
-				return;
-			}
-			
-			if (data.error) {
-				var message = "Application Error: " + (data.error.message ? data.error.message : " no more info available. check logs.");
-				alert(message);
-				return;
-			}
-			
-			if (data.response.noResults) {
-				alert("No configuration info found in database");
-				return;
-			}
-			var configuration = data.response;
-			
-			for (var x=0;x<configuration.length;x++) {
-				if (!configuration[x] || !configuration[x].name || $.trim(!configuration[x].name.length) == 0) {
-					continue;
-				}
-				TissueStack.configuration[configuration[x].name] = {};
-				TissueStack.configuration[configuration[x].name].value = configuration[x].value;
-				TissueStack.configuration[configuration[x].name].description = configuration[x].description ? configuration[x].description : "";
-			};
-		},
-		function(jqXHR, textStatus, errorThrown) {
-			alert("Error connecting to backend: " + textStatus + " " + errorThrown);
-		}
-	);
 };
 
 TissueStack.BindDataSetDependentEvents = function () {
@@ -931,40 +960,6 @@ $(document).ready(function() {
 	  
 	  $.extend(  $.mobile , options);
 
-	var afterLoadingRoutine = function() {
-		// create an instance of the navigation
-		TissueStack.dataSetNavigation = new TissueStack.DataSetNavigation();
-		
-		// see if we have received initial values for data set incl. coords and zoom level
-		var initOpts = TissueStack.Utils.readQueryStringFromAddressBar();
-		if (initOpts) TissueStack.configuration['initOpts'] = initOpts;
-		
-		// display the first data set received from the backend list unless a particular was requested or the requested one does not exist
-		if (TissueStack.configuration['initOpts'] && TissueStack.configuration['initOpts']['ds'] 
-				&& TissueStack.dataSetStore.getDataSetById('localhost_' + TissueStack.configuration['initOpts']['ds'])) {
-			if (TissueStack.desktop)
-				TissueStack.dataSetNavigation.getDynaTreeObject().selectKey("localhost_" + TissueStack.configuration['initOpts']['ds']);
-			else
-				TissueStack.dataSetNavigation.addDataSet(TissueStack.dataSetStore.getDataSetById('localhost_' + TissueStack.configuration['initOpts']['ds']).id, 0);
-		} else if (TissueStack.dataSetStore && TissueStack.dataSetStore.datasetCount && TissueStack.dataSetStore.datasetCount > 0){
-			var ds = TissueStack.dataSetStore.getDataSetByIndex(0);
-			if (TissueStack.desktop) TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(ds.id); 
-			else TissueStack.dataSetNavigation.addDataSet(ds.id, 0);
-		}
-		if (TissueStack.dataSetStore && TissueStack.dataSetStore.datasetCount && TissueStack.dataSetStore.datasetCount > 1) TissueStack.dataSetNavigation.showDataSet(1);
-		
-		// initialize ui and events
-		if (!TissueStack.desktop) { // avoid double binding
-			TissueStack.InitUserInterface();
-			TissueStack.BindDataSetDependentEvents();
-		}
-		TissueStack.BindGlobalEvents();
-		if (TissueStack.configuration['initOpts']) TissueStack.applyUserParameters();
-
-		// add admin functionality to all versions
-		TissueStack.admin = new TissueStack.Admin();
-	};
-	// call asynchronous init
-	TissueStack.Init(afterLoadingRoutine);
+	TissueStack.Init();
 
 });

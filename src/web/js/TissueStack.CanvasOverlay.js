@@ -79,7 +79,7 @@ TissueStack.CanvasOverlay.prototype = {
 						return;
 					}
 					if (data.error) {
-						var message = "Application Error: " + (data.error.message ? data.error.message : " no more info available. check logs.");
+						var message = "Application Error: " + (data.error.description ? data.error.description : " no more info available. check logs.");
 						__this.error = message;
 						return;
 					}
