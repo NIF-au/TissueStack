@@ -38,16 +38,20 @@ const tissuestack::common::Request * const tissuestack::networking::TissueStackR
 			static_cast<const tissuestack::networking::HttpRequest * const>(request);
 	//httpRequest->dumpParametersIntoDebugLog();
 
-	// we need a service parameter at a minimum
+	std::unordered_map<std::string, std::string> parameters = httpRequest->getParameterMap();
+
+	// we need a service parameter at a minimum, if not display version info
 	std::string service = httpRequest->getParameter("SERVICE");
 	if (service.empty())
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
-				"A TissueStack request needs to have a \"SERVICE\" query parameter, e.g. '/?service=image' !");
+	{
+		service = "SERVICES";
+		parameters["SERVICE"] = "SERVICES";
+		parameters["SUB_SERVICE"] = "CONFIGURATION";
+		parameters["ACTION"] = "VERSION";
+	}
 
 	// upper case for better comparison
 	std::transform(service.begin(), service.end(), service.begin(), toupper);
-
-	std::unordered_map<std::string, std::string> parameters = httpRequest->getParameterMap();
 
 	// instantiate the appropriate request class
 	tissuestack::common::Request * return_request = nullptr;
@@ -71,7 +75,7 @@ const tissuestack::common::Request * const tissuestack::networking::TissueStackR
 
 	if (return_request == nullptr)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
-						"A TissueStack request has to be: 'IMAGE', 'IMAGE_PREVIEW, 'QUERY', 'TILING','CONVERSION' or 'SERVICES'!");
+						"A TissueStack request has to be: 'IMAGE', 'IMAGE_PREVIEW, 'QUERY', 'TILING','CONVERSION', 'SERVICES' or VERSION!");
 
 	// a general isObsolete check. for most but not all requests that equates to a superseded timestamp check
 	// for conversion/tiling, this can be used to catch duplicate conversion/tiling requests
