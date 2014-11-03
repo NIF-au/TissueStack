@@ -56,6 +56,7 @@ if [ `iptables -S | grep -e "-A INPUT -p tcp -m tcp --dport 5432 -j DROP" | wc -
 fi
 iptables-save &>> /tmp/post-install.log
 service httpd restart &>> /tmp/post-install.log
+source /etc/profile.d/tissuestack_modules.sh &>> /tmp/post-install.log
 cp -f /opt/tissuestack/conf/tissuestack_init.sh /etc/init.d/tissuestack &>> /tmp/post-install.log
 chmod 755 /etc/init.d/tissuestack &>> /tmp/post-install.log
 chkconfig --add tissuestack &>> /tmp/post-install.log
