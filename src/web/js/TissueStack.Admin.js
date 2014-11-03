@@ -470,6 +470,11 @@ TissueStack.Admin.prototype = {
 					return true;
 				}	
 				if (data.error) {
+					if (data.error.description.indexOf("File exists already!") != 0)
+					{
+						__this.replaceErrorMessage(data.error.description);
+						return false;
+					}
 					if (!confirm("A data set file with the same name exists already! Do you want to rename the new file?"))
 				        return false;
 				    
