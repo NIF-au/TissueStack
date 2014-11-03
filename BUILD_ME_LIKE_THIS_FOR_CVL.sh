@@ -1,11 +1,11 @@
 #!/bin/bash
 clear
 
-HAS_PQXX_LIB=`yum list installed | grep "libpqxx-devel" | wc -c`
-if [ $HAS_PQXX_LIB -eq 0 ]; then
-        echo "Build and install libpqxx first => see tissuestack git branch: libpqxx-devel!"
-        exit -1
-fi;
+#HAS_PQXX_LIB=`yum list installed | grep "libpqxx-devel" | wc -c`
+#if [ $HAS_PQXX_LIB -eq 0 ]; then
+#        echo "Build and install libpqxx first => see tissuestack git branch: libpqxx-devel!"
+#        exit -1
+#fi;
 
 IS_CENTOS_6_X=`cat /etc/*-release | grep -i "centos release 6."| wc -c`
 if [ $IS_CENTOS_6_X -gt 0 ]; then
