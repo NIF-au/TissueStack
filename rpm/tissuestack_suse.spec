@@ -110,12 +110,8 @@ if [ `grep proxy_module /etc/apache2/sysconfig.d/loadmodule.conf | wc -c` -eq 0 
 	echo "LoadModule proxy_module /usr/lib64/apache2-prefork/mod_proxy.so" >> /etc/apache2/sysconfig.d/loadmodule.conf
 	a2enmod proxy
 fi;	 
-if [ `grep proxy_connect /etc/apache2/sysconfig.d/loadmodule.conf | wc -c` -eq 0 ]; then
-	echo "LoadModule proxy_connect /usr/lib64/apache2-prefork/mod_proxy_connect.so" >> /etc/apache2/sysconfig.d/loadmodule.conf
-	a2enmod proxy_connect
-fi;	 
-if [ `grep proxy_http /etc/apache2/sysconfig.d/loadmodule.conf | wc -c` -eq 0 ]; then
-	echo "LoadModule proxy_http /usr/lib64/apache2-prefork/mod_proxy_http.so" >> /etc/apache2/sysconfig.d/loadmodule.conf
+if [ `grep proxy_http_module /etc/apache2/sysconfig.d/loadmodule.conf | wc -c` -eq 0 ]; then
+	echo "LoadModule proxy_http_module /usr/lib64/apache2-prefork/mod_proxy_http.so" >> /etc/apache2/sysconfig.d/loadmodule.conf
 	a2enmod proxy_http
 fi;	 
 if [ `iptables -S | grep -e "-A INPUT -i lo -j ACCEPT" | wc -c` -eq 0 ]; then
