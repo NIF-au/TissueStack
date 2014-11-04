@@ -56,10 +56,12 @@ chmod 666 /tmp/uninstall.log
 exit 0
 
 %postun
-chkconfig --del tissuestack &>> /tmp/uninstall.log
-rm -rf /etc/init.d/tissuestack &>> /tmp/uninstall.log
-rm -rf /etc/apache2/vhosts.d/tissuestack.conf &>> /tmp/uninstall.log
-httpd2 -k restart &>> /tmp/uninstall.log
+if [ $1 -ne 1 ]; then
+	chkconfig --del tissuestack &>> /tmp/uninstall.log
+	rm -rf /etc/init.d/tissuestack &>> /tmp/uninstall.log
+	rm -rf /etc/apache2/vhosts.d/tissuestack.conf &>> /tmp/uninstall.log
+	httpd2 -k restart &>> /tmp/uninstall.log
+fi
 /sbin/ldconfig
 exit 0
 

@@ -56,14 +56,16 @@ chmod 666 /tmp/uninstall.log
 exit 0
 
 %postun
-APACHE_PORT=80
-chkconfig --del tissuestack &>> /tmp/uninstall.log
-rm -rf /etc/init.d/tissuestack &>> /tmp/uninstall.log
-rm -rf /etc/httpd/conf.d/tissuestack.conf &>> /tmp/uninstall.log
-mv /etc/httpd/conf.d/welcome.conf.disabled /etc/httpd/conf.d/welcome.conf &>> /tmp/uninstall.log
-if [ $APACHE_PORT -ne 80 ]; then sed -i "s/Listen $APACHE_PORT/Listen 80/g" /etc/httpd/conf/httpd.conf; fi &>> /tmp/uninstall.log
-rm -rf /tmp/tissue_stack_communication &>> /tmp/uninstall.log
-service httpd restart &>> /tmp/uninstall.log
+if [ $1 -ne 1 ]; then
+	APACHE_PORT=80
+	chkconfig --del tissuestack &>> /tmp/uninstall.log
+	rm -rf /etc/init.d/tissuestack &>> /tmp/uninstall.log
+	rm -rf /etc/httpd/conf.d/tissuestack.conf &>> /tmp/uninstall.log
+	mv /etc/httpd/conf.d/welcome.conf.disabled /etc/httpd/conf.d/welcome.conf &>> /tmp/uninstall.log
+	if [ $APACHE_PORT -ne 80 ]; then sed -i "s/Listen $APACHE_PORT/Listen 80/g" /etc/httpd/conf/httpd.conf; fi &>> /tmp/uninstall.log
+	rm -rf /tmp/tissue_stack_communication &>> /tmp/uninstall.log
+	service httpd restart &>> /tmp/uninstall.log
+fi
 /sbin/ldconfig
 exit 0
 
