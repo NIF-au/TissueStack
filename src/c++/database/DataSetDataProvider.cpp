@@ -170,6 +170,7 @@ void tissuestack::database::DataSetDataProvider::findAndAddPlanes(
 	if (results.empty()) return;
 
 	// loop over planes and create dimension objects
+	unsigned int width = 0, height = 0;
 	for (pqxx::result::const_iterator i_results = results.begin(); i_results != results.end(); ++i_results)
 	{
 		tissuestack::imaging::TissueStackDataDimension * rec =
@@ -180,7 +181,17 @@ void tissuestack::database::DataSetDataProvider::findAndAddPlanes(
 		rec->setTransformationMatrix(
 			i_results["transformation_matrix"].is_null() ? "" : i_results["transformation_matrix"].as<std::string>());
 		imageData->addDimension(rec);
+		width = i_results["max_x"].as<unsigned int>();
+		height = i_results["max_y"].as<unsigned int>();
 	}
+
+	if (imageData->getNumberOfDimensions() == 1) // 2D plane
+	{
+		const_cast<tissuestack::imaging::TissueStackDataDimension *>(
+			imageData->getDimensionByOrderIndex(0))->setWidthAndHeight(width, height);
+		return;
+	}
+
 	imageData->initializeDimensions(true);
 }
 
@@ -265,8 +276,9 @@ const unsigned short tissuestack::database::DataSetDataProvider::addDataSet(
 			<< "," << std::to_string(dim->getHeight())
 			<< "," << std::to_string(dim->getNumberOfSlices())
 			<< "," << std::to_string(dataSet->getOneToOneZoomLevel())
-			<< ",'" << dim->getTransformationMatrix()
-			<< "',";
+			<< (dim->getTransformationMatrix().empty() ?
+					", NULL," :
+					std::string(",'") + dim->getTransformationMatrix() + "',");
 		if (dataSet->getResolutionInMm() == 0)
 			tmpSql << "NULL";
 		else

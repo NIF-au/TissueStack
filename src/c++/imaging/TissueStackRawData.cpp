@@ -213,6 +213,20 @@ void tissuestack::imaging::TissueStackRawData::parseHeader(const std::string & h
 		count++;
 	}
 
+	// special case 2D
+	if (numOfDims == 2)
+	{
+		tissuestack::imaging::TissueStackDataDimension * TwoDPlane =
+			new tissuestack::imaging::TissueStackDataDimension(
+				"yspace",
+				this->_totalHeaderLength,
+				1,
+				dims[0]*dims[1]);
+		this->addDimension(TwoDPlane);
+		TwoDPlane->setWidthAndHeight(dims[0], dims[1]);
+		return;
+	}
+
 	// finally we have everything we need to construct and add our dimension object
 	unsigned short j = 0;
 	unsigned long long int offset[4] =

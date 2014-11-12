@@ -233,6 +233,10 @@ inline void tissuestack::imaging::RawConverter::loopOverDimensions(
 				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 					"Image Format is not suitable for RAW conversion!");
 
+			if (converter_task->getInputImageData()->getNumberOfDimensions() == 2)
+				const_cast<tissuestack::services::TissueStackConversionTask *>(converter_task)->setSlicesDone(
+					converter_task->getTotalSlices()-1);
+
 			// shutdown/cancellation check
 			if (this->hasBeenCancelledOrShutDown(processing_strategy, converter_task))
 			{
@@ -414,7 +418,12 @@ inline void tissuestack::imaging::RawConverter::convertSlice(
 
 	// set time slice to 0 for any data set with dimensionality greater than 3
 	if (nifti->getNiftiHandle()->ndim > 3) dims[4] = 0;
-	dims[dimension_number+1] = slice_number;
+	if (nifti->getNumberOfDimensions() == 2)
+	{
+		dims[dimension_number+1] = -1;
+		dims[dimension_number+2] = -1;
+	} else
+		dims[dimension_number+1] = slice_number;
 
 	const unsigned long long int size_per_slice =
 		dim->getSliceSize();

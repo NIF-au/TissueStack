@@ -377,6 +377,8 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::createImageFromDat
 
 	if (image->getFormat() == tissuestack::imaging::FORMAT::RAW) return img;
 
+	if (image->getNumberOfDimensions() < 3) return img;
+
 	Image * tmp = img;
 	if (image->getFormat() == tissuestack::imaging::FORMAT::NIFTI ||
 			(image->getFormat() == tissuestack::imaging::FORMAT::MINC &&

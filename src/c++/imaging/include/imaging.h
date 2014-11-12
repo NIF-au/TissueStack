@@ -203,7 +203,8 @@ namespace tissuestack
 				void setSliceSizeFromGivenWidthAndHeight();
 			private:
 				friend class TissueStackImageData;
-				void setWidthAndHeight(const std::array<unsigned int, 2> & widthAndHeight);
+				friend class TissueStackRawData;
+				void setWidthAndHeight(const unsigned int width, const unsigned int height);
 				void setOffSet(const unsigned long long int offSet);
 				friend class tissuestack::database::DataSetDataProvider;
 				void setTransformationMatrix(const std::string transformationMatrix);

@@ -45,8 +45,8 @@ const std::array<unsigned long long int, 3> tissuestack::imaging::SimpleCacheHeu
 	const tissuestack::imaging::TissueStackDataDimension * actualDimension =
 			image->getDimensionByLongName(request->getDimensionName());
 
-	if (request->getXCoordinate() > actualDimension->getWidth() ||
-			request->getYCoordinate() > actualDimension->getHeight())
+	if (request->getXCoordinate() >= actualDimension->getWidth() ||
+			request->getYCoordinate() >= actualDimension->getHeight())
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"Image Query: Coordinate (x/y) exceeds the width/height of the image slice!");
 

@@ -241,7 +241,17 @@ TissueStack.DataSetNavigation.prototype = {
 		$("#dataset_" + index  + " .side_canvas_cross_overlay").removeClass("hidden");		
 		
 		// we keep the slider and the cross-hair hidden for overlaid data sets
-		$("#dataset_" + index  + "_right_panel").removeClass("hidden");
+		var numberOfPlanes = 3;
+		var ds_id = TissueStack.dataSetNavigation.selectedDataSets['dataset_' + index];
+		if (ds_id)
+		{
+			var ds = TissueStack.dataSetStore.getDataSetById(ds_id);
+			if (ds)
+				numberOfPlanes = ds.data.length;
+		}
+		
+		if (numberOfPlanes > 1)
+			$("#dataset_" + index  + "_right_panel").removeClass("hidden");
 		this.handleOverlaidDataSets(index, overlaid);
 	},
 	handleOverlaidDataSets : function(index, overlaid) {

@@ -54,6 +54,11 @@ tissuestack::imaging::TissueStackNiftiData::TissueStackNiftiData(const std::stri
 
 	// extract dimension number
 	int numberOfDimensions = this->_volume->ndim;
+	// in these 2 cases we are undoubtedly color
+	if (this->_volume->datatype == NIFTI_TYPE_RGB24
+		|| this->_volume->datatype == NIFTI_TYPE_RGBA32)
+		this->_is_color = true;
+
 	if (numberOfDimensions > 3) { // this is how we handle time series data and potential RGB, data types in headers are not reliable
 		if (numberOfDimensions > 4) this->_is_color = true; // if there is yet another dimension after time we assume RGB
 		numberOfDimensions = 3; // internally we use this to determine our loop length

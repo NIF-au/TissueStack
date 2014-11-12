@@ -160,31 +160,54 @@ inline const std::string tissuestack::imaging::TissueStackImageData::constructId
 
 inline void tissuestack::imaging::TissueStackImageData::setWidthAndHeightByDimension(const std::string & dimension)
 {
-	std::array<unsigned int,2> widthAndHeight = {{0, 0}};
+	unsigned int width = 0;
+	unsigned int height = 0;
 
-	tissuestack::imaging::TissueStackDataDimension * width = nullptr;
-	tissuestack::imaging::TissueStackDataDimension * height = nullptr;
+	tissuestack::imaging::TissueStackDataDimension * widthDimension = nullptr;
+	tissuestack::imaging::TissueStackDataDimension * heightDimension = nullptr;
+
+	tissuestack::imaging::TissueStackDataDimension * presentDimension =
+		const_cast<tissuestack::imaging::TissueStackDataDimension *>(
+			this->getDimensionByLongName(dimension));
 
 	if (dimension.at(0) == 'x')
 	{
-		width = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('y'));
-		height = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('z'));
+		if (this->getNumberOfDimensions() == 2)
+		{
+			widthDimension = nullptr;
+			heightDimension = nullptr;
+			width = presentDimension->getNumberOfSlices();
+			height = this->getDimension('y')->getNumberOfSlices();
+		} else
+		{
+			widthDimension = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('y'));
+			heightDimension = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('z'));
+		}
 	} else if (dimension.at(0) == 'y')
 	{
-		width = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('x'));
-		height = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('z'));
+		if (this->getNumberOfDimensions() == 2)
+		{
+			widthDimension = nullptr;
+			heightDimension = nullptr;
+			width = presentDimension->getNumberOfSlices();
+			height = this->getDimension('x')->getNumberOfSlices();
+		} else
+		{
+			widthDimension = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('x'));
+			heightDimension = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('z'));
+		}
 	} else if (dimension.at(0) == 'z')
 	{
-		width = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('x'));
-		height = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('y'));
-	}
+		widthDimension = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('x'));
+		heightDimension = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('y'));
+	} else
+		THROW_TS_EXCEPTION(
+				tissuestack::common::TissueStackApplicationException, "Dimension cannot be matched to x,y or z!");
 
-	if (width) widthAndHeight[0] = width->getNumberOfSlices();
-	if (height) widthAndHeight[1] = height->getNumberOfSlices();
+	if (widthDimension) width = widthDimension->getNumberOfSlices();
+	if (heightDimension) height = heightDimension->getNumberOfSlices();
 
-	const_cast<tissuestack::imaging::TissueStackDataDimension *>(
-			this->getDimensionByLongName(dimension))->setWidthAndHeight(
-					const_cast<const std::array<unsigned int,2> & >(widthAndHeight));
+	presentDimension->setWidthAndHeight(width, height);
 }
 
 inline void tissuestack::imaging::TissueStackImageData::setTransformationMatrixByDimension(const std::string & dimension)

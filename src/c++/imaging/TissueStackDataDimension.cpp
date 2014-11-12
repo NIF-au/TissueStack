@@ -42,13 +42,13 @@ const std::string tissuestack::imaging::TissueStackDataDimension::getName() cons
 	return this->_name;
 }
 
-void tissuestack::imaging::TissueStackDataDimension::setWidthAndHeight(const std::array<unsigned int, 2> & widthAndHeight)
+void tissuestack::imaging::TissueStackDataDimension::setWidthAndHeight(const unsigned int width, const unsigned int height)
 {
-	if (widthAndHeight[0] <=0 || widthAndHeight[1] <=0)
+	if (width <=0 || height <=0)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"DataDimension Initialization with an invalid width/height of less than or equal to 0");
-	this->_width = widthAndHeight[0];
-	this->_height = widthAndHeight[1];
+	this->_width = width;
+	this->_height = height;
 }
 
 void tissuestack::imaging::TissueStackDataDimension::setTransformationMatrix(const std::string transformationMatrix)
