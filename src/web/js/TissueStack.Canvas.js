@@ -491,6 +491,7 @@ TissueStack.Canvas.prototype = {
 				|| this.upper_left_x > 0 && this.upper_left_x > this.dim_x
 				|| this.upper_left_y <=0 || (this.upper_left_y - this.getDataExtent().y) >= this.dim_y) {
 			this.syncDataSetCoordinates(this, timestamp, true);
+			this.displayLoadingProgress(0,0, true);
 			return;
 		}
 

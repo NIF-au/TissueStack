@@ -144,6 +144,7 @@ TissueStack.Queue.prototype = {
 		var slice = this.canvas.getDataExtent().slice;
 		if (slice < 0 || slice > this.canvas.getDataExtent().max_slices) {
 			this.lowResolutionPreviewDrawn = true;
+			this.canvas.displayLoadingProgress(0,0, true);
 			return;
 		}
 
@@ -154,6 +155,8 @@ TissueStack.Queue.prototype = {
 				|| this.canvas.upper_left_x > 0 && this.canvas.upper_left_x > this.canvas.dim_x
 				|| this.canvas.upper_left_y <=0 || (this.canvas.upper_left_y - this.canvas.getDataExtent().y) >= this.canvas.dim_y) {
 			this.lowResolutionPreviewDrawn = true;
+			this.canvas.displayLoadingProgress(0,0, true);
+
 			return;
 		} 
 		
@@ -488,10 +491,10 @@ TissueStack.Queue.prototype = {
 		}
 		if ((this.canvas.upper_left_y - this.canvas.getDataExtent().y-1) >= this.canvas.dim_y || (this.canvas.upper_left_y - this.canvas.getDataExtent().y-1) > 0) { // behind us
 			this.canvas.eraseCanvasPortion(
-				0, (this.canvas.upper_left_y >= this.canvas.dim_y && this.canvas.upper_left_y - this.canvas.getDataExtent().y-1 >= this.canvas.dim_y) ? 0 : Math.floor(this.canvas.dim_y - (this.canvas.upper_left_y - this.canvas.getDataExtent().y-1)),
+				0, (this.canvas.upper_left_y >= this.canvas.dim_y && this.canvas.upper_left_y - this.canvas.getDataExtent().y-1 >= this.canvas.dim_y) ? 0 : Math.floor(this.canvas.dim_y - (this.canvas.upper_left_y - this.canvas.getDataExtent().y)),
 				this.canvas.dim_x, 
 				(this.canvas.upper_left_y >= this.canvas.dim_y && this.canvas.upper_left_y - this.canvas.getDataExtent().y-1 >= this.canvas.dim_y) ?
-						this.canvas.dim_y : this.canvas.dim_y - Math.floor(this.canvas.dim_y - (this.canvas.upper_left_y - this.canvas.getDataExtent().y-1)));
+						this.canvas.dim_y : this.canvas.dim_y - Math.floor(this.canvas.dim_y - (this.canvas.upper_left_y - this.canvas.getDataExtent().y)));
 		}
 	}
 };
