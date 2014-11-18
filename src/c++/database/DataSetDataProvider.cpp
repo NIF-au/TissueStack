@@ -20,7 +20,7 @@
 
 const std::string tissuestack::database::DataSetDataProvider::SQL =
 	"SELECT PrimaryTable.id AS prim_id, PrimaryTable.filename, PrimaryTable.description, PrimaryTable.lookup_id,"
-		" PrimaryTable.is_tiled, PrimaryTable.zoom_levels, PrimaryTable.one_to_one_zoom_level, resolution_mm,"
+		" PrimaryTable.is_tiled, PrimaryTable.zoom_levels, PrimaryTable.one_to_one_zoom_level, "
 		" SecondaryTable.id AS sec_id, SecondaryTable.filename AS sec_filename, SecondaryTable.content,"
 		" TertiaryTable.id AS ter_id, TertiaryTable.atlas_prefix, TertiaryTable.atlas_description, TertiaryTable.atlas_query_url"
 		" FROM dataset AS PrimaryTable"
@@ -180,6 +180,9 @@ void tissuestack::database::DataSetDataProvider::findAndAddPlanes(
 				i_results["max_slices"].as<unsigned long long int>());
 		rec->setTransformationMatrix(
 			i_results["transformation_matrix"].is_null() ? "" : i_results["transformation_matrix"].as<std::string>());
+		rec->setResolutionMm(
+			i_results["resolution_mm"].is_null() ? 0 : i_results["resolution_mm"].as<float>());
+
 		imageData->addDimension(rec);
 		width = i_results["max_x"].as<unsigned int>();
 		height = i_results["max_y"].as<unsigned int>();
@@ -265,8 +268,8 @@ const unsigned short tissuestack::database::DataSetDataProvider::addDataSet(
 		const tissuestack::imaging::TissueStackDataDimension * dim =
 			dataSet->getDimensionByLongName(d);
 		tmpSql << "INSERT INTO dataset_planes (id, dataset_id, is_tiled, zoom_levels, name,"
-			<< " max_x, max_y, max_slices, one_to_one_zoom_level, transformation_matrix,"
-			<< " resolution_mm) VALUES(DEFAULT,"
+			<< " max_x, max_y, max_slices, one_to_one_zoom_level, transformation_matrix)"
+			<< " VALUES(DEFAULT,"
 			<< db_id << ",'"
 			<< (dataSet->isTiled() ? "T" : "F")
 			<< "','" << dataSet->getZoomLevelsAsJson()
@@ -277,12 +280,8 @@ const unsigned short tissuestack::database::DataSetDataProvider::addDataSet(
 			<< "," << std::to_string(dim->getNumberOfSlices())
 			<< "," << std::to_string(dataSet->getOneToOneZoomLevel())
 			<< (dim->getTransformationMatrix().empty() ?
-					", NULL," :
-					std::string(",'") + dim->getTransformationMatrix() + "',");
-		if (dataSet->getResolutionInMm() == 0)
-			tmpSql << "NULL";
-		else
-			tmpSql << std::to_string(dataSet->getResolutionInMm());
+					", NULL" :
+					std::string(",'") + dim->getTransformationMatrix() + "'");
 		tmpSql << ");";
 		sqls.push_back(tmpSql.str());
 		tmpSql.str("");
@@ -380,7 +379,6 @@ const std::vector<const tissuestack::imaging::TissueStackImageData *> tissuestac
 			i_results["is_tiled"].as<bool>(),
 			v_zoom_levels,
 			i_results["one_to_one_zoom_level"].as<unsigned short>(),
-			i_results["resolution_mm"].is_null() ? 0.0 : i_results["resolution_mm"].as<float>(),
 			associatedLookup
 		);
 		v_results.push_back(rec.release());

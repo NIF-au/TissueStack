@@ -22,6 +22,12 @@ tissuestack::execution::ThreadPool::ThreadPool(short number_of_threads) :
 	if (number_of_threads <1)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "A Thread Pool with less than 1 threads is not of much use!");
 	this->_workers = new tissuestack::execution::WorkerThread*[number_of_threads];
+	int i=0; // initialize to null
+	while (i<this->_number_of_threads) {
+		this->_workers[i] = nullptr;
+		i++;
+	}
+
 	tissuestack::logging::TissueStackLogger::instance()->info("Thread Pool Size: %u\n", number_of_threads);
 }
 

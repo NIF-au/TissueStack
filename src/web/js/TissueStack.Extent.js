@@ -299,7 +299,7 @@ TissueStack.Extent.prototype = {
 	
 		return coords;
 	}, adjustScaleBar :function (length) { 
-		var scaleMiddle = $('#'+this.canvas.dataset_id+'_scale_middle, .'+this.canvas.dataset_id+'_scalecontrol_image');
+		var scaleMiddle = $('#'+this.canvas.dataset_id+'_scale_middle, .scalecontrol_image');
 		if (!scaleMiddle || scaleMiddle.length == 0) return;
 		
 		scaleMiddle.css({"width" : length + 3});

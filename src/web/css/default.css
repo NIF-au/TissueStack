@@ -409,7 +409,7 @@ a.ui-slider-handle-horizontal{
 	width: 4px; 
 	height: 12px;
 }
-.dataset_1_scalecontrol_image, .dataset_2_scalecontrol_image{
+.scalecontrol_image {
 	margin: 0px; 
 	padding: 0px; 
 	position: absolute; 
