@@ -24,7 +24,8 @@ TissueStack = {
 	                	"/js/TissueStack.Queue.js",
 	                	"/js/TissueStack.Canvas.js",
 	                	"/js/TissueStack.Events.js",
-	                	"/js/TissueStack.DataSetStore.js"
+	                	"/js/TissueStack.DataSetStore.js",
+                        "/js/TissueStack.ComponentFactory.js"
 	                ]
 };
 
@@ -185,69 +186,6 @@ TissueStack.Embedded.prototype = {
 		}
 
 		return newEl;
-	},
-	createHTMLForDataSet : function(dataSet, include_cross_hair) {
-		// outer div
-		var html = '<div id="dataset_1" class="dataset">';
-		
-		// loop over all planes in the data
-		for (var i=0; i < dataSet.data.length; i++) {
-			var planeId = dataSet.data[i].name;
-			
-			switch(i) {
-				case 0: // first is main canvas (incl. scale bar)
-					html += ('<div class="scalecontrol_main"><div id="dataset_1_scale_middle" class="scalecontrol_middle">'
-						+ '<div class="scalecontrol_image" style="left: 0px; top: -424px; width: 89px;"></div></div>'
-						+ '<div id="dataset_1_scale_left" class="scalecontrol_left">'
-						+ '<div class="scalecontrol_image" style="left: -4px; top: -398px; width: 59px;"></div></div>'
-						+ '<div id="dataset_1_scale_center_left" class="scalecontrol_center_left">'
-	    				+ '<div class="scalecontrol_image" style="left: 0px; top: -398px; width: 59px;"></div></div>'
-	    				+ '<div id="dataset_1_scale_center_right" class="scalecontrol_center_right">'
-	    				+ '<div class="scalecontrol_image" style="left: 0px; top: -398px; width: 59px;"></div></div>'
-	    				+ '<div id="dataset_1_scale_up" class="scalecontrol_up">'
-    					+ '<div class="scalecontrol_image" style="left: -4px; top: -398px; width: 59px;"></div></div>'
-	    				+ '<div id="dataset_1_scale_text_up" class="scalecontrol_text_up"></div></div>');
-					
-					html +=
-							'<div id="dataset_1_main_view_canvas" class="canvasview canvas_' + planeId + '">'
-						+ 	'<canvas id="dataset_1_canvas_' + planeId + '_plane" class="plane"></canvas>'
-						+ (include_cross_hair ? 
-								'<canvas id="dataset_1_canvas_'  + planeId + '_plane_cross_overlay" class="cross_overlay"></canvas>'
-								: ''
-						   );
-					break;
-				case 1:
-					html +=
-							'<div id="dataset_1_left_side_view_canvas" class="left_side_view ui-bar-a">'
-						+	'<img id="dataset_1_left_side_view_maximize" class="canvas_' + planeId
-						+ 	' maximize_view_icon" src="http://' + this.domain + '/images/maximize.png" alt="Maximize View" />'
-						+	'<canvas id="dataset_1_canvas_' + planeId + '_plane" class="side_canvas"></canvas>'
-						+ 	(include_cross_hair ? 
-								'<canvas id="dataset_1_canvas_' + planeId +
-								'_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>'
-								: ''
-							);
-					break;
-				case 2:
-					html +=
-							'<div id="dataset_1_right_side_view_canvas" class="right_side_view ui-bar-a">'
-						+	'<img id="dataset_1_right_side_view_maximize" class="canvas_' + planeId
-						+ 	' maximize_view_icon" src="http://' + this.domain + '/images/maximize.png" alt="Maximize View" />'
-						+	'<canvas id="dataset_1_canvas_' + planeId + '_plane" class="side_canvas"></canvas>'
-						+ 	(include_cross_hair ? 
-								'<canvas id="dataset_1_canvas_' + planeId +
-								'_plane_cross_overlay" class="side_canvas side_canvas_cross_overlay"></canvas>'
-								: ''
-							);
-					break;
-			}
-			
-			
-			html += "</div>";
-		}
-
-		//close outer div
-		this.getDiv().append(html + '</div>');
 	},
 	initCanvasView : function(dataSet, use_image_service) {
 		// we use that for the image service to be able to abort pending requests
@@ -415,7 +353,12 @@ TissueStack.Embedded.prototype = {
 				}
 
 				// create the HTML necessary for display and initialize the canvas objects
-				_this.createHTMLForDataSet(dataSet, _this.include_cross_hair);
+                var newDataSetDiv =
+                    TissueStack.ComponentFactory.createDataSet(_this.getDiv().attr("id"), dataSet, 1, _this.domain, _this.include_cross_hair);
+                if (newDataSetDiv !== 'dataset_1')
+                    return;
+                    
+                TissueStack.ComponentFactory.addScaleToDataSet(newDataSetDiv, dataSet, 1);
 				_this.adjustCanvasSizes();
 				_this.initCanvasView(dataSet, _this.use_image_service);
 				// if we have more than 1 plane => register the maximize events
