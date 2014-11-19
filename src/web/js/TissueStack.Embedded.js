@@ -186,62 +186,6 @@ TissueStack.Embedded.prototype = {
 		}
 
 		return newEl;
-	},
-	initCanvasView : function(dataSet, use_image_service) {
-		// we use that for the image service to be able to abort pending requests
-		var now = new Date().getTime();
-		
-		// loop over all planes in the data, create canvas and extent objects, then display them
-		for (var i=0; i < dataSet.data.length; i++) {
-			var dataForPlane = dataSet.data[i];
-			var planeId = dataForPlane.name;
-			
-			var zoomLevels = eval(dataForPlane.zoomLevels);
-			transformationMatrix = eval(dataForPlane.transformationMatrix);
-			
-			// create extent
-			var extent = 
-				new TissueStack.Extent(
-					dataSet.id,
-					!use_image_service,
-					dataForPlane.oneToOneZoomLevel,
-					planeId,
-					dataForPlane.maxSlices,
-					dataForPlane.maxX,
-					dataForPlane.maxY,
-					zoomLevels,
-					transformationMatrix,
-					dataForPlane.resolutionMm);
-			
-			// create canvas
-			var canvasElementSelector = "dataset_1"; 
-			var plane = new TissueStack.Canvas(
-					extent,
-					"canvas_" + planeId + "_plane",
-					canvasElementSelector,
-					this.include_cross_hair);
-
-			// for scalebar to know its parent
-			if (i == 0) plane.is_main_view = true;
-			plane.updateScaleBar();
-			
-			// store plane  
-			dataSet.planes[planeId] = plane;
-
-			// get the real world coordinates 
-			dataSet.realWorldCoords[planeId] = plane.getDataExtent().getExtentCoordinates();
-			
-			// display data extent info on page
-			plane.updateExtentInfo(dataSet.realWorldCoords[planeId]);
-
-			// if we have more than 1 plane => show y as the main plane and make x and z the small views
-			if (i != 0) {
-				plane.changeToZoomLevel(0);
-			} 
-
-			plane.queue.drawLowResolutionPreview(now);
-			plane.queue.drawRequestAfterLowResolutionPreview(null, now);
-		}
 	}, applyUserParameters : function(dataSet) {
 		if (!this.initOpts) return;
 		
@@ -291,31 +235,10 @@ TissueStack.Embedded.prototype = {
 		plane.queue.drawLowResolutionPreview(now);
 		plane.queue.drawRequestAfterLowResolutionPreview(null, now);
 	},
-	adjustCanvasSizes : function() {
-		// get dimensions from parent and impose them on the canvases
-		var width = this.getDiv().width();
-		var height = this.getDiv().height();
-		
-		$('#dataset_1').css({"width" : width, "height" : height});
-				
-		// set main canvas dimensions
-		$('#dataset_1_main_view_canvas').css({"width" : width, "height" : height});
-		$('#dataset_1_main_view_canvas canvas').attr("width", width);
-		$('#dataset_1_main_view_canvas canvas').attr("height", height);
-		
-		// set main canvas dimensions
-		var sideCanvasDims = {width: Math.floor(width * 0.3), height: Math.floor(height * 0.2)};
-		$('.left_side_view').css({"width" : sideCanvasDims.width, "height" : sideCanvasDims.height});
-		$('.right_side_view').css({"width" : sideCanvasDims.width, "height" : sideCanvasDims.height});
-		$('.left_side_view canvas').attr("width", sideCanvasDims.width);
-		$('.left_side_view canvas').attr("height", sideCanvasDims.height);
-		$('.right_side_view canvas').attr("width", sideCanvasDims.width);
-		$('.right_side_view canvas').attr("height", sideCanvasDims.height);
-	},
 	loadDataSetConfigurationFromServer : function() {
 		var _this = this;
 		var url = "http://" + _this.domain + "/" + 
-			TissueStack.configuration['server_proxy_path'].value + "/?service=services&sub_service=data&action=query&id=" 
+			TissueStack.configuration['server_proxy_path'].value + "/?service=services&sub_service=data&action=all&id=" 
 			+ _this.data_set_id + "&include_planes=true";
 		
 		// create a new data store
@@ -353,19 +276,17 @@ TissueStack.Embedded.prototype = {
 				}
 
 				// create the HTML necessary for display and initialize the canvas objects
-                var newDataSetDiv =
-                    TissueStack.ComponentFactory.createDataSet(_this.getDiv().attr("id"), dataSet, 1, _this.domain, _this.include_cross_hair);
-                if (newDataSetDiv !== 'dataset_1')
-                    return;
-                    
-                TissueStack.ComponentFactory.addScaleToDataSet(newDataSetDiv, dataSet, 1);
-				_this.adjustCanvasSizes();
-				_this.initCanvasView(dataSet, _this.use_image_service);
-				// if we have more than 1 plane => register the maximize events
-				if (dataSet.data.length > 1) {
-					_this.registerMaximizeEvents();
-				}
+                TissueStack.ComponentFactory.createDataSetWidget(
+                    _this.getDiv().attr("id"), dataSet, 1, _this.domain, _this.include_cross_hair, true, _this.use_image_service);
 				if (_this.initOpts) _this.applyUserParameters(dataSet);
+                
+                /*
+                // add to data store
+                dataSet = data.response[1];
+                dataSet = TissueStack.dataSetStore.addDataSetToStore(dataSet, _this.domain);
+                TissueStack.ComponentFactory.createDataSetWidget(
+                    _this.getDiv().attr("id") + "2", dataSet, 2, _this.domain, _this.include_cross_hair, true, _this.use_image_service);
+                */
 			},
 			function(jqXHR, textStatus, errorThrown) {
 				_this.writeErrorMessageIntoDiv("Error connecting to backend: " + textStatus + " " + errorThrown);
@@ -424,97 +345,4 @@ TissueStack.Embedded.prototype = {
 			}
 		});
 	},
-	registerMaximizeEvents : function() {
-		$('#dataset_1_left_side_view_maximize, #dataset_1_right_side_view_maximize').bind("click", function(event) {
-			// what side view and canvas called for maximization
-			if (!event.target.id || !$("#" + event.target.id).attr("class")) {
-				return;
-			}
-
-			var dataSet = TissueStack.dataSetStore.getDataSetByIndex(0);
-			
-			var plane = TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray($("#" + event.target.id).attr("class").split(" "), "^canvas_");
-			if (!plane) {
-				return;
-			}
-			var startPos = "canvas_".length;
-			var sideViewPlaneId = plane.substring(startPos, startPos + 1);
-			
-			plane = TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray($("#dataset_1_main_view_canvas").attr("class").split(" "), "^canvas_");
-			if (!plane) {
-				return;
-			}
-			var mainViewPlaneId = plane.substring(startPos, startPos + 1);
-			
-			// with the id we get the can get the main canvas and the side canvas and swap them, including their dimensions and zoom levels
-			var mainCanvas = $("#dataset_1_main_view_canvas");
-			var mainCanvasChildren = mainCanvas.children("canvas");
-			if (!mainCanvasChildren || mainCanvasChildren.length == 0) {
-				return;
-			}
-			mainCanvasChildren.detach();
-			
-			startPos = event.target.id.indexOf("_maximize");
-			if (startPos < 0) {
-				return;
-			}
-			var sideCanvasId = event.target.id.substring(0, startPos);
-
-			var sideCanvas = $("#" + sideCanvasId + "_canvas");
-			var sideCanvasChildren = sideCanvas.children("canvas");
-			if (!sideCanvasChildren || sideCanvasChildren.length == 0) {
-				return;
-			}
-			sideCanvasChildren.detach();
-			
-			// swap dimensions
-			var sideCanvasRelativeCross = dataSet.planes[sideViewPlaneId].getRelativeCrossCoordinates(); 
-			var mainCanvasRelativeCross = dataSet.planes[mainViewPlaneId].getRelativeCrossCoordinates();
-			
-			var sideCanvasDims = {x: sideCanvasChildren[0].width, y: sideCanvasChildren[0].height};
-			var mainCanvasDims = {x: mainCanvasChildren[0].width, y: mainCanvasChildren[0].height};
-			
-			var tmpAttr = [];
-			for (var i=0; i < sideCanvasChildren.length; i++) {
-				tmpAttr[i] = sideCanvasChildren[i].getAttribute("class");
-				sideCanvasChildren[i].setAttribute("class", mainCanvasChildren[i].getAttribute("class"));
-				sideCanvasChildren[i].width = mainCanvasDims.x;
-				sideCanvasChildren[i].height = mainCanvasDims.y;
-			}
-			dataSet.planes[sideViewPlaneId].setDimensions(mainCanvasDims.x, mainCanvasDims.y);
-			// store zoom level for side view
-			var zoomLevelSideView = dataSet.planes[sideViewPlaneId].getDataExtent().zoom_level;
-
-			for (var i=0; i < mainCanvasChildren.length; i++) {
-				mainCanvasChildren[i].setAttribute("class", tmpAttr[i]);
-				mainCanvasChildren[i].width = sideCanvasDims.x;
-				mainCanvasChildren[i].height = sideCanvasDims.y;
-			}
-			dataSet.planes[mainViewPlaneId].setDimensions(sideCanvasDims.x, sideCanvasDims.y);
-							
-			mainCanvas.append(sideCanvasChildren);
-			sideCanvas.append(mainCanvasChildren);
-			
-			// remember change in class
-			$("#" + sideCanvasId + "_maximize").addClass("canvas_" + mainViewPlaneId);
-			$("#" + sideCanvasId  + "_maximize").removeClass("canvas_" + sideViewPlaneId);
-			$("#dataset_1_main_view_canvas").addClass("canvas_" + sideViewPlaneId);
-			$("#dataset_1_main_view_canvas").removeClass("canvas_" + mainViewPlaneId);
-			
-			// swap main view
-			dataSet.planes[mainViewPlaneId].is_main_view = false;
-			dataSet.planes[sideViewPlaneId].is_main_view = true;
-			
-			// redraw and change the zoom level as well
-			var now = new Date().getTime();
-			dataSet.planes[sideViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(sideCanvasRelativeCross, false, now);
-			dataSet.planes[mainViewPlaneId].redrawWithCenterAndCrossAtGivenPixelCoordinates(mainCanvasRelativeCross, false, now);
-			dataSet.planes[sideViewPlaneId].events.changeSliceForPlane(dataSet.planes[sideViewPlaneId].data_extent.slice);
-			dataSet.planes[sideViewPlaneId].changeToZoomLevel(dataSet.planes[mainViewPlaneId].getDataExtent().zoom_level);
-			dataSet.planes[mainViewPlaneId].changeToZoomLevel(zoomLevelSideView);
-
-			dataSet.planes[sideViewPlaneId].updateExtentInfo(
-			dataSet.planes[sideViewPlaneId].getDataExtent().getExtentCoordinates());
-		});
-	}
 };
