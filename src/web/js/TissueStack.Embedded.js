@@ -42,13 +42,13 @@ TissueStack.Embedded = function (div, server, data_set_id, include_cross_hair, u
 		alert("Given div id does not exist!");
 		return;
 	}
-	
+
 	if (typeof(server) != 'string' || $.trim(server) == '') {
 		this.writeErrorMessageIntoDiv("Empty server name was given!");
 		return;
 	}
-	this.domain = this.extractHostNameFromUrl(server);
-
+    this.server = server;
+    
 	if (typeof(data_set_id) != 'number' || data_set_id <= 0) {
 		this.writeErrorMessageIntoDiv("Data Set id has to be greater than 0!");
 		return;
@@ -72,14 +72,16 @@ TissueStack.Embedded = function (div, server, data_set_id, include_cross_hair, u
 	} else {
 		this.initOpts = null;
 	}
-	
-	// check canvas support
-	if (!this.supportsCanvas()) {
-		this.writeErrorMessageIntoDiv("Sorry, your browser does not support the HTML 5 feature canvas");
-		return;
-	}
-	
+
 	var afterLoadActions = function(_this) {
+        if (!TissueStack.Utils.supportsCanvas()) {
+            alert("Your browser does not support the HTML5 feature 'Canvas'!\n\n" +
+                    "This means that this site will be of very limited use for you.\n\n" +
+                    "We recommend upgrading your browser: Latest versions of Chrome, Firefox, Safari and Opera support the canvas element," +
+                    " so does IE from version 9 on.");
+        }
+    	//_this.domain = TissueStack.Utils.extractHostNameFromUrl(_this.server);
+
         // load server configuration values needed
         _this.loadDataBaseConfiguration();
         // load given data set configuration
@@ -104,35 +106,6 @@ TissueStack.Embedded.prototype = {
 	  var elem = document.createElement('canvas');
 	  return !!(elem.getContext && elem.getContext('2d'));
 	},
-	extractHostNameFromUrl : function(url) {
-		if (typeof(url) != "string") {
-			return null;
-		}
-
-		// trim whitespace
-		url = $.trim(url);
-
-		// take off protocol 
-		if (url.indexOf("http://") == 0 || url.indexOf("file://") == 0) {
-			url = url.substring(7, url.length);
-		} else if (url.indexOf("https://") == 0 || url.indexOf("file:///") == 0) {
-			url = url.substring(8, url.length);
-		} else if (url.indexOf("ftp://") == 0) {
-			url = url.substring(6, url.length);
-		}
-		// strip it off a potential www
-		if (url.indexOf("www.") == 0) {
-			url = url.substring(4, url.length);
-		}
-			
-		//now cut off anything after the initial '/' if exists to preserve the domain
-		var slashPosition = url.indexOf("/");
-		if (slashPosition > 0) {
-			url = url.substring(0, slashPosition);
-		}
-
-		return url;
-	},	
 	includeJavaScriptAndCssNeeded : function(afterLoadActions) {
 		// if header does not exist => create it
 		var head = $("head");
@@ -141,7 +114,7 @@ TissueStack.Embedded.prototype = {
 		}
 
 		// add all the css that's necessary
-		head.append(this.createElement("link", "http://" + this.domain + "/css/default.css"));
+		head.append(this.createElement("link", "http://" + this.server + "/css/default.css"));
 
 		_this = this;
 		
@@ -159,7 +132,7 @@ TissueStack.Embedded.prototype = {
 		for (var i=0;i<TissueStack.requiredLibs.length;i++) {
 			(function () {
 				$.ajax({
-					url : "http://" + _this.domain + TissueStack.requiredLibs[i],
+					url : "http://" + _this.server + TissueStack.requiredLibs[i],
 					async: false,
 					dataType : "script",
 					cache : false,
@@ -186,58 +159,10 @@ TissueStack.Embedded.prototype = {
 		}
 
 		return newEl;
-	}, applyUserParameters : function(dataSet) {
-		if (!this.initOpts) return;
-		
-		var plane_id = typeof(this.initOpts['plane']) === 'string' ?  this.initOpts['plane'] : 'y';
-
-		// plane or data set does not exist => good bye
-		if (!dataSet || !dataSet.planes[plane_id]) return;
-		
-		// do we need to swap planes in the main view
-		var maximizeIcon = $("#dataset_1 .canvas_" + plane_id + ",maximize_view_icon");
-		if (maximizeIcon && maximizeIcon.length == 1) {
-			// not elegant but fire event to achieve our plane swap
-			maximizeIcon.click();
-		}
-		
-		var _this = this;
-		var plane = dataSet.planes[plane_id];
-		
-		if (_this.initOpts['zoom'] != null && _this.initOpts['zoom'] >= 0 && _this.initOpts['zoom'] < plane.data_extent.zoom_levels.length) {
-			plane.changeToZoomLevel(_this.initOpts['zoom']); 
-		}
-
-		if (_this.initOpts['color'] && _this.initOpts['color'] != 'grey') {
-			// change color map collectively for all planes
-			for (var id in dataSet.planes) {
-				dataSet.planes[id].color_map = _this.initOpts['color'];
-				dataSet.planes[id].is_color_map_tiled = null;
-			}
-		}
-
-		var givenCoords = {};
-		if (_this.initOpts['x'] != null || _this.initOpts['y'] != null || _this.initOpts['z'] != null) {
-			givenCoords = {x: _this.initOpts['x'] != null ? _this.initOpts['x'] : 0,
-					y: _this.initOpts['y'] != null ? _this.initOpts['y'] : 0,
-					z: _this.initOpts['z'] != null ? _this.initOpts['z'] : 0};
-			
-			if (plane.getDataExtent().worldCoordinatesTransformationMatrix) {
-				givenCoords = plane.getDataExtent().getPixelForWorldCoordinates(givenCoords);
-			}
-		} else {
-			givenCoords = plane.getRelativeCrossCoordinates();
-			givenCoords.z = plane.getDataExtent().slice;
-		}
-		
-		var now = new Date().getTime();
-		plane.events.changeSliceForPlane(givenCoords.z);
-		plane.queue.drawLowResolutionPreview(now);
-		plane.queue.drawRequestAfterLowResolutionPreview(null, now);
 	},
 	loadDataSetConfigurationFromServer : function() {
 		var _this = this;
-		var url = "http://" + _this.domain + "/" + 
+		var url = "http://" + _this.server + "/" + 
 			TissueStack.configuration['server_proxy_path'].value + "/?service=services&sub_service=data&action=all&id=" 
 			+ _this.data_set_id + "&include_planes=true";
 		
@@ -268,7 +193,7 @@ TissueStack.Embedded.prototype = {
 				// create a new data store
 				TissueStack.dataSetStore = new TissueStack.DataSetStore(null, true);
 				// add to data store
-				dataSet = TissueStack.dataSetStore.addDataSetToStore(dataSet, _this.domain);
+				dataSet = TissueStack.dataSetStore.addDataSetToStore(dataSet, _this.server);
 				
 				if (!dataSet.data || dataSet.data.length == 0) {
 					this.writeErrorMessageIntoDiv("Data set '" + dataSet.id + "' does not have any planes associated with it!");
@@ -276,16 +201,21 @@ TissueStack.Embedded.prototype = {
 				}
 
 				// create the HTML necessary for display and initialize the canvas objects
+                if (_this.initOpts) 
+                   _this.getDiv().hide();
                 TissueStack.ComponentFactory.createDataSetWidget(
-                    _this.getDiv().attr("id"), dataSet, 1, _this.domain, _this.include_cross_hair, true, _this.use_image_service);
-				if (_this.initOpts) _this.applyUserParameters(dataSet);
-                
+                    _this.getDiv().attr("id"), dataSet, 1, _this.server, _this.include_cross_hair, true, _this.use_image_service);
+				if (_this.initOpts) {
+                    TissueStack.ComponentFactory.applyUserParameters(_this.initOpts, dataSet);
+                    setTimeout(function() {
+                     _this.getDiv().show();}, 500);
+                }
                 /*
                 // add to data store
                 dataSet = data.response[1];
-                dataSet = TissueStack.dataSetStore.addDataSetToStore(dataSet, _this.domain);
+                dataSet = TissueStack.dataSetStore.addDataSetToStore(dataSet, _this.server);
                 TissueStack.ComponentFactory.createDataSetWidget(
-                    _this.getDiv().attr("id") + "2", dataSet, 2, _this.domain, _this.include_cross_hair, true, _this.use_image_service);
+                    _this.getDiv().attr("id") + "2", dataSet, 2, _this.server, _this.include_cross_hair, true, _this.use_image_service);
                 */
 			},
 			function(jqXHR, textStatus, errorThrown) {
@@ -296,7 +226,7 @@ TissueStack.Embedded.prototype = {
 	loadDataBaseConfiguration : function() {
 		// we do this one synchronously
 		TissueStack.Utils.sendAjaxRequest(
-			"http://" + this.domain + "/" + TissueStack.configuration['server_proxy_path'].value +
+			"http://" + this.server + "/" + TissueStack.configuration['server_proxy_path'].value +
 				"/?service=services&sub_service=configuration&action=all", 'GET', false,
 			function(data, textStatus, jqXHR) {
 				if (!data.response && !data.error) {

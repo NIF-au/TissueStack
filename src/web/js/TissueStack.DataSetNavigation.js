@@ -217,7 +217,30 @@ TissueStack.DataSetNavigation.prototype = {
 		   }
 		}
 	},
-	showDataSet : function(index, overlaid) {
+	setDataSetVisibility : function(id, visible) {
+        if (typeof(id) != 'string')
+            return;
+        if (typeof(visible) != 'boolean')
+            visible = true;
+        
+        var index = -1;
+        for (var i=0;i<this.selectedDataSets.count;i++) {
+		  if (this.selectedDataSets["dataset_" + (i+1)] && 
+                this.selectedDataSets["dataset_" + (i+1)] === id) 
+          {
+              index = i+1;
+              break;
+          }
+		}
+
+        if (index < 1) return;
+        
+        if (visible)
+            $("#dataset_" + index).show();
+        else 
+            $("#dataset_" + index).hide();
+    },
+    showDataSet : function(index, overlaid) {
 		if (typeof(index) != "number") {
 			return;
 		}
@@ -454,7 +477,7 @@ TissueStack.DataSetNavigation.prototype = {
 	    		   }
 
 	    			// re-initialize data set handed in
-	    		   TissueStack.InitUserInterface();
+	    		   TissueStack.InitUserInterface(!TissueStack.useUserParameters);
 	    		   TissueStack.BindDataSetDependentEvents();
 		       },
 		       onCreate : function(node, span) {
