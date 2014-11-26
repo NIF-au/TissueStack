@@ -163,12 +163,13 @@ TissueStack.Embedded.prototype = {
 	loadDataSetConfigurationFromServer : function() {
 		var _this = this;
 		var url = "http://" + _this.server + "/" + 
-			TissueStack.configuration['server_proxy_path'].value + "/?service=services&sub_service=data&action=all&id=" 
+			TissueStack.configuration['server_proxy_path'].value + "/?service=services&sub_service=data&action=query&id=" 
 			+ _this.data_set_id + "&include_planes=true";
 		
 		// create a new data store
-		TissueStack.dataSetStore = new TissueStack.DataSetStore(null, true);
-		
+        if (!TissueStack.dataSetStore)
+            TissueStack.dataSetStore = new TissueStack.DataSetStore(null, true);
+
 		TissueStack.Utils.sendAjaxRequest(
 			url, 'GET',	true,	
 			function(data, textStatus, jqXHR) {
@@ -187,36 +188,36 @@ TissueStack.Embedded.prototype = {
 					_this.writeErrorMessageIntoDiv("No data set found in configuration database for given id");
 					return;
 				}
-				
-				var dataSet = data.response[0];
-				
-				// create a new data store
-				TissueStack.dataSetStore = new TissueStack.DataSetStore(null, true);
+
 				// add to data store
+				var dataSet = data.response[0];
 				dataSet = TissueStack.dataSetStore.addDataSetToStore(dataSet, _this.server);
-				
 				if (!dataSet.data || dataSet.data.length == 0) {
 					this.writeErrorMessageIntoDiv("Data set '" + dataSet.id + "' does not have any planes associated with it!");
 					return; 
 				}
 
+                // look for the next dataset_x that's available ...
+                var nextAvailableOrdinal = 1;
+                while (nextAvailableOrdinal < 100) {
+                    var testDiv = $("#dataset_" + nextAvailableOrdinal);
+                    if (!testDiv || testDiv.length == 0)
+                        break;
+                    nextAvailableOrdinal++;
+                }
+
 				// create the HTML necessary for display and initialize the canvas objects
                 if (_this.initOpts) 
                    _this.getDiv().hide();
-                TissueStack.ComponentFactory.createDataSetWidget(
-                    _this.getDiv().attr("id"), dataSet, 1, _this.server, _this.include_cross_hair, true, _this.use_image_service);
+                var ds_div = TissueStack.ComponentFactory.createDataSetWidget(
+                    _this.getDiv().attr("id"), dataSet, nextAvailableOrdinal, _this.server, _this.include_cross_hair, true, _this.use_image_service);
+                TissueStack.ComponentFactory.addProgressBar(ds_div, dataSet);
 				if (_this.initOpts) {
                     TissueStack.ComponentFactory.applyUserParameters(_this.initOpts, dataSet);
                     setTimeout(function() {
-                     _this.getDiv().show();}, 500);
-                }
-                /*
-                // add to data store
-                dataSet = data.response[1];
-                dataSet = TissueStack.dataSetStore.addDataSetToStore(dataSet, _this.server);
-                TissueStack.ComponentFactory.createDataSetWidget(
-                    _this.getDiv().attr("id") + "2", dataSet, 2, _this.server, _this.include_cross_hair, true, _this.use_image_service);
-                */
+                     _this.getDiv().show();}, 1000);
+                } else
+                    TissueStack.ComponentFactory.redrawDataSet(dataSet);
 			},
 			function(jqXHR, textStatus, errorThrown) {
 				_this.writeErrorMessageIntoDiv("Error connecting to backend: " + textStatus + " " + errorThrown);
@@ -266,8 +267,6 @@ TissueStack.Embedded.prototype = {
 		var _this = this;
 		// handle dynamic window & parent div resizing
 		$(window).resize(function() {
-			_this.adjustCanvasSizes();
-			
 			// set new canvas dimensions
 			var dataSet = TissueStack.dataSetStore.getDataSetByIndex(0);
 			for (var plane in dataSet.planes) {

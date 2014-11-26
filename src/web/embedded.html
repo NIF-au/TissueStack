@@ -28,6 +28,15 @@
        		  true, // display cross hair canvas on top (defaults to: true)
        		  true, // use direct querying as opposed to pre tiles (defaults to: false)
        	      initOpts); 
+
+            new TissueStack.Embedded(
+       		  "test2", // id of parent div that will hold the TissueStack Canvas elements 
+       		  "localhost", // server name of the TissueStack instance that houses the data as well as the js and css
+       		  3, // id of data set that is requested
+       		  true, // display cross hair canvas on top (defaults to: true)
+       		  true, // use direct querying as opposed to pre tiles (defaults to: false)
+       	      null); 
+            
         });
         </script>
   </head>
@@ -56,10 +65,10 @@
 	        </div>
             
             <!-- ATTENTION: setting width and height is vital and determines the canvas dimensions !!! -->
-	        <div id="test" style="margin: 10px; width: 500px; height: 500px;  float: left"></div>
+	        <div id="test" style="margin: 10px; width: 1500px; height: 800px;  float: left"></div>
 
             <!-- ATTENTION: setting width and height is vital and determines the canvas dimensions !!!-->
-            <!-- div id="test2" style="margin: 10px; width: 500px; height: 500px;  float: left"></div -->
+            <div id="test2" style="margin: 10px; width: 500px; height: 500px;  float: left"></div>
 
 	        <div style="float:left; width: 500px;text-align: center;">
 	            <div>Right Panel</div>

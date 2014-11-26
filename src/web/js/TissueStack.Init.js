@@ -37,6 +37,7 @@ TissueStack.Init = function () {
 			TissueStack.dataSetNavigation.addDataSet(ds.id, 0);
 			TissueStack.InitUserInterface();
 			TissueStack.BindDataSetDependentEvents();
+            TissueStack.dataSetNavigation.showDataSet(1);
 		} else
 			TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(ds.id);
 			
@@ -221,7 +222,8 @@ TissueStack.InitUserInterface = function (drawMe) {
 		if (!dataSet.lookupValues) {
 			if(TissueStack.desktop || TissueStack.tablet) {
 				//$("#dataset_" + (x+1) + "_toolbox_canvas_button").show();
-				contrast = new TissueStack.ContrastCanvas("dataset_" + (x+1) + "_toolbox_canvas");
+				// TODO: remove
+                if (!TissueStack.desktop) contrast = new TissueStack.ContrastCanvas("dataset_" + (x+1) + "_toolbox_canvas");
 			} // crate a contrast slider per data set for phone version
 			else if (TissueStack.phone){
 				contrast = new TissueStack.ContrastCanvas("dataset_1_toolbox_canvas_phone");
@@ -242,8 +244,8 @@ TissueStack.InitUserInterface = function (drawMe) {
 		for (var i=0; i < dataSet.data.length; i++) {
 			var dataForPlane = dataSet.data[i];
 			var planeId = dataForPlane.name;
-			
-			var zoomLevels = eval(dataForPlane.zoomLevels);
+
+            var zoomLevels = eval(dataForPlane.zoomLevels);
 			transformationMatrix = eval(dataForPlane.transformationMatrix);
 			
 			// create extent
@@ -327,7 +329,7 @@ TissueStack.InitUserInterface = function (drawMe) {
 				plane.changeToZoomLevel(0);
 			}
 			
-			plane.eraseCanvasContent();
+            plane.eraseCanvasContent();
 			
             if (!drawMe) continue;
             
@@ -336,11 +338,11 @@ TissueStack.InitUserInterface = function (drawMe) {
 			plane.queue.drawLowResolutionPreview(now);
 			plane.queue.drawRequestAfterLowResolutionPreview(null, now);
 
-			if (main_view_plane) {
-				main_view_plane.updateExtentInfo(main_view_plane.getDataExtent().getExtentCoordinates());
-                main_view_plane.events.updateCoordinateDisplay();
-				//setTimeout(function() {main_view_plane.events.updateCoordinateDisplay();}, 500);
-			}
+           if (main_view_plane) {
+               main_view_plane.updateExtentInfo(main_view_plane.getDataExtent().getExtentCoordinates());
+               main_view_plane.events.updateCoordinateDisplay();
+               //setTimeout(function() {main_view_plane.events.updateCoordinateDisplay();}, 500);
+           }
 		}
 	}
 };
@@ -392,7 +394,7 @@ TissueStack.BindGlobalEvents = function () {
 			url += "/";
 		}
 		
-		url += (TissueStack.configuration['server_proxy_path'].value + "/?service=services&sub_service=data&action=all?include_planes=true");
+		url += (TissueStack.configuration['server_proxy_path'].value + "/?service=services&sub_service=data&action=all&include_planes=true");
 		
 		// contact server
 		TissueStack.Utils.sendAjaxRequest(
@@ -635,101 +637,8 @@ TissueStack.BindDataSetDependentEvents = function () {
         }
 
         // Z PLANE AKA SLICE SLIDER 
-		var extractCanvasId = function(sliderId, actualDataSet) {
-			if (!sliderId) {
-				return;
-			}
-			
-			var planeId = null;
-			/*
-			if (TissueStack.phone) {
-				return sliderId.substring("canvas_".length, "canvas_".length + 1);
-			}
-			*/
-			var plane =
-				TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray($("#" + sliderId).attr("class").split(" "), "^canvas_");
-			if (!plane) {
-				return;
-			}
-
-			var startPos = "canvas_".length;
-			planeId = plane.substring(startPos, startPos + 1);
-
-			var dataset_prefixEnd = sliderId.lastIndexOf("_canvas_main_slider");
-			if (dataset_prefixEnd > 0 && sliderId.substring(0,dataset_prefixEnd) != actualDataSet.planes[planeId].dataset_id) {
-				return null;
-			}
-			
-			return planeId;
-		};
-		var triggerQueuedRedraw = function(id, slice, actualDataSet) {
-			if (!id) {
-				return;
-			}
-			
-			slice = parseInt(slice);
-			
-			if (slice < 0) slice = 0;
-			else if (slice > actualDataSet.planes[id].data_extent.max_slices) slice = actualDataSet.planes[id].data_extent.max_slices;
-			
-			actualDataSet.planes[id].events.changeSliceForPlane(slice);
-			setTimeout(function(){actualDataSet.planes[id].events.updateCoordinateDisplay();}, 500);
-		};
-		
-		(function(actualDataSet, x) {
-			// z dimension slider: set proper length and min/max for dimension
-			// sadly a separate routine is necessary for the active page slider.
-			// for reasons unknown the active page slider does not refresh until after a page change has been performed 
-			if ((TissueStack.desktop || TissueStack.tablet)) {
-				$('.ui-slider-vertical').css({"height": TissueStack.canvasDimensions.height - 50});
-			} 
-			$(TissueStack.phone ? ('.canvasslider') : ('#dataset_' + (x+1) + '_canvas_main_slider')).each(
-				function() {
-					var id = extractCanvasId(this.id, actualDataSet);
-					
-					if (!id) {
-						return;
-					}
-					
-					$(this).attr("min", 0);
-					$(this).attr("max", actualDataSet.planes[id].data_extent.max_slices);
-					$(this).attr("value", actualDataSet.planes[id].data_extent.slice);
-					$(this).blur();
-				}
-			);
-			// avoid potential double binding by un-binding at this stage
-			$(TissueStack.phone ? ('.canvasslider') : ('#dataset_' + (x+1) + '_canvas_main_slider')).unbind("change");
-			// rebind
-			$(TissueStack.phone ? ('.canvasslider') : ('#dataset_' + (x+1) + '_canvas_main_slider')).bind ("change", function (event, ui)  {
-				var id = extractCanvasId(this.id, actualDataSet);
-				if (!id) {
-					return;
-				}
-	
-				triggerQueuedRedraw(id, this.value, actualDataSet);
-			});
-	
-			// rebind
-			if (TissueStack.phone) {
-				// avoid potential double binding by un-binding at this stage
-                $('.canvasslider').die("slidercreate");			
-				// rebind
-				$('.canvasslider').live ("slidercreate", function () {
-					var res = $('#' + this.id).data('events');
-					// unbind previous change
-					$('#' + this.id).unbind("change");
-					if (!res.change || res.change.length == 0) {
-						$('#' + this.id).bind("change", function (event, ui)  {
-							var id = extractCanvasId(this.id);
-							if (!id) {
-								return;
-							}
-							triggerQueuedRedraw(id, this.value, actualDataSet);
-						});
-					}
-				});
-			}
-		})(dataSet, y);
+        TissueStack.ComponentFactory.initDataSetSlider("dataset_" + (y+1), dataSet);
+        if (!TissueStack.PhoneMenu) TissueStack.ComponentFactory.resizeDataSetSlider(TissueStack.canvasDimensions.height);
 	}
 };
 

@@ -128,6 +128,7 @@ TissueStack.DataSetNavigation.prototype = {
 		if (!dataSet) {
 			return;
 		}
+        
 		// for all canvases, unbind the events
 		for (var plane in dataSet.planes) {
 			if (dataSet.planes[plane].underlying_canvas) dataSet.planes[plane].underlying_canvas = null; 
@@ -141,7 +142,13 @@ TissueStack.DataSetNavigation.prototype = {
 		}
 		dataSet.planes = {};
 		TissueStack.overlay_values = {};
-		
+
+        if (TissueStack.desktop) {
+            TissueStack.ComponentFactory.destroyDataSetWidget(dataset);
+            TissueStack.ComponentFactory.destroyDataSetSlider(dataset);
+            return;
+        }
+        
 		// restore plane and canvas order to default
 		var coll = $("#" + dataset + "_main_view_canvas");
 		coll.removeAttr("class");
@@ -468,16 +475,31 @@ TissueStack.DataSetNavigation.prototype = {
 
 	    		   // display/hide data sets left / not left
 	    		   for (var n=0;n<selectedNodes.length;n++) {
-		    		   _this.addToOrReplaceSelectedDataSets(selectedNodes[n].data.key, n);
+                       var selectedDataSetKey = selectedNodes[n].data.key;
+		    		   _this.addToOrReplaceSelectedDataSets(selectedDataSetKey, n);
+                       var dataSetSelected =
+                           TissueStack.dataSetStore.getDataSetById(selectedDataSetKey);
+                       var dataSetOrdinal = TissueStack.dataSetNavigation.selectedDataSets.count;
+                       TissueStack.ComponentFactory.createDataSetWidget(
+                           "test", dataSetSelected, dataSetOrdinal, dataSetSelected.host, true, true, !dataSetSelected.data[0].isTiled);
+                       TissueStack.ComponentFactory.createDataSetSlider("test", dataSetSelected, dataSetOrdinal, "y");
+                       TissueStack.ComponentFactory.addProgressBar("dataset_" + dataSetOrdinal, dataSetSelected);
+                       TissueStack.ComponentFactory.applyUserParameters({"plane" : "y"}, dataSetSelected);
+                       
+                       _this.showDataSet(n + 1, TissueStack.overlay_datasets && selectedNodes.length > 1);
 	    		   }
+                   // adjust to screen size
+                   TissueStack.Utils.adjustScreenContentToActualScreenSize(selectedNodes.length);
+					// set new canvas dimensions
+					for (var i=0;i<selectedNodes.length;i++) {
+						var dataSet = TissueStack.dataSetStore.getDataSetById(selectedNodes[i].data.key);
+                        TissueStack.ComponentFactory.redrawDataSet(dataSet);
+					}
 
-	    			// show everything again
-	    		   for (var n=0;n<selectedNodes.length;n++) {
-		    			_this.showDataSet(n + 1, TissueStack.overlay_datasets && selectedNodes.length > 1);
-	    		   }
-
-	    			// re-initialize data set handed in
-	    		   TissueStack.InitUserInterface(!TissueStack.useUserParameters);
+                   // link previous and succeeding ds
+                   _this.setOverAndUnderLaysForNodes(selectedNodes);
+                   
+                   // bind events
 	    		   TissueStack.BindDataSetDependentEvents();
 		       },
 		       onCreate : function(node, span) {
@@ -490,8 +512,8 @@ TissueStack.DataSetNavigation.prototype = {
 					// Eat keyboard events, when a menu is open
 					if( $(".contextMenu:visible").length > 0 )
 						return false;
-				}
-		  });
+				},
+ 		  });
 	},
 	buildTabletMenu : function() {
 		//BUILD FISRT TABLET TREE WHEN BROWSER LOAD
@@ -734,5 +756,32 @@ TissueStack.DataSetNavigation.prototype = {
 				file = file.substring(1);
 		}
 		return file;
-	}
+	},
+    setOverAndUnderLaysForNodes : function(selectedNodes) {
+        if (!TissueStack.overlay_datasets || !TissueStack.desktop) return;
+        
+        if (!selectedNodes || !selectedNodes.length || selectedNodes.length < 2) return;
+        
+        var numberOfSelectedNodes = selectedNodes.length;
+        
+        for (var i=0;i<numberOfSelectedNodes;i++) {
+            var dataSet = TissueStack.dataSetStore.getDataSetById(selectedNodes[i].data.key);
+            
+            if (i>0 && i<numberOfSelectedNodes) { // underlying data sets
+                var prevDataSet = TissueStack.dataSetStore.getDataSetById(selectedNodes[i-1].data.key);
+                if (prevDataSet)
+                    for (var p in dataSet.planes)
+                        dataSet.planes[p].underlying_canvas = 
+                            prevDataSet.planes[p];
+            }
+
+            if (i < numberOfSelectedNodes - 1) { // overlying data sets
+                var succDataSet = TissueStack.dataSetStore.getDataSetById(selectedNodes[i+1].data.key);
+                if (succDataSet)
+                    for (var p in dataSet.planes)
+                        dataSet.planes[p].overlay_canvas = 
+                            succDataSet.planes[p];
+            }
+        }
+    }
 };		

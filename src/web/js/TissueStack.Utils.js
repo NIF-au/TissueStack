@@ -258,61 +258,52 @@ TissueStack.Utils = {
 			datasets = 0;
 		}
 		
-		// clamp to max
-		if (datasets > 2) datasets = 2;
-
 		// we hide everything if there are no data sets selected
 		if (datasets == 0) {
-		   // clear input fields
-		   $("#canvas_point_x,#canvas_point_y,#canvas_point_z,#canvas_point_value").attr("value", "");
-		   $("#canvas_point_x,#canvas_point_y,#canvas_point_z").attr("disabled", "disabled");
-		   // hide everything
-		   $('#dataset_1_center_point_in_canvas, #dataset_2_center_point_in_canvas').closest('.ui-btn').hide();
-		   $(".dataset, .right_panel").addClass("hidden");
-		   return;
+            // clear input fields
+            $("#canvas_point_x,#canvas_point_y,#canvas_point_z,#canvas_point_value").attr("value", "");
+            $("#canvas_point_x,#canvas_point_y,#canvas_point_z").attr("disabled", "disabled");
+            // hide everything
+		    $('#dataset_1_center_point_in_canvas, #dataset_2_center_point_in_canvas').closest('.ui-btn').hide();
+		    $(".dataset, .right_panel").addClass("hidden");
+		    return;
 		}
 		
-		// get screen dimensions
-		var screenWidth = $(window).width();
-		var screenHeight = $(window).height();
-		
-		// get the height of the menu header
-		var menuHeight = $('#menu_header').height();
-		// define some tolerance span
-		var widthTolerance = Math.floor(screenWidth * 0.01);
-		var heightTolerance = Math.floor(screenHeight * 0.01);
-		
-		// get the width of the left panel 
-		var leftPanelWidth = Math.floor(screenWidth * 0.15);
-		var leftPanelHeight = screenHeight - menuHeight;
-		var rightPanelWidth = Math.floor(screenWidth * 0.05);
-		
-		TissueStack.canvasDimensions = {width: (screenWidth - leftPanelWidth - rightPanelWidth - widthTolerance), height: Math.floor(leftPanelHeight / (TissueStack.overlay_datasets ? 1 : datasets)) -  heightTolerance};		
+        TissueStack.Utils.captureScreenDimensions(datasets);
 		//leftPanelHeight -=  heightTolerance;
 		
-		//$('.left_panel').css({"width" : leftPanelWidth, "height": leftPanelHeight});
-		$('.left_panel').css({"left" : 0, "top" : menuHeight,"width" : leftPanelWidth, "height": leftPanelHeight * 0.99});
-		$('#dataset_1_right_panel').css({"left" : TissueStack.canvasDimensions.width + leftPanelWidth + 20, "top" : menuHeight});
-		$('#dataset_1_right_panel').css({"width" : rightPanelWidth, "height": TissueStack.canvasDimensions.height  * 0.99});
+		//$('.left_panel').css({"width" : TissueStack.canvasDimensions.leftPanelWidth, "height": TissueStack.canvasDimensions.leftPanelWidth});
+		$('.left_panel').css({"left" : 0, 
+                              "top" : TissueStack.canvasDimensions.menuHeight,
+                              "width" : TissueStack.canvasDimensions.leftPanelWidth,
+                              "height": TissueStack.canvasDimensions.leftPanelHeight * 0.99});
+		$('#dataset_1_right_panel').css({"left" : TissueStack.canvasDimensions.width + TissueStack.canvasDimensions.leftPanelWidth + 20,
+                                         "top" : TissueStack.canvasDimensions.menuHeight});
+		$('#dataset_1_right_panel').css({"width" : TissueStack.canvasDimensions.rightPanelWidth,
+                                         "height": TissueStack.canvasDimensions.height  * 0.99});
 		if (TissueStack.overlay_datasets) {
-			$('#dataset_2_right_panel').css({"left" : TissueStack.canvasDimensions.width + leftPanelWidth + 20, "top" : menuHeight});
-			$('#dataset_2_right_panel').css({"width" : rightPanelWidth, "height": TissueStack.canvasDimensions.height  * 0.99});
+			$('#dataset_2_right_panel').css({"left" : TissueStack.canvasDimensions.width + TissueStack.canvasDimensions.leftPanelWidth + 20,
+                                             "top" : TissueStack.canvasDimensions.menuHeight});
+			$('#dataset_2_right_panel').css({"width" : TissueStack.canvasDimensions.rightPanelWidth,
+                                             "height": TissueStack.canvasDimensions.height  * 0.99});
 		}		
 		var sliderLength = (TissueStack.canvasDimensions.height - $('.canvasslider').outerHeight()) * 0.99;
-		$(".ui-slider-vertical").height(sliderLength);
-		$(".ui-slider-horizontal").height(sliderLength);
+		//$(".ui-slider-vertical").height(sliderLength);
+		//$(".ui-slider-horizontal").height(sliderLength);
 
-		$('#dataset_1').css({"left" : leftPanelWidth + 10, "top" : menuHeight});
+		$('#dataset_1').css({"left" : TissueStack.canvasDimensions.leftPanelWidth + 10, "top" : TissueStack.canvasDimensions.menuHeight});
 		if (TissueStack.overlay_datasets)
-			$('#dataset_2').css({"left" : leftPanelWidth + 10, "top" : menuHeight});
+			$('#dataset_2').css({"left" : TissueStack.canvasDimensions.leftPanelWidth + 10, "top" : TissueStack.canvasDimensions.menuHeight});
 		$('.dataset').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height * 0.99});
 		
 		for (var x=1;x<=datasets;x++) {
 			if (!TissueStack.overlay_datasets && x>1) { 
-				$('#dataset_' + x).css({"left" : leftPanelWidth + 10, "top" : menuHeight + 10 + TissueStack.canvasDimensions.height * 0.99});
-				$('#dataset_' + x + '_right_panel').css({"left" : TissueStack.canvasDimensions.width + leftPanelWidth + 20, "top" : menuHeight + 10 + TissueStack.canvasDimensions.height * 0.99});
+				$('#dataset_' + x).css({"left" : TissueStack.canvasDimensions.leftPanelWidth + 10,
+                                        "top" : TissueStack.canvasDimensions.menuHeight + 10 + TissueStack.canvasDimensions.height * 0.99});
+				$('#dataset_' + x + '_right_panel').css({"left" : TissueStack.canvasDimensions.width + TissueStack.canvasDimensions.leftPanelWidth + 20,
+                                                         "top" : TissueStack.canvasDimensions.menuHeight + 10 + TissueStack.canvasDimensions.height * 0.99});
 			}
-			$('#dataset_' + x + '_right_panel').css({"width" : rightPanelWidth, "height": sliderLength});
+			$('#dataset_' + x + '_right_panel').css({"width" : TissueStack.canvasDimensions.rightPanelWidth, "height": sliderLength});
 			$("#dataset_" + x + "_toolbox_canvas").css({"width" : TissueStack.canvasDimensions.width * 0.8, "height" : 75});
 			$("#dataset_" + x + "_contrast_box").css({"width" : TissueStack.canvasDimensions.width * 0.8, "height" : 55});
 			$("#dataset_" + x + "_toolbox_canvas").attr("width", TissueStack.canvasDimensions.width * 0.8);
@@ -345,6 +336,10 @@ TissueStack.Utils = {
 			$('#dataset_' + x + '_main_view_canvas').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height * 0.99});
 			$('#dataset_' + x + '_main_view_canvas canvas').attr("width", TissueStack.canvasDimensions.width);
 			$('#dataset_' + x + '_main_view_canvas canvas').attr("height", TissueStack.canvasDimensions.height * 0.99);
+            
+            var div = "dataset_" + x;
+            TissueStack.ComponentFactory.resizeProgressBar(div);
+            TissueStack.ComponentFactory.resizeDataSetSlider(TissueStack.canvasDimensions.height);
 		}
 
 		// apply screen and canvas size changes
@@ -364,7 +359,7 @@ TissueStack.Utils = {
 		else TissueStack.Utils.adjustCollapsibleSectionsHeight('menutransition');
 		
 		// apply scroll screen for admin upload direcory
-		$('.settings-right-column, .settings-left-column').css({"height": screenHeight/1.7});
+		$('.settings-right-column, .settings-left-column').css({"height": TissueStack.canvasDimensions.screenHeight/1.7});
 	}, adjustCollapsibleSectionsHeight : function(elem_id) {
 		if (typeof(elem_id) != 'string') return;
 		if (!$("#" + elem_id) || typeof($("#" + elem_id).length) != 'number' || $("#" + elem_id).length == 0) return; 
@@ -758,5 +753,30 @@ TissueStack.Utils = {
 				return;
 			}
 		);
-	}
+	},
+    captureScreenDimensions : function(datasets) {
+ 		// get screen dimensions
+		var screenWidth = $(window).width();
+		var screenHeight = $(window).height();
+		
+		// get the height of the menu header
+		var menuHeight = $('#menu_header').height();
+		// define some tolerance span
+		var widthTolerance = Math.floor(screenWidth * 0.01);
+		var heightTolerance = Math.floor(screenHeight * 0.01);
+		
+		// get the width of the left panel 
+		var leftPanelWidth = Math.floor(screenWidth * 0.15);
+		var leftPanelHeight = screenHeight - menuHeight;
+		var rightPanelWidth = Math.floor(screenWidth * 0.05);
+		
+		TissueStack.canvasDimensions = 
+            { width: (screenWidth - leftPanelWidth - rightPanelWidth - widthTolerance),
+              height: Math.floor(leftPanelHeight / (TissueStack.overlay_datasets ? 1 : datasets)) -  heightTolerance,
+              menuHeight: menuHeight,
+              leftPanelWidth: leftPanelWidth,
+              leftPanelHeight: leftPanelHeight,
+              rightPanelWidth: rightPanelWidth,
+              screenHeight: screenHeight};		
+    }
 };

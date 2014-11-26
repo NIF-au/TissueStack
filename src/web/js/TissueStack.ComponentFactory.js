@@ -43,14 +43,25 @@ TissueStack.ComponentFactory = {
 
         return true;
     },
+    redrawDataSet : function(dataSet) {
+        if (!dataSet || !dataSet.planes) {
+            alert("ComponentFactory::redrawDataSet => given data set does not have planes!");
+            return;
+        }
+            
+        for (var plane in dataSet.planes) {
+            dataSet.planes[plane].eraseCanvasContent();
+            dataSet.planes[plane].resizeCanvas(new Date().getTime());
+        }
+    },
     initDataSetWidget : function(div, dataSet, includeCrossHair, addScaleBar, useImageService) {
         if (!TissueStack.ComponentFactory.checkDivExistence(div)) {
-            alert("ComponentFactory::resizeDataSetWidget => given div does not exist!");
+            alert("ComponentFactory::initDataSetWidget => given div does not exist!");
             return;
         }
 
         if (!TissueStack.ComponentFactory.checkDataSetObjectIntegrity(dataSet)) {
-            alert("ComponentFactory::resizeDataSetWidget => given data set is invalid!");
+            alert("ComponentFactory::initDataSetWidget => given data set is invalid!");
             return;
         }
         
@@ -63,9 +74,6 @@ TissueStack.ComponentFactory = {
         if (typeof(addScaleBar) !== 'boolean')
             addScaleBar = false;
 
-        // we use that for the image service to be able to abort pending requests
-		var now = new Date().getTime();
-		
 		// loop over all planes in the data, create canvas and extent objects, then display them
 		for (var i=0; i < dataSet.data.length; i++) {
 			var dataForPlane = dataSet.data[i];
@@ -99,6 +107,30 @@ TissueStack.ComponentFactory = {
 			if (i == 0) plane.is_main_view = true;
 			if (plane.is_main_view && addScaleBar) plane.updateScaleBar();
 			
+            // set the internal db id
+			plane.id = dataForPlane.id;
+			
+			var localHost = document.location.host;
+			if (!localHost)
+				localHost = dataSet.host;
+			
+			// query for overlays (if exist) TODO: extend to tablet and phone
+			if (TissueStack.desktop && dataSet.overlays) {
+				plane.overlays = [];
+				for (var z=0;z<dataSet.overlays.length;z++) {
+					var type = dataSet.overlays[z].type;
+					if (type === 'CANVAS')
+						plane.overlays[z] = new TissueStack.CanvasOverlay(z, plane, "http", localHost, dataSet.local_id, plane.id);
+					else if (type === 'SVG')
+						plane.overlays[z] = new TissueStack.SVGOverlay(z, plane, "http", localHost, dataSet.local_id, plane.id);
+					else if (type === 'DATASET')
+						plane.overlays[z] = new TissueStack.DataSetOverlay(z, plane, "http", localHost, dataSet.local_id, plane.id, dataSet.host);
+				}
+			}
+
+			// set original value range 
+			plane.setValueRange(dataForPlane.valueRangeMin, dataForPlane.valueRangeMax);
+            
 			// store plane  
 			dataSet.planes[planeId] = plane;
 
@@ -112,9 +144,6 @@ TissueStack.ComponentFactory = {
 			if (i != 0) {
 				plane.changeToZoomLevel(0);
 			} 
-
-			plane.queue.drawLowResolutionPreview(now);
-			plane.queue.drawRequestAfterLowResolutionPreview(null, now);
 		}
 	},
     resizeDataSetWidget : function(parent, div) {
@@ -226,6 +255,144 @@ TissueStack.ComponentFactory = {
         
         return dataSetPrefix;
     },
+    destroyDataSetWidget : function(div) {
+        if (!TissueStack.ComponentFactory.checkDivExistence(div)) {
+            alert("ComponentFactory::destroyDataSetWidget => Failed to add scale bar!");
+            return;
+        }
+        // unregister slider events
+        $('#' + div + '_left_side_view_maximize, #' + div + '_right_side_view_maximize').unbind("click");
+        $('#' + div).remove();
+    },
+    createDataSetSlider : function(div, dataSet, dataSetOrdinal, plane) {
+        if (!TissueStack.ComponentFactory.checkDivExistence(div) ||
+            !TissueStack.ComponentFactory.checkDivExistence("dataset_" + dataSetOrdinal) ||
+            !(plane == 'x' || plane == 'y' || plane == 'z')) {
+            alert("ComponentFactory::createDataSetSlider => Failed to add slider!");
+            return;
+        }
+        
+        var html = '<div id="dataset_' + dataSetOrdinal + '_right_panel" class="right_panel hidden">'
+            + '<input data-mini="true" id="dataset_' + dataSetOrdinal + '_canvas_main_slider" class="canvasslider canvas_'
+            + plane + ' ui-input-text ui-body-a ui-corner-all ui-shadow-inset ui-mini ui-slider-input" type="number" data-type="range" min="0" max="1000" value="500" step="1" orientation="vertical"  /></div>';
+        $("#" + div).append(html);
+        
+        //TissueStack.ComponentFactory.initDataSetSlider("dataset_" + dataSetOrdinal, dataSet);
+    },
+    initDataSetSlider : function(div, dataSet) {
+        if (!TissueStack.ComponentFactory.checkDataSetObjectIntegrity(dataSet)) {
+            alert("ComponentFactory::initDataSetSlider => given data set is invalid!");
+            return;
+        }
+
+        var extractCanvasId = function(sliderId, actualDataSet) {
+			if (!sliderId) {
+				return;
+			}
+			
+			var planeId = null;
+			var plane =
+				TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray($("#" + sliderId).attr("class").split(" "), "^canvas_");
+			if (!plane) {
+				return;
+			}
+
+			var startPos = "canvas_".length;
+			planeId = plane.substring(startPos, startPos + 1);
+
+			var dataset_prefixEnd = sliderId.lastIndexOf("_canvas_main_slider");
+			if (dataset_prefixEnd > 0 && sliderId.substring(0,dataset_prefixEnd) != actualDataSet.planes[planeId].dataset_id) {
+				return null;
+			}
+			
+			return planeId;
+		};
+		var triggerQueuedRedraw = function(id, slice, actualDataSet) {
+			if (!id) {
+				return;
+			}
+			
+			slice = parseInt(slice);
+			
+			if (slice < 0) slice = 0;
+			else if (slice > actualDataSet.planes[id].data_extent.max_slices) slice = actualDataSet.planes[id].data_extent.max_slices;
+			
+			actualDataSet.planes[id].events.changeSliceForPlane(slice);
+			setTimeout(function(){actualDataSet.planes[id].events.updateCoordinateDisplay();}, 500);
+		};
+        
+        div = TissueStack.phone ? '.canvasslider' : '#' + div + '_canvas_main_slider';
+        if (TissueStack.desktop) {
+            $(div).slider(function () {
+                    $(this).attr("min", 0);
+                    $(this).attr("max", actualDataSet.planes[id].data_extent.max_slices);
+                    $(this).attr("value", actualDataSet.planes[id].data_extent.slice);
+
+                     var res = $('#' + this.id).data('events');
+                    // unbind previous change
+                    $('#' + this.id).unbind("change");
+                    if (!res.change || res.change.length == 0) {
+                        $('#' + this.id).bind("change", function (event, ui)  {
+                            var id = extractCanvasId(this.id);
+                            if (!id) {
+                                return;
+                            }
+                            triggerQueuedRedraw(id, this.value, dataSet);
+                        });
+                    }
+            });
+        } else {
+            $(div).each(
+            function() {
+                var id = extractCanvasId(this.id, dataSet);
+
+                if (!id) {
+                    return;
+                }
+
+                $(this).attr("min", 0);
+                $(this).attr("max", dataSet.planes[id].data_extent.max_slices);
+                $(this).attr("value", dataSet.planes[id].data_extent.slice);
+                $(this).blur();
+            });   
+        }
+        
+        $(div).unbind("change");
+        // rebind
+        $(div).bind ("change", function (event, ui)  {
+            var id = extractCanvasId(this.id, dataSet);
+            if (!id) return;
+            triggerQueuedRedraw(id, this.value, dataSet);
+        });
+
+        if (TissueStack.phone) {
+             $(div).die("slidercreate");			
+            // rebind
+            $(div).live ("slidercreate", function () {
+                var res = $('#' + this.id).data('events');
+                // unbind previous change
+                $('#' + this.id).unbind("change");
+                if (!res.change || res.change.length == 0) {
+                    $('#' + this.id).bind("change", function (event, ui)  {
+                        var id = extractCanvasId(this.id);
+                        if (!id) {
+                            return;
+                        }
+                        triggerQueuedRedraw(id, this.value, dataSet);
+                    });
+                }
+            });
+        }
+    },
+    destroyDataSetSlider : function(div) {
+        var rightPanelDiv = div + "_right_panel";
+        if (!TissueStack.ComponentFactory.checkDivExistence(rightPanelDiv))
+            return;
+
+        // unregister maximize events
+        $('#' + div + '_canvas_main_slider').unbind("change");
+        $('#' + rightPanelDiv).remove();
+    },
     addScaleToDataSetWidget : function(div) {
         if (!TissueStack.ComponentFactory.checkDivExistence(div)) {
             alert("ComponentFactory::addScaleToDataSet => Failed to add scale bar!");
@@ -279,9 +446,8 @@ TissueStack.ComponentFactory = {
             return;
         }
         
-        if (mainViewPlaneId == sideViewPlaneId) {
+        if (mainViewPlaneId == sideViewPlaneId)
             return;
-        }
         
         // with the id we get the can get the main canvas and the side canvas and swap them, including their dimensions and zoom levels
         var mainCanvas = $('#' + div + '_main_view_canvas');
@@ -359,6 +525,7 @@ TissueStack.ComponentFactory = {
         // swap slice dimension values
         $("#" + div + "_canvas_main_slider").attr("value", dataSet.planes[sideViewPlaneId].data_extent.slice);
         $("#" + div + "_canvas_main_slider").attr("max", dataSet.planes[sideViewPlaneId].data_extent.max_slices);
+  
         // swap progress display
         var disp1 = $("#" + div + " .tile_count_div span." + mainViewPlaneId);
         var disp2 = $("#" + div + " .tile_count_div span." + sideViewPlaneId);
@@ -366,7 +533,7 @@ TissueStack.ComponentFactory = {
         disp1.addClass(sideViewPlaneId);
         disp2.removeClass(sideViewPlaneId);
         disp2.addClass(mainViewPlaneId);
-
+        
         // swap main view
         dataSet.planes[mainViewPlaneId].is_main_view = false;
         dataSet.planes[sideViewPlaneId].is_main_view = true;
@@ -384,20 +551,14 @@ TissueStack.ComponentFactory = {
         dataSet.planes[sideViewPlaneId].updateExtentInfo(dataSet.planes[sideViewPlaneId].getDataExtent().getExtentCoordinates());
 
         // Given TissueStack.overlay_datasets => trigger swap event for other dataset if exists
-        if (!TissueStack.planes_swapped && TissueStack.overlay_datasets && TissueStack.dataSetNavigation.selectedDataSets.count > 1) {
-            var elementIdForMaximizingOtherDataSet = event.target.id;
-            var thisHereDataSet = elementIdForMaximizingOtherDataSet.substring(0, "dataset_x".length);
-
-            var thisOtherDataSet = "dataset_2";
-            if (thisHereDataSet == 'dataset_2')
-                thisOtherDataSet = "dataset_1";
-            elementIdForMaximizingOtherDataSet = elementIdForMaximizingOtherDataSet.replace(thisHereDataSet, thisOtherDataSet);
-            // set to swapped so that we avoid cycle
-            TissueStack.planes_swapped = true;
-
-            setTimeout(function() {$('#' + elementIdForMaximizingOtherDataSet).click();}, 200);
-        } else 
-            TissueStack.planes_swapped = false;
+        var underlyingCanvas = dataSet.planes[mainViewPlaneId].underlying_canvas;
+        if (TissueStack.overlay_datasets && underlyingCanvas) {
+            var descDataSet = 
+                TissueStack.dataSetStore.getDataSetById(
+                    TissueStack.dataSetNavigation.selectedDataSets[underlyingCanvas.dataset_id]);
+            if (descDataSet)
+                TissueStack.ComponentFactory.swapWithMainCanvas(underlyingCanvas.dataset_id, descDataSet, sideViewPlaneId);
+        }
     },
 	registerMaximizeEventsForDataSetWidget : function(div, dataSet) {
         if (!TissueStack.ComponentFactory.checkDivExistence(div)) {
@@ -445,7 +606,7 @@ TissueStack.ComponentFactory = {
             timeout = 0;
         
         if (!TissueStack.phone)
-            TissueStack.ComponentFactory.swapWithMainCanvas("dataset_1", dataSet, plane_id);
+            TissueStack.ComponentFactory.swapWithMainCanvas(dataSet.planes[plane_id].dataset_id, dataSet, plane_id);
 
         var plane = dataSet.planes[plane_id];
 
@@ -520,5 +681,58 @@ TissueStack.ComponentFactory = {
                  if (!TissueStack.phone) slider.slider("refresh");
             };
         }, timeout);
+    }, 
+    addProgressBar : function(div, dataSet) {
+        if (!TissueStack.ComponentFactory.checkDivExistence(div)) {
+            alert("ComponentFactory::addProgressBar => given div does not exist!");
+            return;
+        }
+        
+        if (!TissueStack.ComponentFactory.checkDataSetObjectIntegrity(dataSet)) {
+            alert("ComponentFactory::addProgressBar => given data set is invalid!");
+            return;
+        }
+
+        if (dataSet.data.length == 0)
+            return;
+        
+        var placeHolder = [null,null,null];
+        for (var x=0;x<dataSet.data.length;x++){
+            // this becomes main by default
+            if (x==0)
+                placeHolder[1] =
+                    '<span class="plane_2 ' + dataSet.data[0].name + '">0%</span>';    
+            else if (x==1)
+                placeHolder[0] =
+                    '<span class="plane_1 ' + dataSet.data[1].name + '">0%</span>';    
+            else if (x==2)
+                placeHolder[3] =
+                    '<span class="plane_3 ' + dataSet.data[2].name + '">0%</span>';    
+        }
+
+        var html = '<div class="tile_count_div">';
+        for (var x=0;x<placeHolder.length;x++)
+            if (placeHolder[x])
+                html += placeHolder[x];
+        html += '</div>';
+
+        $("#" + div).prepend(html);
+        TissueStack.ComponentFactory.resizeProgressBar(div);
+    },
+    resizeProgressBar : function(div) {
+        if (!TissueStack.ComponentFactory.checkDivExistence(div)) {
+            return;
+        }
+    
+        // adjust position of progress bar
+        var wDiv = $("#" + div).width();
+        var wProgress = $("#" + div + " .tile_count_div").width();
+        
+        $("#" + div + " .tile_count_div").css("left", function( style ) {
+            return (wDiv / 2) - (wProgress / 2);
+        });
+    },
+    resizeDataSetSlider : function(height) {
+        $('.ui-slider-vertical').css({"height": height - 50});
     }
 };
