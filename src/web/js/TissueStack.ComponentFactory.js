@@ -632,9 +632,9 @@ TissueStack.ComponentFactory = {
                         $("#colormap_" + initOpts['color']).attr("checked", "checked");
                     }
                 } else {
-                    $(".color_map_select").val(initOpts['color']);
+                    $("#" + plane.dataset_id + "_color_map .color_map_select").val(initOpts['color']);
                     try {
-                        $(".color_map_select").selectmenu("refresh");
+                        $("#" + plane.dataset_id + "_color_map .color_map_select").selectmenu("refresh");
                     } catch (any){
                         // we don't care, stupid jquery mobile ...
                     }
@@ -734,5 +734,55 @@ TissueStack.ComponentFactory = {
     },
     resizeDataSetSlider : function(height) {
         $('.ui-slider-vertical').css({"height": height - 50});
+    },
+    createColorMapSwitcher : function(div) {
+      if (!TissueStack.ComponentFactory.checkDivExistence(div)) {
+            alert("ComponentFactory::createColorMapSwitcher => Failed to add color map control!");
+            return;
+        }
+        
+        var html = '<div id="' + div + '_color_map" class="color_map_main" title="Choose color For Data Set">'
+                +  '<select class="color_map_select color_map_style" data-role="none"><option>Uninitialized</option>'
+                +  '</select></div>';
+        $("#" + div).append(html);
+        TissueStack.Utils.updateColorMapChooser();
+    }, initColorMapSwitcher : function(div, dataSet) {
+        if (!TissueStack.ComponentFactory.checkDataSetObjectIntegrity(dataSet)) {
+            alert("ComponentFactory::initColorMapSwitcher => given data set is invalid!");
+            return;
+        }
+
+        if (TissueStack.phone) { // we use this one only for the phone
+            $('input[name="color_map"]').unbind("click");
+            // rebind
+            $('input[name="color_map"]').bind("click", function(e) {
+                    var now = new Date().getTime();
+                    for (var id in dataSet.planes) {	
+                        dataSet.planes[id].color_map = e.target.value;
+                        dataSet.planes[id].is_color_map_tiled = null;
+                        dataSet.planes[id].queue.drawLowResolutionPreview(now);
+                        dataSet.planes[id].queue.drawRequestAfterLowResolutionPreview(null, now);
+                    }
+            });
+            return;
+        }
+
+        if (!TissueStack.ComponentFactory.checkDivExistence(div)) {
+        alert("ComponentFactory::initColorMapSwitcher => could not find data set div!");
+        return;
+        }
+
+        // unbind
+        $('#' + div + '_color_map').unbind("change");
+        // rebind
+        $('#' + div + '_color_map').bind("change", function(event) {
+            var now = new Date().getTime();
+            for (var id in dataSet.planes) {	
+                dataSet.planes[id].color_map = event.target.value;
+                dataSet.planes[id].is_color_map_tiled = null;
+                dataSet.planes[id].queue.drawLowResolutionPreview(now);
+                dataSet.planes[id].queue.drawRequestAfterLowResolutionPreview(null, now);
+            }
+        });
     }
 };

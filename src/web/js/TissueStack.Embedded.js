@@ -26,7 +26,8 @@ TissueStack = {
 	                	"/js/TissueStack.Events.js",
 	                	"/js/TissueStack.DataSetStore.js",
                         "/js/TissueStack.ComponentFactory.js"
-	                ]
+	                ],
+    embedded : true
 };
 
 TissueStack.Embedded = function (div, server, data_set_id, include_cross_hair, use_image_service, initOpts) {
@@ -212,6 +213,8 @@ TissueStack.Embedded.prototype = {
                 var ds_div = TissueStack.ComponentFactory.createDataSetWidget(
                     _this.getDiv().attr("id"), dataSet, nextAvailableOrdinal, _this.server, _this.include_cross_hair, true, _this.use_image_service);
                 TissueStack.ComponentFactory.addProgressBar(ds_div, dataSet);
+                //TissueStack.ComponentFactory.createColorMapSwitcher("dataset_" + nextAvailableOrdinal);
+                //TissueStack.ComponentFactory.initColorMapSwitcher("dataset_" + nextAvailableOrdinal, dataSet);
 				if (_this.initOpts) {
                     TissueStack.ComponentFactory.applyUserParameters(_this.initOpts, dataSet);
                     setTimeout(function() {

@@ -38,8 +38,10 @@ TissueStack.Init = function () {
 			TissueStack.InitUserInterface();
 			TissueStack.BindDataSetDependentEvents();
             TissueStack.dataSetNavigation.showDataSet(1);
-		} else
+		} else {
 			TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(ds.id);
+        }
+        TissueStack.Utils.adjustBorderColorWhenMouseOver();	
 			
         TissueStack.useUserParameters = false;
         
@@ -504,48 +506,12 @@ TissueStack.BindDataSetDependentEvents = function () {
 		}
 	});
 	
-	// COLOR MAP CHANGE HANDLER
-	// avoid potential double binding by un-binding at this stage
-	if (TissueStack.phone) { // we use this one only for the phone
-		$('input[name="color_map"]').unbind("click");
-		// rebind
-		$('input[name="color_map"]').bind("click", function(e) {
-			for (var x=0;x<maxDataSets;x++) {
-				var dataSet = datasets[x];
-				var now = new Date().getTime();
-				for (var id in dataSet.planes) {	
-					dataSet.planes[id].color_map = e.target.value;
-					dataSet.planes[id].is_color_map_tiled = null;
-					dataSet.planes[id].queue.drawLowResolutionPreview(now);
-					dataSet.planes[id].queue.drawRequestAfterLowResolutionPreview(null, now);
-					//dataSet.planes[id].drawMe(now);
-				}
-			}
-		});
-	}
-	
 	// now let's bind events that are intimately linked to their own data set
 	for (var y=0;y<maxDataSets;y++) {
 		var dataSet = datasets[y];
 
 		if (TissueStack.desktop || TissueStack.tablet) {
-			// COLOR MAP PER DATA SET
-			// avoid potential double binding by un-binding at this stage
-			$('#dataset_' + (y+1) + '_color_map').unbind("change");
-			// rebind
-			$('#dataset_' + (y+1) + '_color_map').bind("change", [{actualDataSet: dataSet}], function(event) {
-				var now = new Date().getTime();
-				var ds = event.data[0].actualDataSet;
-				for (var id in ds.planes) {	
-					ds.planes[id].color_map = event.target.value;
-					ds.planes[id].is_color_map_tiled = null;
-					ds.planes[id].queue.drawLowResolutionPreview(now);
-					ds.planes[id].queue.drawRequestAfterLowResolutionPreview(null, now);
-					//ds.planes[id].drawMe(now);
-				}
-			});
-			
-			// COORDINATE CENTER FUNCTIONALITY FOR DESKTOP
+            // COORDINATE CENTER FUNCTIONALITY FOR DESKTOP
 			// avoid potential double binding by un-binding at this stage
 			$('#dataset_' + (y+1) + '_center_point_in_canvas').unbind("click");
 			// rebind
@@ -636,6 +602,9 @@ TissueStack.BindDataSetDependentEvents = function () {
             TissueStack.ComponentFactory.registerMaximizeEventsForDataSetWidget("dataset_" + (y+1), dataSet);
         }
 
+        // COLOR MAP SWITCHER
+        TissueStack.ComponentFactory.initColorMapSwitcher('dataset_' + (y+1), dataSet);
+        
         // Z PLANE AKA SLICE SLIDER 
         TissueStack.ComponentFactory.initDataSetSlider("dataset_" + (y+1), dataSet);
         if (!TissueStack.PhoneMenu) TissueStack.ComponentFactory.resizeDataSetSlider(TissueStack.canvasDimensions.height);

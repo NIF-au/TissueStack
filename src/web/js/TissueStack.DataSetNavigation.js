@@ -484,6 +484,7 @@ TissueStack.DataSetNavigation.prototype = {
                            "test", dataSetSelected, dataSetOrdinal, dataSetSelected.host, true, true, !dataSetSelected.data[0].isTiled);
                        TissueStack.ComponentFactory.createDataSetSlider("test", dataSetSelected, dataSetOrdinal, "y");
                        TissueStack.ComponentFactory.addProgressBar("dataset_" + dataSetOrdinal, dataSetSelected);
+                       TissueStack.ComponentFactory.createColorMapSwitcher("dataset_" + dataSetOrdinal);
                        TissueStack.ComponentFactory.applyUserParameters({"plane" : "y"}, dataSetSelected);
                        
                        _this.showDataSet(n + 1, TissueStack.overlay_datasets && selectedNodes.length > 1);
@@ -501,6 +502,7 @@ TissueStack.DataSetNavigation.prototype = {
                    
                    // bind events
 	    		   TissueStack.BindDataSetDependentEvents();
+                   TissueStack.Utils.adjustBorderColorWhenMouseOver();	
 		       },
 		       onCreate : function(node, span) {
 		    	   _this.bindDynaTreeContextMenu(span);

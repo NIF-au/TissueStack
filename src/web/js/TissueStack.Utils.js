@@ -230,18 +230,16 @@ TissueStack.Utils = {
 
 		var html = "";
 			
-		if(TissueStack.desktop || TissueStack.tablet){
-			for (var c in TissueStack.indexed_color_maps)
-				html += ("<option>" + c + "</option>");		
-		}
-		
 		if(TissueStack.phone){
 			for (var c in TissueStack.indexed_color_maps)
 				html += ('<input type="radio" name="color_map" id="colormap_'+ c + '" value="'+ c +'"/>'
 					 +  '<label for="colormap_' + c +'">' + c + '</label>');
 			$(".color_map_select").html(html);
 			return;
-		}
+		} else {
+			for (var c in TissueStack.indexed_color_maps)
+				html += ("<option>" + c + "</option>");		
+        }
 		
 		$(".color_map_select").html(html);
 		//$(".color_map_select").selectmenu("refresh");	
@@ -518,6 +516,8 @@ TissueStack.Utils = {
 				return;
 			}
 	
+			$('.dataset').unbind('mouseover');
+			$('.dataset').unbind('mouseout');
 			$('.dataset').mouseover(function(){
 				var id = $(this).attr('id');
 				if (!id || id.length != "dataset_X".length) return;
