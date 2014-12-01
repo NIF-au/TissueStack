@@ -229,9 +229,11 @@ TissueStack.ContrastCanvas.prototype = {
 		return null;
 	},
 	getMinimum : function() {
+        if (this.step == 0) return 0;
 		return Math.floor((this.min_bar_pos - this.margin) /this.step);
 	},
 	getMaximum : function() {
+        if (this.step == 0) return 255;
 		return Math.floor((this.max_bar_pos - this.margin) /this.step);
 	},
 	getMinimumBarPositionForValue : function(val) {

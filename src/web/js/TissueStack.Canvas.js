@@ -29,7 +29,6 @@ TissueStack.Canvas = function(data_extent, canvas_id, dataset_id, include_cross_
 	if (typeof(is_linked_dataset) == 'boolean' && is_linked_dataset)
 		this.is_linked_dataset = true;
 	if (!this.is_linked_dataset) this.events = new TissueStack.Events(this, this.include_cross_hair);
-	if (!this.is_linked_dataset) this.bindControlEvents(); // ui events for show/hide of controls such as contrast slider and copyable url link 
 	this.queue = new TissueStack.Queue(this);
 	this.contrast = null; // a shared instance of a contrast slider
 	// make parent and ourselves visible
@@ -950,19 +949,6 @@ TissueStack.Canvas.prototype = {
 		}
 		
 		$('#'+this.dataset_id +'_link_message').html('<a href="' + url_link_message + '" target="_blank">' + url_link_message + '</a>');
-	}, bindControlEvents : function () {
-		var _this = this;
-		if(TissueStack.desktop || TissueStack.tablet){
-			//Show or Hide "URL Link" Box (used unbind "click" to solve the problem when opening two datasets)
-			$('#'+ _this.dataset_id + '_url_button').unbind('click').click(function(){ 
-				$('#'+ _this.dataset_id + '_url_box').toggle();		
-			});	
-			// show and hide events for contrast slider
-			$('#'+ _this.dataset_id + '_toolbox_canvas_button').unbind('click');
-			$('#'+ _this.dataset_id + '_toolbox_canvas_button').click(function(){ 
-				$('#'+ _this.dataset_id + '_contrast_box').toggle();		
-			});
-		}
 	}, displayLoadingProgress : function(fraction, total, reset) {
 		if (this.is_linked_dataset) // no display for overlay 
 			return;

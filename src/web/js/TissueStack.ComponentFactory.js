@@ -51,6 +51,8 @@ TissueStack.ComponentFactory = {
             
         for (var plane in dataSet.planes) {
             dataSet.planes[plane].eraseCanvasContent();
+            if (dataSet.planes[plane].contrast)
+                dataSet.planes[plane].contrast.initContrastSlider();
             dataSet.planes[plane].resizeCanvas(new Date().getTime());
         }
     },
@@ -322,7 +324,21 @@ TissueStack.ComponentFactory = {
 		};
         
         div = TissueStack.phone ? '.canvasslider' : '#' + div + '_canvas_main_slider';
-        if (TissueStack.desktop) {
+        if (TissueStack.phone) {
+            $(div).each(
+                function() {
+                    var id = extractCanvasId(this.id, dataSet);
+
+                    if (!id) {
+                        return;
+                    }
+
+                    $(this).attr("min", 0);
+                    $(this).attr("max", dataSet.planes[id].data_extent.max_slices);
+                    $(this).attr("value", dataSet.planes[id].data_extent.slice);
+                    $(this).blur();
+            });   
+        } else {
             $(div).slider(function () {
                     $(this).attr("min", 0);
                     $(this).attr("max", actualDataSet.planes[id].data_extent.max_slices);
@@ -341,20 +357,6 @@ TissueStack.ComponentFactory = {
                         });
                     }
             });
-        } else {
-            $(div).each(
-            function() {
-                var id = extractCanvasId(this.id, dataSet);
-
-                if (!id) {
-                    return;
-                }
-
-                $(this).attr("min", 0);
-                $(this).attr("max", dataSet.planes[id].data_extent.max_slices);
-                $(this).attr("value", dataSet.planes[id].data_extent.slice);
-                $(this).blur();
-            });   
         }
         
         $(div).unbind("change");
@@ -783,6 +785,60 @@ TissueStack.ComponentFactory = {
                 dataSet.planes[id].queue.drawLowResolutionPreview(now);
                 dataSet.planes[id].queue.drawRequestAfterLowResolutionPreview(null, now);
             }
+        });
+    },
+    createUrlLink : function(div) {
+        if (!TissueStack.ComponentFactory.checkDivExistence(div)) {
+            alert("ComponentFactory::createUrlLink => Failed to add url link control!");
+            return;
+        }
+
+        var html = 
+            '<div class="url_link_main"><a id="' + div + '_url_button" class="top_right_button" style="color: white;" href="#">URL</a>'
+            + '<div id="' + div + '_url_box" class="url_box"><div class="url_arrow"></div>'
+            + '<div class="url_arrow-border"></div><div id="' + div + '_link_message" class="url_link_message"></div></div></div>';
+        $("#" + div).append(html);
+        
+        TissueStack.ComponentFactory.initUrlLink(div);
+    }, initUrlLink : function(div) {
+        if (!TissueStack.ComponentFactory.checkDivExistence(div))
+            return;
+
+        $('#'+ div + '_url_button').unbind('click').click(function(){ 
+		  $('#'+ div + '_url_box').toggle();		
+        });	
+    }, createContrastSlider : function(div, dataSet) {
+        if (!TissueStack.ComponentFactory.checkDivExistence(div, dataSet)) {
+            alert("ComponentFactory::createContrastSlider => Failed to add contrast control!");
+            return;
+        }
+
+        if (!TissueStack.ComponentFactory.checkDataSetObjectIntegrity(dataSet)) {
+            alert("ComponentFactory::createContrastSlider => given data set is invalid!");
+            return;
+        }
+        
+        var html = 
+            '<div class="contrast_main"><a id="' + div + '_toolbox_canvas_button" class="top_right_button" style="color: white;" href="#">CONTRAST</a>'
+            + '<div id="' + div + '_contrast_box" class="contrast_box"><div class="url_arrow"></div><div class="url_arrow-border"></div><canvas id="'
+            + div + '_toolbox_canvas" class="contrast_slider "></canvas></div></div>';
+        $("#" + div).append(html);
+
+        TissueStack.ComponentFactory.initContrastSlider(div, dataSet);
+    }, initContrastSlider : function(div, dataSet) {
+        if (!TissueStack.ComponentFactory.checkDivExistence(div) ||
+            !TissueStack.ComponentFactory.checkDataSetObjectIntegrity(dataSet))
+            return;
+
+        var contrastSlider = new TissueStack.ContrastCanvas(div + "_toolbox_canvas");
+        for (var p in dataSet.planes) {
+            dataSet.planes[p].contrast = contrastSlider;
+            dataSet.planes[p].contrast.canvas =  dataSet.planes[p];
+        }
+        
+        $('#'+ div + '_toolbox_canvas_button').unbind('click');
+		$('#'+ div + '_toolbox_canvas_button').click(function(){ 
+		  $('#'+ div + '_contrast_box').toggle();		
         });
     }
 };

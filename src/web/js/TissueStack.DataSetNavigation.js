@@ -143,7 +143,7 @@ TissueStack.DataSetNavigation.prototype = {
 		dataSet.planes = {};
 		TissueStack.overlay_values = {};
 
-        if (TissueStack.desktop) {
+        if (!TissueStack.phone) {
             TissueStack.ComponentFactory.destroyDataSetWidget(dataset);
             TissueStack.ComponentFactory.destroyDataSetSlider(dataset);
             return;
@@ -480,11 +480,14 @@ TissueStack.DataSetNavigation.prototype = {
                        var dataSetSelected =
                            TissueStack.dataSetStore.getDataSetById(selectedDataSetKey);
                        var dataSetOrdinal = TissueStack.dataSetNavigation.selectedDataSets.count;
+                       var dsDiv = "dataset_" + dataSetOrdinal;
                        TissueStack.ComponentFactory.createDataSetWidget(
                            "test", dataSetSelected, dataSetOrdinal, dataSetSelected.host, true, true, !dataSetSelected.data[0].isTiled);
-                       TissueStack.ComponentFactory.createDataSetSlider("test", dataSetSelected, dataSetOrdinal, "y");
-                       TissueStack.ComponentFactory.addProgressBar("dataset_" + dataSetOrdinal, dataSetSelected);
-                       TissueStack.ComponentFactory.createColorMapSwitcher("dataset_" + dataSetOrdinal);
+                       TissueStack.ComponentFactory.createDataSetSlider("datasets", dataSetSelected, dataSetOrdinal, "y");
+                       TissueStack.ComponentFactory.addProgressBar(dsDiv, dataSetSelected);
+                       TissueStack.ComponentFactory.createColorMapSwitcher(dsDiv);
+                       TissueStack.ComponentFactory.createUrlLink(dsDiv);
+                       TissueStack.ComponentFactory.createContrastSlider(dsDiv, dataSetSelected);
                        TissueStack.ComponentFactory.applyUserParameters({"plane" : "y"}, dataSetSelected);
                        
                        _this.showDataSet(n + 1, TissueStack.overlay_datasets && selectedNodes.length > 1);
@@ -612,39 +615,50 @@ TissueStack.DataSetNavigation.prototype = {
 		for (var dataSetKey in TissueStack.dataSetStore.datasets) {
 			var dataSet = TissueStack.dataSetStore.datasets[dataSetKey];
 
-			htmlString += '<div data-role="collapsible"'+' id="tabletTreeDiv-'+ dataSet.local_id + dataSet.host + '"' 
+			htmlString += '<div data-role="collapsible"'+' id="tabletTreeDiv-'+ dataSet.local_id + '-' + dataSet.host + '"' 
 			  			 + 'data-transition="slide">' + '<h3>'+ dataSet.description +'</h3>'
   			  			 + '<p><span style="text-decoration:underline;">' + dataSet.description + '</span><br>[' + dataSet.local_id + '@' + dataSet.host +']<br>('+ this.stripFileNameOfDataDirectory(dataSet.filename) +')</p>'
   			  			 + '</div>';
-  			  			 // For future used (Overlay Redio Button in DataSet selection)
-  			  			 /* 
-  			  			 + '<fieldset data-role="controlgroup" data-mini="true">'
-  			  			 + '<input type="radio" name="radio-' + dataSet.local_id + '"'+' id="radio-'+ dataSet.local_id +'"'+' value="on" />'
-  			  			 + '<label for="radio-'+ dataSet.local_id +'"'+'>Overlay ON</label>'
-  			  			 + '<input type="radio" name="radio-' + dataSet.local_id + '"'+' id="radio-off-'+ dataSet.local_id +'"'
-  			  			 + 'value="off" />' + '<label for="radio-off-'+ dataSet.local_id + '"'+'>Overlay OFF</label>'
-  			  			 + '</fieldset></div>';
-  			  			 */	
 		}		
 		$('#treedataset').append(htmlString)
 		.trigger("create").controlgroup('refresh', true);
 
-		this.getSelectedTabletTree(dataSet);
-	},
-	getSelectedTabletTree : function (dataSet) {
 		for (var dataSetKey in TissueStack.dataSetStore.datasets) {
 			var dataSet = TissueStack.dataSetStore.datasets[dataSetKey];
 			(function(dataSet,_this) {
-				$("#tabletTreeDiv-" + dataSet.local_id + dataSet.host).trigger("collapse");
-				$("#tabletTreeDiv-" + dataSet.local_id + dataSet.host).bind("expand", function() {
+				$("#tabletTreeDiv-" + dataSet.local_id + '-' + dataSet.host).bind("expand", function() {
 					if(TissueStack.phone){
 						TissueStack.Utils.adjustScreenContentToActualScreenSize(0);
 					}
-					_this.addToOrReplaceSelectedDataSets(dataSet.id, 0);
+                    
+                    _this.addToOrReplaceSelectedDataSets(dataSet.id, 0);
+                    
+                    if (TissueStack.tablet) {
+                        var dataSetOrdinal = 1;
+                        var dsDiv = "dataset_" + dataSetOrdinal;
+                        TissueStack.ComponentFactory.createDataSetWidget(
+                           "datasets", dataSet, dataSetOrdinal, dataSet.host, true, true, !dataSet.data[0].isTiled);
+                        TissueStack.ComponentFactory.createDataSetSlider("datasets", dataSet, dataSetOrdinal, "y");
+                        TissueStack.ComponentFactory.addProgressBar(dsDiv, dataSet);
+                        TissueStack.ComponentFactory.createColorMapSwitcher(dsDiv);
+                        TissueStack.ComponentFactory.createUrlLink(dsDiv);
+                        TissueStack.ComponentFactory.createContrastSlider(dsDiv, dataSet);
+                        TissueStack.ComponentFactory.applyUserParameters({"plane" : "y"}, dataSet);
+                    }
+                       
 					_this.showDataSet(1);
-					TissueStack.InitUserInterface();
+                    
+                    if (TissueStack.phone)
+					   TissueStack.InitUserInterface();
+                    
 					TissueStack.BindDataSetDependentEvents();
-					//redirect to x plane after expanded
+					
+                    if (TissueStack.tablet) {
+                        TissueStack.Utils.adjustScreenContentToActualScreenSize(1);
+                        TissueStack.ComponentFactory.redrawDataSet(dataSet);
+					}
+                    
+                    //redirect to x plane after expanded
 					if (TissueStack.phone) window.location = document.location.href.split('#dataset')[0] + '#tissueX';
 					return;
 				});

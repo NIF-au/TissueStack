@@ -33,14 +33,16 @@ TissueStack.Init = function () {
 		}
 
 		// initialize ui and events
-		if (!TissueStack.desktop) {
+		if (TissueStack.desktop)
+            TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(ds.id);
+        else if (TissueStack.tablet)
+            $("#tabletTreeDiv-" + ds.local_id + "-" + ds.host).trigger("expand");
+        else { // phone
 			TissueStack.dataSetNavigation.addDataSet(ds.id, 0);
 			TissueStack.InitUserInterface();
 			TissueStack.BindDataSetDependentEvents();
             TissueStack.dataSetNavigation.showDataSet(1);
-		} else {
-			TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(ds.id);
-        }
+		}
         TissueStack.Utils.adjustBorderColorWhenMouseOver();	
 			
         TissueStack.useUserParameters = false;
@@ -221,18 +223,9 @@ TissueStack.InitUserInterface = function (drawMe) {
 		
 		// crate a contrast slider per data set
 		var contrast = null;
-		if (!dataSet.lookupValues) {
-			if(TissueStack.desktop || TissueStack.tablet) {
-				//$("#dataset_" + (x+1) + "_toolbox_canvas_button").show();
-				// TODO: remove
-                if (!TissueStack.desktop) contrast = new TissueStack.ContrastCanvas("dataset_" + (x+1) + "_toolbox_canvas");
-			} // crate a contrast slider per data set for phone version
-			else if (TissueStack.phone){
-				contrast = new TissueStack.ContrastCanvas("dataset_1_toolbox_canvas_phone");
-			}
-		} else {
-			$("#dataset_" + (x+1) + "_toolbox_canvas_button").hide();
-		}
+		if (TissueStack.phone)
+			contrast = new TissueStack.ContrastCanvas("dataset_1_toolbox_canvas_phone");
+		
 		var dsUnderlying = null;
 		// if we have overlays of data sets on we remember the data set that underlies the top overlay
 		// that way we can later link canvases between the 2 
