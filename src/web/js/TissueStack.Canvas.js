@@ -747,10 +747,15 @@ TissueStack.Canvas.prototype = {
 	},
 	updateExtentInfo : function(realWorldCoords) {
 		var log = (TissueStack.desktop || TissueStack.tablet) ? $('#canvas_extent') : $('#canvas_' + this.getDataExtent().plane + '_extent');
-		if(TissueStack.phone){
+		
+		if (!realWorldCoords) {
+			log.html('<br/><br/>');
+			return;
+		}
+		
+		if(TissueStack.phone)
 			log.html("Zoom Level: " + this.getDataExtent().zoom_level);
-
-		} else {
+		else {
 			var text = "Zoom Level: " + this.getDataExtent().zoom_level
 					+ "<br/><hr />X: " + Math.round(realWorldCoords.min_x *1000) / 1000 + " to " + Math.round(realWorldCoords.max_x *1000) / 1000 + "<br/>Y: "
 					+ Math.round(realWorldCoords.min_y *1000) / 1000 + " to " + Math.round(realWorldCoords.max_y *1000) / 1000 + "<br/>";
@@ -776,6 +781,11 @@ TissueStack.Canvas.prototype = {
 			$("#canvas_point_z").val("");
 			$("#canvas_point_value").val("");
 			
+            var ontTree = $("#ontology_tree");
+            if (ontTree && ontTree.length > 0 && ontTree.empty) {
+                ontTree.empty();
+            }
+
 			return;
 		}
 		
@@ -815,7 +825,7 @@ TissueStack.Canvas.prototype = {
 	}, displayPixelValue : function(dataSet, pixelValues) {
 		if (typeof(pixelValues) != 'object' || !pixelValues
 			|| typeof(dataSet) != 'object' || !dataSet) {
-			$("#canvas_point_value").val("N/A");
+			$("#canvas_point_value").val("");
 			return;
 		}			
 		
@@ -823,6 +833,8 @@ TissueStack.Canvas.prototype = {
 		var children = [];
 		
 		var dataSetPixelValues = pixelValues[dataSet.filename];
+        if (!dataSetPixelValues) return;
+            
 		var info = "Value";
 
 		// we have a label info for the data set

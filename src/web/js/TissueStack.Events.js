@@ -453,6 +453,12 @@ TissueStack.Events.prototype = {
 			$("#canvas_point_y").val("");
 			$("#canvas_point_z").val("");
 			$("#canvas_point_value").val("");
+			
+			var ontTree = $("#ontology_tree");
+            if (ontTree && ontTree.length > 0 && ontTree.empty) {
+                ontTree.empty();
+            }
+			
 			if (exitAfterReset)
 				return;
 		}

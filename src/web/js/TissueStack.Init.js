@@ -39,7 +39,7 @@ TissueStack.Init = function () {
             $("#tabletTreeDiv-" + ds.local_id + "-" + ds.host).trigger("expand");
         else { // phone
 			TissueStack.dataSetNavigation.addDataSet(ds.id, 0);
-			TissueStack.InitUserInterface();
+			TissueStack.InitPhoneUserInterface();
 			TissueStack.BindDataSetDependentEvents();
             TissueStack.dataSetNavigation.showDataSet(1);
 		}
@@ -135,7 +135,7 @@ TissueStack.Init = function () {
 	);
 };
 
-TissueStack.InitUserInterface = function (drawMe) {
+TissueStack.InitPhoneUserInterface = function (drawMe) {
 	if (TissueStack.dataSetNavigation.selectedDataSets.count == 0) {
 		return;
 	}
@@ -143,202 +143,100 @@ TissueStack.InitUserInterface = function (drawMe) {
     if (typeof(drawMe) != 'boolean')
         drawMe = true;
     
-	// get all data sets that have been selected from the store and stuff them into the array for binding its events
-	var datasets = [];
-	for (var x=0;x<TissueStack.dataSetNavigation.selectedDataSets.count;x++) {
-		var selectedKey = TissueStack.dataSetNavigation.selectedDataSets["dataset_" + (x+1)]; 
-		datasets.push(TissueStack.dataSetStore.getDataSetById(selectedKey)); 
-	}
-
-	// determine the maximum number of data sets that are displayed. depends on the type of display
-	var maxDataSets = (TissueStack.phone || TissueStack.tablet) ? 1 : 2;
-	if (maxDataSets > datasets.length) {
-		maxDataSets = datasets.length;
-	}
-
-	TissueStack.Utils.adjustScreenContentToActualScreenSize(maxDataSets);
-	
-	if(TissueStack.desktop){
-		TissueStack.Utils.adjustBorderColorWhenMouseOver();	
-	}
+	TissueStack.Utils.adjustScreenContentToActualScreenSize(1);
 	
 	// initialize the color map chooser for desktop and tablet and (now in phone version)
-	//if(TissueStack.desktop || TissueStack.tablet || TissueStack.phone)
 	TissueStack.Utils.updateColorMapChooser();
 	
-	// particular settings for data set overlay
-	if (TissueStack.desktop && TissueStack.overlay_datasets && TissueStack.dataSetNavigation.selectedDataSets.count == 2) {
-		// hide scale bar for first data set
-		$("#dataset_1_scalecontrol").hide();
-		$("#dataset_1_toolbox_canvas_button, #dataset_2_toolbox_canvas_button").hide();
-		// transparency knob
-		TissueStack.transparency = 0.5; // reset
-		$("#transparency_knob").knob({
-            'change' : function (v) { 
-            	TissueStack.transparency = (parseInt(v) / 100);
-            	if (TissueStack.overlay_datasets && TissueStack.dataSetNavigation && TissueStack.dataSetNavigation.selectedDataSets
-            			&& TissueStack.dataSetNavigation.selectedDataSets.count == 2) {
-            		var ds = TissueStack.dataSetNavigation.selectedDataSets["dataset_2"];
-            		if (!ds) return;
-            		var actualDs = TissueStack.dataSetStore.getDataSetById(ds);
-            		if (actualDs && actualDs.planes)
-            			var sync_time = new Date().getTime();
-            			for (var p in actualDs.planes) {
-            				(function(pl) {
-                				actualDs.planes[pl].has_been_synced = true;
-            					actualDs.planes[pl].queue.latestDrawRequestTimestamp = sync_time;            					
-            					setTimeout(function() {
-            						actualDs.planes[pl].queue.drawLowResolutionPreview(sync_time);
-	            					actualDs.planes[pl].queue.drawRequestAfterLowResolutionPreview(null, sync_time);
-            					},actualDs.planes[pl].queue.drawingIntervalInMillis);
-            				})(p);
-            			}
-            	}
-            }
-        });
-		$("#transparency_knob").val(TissueStack.transparency * 100).trigger('change');
-		$(".transparency_knob_div").show();
-		// data set swap
-		$(".overlay_swapper").unbind("click");
-		$(".overlay_swapper").bind("click",
-			function() {
-	        	if (TissueStack.overlay_datasets && TissueStack.dataSetNavigation && TissueStack.dataSetNavigation.selectedDataSets
-	        			&& TissueStack.dataSetNavigation.selectedDataSets.count == 2) {
-	        		TissueStack.reverseOverlayOrder = TissueStack.reverseOverlayOrder ? false : true;
-	        		TissueStack.swappedOverlayOrder = true;
-	        		TissueStack.Utils.transitionToDataSetView();
-	        	}
-			}
-		);
-		$(".overlay_swapper").show();
+	var dataSet =
+		TissueStack.dataSetStore.getDataSetById(
+			TissueStack.dataSetNavigation.selectedDataSets["dataset_1"]);
+	
+	if (!dataSet.data || dataSet.data.length == 0) {
+		alert("Data set '" + dataSet.id + "' does not have any planes associated with it!");
+		return; 
 	}
 	
-	for (var x=0;x<maxDataSets;x++) {
-		var dataSet = datasets[x];
+	// crate a contrast slider per data set
+	var contrast = null;
+	if (TissueStack.phone)
+		contrast = new TissueStack.ContrastCanvas("dataset_1_toolbox_canvas_phone");
+	
+	// loop over all planes in the data, create canvas and extent objects, then display them
+	var main_view_plane = null;
+	for (var i=0; i < dataSet.data.length; i++) {
+		var dataForPlane = dataSet.data[i];
+		var planeId = dataForPlane.name;
+
+        var zoomLevels = eval(dataForPlane.zoomLevels);
+		transformationMatrix = eval(dataForPlane.transformationMatrix);
 		
-		if (!dataSet.data || dataSet.data.length == 0) {
-			alert("Data set '" + dataSet.id + "' does not have any planes associated with it!");
-			continue; 
+		// create extent
+		var extent = 
+			new TissueStack.Extent(
+				dataSet.id,
+				dataForPlane.isTiled,
+				dataForPlane.oneToOneZoomLevel,
+				planeId,
+				dataForPlane.maxSlices,
+				dataForPlane.maxX,
+				dataForPlane.maxY,
+				zoomLevels,
+				transformationMatrix, 
+				dataForPlane.resolutionMm);
+
+		// create canvas
+		var plane = new TissueStack.Canvas(extent, "canvas_" + planeId + "_plane", "dataset_1", true);
+
+        // this is a bit of a hack to not have to change the fixed html layout if we have only 1 plane (classic 2D data):
+		// in order to use the main view which is hard-coded to plane with id 'y', we'll make the only plane that we have 'y' 
+		if (dataSet.data.length == 1) {
+            main_view_plane = plane;
+			planeId = 'y';
+			extent.plane = planeId;
 		}
+        
+		// set the internal db id
+		plane.id = dataForPlane.id;
 		
-		// crate a contrast slider per data set
-		var contrast = null;
-		if (TissueStack.phone)
-			contrast = new TissueStack.ContrastCanvas("dataset_1_toolbox_canvas_phone");
+		var localHost = document.location.host;
+		if (!localHost)
+			localHost = dataSet.host;
 		
-		var dsUnderlying = null;
-		// if we have overlays of data sets on we remember the data set that underlies the top overlay
-		// that way we can later link canvases between the 2 
-		if (TissueStack.desktop && maxDataSets > 1 && x==(maxDataSets-1)) {
-			dsUnderlying = datasets[x-1];
-			if (!dataSet.lookupValues) $("#dataset_" + (x+1) + "_toolbox_canvas_button").show();
+		// set original value range 
+		plane.setValueRange(dataForPlane.valueRangeMin, dataForPlane.valueRangeMax);
+		
+		// set bidirectional relationship for contrast
+		plane.contrast = contrast;
+		if (contrast) contrast.canvas = plane;
+		
+		// for scalebar to know its parent
+		if (planeId == 'y') {
+			main_view_plane = plane;
+			plane.is_main_view = true;
 		}
+		plane.updateScaleBar();
 		
-		// loop over all planes in the data, create canvas and extent objects, then display them
-		var main_view_plane = null;
-		for (var i=0; i < dataSet.data.length; i++) {
-			var dataForPlane = dataSet.data[i];
-			var planeId = dataForPlane.name;
+		// store plane  
+		dataSet.planes[planeId] = plane;
+		
+		// get the real world coordinates 
+		dataSet.realWorldCoords[planeId] = plane.getDataExtent().getExtentCoordinates();
+		
+		plane.changeToZoomLevel(0);
+        plane.eraseCanvasContent();
+		
+        if (!drawMe) continue;
+        
+		var now = new Date().getTime();
+		
+		plane.queue.drawLowResolutionPreview(now);
+		plane.queue.drawRequestAfterLowResolutionPreview(null, now);
 
-            var zoomLevels = eval(dataForPlane.zoomLevels);
-			transformationMatrix = eval(dataForPlane.transformationMatrix);
-			
-			// create extent
-			var extent = 
-				new TissueStack.Extent(
-					dataSet.id,
-					dataForPlane.isTiled,
-					dataForPlane.oneToOneZoomLevel,
-					planeId,
-					dataForPlane.maxSlices,
-					dataForPlane.maxX,
-					dataForPlane.maxY,
-					zoomLevels,
-					transformationMatrix, 
-					dataForPlane.resolutionMm);
-
-			// create canvas
-			var canvasElementSelector = "dataset_" + (x+1); 
-			var plane = new TissueStack.Canvas(extent, "canvas_" + planeId + "_plane", canvasElementSelector, true);
-
-            // this is a bit of a hack to not have to change the fixed html layout if we have only 1 plane (classic 2D data):
-			// in order to use the main view which is hard-coded to plane with id 'y', we'll make the only plane that we have 'y' 
-			if (dataSet.data.length == 1) {
-                main_view_plane = plane;
-				planeId = 'y';
-				extent.plane = planeId;
-			}
-            
-			// set the internal db id
-			plane.id = dataForPlane.id;
-			
-			var localHost = document.location.host;
-			if (!localHost)
-				localHost = dataSet.host;
-			
-			// query for overlays (if exist) TODO: extend to tablet and phone
-			if (TissueStack.desktop && dataSet.overlays) {
-				plane.overlays = [];
-				for (var z=0;z<dataSet.overlays.length;z++) {
-					var type = dataSet.overlays[z].type;
-					if (type === 'CANVAS')
-						plane.overlays[z] = new TissueStack.CanvasOverlay(z, plane, "http", localHost, dataSet.local_id, plane.id);
-					else if (type === 'SVG')
-						plane.overlays[z] = new TissueStack.SVGOverlay(z, plane, "http", localHost, dataSet.local_id, plane.id);
-					else if (type === 'DATASET')
-						plane.overlays[z] = new TissueStack.DataSetOverlay(z, plane, "http", localHost, dataSet.local_id, plane.id, dataSet.host);
-				}
-			}
-
-			// set original value range 
-			plane.setValueRange(dataForPlane.valueRangeMin, dataForPlane.valueRangeMax);
-			
-			// link overlaid canvas with its undelying counterpart 
-			if (TissueStack.desktop && dsUnderlying && dsUnderlying.planes) {
-				var dsUnderlyingPlane = dsUnderlying.planes[extent.plane];
-				if (dsUnderlyingPlane) {
-					plane.underlying_canvas = dsUnderlyingPlane;
-					dsUnderlyingPlane.overlay_canvas = plane;
-				}
-			}
-			
-			// set bidirectional relationship for contrast
-			plane.contrast = contrast;
-			if (contrast) contrast.canvas = plane;
-			
-			// for scalebar to know its parent
-			if (planeId == 'y') {
-				main_view_plane = plane;
-				plane.is_main_view = true;
-			}
-			plane.updateScaleBar();
-			
-			// store plane  
-			dataSet.planes[planeId] = plane;
-			
-			// get the real world coordinates 
-			dataSet.realWorldCoords[planeId] = plane.getDataExtent().getExtentCoordinates();
-			
-			// for desktop version show 2 small canvases
-			if (TissueStack.phone || ((TissueStack.desktop || TissueStack.tablet) && planeId != 'y')) {
-				plane.changeToZoomLevel(0);
-			}
-			
-            plane.eraseCanvasContent();
-			
-            if (!drawMe) continue;
-            
-			var now = new Date().getTime();
-			
-			plane.queue.drawLowResolutionPreview(now);
-			plane.queue.drawRequestAfterLowResolutionPreview(null, now);
-
-           if (main_view_plane) {
-               main_view_plane.updateExtentInfo(main_view_plane.getDataExtent().getExtentCoordinates());
-               main_view_plane.events.updateCoordinateDisplay();
-               //setTimeout(function() {main_view_plane.events.updateCoordinateDisplay();}, 500);
-           }
-		}
+       if (main_view_plane) {
+           main_view_plane.updateExtentInfo(main_view_plane.getDataExtent().getExtentCoordinates());
+           main_view_plane.events.updateCoordinateDisplay();
+       }
 	}
 };
 

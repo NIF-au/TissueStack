@@ -840,5 +840,46 @@ TissueStack.ComponentFactory = {
 		$('#'+ div + '_toolbox_canvas_button').click(function(){ 
 		  $('#'+ div + '_contrast_box').toggle();		
         });
+    },
+    addTransparencyWheel : function(div) {
+        if (!TissueStack.ComponentFactory.checkDivExistence(div)) {
+            alert("ComponentFactory::addTransparencyWheel => Failed to add transparency control!");
+            return;
+        }
+
+        var html =
+            '<div class="transparency_knob_div" title="Adjust Transparency of Overlay">'
+            + '<input  id="transparency_knob" type="text" data-width="75" data-height="75" data-fgColor="#ffec03" data-min="0" data-max="100" data-thickness=".2" value="50">'
+            + '</div>';
+        
+        $("#" + div).append(html);
+    },
+    initTransparencyWheel : function(handler) {
+        if (typeof(handler) != 'function')
+            return;
+            
+        TissueStack.transparency = 0.5; // reset
+		$("#transparency_knob").unbind('change');
+        $("#transparency_knob").knob({'change' : handler});
+		$("#transparency_knob").val(TissueStack.transparency * 100).trigger('change');
+    },
+    addDataSetSwapper : function(div) {
+        if (!TissueStack.ComponentFactory.checkDivExistence(div)) {
+            alert("ComponentFactory::addDataSetSwapper => Failed to add dataset swapper control!");
+            return;
+        }
+        
+        var html =
+            '<div class="overlay_swapper" title="Swap Data Sets">'
+            + '<a href="#"><img alt="Swap Data Sets" src="images/swap_button.png" ></a></div>';
+        
+        $("#" + div).append(html); 
+    },
+    initDataSetSwapper : function(handler) {
+        if (typeof(handler) != 'function')
+            return;
+
+		$(".overlay_swapper").unbind("click");
+		$(".overlay_swapper").bind("click", handler);
     }
 };
