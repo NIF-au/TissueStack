@@ -380,7 +380,7 @@ TissueStack.BindGlobalEvents = function () {
 			url += "/";
 		}
 		
-		url += (TissueStack.configuration['server_proxy_path'].value + "/?service=services&sub_service=data&action=all?include_planes=true");
+		url += (TissueStack.configuration['server_proxy_path'].value + "/?service=services&sub_service=data&action=all&include_planes=true");
 		
 		// contact server
 		TissueStack.Utils.sendAjaxRequest(
