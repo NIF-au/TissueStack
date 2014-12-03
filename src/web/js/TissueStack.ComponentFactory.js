@@ -188,7 +188,7 @@ TissueStack.ComponentFactory = {
         
         var maximizePngPath = 'images/maximize.png';
         if (server != null)
-            maximizePngPath = "http://" + server + "/" + maximizePngPath;
+            maximizePngPath = "http://" + server.replace(/[_]/g,".") + "/" + maximizePngPath;
         
         var dataSetPrefix = "dataset_" + dataSetOrdinal;
         
