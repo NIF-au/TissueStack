@@ -123,6 +123,13 @@
 	display: none;
 }
 
+#panel .white {
+	color: white;
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    font-weight: normal;
+}
+
 #panel h1 {
 	font-size: 1.6em;
 	padding: 5px 0 10px;

@@ -597,13 +597,28 @@ TissueStack.DataSetNavigation.prototype = {
   			  			 + '<p><span style="text-decoration:underline;">' + dataSet.description + '</span><br>[' + dataSet.local_id + '@' + dataSet.host +']<br>('+ this.stripFileNameOfDataDirectory(dataSet.filename) +')</p>'
   			  			 + '</div>';
 		}		
-		$('#treedataset').append(htmlString)
-		.trigger("create").controlgroup('refresh', true);
+		var treeSet = $('#treedataset').append(htmlString);
+		treeSet.trigger("create").controlgroup();
+        try {
+            treeSet.controlgroup('refresh', true);
+        } catch(err)
+        {
+			// ignored
+        }
 
+		var _this = this;
 		for (var dataSetKey in TissueStack.dataSetStore.datasets) {
 			var dataSet = TissueStack.dataSetStore.datasets[dataSetKey];
 			(function(dataSet,_this) {
-				$("#tabletTreeDiv-" + dataSet.local_id + '-' + dataSet.host).bind("expand", function() {
+                $("#tabletTreeDiv-" + dataSet.local_id + '-' + dataSet.host).trigger("collapsiblecollapse");
+				$("#tabletTreeDiv-" + dataSet.local_id + '-' + dataSet.host).bind("collapsibleexpand", function(event) {
+                    for (var oneDsKey in TissueStack.dataSetStore.datasets) // collapse all others
+                    {
+                        var oneDs = TissueStack.dataSetStore.datasets[oneDsKey];
+                        if (event.target.id != ("tabletTreeDiv-" + oneDs.local_id + "-" + oneDs.host))
+                            $("#tabletTreeDiv-" + oneDs.local_id + "-" + oneDs.host).collapsible( "option", "collapsed", true );
+                    }
+                        
 					if(TissueStack.phone){
 						TissueStack.Utils.adjustScreenContentToActualScreenSize(0);
 					}
@@ -636,9 +651,15 @@ TissueStack.DataSetNavigation.prototype = {
 					}
                     
                     //redirect to x plane after expanded
-					if (TissueStack.phone) window.location = document.location.href.split('#dataset')[0] + '#tissueX';
+					if (TissueStack.phone) window.location = document.location.href.split('#dataset')[0] + '#tissueY';
 					return;
 				});
+                
+				$("#tabletTreeDiv-" + dataSet.local_id + '-' + dataSet.host).bind("collapsiblecollapse", function(event) {
+                    if (!TissueStack.desktop) 
+                        TissueStack.dataSetNavigation.removeFromSelectedDataSetsByKey(dataSet.id);
+                });
+                
 			})(dataSet, this);
 		}
 	},

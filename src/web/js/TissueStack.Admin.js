@@ -258,7 +258,9 @@ TissueStack.Admin.prototype = {
 	             	 $('.file_radio_list').html(listOfFileName)
 	             	 	.trigger( "create" );
 	             	 	//_this.identifyFileType();
+                    try {
 	             	 $('.file_radio_list').controlgroup('refresh', true);
+                    } catch(ignored) {}
 		        });
 	      	});
 	     });

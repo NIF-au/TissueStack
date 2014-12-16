@@ -17,7 +17,8 @@
 TissueStack = {
 	requiredLibs : [
 	                	"/js/libs/sylvester/sylvester.js",
-	                	"/js/TissueStack.js",
+	                	"/js/libs/jquery/jquery.contextMenu-custom.js",
+                        "/js/TissueStack.js",
 	                	"/js/TissueStack.MouseWheel.js",
 	                	"/js/TissueStack.Utils.js",
 	                	"/js/TissueStack.Extent.js",

@@ -52,7 +52,8 @@ if(jQuery)( function() {
 		 }
 		 return browser;
 	}
-	var BROWSER = jQuery.browser || _checkBrowser();
+	//var BROWSER = ;
+	jQuery.browser = jQuery.browser || _checkBrowser();
 
 	$.extend($.fn, {
 
@@ -174,9 +175,9 @@ if(jQuery)( function() {
 				});
 
 				// Disable text selection
-				if( BROWSER.mozilla ) {
+				if( jQuery.browser.mozilla ) {
 					$('#' + o.menu).each( function() { $(this).css({ 'MozUserSelect' : 'none' }); });
-				} else if( BROWSER.msie ) {
+				} else if( jQuery.browser.msie ) {
 					$('#' + o.menu).each( function() { $(this).bind('selectstart.disableTextSelect', function() { return false; }); });
 				} else {
 					$('#' + o.menu).each(function() { $(this).bind('mousedown.disableTextSelect', function() { return false; }); });

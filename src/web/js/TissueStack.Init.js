@@ -36,7 +36,7 @@ TissueStack.Init = function () {
 		if (TissueStack.desktop)
             TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(ds.id);
         else if (TissueStack.tablet)
-            $("#tabletTreeDiv-" + ds.local_id + "-" + ds.host).trigger("expand");
+            $("#tabletTreeDiv-" + ds.local_id + "-" + ds.host).collapsible("expand");
         else { // phone
 			TissueStack.dataSetNavigation.addDataSet(ds.id, 0);
 			TissueStack.InitPhoneUserInterface();
@@ -502,24 +502,39 @@ TissueStack.BindDataSetDependentEvents = function () {
 	}
 };
 
-$(document).ready(function() {
-	if (!TissueStack.Utils.supportsCanvas()) {
-		alert("Your browser does not support the HTML5 feature 'Canvas'!\n\n" +
-				"This means that this site will be of very limited use for you.\n\n" +
-				"We recommend upgrading your browser: Latest versions of Chrome, Firefox, Safari and Opera support the canvas element," +
-				" so does IE from version 9 on.");
-	}
-	  // override cross domain behavior
-	  var options = {
-		  allowCrossDomainPages : true
-	  };
-	  // override form submission behavior for desktop version
-	  if (TissueStack.desktop) {
-		  options.ajaxEnabled = false;
-	  }
-	  
-	  $.extend(  $.mobile , options);
+TissueStack.CommonBootStrap = function() {
+    if (!TissueStack.Utils.supportsCanvas()) {
+        alert("Your browser does not support the HTML5 feature 'Canvas'!\n\n" +
+                "This means that this site will be of very limited use for you.\n\n" +
+                "We recommend upgrading your browser: Latest versions of Chrome, Firefox, Safari and Opera support the canvas element," +
+                " so does IE from version 9 on.");
+    }
+      // override cross domain behavior
+      var options = {
+          allowCrossDomainPages : true
+      };
+      // override form submission behavior for desktop version
+      if (TissueStack.desktop) {
+          options.ajaxEnabled = false;
+      }
 
-	TissueStack.Init();
+      $.extend(  $.mobile , options);
 
-});
+    TissueStack.Init();
+}
+
+if (TissueStack.phone) {
+    $(document).bind ("pageinit", function(event) {
+        if (TissueStack.initTimeStamp) return;
+        
+        TissueStack.CommonBootStrap();
+        TissueStack.initTimeStamp = event.timeStamp;
+    });    
+}
+
+if (!TissueStack.phone) {
+    $(document).ready(function() {
+        TissueStack.CommonBootStrap();
+    });
+}
+

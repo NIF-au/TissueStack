@@ -7,21 +7,24 @@
         
         <title> Tissue Stack - Tablet </title>
        	<link rel="icon" type="image/png" href="images/favicon.png" />
-       	
-        <link rel="stylesheet" href="css/jquery.mobile-1.1.1.min.css" />
-        <link rel="stylesheet" href="css/default.css" />
-        <link rel="stylesheet" href="css/admin_login.css" />
-        
+
         <!--Apple Device Start Up Splash Screen and ICON-->
 		<link rel="apple-touch-startup-image" href="images/mobile/ipadscreen.png" /> <!--For iPad-->
 		<link rel="apple-touch-icon" href="images/favicon_icon.png" />
-		
-        <script src="js/libs/jquery/jquery-1.7.1.min.js"></script>
-        <script src="js/libs/jquery/jquery.mobile-1.1.1.min.js"></script>
+       	
+        <link rel="stylesheet" href="css/tissuestack-theme.min.css" />
+		<link rel="stylesheet" href="css/jquery.mobile.icons.min.css" />
+		<link rel="stylesheet" href="css/jquery.mobile.structure-1.4.5.min.css" />
+        <link rel="stylesheet" href="css/default.css" />
+        <link rel="stylesheet" href="css/admin_login.css" />
+        
+        <script src="js/libs/jquery/jquery-2.1.1.min.js"></script>
+        <script src="js/libs/jquery/jquery.mobile-1.4.5.min.js"></script>
         <script src="js/libs/jquery/jquery.form.js"></script>
         <script src="js/TissueStack.Slider.js"></script>
 		<script src="js/libs/sylvester/sylvester.js"></script>
         <script src="js/libs/jquery/jquery.cookie.js"></script>
+		<script src="js/libs/jquery/jquery.contextMenu-custom.js" type="text/javascript"></script>
 		
 		<script src="js/TissueStack.MouseWheel.js"></script>
 		<script src="js/TissueStack.js"></script>
@@ -60,9 +63,10 @@
 			  		 </div>
                 </div>
      	    </div>
+            <div class="ui-icon-video" style="height: 100px"></div>
      	    <div style="min-width: 1400px;">
      	    	<div class="left_panel"> 
-     	    		<div data-mini="true" data-collapsed="true" data-role="collapsible" class="text-align-center">
+     	    		<div data-mini="true" data-role="collapsible" class="text-align-center">
      	    			<h6>Extent/Zoom</h6>
      	    			<div id="canvas_extent" class="text-align-center"></div>
      	    		</div>
@@ -94,7 +98,8 @@
      	    	</div>
      	    	
                 <div id="datasets" style="width: 1000px; height: 500px"></div>
-       </div>  
+            </div>
+    </div>
     <!-- END OF TILE PAGE -->  
        
 	<!-- ADMIN PAGE --> 
@@ -126,23 +131,21 @@
  	     			<div class="left">
  	     				<!-- Login Form -->
  	     				<form class="clearfix" action="#" method="post">
- 	     					<h2>Admin Login</h2>
- 	     					<label class="grey" for="username">Username:</label>
- 	     					<input type="text" size="15" name="username" id="username" disabled="disabled" value="Admin"/>
- 	     					<label class="grey" for="password">Password:</label>
- 	     					<input type="password" size="15" name="password" id="password" /><br/>
- 	     					<input type="button" accesskey="l" class="login_btn_check" id="login_btn" name="login" value="Login" />
+ 	     					<label data-mini="true" class="white" for="username">Username:</label><br/><br/>
+ 	     					<input data-mini="true" type="text" size="15" name="username" id="username" disabled="disabled" value="Admin"/>
+ 	     					<label data-mini="true" class="white" for="password">Password:</label><br/><br/>
+ 	     					<input data-mini="true" type="password" size="15" name="password" id="password" /><br/>
+ 	     					<input data-mini="true" type="button" accesskey="l" class="login_btn_check" id="login_btn" name="login" value="Login" />
  	     				</form>
  	     			</div>
 	 		  			<div class="left right">			
 	 		  				<!-- Password Change Form -->
 	 		  				<form class="clearfix" action="#" method="post">
-	 		  					<h2>Change Admin Password</h2>
-	 		  					<label class="grey" for="password">Old Password:</label>
-	 		  					<input type="password" size="15" name="old_password" id="old_password" value=""/>
-	 		  					<label class="grey" for="password">New Password:</label>
-	 		  					<input type="password" size="15" name="new_password" id="new_password" /><br/>
-	 		  					<input type="button" accesskey="l" class="login_btn_check" id="passwd_change_btn" name="passwd_change" value="Change Password" />
+	 		  					<label data-mini="true" class="white" for="password">Old Password:</label><br/><br/>
+	 		  					<input data-mini="true" type="password" size="15" name="old_password" id="old_password" value=""/>
+	 		  					<label data-mini="true" class="white" for="password">New Password:</label><br/><br/>
+	 		  					<input data-mini="true" type="password" size="15" name="new_password" id="new_password" /><br/>
+	 		  					<input data-mini="true" type="button" accesskey="l" class="login_btn_check" id="passwd_change_btn" name="passwd_change" value="Change Password" />
 	 		  				</form>
 	 		  			</div>
  	     		</div>
@@ -166,8 +169,8 @@
                 <h3 id="setting_name">Settings</h3>
                 <hr/>
                 <div data-role="fieldcontain">
-                    <input id="drawing_interval" type="text" value="150" style="width: 90px;">
-                    <a href="tablet.html#data" data-role="button" data-inline="true" id="drawing_interval_button" data-mini="true">Set Drawing Interval (ms)</a>
+                    <input id="drawing_interval"  data-mini="true" type="text" value="150" style="width: 90px;">
+                    <a  data-mini="true" href="tablet.html#data" data-role="button" data-inline="true" id="drawing_interval_button" data-mini="true">Set Drawing Interval (ms)</a>
                 </div>
                 <hr/>
  	    		<h3 id="directory_name">Upload Directory</h3>
