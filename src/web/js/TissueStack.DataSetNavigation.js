@@ -153,6 +153,7 @@ TissueStack.DataSetNavigation.prototype = {
                     ontTree.empty();
                 }
             }
+            $("#canvas_point_value").show();
         } else { // phone
             try {
                 $("#colormap_choice input").removeAttr("checked").checkboxradio("refresh");

@@ -266,6 +266,15 @@ span.dynatree-node
 /*  display: inline-block; /* Required to make a span sizeable */
 }
 
+span.dynatree-node a {
+    font-weight: normal;
+    color: white;
+}
+
+span.dynatree-node a:visited {
+    font-weight: normal;
+    color: white;
+}
 
 /* Remove blue color and underline from title links */
 ul.dynatree-container a
@@ -312,6 +321,14 @@ span.dynatree-has-children a
 
 span.dynatree-expanded a
 {
+}
+
+span.dynatree-selected a:visited
+{
+    font-weight: normal;
+	color: #449ab9;
+/*	font-style: italic;*/
+/*	background-color: #449ab9;*/
 }
 
 span.dynatree-selected a

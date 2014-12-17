@@ -244,12 +244,12 @@ TissueStack.BindGlobalEvents = function () {
 	// for the desktop, we want to resize stuff once the individual sections have been expanded
 	$(".left_panel div[data-role='collapsible']").each(
 			function() {
-				$(this).bind("expand", function() {
-					TissueStack.Utils.adjustCollapsibleSectionsHeight('ontology_tree');
+				$(this).bind("collapsibleexpand", function() {
+					//TissueStack.Utils.adjustCollapsibleSectionsHeight('ontology_tree', 150);
 					TissueStack.Utils.adjustCollapsibleSectionsHeight('treedataset');
 				});
-				$(this).bind("collapse", function() {
-					TissueStack.Utils.adjustCollapsibleSectionsHeight('ontology_tree');
+				$(this).bind("collapsiblecollapse", function() {
+					//TissueStack.Utils.adjustCollapsibleSectionsHeight('ontology_tree', 150);
 					TissueStack.Utils.adjustCollapsibleSectionsHeight('treedataset');
 				});
 			}

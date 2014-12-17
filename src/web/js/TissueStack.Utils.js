@@ -264,7 +264,16 @@ TissueStack.Utils = {
             // hide everything
 		    $('#dataset_1_center_point_in_canvas, #dataset_2_center_point_in_canvas').closest('.ui-btn').hide();
 		    $(".dataset, .right_panel").addClass("hidden");
+			try {
+			    $("#ontology_tree_div").collapsible("collapse");
+				$("#coords_collapsible").collapsible("collapse");
+			} catch(ignored) {}
+
 		    return;
+		} else {
+			try {
+				$("#coords_collapsible").collapsible("expand");
+			} catch(ignored) {}
 		}
 		
         TissueStack.Utils.captureScreenDimensions(datasets);
@@ -348,14 +357,14 @@ TissueStack.Utils = {
 		
 		// adjust Tree Height
 		if (TissueStack.desktop) {
-			TissueStack.Utils.adjustCollapsibleSectionsHeight('ontology_tree');
+			//TissueStack.Utils.adjustCollapsibleSectionsHeight('ontology_tree');
 			TissueStack.Utils.adjustCollapsibleSectionsHeight('treedataset');			
 		}
 		else TissueStack.Utils.adjustCollapsibleSectionsHeight('menutransition');
 		
 		// apply scroll screen for admin upload direcory
 		$('.settings-right-column, .settings-left-column').css({"height": TissueStack.canvasDimensions.screenHeight/1.7});
-	}, adjustCollapsibleSectionsHeight : function(elem_id) {
+	}, adjustCollapsibleSectionsHeight : function(elem_id, upper_limit) {
 		if (typeof(elem_id) != 'string') return;
 		if (!$("#" + elem_id) || typeof($("#" + elem_id).length) != 'number' || $("#" + elem_id).length == 0) return; 
 		
@@ -367,7 +376,13 @@ TissueStack.Utils = {
 	    	  treeHeight -= $(this).outerHeight();
 	      }
 	    });
-		$('#' + elem_id).css({"height": treeHeight - $("#" + elem_id + "_div .ui-collapsible-heading").outerHeight() - elCount*10});
+	    
+	    var finalHeight = treeHeight - $("#" + elem_id + "_div .ui-collapsible-heading").outerHeight() - elCount*10;
+	    
+	    if (typeof(upper_limit) != 'number' || upper_limit <= 0 || upper_limit >= finalHeight)
+			$('#' + elem_id).css({"height": finalHeight});
+		else
+			$('#' + elem_id).css({"height": upper_limit});
 	},
 	verifyUrlSyntax : function(url) {
 		if (typeof(url) != "string") {

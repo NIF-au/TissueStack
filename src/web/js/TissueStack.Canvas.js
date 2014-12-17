@@ -904,13 +904,15 @@ TissueStack.Canvas.prototype = {
 			       checkbox: false,
 			       children: ontologies
 			 });
+			 $("#canvas_point_value").hide();
 			 $("#ontology_tree").dynatree("getTree").reload();
 			 $("#ontology_tree").show();
 			 
 		} else {
+			$("#canvas_point_value").show();
 			$("#ontology_tree").hide();
 		}
-		TissueStack.Utils.adjustCollapsibleSectionsHeight('ontology_tree');
+		//TissueStack.Utils.adjustCollapsibleSectionsHeight('ontology_tree', 150);
 		TissueStack.Utils.adjustCollapsibleSectionsHeight('treedataset');
 	}, getXYCoordinatesWithRespectToZoomLevel : function(coords) {
 		/*
