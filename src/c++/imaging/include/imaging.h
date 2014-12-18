@@ -196,7 +196,6 @@ namespace tissuestack
 				const unsigned long long int getNumberOfSlices() const;
 				const unsigned long long int getSliceSize() const;
 				const unsigned long long int getOffset() const;
-				const float getResolutionMm() const;
 				const std::string getTransformationMatrix() const;
 				const unsigned int getWidth() const;
 				const unsigned int getHeight() const;
@@ -209,7 +208,6 @@ namespace tissuestack
 				void setOffSet(const unsigned long long int offSet);
 				friend class tissuestack::database::DataSetDataProvider;
 				void setTransformationMatrix(const std::string transformationMatrix);
-				void setResolutionMm(const float resolution_mm);
 				const unsigned long long int _id;
 				const std::string 	_name;
 				unsigned long long int 	_offset;
@@ -218,7 +216,6 @@ namespace tissuestack
 				unsigned int _width;
 				unsigned int _height;
 				std::string _transformationMatrix;
-				float _resolutionMm;
 		};
 
 		class TissueStackImageData
@@ -253,7 +250,9 @@ namespace tissuestack
 						const bool is_tiled = false,
 						const std::vector<float> zoom_levels = {0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2.00, 2.25, 2.5},
 						const unsigned short one_to_one_zoom_level = 3,
+						const float resolution_in_mm = 0,
 						const TissueStackLabelLookup * lookup = nullptr);
+				const float getResolutionMm() const;
 				const bool isTiled() const;
 				const std::vector<float> getZoomLevels() const;
 				const unsigned short getOneToOneZoomLevel() const;
@@ -272,6 +271,7 @@ namespace tissuestack
 				void clearAssociatedDataSets();
 			protected:
 				friend class tissuestack::database::DataSetDataProvider;
+				void setResolutionMm(const float resolution_mm);
 				explicit TissueStackImageData(const long long unsigned int id, const std::string filename = "");
 				explicit TissueStackImageData(const std::string & filename);
 				TissueStackImageData(const std::string & filename, FORMAT format);
@@ -288,7 +288,6 @@ namespace tissuestack
 				inline const std::string constructIdentityMatrixForDimensionNumber() const;
 				inline const std::string getAdjointMatrix() const;
 				inline void setWidthAndHeightByDimension(const std::string & dimension);
-				inline void setResolutionMmByDimension(const std::string & dimension);
 				inline void setTransformationMatrixByDimension(const std::string & dimension);
 				inline const std::string setTransformationMatrixByDimension0(
 						const short step_index, const short index);
@@ -313,6 +312,7 @@ namespace tissuestack
 				const TissueStackLabelLookup * _lookup = nullptr;
 				std::vector<const TissueStackImageData *> _associated_data_sets;
 				std::string _header = "";
+				float _resolutionMm;
 		};
 
 		class TissueStackRawData final : public TissueStackImageData

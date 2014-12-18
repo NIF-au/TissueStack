@@ -22,7 +22,7 @@ tissuestack::imaging::TissueStackDataDimension::TissueStackDataDimension(
 		const unsigned long long int offset,
 		const unsigned long long int number_of_slices,
 		const unsigned long long int slice_size) :
-		_id(0), _name(name), _offset(offset), _numberOfSlices(number_of_slices),_sliceSize(slice_size), _width(0), _height(0), _resolutionMm(0)
+		_id(0), _name(name), _offset(offset), _numberOfSlices(number_of_slices),_sliceSize(slice_size), _width(0), _height(0)
 {
 	if (name.empty() || number_of_slices <=0)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "DataDimension Initialization with either 0 slices or empty name or both!");
@@ -31,7 +31,7 @@ tissuestack::imaging::TissueStackDataDimension::TissueStackDataDimension(
 tissuestack::imaging::TissueStackDataDimension::TissueStackDataDimension(
 		const long long unsigned int id,
 		const std::string & name,
-		const unsigned long long int number_of_slices) : _id(id), _name(name), _offset(0), _numberOfSlices(number_of_slices), _sliceSize(0), _width(0), _height(0), _resolutionMm(0)
+		const unsigned long long int number_of_slices) : _id(id), _name(name), _offset(0), _numberOfSlices(number_of_slices), _sliceSize(0), _width(0), _height(0)
 {
 	if (name.empty() || number_of_slices <=0)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "DataDimension Initialization with a fishy number smaller or equal to 0!");
@@ -54,16 +54,6 @@ void tissuestack::imaging::TissueStackDataDimension::setWidthAndHeight(const uns
 void tissuestack::imaging::TissueStackDataDimension::setTransformationMatrix(const std::string transformationMatrix)
 {
 	this->_transformationMatrix = transformationMatrix;
-}
-
-const float tissuestack::imaging::TissueStackDataDimension::getResolutionMm() const
-{
-	return this->_resolutionMm;
-}
-
-void tissuestack::imaging::TissueStackDataDimension::setResolutionMm(const float resolution_mm)
-{
-	this->_resolutionMm = resolution_mm;
 }
 
 const std::string tissuestack::imaging::TissueStackDataDimension::getTransformationMatrix() const
