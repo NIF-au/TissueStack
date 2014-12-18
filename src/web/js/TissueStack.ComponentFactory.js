@@ -366,11 +366,25 @@ TissueStack.ComponentFactory = {
                 })(p);
             }
         } else {
-            $(div).slider(function () {
+            	var id = extractCanvasId($(div).attr("id"), dataSet);
+					
+					if (!id) {
+						return;
+					}
+                
+                    if (!dataSet.planes[id]) {
+                        $(this).attr("min", 0);
+                        $(this).attr("max", 0);
+                        $(this).attr("value", 0);
+                        return;
+                    }
+            
                     $(this).attr("min", 0);
-                    $(this).attr("max", actualDataSet.planes[id].data_extent.max_slices);
-                    $(this).attr("value", actualDataSet.planes[id].data_extent.slice);
-            });
+                    $(this).attr("max", dataSet.planes[id].data_extent.max_slices);
+                
+                     try {
+                            $(div).slider();
+                        } catch(ignored) {}
         }
 
         $(div).unbind("change");
@@ -543,7 +557,9 @@ TissueStack.ComponentFactory = {
         dataSet.planes[sideViewPlaneId].events.changeSliceForPlane(dataSet.planes[sideViewPlaneId].data_extent.slice);
         dataSet.planes[sideViewPlaneId].changeToZoomLevel(dataSet.planes[mainViewPlaneId].getDataExtent().zoom_level);
         dataSet.planes[mainViewPlaneId].changeToZoomLevel(zoomLevelSideView);
-        $("#" + div + "_canvas_main_slider").blur();
+        try {
+            $("#" + div + "_canvas_main_slider").val(dataSet.planes[sideViewPlaneId].data_extent.slice).slider("refresh");
+        } catch(ign) {}
 
         dataSet.planes[sideViewPlaneId].updateExtentInfo(dataSet.planes[sideViewPlaneId].getDataExtent().getExtentCoordinates());
 
