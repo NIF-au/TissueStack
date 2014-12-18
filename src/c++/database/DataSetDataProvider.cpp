@@ -243,12 +243,18 @@ const unsigned short tissuestack::database::DataSetDataProvider::addDataSet(
 	std::ostringstream tmpSql;
 
 	// main table insert
-	tmpSql << "INSERT INTO dataset (id, filename";
+	tmpSql << "INSERT INTO dataset (id, filename, resolution_mm";
 	if (!dataSet->getDescription().empty())
 		tmpSql << ",description";
 	tmpSql << ") VALUES (" << db_id << ",'"
 		<< dataSet->getFileName()
 		<< "'";
+	if (dataSet->getResolutionMm() > 0)
+		tmpSql << ","
+			<< std::to_string(dataSet->getResolutionMm())
+			<< "";
+	else
+		tmpSql << ",0";
 	if (!dataSet->getDescription().empty())
 		tmpSql << ",'"
 			<< tissuestack::utils::Misc::sanitizeSqlQuote(dataSet->getDescription())
@@ -266,7 +272,7 @@ const unsigned short tissuestack::database::DataSetDataProvider::addDataSet(
 		const tissuestack::imaging::TissueStackDataDimension * dim =
 			dataSet->getDimensionByLongName(d);
 		tmpSql << "INSERT INTO dataset_planes (id, dataset_id, is_tiled, zoom_levels, name,"
-			<< " max_x, max_y, max_slices, one_to_one_zoom_level, transformation_matrix, resolution_mm)"
+			<< " max_x, max_y, max_slices, one_to_one_zoom_level, transformation_matrix)"
 			<< " VALUES(DEFAULT,"
 			<< db_id << ",'"
 			<< (dataSet->isTiled() ? "T" : "F")
@@ -279,11 +285,7 @@ const unsigned short tissuestack::database::DataSetDataProvider::addDataSet(
 			<< "," << std::to_string(dataSet->getOneToOneZoomLevel())
 			<< (dim->getTransformationMatrix().empty() ?
 					", NULL," :
-					std::string(",'") + dim->getTransformationMatrix() + "',");
-			if (dataSet->getResolutionMm() == 0)
-				tmpSql << "NULL";
-			else
-				tmpSql << std::to_string(dataSet->getResolutionMm());
+					std::string(",'") + dim->getTransformationMatrix() + "'");
 			tmpSql << ");";
 		sqls.push_back(tmpSql.str());
 		tmpSql.str("");
