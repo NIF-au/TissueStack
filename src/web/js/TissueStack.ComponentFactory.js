@@ -210,7 +210,7 @@ TissueStack.ComponentFactory = {
 			switch(i) {
 				case 0:
 					html +=
-							'<div id="' + dataSetPrefix + '_main_view_canvas" class="canvasview canvas_' + planeId + '">'
+							'<div id="' + dataSetPrefix + '_main_view_canvas" class="canvasview canvas_' + planeId + ' background_canvas">'
 						+ 	'<canvas id="' + dataSetPrefix + '_canvas_' + planeId + '_plane" class="plane"></canvas>'
 						+ (includeCrossHair ? 
 								'<canvas id="' + dataSetPrefix + '_canvas_'  + planeId + '_plane_cross_overlay" class="cross_overlay"></canvas>'
@@ -219,7 +219,7 @@ TissueStack.ComponentFactory = {
 					break;
 				case 1:
 					html +=
-							'<div id="' + dataSetPrefix + '_left_side_view_canvas" class="left_side_view ui-bar-a">'
+							'<div id="' + dataSetPrefix + '_left_side_view_canvas" class="left_side_view background_canvas">'
 						+	'<img id="' + dataSetPrefix + '_left_side_view_maximize" class="canvas_' + planeId
 						+ 	' maximize_view_icon" src="' + maximizePngPath + '" alt="Maximize View" />'
 						+	'<canvas id="' + dataSetPrefix + '_canvas_' + planeId + '_plane" class="side_canvas"></canvas>'
@@ -231,7 +231,7 @@ TissueStack.ComponentFactory = {
 					break;
 				case 2:
 					html +=
-							'<div id="' + dataSetPrefix + '_right_side_view_canvas" class="right_side_view ui-bar-a">'
+							'<div id="' + dataSetPrefix + '_right_side_view_canvas" class="right_side_view background_canvas">'
 						+	'<img id="' + dataSetPrefix + '_right_side_view_maximize" class="canvas_' + planeId
 						+ 	' maximize_view_icon" src="' + maximizePngPath + '" alt="Maximize View" />'
 						+	'<canvas id="' + dataSetPrefix + '_canvas_' + planeId + '_plane" class="side_canvas"></canvas>'

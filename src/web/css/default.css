@@ -294,6 +294,10 @@ a.ui-slider-handle-horizontal{
     text-align: center;
 }
 
+.background_canvas {
+	background: rgb(84, 84, 84);
+}
+
 .left_side_view {
 	z-index: 2390;
 	border: 1px solid #fff;

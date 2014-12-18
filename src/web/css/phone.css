@@ -189,6 +189,7 @@ body{
 	width:310px;
 }
 .canvasBox{
+	background: white;
 	position: relative; 
 	left: 0px; 
 	top: 0px; 
