@@ -452,7 +452,7 @@ TissueStack.DataSetNavigation.prototype = {
                        var dataSetOrdinal = n+1;
                        var dsDiv = "dataset_" + dataSetOrdinal;
                        TissueStack.ComponentFactory.createDataSetWidget(
-                           "datasets", dataSetSelected, dataSetOrdinal, dataSetSelected.host, true, true, !dataSetSelected.data[0].isTiled);
+                           "datasets", dataSetSelected, dataSetOrdinal, null, true, true, !dataSetSelected.data[0].isTiled);
                        TissueStack.ComponentFactory.createDataSetSlider("datasets", dataSetSelected, dataSetOrdinal, "y");
                        TissueStack.ComponentFactory.addProgressBar(dsDiv, dataSetSelected);
                        TissueStack.ComponentFactory.createColorMapSwitcher(dsDiv);
@@ -630,7 +630,7 @@ TissueStack.DataSetNavigation.prototype = {
                         var dataSetOrdinal = 1;
                         var dsDiv = "dataset_" + dataSetOrdinal;
                         TissueStack.ComponentFactory.createDataSetWidget(
-                           "datasets", dataSet, dataSetOrdinal, dataSet.host, true, true, !dataSet.data[0].isTiled);
+                           "datasets", dataSet, dataSetOrdinal, null, true, true, !dataSet.data[0].isTiled);
                         TissueStack.ComponentFactory.createDataSetSlider("datasets", dataSet, dataSetOrdinal, "y");
                         TissueStack.ComponentFactory.addProgressBar(dsDiv, dataSet);
                         TissueStack.ComponentFactory.createColorMapSwitcher(dsDiv);
