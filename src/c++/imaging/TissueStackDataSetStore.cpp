@@ -80,7 +80,7 @@ void tissuestack::imaging::TissueStackDataSetStore::integrateDataBaseResultsInto
 				rec->isTiled(),
 				rec->getZoomLevels(),
 				rec->getOneToOneZoomLevel(),
-				rec->getResolutionInMm(),
+				rec->getResolutionMm(),
 				rec->getLookup());
 			delete rec;
 			dataSets[i] = foundDataSet->getImageData();

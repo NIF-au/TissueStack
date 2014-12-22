@@ -12,6 +12,8 @@
 
 (function($) {
 
+$.attrFn = $.attrFn || {};
+
 var types = ['DOMMouseScroll', 'mousewheel'];
 
 if ($.event.fixHooks) {

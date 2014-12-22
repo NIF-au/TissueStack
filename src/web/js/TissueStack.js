@@ -46,3 +46,4 @@ TissueStack.reverseOverlayOrder = false;
 TissueStack.swappedOverlayOrder = false;
 TissueStack.overlay_values = {};
 TissueStack.mouseOverDataSet = -1;
+TissueStack.useUserParameters = false;

@@ -7,21 +7,24 @@
         
         <title> Tissue Stack - Tablet </title>
        	<link rel="icon" type="image/png" href="images/favicon.png" />
-       	
-        <link rel="stylesheet" href="css/jquery.mobile-1.1.1.min.css" />
-        <link rel="stylesheet" href="css/default.css" />
-        <link rel="stylesheet" href="css/admin_login.css" />
-        
+
         <!--Apple Device Start Up Splash Screen and ICON-->
 		<link rel="apple-touch-startup-image" href="images/mobile/ipadscreen.png" /> <!--For iPad-->
 		<link rel="apple-touch-icon" href="images/favicon_icon.png" />
-		
-        <script src="js/libs/jquery/jquery-1.7.1.min.js"></script>
-        <script src="js/libs/jquery/jquery.mobile-1.1.1.min.js"></script>
+       	
+        <link rel="stylesheet" href="css/tissuestack-theme.min.css" />
+		<link rel="stylesheet" href="css/jquery.mobile.icons.min.css" />
+		<link rel="stylesheet" href="css/jquery.mobile.structure-1.4.5.min.css" />
+        <link rel="stylesheet" href="css/default.css" />
+        <link rel="stylesheet" href="css/admin_login.css" />
+        
+        <script src="js/libs/jquery/jquery-2.1.1.min.js"></script>
+        <script src="js/libs/jquery/jquery.mobile-1.4.5.min.js"></script>
         <script src="js/libs/jquery/jquery.form.js"></script>
         <script src="js/TissueStack.Slider.js"></script>
 		<script src="js/libs/sylvester/sylvester.js"></script>
         <script src="js/libs/jquery/jquery.cookie.js"></script>
+		<script src="js/libs/jquery/jquery.contextMenu-custom.js" type="text/javascript"></script>
 		
 		<script src="js/TissueStack.MouseWheel.js"></script>
 		<script src="js/TissueStack.js"></script>
@@ -39,6 +42,7 @@
         <script src="js/TissueStack.CanvasOverlay.js"></script>
         <script src="js/TissueStack.SVGOverlay.js"></script>
         <script src="js/TissueStack.DataSetOverlay.js"></script>
+        <script src="js/TissueStack.ComponentFactory.js"></script>
 		<script src="js/TissueStack.Init.js"></script>
 		
 		<script type="text/javascript">
@@ -59,13 +63,14 @@
 			  		 </div>
                 </div>
      	    </div>
+            <div class="ui-icon-video" style="height: 100px"></div>
      	    <div style="min-width: 1400px;">
      	    	<div class="left_panel"> 
-     	    		<div data-mini="true" data-collapsed="true" data-role="collapsible" class="text-align-center">
+     	    		<div data-mini="true" data-role="collapsible" class="text-align-center">
      	    			<h6>Extent/Zoom</h6>
      	    			<div id="canvas_extent" class="text-align-center"></div>
      	    		</div>
-     	    		<div data-mini="true" data-collapsed="false" data-role="collapsible">
+     	    		<div id="coords_collapsible" data-mini="true" data-collapsed="false" data-role="collapsible">
      	    			<h6>Coords/Data Info</h6>
 	     	    		<input data-mini="true" size="8" maxlength="10" type="text" id="canvas_point_x" value=""/>
 	     	    		<input data-mini="true" size="8" maxlength="10" type="text" id="canvas_point_y" value=""/>
@@ -92,74 +97,9 @@
 					<!--END -->
      	    	</div>
      	    	
-     	    	<div id="dataset_1" class="dataset hidden">
-     	    		<!--DISTANCE SCALE-->
-     	    			<div class="scalecontrol_main">
-     	    				<div id="dataset_1_scale_middle" class="scalecontrol_middle">
-     	    					<div class="dataset_1_scalecontrol_image" style="left: 0px; top: -424px; width: 89px;"></div>
-     	    				</div>
-     	    				<div id="dataset_1_scale_left" class="scalecontrol_left">
-     	    					<div class="dataset_1_scalecontrol_image" style="left: -4px; top: -398px; width: 59px;"></div>
-     	    				</div>
-     	    				<div id="dataset_1_scale_center_left" class="scalecontrol_center_left">
-     	    					<div class="dataset_1_scalecontrol_image" style="left: 0px; top: -398px; width: 59px;"></div>
-     	    				</div>
-     	    				<div id="dataset_1_scale_center_right" class="scalecontrol_center_right">
-     	    					<div class="dataset_1_scalecontrol_image" style="left: 0px; top: -398px; width: 59px;"></div>
-     	    				</div>
-     	    				<div id="dataset_1_scale_up" class="scalecontrol_up">
-     	    					<div class="dataset_1_scalecontrol_image" style="left: -4px; top: -398px; width: 59px;"></div>
-     	    				</div>
-     	    				<div id="dataset_1_scale_text_up" class="scalecontrol_text_up"></div>
-     	    			</div>
-     	    		<!--END OF DISTANCE SCALE-->
-     	    		<!--URL LINK-->
-     	    			<div class="url_link_main">
-     	    				<a id="dataset_1_url_button" class="top_right_button" style="color: white;" href="#">URL</a>
-     	    				<div id="dataset_1_url_box" class='url_box'>
-     	    					<div class='url_arrow'></div>
-     	    					<div class='url_arrow-border'></div>
-     	    					<div id="dataset_1_link_message" class="url_link_message"></div>
-     	    				</div>
-     	    			</div>
-     	    		<!--END OF URL LINK-->
-     	    		<!--CONTRAST CONTROL-->
-     	    			<div class="contrast_main">
-     	    				<a id="dataset_1_toolbox_canvas_button" class="top_right_button" style="color: white;" href="#">CONTRAST</a>
-     	    				<div id="dataset_1_contrast_box" class="contrast_box">	
-     	    					<div class='url_arrow'></div>
-     	    					<div class='url_arrow-border'></div>
-     	    					<canvas id="dataset_1_toolbox_canvas" class="contrast_slider "></canvas>
-     	    				</div>
-     	    			</div>
-     	    		<!--END OF CONTRAST CONTROL-->
-                    <!--COLORMAP CONTROL-->
-                       <div id="dataset_1_color_map" class="color_map_main hidden" title="Choose color For Data Set">
-                           <select class="color_map_select color_map_style" data-role="none">
-                               <option>Uninitialized</option>
-                        	</select>
-                       </div>
-                    <!--END OF COLORMAP CONTROL-->
-                       <div class="tile_count_div">
-                           <span class="plane_1 x">0%</span><span class="plane_2 y">0%</span><span class="plane_3 z">0%</span>
-                        </div>
-     	    		<div id="dataset_1_main_view_canvas" class="canvasview canvas_y" >
-     	    			<canvas id="dataset_1_canvas_y_plane" class="plane"></canvas>	
-					</div>
-						<div id="dataset_1_left_side_view_canvas" class="left_side_view ui-bar-a hidden">     	    			
-							<img id="dataset_1_left_side_view_maximize" class="canvas_x maximize_view_icon" src="images/maximize.png" alt="Maximize View" />
-							<canvas id="dataset_1_canvas_x_plane" class="side_canvas"></canvas>
-						</div>
-			     	  	<div id="dataset_1_right_side_view_canvas" class="right_side_view ui-bar-a hidden">
-							<img id="dataset_1_right_side_view_maximize" class="canvas_z maximize_view_icon" src="images/maximize.png" alt="Maximize View" />
-							<canvas  id="dataset_1_canvas_z_plane" class="side_canvas"></canvas>
-						</div>					     	    			
-     	    	</div>
-		     	<div id="dataset_1_right_panel" class="right_panel hidden">
-		     		<input data-mini="true" id="dataset_1_canvas_main_slider" class="canvasslider canvas_y" type="range" min="0" max="1000" value="500" step="1" orientation="vertical"  />
-		     	</div>										
-     	    </div>
-       </div>  
+                <div id="datasets" style="width: 1000px; height: 500px"></div>
+            </div>
+    </div>
     <!-- END OF TILE PAGE -->  
        
 	<!-- ADMIN PAGE --> 
@@ -191,23 +131,21 @@
  	     			<div class="left">
  	     				<!-- Login Form -->
  	     				<form class="clearfix" action="#" method="post">
- 	     					<h2>Admin Login</h2>
- 	     					<label class="grey" for="username">Username:</label>
- 	     					<input type="text" size="15" name="username" id="username" disabled="disabled" value="Admin"/>
- 	     					<label class="grey" for="password">Password:</label>
- 	     					<input type="password" size="15" name="password" id="password" /><br/>
- 	     					<input type="button" accesskey="l" class="login_btn_check" id="login_btn" name="login" value="Login" />
+ 	     					<label data-mini="true" class="white" for="username">Username:</label><br/><br/>
+ 	     					<input data-mini="true" type="text" size="15" name="username" id="username" disabled="disabled" value="Admin"/>
+ 	     					<label data-mini="true" class="white" for="password">Password:</label><br/><br/>
+ 	     					<input data-mini="true" type="password" size="15" name="password" id="password" /><br/>
+ 	     					<input data-mini="true" type="button" accesskey="l" class="login_btn_check" id="login_btn" name="login" value="Login" />
  	     				</form>
  	     			</div>
 	 		  			<div class="left right">			
 	 		  				<!-- Password Change Form -->
 	 		  				<form class="clearfix" action="#" method="post">
-	 		  					<h2>Change Admin Password</h2>
-	 		  					<label class="grey" for="password">Old Password:</label>
-	 		  					<input type="password" size="15" name="old_password" id="old_password" value=""/>
-	 		  					<label class="grey" for="password">New Password:</label>
-	 		  					<input type="password" size="15" name="new_password" id="new_password" /><br/>
-	 		  					<input type="button" accesskey="l" class="login_btn_check" id="passwd_change_btn" name="passwd_change" value="Change Password" />
+	 		  					<label data-mini="true" class="white" for="password">Old Password:</label><br/><br/>
+	 		  					<input data-mini="true" type="password" size="15" name="old_password" id="old_password" value=""/>
+	 		  					<label data-mini="true" class="white" for="password">New Password:</label><br/><br/>
+	 		  					<input data-mini="true" type="password" size="15" name="new_password" id="new_password" /><br/>
+	 		  					<input data-mini="true" type="button" accesskey="l" class="login_btn_check" id="passwd_change_btn" name="passwd_change" value="Change Password" />
 	 		  				</form>
 	 		  			</div>
  	     		</div>
@@ -231,8 +169,8 @@
                 <h3 id="setting_name">Settings</h3>
                 <hr/>
                 <div data-role="fieldcontain">
-                    <input id="drawing_interval" type="text" value="150" style="width: 90px;">
-                    <a href="tablet.html#data" data-role="button" data-inline="true" id="drawing_interval_button" data-mini="true">Set Drawing Interval (ms)</a>
+                    <input id="drawing_interval"  data-mini="true" type="text" value="150" style="width: 90px;">
+                    <a  data-mini="true" href="tablet.html#data" data-role="button" data-inline="true" id="drawing_interval_button" data-mini="true">Set Drawing Interval (ms)</a>
                 </div>
                 <hr/>
  	    		<h3 id="directory_name">Upload Directory</h3>

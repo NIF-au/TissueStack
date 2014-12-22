@@ -252,10 +252,10 @@ namespace tissuestack
 						const unsigned short one_to_one_zoom_level = 3,
 						const float resolution_in_mm = 0,
 						const TissueStackLabelLookup * lookup = nullptr);
+				const float getResolutionMm() const;
 				const bool isTiled() const;
 				const std::vector<float> getZoomLevels() const;
 				const unsigned short getOneToOneZoomLevel() const;
-				const float getResolutionInMm() const;
 				void dumpImageDataIntoDebugLog() const;
 				const TissueStackLabelLookup * getLookup() const;
 				const int getFileDescriptor();
@@ -271,6 +271,7 @@ namespace tissuestack
 				void clearAssociatedDataSets();
 			protected:
 				friend class tissuestack::database::DataSetDataProvider;
+				void setResolutionMm(const float resolution_mm);
 				explicit TissueStackImageData(const long long unsigned int id, const std::string filename = "");
 				explicit TissueStackImageData(const std::string & filename);
 				TissueStackImageData(const std::string & filename, FORMAT format);
@@ -308,10 +309,10 @@ namespace tissuestack
 				bool _is_tiled = false;
 				std::vector<float> _zoom_levels = {0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2.00, 2.25, 2.5};
 				unsigned short _one_to_one_zoom_level = 3;
-				float _resolution_in_mm = 0;
 				const TissueStackLabelLookup * _lookup = nullptr;
 				std::vector<const TissueStackImageData *> _associated_data_sets;
 				std::string _header = "";
+				float _resolutionMm;
 		};
 
 		class TissueStackRawData final : public TissueStackImageData

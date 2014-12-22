@@ -5,28 +5,30 @@
         
         <title> Tissue Stack - Desktop</title>
        	<link rel="icon" type="image/png" href="images/favicon.png" />
-       	
-        <link rel="stylesheet" href="css/jquery.mobile-1.1.1.min.css" />
-        
-        <link rel="stylesheet" href="css/default.css" />
-        <link rel="stylesheet" href="css/admin_login.css" />
-        
 
         <!--Apple Device Start Up Splash Screen and ICON-->
 		<link rel="apple-touch-startup-image" href="images/mobile/ipadscreen.png" /> <!--For iPad-->
 		<link rel="apple-touch-icon" href="images/favicon_icon.png" />
-		
-        <script src="js/libs/jquery/jquery-1.7.1.min.js"></script>
-        <script src="js/libs/jquery/jquery.mobile-1.1.1.min.js"></script>
+
+        <link rel="stylesheet" href="css/tissuestack-theme.min.css" />
+		<link rel="stylesheet" href="css/jquery.mobile.icons.min.css" />
+		<link rel="stylesheet" href="css/jquery.mobile.structure-1.4.5.min.css" />
+        <link rel="stylesheet" href="css/default.css" />
+        <link rel="stylesheet" href="css/admin_login.css" />
+        
+        <script src="js/libs/jquery/jquery-2.1.1.min.js"></script>
+        <script src="js/libs/jquery/jquery.mobile-1.4.5.min.js"></script>
         <script src="js/libs/jquery/jquery.form.js"></script>
         <script src="js/libs/jquery/jquery.knob.js"></script>
         <script src="js/TissueStack.Slider.js"></script>
 		<script src="js/libs/sylvester/sylvester.js"></script>
-		<!--TREE DATA SETS-->
+		
+        <!--TREE DATA SETS-->
 	    <script src="js/libs/jquery/jquery.cookie.js"></script>
-	    <script src="js/libs/jquery/jquery.dynatree.js"></script>
+	    <script src="js/libs/jquery/jquery.dynatree.min.js"></script>
 	    <link rel="stylesheet" href="css/ui.dynatree.css">
- 		<!--TREE DATA SETS CONTEXT MENU-->
+ 		
+        <!--TREE DATA SETS CONTEXT MENU-->
  		<script src="js/libs/jquery/jquery.contextMenu-custom.js" type="text/javascript"></script>
   		<link href="css/jquery.contextMenu.css" rel="stylesheet" type="text/css" >
   				
@@ -45,6 +47,7 @@
 		<script src="js/TissueStack.CanvasOverlay.js"></script>
 		<script src="js/TissueStack.SVGOverlay.js"></script>
 		<script src="js/TissueStack.DataSetOverlay.js"></script>
+        <script src="js/TissueStack.ComponentFactory.js"></script>
 		<script src="js/TissueStack.Init.js"></script>
 		
 		<script type="text/javascript">
@@ -75,7 +78,7 @@
      	    			<h6>Extent/Zoom</h6>
      	    			<div id="canvas_extent"></div>
      	    		</div>
-     	    		<div data-mini="true" data-collapsed="false" data-role="collapsible">
+     	    		<div id="coords_collapsible" data-mini="true" data-collapsed="false" data-role="collapsible">
      	    			<h6>Coordinates</h6>
 	     	    		<input data-mini="true" size="8" maxlength="10" type="text" id="canvas_point_x" value=""/>
 	     	    		<input data-mini="true" size="8" maxlength="10" type="text" id="canvas_point_y" value=""/>
@@ -86,7 +89,7 @@
      	    		<div id="ontology_tree_div" data-mini="true" data-role="collapsible">
      	    			<h6>Data/Meta Info</h6>
 	     	    		<input data-mini="true" readonly="readonly" style="background-color: gray;color: white;" size="8" maxlength="10" type="text" id="canvas_point_value" value=""/>
-	     	    		<div id="ontology_tree" style="height:250px"></div>
+	     	    		<div id="ontology_tree" style="height:100px"></div>
 					</div>
      	    		<div data-mini="true" data-role="collapsible">
      	    			<h6>Connect</h6>
@@ -107,155 +110,7 @@
 					<!--END -->
      	    	</div>
      	    	
-     	    	<div>
-	     	    	<div id="dataset_1" class="dataset hidden">
-	     	    	<!--DISTANCE SCALE-->
-	     	    		<div id="dataset_1_scalecontrol" class="scalecontrol_main">
-     	    				<div id="dataset_1_scale_middle" class="scalecontrol_middle">
-     	    					<div class="dataset_1_scalecontrol_image" style="left: 0px; top: -424px; width: 89px;"></div>
-     	    				</div>
-     	    				<div id="dataset_1_scale_left" class="scalecontrol_left">
-     	    					<div class="dataset_1_scalecontrol_image" style="left: -4px; top: -398px; width: 59px;"></div>
-     	    				</div>
-     	    				<div id="dataset_1_scale_center_left" class="scalecontrol_center_left">
-     	    					<div class="dataset_1_scalecontrol_image" style="left: 0px; top: -398px; width: 59px;"></div>
-     	    				</div>
-     	    				<div id="dataset_1_scale_center_right" class="scalecontrol_center_right">
-     	    					<div class="dataset_1_scalecontrol_image" style="left: 0px; top: -398px; width: 59px;"></div>
-     	    				</div>
-     	    				<div id="dataset_1_scale_up" class="scalecontrol_up">
-     	    					<div class="dataset_1_scalecontrol_image" style="left: -4px; top: -398px; width: 59px;"></div>
-     	    				</div>
-     	    				<div id="dataset_1_scale_text_up" class="scalecontrol_text_up"></div>
-	     	    		</div>
-	     	    	<!--END OF DISTANCE SCALE-->
-	     	    	<!--URL LINK-->
-	     	    		<div class="url_link_main" title="Show URL For Data Set">
-	     	    			<a id="dataset_1_url_button" class="top_right_button" style="color: white;" href="#">URL</a>
-	     	    			<div id="dataset_1_url_box" class='url_box'>
-		     	    			<div class='url_arrow'></div>
-		     	    			<div class='url_arrow-border'></div>
-		     	    			<div id="dataset_1_link_message" class="url_link_message"></div>
-	     	    			</div>
-	     	    		</div>
-	     	    	<!--END OF URL LINK-->
-	     	    	<!--CONTRAST CONTROL-->
-	     	    		<div class="contrast_main" title="Change Contrast For Data Set">
-	     	    			<a id="dataset_1_toolbox_canvas_button" class="top_right_button" style="color: white;" href="#">CONTRAST</a>
-	     	    			<div id="dataset_1_contrast_box" class="contrast_box">	
-	     	    				<div class='url_arrow'></div>
-	     	    				<div class='url_arrow-border'></div>
-	     	    				<canvas id="dataset_1_toolbox_canvas" class="contrast_slider "></canvas>
-	     	    			</div>
-	     	    		</div>
-	     	    	<!--END OF CONTRAST CONTROL-->
-	     	    	<!--COLORMAP CONTROL-->
-                        <div id="dataset_1_color_map" class="color_map_main hidden" title="Choose color For Data Set">
-                            <select class="color_map_select color_map_style" data-role="none">
-                                <option>Uninitialized</option>
-                         	</select>
-                        </div>
-	     	    	<!--END OF COLORMAP CONTROL-->
-                       <!--  LOADING PROGRESS -->
-                       <div class="tile_count_div">
-                           <span class="plane_1 x">0%</span><span class="plane_2 y">0%</span><span class="plane_3 z">0%</span>
-                        </div>
-	     	    		<div id="dataset_1_main_view_canvas" class="canvasview canvas_y" >		     	    		
-	     	    			<canvas id="dataset_1_canvas_y_plane" class="plane"></canvas>
-						</div>
-						<div id="dataset_1_left_side_view_canvas" class="left_side_view ui-bar-a hidden">     	    			
-							<img id="dataset_1_left_side_view_maximize" class="canvas_x maximize_view_icon" src="images/maximize.png" alt="Maximize View" title="Maximize View"/>
-							<canvas id="dataset_1_canvas_x_plane" class="side_canvas"></canvas>
-						</div>
-			     	  	<div id="dataset_1_right_side_view_canvas" class="right_side_view ui-bar-a hidden">
-							<img id="dataset_1_right_side_view_maximize" class="canvas_z maximize_view_icon" src="images/maximize.png" alt="Maximize View" title="Maximize View"/>
-							<canvas id="dataset_1_canvas_z_plane" class="side_canvas"></canvas>
-						</div>						     	    			
-	     	    	</div>
-     	    	
-	     	    	<div id="dataset_1_right_panel" class="right_panel hidden">
-	                    <input data-mini="true" id="dataset_1_canvas_main_slider" class="canvasslider canvas_y" type="range" min="0" max="1000" value="500" step="1" orientation="vertical"  />
-	                </div>                                      
-     	    	
-                    
-	               <div id="dataset_2" class="dataset hidden">
-	                 <!--DISTANCE SCALE-->
-	                  	<div class="scalecontrol_main">
-	                  		<div id="dataset_2_scale_middle" class="scalecontrol_middle">
-	                  			<div class="dataset_2_scalecontrol_image" style="left: 0px; top: -424px; width: 89px;"></div>
-	                  		</div>
-	                  		<div id="dataset_2_scale_left" class="scalecontrol_left">
-	                  			<div class="dataset_2_scalecontrol_image" style="left: -4px; top: -398px; width: 59px;"></div>
-	                  		</div>
-	                  		<div id="dataset_2_scale_center_left" class="scalecontrol_center_left">
-	                  			<div class="dataset_2_scalecontrol_image" style="left: 0px; top: -398px; width: 59px;"></div>
-	                  		</div>
-	                  		<div id="dataset_2_scale_center_right" class="scalecontrol_center_right">
-	                  			<div class="dataset_2_scalecontrol_image" style="left: 0px; top: -398px; width: 59px;"></div>
-	                  		</div>
-	                  		<div id="dataset_2_scale_up" class="scalecontrol_up">
-	                  			<div class="dataset_2_scalecontrol_image" style="left: -4px; top: -398px; width: 59px;"></div>
-	                  		</div>
-	                  		<div id="dataset_2_scale_text_up" class="scalecontrol_text_up"></div>
-	                  	</div>
-	                 <!--END OF DISTANCE SCALE-->
-	                 <!-- TRANSPARENCY WHEEL -->
-	                 <div class="transparency_knob_div hidden" title="Adjust Transparency of Overlay">
-                        <input  id="transparency_knob" type="text" data-width="75" data-height="75" data-fgColor="#ffec03" data-min="0" data-max="100" data-thickness=".2" value="50">
-                    </div>
-	                 <!-- END OF TRANSPARENCY WHEEL -->
-	                 <!--URL LINK-->
-	                 	<div class="url_link_main" title="Show URL For Data Set">
-	                 		<a id="dataset_2_url_button" class="top_right_button" style="color: white;" href="#">URL</a>
-	                 		<div id="dataset_2_url_box" class='url_box'>
-	                 			<div class='url_arrow'></div>
-	                 			<div class='url_arrow-border'></div>
-	                 			<div id="dataset_2_link_message" class="url_link_message"></div>
-	                 		</div>
-	                 	</div>
-	                 <!--END OF URL LINK-->	
-	                 <!--CONTRAST CONTROL-->
-						<div class="contrast_main" title="Change Contrast For Data Set">
-							<a id="dataset_2_toolbox_canvas_button" class="top_right_button" style="color: white;" href="#">CONTRAST</a>
-							<div id="dataset_2_contrast_box" class="contrast_box">	
-								<div class='url_arrow'></div>
-								<div class='url_arrow-border'></div>
-								<canvas id="dataset_2_toolbox_canvas" class="contrast_slider "></canvas>
-							</div>
-						</div>
-	                 <!--END OF CONTRAST CONTROL-->
-	                 <!--COLORMAP CONTROL-->
-                        <div id="dataset_2_color_map" class="color_map_main hidden" title="Choose color For Data Set">
-                            <select class="color_map_select color_map_style" data-role="none">
-                                <option>Uninitialized</option>
-                         	</select>
-                        </div>
-	                 <!--END OF COLORMAP CONTROL-->
-	                 <div class="overlay_swapper hidden" title="Swap Data Sets">
-	                   <a href="#"><img alt="Swap Data Sets" src="images/swap_button.png" ></a>
-	                 </div>
-	                   <!--  LOADING PROGRESS -->
-                       <div class="tile_count_div">
-                           <span class="plane_1 x">0%</span><span class="plane_2 y">0%</span><span class="plane_3 z">0%</span>
-                        </div>
-						<div id="dataset_2_main_view_canvas" class="canvasview canvas_y" >
-						   <canvas id="dataset_2_canvas_y_plane" class="plane"></canvas> 
-						</div>
-						<div  id="dataset_2_left_side_view_canvas" class="left_side_view ui-bar-a hidden">                       
-						   <img id="dataset_2_left_side_view_maximize" class="canvas_x maximize_view_icon" src="images/maximize.png" alt="Maximize View" title="Maximize View"/>
-						   <canvas id="dataset_2_canvas_x_plane" class="side_canvas"></canvas>
-						</div>
-						<div id="dataset_2_right_side_view_canvas" class="right_side_view ui-bar-a hidden">
-						   <img id="dataset_2_right_side_view_maximize" class="canvas_z maximize_view_icon" src="images/maximize.png" alt="Maximize View" title="Maximize View"/>
-						   <canvas id="dataset_2_canvas_z_plane" class="side_canvas"></canvas>
-						</div>                                          
-	               </div>
-	
-	               <div id="dataset_2_right_panel" class="right_panel hidden">
-	                   <input data-mini="true" id="dataset_2_canvas_main_slider" class="canvasslider canvas_y" type="range" min="0" max="1000" value="500" step="1" orientation="vertical"  />
-	               </div>                                      
-
-                </div>     	    	
+     	    	<div id="datasets" style="width: 1000px; height: 500px"></div>     	    	
      	    </div>
      </div>  
     <!-- END OF TILE PAGE -->     
@@ -288,23 +143,23 @@
 	 		  			<div class="left">
 	 		  				<!-- Login Form -->
 	 		  				<form class="clearfix" action="#" method="post">
-	 		  					<h2>Admin Login</h2>
-	 		  					<label class="grey" for="username">Username:</label>
-	 		  					<input type="text" size="15" name="username" id="username" disabled="disabled" value="Admin"/>
-	 		  					<label class="grey" for="password">Password:</label>
-	 		  					<input type="password" size="15" name="password" id="password" /><br/>
-	 		  					<input type="button" accesskey="l" class="login_btn_check" id="login_btn" name="login" value="Login" />
+	 		  					<!--h3>Admin Login</h3-->
+	 		  					<label data-mini="true" class="white" for="username">Username:</label><br/><br/>
+	 		  					<input data-mini="true" type="text" size="15" name="username" id="username" disabled="disabled" value="Admin"/>
+	 		  					<label data-mini="true" class="white" for="password">Password:</label><br/><br/>
+	 		  					<input data-mini="true" type="password" size="15" name="password" id="password" /><br/>
+	 		  					<input data-mini="true" type="button" accesskey="l" class="login_btn_check" id="login_btn" name="login" value="Login" />
 	 		  				</form>
 	 		  			</div>
 	 		  			<div class="left right">			
 	 		  				<!-- Password Change Form -->
 	 		  				<form class="clearfix" action="#" method="post">
-	 		  					<h2>Change Admin Password</h2>
-	 		  					<label class="grey" for="password">Old Password:</label>
-	 		  					<input type="password" size="15" name="old_password" id="old_password" value=""/>
-	 		  					<label class="grey" for="password">New Password:</label>
-	 		  					<input type="password" size="15" name="new_password" id="new_password" /><br/>
-	 		  					<input type="button" accesskey="l" class="login_btn_check" id="passwd_change_btn" name="passwd_change" value="Change Password" />
+	 		  					<!--h3>Change Admin Password</h3-->
+	 		  					<label data-mini="true" class="white" for="password">Old Password:</label><br/><br/>
+	 		  					<input data-mini="true" type="password" size="15" name="old_password" id="old_password" value=""/>
+	 		  					<label data-mini="true" class="white" for="password">New Password:</label><br/><br/>
+	 		  					<input data-mini="true" type="password" size="15" name="new_password" id="new_password" /><br/>
+	 		  					<input data-mini="true" type="button" accesskey="l" class="login_btn_check" id="passwd_change_btn" name="passwd_change" value="Change Password" />
 	 		  				</form>
 	 		  			</div>
 	 		  		</div>
@@ -327,13 +182,13 @@
 	 		<!--ADMIN LEFT COLUMN-->
 	     	<div id="div_file_upload" class="settings-left-column">
                 <hr/>
-                <h2>Settings</h2>
+                <h3>Settings</h3>
                 <hr/>
                 <div data-role="fieldcontain">
-	                <input id="drawing_interval" type="text" value="150" style="width: 90px;">
+	                <input id="drawing_interval" data-mini="true" type="text" value="150" style="width: 90px;">
 	                <a href="desktop.html#data" data-role="button" data-inline="true" id="drawing_interval_button" data-mini="true">Set Drawing Interval (ms)</a>
                 </div>
-                <fieldset data-role="controlgroup">
+                <fieldset data-mini="true" data-role="controlgroup">
                 	<input type="checkbox" id="sync_data_sets" />
                     <label for="sync_data_sets">Synchronize Data Sets</label>
                     <input type="checkbox" id="overlay_data_sets" />
@@ -341,37 +196,36 @@
                 </fieldset>
                 <br/>
                 <hr/>
-				<h2>File Upload</h2>
+				<h3>File Upload</h3>
 				<hr/>
 				<div id="file_uploaded_message" ></div>
 				<div id="file_status_message" class="hidden"></div>		 
 			    <fieldset>
-			        <form id="uploadForm" action="#" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
-			            <label for="filename_1">File: </label>
-			            <input id="filename_1" type="file" name="filename_1" size="50"/><br/>
-			            <input class="submit_new_file" type="submit" value="Upload" data-inline="true" data-theme="e" data-icon="check" />
-			        </form>
 			        <div class="progress" style="left: 20px ;">
 		                <div class="bar"></div >
 		                <div class="percent">0%</div >
 			        </div>
+                    <form id="uploadForm" data-mini="true" action="#" method="post" enctype="multipart/form-data" encoding="multipart/form-data">
+			            <input id="filename_1" data-mini="true" type="file" name="filename_1" size="50"/><br/>
+			            <input class="submit_new_file" type="submit" value="Upload" data-inline="true" data-theme="e" data-icon="check" />
+			        </form>
 			    </fieldset>   
 	     	</div>
 	 		<!--END OF ADMIN LEFT COLUMN-->
 	 		<!--ADMIN RIGHT COLUMN-->	     	
 	     	<div class="settings-right-column">
 	     	    <hr/>
-				<h2 id="directory_name">Upload Directory</h2>
+				<h3 id="directory_name">Upload Directory</h3>
 				<hr/>
-				<div id="file_group" data-role="fieldcontain" style="overflow: auto; height: 130px;">
-					<fieldset class="file_radio_list" data-role="controlgroup">
+				<div id="file_group" data-mini="true" data-role="fieldcontain" style="overflow: auto; height: 200px;">
+					<fieldset class="file_radio_list" data-mini="true" data-role="controlgroup">
 					</fieldset>
 				</div>
-				<label for="txtDesc" style="text-align: left;">&nbsp;&nbsp;Description:</label>
+				<label data-mini="true" for="txtDesc" style="text-align: left;">&nbsp;&nbsp;Description:</label>
 				<input type="text" name="name" id="txtDesc" data-mini="true" />
 				
 				<div data-role="fieldcontain">
-				    <fieldset id="radio_task" data-role="controlgroup" data-type="horizontal">
+				    <fieldset data-mini="true" id="radio_task" data-role="controlgroup" data-type="horizontal">
 				         	<input type="radio" name="radio_task" id="bt_convert" value="Convert" />
 				         	<label for="bt_convert">Convert</label>
 				         	<input type="radio" name="radio_task" id="bt_preTile" value="PreTile"  checked="checked"/>
@@ -386,9 +240,9 @@
 			<!--ADMIN BUTTOM COLUMN-->
 			<div data-role="footer" class="setting-buttom-column">
 				<div id="task_list">
-				    <table id="task_table" style="height:40px" class="conversion-table">
-				        <thead style="height:40px">
-                            <tr style="height:40px">
+				    <table id="task_table" style="height:50px" class="conversion-table">
+				        <thead style="height:50px">
+                            <tr style="height:50px">
                                 <th scope="col">Task Id</th>
                                 <th scope="col">File</th>
                                 <th scope="col">Task</th>

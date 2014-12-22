@@ -14,17 +14,20 @@
 	<link rel="apple-touch-icon-precomposed" href="images/favicon_icon.png" /> <!-- Home Screen for Android Devices -->
 	
 	<link rel="stylesheet" href="css/phone.css" />
-	<link rel="stylesheet" href="css/jquery.mobile-1.1.1.min.css" />
+    <link rel="stylesheet" href="css/tissuestack-theme.min.css" />
+	<link rel="stylesheet" href="css/jquery.mobile.icons.min.css" />
+	<link rel="stylesheet" href="css/jquery.mobile.structure-1.4.5.min.css" />
 	<link rel="stylesheet" href="css/default.css" />
 	<!--Add To Home Script-->
 	<script src="js/libs/addToHome.js"></script>
 	
-	<script src="js/libs/jquery/jquery-1.7.1.min.js"></script>
-	<script src="js/libs/jquery/jquery.mobile-1.1.1.min.js"></script>
+	<script src="js/libs/jquery/jquery-2.1.1.min.js"></script>
+	<script src="js/libs/jquery/jquery.mobile-1.4.5.min.js"></script>
 	<script src="js/libs/jquery/jquery.form.js"></script>
 	<script src="js/TissueStack.Slider.js"></script>
 	<script src="js/libs/sylvester/sylvester.js"></script>
 	<script src="js/libs/jquery/jquery.cookie.js"></script>
+	<script src="js/libs/jquery/jquery.contextMenu-custom.js" type="text/javascript"></script>
 	
 	<script src="js/TissueStack.MouseWheel.js"></script>
 	<script src="js/TissueStack.js"></script>
@@ -42,7 +45,7 @@
     <script src="js/TissueStack.CanvasOverlay.js"></script>
     <script src="js/TissueStack.SVGOverlay.js"></script>
     <script src="js/TissueStack.DataSetOverlay.js"></script>
- 	<script src="js/TissueStack.Init.js"></script>
+    <script src="js/TissueStack.ComponentFactory.js"></script>
 
 	<script type="text/javascript">
 		TissueStack.phone = true;
@@ -52,6 +55,7 @@
         	if (confirm("Are you on a tablet? If so, there is a tablet version. Do you wish to be redirected to it?"))
         	    document.location.pathname = "/tablet.html";    
 	</script>
+ 	<script src="js/TissueStack.Init.js"></script>
 	
 </head> 
 
@@ -137,7 +141,7 @@
 						<canvas id="dataset_1_canvas_x_plane" class="plane" width="300" height="300" ></canvas>	
 						<canvas id="dataset_1_canvas_x_plane_cross_overlay" class="cross_overlay" width="300" height="300" ></canvas>
 					</div>
-					<div class="cover coords">&nbsp;</div>
+					<!--div class="cover coords">&nbsp;</div-->
 			</div>
 			<br />
 			<input id="canvas_x_slider" class="canvasslider canvas_x" type="range" min="0" max="1000" value="500" step="1" orientation="horizontal"  />
@@ -157,7 +161,7 @@
 					<canvas id="dataset_1_canvas_y_plane" class="plane" width="300" height="300" ></canvas>	
 					<canvas id="dataset_1_canvas_y_plane_cross_overlay" class="cross_overlay" width="300" height="300" ></canvas>
 				</div>
-                <div class="cover coords">&nbsp;</div> 
+                <!--div class="cover coords">&nbsp;</div--> 
 			</div>
 			<br />
 			<input id="canvas_y_slider" class="canvasslider canvas_y" type="range" min="0" max="1000" value="500" step="1" orientation="horizontal"  />
@@ -177,7 +181,7 @@
 					<canvas id="dataset_1_canvas_z_plane" class="plane" width="300" height="300" ></canvas>	
 					<canvas id="dataset_1_canvas_z_plane_cross_overlay" class="cross_overlay" width="300" height="300" ></canvas>
 				</div>
-                <div class="cover coords">&nbsp;</div> 
+                <!--div class="cover coords">&nbsp;</div--> 
 			</div>
 			<br />
 			<input id="canvas_z_slider" class="canvasslider canvas_z" type="range" min="0" max="1000" value="500" step="1" orientation="horizontal"  />

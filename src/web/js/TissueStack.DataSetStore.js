@@ -148,7 +148,8 @@ TissueStack.DataSetStore.prototype = {
 				}				
 		);
 	},	lookupValueForRGBTriple : function(dataSet, rgbTriples) {
-		if (typeof(dataSet) != 'object' || typeof(rgbTriples) != 'object' || !rgbTriples) return rgbTriples;
+		if (typeof(dataSet) != 'object' || typeof(rgbTriples) != 'object' || !rgbTriples
+                || !rgbTriples[dataSet.filename]) return rgbTriples;
 
 		// first look up the label info for the actual data set
 		if (typeof(dataSet.lookupValues) == 'object' && dataSet.lookupValues) {

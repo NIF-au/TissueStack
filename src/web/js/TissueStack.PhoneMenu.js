@@ -36,7 +36,7 @@ TissueStack.PhoneMenu = function() {
 			});
 			
 			//Slide on page after menu has been actived (swipe to left from anywhere)
-			$('#menu, .pages').live("swipeleft", function(){
+			$('#menu, .pages').on("swipeleft", function(){
 				if (menuStatus){	
 				$(".ui-page-active").animate({
 					marginLeft: "0px",
@@ -45,7 +45,7 @@ TissueStack.PhoneMenu = function() {
 			});
 			
 			//Slide on header to get menu
-			$('.headers').live("swiperight", function(){
+			$('.headers').on("swiperight", function(){
 				if (!menuStatus){	
 				$(".ui-page-active").animate({
 					marginLeft: "165px",
@@ -53,7 +53,7 @@ TissueStack.PhoneMenu = function() {
 				  }
 			});
 			
-			$('div[data-role="page"]').live('pagebeforeshow',function(event, ui){
+			$('div[data-role="page"]').on('pagebeforeshow',function(event, ui){
 				menuStatus = false;
 				$(".pages").css("margin-left","0");
 			});
@@ -70,7 +70,7 @@ TissueStack.PhoneMenu = function() {
 			});
 		
 			// Tabs 
-			$('div[data-role="navbar"] a').live('click', function () {
+			$('div[data-role="navbar"] a').on('click', function () {
 				$(this).addClass('ui-btn-active');
 				$('div.content_div').hide();
 				$('div#' + $(this).attr('data-href')).show();

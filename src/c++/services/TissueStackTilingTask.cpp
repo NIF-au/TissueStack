@@ -35,10 +35,22 @@ tissuestack::services::TissueStackTilingTask::TissueStackTilingTask(
 			"Tiling needs raw format data");
 
 	// check tile directory
-	if (!tissuestack::utils::System::directoryExists(tile_dir) &&
-		!tissuestack::utils::System::createDirectory(tile_dir, 0755))
+	// with simultaneous threads having a go at this, we can have it that mkdir fails
+	// because another thread has already done it
+	unsigned short tries = 5;
+	while (true)
+	{
+		if (tissuestack::utils::System::directoryExists(tile_dir))
+			break;
+
+		if (tries <= 0)
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Could not create tile directory!");
+
+		if (!tissuestack::utils::System::createDirectory(tile_dir, 0755))
+			tries--;
+		usleep(100 * 1000); // wait 100 millis
+	}
 	this->_tile_dir = tile_dir;
 
 	// check color map

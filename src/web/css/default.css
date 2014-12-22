@@ -168,6 +168,11 @@
 }
 
 /* VERTICAL SLIDER CSS*/
+input.ui-slider-input {
+    margin-top: 10px;
+    width: 50px;
+}
+
 label.ui-slider-vertical { 
 	display: block; 
 }
@@ -177,13 +182,14 @@ a.ui-slider-handle-vertical .ui-btn-inner{
 	padding-right: 0;
 }
 
-div.ui-slider-vertical{ 
+div.ui-slider-vertical{
+    background-image: linear-gradient(rgb(84, 84, 84), rgb(84, 84, 84));
 	position: relative; 
 	display: inline-block; 
 	overflow: visible; 
 	height: 250px; 
 	padding: 0; 
-	margin: 0 2% 0 20px; 
+	margin: 5px 2px 0 20px; 
 	top: 4px; 
 	width:15px; 
 }
@@ -192,17 +198,14 @@ label.ui-slider-vertical{
 	width: 20%;  
 	margin: 0 2% 0 0; 
 }
-div.ui-slider-vertical{ 
-	width: 15px; 
-}
 a.ui-slider-handle-vertical{
 	position: absolute; 
 	z-index: 10;  
 	top: 50%; 
-	width: 28px; 
-	height: 28px; 
-	margin-top: -15px; 
-	margin-left: -8px; 
+	width: 6px; 
+	height: 6px; 
+	margin-top: -12px; 
+	margin-left: -12px; 
 }
 
 /* HORIZONTAL SLIDER CSS*/
@@ -218,12 +221,13 @@ a.ui-slider-handle-horizontal .ui-btn-inner{
 }
 
 div.ui-slider-horizontal{ 
+    background-image: linear-gradient(rgb(41, 91, 142), rgb(62, 121, 181));
 	position: relative; 
 	display: inline-block; 
 	overflow: visible; 
-	height: 15px; 
+	height: 20px; 
 	padding: 0; 
-	margin: 0 2% 0 20px; 
+	margin: 12px 2% 0 20px; 
 	left: 0px; 
 	width: 195px;
 }
@@ -232,17 +236,15 @@ label.ui-slider-horizontal{
 	height: 20%;  
 	margin: 0 2% 0 0; 
 }
-div.ui-slider-horizontal{ 
-	height: 15px; 
-}
 a.ui-slider-handle-horizontal{
 	position: absolute; 
+    background-image:  linear-gradient(rgb(111, 172, 213), rgb(66, 114, 164));
 	z-index: 10;  
 	top: 50%; 
-	width: 28px; 
-	height: 28px; 
+	width: 6px; 
+	height: 6px; 
 	margin-top: -15px; 
-	margin-left: -8px; 
+	margin-left: -15px; 
 }
 
 .maximize_view_icon {
@@ -268,6 +270,7 @@ a.ui-slider-handle-horizontal{
     background-color: transparent;
     position: absolute;
     font-weight: bold;
+    font-size: 13px;
     top: 15%;
     left: 5px;
     text-align: center;
@@ -276,6 +279,7 @@ a.ui-slider-handle-horizontal{
     background-color: transparent;
     position: absolute;
     font-weight: bold;
+    font-size: 13px;
     top: 15%;
     left: 50px;
     text-align: center;
@@ -284,9 +288,14 @@ a.ui-slider-handle-horizontal{
     background-color: transparent;
     position: absolute;
     font-weight: bold;
+    font-size: 13px;
     top: 15%;
     left: 100px;
     text-align: center;
+}
+
+.background_canvas {
+	background: rgb(84, 84, 84);
 }
 
 .left_side_view {
@@ -409,7 +418,7 @@ a.ui-slider-handle-horizontal{
 	width: 4px; 
 	height: 12px;
 }
-.dataset_1_scalecontrol_image, .dataset_2_scalecontrol_image{
+.scalecontrol_image {
 	margin: 0px; 
 	padding: 0px; 
 	position: absolute; 
