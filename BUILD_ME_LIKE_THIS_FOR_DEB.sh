@@ -1,7 +1,7 @@
 #!/bin/sh
 clear
 
-export TISSUESTACK_BUILD_VERSION=1.6
+export TISSUESTACK_BUILD_VERSION=1.7
 
 CURRENT_DIR=`pwd`
 

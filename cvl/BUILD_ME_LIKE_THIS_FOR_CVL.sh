@@ -1,7 +1,7 @@
 clear
 
 NAME=tissuestack
-VERSION=1.6
+VERSION=1.7
 BUILD_DIR=/tmp/tissuestack_build
 DEST_PATH=${NAME^^}/$VERSION
 

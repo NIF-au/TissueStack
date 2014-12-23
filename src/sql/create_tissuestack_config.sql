@@ -1,7 +1,7 @@
 -- !!!!! SWITCH TO tissuestack NOW before executing the following lines !!!!!
 
 -- GENERAL INSTANCE CONFIGURATION - some default values
-INSERT INTO configuration VALUES('version', '1.6', 'version');
+INSERT INTO configuration VALUES('version', '1.7', 'version');
 INSERT INTO configuration VALUES('session_timeout_minutes', '15', 'The session timeout given in minutes');
 INSERT INTO configuration VALUES('admin_passwd', '101ee9fe7aceaa8bea949e75a529d796da02e08bced78c6c4dde60768183fa14', 'Admin Password');
 INSERT INTO configuration VALUES('server_proxy_path', 'server', 'server proxy path (relative to the application''s web root directory)');
