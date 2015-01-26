@@ -33,12 +33,12 @@ TissueStack.Init = function () {
 		}
 
 		// initialize ui and events
-		if (TissueStack.desktop)
+		if (TissueStack.desktop && ds)
             TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(ds.id);
-        else if (TissueStack.tablet)
+        else if (TissueStack.tablet && ds)
             $("#tabletTreeDiv-" + ds.local_id + "-" + ds.host).collapsible("expand");
         else { // phone
-			TissueStack.dataSetNavigation.addDataSet(ds.id, 0);
+			if (ds) TissueStack.dataSetNavigation.addDataSet(ds.id, 0);
 			TissueStack.InitPhoneUserInterface();
 			TissueStack.BindDataSetDependentEvents();
             TissueStack.dataSetNavigation.showDataSet(1);
@@ -534,6 +534,11 @@ if (TissueStack.phone) {
 
 if (!TissueStack.phone) {
     $(document).ready(function() {
+ 	if (TissueStack.desktop)
+ 		$(document).bind ("pageshow", function(event) {
+			TissueStack.Utils.adjustCollapsibleSectionsHeight('treedataset');
+		});	
+        
         TissueStack.CommonBootStrap();
     });
 }
