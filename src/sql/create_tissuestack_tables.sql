@@ -50,7 +50,9 @@ CREATE TABLE dataset
   is_tiled CHAR(1) NOT NULL DEFAULT 'F',
   zoom_levels TEXT NOT NULL DEFAULT '[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2.00]',
   one_to_one_zoom_level INTEGER NOT NULL DEFAULT 3,
-  resolution_mm NUMERIC(18,10),
+  value_range_min NUMERIC(18,5) NOT NULL DEFAULT 0,
+  value_range_max NUMERIC(18,5) NOT NULL DEFAULT 255,
+  resolution_mm NUMERIC(18,10) DEFAULT 0,
   CONSTRAINT dataset_pk PRIMARY KEY (id),
   CONSTRAINT dataset_lookup_fk FOREIGN KEY (lookup_id) REFERENCES dataset_values_lookup (id),
   CONSTRAINT dataset_filename_unique UNIQUE (filename)
@@ -75,9 +77,6 @@ CREATE TABLE dataset_planes
   zoom_levels TEXT NOT NULL,
   one_to_one_zoom_level INTEGER NOT NULL,
   transformation_matrix TEXT,
-  resolution_mm NUMERIC(18,10),
-  value_range_min NUMERIC(18,5) DEFAULT 0,
-  value_range_max NUMERIC(18,5) DEFAULT 255,
   CONSTRAINT dataset_planes_pk PRIMARY KEY (id),
   CONSTRAINT dataset_planes_fk FOREIGN KEY (dataset_id)
       REFERENCES dataset (id) ON DELETE CASCADE ON UPDATE CASCADE,

@@ -21,6 +21,7 @@
 const std::string tissuestack::database::DataSetDataProvider::SQL =
 	"SELECT PrimaryTable.id AS prim_id, PrimaryTable.filename, PrimaryTable.description, PrimaryTable.lookup_id,"
 		" PrimaryTable.is_tiled, PrimaryTable.zoom_levels, PrimaryTable.one_to_one_zoom_level, PrimaryTable.resolution_mm, "
+		" value_range_min, value_range_max, "
 		" SecondaryTable.id AS sec_id, SecondaryTable.filename AS sec_filename, SecondaryTable.content,"
 		" TertiaryTable.id AS ter_id, TertiaryTable.atlas_prefix, TertiaryTable.atlas_description, TertiaryTable.atlas_query_url"
 		" FROM dataset AS PrimaryTable"
@@ -243,7 +244,7 @@ const unsigned short tissuestack::database::DataSetDataProvider::addDataSet(
 	std::ostringstream tmpSql;
 
 	// main table insert
-	tmpSql << "INSERT INTO dataset (id, filename, resolution_mm";
+	tmpSql << "INSERT INTO dataset (id, filename, resolution_mm, value_range_min, value_range_max";
 	if (!dataSet->getDescription().empty())
 		tmpSql << ",description";
 	tmpSql << ") VALUES (" << db_id << ",'"
@@ -255,6 +256,8 @@ const unsigned short tissuestack::database::DataSetDataProvider::addDataSet(
 			<< "";
 	else
 		tmpSql << ",0";
+	tmpSql << "," << std::to_string(dataSet->getImageDataMinumum());
+	tmpSql << "," << std::to_string(dataSet->getImageDataMaximum());
 	if (!dataSet->getDescription().empty())
 		tmpSql << ",'"
 			<< tissuestack::utils::Misc::sanitizeSqlQuote(dataSet->getDescription())
@@ -284,7 +287,7 @@ const unsigned short tissuestack::database::DataSetDataProvider::addDataSet(
 			<< "," << std::to_string(dim->getNumberOfSlices())
 			<< "," << std::to_string(dataSet->getOneToOneZoomLevel())
 			<< (dim->getTransformationMatrix().empty() ?
-					", NULL," :
+					", NULL" :
 					std::string(",'") + dim->getTransformationMatrix() + "'");
 			tmpSql << ");";
 		sqls.push_back(tmpSql.str());
@@ -383,7 +386,9 @@ const std::vector<const tissuestack::imaging::TissueStackImageData *> tissuestac
 			i_results["is_tiled"].as<bool>(),
 			v_zoom_levels,
 			i_results["one_to_one_zoom_level"].as<unsigned short>(),
-			i_results["resolution_mm"].is_null() ? 0.0 : i_results["resolution_mm"].as<float>(),
+			i_results["resolution_mm"].is_null() ? 0 : i_results["resolution_mm"].as<float>(),
+			i_results["value_range_min"].as<float>(),
+			i_results["value_range_max"].as<float>(),
 			associatedLookup
 		);
 		v_results.push_back(rec.release());

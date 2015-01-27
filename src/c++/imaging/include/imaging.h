@@ -238,8 +238,8 @@ namespace tissuestack
 				const std::vector<std::string> getDimensionOrder() const;
 				const std::vector<float> getCoordinates() const;
 				const std::vector<float> getSteps() const;
-				const unsigned short getImageDataMinumum() const;
-				const unsigned short getImageDataMaximum() const;
+				const float getImageDataMinumum() const;
+				const float getImageDataMaximum() const;
 				const unsigned long long int getDataBaseId() const;
 				const std::string getDescription() const;
 				const unsigned short getNumberOfDimensions() const;
@@ -251,6 +251,8 @@ namespace tissuestack
 						const std::vector<float> zoom_levels = {0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2.00, 2.25, 2.5},
 						const unsigned short one_to_one_zoom_level = 3,
 						const float resolution_in_mm = 0,
+						const float global_min_value = 0,
+						const float global_max_value = 255,
 						const TissueStackLabelLookup * lookup = nullptr);
 				const float getResolutionMm() const;
 				const bool isTiled() const;
@@ -271,6 +273,7 @@ namespace tissuestack
 				void clearAssociatedDataSets();
 			protected:
 				friend class tissuestack::database::DataSetDataProvider;
+				void setImageDataBounds(const float min=0, const float max=255);
 				void setResolutionMm(const float resolution_mm);
 				explicit TissueStackImageData(const long long unsigned int id, const std::string filename = "");
 				explicit TissueStackImageData(const std::string & filename);
@@ -298,8 +301,8 @@ namespace tissuestack
 				const std::string _file_name;
 				std::string _description = "";
 				FORMAT _format;
-				unsigned short 	_global_min_value = 0;
-				unsigned short 	_global_max_value = 255;
+				float 	_global_min_value = 0;
+				float 	_global_max_value = 255;
 				std::vector<std::string> _dim_order;
 				std::vector<float> _coordinates;
 				std::vector<float> _steps;
@@ -312,7 +315,7 @@ namespace tissuestack
 				const TissueStackLabelLookup * _lookup = nullptr;
 				std::vector<const TissueStackImageData *> _associated_data_sets;
 				std::string _header = "";
-				float _resolutionMm;
+				float _resolutionMm = 0;
 		};
 
 		class TissueStackRawData final : public TissueStackImageData

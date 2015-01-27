@@ -388,14 +388,20 @@ const tissuestack::imaging::TissueStackDataDimension * tissuestack::imaging::Tis
 	}
 }
 
-const unsigned short tissuestack::imaging::TissueStackImageData::getImageDataMinumum() const
+const float tissuestack::imaging::TissueStackImageData::getImageDataMinumum() const
 {
 	return this->_global_min_value;
 }
 
-const unsigned short tissuestack::imaging::TissueStackImageData::getImageDataMaximum() const
+const float tissuestack::imaging::TissueStackImageData::getImageDataMaximum() const
 {
 	return this->_global_max_value;
+}
+
+void tissuestack::imaging::TissueStackImageData::setImageDataBounds(const float min, const float max)
+{
+	this->_global_min_value = min;
+	this->_global_max_value = max;
 }
 
 void tissuestack::imaging::TissueStackImageData::setDataBaseId(const unsigned long long int id)
@@ -507,6 +513,8 @@ const std::string tissuestack::imaging::TissueStackImageData::toJson(
 			json << ", \"resolutionMm\": " << std::to_string(this->getResolutionMm());
 			json << ", \"transformationMatrix\": \"" << dim->getTransformationMatrix() << "\"";
 			json << ", \"zoomLevels\": \"" << this->getZoomLevelsAsJson() << "\"";
+			json << ", \"valueRangeMin\": \"" << std::to_string(this->getImageDataMinumum()) << "\"";
+			json << ", \"valueRangeMax\": \"" << std::to_string(this->getImageDataMaximum()) << "\"";
 			json << "}";
 			j++;
 		}
@@ -600,6 +608,8 @@ void tissuestack::imaging::TissueStackImageData::setMembersFromDataBaseInformati
 		const std::vector<float> zoom_levels,
 		const unsigned short one_to_one_zoom_level,
 		const float resolution_in_mm,
+		const float global_min_value,
+		const float global_max_value,
 		const tissuestack::imaging::TissueStackLabelLookup * lookup)
 {
 	this->_database_id = id,
@@ -609,6 +619,8 @@ void tissuestack::imaging::TissueStackImageData::setMembersFromDataBaseInformati
 		this->_zoom_levels = zoom_levels;
 	this->_one_to_one_zoom_level = one_to_one_zoom_level;
 	this->_resolutionMm = resolution_in_mm;
+	this->_global_min_value = global_min_value;
+	this->_global_max_value = global_max_value;
 	this->_lookup = lookup;
 }
 
