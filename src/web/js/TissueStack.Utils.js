@@ -378,7 +378,9 @@ TissueStack.Utils = {
 	    });
 	    
 	    var finalHeight = treeHeight - $("#" + elem_id + "_div .ui-collapsible-heading").outerHeight() - elCount*10;
-	    
+	    if (finalHeight <=0) // sanity check for minimal height
+            finalHeight = 150;
+        
 	    if (typeof(upper_limit) != 'number' || upper_limit <= 0 || upper_limit >= finalHeight)
 			$('#' + elem_id).css({"height": finalHeight});
 		else
