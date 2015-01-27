@@ -601,7 +601,7 @@ a.ui-slider-handle-horizontal{
  }
 /*Create Table in Admin*/
 #task_list{
-	height:180px; 
+	height:150px; 
 	position:relative; 
 	overflow:auto;
 }
