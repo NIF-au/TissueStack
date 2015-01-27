@@ -106,7 +106,7 @@ ESCAPED_STRING=`cat /tmp/escaped.string` &>> /tmp/post-install.log
 cp -f /opt/tissuestack/conf/tissuestack.conf /etc/httpd/conf.d/tissuestack.conf &>> /tmp/post-install.log
 sed -i "s/##DOC_ROOT##/$ESCAPED_STRING\/web/g" /etc/httpd/conf.d/tissuestack.conf &>> /tmp/post-install.log
 sed -i 's/##ERROR_LOG##/\/var\/log\/httpd\/tissuestack-error.log/g' /etc/httpd/conf.d/tissuestack.conf &>> /tmp/post-install.log
-if [ $APACHE_PORT -ne 80 ]; then sed -i "s/*:80/*:$APACHE_PORT/g" /etc/httpd/conf.d/tissuestack.conf; fi &>> /tmp/post-install.log
+if [ $APACHE_PORT -ne 80 ]; then sed -i "/^Listen[ ]*[0123456789]*/c\Listen $APACHE_PORT" /etc/httpd/conf.d/tissuestack.conf; fi &>> /tmp/post-install.log
 HTTP_VERSION=`httpd -v | grep "Apache/" | cut -f2 -d "/" | cut -f1 -d " " | cut -f1,2 -d "." | sed 's/\.//g'` &>> /tmp/post-install.log
 if [ $HTTP_VERSION -gt 23 ]; then sed -i 's/#Require all granted/Require all granted/g' /etc/httpd/conf.d/tissuestack.conf; fi &>> /tmp/post-install.log
 mv /etc/httpd/conf.d/welcome.conf /etc/httpd/conf.d/welcome.conf.disabled &>> /tmp/post-install.log
