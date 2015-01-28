@@ -62,7 +62,7 @@ if [ $1 -ne 1 ]; then
 	rm -rf /etc/init.d/tissuestack &>> /tmp/uninstall.log
 	rm -rf /etc/httpd/conf.d/tissuestack.conf &>> /tmp/uninstall.log
 	mv /etc/httpd/conf.d/welcome.conf.disabled /etc/httpd/conf.d/welcome.conf &>> /tmp/uninstall.log
-	if [ $APACHE_PORT -ne 80 ]; then sed -i "s/Listen $APACHE_PORT/Listen 80/g" /etc/httpd/conf/httpd.conf; fi &>> /tmp/uninstall.log
+	if [ $APACHE_PORT -ne 80 ]; then sed -i "/^Listen[ ]*[0123456789]*/c\Listen 80" /etc/httpd/conf/httpd.conf; fi &>> /tmp/uninstall.log
 	rm -rf /tmp/tissue_stack_communication &>> /tmp/uninstall.log
 	service httpd restart &>> /tmp/uninstall.log
 fi
