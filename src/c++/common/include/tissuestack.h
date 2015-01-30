@@ -188,6 +188,7 @@ namespace tissuestack
 				ProcessingStrategy	* _default_strategy;
 				ProcessingStrategy * _task_queue_executor;
 				ProcessingStrategy * _slice_cache_cleaner;
+				ProcessingStrategy * _colormap_lookup_updater;
 		};
 
 		class RequestFilter

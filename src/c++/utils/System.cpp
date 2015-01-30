@@ -183,6 +183,29 @@ const std::string tissuestack::utils::System::getSystemTimeFormatted(const std::
 	return std::string(buff);
 }
 
+const time_t tissuestack::utils::System::getLastModifiedTime(const std::string & filename)
+{
+	if (!tissuestack::utils::System::fileExists(filename))
+		return 0;
+
+	struct stat buffer;
+	stat(filename.c_str(), &buffer);
+	return buffer.st_mtime;
+}
+
+const time_t tissuestack::utils::System::hasFileBeenModifiedSince(const std::string & filename, const time_t lastModification)
+{
+	const time_t latestModification = tissuestack::utils::System::getLastModifiedTime(filename);
+	if (latestModification == 0)
+		return 0;
+
+	// return NULL if there hasn't been a modification (compared to the 2nd paramter time) or the new modification time if otherwise
+	if (difftime(lastModification, lastModification) == 0)
+		return 0;
+
+	return latestModification;
+}
+
 const std::vector<std::string> tissuestack::utils::System::getFilesInDirectory(const std::string & directory)
 {
 	std::vector<std::string> files;

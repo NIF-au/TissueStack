@@ -14,10 +14,16 @@
  * You should have received a copy of the GNU General Public License
  * along with TissueStack.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include "database.h"
 #include "networking.h"
 #include "imaging.h"
 
 tissuestack::imaging::TissueStackLabelLookupStore::TissueStackLabelLookupStore()
+{
+	this->updateLabelLookupStore(true);
+}
+
+void tissuestack::imaging::TissueStackLabelLookupStore::updateLabelLookupStore(bool initial)
 {
 	if (!tissuestack::utils::System::directoryExists(LABEL_LOOKUP_PATH) &&
 		!tissuestack::utils::System::createDirectory(LABEL_LOOKUP_PATH, 0755))
@@ -29,7 +35,54 @@ tissuestack::imaging::TissueStackLabelLookupStore::TissueStackLabelLookupStore()
 	{
 		try
 		{
-			this->addOrReplaceLabelLookup(tissuestack::imaging::TissueStackLabelLookup::fromFile(f.c_str()));
+			// TODO: skip . temporary files
+
+			tissuestack::imaging::TissueStackLabelLookup * newLabelLookup =
+				const_cast<tissuestack::imaging::TissueStackLabelLookup *>(
+					initial ? // first load (from directory)
+						tissuestack::imaging::TissueStackLabelLookup::fromFile(f) :
+						this->findLabelLookupByFullPath(f)); // update of already loaded file
+
+			if (!initial && newLabelLookup == nullptr) // this happens if a new file has been added
+			{
+				this->dumpAllLabelLookupsToDebugLog();
+
+				tissuestack::logging::TissueStackLogger::instance()->info(
+					"Adding file '%s'", f.c_str());
+
+				newLabelLookup =
+					const_cast<tissuestack::imaging::TissueStackLabelLookup *>(
+					tissuestack::imaging::TissueStackLabelLookup::fromFile(f));
+				newLabelLookup->setLastModified( // we set the last modified for added files but deduct 1 so that we force addition
+					tissuestack::utils::System::getLastModifiedTime(f) - 1);
+			}
+
+			if (initial) // we set the last modified for the inital load minus 1 to force addition
+			{
+				// TODO: check time stamp for initial modification
+				newLabelLookup->setLastModified(
+					tissuestack::utils::System::getLastModifiedTime(f) - 1);
+			}
+
+			// do the time comparison and decide to not update if there was no file change
+			const time_t latestModification =
+				tissuestack::utils::System::hasFileBeenModifiedSince(f, newLabelLookup->getLastModified());
+
+			if (latestModification == 0)
+			{// skip
+				tissuestack::logging::TissueStackLogger::instance()->info(
+								"Skipping file '%s'", f.c_str());
+				continue;
+			}
+
+			if (!initial)
+				tissuestack::logging::TissueStackLogger::instance()->info(
+					"Updating file '%s' after addition/modification", f.c_str());
+
+			newLabelLookup->setUpdateFlag(true);
+			this->addOrReplaceLabelLookup(newLabelLookup);
+			this->synchronizeLabelLookupWithDataBase(newLabelLookup);
+			newLabelLookup->setUpdateFlag(false);
 		} catch (std::exception & bad)
 		{
 			if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
@@ -78,8 +131,10 @@ const tissuestack::imaging::TissueStackLabelLookup * tissuestack::imaging::Tissu
 		const std::string & id) const
 {
 	for (auto l : this->_label_lookups)
+	{
 		if (l.second->getLabelLookupId(true).compare(id) == 0)
 			return l.second;
+	}
 
 	return nullptr;
 }
@@ -112,7 +167,22 @@ const std::unordered_map<std::string, const tissuestack::imaging::TissueStackLab
  void tissuestack::imaging::TissueStackLabelLookupStore::dumpAllLabelLookupsToDebugLog() const
  {
 	for (auto entry = this->_label_lookups.begin(); entry != this->_label_lookups.end(); ++entry)
-		entry->second->dumpLabelLookupToDebugLog();
+	{
+		//entry->second->dumpLabelLookupToDebugLog();
+		tissuestack::logging::TissueStackLogger::instance()->info(
+				"Dumping Label Lookup: |%s|\n", entry->second->getLabelLookupId(true).c_str());
+	}
  }
+
+void tissuestack::imaging::TissueStackLabelLookupStore::synchronizeLabelLookupWithDataBase(const tissuestack::imaging::TissueStackLabelLookup * labelLookup)
+{
+	std::unique_ptr<const tissuestack::imaging::TissueStackLabelLookup> hit(
+			tissuestack::database::LabelLookupDataProvider::queryLookupValuesByFileName(labelLookup->getLabelLookupId(true)));
+
+	if (hit.get() == nullptr) // persist if not exists
+		tissuestack::database::LabelLookupDataProvider::persistLookupValues(labelLookup);
+	else // update
+		tissuestack::database::LabelLookupDataProvider::updateLookupValues(hit.get(), labelLookup);
+}
 
 tissuestack::imaging::TissueStackLabelLookupStore * tissuestack::imaging::TissueStackLabelLookupStore::_instance = nullptr;

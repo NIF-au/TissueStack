@@ -18,7 +18,8 @@
 
 tissuestack::common::TissueStackProcessingStrategy::TissueStackProcessingStrategy() :
 	_task_queue_executor(new tissuestack::execution::TissueStackTaskQueueExecutor()),
-	_slice_cache_cleaner(new tissuestack::execution::TissueStackSliceCacheCleaner())
+	_slice_cache_cleaner(new tissuestack::execution::TissueStackSliceCacheCleaner()),
+	_colormap_lookup_updater(new tissuestack::execution::TissueStackColorMapAndLookupUpdater())
 {
 	unsigned int cores = tissuestack::utils::System::getNumberOfCores();
 
@@ -39,6 +40,7 @@ tissuestack::common::TissueStackProcessingStrategy::~TissueStackProcessingStrate
 	delete this->_default_strategy;
 	delete this->_task_queue_executor;
 	delete this->_slice_cache_cleaner;
+	delete this->_colormap_lookup_updater;
 };
 
 void tissuestack::common::TissueStackProcessingStrategy::init()
@@ -47,9 +49,11 @@ void tissuestack::common::TissueStackProcessingStrategy::init()
 	this->_default_strategy->init();
 	this->_task_queue_executor->init();
 	this->_slice_cache_cleaner->init();
+	this->_colormap_lookup_updater->init();
 	if (this->_default_strategy->isRunning() &&
 			this->_task_queue_executor->isRunning() &&
-			this->_slice_cache_cleaner->isRunning())
+			this->_slice_cache_cleaner->isRunning() &&
+			this->_colormap_lookup_updater->isRunning())
 		this->setRunningFlag(true);
 };
 
@@ -69,9 +73,12 @@ void tissuestack::common::TissueStackProcessingStrategy::stop()
 		this->_task_queue_executor->stop();
 	if (this->_slice_cache_cleaner->isRunning())
 		this->_slice_cache_cleaner->stop();
+	if (this->_colormap_lookup_updater->isRunning())
+		this->_colormap_lookup_updater->stop();
 
 	if (!this->_default_strategy->isRunning() &&
 			!this->_task_queue_executor->isRunning() &&
-			!this->_slice_cache_cleaner->isRunning())
+			!this->_slice_cache_cleaner->isRunning() &&
+			!this->_colormap_lookup_updater->isRunning())
 			this->setRunningFlag(false);
 };

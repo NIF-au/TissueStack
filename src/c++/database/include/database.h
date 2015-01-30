@@ -25,6 +25,7 @@ namespace tissuestack
 	namespace imaging
 	{
 		class TissueStackImageData;
+		class TissueStackLabelLookup;
 	}
 
 	namespace database
@@ -174,6 +175,19 @@ namespace tissuestack
 				static const std::string SQL_PLANES;
 				static const std::string SQL_ASSOCIATIONED_SETS;
 				static const std::string ORDER_BY;
+		};
+
+		class LabelLookupDataProvider final
+		{
+			public:
+				LabelLookupDataProvider & operator=(const LabelLookupDataProvider&) = delete;
+				LabelLookupDataProvider(const LabelLookupDataProvider&) = delete;
+				LabelLookupDataProvider() = delete;
+				static const tissuestack::imaging::TissueStackLabelLookup * queryLookupValuesByFileName(const std::string file_name);
+				static const bool persistLookupValues(const tissuestack::imaging::TissueStackLabelLookup * lookup);
+				static const bool updateLookupValues(
+					const tissuestack::imaging::TissueStackLabelLookup * hit,
+					const tissuestack::imaging::TissueStackLabelLookup * lookup);
 		};
 	}
 }

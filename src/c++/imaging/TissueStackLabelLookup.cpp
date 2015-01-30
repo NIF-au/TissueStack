@@ -50,6 +50,21 @@ tissuestack::imaging::TissueStackLabelLookup::TissueStackLabelLookup(
 tissuestack::imaging::TissueStackLabelLookup::TissueStackLabelLookup(const std::string & filename) :
 		_labellookup_id(filename), _database_id(0), _atlas_info(nullptr)
 {
+	this->updateLabelLookup(filename);
+}
+
+const time_t tissuestack::imaging::TissueStackLabelLookup::getLastModified() const
+{
+	return this->_last_Modification;
+}
+
+void tissuestack::imaging::TissueStackLabelLookup::setLastModified(const time_t lastModified)
+{
+	this->_last_Modification = lastModified;
+}
+
+void tissuestack::imaging::TissueStackLabelLookup::updateLabelLookup(const std::string & filename)
+{
 	if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
 		tissuestack::logging::TissueStackLogger::instance()->info("Loading label lookup file %s\n", filename.c_str());
 
@@ -139,7 +154,6 @@ tissuestack::imaging::TissueStackLabelLookup::TissueStackLabelLookup(const std::
 				std::string rgbTripleKey = "" +
 					std::to_string(red) + "/" + std::to_string(green) + "/" + std::to_string(blue);
 				this->_label_lookups[rgbTripleKey] = label;
-
 				// try and add also the gray lookup but only if we don't overwrite an rgb lookup!
 				if (gray >=0 && this->getLabel(gray, gray, gray).empty())
 				{
@@ -165,7 +179,7 @@ tissuestack::imaging::TissueStackLabelLookup::TissueStackLabelLookup(const std::
 const std::string tissuestack::imaging::TissueStackLabelLookup::getLabel(const unsigned short & red, const unsigned short & green, const unsigned short & blue) const
 {
 	std::ostringstream in;
-	in << red << "/" << green << "/" + blue;
+	in << std::to_string(red) << "/" << std::to_string(green) << "/" + std::to_string(blue);
 	std::string rgbTripleKey = in.str();
 
 	try
@@ -214,16 +228,21 @@ const unsigned long long int tissuestack::imaging::TissueStackLabelLookup::getDa
 	return this->_database_id;
 }
 
+const tissuestack::database::AtlasInfo * tissuestack::imaging::TissueStackLabelLookup::getAtlasInfo() const
+{
+	return this->_atlas_info;
+}
+
 void tissuestack::imaging::TissueStackLabelLookup::dumpLabelLookupToDebugLog() const
 {
 	if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
-		tissuestack::logging::TissueStackLogger::instance()->debug("Dumping Label Lookup: %s\n", this->getLabelLookupId().c_str());
+		tissuestack::logging::TissueStackLogger::instance()->debug("Dumping Label Lookup: %s\n", this->getLabelLookupId(true).c_str());
 
-	for (auto rgb : this->_gray_indexed_rgb_mapping)
+	for (auto entries : this->_label_lookups)
 	{
-		const std::string label = this->getLabel(rgb[0], rgb[1], rgb[2]);
+		const std::string label = entries.second;
 		if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
-			tissuestack::logging::TissueStackLogger::instance()->debug("%u\t%u\t%u\t%s\n", rgb[0], rgb[1], rgb[2], label.c_str());
+			tissuestack::logging::TissueStackLogger::instance()->debug("%s => %s\n", entries.first.c_str(), label.c_str());
 	}
 }
 
@@ -272,4 +291,35 @@ const std::string tissuestack::imaging::TissueStackLabelLookup::toJson() const
 
 	json << "}";
 	return json.str();
+}
+
+const std::string tissuestack::imaging::TissueStackLabelLookup::getContentForSql() const
+{
+	std::ostringstream content;
+	content << "{";
+
+	int i=0;
+	for (auto rgb : this->_label_lookups)
+	{
+		if (i !=0)
+			content << ",";
+
+		content << "\"" << rgb.first << "\":" <<
+			"\"" << tissuestack::utils::Misc::eliminateWhitespaceAndUnwantedEscapeCharacters(rgb.second) << "\"";
+
+		i++;
+	}
+	content << "}";
+
+	return tissuestack::utils::Misc::sanitizeSqlQuote(content.str());
+}
+
+void tissuestack::imaging::TissueStackLabelLookup::setUpdateFlag(const bool is_being_Updated)
+{
+	this->_is_being_Updated = is_being_Updated;
+}
+
+const bool tissuestack::imaging::TissueStackLabelLookup::isBeingUpdated() const
+{
+	return this->_is_being_Updated;
 }

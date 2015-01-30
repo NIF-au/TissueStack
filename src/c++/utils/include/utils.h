@@ -65,6 +65,8 @@ namespace tissuestack
         static const bool createDirectory(const std::string& directory, mode_t mode);
         static const std::vector<std::string> readTextFileLineByLine(const std::string & file);
         static const std::string getSystemTimeFormatted(const std::string & format);
+        static const time_t getLastModifiedTime(const std::string & filename);
+        static const time_t hasFileBeenModifiedSince(const std::string & filename, const time_t lastModification);
         static const unsigned long long int getSystemTimeInMillis();
         static const bool touchFile(
         	const std::string & file,

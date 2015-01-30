@@ -73,6 +73,8 @@ tissuestack::database::TissueStackPostgresConnector * tissuestack::database::Tis
 
 const pqxx::result tissuestack::database::TissueStackPostgresConnector::executeNonTransactionalQuery(const std::string sql)
 {
+	//tissuestack::logging::TissueStackLogger::instance()->debug("Executing non transSQL: %s", sql.c_str());
+
 	const unsigned short indexForIdleConnection =
 		this->findNextIdleNonTransConnection();
 

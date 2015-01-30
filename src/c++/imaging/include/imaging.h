@@ -35,10 +35,15 @@ namespace tissuestack
 	{
 		class AtlasInfo;
 		class DataSetDataProvider;
+		class LabelLookupDataProvider;
 	}
 	namespace services
 	{
 		class TissueStackTask; // forward declaration
+	}
+	namespace execution
+	{
+		class TissueStackColorMapAndLookupUpdater;
 	}
 	namespace imaging
 	{
@@ -93,10 +98,14 @@ namespace tissuestack
 						const tissuestack::database::AtlasInfo * atlasInfo = nullptr);
 				const std::string getLabel(const unsigned short & red, const unsigned short & green, const unsigned short & blue) const;
 				const std::string getLabelLookupId(bool fullPath=false) const;
+				const tissuestack::database::AtlasInfo * getAtlasInfo() const;
 				const unsigned long long int getDataBaseId() const;
 				void dumpLabelLookupToDebugLog() const;
 				void releaseAtlasInfoPointer();
 				const std::string toJson() const;
+				const std::string getContentForSql() const;
+				const bool isBeingUpdated() const;
+				const time_t getLastModified() const;
 			private:
 				const std::string _labellookup_id;
 				unsigned long long int _database_id;
@@ -104,8 +113,13 @@ namespace tissuestack
 				std::unordered_map<std::string, std::string> _label_lookups;
 				const tissuestack::database::AtlasInfo * _atlas_info;
 				friend class TissueStackColorMap;
-				void copyGrayIndexedRgbMapping(std::array<unsigned short[3], 256> & grayIndexedRgbMapping) const;
+				friend class tissuestack::database::LabelLookupDataProvider;
 				friend class tissuestack::database::DataSetDataProvider;
+				friend class TissueStackLabelLookupStore;
+				void setUpdateFlag(const bool is_being_Updated);
+				void updateLabelLookup(const std::string & filename);
+				void copyGrayIndexedRgbMapping(std::array<unsigned short[3], 256> & grayIndexedRgbMapping) const;
+				void setLastModified(const time_t lastModified);
 				void setDataBaseInfo(
 					const unsigned long long int id,
 					const tissuestack::database::AtlasInfo * atlasInfo);
@@ -115,6 +129,8 @@ namespace tissuestack
 					const std::string & filename,
 					const std::string & content,
 					const tissuestack::database::AtlasInfo * atlasInfo);
+				bool _is_being_Updated = false;
+				time_t _last_Modification = 0;
 		};
 
 		class TissueStackLabelLookupStore final
@@ -132,7 +148,10 @@ namespace tissuestack
 				const std::unordered_map<std::string, const tissuestack::imaging::TissueStackLabelLookup *> getAllLabelLookups() const;
 				void dumpAllLabelLookupsToDebugLog() const;
 			private:
+				friend class tissuestack::execution::TissueStackColorMapAndLookupUpdater;
+				void updateLabelLookupStore(bool initial=false);
 				TissueStackLabelLookupStore();
+				void synchronizeLabelLookupWithDataBase(const tissuestack::imaging::TissueStackLabelLookup * labelLookup);
 				std::unordered_map<std::string, const TissueStackLabelLookup *> _label_lookups;
 				static TissueStackLabelLookupStore * _instance;
 		};
