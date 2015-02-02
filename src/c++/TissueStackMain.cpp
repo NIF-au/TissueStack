@@ -222,7 +222,7 @@ int main(int argc, char * args[])
 	try
 	{
 		tissuestack::imaging::TissueStackLabelLookupStore::instance(); // for label lookups
-		tissuestack::imaging::TissueStackLabelLookupStore::instance()->dumpAllLabelLookupsToDebugLog();
+		//tissuestack::imaging::TissueStackLabelLookupStore::instance()->dumpAllLabelLookupsToDebugLog();
 	} catch (std::exception & bad)
 	{
 		std::cerr << "Could not instantiate TissueStackLabelLookupStore!" << std::endl;
