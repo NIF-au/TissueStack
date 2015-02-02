@@ -76,6 +76,7 @@ void tissuestack::imaging::TissueStackLabelLookup::updateLabelLookup(const std::
 		file_stream.open(filename);
 
 		tissuestack::imaging::TissueStackColorMap::preFillColorMapArray(this->_gray_indexed_rgb_mapping);
+		this->_label_lookups.clear();
 
 		for( std::string line; std::getline( file_stream, line ); )
 		{

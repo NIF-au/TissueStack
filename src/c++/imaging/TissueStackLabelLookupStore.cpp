@@ -35,7 +35,8 @@ void tissuestack::imaging::TissueStackLabelLookupStore::updateLabelLookupStore(b
 	{
 		try
 		{
-			// TODO: skip . temporary files
+			if (f.rfind("/.") != std::string::npos) // skip .files
+				continue;
 
 			tissuestack::imaging::TissueStackLabelLookup * newLabelLookup =
 				const_cast<tissuestack::imaging::TissueStackLabelLookup *>(
@@ -43,46 +44,39 @@ void tissuestack::imaging::TissueStackLabelLookupStore::updateLabelLookupStore(b
 						tissuestack::imaging::TissueStackLabelLookup::fromFile(f) :
 						this->findLabelLookupByFullPath(f)); // update of already loaded file
 
-			if (!initial && newLabelLookup == nullptr) // this happens if a new file has been added
-			{
-				this->dumpAllLabelLookupsToDebugLog();
+			time_t lastModificationTime =
+				newLabelLookup && newLabelLookup->getLastModified() > 0 ?
+					newLabelLookup->getLastModified() :
+					tissuestack::utils::System::getLastModifiedTime(f);
 
+			if (initial) // we set the last modified for the inital load minus 1 to force addition
+				lastModificationTime -= 1;
+			else if (!initial && newLabelLookup == nullptr) // this happens if a new file has been added
+			{
 				tissuestack::logging::TissueStackLogger::instance()->info(
-					"Adding file '%s'", f.c_str());
+					"Adding new lookup file '%s'", f.c_str());
 
 				newLabelLookup =
 					const_cast<tissuestack::imaging::TissueStackLabelLookup *>(
 					tissuestack::imaging::TissueStackLabelLookup::fromFile(f));
-				newLabelLookup->setLastModified( // we set the last modified for added files but deduct 1 so that we force addition
-					tissuestack::utils::System::getLastModifiedTime(f) - 1);
-			}
-
-			if (initial) // we set the last modified for the inital load minus 1 to force addition
-			{
-				// TODO: check time stamp for initial modification
-				newLabelLookup->setLastModified(
-					tissuestack::utils::System::getLastModifiedTime(f) - 1);
+				lastModificationTime -= 1;
 			}
 
 			// do the time comparison and decide to not update if there was no file change
 			const time_t latestModification =
-				tissuestack::utils::System::hasFileBeenModifiedSince(f, newLabelLookup->getLastModified());
+				tissuestack::utils::System::hasFileBeenModifiedSince(f, lastModificationTime);
 
-			if (latestModification == 0)
-			{// skip
-				tissuestack::logging::TissueStackLogger::instance()->info(
-								"Skipping file '%s'", f.c_str());
+			if (latestModification == 0) // skip
 				continue;
-			}
-
-			if (!initial)
-				tissuestack::logging::TissueStackLogger::instance()->info(
-					"Updating file '%s' after addition/modification", f.c_str());
 
 			newLabelLookup->setUpdateFlag(true);
+			newLabelLookup->updateLabelLookup(f);
 			this->addOrReplaceLabelLookup(newLabelLookup);
 			this->synchronizeLabelLookupWithDataBase(newLabelLookup);
 			newLabelLookup->setUpdateFlag(false);
+			newLabelLookup->setLastModified( // we set the last modified for added files but deduct 1 so that we force addition
+					latestModification);
+
 		} catch (std::exception & bad)
 		{
 			if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
@@ -168,9 +162,7 @@ const std::unordered_map<std::string, const tissuestack::imaging::TissueStackLab
  {
 	for (auto entry = this->_label_lookups.begin(); entry != this->_label_lookups.end(); ++entry)
 	{
-		//entry->second->dumpLabelLookupToDebugLog();
-		tissuestack::logging::TissueStackLogger::instance()->info(
-				"Dumping Label Lookup: |%s|\n", entry->second->getLabelLookupId(true).c_str());
+		entry->second->dumpLabelLookupToDebugLog();
 	}
  }
 
