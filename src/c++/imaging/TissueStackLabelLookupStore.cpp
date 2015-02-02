@@ -70,13 +70,12 @@ void tissuestack::imaging::TissueStackLabelLookupStore::updateLabelLookupStore(b
 				continue;
 
 			newLabelLookup->setUpdateFlag(true);
-			newLabelLookup->updateLabelLookup(f);
+			if (!initial) newLabelLookup->updateLabelLookup(f);
 			this->addOrReplaceLabelLookup(newLabelLookup);
 			this->synchronizeLabelLookupWithDataBase(newLabelLookup);
 			newLabelLookup->setUpdateFlag(false);
 			newLabelLookup->setLastModified( // we set the last modified for added files but deduct 1 so that we force addition
 					latestModification);
-
 		} catch (std::exception & bad)
 		{
 			if (tissuestack::logging::TissueStackLogger::doesInstanceExist())

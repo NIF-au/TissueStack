@@ -19,46 +19,7 @@
 
 tissuestack::imaging::TissueStackColorMapStore::TissueStackColorMapStore()
 {
-	if (!tissuestack::utils::System::directoryExists(COLORMAP_PATH) &&
-		!tissuestack::utils::System::createDirectory(COLORMAP_PATH, 0755))
-			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-				"Could not create color map directory!");
-
-	const std::vector<std::string> fileList = tissuestack::utils::System::getFilesInDirectory(COLORMAP_PATH);
-	for (std::string f : fileList)
-	{
-		try
-		{
-			this->addOrReplaceColorMap(tissuestack::imaging::TissueStackColorMap::fromFile(f.c_str()));
-		} catch (std::exception & bad)
-		{
-			if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
-				tissuestack::logging::TissueStackLogger::instance()->error(
-					"Could not load color map file '%s' for the following reason:\n%s\n", f.c_str(), bad.what());
-		}
-	}
-
-	if (!tissuestack::imaging::TissueStackLabelLookupStore::doesInstanceExist())
-		return;
-
-	// add to that the discrete color maps of the label lookups
-	const std::unordered_map<std::string, const tissuestack::imaging::TissueStackLabelLookup *> lookups =
-			tissuestack::imaging::TissueStackLabelLookupStore::instance()->getAllLabelLookups();
-
-	// walk through entries and copy the colormap
-	for (auto lookup : lookups)
-	{
-		try
-		{
-			this->addOrReplaceColorMap(lookup.second);
-		} catch (std::exception & bad)
-		{
-			if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
-				tissuestack::logging::TissueStackLogger::instance()->error(
-					"Could not load color map from lookup file '%s' for the following reason:\n%s\n",
-					lookup.second->getLabelLookupId().c_str(), bad.what());
-		}
-	}
+	this->updateColorMapStore(true);
 }
 
 void tissuestack::imaging::TissueStackColorMapStore::purgeInstance()
@@ -99,21 +60,152 @@ const bool tissuestack::imaging::TissueStackColorMapStore::doesInstanceExist()
  {
 	 if (colorMap == nullptr) return;
 
-	 if (this->findColorMap(colorMap->getColorMapId()))
-		 delete this->_color_maps[colorMap->getColorMapId()];
+	 //if (this->findColorMap(colorMap->getColorMapId()))
+	 //	 delete this->_color_maps[colorMap->getColorMapId()];
 
 	 this->_color_maps[colorMap->getColorMapId()] = colorMap;
  }
 
- void tissuestack::imaging::TissueStackColorMapStore::addOrReplaceColorMap(const tissuestack::imaging::TissueStackLabelLookup * labelLookup)
+ void tissuestack::imaging::TissueStackColorMapStore::addOrReplaceColorMap(
+		 const tissuestack::imaging::TissueStackLabelLookup * labelLookup,
+		 const time_t lastModified)
 {
 	 if (labelLookup == nullptr) return;
 
-	 if (this->findColorMap(labelLookup->getLabelLookupId()))
-		 delete this->_color_maps[labelLookup->getLabelLookupId()];
+	 tissuestack::imaging::TissueStackColorMap * colorFromLabel =
+		const_cast<tissuestack::imaging::TissueStackColorMap *>(
+		tissuestack::imaging::TissueStackColorMap::fromLabelLookup(labelLookup));
+	 colorFromLabel->setLastModified(lastModified);
 
-	 this->_color_maps[labelLookup->getLabelLookupId()] =
-			 tissuestack::imaging::TissueStackColorMap::fromLabelLookup(labelLookup);
+	 const tissuestack::imaging::TissueStackColorMap * oldPointer =
+		this->findColorMap(labelLookup->getLabelLookupId());
+	 if (oldPointer != nullptr)
+		 const_cast<tissuestack::imaging::TissueStackColorMap *>(oldPointer)->setUpdateFlag(true);
+
+	 this->_color_maps[labelLookup->getLabelLookupId()] = colorFromLabel;
+
+	 if (oldPointer != nullptr)
+		 delete oldPointer;
+
+}
+
+void tissuestack::imaging::TissueStackColorMapStore::updateColorMapStore(bool initial)
+{
+	if (!tissuestack::utils::System::directoryExists(COLORMAP_PATH) &&
+		!tissuestack::utils::System::createDirectory(COLORMAP_PATH, 0755))
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Could not create color map directory!");
+
+	const std::vector<std::string> fileList = tissuestack::utils::System::getFilesInDirectory(COLORMAP_PATH);
+	for (std::string f : fileList)
+	{
+		try
+		{
+			if (f.rfind("/.") != std::string::npos) // skip .files
+				continue;
+
+			std::string shortPath = f;
+			size_t lastSlash = 0;
+			lastSlash = f.rfind("/");
+			if (lastSlash != std::string::npos)
+			{
+				lastSlash++;
+				shortPath = f.substr(lastSlash, f.length()-lastSlash);
+			}
+
+			if (tissuestack::imaging::TissueStackLabelLookupStore::doesInstanceExist() &&
+				tissuestack::imaging::TissueStackLabelLookupStore::instance()->findLabelLookup(shortPath))
+			{
+				tissuestack::logging::TissueStackLogger::instance()->info(
+					"Failed to add color map '%s' as there is a lookup file by the same name!", shortPath.c_str());
+				continue;
+			}
+
+			tissuestack::imaging::TissueStackColorMap * newColorMap =
+				const_cast<tissuestack::imaging::TissueStackColorMap *>(
+					initial ? // first load (from directory)
+						tissuestack::imaging::TissueStackColorMap::fromFile(f) :
+						this->findColorMap(shortPath)); // update of already loaded file
+
+			time_t lastModificationTime =
+					newColorMap && newColorMap->getLastModified() > 0 ?
+						newColorMap->getLastModified() :
+					tissuestack::utils::System::getLastModifiedTime(f);
+
+			if (initial) // we set the last modified for the inital load minus 1 to force addition
+				lastModificationTime -= 1;
+			else if (!initial && newColorMap == nullptr) // this happens if a new file has been added
+			{
+				tissuestack::logging::TissueStackLogger::instance()->info(
+					"Adding new color map file '%s'", f.c_str());
+
+				newColorMap =
+					const_cast<tissuestack::imaging::TissueStackColorMap *>(
+					tissuestack::imaging::TissueStackColorMap::fromFile(f));
+				lastModificationTime -= 1;
+			}
+
+			// do the time comparison and decide to not update if there was no file change
+			const time_t latestModification =
+				tissuestack::utils::System::hasFileBeenModifiedSince(f, lastModificationTime);
+
+			if (latestModification == 0) // skip
+				continue;
+
+			newColorMap->setUpdateFlag(true);
+			if (!initial) newColorMap->updateColorMap(f);
+			this->addOrReplaceColorMap(newColorMap);
+			newColorMap->setUpdateFlag(false);
+			newColorMap->setLastModified( // we set the last modified for added files but deduct 1 so that we force addition
+					latestModification);
+		} catch (std::exception & bad)
+		{
+			if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
+				tissuestack::logging::TissueStackLogger::instance()->error(
+					"Could not load color map file '%s' for the following reason:\n%s\n", f.c_str(), bad.what());
+		}
+	}
+
+	if (!tissuestack::imaging::TissueStackLabelLookupStore::doesInstanceExist())
+		return;
+
+	// add to that the discrete color maps of the label lookups
+	const std::unordered_map<std::string, const tissuestack::imaging::TissueStackLabelLookup *> lookups =
+			tissuestack::imaging::TissueStackLabelLookupStore::instance()->getAllLabelLookups();
+
+	// walk through entries and copy the colormap
+	for (auto lookup : lookups)
+	{
+		try
+		{
+			tissuestack::imaging::TissueStackColorMap * newColorMap =
+				const_cast<tissuestack::imaging::TissueStackColorMap *>(
+					this->findColorMap(lookup.second->getLabelLookupId()));
+
+			time_t lastModificationTime =
+					newColorMap && newColorMap->getLastModified() > 0 ?
+							newColorMap->getLastModified() :
+					lookup.second->getLastModified();
+
+			if (newColorMap == nullptr)
+				lastModificationTime -= 1;
+
+			// do the time comparison and decide to not update if there was no file change
+			const time_t latestModification =
+				tissuestack::utils::System::hasFileBeenModifiedSince(lookup.second->getLabelLookupId(true), lastModificationTime);
+
+			if (latestModification == 0) // skip
+				continue;
+
+			this->addOrReplaceColorMap(lookup.second, latestModification);
+		} catch (std::exception & bad)
+		{
+			if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
+				tissuestack::logging::TissueStackLogger::instance()->error(
+					"Could not load color map from lookup file '%s' for the following reason:\n%s\n",
+					lookup.second->getLabelLookupId().c_str(), bad.what());
+		}
+	}
 }
 
 const std::string tissuestack::imaging::TissueStackColorMapStore::toJson(bool originalColorMapContents) const

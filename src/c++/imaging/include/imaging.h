@@ -167,15 +167,23 @@ namespace tissuestack
 				const std::array<const unsigned short, 3> getRGBMapForGrayValue(const unsigned short & gray) const;
 				const std::string getColorMapId() const;
 				void dumpColorMapToDebugLog() const;
+				const bool isBeingUpdated() const;
 				const std::string toJson(bool originalColorMapContents = true) const;
+				const time_t getLastModified() const;
 			private:
+				friend class TissueStackColorMapStore;
 				const std::string _colormap_id;
 				std::array<unsigned short[3], 256> _gray_indexed_rgb_mapping;
+				void updateColorMap(const std::string & filename);
+				void setUpdateFlag(const bool is_being_Updated);
 				explicit TissueStackColorMap(const std::string & filename);
 				explicit TissueStackColorMap(const TissueStackLabelLookup * label_lookup_file);
 				void marshallColorMapContentsIntoJson(const std::vector<std::array<float, 4> > & colorMapRanges);
 				void marshallLookupFileContentsIntoJson();
+				void setLastModified(const time_t lastModified);
 				std::string _colorMapFileContentAsJson;
+				bool _is_being_Updated = false;
+				time_t _last_Modification = 0;
 		};
 
 		class TissueStackColorMapStore final
@@ -188,11 +196,15 @@ namespace tissuestack
 		    	void purgeInstance();
 		    	const TissueStackColorMap * findColorMap(const std::string & id) const;
 		    	void addOrReplaceColorMap(const TissueStackColorMap * colorMap);
-		    	void addOrReplaceColorMap(const TissueStackLabelLookup * labelLookup);
+		    	void addOrReplaceColorMap(
+		    		const TissueStackLabelLookup * labelLookup,
+					const time_t lastModified);
 		    	const std::string toJson(bool originalColorMapContents = true) const;
 		    	void dumpAllColorMapsToDebugLog() const;
 			private:
+				friend class tissuestack::execution::TissueStackColorMapAndLookupUpdater;
 		    	TissueStackColorMapStore();
+				void updateColorMapStore(bool initial=false);
 		    	std::unordered_map<std::string, const TissueStackColorMap *> _color_maps;
 				static TissueStackColorMapStore * _instance;
 	 	};

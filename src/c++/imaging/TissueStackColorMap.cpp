@@ -19,6 +19,11 @@
 
 tissuestack::imaging::TissueStackColorMap::TissueStackColorMap(const std::string & filename) : _colormap_id(filename)
 {
+	this->updateColorMap(filename);
+}
+
+void tissuestack::imaging::TissueStackColorMap::updateColorMap(const std::string & filename)
+{
 	if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
 		tissuestack::logging::TissueStackLogger::instance()->info("Loading color map file %s\n", filename.c_str());
 
@@ -161,6 +166,16 @@ tissuestack::imaging::TissueStackColorMap::TissueStackColorMap(const tissuestack
 			label_lookup_file->getLabelLookupId().c_str());
 }
 
+const bool tissuestack::imaging::TissueStackColorMap::isBeingUpdated() const
+{
+	return this->_is_being_Updated;
+}
+
+void tissuestack::imaging::TissueStackColorMap::setUpdateFlag(const bool is_being_Updated)
+{
+	this->_is_being_Updated = is_being_Updated;
+}
+
 void tissuestack::imaging::TissueStackColorMap::preFillColorMapArray(std::array<unsigned short[3], 256> & color_map_array)
 {
 	unsigned short i=0;
@@ -173,6 +188,9 @@ void tissuestack::imaging::TissueStackColorMap::preFillColorMapArray(std::array<
 
 const std::array<const unsigned short, 3> tissuestack::imaging::TissueStackColorMap::getRGBMapForGrayValue(const unsigned short & gray) const
 {
+	while (this->isBeingUpdated())
+		usleep(10000); // 10,000 micro seconds /10 milli seconds
+
 	const std::array<const unsigned short, 3> ret =
 			{{
 				this->_gray_indexed_rgb_mapping[gray][0],
@@ -192,6 +210,16 @@ const tissuestack::imaging::TissueStackColorMap * tissuestack::imaging::TissueSt
 	if (labelLookup == nullptr) return nullptr;
 
 	return new tissuestack::imaging::TissueStackColorMap(labelLookup);
+}
+
+const time_t tissuestack::imaging::TissueStackColorMap::getLastModified() const
+{
+	return this->_last_Modification;
+}
+
+void tissuestack::imaging::TissueStackColorMap::setLastModified(const time_t lastModified)
+{
+	this->_last_Modification = lastModified;
 }
 
 void tissuestack::imaging::TissueStackColorMap::marshallColorMapContentsIntoJson(
@@ -241,6 +269,9 @@ const std::string tissuestack::imaging::TissueStackColorMap::getColorMapId() con
 
 const std::string tissuestack::imaging::TissueStackColorMap::toJson(bool originalColorMapContents) const
 {
+	while (this->isBeingUpdated())
+		usleep(10000); // 10,000 micro seconds /10 milli seconds
+
 	if (originalColorMapContents)
 		return this->_colorMapFileContentAsJson;
 
@@ -264,6 +295,9 @@ void tissuestack::imaging::TissueStackColorMap::dumpColorMapToDebugLog() const
 {
 	if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
 		tissuestack::logging::TissueStackLogger::instance()->debug("Dumping Color Map: %s\n", this->getColorMapId().c_str());
+
+	if (this->isBeingUpdated())
+		tissuestack::logging::TissueStackLogger::instance()->debug("Color Map is being updated at the moment!");
 
 	for (auto rgb : this->_gray_indexed_rgb_mapping)
 	{

@@ -53,9 +53,9 @@ void tissuestack::execution::TissueStackColorMapAndLookupUpdater::init()
 				if (this->hasNoTasksQueued())
 					break;
 
-				// TODO: do synchronization
+				// do synchronization of first label lookup, then colormap
 				tissuestack::imaging::TissueStackLabelLookupStore::instance()->updateLabelLookupStore();
-				// TODO: synchronize colormaps with flags update and last modified
+				tissuestack::imaging::TissueStackColorMapStore::instance()->updateColorMapStore();
 			}
 			tissuestack::logging::TissueStackLogger::instance()->info(
 					"Color Map and Lookup Values Updater Thread %u is about to stop working!\n",
