@@ -129,26 +129,7 @@ TissueStack.Canvas.prototype = {
 
 		// set rgb values and transparency
 		return {red: dataForPixel.data[0], green: dataForPixel.data[1], blue: dataForPixel.data[2], t: dataForPixel.data[3], label: null};
-	},/* deprecated
-	getOriginalPixelValue : function(value) {
-		if (typeof(value) != 'object') return;
-
-		// lookup value
-		if (TissueStack.dataSetStore.datasets[this.data_extent.data_id].lookupValues) {
-			var label = TissueStack.dataSetStore.datasets[this.data_extent.data_id].
-					lookupValues["" + value.r + "/" + value.g + "/" + value.b];
-			if (typeof(label) != 'undefined')	value['l'] = label;
-		}
-		
-		// map back to original value range (easy since we always have a positive 0-255 range in the canvas)
-		var originalRange = Math.abs(this.value_range_max) - this.value_range_min; 
-		
-		for(var rgbVal in value)
-			if (rgbVal != 't' && rgbVal != 'l')
-				value[rgbVal] = this.value_range_min + (value[rgbVal] * (originalRange / 255));
-
-		return value;
-	},*/
+	},
 	changeToZoomLevel : function(zoom_level) {
 		if (typeof(zoom_level) != 'number') {
 			return;
@@ -160,8 +141,15 @@ TissueStack.Canvas.prototype = {
 
 		var centerAfterZoom = this.getNewUpperLeftCornerForPointZoom({x: this.cross_x, y: this.cross_y}, zoom_level);
 
-		this.getDataExtent().changeToZoomLevel(zoom_level);
+        this.getDataExtent().changeToZoomLevel(zoom_level);
 
+        /*
+        if (this.getDataExtent().one_to_one_x != this.getDataExtent().origX)
+            centerAfterZoom.x *= (this.getDataExtent().origX / this.getDataExtent().one_to_one_x);
+        if (this.getDataExtent().one_to_one_y != this.getDataExtent().origY)
+            centerAfterZoom.y *= (this.getDataExtent().origY / this.getDataExtent().one_to_one_y);
+        */  
+        
 		if (centerAfterZoom) this.setUpperLeftCorner(centerAfterZoom.x, centerAfterZoom.y);
 		
 		// update displayed info

@@ -14,7 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with TissueStack.  If not, see <http://www.gnu.org/licenses/>.
  */
-TissueStack.Extent = function (data_id, is_tiled, zoom_level, plane, max_slices, x, y, zoom_levels, worldCoordinatesTransformationMatrix, res_mm) {
+TissueStack.Extent = function (
+		data_id, is_tiled, zoom_level, plane, max_slices, x, y, origX, origY,
+		zoom_levels, worldCoordinatesTransformationMatrix, res_mm) {
 	this.setDataId(data_id);
 	this.setIsTiled(is_tiled);
 	this.setZoomLevel(zoom_level);
@@ -22,7 +24,7 @@ TissueStack.Extent = function (data_id, is_tiled, zoom_level, plane, max_slices,
 	this.max_slices = max_slices;
 	this.setSlice(Math.floor(max_slices / 2));
 	this.setDimensions(x, y);
-	this.rememberOneToOneZoomLevel(this.x, this.y, this.zoom_level);
+	this.rememberOneToOneZoomLevel(this.x, this.y, origX, origY, this.zoom_level);
 	this.setZoomLevels(zoom_levels);
 	this.worldCoordinatesTransformationMatrix = worldCoordinatesTransformationMatrix;
 	if (typeof(res_mm) == 'number')  this.resolution_mm = res_mm;
@@ -33,8 +35,11 @@ TissueStack.Extent.prototype = {
 	is_tiled : false,
 	tile_size : 256,	
 	x : 0,
+	origX : 0,
 	y : 0,
-	one_to_one_y : 0,
+	origY : 0,
+	one_to_one_x : 0,
+    one_to_one_y : 0,
 	data_id: "",
 	one_to_one_zoom_level : 0,
 	zoom_level : 0,
@@ -98,13 +103,30 @@ TissueStack.Extent.prototype = {
 			throw new Error("y has to be a non-negative integer");
 		}
 		this.y = Math.floor(y);
-	}, rememberOneToOneZoomLevel : function(x, y, zoom_level) {
+	}, rememberOneToOneZoomLevel : function(x, y, origX, origY, zoom_level) {
 		if (typeof(x) != "number" || Math.floor(x) < 0 || typeof(y) != "number" || Math.floor(y) < 0 || typeof(zoom_level) != "number" || Math.floor(zoom_level) < 0) {
 			return;
 		}
 		this.one_to_one_zoom_level = zoom_level;
 		this.one_to_one_x = x;
 		this.one_to_one_y = y;
+
+		// 'original' x/y without anisotropy
+		if (typeof(origX) == "string") {
+			origX = parseInt(origX);
+		}
+		
+		if (typeof(origX) != "number" || Math.floor(origX) < 0) {
+			origX = this.one_to_one_x;
+		}
+		this.origX = Math.floor(origX);
+		if (typeof(origY) == "string") {
+			origY = parseInt(origY);
+		}
+		if (typeof(origY) != "number" || Math.floor(origY) < 0) {
+			origY = this.one_to_one_y;
+		}
+		this.origY = Math.floor(origY);
 	}, changeToZoomLevel : function(zoom_level) {
 		var zoom_level_factor = this.getZoomLevelFactorForZoomLevel(zoom_level);
 		
@@ -210,10 +232,14 @@ TissueStack.Extent.prototype = {
 		
 		// now we'll have to correct x and y according to their zoom level to get the 1:1 pixel Coordinates which can then be transformed
 		worldCoords.x = worldCoords.x * (this.one_to_one_x / this.x);
-		worldCoords.y = worldCoords.y * (this.one_to_one_y / this.y);
+        if (this.one_to_one_x != this.origX)
+            worldCoords.x *= (this.origX / this.one_to_one_x);
+		worldCoords.y = this.one_to_one_y - (worldCoords.y * (this.one_to_one_y / this.y));
+        if (this.one_to_one_y != this.origY)
+            worldCoords.y *= ( this.origY / this.one_to_one_y);
 
 		worldCoords = TissueStack.Utils.transformPixelCoordinatesToWorldCoordinates(
-				[worldCoords.x, this.one_to_one_y - worldCoords.y, worldCoords.z, 1], 
+				[worldCoords.x, worldCoords.y, worldCoords.z, 1], 
 				this.worldCoordinatesTransformationMatrix);
 		if (!worldCoords) return null;
 
@@ -250,6 +276,11 @@ TissueStack.Extent.prototype = {
 		
 		pixelCoords = {x: pixelCoords[0], y: pixelCoords[1], z: pixelCoords[2]};
 		
+        if (this.one_to_one_x != this.origX)
+            pixelCoords.x *= (this.one_to_one_x / this.origX);
+        if (this.one_to_one_y != this.origY)
+            pixelCoords.y *= (this.one_to_one_y / this.origY);
+        
 		// now we have to correct x and y according to their zoom level
 		pixelCoords.z = pixelCoords.z;
 		pixelCoords.x = pixelCoords.x * (this.x / this.one_to_one_x);

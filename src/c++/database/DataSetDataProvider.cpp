@@ -183,6 +183,7 @@ void tissuestack::database::DataSetDataProvider::findAndAddPlanes(
 			i_results["transformation_matrix"].is_null() ? "" : i_results["transformation_matrix"].as<std::string>());
 
 		imageData->addDimension(rec);
+		imageData->addStep(i_results["step"].as<float>());
 		width = i_results["max_x"].as<unsigned int>();
 		height = i_results["max_y"].as<unsigned int>();
 	}
@@ -190,7 +191,7 @@ void tissuestack::database::DataSetDataProvider::findAndAddPlanes(
 	if (imageData->getNumberOfDimensions() == 1) // 2D plane
 	{
 		const_cast<tissuestack::imaging::TissueStackDataDimension *>(
-			imageData->getDimensionByOrderIndex(0))->setWidthAndHeight(width, height);
+			imageData->getDimensionByOrderIndex(0))->setWidthAndHeight(width, height, width, height);
 		return;
 	}
 
@@ -270,12 +271,13 @@ const unsigned short tissuestack::database::DataSetDataProvider::addDataSet(
 
 	// dimensions/planes table insert
 	const std::vector<std::string> dims = dataSet->getDimensionOrder();
+	unsigned int i = 0;
 	for (auto d : dims)
 	{
 		const tissuestack::imaging::TissueStackDataDimension * dim =
 			dataSet->getDimensionByLongName(d);
 		tmpSql << "INSERT INTO dataset_planes (id, dataset_id, is_tiled, zoom_levels, name,"
-			<< " max_x, max_y, max_slices, one_to_one_zoom_level, transformation_matrix)"
+			<< " max_x, max_y, max_slices, one_to_one_zoom_level, step, transformation_matrix)"
 			<< " VALUES(DEFAULT,"
 			<< db_id << ",'"
 			<< (dataSet->isTiled() ? "T" : "F")
@@ -286,6 +288,7 @@ const unsigned short tissuestack::database::DataSetDataProvider::addDataSet(
 			<< "," << std::to_string(dim->getHeight())
 			<< "," << std::to_string(dim->getNumberOfSlices())
 			<< "," << std::to_string(dataSet->getOneToOneZoomLevel())
+			<< "," << ((i < dataSet->_steps.size()) ? std::to_string(dataSet->_steps[i]) : "1")
 			<< (dim->getTransformationMatrix().empty() ?
 					", NULL" :
 					std::string(",'") + dim->getTransformationMatrix() + "'");
@@ -293,6 +296,7 @@ const unsigned short tissuestack::database::DataSetDataProvider::addDataSet(
 		sqls.push_back(tmpSql.str());
 		tmpSql.str("");
 		tmpSql.clear();
+		i++;
 	}
 
 	return tissuestack::database::TissueStackPostgresConnector::instance()->executeTransaction(sqls);

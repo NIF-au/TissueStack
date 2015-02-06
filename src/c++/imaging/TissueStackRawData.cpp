@@ -223,7 +223,7 @@ void tissuestack::imaging::TissueStackRawData::parseHeader(const std::string & h
 				1,
 				dims[0]*dims[1]);
 		this->addDimension(TwoDPlane);
-		TwoDPlane->setWidthAndHeight(dims[0], dims[1]);
+		TwoDPlane->setWidthAndHeight(dims[0], dims[1], dims[0], dims[1]);
 		return;
 	}
 

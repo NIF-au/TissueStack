@@ -76,6 +76,7 @@ CREATE TABLE dataset_planes
   max_slices INTEGER NOT NULL,
   zoom_levels TEXT NOT NULL,
   one_to_one_zoom_level INTEGER NOT NULL,
+  step NUMERIC(18,10) NOT NULL DEFAULT 1,
   transformation_matrix TEXT,
   CONSTRAINT dataset_planes_pk PRIMARY KEY (id),
   CONSTRAINT dataset_planes_fk FOREIGN KEY (dataset_id)

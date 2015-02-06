@@ -230,12 +230,18 @@ namespace tissuestack
 				const std::string getTransformationMatrix() const;
 				const unsigned int getWidth() const;
 				const unsigned int getHeight() const;
+				const unsigned int getAnisotropicWidth() const;
+				const unsigned int getAnisotropicHeight() const;
+				const float getIsotropyFactor() const;
+				void setIsotropyFactor(const float isotropy_factor);
 				void dumpDataDimensionInfoIntoDebugLog() const;
 				void setSliceSizeFromGivenWidthAndHeight();
 			private:
 				friend class TissueStackImageData;
 				friend class TissueStackRawData;
-				void setWidthAndHeight(const unsigned int width, const unsigned int height);
+				void setWidthAndHeight(
+						const unsigned int width, const unsigned int height,
+						const unsigned int anisotropic_width, const unsigned int anisotropic_height);
 				void setOffSet(const unsigned long long int offSet);
 				friend class tissuestack::database::DataSetDataProvider;
 				void setTransformationMatrix(const std::string transformationMatrix);
@@ -247,6 +253,9 @@ namespace tissuestack
 				unsigned int _width;
 				unsigned int _height;
 				std::string _transformationMatrix;
+				float _isotropy_factor = 1;
+				unsigned int _anisotropic_width;
+				unsigned int _anisotropic_height;
 		};
 
 		class TissueStackImageData
@@ -326,6 +335,7 @@ namespace tissuestack
 				inline const std::string setTransformationMatrixByDimension0(
 						const short step_index, const short index);
 				inline const short getIndexForPlane(const char plane) const;
+				inline void setIsotropyFactors();
 				void openFileHandle(bool close_open_handle = false);
 				void closeFileHandle();
 				void dumpDataDimensionInfoIntoDebugLog() const;

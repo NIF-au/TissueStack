@@ -159,8 +159,8 @@ Image * tissuestack::imaging::UncachedImageExtraction::applyPostExtractionTasks(
 				request->getContrastMaximum(),
 				image->getImageDataMinumum(),
 				image->getImageDataMaximum(),
-				actualDimension->getWidth(),
-				actualDimension->getHeight());
+				actualDimension->getAnisotropicWidth(),
+				actualDimension->getAnisotropicHeight());
 	}
 
 	// timeout/shutdown check
@@ -179,8 +179,8 @@ Image * tissuestack::imaging::UncachedImageExtraction::applyPostExtractionTasks(
 		this->applyColorMap(
 				img,
 				request->getColorMapName(),
-				actualDimension->getWidth(),
-				actualDimension->getHeight());
+				actualDimension->getAnisotropicWidth(),
+				actualDimension->getAnisotropicHeight());
 	}
 
 	// timeout/shutdown check
@@ -196,8 +196,8 @@ Image * tissuestack::imaging::UncachedImageExtraction::applyPostExtractionTasks(
 		img =
 			this->scaleImage(
 				img,
-				static_cast<const float>(actualDimension->getWidth()) * request->getScaleFactor(),
-				static_cast<const float>(actualDimension->getHeight()) * request->getScaleFactor());
+				static_cast<const float>(actualDimension->getAnisotropicWidth()) * request->getScaleFactor(),
+				static_cast<const float>(actualDimension->getAnisotropicHeight()) * request->getScaleFactor());
 
 	// timeout/shutdown check
 	if (request->hasExpired())
@@ -212,8 +212,8 @@ Image * tissuestack::imaging::UncachedImageExtraction::applyPostExtractionTasks(
 		img =
 			this->degradeImage0(
 				img,
-				static_cast<const float>(actualDimension->getWidth()) * request->getScaleFactor(),
-				static_cast<const float>(actualDimension->getHeight()) * request->getScaleFactor(),
+				static_cast<const float>(actualDimension->getAnisotropicWidth()) * request->getScaleFactor(),
+				static_cast<const float>(actualDimension->getAnisotropicHeight()) * request->getScaleFactor(),
 				request->getQualityFactor());
 
 	// we don't have a preview => chop up into tiles
@@ -374,6 +374,11 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::createImageFromDat
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"Could not constitute Image!");
 	}
+
+	// adjust image size in the anisotropic case ...
+	if (actualDimension->getWidth() != actualDimension->getAnisotropicWidth() ||
+		actualDimension->getHeight() != actualDimension->getAnisotropicHeight())
+		img = this->scaleImage(img, actualDimension->getAnisotropicWidth(), actualDimension->getAnisotropicHeight());
 
 	if (image->getFormat() == tissuestack::imaging::FORMAT::RAW) return img;
 

@@ -106,7 +106,12 @@ tissuestack::imaging::TissueStackImageData::TissueStackImageData(
 
 void tissuestack::imaging::TissueStackImageData::initializeDimensions(const bool omitTransformationMatrix)
 {
+	// fallback identity matrix for missing transformation info
 	const std::string identity = this->constructIdentityMatrixForDimensionNumber();
+
+	this->setIsotropyFactors();
+
+	// set width and height
 	for (auto dim : this->_dim_order)
 	{
 		this->setWidthAndHeightByDimension(dim);
@@ -118,6 +123,47 @@ void tissuestack::imaging::TissueStackImageData::initializeDimensions(const bool
 			const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimensionByLongName(dim));
 		if (d->getTransformationMatrix().empty())
 			d->setTransformationMatrix(identity);
+	}
+}
+void tissuestack::imaging::TissueStackImageData::setIsotropyFactors()
+{
+	// set isotropy factor which is all 1s if isotropic
+	// if anisotropic, there will be at least 1 (or more) dimension
+	//which will be the 'standard' to relate the others to
+	float base_value = 1;
+
+	std::vector<float> copyOfSteps = this->_steps;
+	std::sort (copyOfSteps.begin(), copyOfSteps.end());
+
+	float prvValue = -1;
+	for (auto step : copyOfSteps)
+	{
+		if (step == prvValue)
+		{
+			base_value = static_cast<float>(fabs(step));
+			break;
+		}
+		prvValue = static_cast<float>(fabs(step));
+	}
+	unsigned int numberOfBaseValues = 0;
+	for (auto step : copyOfSteps)
+		if (step == base_value)
+			numberOfBaseValues++;
+
+	if (numberOfBaseValues == copyOfSteps.size() || copyOfSteps.size() == 1)
+		base_value = 1;
+	else // take smallest value
+		base_value = copyOfSteps[0];
+
+	// now that we have the base value to compare to, let's compute the ratios
+	for (unsigned int i=0; i < this->_steps.size(); i++)
+	{
+		if (base_value == 1 || this->_steps[i] == base_value)
+			const_cast<tissuestack::imaging::TissueStackDataDimension *>(
+				this->getDimensionByOrderIndex(i))->setIsotropyFactor(1);
+		else
+			const_cast<tissuestack::imaging::TissueStackDataDimension *>(
+				this->getDimensionByOrderIndex(i))->setIsotropyFactor(static_cast<float>(fabs(this->_steps[i])) / base_value);
 	}
 }
 
@@ -163,6 +209,9 @@ inline void tissuestack::imaging::TissueStackImageData::setWidthAndHeightByDimen
 	unsigned int width = 0;
 	unsigned int height = 0;
 
+	unsigned int anisotropicWidth = 0;
+	unsigned int anisotropicHeight = 0;
+
 	tissuestack::imaging::TissueStackDataDimension * widthDimension = nullptr;
 	tissuestack::imaging::TissueStackDataDimension * heightDimension = nullptr;
 
@@ -204,10 +253,29 @@ inline void tissuestack::imaging::TissueStackImageData::setWidthAndHeightByDimen
 		THROW_TS_EXCEPTION(
 				tissuestack::common::TissueStackApplicationException, "Dimension cannot be matched to x,y or z!");
 
-	if (widthDimension) width = widthDimension->getNumberOfSlices();
-	if (heightDimension) height = heightDimension->getNumberOfSlices();
+	if (widthDimension)
+	{
+		width = widthDimension->getNumberOfSlices();
+		if (widthDimension->getIsotropyFactor() == 1)
+			anisotropicWidth = width;
+		else
+			anisotropicWidth =
+				static_cast<unsigned int>(
+					static_cast<float>(width) * widthDimension->getIsotropyFactor());
+	}
+	if (heightDimension)
+	{
+		height = heightDimension->getNumberOfSlices();
+		if (heightDimension->getIsotropyFactor() == 1)
+			anisotropicHeight = height;
+		else
+			anisotropicHeight =
+				static_cast<unsigned int>(
+					static_cast<float>(height) * heightDimension->getIsotropyFactor());
+	}
 
-	presentDimension->setWidthAndHeight(width, height);
+	presentDimension->setWidthAndHeight(
+		width, height, anisotropicWidth, anisotropicHeight);
 }
 
 inline void tissuestack::imaging::TissueStackImageData::setTransformationMatrixByDimension(const std::string & dimension)
@@ -506,8 +574,10 @@ const std::string tissuestack::imaging::TissueStackImageData::toJson(
 			if (j != 0) json << ",";
 			json << "{ \"name\": \"" << dim->getName()[0] << "\"";
 			json << ", \"maxSlices\": " << std::to_string(dim->getNumberOfSlices()-1);
-			json << ", \"maxX\": " << std::to_string(dim->getWidth());
-			json << ", \"maxY\": " << std::to_string(dim->getHeight());
+			json << ", \"maxX\": " << std::to_string(dim->getAnisotropicWidth());
+			json << ", \"maxY\": " << std::to_string(dim->getAnisotropicHeight());
+			json << ", \"origX\": " << std::to_string(dim->getWidth());
+			json << ", \"origY\": " << std::to_string(dim->getHeight());
 			json << ", \"isTiled\": " << (this->_is_tiled ? "true" : "false");
 			json << ", \"oneToOneZoomLevel\": " << std::to_string(this->_one_to_one_zoom_level);
 			json << ", \"resolutionMm\": " << std::to_string(this->getResolutionMm());

@@ -42,13 +42,18 @@ const std::string tissuestack::imaging::TissueStackDataDimension::getName() cons
 	return this->_name;
 }
 
-void tissuestack::imaging::TissueStackDataDimension::setWidthAndHeight(const unsigned int width, const unsigned int height)
+void tissuestack::imaging::TissueStackDataDimension::setWidthAndHeight(
+	const unsigned int width, const unsigned int height,
+	const unsigned int anisotropic_width, const unsigned int anisotropic_height)
 {
-	if (width <=0 || height <=0)
+	if (width <=0 || height <=0 || anisotropic_width <=0 || anisotropic_height <=0)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"DataDimension Initialization with an invalid width/height of less than or equal to 0");
 	this->_width = width;
 	this->_height = height;
+	this->_anisotropic_width = anisotropic_width;
+	this->_anisotropic_height = anisotropic_height;
+
 }
 
 void tissuestack::imaging::TissueStackDataDimension::setTransformationMatrix(const std::string transformationMatrix)
@@ -66,9 +71,20 @@ const unsigned int tissuestack::imaging::TissueStackDataDimension::getWidth() co
 	return this->_width;
 }
 
+const unsigned int tissuestack::imaging::TissueStackDataDimension::getAnisotropicWidth() const
+{
+	return this->_anisotropic_width;
+}
+
+
 const unsigned int tissuestack::imaging::TissueStackDataDimension::getHeight() const
 {
 	return this->_height;
+}
+
+const unsigned int tissuestack::imaging::TissueStackDataDimension::getAnisotropicHeight() const
+{
+	return this->_anisotropic_height;
 }
 
 const unsigned long long int tissuestack::imaging::TissueStackDataDimension::getNumberOfSlices() const
@@ -105,3 +121,14 @@ void tissuestack::imaging::TissueStackDataDimension::setOffSet(const unsigned lo
 {
 	this->_offset = offSet;
 }
+
+const float tissuestack::imaging::TissueStackDataDimension::getIsotropyFactor() const
+{
+	return this->_isotropy_factor;
+}
+
+void tissuestack::imaging::TissueStackDataDimension::setIsotropyFactor(const float isotropy_factor)
+{
+	this->_isotropy_factor = isotropy_factor;
+}
+

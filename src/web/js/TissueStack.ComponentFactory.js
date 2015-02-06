@@ -94,6 +94,8 @@ TissueStack.ComponentFactory = {
 					dataForPlane.maxSlices,
 					dataForPlane.maxX,
 					dataForPlane.maxY,
+					dataForPlane.origX,
+					dataForPlane.origY,
 					zoomLevels,
 					transformationMatrix,
 					dataForPlane.resolutionMm);
