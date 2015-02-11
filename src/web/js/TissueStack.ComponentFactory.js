@@ -561,8 +561,9 @@ TissueStack.ComponentFactory = {
         dataSet.planes[sideViewPlaneId].events.changeSliceForPlane(dataSet.planes[sideViewPlaneId].data_extent.slice);
         dataSet.planes[sideViewPlaneId].changeToZoomLevel(dataSet.planes[mainViewPlaneId].getDataExtent().zoom_level);
         dataSet.planes[mainViewPlaneId].changeToZoomLevel(zoomLevelSideView);
+        
         try {
-            $("#" + div + "_canvas_main_slider").val(dataSet.planes[sideViewPlaneId].data_extent.slice).slider("refresh");
+            $("#" + div + "_canvas_main_slider").val(dataSet.planes[sideViewPlaneId].data_extent.slice);
         } catch(ign) {}
 
         dataSet.planes[sideViewPlaneId].updateExtentInfo(dataSet.planes[sideViewPlaneId].getDataExtent().getExtentCoordinates());

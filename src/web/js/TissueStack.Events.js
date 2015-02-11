@@ -185,9 +185,10 @@ TissueStack.Events.prototype = {
 			if (delta > 0) _this.canvas.data_extent.slice++; else  _this.canvas.data_extent.slice--;
 			
 			var slider = $("#" + _this.canvas.dataset_id + "_canvas_main_slider");
-			slider.attr("value", _this.canvas.data_extent.slice);
-			slider.blur();
-			
+			try {
+				slider.val(_this.canvas.data_extent.slice);
+            } catch(ignored) {}
+            			
 			_this.changeSliceForPlane(_this.canvas.data_extent.slice);
 			setTimeout(function(){_this.updateCoordinateDisplay();}, 500);
 			e.stopPropagation();

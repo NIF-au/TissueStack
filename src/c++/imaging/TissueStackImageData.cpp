@@ -583,8 +583,9 @@ const std::string tissuestack::imaging::TissueStackImageData::toJson(
 			json << ", \"resolutionMm\": " << std::to_string(this->getResolutionMm());
 			json << ", \"transformationMatrix\": \"" << dim->getTransformationMatrix() << "\"";
 			json << ", \"zoomLevels\": \"" << this->getZoomLevelsAsJson() << "\"";
-			json << ", \"valueRangeMin\": \"" << std::to_string(this->getImageDataMinumum()) << "\"";
-			json << ", \"valueRangeMax\": \"" << std::to_string(this->getImageDataMaximum()) << "\"";
+			json << ", \"valueRangeMin\": " << std::to_string(this->getImageDataMinumum());
+			json << ", \"valueRangeMax\": " << std::to_string(this->getImageDataMaximum());
+			json << ", \"step\": " << std::to_string(this->getSteps()[j]);
 			json << "}";
 			j++;
 		}

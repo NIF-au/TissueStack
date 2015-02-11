@@ -179,7 +179,7 @@ TissueStack.Extent.prototype = {
 		
 		return {x: Math.floor(this.one_to_one_x * zoomLevelFactor), y: Math.floor(this.one_to_one_y * zoomLevelFactor)};
 	}, setSliceWithRespectToZoomLevel : function(slice) {
-		this.slice = slice / this.zoom_level_factor;
+		this.slice = Math.round(slice / this.zoom_level_factor);
 		
 		var canvasSlider = $("#" + (this.canvas.dataset_id == "" ? "canvas_" : this.canvas.dataset_id + "_canvas_") + "main_slider");
 		if (canvasSlider.length == 0) {
@@ -198,8 +198,9 @@ TissueStack.Extent.prototype = {
 			
 			if (mainCanvas == this.plane && canvasSlider && canvasSlider.length > 0) {
 				slice = this.slice < 0 ? this.max_slices : (this.slice > this.max_slices ? 0 : this.slice);
-				canvasSlider.attr("value",slice > this.max_slices ? this.max_slices : slice);
-				canvasSlider.blur();
+				try {
+					canvasSlider.val(slice > this.max_slices ? this.max_slices : slice);
+                } catch(ignored) {}
 			}
 		}
 	}, getCenter : function () {
