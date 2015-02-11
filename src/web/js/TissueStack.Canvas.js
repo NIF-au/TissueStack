@@ -162,7 +162,8 @@ TissueStack.Canvas.prototype = {
 	getDataCoordinates : function(relative_mouse_coords) {
 		var relDataX = -1;
 		var relDataY = -1;
-		if (this.upper_left_x < 0 && relative_mouse_coords.x <= (this.upper_left_x + this.getDataExtent().x)) {
+
+        if (this.upper_left_x < 0 && relative_mouse_coords.x <= (this.upper_left_x + this.getDataExtent().x)) {
 			relDataX = Math.abs(this.upper_left_x) + relative_mouse_coords.x;
 		} else if (this.upper_left_x >= 0 && relative_mouse_coords.x >= this.upper_left_x && relative_mouse_coords.x <= this.upper_left_x + this.getDataExtent().x) {
 			relDataX = relative_mouse_coords.x - this.upper_left_x;
@@ -203,20 +204,22 @@ TissueStack.Canvas.prototype = {
 		return $("#" + this.canvas_id + "_cross_overlay");
 	},
 	getRelativeCrossCoordinates : function() {
-		var relCrossX = (this.cross_x > (this.upper_left_x + (this.getDataExtent().x - 1))) ? -(this.cross_x - (this.upper_left_x + (this.getDataExtent().x - 1))) : (this.getDataExtent().x -1) +  (this.upper_left_x - this.cross_x);
-		/*
-		var relCrossX = 
-			(this.cross_x > this.upper_left_x) ?
-					(this.cross_x > (this.upper_left_x + (this.getDataExtent().x - 1)) ? 
-							(this.upper_left_x + (this.getDataExtent().x - 1) - this.cross_x) : this.upper_left_x - this.cross_x) :	this.upper_left_x;
-		*/
-		var relCrossY = ((this.dim_y - this.cross_y) > this.upper_left_y) ? (this.upper_left_y - (this.dim_y - this.cross_y)) : ((this.getDataExtent().y - 1) + (this.upper_left_y - (this.getDataExtent().y - 1) - (this.dim_y - this.cross_y)));
-		if (this.upper_left_x < 0 && this.cross_x <= (this.upper_left_x + (this.getDataExtent().x - 1))) {
+        var data_extent_x = this.getDataExtent().x;
+        var data_extent_y = this.getDataExtent().y;
+
+        if (this.getDataExtent().one_to_one_x != this.getDataExtent().origX)
+            data_extent_x /= (this.getDataExtent().origX / this.getDataExtent().one_to_one_x);
+        if (this.getDataExtent().one_to_one_y != this.getDataExtent().origY)
+            data_extent_y /= (this.getDataExtent().origY / this.getDataExtent().one_to_one_y);
+		
+		var relCrossX = (this.cross_x > (this.upper_left_x + (data_extent_x - 1))) ? -(this.cross_x - (this.upper_left_x + (data_extent_x - 1))) : (data_extent_x -1) +  (this.upper_left_x - this.cross_x);
+		var relCrossY = ((this.dim_y - this.cross_y) > this.upper_left_y) ? (this.upper_left_y - (this.dim_y - this.cross_y)) : ((data_extent_y - 1) + (this.upper_left_y - (data_extent_y - 1) - (this.dim_y - this.cross_y)));
+		if (this.upper_left_x < 0 && this.cross_x <= (this.upper_left_x + (data_extent_x - 1))) {
 			relCrossX = Math.abs(this.upper_left_x) + this.cross_x;
-		} else if (this.upper_left_x >= 0 && this.cross_x >= this.upper_left_x && this.cross_x <= this.upper_left_x + (this.getDataExtent().x -1)) {
+		} else if (this.upper_left_x >= 0 && this.cross_x >= this.upper_left_x && this.cross_x <= this.upper_left_x + (data_extent_x -1)) {
 			relCrossX = this.cross_x - this.upper_left_x;
 		}
-		if (this.upper_left_y > 0 && this.upper_left_y - (this.getDataExtent().y-1) < this.dim_y && this.dim_y - this.cross_y <= this.upper_left_y && this.dim_y - this.cross_y >= this.upper_left_y - (this.getDataExtent().y -1)) {
+		if (this.upper_left_y > 0 && this.upper_left_y - (data_extent_y-1) < this.dim_y && this.dim_y - this.cross_y <= this.upper_left_y && this.dim_y - this.cross_y >= this.upper_left_y - (data_extent_y -1)) {
 			relCrossY = this.upper_left_y - (this.dim_y - this.cross_y);
 		}
 		
@@ -320,6 +323,14 @@ TissueStack.Canvas.prototype = {
 
 		if (typeof(sync) == 'boolean' && !sync) return;
 		
+        var aniso_factor_x = 1;
+        var aniso_factor_y = 1;
+
+        if (this.data_extent.one_to_one_x != this.data_extent.origX)
+            aniso_factor_x = (this.data_extent.one_to_one_x / this.data_extent.origX);
+        if (this.data_extent.one_to_one_y != this.data_extent.origY)
+            aniso_factor_y = (this.data_extent.one_to_one_y / this.data_extent.origY);
+        
 		// send message out to others that they need to redraw as well
 		canvas.trigger("sync", [this.data_extent.data_id,
 		                        this.dataset_id,
@@ -329,7 +340,9 @@ TissueStack.Canvas.prototype = {
 		                        this.getDataExtent().zoom_level,
 		                        this.getDataExtent().slice,
 		                        coords,
-		                        {max_x: this.getDataExtent().x, max_y: this.getDataExtent().y},
+		                        {max_x: this.getDataExtent().x, max_y: this.getDataExtent().y, 
+                                 aniso_factor_x : aniso_factor_x, aniso_factor_y: aniso_factor_y,
+                                 step: this.getDataExtent().step},
 								{x: this.upper_left_x, y: this.upper_left_y},
 								{x: this.cross_x, y: this.cross_y},
 								{x: this.dim_x, y: this.dim_y}

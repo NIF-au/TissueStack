@@ -191,6 +191,7 @@ TissueStack.DataSetOverlay.prototype = {
 								dataSetPlane.maxY,
 								dataForPlane.origX,
 								dataForPlane.origY,
+								dataForPlane.step,
 								zoomLevels,
 								transformationMatrix, 
 								dataSetPlane.resolutionMm);

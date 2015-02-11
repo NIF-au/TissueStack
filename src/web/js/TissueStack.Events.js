@@ -188,7 +188,7 @@ TissueStack.Events.prototype = {
 			try {
 				slider.val(_this.canvas.data_extent.slice);
             } catch(ignored) {}
-            			
+			
 			_this.changeSliceForPlane(_this.canvas.data_extent.slice);
 			setTimeout(function(){_this.updateCoordinateDisplay();}, 500);
 			e.stopPropagation();
@@ -246,7 +246,15 @@ TissueStack.Events.prototype = {
 			var upper_left_corner = {x: this.canvas.upper_left_x, y: this.canvas.upper_left_y};
 			var cross_coords = {x: this.canvas.cross_x, y: this.canvas.cross_y};
 			var canvas_dims = {x: this.canvas.dim_x, y: this.canvas.dim_y};
-			
+
+            var aniso_factor_x = 1;
+            var aniso_factor_y = 1;
+            
+            if (this.canvas.data_extent.one_to_one_x != this.canvas.data_extent.origX)
+                aniso_factor_x = (this.canvas.data_extent.one_to_one_x / this.canvas.data_extent.origX);
+            if (this.canvas.data_extent.one_to_one_y != this.canvas.data_extent.origY)
+                aniso_factor_y = (this.canvas.data_extent.one_to_one_y / this.canvas.data_extent.origY);
+
 			// queue events 
 			this.canvas.queue.addToQueue(
 					{	
@@ -258,7 +266,9 @@ TissueStack.Events.prototype = {
 						zoom_level : this.canvas.getDataExtent().zoom_level,
 						slice : this.canvas.getDataExtent().slice,
 						coords: relCoordinates,
-						max_coords_of_event_triggering_plane : {max_x: this.canvas.getDataExtent().x, max_y: this.canvas.getDataExtent().y},
+						max_coords_of_event_triggering_plane : 
+                            {max_x: this.canvas.getDataExtent().x, max_y: this.canvas.getDataExtent().y,
+                             aniso_factor_x: aniso_factor_x, aniso_factor_y: aniso_factor_y, step: this.canvas.getDataExtent().step},
 						upperLeftCorner : upper_left_corner,
 						crossCoords : cross_coords,
 						canvasDims : canvas_dims
@@ -274,7 +284,8 @@ TissueStack.Events.prototype = {
 						 	this.canvas.getDataExtent().zoom_level,
 						 	this.canvas.getDataExtent().slice,
 						 	this.canvas.getRelativeCrossCoordinates(),
-						 	{max_x: this.canvas.getDataExtent().x, max_y: this.canvas.getDataExtent().y},
+						 	    {max_x: this.canvas.getDataExtent().x, max_y: this.canvas.getDataExtent().y,
+                                aniso_factor_x: aniso_factor_x, aniso_factor_y: aniso_factor_y, step: this.canvas.getDataExtent().step},
 						 	upper_left_corner,
 						 	cross_coords,
 						 	canvas_dims
@@ -297,6 +308,14 @@ TissueStack.Events.prototype = {
 		var cross_coords = {x: this.canvas.cross_x, y: this.canvas.cross_y};
 		var canvas_dims = {x: this.canvas.dim_x, y: this.canvas.dim_y};
 		
+        var aniso_factor_x = 1;
+        var aniso_factor_y = 1;
+
+        if (this.canvas.data_extent.one_to_one_x != this.canvas.data_extent.origX)
+            aniso_factor_x = (this.canvas.data_extent.one_to_one_x / this.canvas.data_extent.origX);
+        if (this.canvas.data_extent.one_to_one_y != this.canvas.data_extent.origY)
+            aniso_factor_y = (this.canvas.data_extent.one_to_one_y / this.canvas.data_extent.origY);
+        
 		// queue events 
 		this.canvas.queue.addToQueue(
 				{	data_id : this.canvas.data_extent.data_id,
@@ -307,12 +326,13 @@ TissueStack.Events.prototype = {
 					zoom_level : this.canvas.getDataExtent().zoom_level,
 					slice : this.canvas.getDataExtent().slice,
 					coords: {x: 0, y: 0},
-					max_coords_of_event_triggering_plane : {max_x: this.canvas.getDataExtent().x, max_y: this.canvas.getDataExtent().y},
+					max_coords_of_event_triggering_plane : 
+                        {max_x: this.canvas.getDataExtent().x, max_y: this.canvas.getDataExtent().y,
+                        aniso_factor_x: aniso_factor_x, aniso_factor_y: aniso_factor_y, step: this.canvas.getDataExtent().step},
 					upperLeftCorner : upper_left_corner,
 					crossCoords : cross_coords,
 					canvasDims : canvas_dims
 				});
-		
 
 		// send message out to others that they need to redraw as well
 		this.canvas.getCanvasElement().trigger("sync", 
@@ -324,7 +344,8 @@ TissueStack.Events.prototype = {
 					 	this.canvas.getDataExtent().zoom_level,
 					 	this.canvas.getDataExtent().slice,
 					 	{x: 0, y: 0},
-					 	{max_x: this.canvas.getDataExtent().x, max_y: this.canvas.getDataExtent().y},
+					 	{max_x: this.canvas.getDataExtent().x, max_y: this.canvas.getDataExtent().y,
+					 	 aniso_factor_x: aniso_factor_x, aniso_factor_y: aniso_factor_y, step: this.canvas.getDataExtent().step},
 					 	upper_left_corner,
 					 	cross_coords,
 					 	canvas_dims
@@ -347,6 +368,14 @@ TissueStack.Events.prototype = {
 			this.canvas.queue.drawLowResolutionPreview(now);
 			this.canvas.queue.drawRequestAfterLowResolutionPreview(null, now);
 		}
+
+        var aniso_factor_x = 1;
+        var aniso_factor_y = 1;
+
+        if (this.canvas.data_extent.one_to_one_x != this.canvas.data_extent.origX)
+            aniso_factor_x = (this.canvas.data_extent.one_to_one_x / this.canvas.data_extent.origX);
+        if (this.canvas.data_extent.one_to_one_y != this.canvas.data_extent.origY)
+            aniso_factor_y = (this.canvas.data_extent.one_to_one_y / this.canvas.data_extent.origY);
 		
 		// send message out to others that they need to redraw as well
 		this.canvas.getCanvasElement().trigger("sync",
@@ -358,7 +387,8 @@ TissueStack.Events.prototype = {
 								this.canvas.getDataExtent().zoom_level,
 								this.canvas.getDataExtent().slice,
 								this.canvas.getRelativeCrossCoordinates(),
-		                        {max_x: this.canvas.getDataExtent().x, max_y: this.canvas.getDataExtent().y},
+		                          {max_x: this.canvas.getDataExtent().x, max_y: this.canvas.getDataExtent().y,
+		                           aniso_factor_x :aniso_factor_x, aniso_factor_y: aniso_factor_y, step: this.canvas.getDataExtent().step},
 		                        upper_left_corner,
 		                        cross_coords,
 		                        canvas_dims

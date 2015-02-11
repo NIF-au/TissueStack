@@ -320,9 +320,17 @@ TissueStack.Queue.prototype = {
 			// crosshair focus
 			var crossHairPosition = {x: this.canvas.cross_x, y: this.canvas.cross_y};
 
+            if (this.canvas.data_extent.one_to_one_x != this.canvas.data_extent.origX &&
+                draw_request.max_coords_of_event_triggering_plane.step != this.canvas.getDataExtent().step)
+                draw_request.slice *= (this.canvas.data_extent.one_to_one_x / this.canvas.data_extent.origX);
+            if (this.canvas.data_extent.one_to_one_y != this.canvas.data_extent.origY &&
+                draw_request.max_coords_of_event_triggering_plane.step != this.canvas.getDataExtent().step)
+                draw_request.slice *= (this.canvas.data_extent.one_to_one_y / this.canvas.data_extent.origY);
+
 			// get slice changes
 			var sliceX = draw_request.slice;
 			var sliceY = this.canvas.data_extent.one_to_one_y - draw_request.slice;
+            
 			// adjust for zoom level
 			sliceX = sliceX * (this.canvas.getDataExtent().x / this.canvas.data_extent.one_to_one_x);
 			sliceY = sliceY * (this.canvas.getDataExtent().y / this.canvas.data_extent.one_to_one_y);
@@ -377,7 +385,7 @@ TissueStack.Queue.prototype = {
 					{x: this.canvas.cross_x,
 					 y: this.canvas.dim_y - (draw_request.crossCoords.x + ((this.canvas.dim_y - this.canvas.cross_y) - draw_request.crossCoords.x))});
 		}
-		
+	
 		// COORDINATE CHANGES DUE TO VARYING ZOOM LEVELS BETWEEN THE CANVASES 
 		var originalZoomLevelDims = this.canvas.getDataExtent().getZoomLevelDimensions(draw_request.zoom_level);
 		var crossXOutsideOfExtentX = (draw_request.coords.x < 0) ? -1 : 0;
@@ -388,7 +396,20 @@ TissueStack.Queue.prototype = {
 		if (draw_request.coords.y > (draw_request.max_coords_of_event_triggering_plane.max_y - 1)) {
 			crossYOutsideOfExtentY = 1;
 		}
-		
+
+        if (draw_request.max_coords_of_event_triggering_plane.aniso_factor_x &&
+        	draw_request.max_coords_of_event_triggering_plane.aniso_factor_x != 1 && 
+            draw_request.max_coords_of_event_triggering_plane.step != this.canvas.getDataExtent().step) {
+            draw_request.max_coords_of_event_triggering_plane.max_x /= draw_request.max_coords_of_event_triggering_plane.aniso_factor_x;
+            draw_request.coords.x /= draw_request.max_coords_of_event_triggering_plane.aniso_factor_x;
+        }
+        if (draw_request.max_coords_of_event_triggering_plane.aniso_factor_y &&
+        	draw_request.max_coords_of_event_triggering_plane.aniso_factor_y != 1 &&
+            draw_request.max_coords_of_event_triggering_plane.step != this.canvas.getDataExtent().step) {
+            draw_request.max_coords_of_event_triggering_plane.max_y /= draw_request.max_coords_of_event_triggering_plane.aniso_factor_y;
+            draw_request.coords.y /= draw_request.max_coords_of_event_triggering_plane.aniso_factor_y;
+        }
+        
 		if (draw_request.zoom_level != this.canvas.getDataExtent().zoom_level) {
 			if (draw_request.coords.x < 0) {
 				draw_request.coords.x = Math.abs(draw_request.coords.x - draw_request.max_coords_of_event_triggering_plane.max_x);
@@ -417,7 +438,7 @@ TissueStack.Queue.prototype = {
 			draw_request.max_coords_of_event_triggering_plane.max_y =
 					draw_request.max_coords_of_event_triggering_plane.max_y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);
 		} 
-		
+        
 		// PAN AND CLICK ACTION
 		if (thisHerePlane === 'x' && draw_request.plane === 'z') {
 			this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(

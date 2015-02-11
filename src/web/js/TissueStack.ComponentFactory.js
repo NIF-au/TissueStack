@@ -96,6 +96,7 @@ TissueStack.ComponentFactory = {
 					dataForPlane.maxY,
 					dataForPlane.origX,
 					dataForPlane.origY,
+					dataForPlane.step,
 					zoomLevels,
 					transformationMatrix,
 					dataForPlane.resolutionMm);
@@ -445,7 +446,6 @@ TissueStack.ComponentFactory = {
             alert("ComponentFactory::swapWithMainCanvas => side plane was not x,y or z!");
             return;
         }
-
         
         var plane = TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray($('#' + div + '_main_view_canvas').attr("class").split(" "), "^canvas_");
         if (!plane) {
@@ -561,9 +561,8 @@ TissueStack.ComponentFactory = {
         dataSet.planes[sideViewPlaneId].events.changeSliceForPlane(dataSet.planes[sideViewPlaneId].data_extent.slice);
         dataSet.planes[sideViewPlaneId].changeToZoomLevel(dataSet.planes[mainViewPlaneId].getDataExtent().zoom_level);
         dataSet.planes[mainViewPlaneId].changeToZoomLevel(zoomLevelSideView);
-        
         try {
-            $("#" + div + "_canvas_main_slider").val(dataSet.planes[sideViewPlaneId].data_extent.slice);
+            $("#" + div + "_canvas_main_slider").val(dataSet.planes[sideViewPlaneId].data_extent.slice); //.slider("refresh");
         } catch(ign) {}
 
         dataSet.planes[sideViewPlaneId].updateExtentInfo(dataSet.planes[sideViewPlaneId].getDataExtent().getExtentCoordinates());
@@ -695,8 +694,9 @@ TissueStack.ComponentFactory = {
                     $("#canvas_" + plane.data_extent.plane + "_slider") :
                     $("#" + (plane.dataset_id == "" ? "" : plane.dataset_id + "_") + "canvas_main_slider");
             if (slider && slider.length == 1) {
-                slider.attr("value", givenCoords.z);
-                 if (!TissueStack.phone) slider.slider("refresh");
+                try {
+                    slider.val(givenCoords.z);
+                } catch(ignored) {}
             };
         }, timeout);
     }, 

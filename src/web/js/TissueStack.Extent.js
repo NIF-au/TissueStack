@@ -15,7 +15,7 @@
  * along with TissueStack.  If not, see <http://www.gnu.org/licenses/>.
  */
 TissueStack.Extent = function (
-		data_id, is_tiled, zoom_level, plane, max_slices, x, y, origX, origY,
+		data_id, is_tiled, zoom_level, plane, max_slices, x, y, origX, origY, step,
 		zoom_levels, worldCoordinatesTransformationMatrix, res_mm) {
 	this.setDataId(data_id);
 	this.setIsTiled(is_tiled);
@@ -25,6 +25,7 @@ TissueStack.Extent = function (
 	this.setSlice(Math.floor(max_slices / 2));
 	this.setDimensions(x, y);
 	this.rememberOneToOneZoomLevel(this.x, this.y, origX, origY, this.zoom_level);
+	this.step = step;
 	this.setZoomLevels(zoom_levels);
 	this.worldCoordinatesTransformationMatrix = worldCoordinatesTransformationMatrix;
 	if (typeof(res_mm) == 'number')  this.resolution_mm = res_mm;
@@ -48,6 +49,7 @@ TissueStack.Extent.prototype = {
 	plane: 'z',
 	max_slices : 0,
 	slice: 0,
+	step: 1,
 	worldCoordinatesTransformationMatrix: null,
 	resolution_mm: 0,
 	setDataId : function(data_id) {

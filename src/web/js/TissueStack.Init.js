@@ -183,6 +183,7 @@ TissueStack.InitPhoneUserInterface = function (drawMe) {
 				dataForPlane.maxY,
 				dataForPlane.origX,
 				dataForPlane.origY,
+				dataForPlane.step,
 				zoomLevels,
 				transformationMatrix, 
 				dataForPlane.resolutionMm);
