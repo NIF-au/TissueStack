@@ -186,10 +186,10 @@ TissueStack.Events.prototype = {
 			
 			var slider = $("#" + _this.canvas.dataset_id + "_canvas_main_slider");
 			try {
-				slider.val(_this.canvas.data_extent.slice);
+				slider.val(_this.canvas.data_extent.slice).slider("refresh");
             } catch(ignored) {}
 			
-			_this.changeSliceForPlane(_this.canvas.data_extent.slice);
+			//_this.changeSliceForPlane(_this.canvas.data_extent.slice);
 			setTimeout(function(){_this.updateCoordinateDisplay();}, 500);
 			e.stopPropagation();
 		});

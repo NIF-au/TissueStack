@@ -324,7 +324,7 @@ $.widget( "mobile.slider", $.mobile.widget, {
 				control[ 0 ].selectedIndex = newval;
 			}
 			if ( !isfromControl ) {
-				control.trigger( "change" );
+				control.trigger( "change");
 			}
 		}
 	},

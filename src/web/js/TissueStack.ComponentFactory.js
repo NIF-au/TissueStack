@@ -562,7 +562,7 @@ TissueStack.ComponentFactory = {
         dataSet.planes[sideViewPlaneId].changeToZoomLevel(dataSet.planes[mainViewPlaneId].getDataExtent().zoom_level);
         dataSet.planes[mainViewPlaneId].changeToZoomLevel(zoomLevelSideView);
         try {
-            $("#" + div + "_canvas_main_slider").val(dataSet.planes[sideViewPlaneId].data_extent.slice); //.slider("refresh");
+            $("#" + div + "_canvas_main_slider").val(dataSet.planes[sideViewPlaneId].data_extent.slice).slider("refresh");
         } catch(ign) {}
 
         dataSet.planes[sideViewPlaneId].updateExtentInfo(dataSet.planes[sideViewPlaneId].getDataExtent().getExtentCoordinates());
@@ -695,7 +695,7 @@ TissueStack.ComponentFactory = {
                     $("#" + (plane.dataset_id == "" ? "" : plane.dataset_id + "_") + "canvas_main_slider");
             if (slider && slider.length == 1) {
                 try {
-                    slider.val(givenCoords.z);
+                    slider.val(givenCoords.z).slider("refresh");
                 } catch(ignored) {}
             };
         }, timeout);

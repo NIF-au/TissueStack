@@ -201,7 +201,8 @@ TissueStack.Extent.prototype = {
 			if (mainCanvas == this.plane && canvasSlider && canvasSlider.length > 0) {
 				slice = this.slice < 0 ? this.max_slices : (this.slice > this.max_slices ? 0 : this.slice);
 				try {
-					canvasSlider.val(slice > this.max_slices ? this.max_slices : slice);
+					canvasSlider.val(slice > this.max_slices ? this.max_slices : slice);//.slider("refresh");
+					canvasSlider.blur();
                 } catch(ignored) {}
 			}
 		}

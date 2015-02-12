@@ -478,8 +478,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 				if (event.data[0].actualDataSet.data.length > 1) {
 					var slider = $("#" + (plane.dataset_id == "" ? "" : plane.dataset_id + "_") + "canvas_main_slider");
 					if (slider) {
-						slider.val(givenCoords.z);
-						slider.blur();
+						slider.val(givenCoords.z).slider("refresh");
 						setTimeout(function() {
 							plane.events.changeSliceForPlane(givenCoords.z);
 							}, 150);
