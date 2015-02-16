@@ -212,14 +212,14 @@ TissueStack.Canvas.prototype = {
         if (this.getDataExtent().one_to_one_y != this.getDataExtent().origY)
             data_extent_y /= (this.getDataExtent().origY / this.getDataExtent().one_to_one_y);
 		
-		var relCrossX = (this.cross_x > (this.upper_left_x + (data_extent_x - 1))) ? -(this.cross_x - (this.upper_left_x + (data_extent_x - 1))) : (data_extent_x -1) +  (this.upper_left_x - this.cross_x);
-		var relCrossY = ((this.dim_y - this.cross_y) > this.upper_left_y) ? (this.upper_left_y - (this.dim_y - this.cross_y)) : ((data_extent_y - 1) + (this.upper_left_y - (data_extent_y - 1) - (this.dim_y - this.cross_y)));
-		if (this.upper_left_x < 0 && this.cross_x <= (this.upper_left_x + (data_extent_x - 1))) {
+		var relCrossX = (this.cross_x > this.upper_left_x + data_extent_x) ? -(this.cross_x - (this.upper_left_x + data_extent_x)) : data_extent_x +  (this.upper_left_x - this.cross_x);
+		var relCrossY = ((this.dim_y - this.cross_y) > this.upper_left_y) ? (this.upper_left_y - (this.dim_y - this.cross_y)) : (data_extent_y + (this.upper_left_y - data_extent_y - (this.dim_y - this.cross_y)));
+		if (this.upper_left_x < 0 && this.cross_x <= (this.upper_left_x + data_extent_x)) {
 			relCrossX = Math.abs(this.upper_left_x) + this.cross_x;
-		} else if (this.upper_left_x >= 0 && this.cross_x >= this.upper_left_x && this.cross_x <= this.upper_left_x + (data_extent_x -1)) {
+		} else if (this.upper_left_x >= 0 && this.cross_x >= this.upper_left_x && this.cross_x <= this.upper_left_x + data_extent_x) {
 			relCrossX = this.cross_x - this.upper_left_x;
 		}
-		if (this.upper_left_y > 0 && this.upper_left_y - (data_extent_y-1) < this.dim_y && this.dim_y - this.cross_y <= this.upper_left_y && this.dim_y - this.cross_y >= this.upper_left_y - (data_extent_y -1)) {
+		if (this.upper_left_y > 0 && this.upper_left_y - data_extent_y < this.dim_y && this.dim_y - this.cross_y <= this.upper_left_y && this.dim_y - this.cross_y >= this.upper_left_y - data_extent_y) {
 			relCrossY = this.upper_left_y - (this.dim_y - this.cross_y);
 		}
 		
@@ -696,8 +696,9 @@ TissueStack.Canvas.prototype = {
 						_this.applyContrastAndColorMapToTiles(ctx, canvasX, canvasY, width, height);
 						
 						if ((TissueStack.overlay_datasets && _this.underlying_canvas) || _this.is_linked_dataset) {
-							TissueStack.overlay_values[_this.data_extent.plane].getContext("2d");
-							TissueStack.overlay_values[_this.data_extent.plane].getContext("2d").drawImage(this,
+							if (TissueStack.overlay_values[_this.data_extent.plane] && 
+                                TissueStack.overlay_values[_this.data_extent.plane].getContext("2d"))
+							     TissueStack.overlay_values[_this.data_extent.plane].getContext("2d").drawImage(this,
 									imageOffsetX, imageOffsetY, width, height, // tile dimensions
 									canvasX, canvasY, width, height); // canvas dimensions
 						}
@@ -868,16 +869,18 @@ TissueStack.Canvas.prototype = {
 				children = [];
 			}
 		} else if (!this.isColorMapOn()) {
-		// fallback: if no label lookup value was associated, we display either the gray value or the color rgb triples
-			$("#canvas_point_value").show();
-			info += (": " + (Math.round(dataSetPixelValues.red) *1000) / 1000); // any channel will do for gray 
+			// fallback: if no label lookup value was associated, we display either the gray value or the color rgb triples
+			var v = " [R/G/B]: " + dataSetPixelValues.red + "/" + dataSetPixelValues.green + "/" + dataSetPixelValues.blue;
+			if (dataSetPixelValues.red == dataSetPixelValues.green == dataSetPixelValues.blue)
+				v = ": " + dataSetPixelValues.red;
+			info += v;
+			$("#canvas_point_value").show(); 
 		} else {// display r/g/b triples
-			$("#canvas_point_value").show();
 			info += " [R/G/B]: ";
-			info += ("" + (Math.round(dataSetPixelValues.red) *1000) / 1000 + "/"
-					+ (Math.round(dataSetPixelValues.green) *1000) / 1000 + "/"
-					+ (Math.round(dataSetPixelValues.blue) *1000) / 1000
-			); 
+			info += ("" + dataSetPixelValues.red + "/"
+					+ dataSetPixelValues.green + "/"
+					+ dataSetPixelValues.blue); 
+			$("#canvas_point_value").show();
 		}
 		$("#canvas_point_value").val(info);
 		

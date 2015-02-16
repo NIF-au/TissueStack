@@ -336,7 +336,7 @@ TissueStack.Queue.prototype = {
 			sliceY = sliceY * (this.canvas.getDataExtent().y / this.canvas.data_extent.one_to_one_y);
 
 			sliceX = crossHairPosition.x - sliceX;
-			sliceY = crossHairPosition.y + sliceY;
+			sliceY = (this.canvas.dim_y - crossHairPosition.y) + sliceY;
 
 			if (thisHerePlane === 'x' && draw_request.plane === 'z') {
 				this.canvas.setUpperLeftCorner(this.canvas.upper_left_x, sliceY);
@@ -389,13 +389,42 @@ TissueStack.Queue.prototype = {
 		// COORDINATE CHANGES DUE TO VARYING ZOOM LEVELS BETWEEN THE CANVASES 
 		var originalZoomLevelDims = this.canvas.getDataExtent().getZoomLevelDimensions(draw_request.zoom_level);
 		var crossXOutsideOfExtentX = (draw_request.coords.x < 0) ? -1 : 0;
-		if (draw_request.coords.x > (draw_request.max_coords_of_event_triggering_plane.max_x - 1)) {
+		if (draw_request.coords.x > (draw_request.max_coords_of_event_triggering_plane.max_x)) {
 			crossXOutsideOfExtentX = 1;
 		}
 		var crossYOutsideOfExtentY = (draw_request.coords.y < 0) ? -1 : 0;
-		if (draw_request.coords.y > (draw_request.max_coords_of_event_triggering_plane.max_y - 1)) {
+		if (draw_request.coords.y > (draw_request.max_coords_of_event_triggering_plane.max_y )) {
 			crossYOutsideOfExtentY = 1;
 		}
+
+		if (draw_request.zoom_level != this.canvas.getDataExtent().zoom_level) {
+			if (draw_request.coords.x < 0) {
+				draw_request.coords.x = Math.abs(draw_request.coords.x - draw_request.max_coords_of_event_triggering_plane.max_x);
+				draw_request.upperLeftCorner.x = draw_request.crossCoords.x - draw_request.coords.x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x);				
+			} else if (draw_request.coords.x > (draw_request.max_coords_of_event_triggering_plane.max_x )) {
+				draw_request.coords.x = draw_request.coords.x - (draw_request.max_coords_of_event_triggering_plane.max_x );
+				draw_request.upperLeftCorner.x = draw_request.crossCoords.x + draw_request.coords.x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x);
+			} else {
+				draw_request.upperLeftCorner.x = draw_request.crossCoords.x - draw_request.coords.x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x);				
+			}
+
+			if (draw_request.coords.y < 0) {
+				draw_request.coords.y = Math.abs(draw_request.coords.y);
+				draw_request.upperLeftCorner.y = (draw_request.canvasDims.y - draw_request.crossCoords.y) - draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);				
+			} else if (draw_request.coords.y > (draw_request.max_coords_of_event_triggering_plane.max_y )) {
+				draw_request.upperLeftCorner.y = (draw_request.canvasDims.y - draw_request.crossCoords.y) + draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);
+			} else {
+				draw_request.upperLeftCorner.y = (draw_request.canvasDims.y - draw_request.crossCoords.y) + draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);				
+			}
+
+			draw_request.coords.x = draw_request.coords.x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x);
+			draw_request.coords.y = draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);
+
+			draw_request.max_coords_of_event_triggering_plane.max_x =
+					draw_request.max_coords_of_event_triggering_plane.max_x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x);
+			draw_request.max_coords_of_event_triggering_plane.max_y =
+					draw_request.max_coords_of_event_triggering_plane.max_y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);
+		} 
 
         if (draw_request.max_coords_of_event_triggering_plane.aniso_factor_x &&
         	draw_request.max_coords_of_event_triggering_plane.aniso_factor_x != 1 && 
@@ -410,41 +439,12 @@ TissueStack.Queue.prototype = {
             draw_request.coords.y /= draw_request.max_coords_of_event_triggering_plane.aniso_factor_y;
         }
         
-		if (draw_request.zoom_level != this.canvas.getDataExtent().zoom_level) {
-			if (draw_request.coords.x < 0) {
-				draw_request.coords.x = Math.abs(draw_request.coords.x - draw_request.max_coords_of_event_triggering_plane.max_x);
-				draw_request.upperLeftCorner.x = draw_request.crossCoords.x - draw_request.coords.x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x);				
-			} else if (draw_request.coords.x > (draw_request.max_coords_of_event_triggering_plane.max_x - 1)) {
-				draw_request.coords.x = draw_request.coords.x - (draw_request.max_coords_of_event_triggering_plane.max_x - 1);
-				draw_request.upperLeftCorner.x = draw_request.crossCoords.x + draw_request.coords.x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x);
-			} else {
-				draw_request.upperLeftCorner.x = draw_request.crossCoords.x - draw_request.coords.x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x);				
-			}
-
-			if (draw_request.coords.y < 0) {
-				draw_request.coords.y = Math.abs(draw_request.coords.y);
-				draw_request.upperLeftCorner.y = (draw_request.canvasDims.y - draw_request.crossCoords.y) - draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);				
-			} else if (draw_request.coords.y > (draw_request.max_coords_of_event_triggering_plane.max_y - 1)) {
-				draw_request.upperLeftCorner.y = (draw_request.canvasDims.y - draw_request.crossCoords.y) + draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);
-			} else {
-				draw_request.upperLeftCorner.y = (draw_request.canvasDims.y - draw_request.crossCoords.y) + draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);				
-			}
-
-			draw_request.coords.x = draw_request.coords.x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x);
-			draw_request.coords.y = draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);
-
-			draw_request.max_coords_of_event_triggering_plane.max_x =
-					draw_request.max_coords_of_event_triggering_plane.max_x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x);
-			draw_request.max_coords_of_event_triggering_plane.max_y =
-					draw_request.max_coords_of_event_triggering_plane.max_y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);
-		} 
-        
 		// PAN AND CLICK ACTION
 		if (thisHerePlane === 'x' && draw_request.plane === 'z') {
 			this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(
 					(crossXOutsideOfExtentX < 0) ? -99 : ((crossXOutsideOfExtentX > 0) ? (draw_request.max_coords_of_event_triggering_plane.max_x + 99) : draw_request.coords.x));
 			this.canvas.setUpperLeftCorner(
-					(draw_request.upperLeftCorner.y - (draw_request.max_coords_of_event_triggering_plane.max_y - 1))
+					(draw_request.upperLeftCorner.y - (draw_request.max_coords_of_event_triggering_plane.max_y ))
 					+ (this.canvas.cross_x - (draw_request.canvasDims.y - draw_request.crossCoords.y)),
 					this.canvas.upper_left_y);
 		} else if (thisHerePlane === 'y' && draw_request.plane === 'z') {
@@ -452,7 +452,7 @@ TissueStack.Queue.prototype = {
 					(crossYOutsideOfExtentY < 0) ?
 							-99 :
 							((crossYOutsideOfExtentY > 0) ? (draw_request.max_coords_of_event_triggering_plane.max_y + 99) :
-								((draw_request.max_coords_of_event_triggering_plane.max_y - 1) - draw_request.coords.y)));
+								((draw_request.max_coords_of_event_triggering_plane.max_y ) - draw_request.coords.y)));
 			this.canvas.setUpperLeftCorner(
 					draw_request.upperLeftCorner.x + (this.canvas.cross_x - draw_request.crossCoords.x),
 					this.canvas.upper_left_y);
@@ -467,7 +467,7 @@ TissueStack.Queue.prototype = {
 					(crossYOutsideOfExtentY < 0) ?
 							-99 :
 							((crossYOutsideOfExtentY > 0) ? (draw_request.max_coords_of_event_triggering_plane.max_y + 99) :
-								((draw_request.max_coords_of_event_triggering_plane.max_y - 1) - draw_request.coords.y)));
+								((draw_request.max_coords_of_event_triggering_plane.max_y ) - draw_request.coords.y)));
 			this.canvas.setUpperLeftCorner(
 					draw_request.upperLeftCorner.x + (this.canvas.cross_x - draw_request.crossCoords.x),
 					this.canvas.upper_left_y);
@@ -478,10 +478,10 @@ TissueStack.Queue.prototype = {
 					this.canvas.upper_left_x ,
 					draw_request.upperLeftCorner.y + ((this.canvas.dim_y - this.canvas.cross_y) - (draw_request.canvasDims.y - draw_request.crossCoords.y)));
 		} else if (thisHerePlane === 'z' && draw_request.plane === 'x') {
-			this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(((draw_request.max_coords_of_event_triggering_plane.max_y - 1) - draw_request.coords.y));
+			this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(((draw_request.max_coords_of_event_triggering_plane.max_y ) - draw_request.coords.y));
 			this.canvas.setUpperLeftCorner(
 					this.canvas.upper_left_x ,
-					((draw_request.max_coords_of_event_triggering_plane.max_x - 1) + draw_request.upperLeftCorner.x + ((this.canvas.dim_y - this.canvas.cross_y) - draw_request.crossCoords.x)));
+					((draw_request.max_coords_of_event_triggering_plane.max_x ) + draw_request.upperLeftCorner.x + ((this.canvas.dim_y - this.canvas.cross_y) - draw_request.crossCoords.x)));
 		}
 		
 		return true;

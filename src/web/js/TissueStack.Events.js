@@ -382,7 +382,7 @@ TissueStack.Events.prototype = {
 								[this.canvas.data_extent.data_id,
 								 this.canvas.dataset_id,	 
 								 now,
-								'CLICK',
+								'POINT',
 								this.canvas.getDataExtent().plane,
 								this.canvas.getDataExtent().zoom_level,
 								this.canvas.getDataExtent().slice,
