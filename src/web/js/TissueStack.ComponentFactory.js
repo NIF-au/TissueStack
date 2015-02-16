@@ -685,7 +685,7 @@ TissueStack.ComponentFactory = {
                 givenCoords.z = plane.getDataExtent().slice;
             }
             var now = new Date().getTime();
-            plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, false, now);
+            plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, true, now);
             plane.events.changeSliceForPlane(givenCoords.z);
             plane.queue.drawLowResolutionPreview(now);
             plane.queue.drawRequestAfterLowResolutionPreview(null, now);
@@ -695,9 +695,11 @@ TissueStack.ComponentFactory = {
                     $("#" + (plane.dataset_id == "" ? "" : plane.dataset_id + "_") + "canvas_main_slider");
             if (slider && slider.length == 1) {
                 try {
-                    slider.val(givenCoords.z).slider("refresh");
+                    slider.val(givenCoords.z);
+                    slider.blur();
                 } catch(ignored) {}
             };
+            plane.events.updateCoordinateDisplay();
         }, timeout);
     }, 
     addProgressBar : function(div, dataSet) {
