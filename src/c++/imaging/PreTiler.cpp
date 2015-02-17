@@ -205,8 +205,8 @@ inline void tissuestack::imaging::PreTiler::loopOverDimensions(
 					}
 
 					// apply zoom and colormap if necessary
-					unsigned long int width = actualDimension->getWidth();
-					unsigned long int height = actualDimension->getHeight();
+					unsigned long int width = actualDimension->getAnisotropicWidth();
+					unsigned long int height = actualDimension->getAnisotropicHeight();
 
 					ExceptionInfo exception;
 					GetExceptionInfo(&exception);
