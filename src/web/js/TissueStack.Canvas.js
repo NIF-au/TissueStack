@@ -871,7 +871,7 @@ TissueStack.Canvas.prototype = {
 		} else if (!this.isColorMapOn()) {
 			// fallback: if no label lookup value was associated, we display either the gray value or the color rgb triples
 			var v = " [R/G/B]: " + dataSetPixelValues.red + "/" + dataSetPixelValues.green + "/" + dataSetPixelValues.blue;
-			if (dataSetPixelValues.red == dataSetPixelValues.green == dataSetPixelValues.blue)
+			if ((dataSetPixelValues.red == dataSetPixelValues.green) && (dataSetPixelValues.green == dataSetPixelValues.blue))
 				v = ": " + dataSetPixelValues.red;
 			info += v;
 			$("#canvas_point_value").show(); 
