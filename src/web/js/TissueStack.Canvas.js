@@ -530,16 +530,6 @@ TissueStack.Canvas.prototype = {
 
 		var copyOfCanvasY = canvasY;
 
-		/*
-	     //create a temporary Canvas to avoid the flickering for contrast and colormaps
-		if (TissueStack.overlay_datasets && (this.overlay_canvas || this.underlying_canvas)) {
-			tempCanvas = document.createElement("canvas");
-			tempCanvas.width = this.dim_x;
-			tempCanvas.height = this.dim_y;
-			// redirect original context to temporary canvas content
-			ctx = tempCanvas.getContext("2d");
-		}*/
-		
 		if ((TissueStack.overlay_datasets && this.underlying_canvas) || this.is_linked_dataset) {
 			this.eraseCanvasContent();
 			ctx.globalAlpha = TissueStack.transparency

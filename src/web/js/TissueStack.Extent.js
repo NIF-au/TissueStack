@@ -214,25 +214,6 @@ TissueStack.Extent.prototype = {
 			y : pixelCoords.y,
 			z : pixelCoords.z,
 		};
-		/*
-		// min & max clamps
-		if (pixelCoords.x < 0)
-			pixelCoords.x = (this.x-1) - pixelCoords.x;
-		else if (pixelCoords.x > this.x-1)
-			pixelCoords.x = (this.x-1) - pixelCoords.x;
-		if (typeof(pixelCoords.z) == 'undefined') 	// check optional z aka slices
-			pixelCoords.z = this.slice;
-		pixelCoords.z = pixelCoords.z < 0 ? 0 : pixelCoords.z;  
-		pixelCoords.z = pixelCoords.z > this.max_slices ? this.max_slices : pixelCoords.z; 
-
-		if (worldCoords.x < 0) worldCoords.x = 0;
-		if (worldCoords.y < 0) worldCoords.y = 0;
-		if (worldCoords.z < 0) worldCoords.z = 0;
-
-		if (worldCoords.x > (this.x-1)) worldCoords.x = this.x-1;
-		if (worldCoords.y > (this.y-1)) worldCoords.y = this.y-1;
-		if (worldCoords.z > this.max_slices) worldCoords.z = this.max_slices;
-		*/
 		
 		// now we'll have to correct x and y according to their zoom level to get the 1:1 pixel Coordinates which can then be transformed
 		worldCoords.x = worldCoords.x * (this.one_to_one_x / this.x);
@@ -290,21 +271,6 @@ TissueStack.Extent.prototype = {
 		pixelCoords.x = pixelCoords.x * (this.x / this.one_to_one_x);
 		pixelCoords.y = this.y - pixelCoords.y * (this.y / this.one_to_one_y);
 
-		/*
-		// min & max clamps 
-		if (pixelCoords.x < 0) pixelCoords.x = 0;
-		if (pixelCoords.y < 0) pixelCoords.y = 0;
-		if (pixelCoords.z < 0) pixelCoords.z = 0;
-
-		if (pixelCoords.x > this.x-1) pixelCoords.x = this.x-1;
-		if (pixelCoords.y > this.y-1) pixelCoords.y = this.y-1;
-		if (pixelCoords.z > this.max_slices) pixelCoords.z = this.max_slices;
-
-		pixelCoords.z = pixelCoords.z;
-		pixelCoords.x = pixelCoords.x * (this.x / this.one_to_one_x);
-		pixelCoords.y = this.y - pixelCoords.y * (this.y / this.one_to_one_y);
-		*/
-		
 		return pixelCoords;
 	},
 	getExtentCoordinates : function() {

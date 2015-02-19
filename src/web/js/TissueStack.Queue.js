@@ -134,7 +134,7 @@ TissueStack.Queue.prototype = {
 		this.lowResolutionPreviewDrawn = false;
 
 		if (this.latestDrawRequestTimestamp < 0 || timestamp < this.latestDrawRequestTimestamp) {
-			console.info('Drawing preview for ' + this.canvas.getDataExtent().data_id + '[' + this.canvas.getDataExtent().getOriginalPlane() +  ']: ' + timestamp);
+			//console.info('Drawing preview for ' + this.canvas.getDataExtent().data_id + '[' + this.canvas.getDataExtent().getOriginalPlane() +  ']: ' + timestamp);
 			this.lowResolutionPreviewDrawn = true;
 			return;
 		}

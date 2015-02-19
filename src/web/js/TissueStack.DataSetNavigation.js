@@ -293,6 +293,46 @@ TissueStack.DataSetNavigation.prototype = {
 			}
 		});
 	},
+    checkCoordinateCompatibility : function(worldCoordinatesOne, worldCoordinatesTwo) {
+        if (!worldCoordinatesOne || !worldCoordinatesTwo)
+            return false;
+        
+        var plane = null;
+        for (var p in worldCoordinatesOne) { // find matching plane
+            if (!worldCoordinatesTwo[p]) {
+                plane = null;
+                break;
+            }
+            plane = p;
+        }
+        if (!plane) 
+            return false;
+
+        //check coords: if one data set is not fully contained int the other, we'll return false
+        if (typeof(worldCoordinatesOne[plane].min_x) != 'number' || typeof(worldCoordinatesTwo[plane].min_x) != 'number' ||
+            typeof(worldCoordinatesOne[plane].max_x) != 'number' || typeof(worldCoordinatesTwo[plane].max_x) != 'number' ||
+            typeof(worldCoordinatesOne[plane].min_y) != 'number' || typeof(worldCoordinatesTwo[plane].min_y) != 'number' ||
+            typeof(worldCoordinatesOne[plane].max_y) != 'number' || typeof(worldCoordinatesTwo[plane].max_y) != 'number' ||
+            typeof(worldCoordinatesOne[plane].min_z) != 'number' || typeof(worldCoordinatesTwo[plane].min_z) != 'number' ||
+            typeof(worldCoordinatesOne[plane].max_z) != 'number' || typeof(worldCoordinatesTwo[plane].max_z) != 'number' ||
+            !(
+                (
+                    worldCoordinatesOne[plane].min_x >= worldCoordinatesTwo[plane].min_x && worldCoordinatesOne[plane].max_x <= worldCoordinatesTwo[plane].max_x && 
+                    worldCoordinatesOne[plane].min_y >= worldCoordinatesTwo[plane].min_y && worldCoordinatesOne[plane].max_y <= worldCoordinatesTwo[plane].max_y &&
+                    worldCoordinatesOne[plane].min_z >= worldCoordinatesTwo[plane].min_z && worldCoordinatesOne[plane].max_z <= worldCoordinatesTwo[plane].max_z
+                )
+              ||
+                (
+                    worldCoordinatesTwo[plane].min_x >= worldCoordinatesOne[plane].min_x && worldCoordinatesTwo[plane].max_x <= worldCoordinatesOne[plane].max_x &&
+                    worldCoordinatesTwo[plane].min_y >= worldCoordinatesOne[plane].min_y && worldCoordinatesTwo[plane].max_y <= worldCoordinatesOne[plane].max_y &&
+                    worldCoordinatesTwo[plane].min_z >= worldCoordinatesOne[plane].min_z && worldCoordinatesTwo[plane].max_z <= worldCoordinatesOne[plane].max_z
+                )
+            ))
+            return false;
+
+        return true;
+        
+    },
 	buildDynaTree : function() {
 		var treeData = [];
 
@@ -347,7 +387,7 @@ TissueStack.DataSetNavigation.prototype = {
 		
 		// create dyna tree and bind events 
 		 $("#treedataset").dynatree({
-		       checkbox: true,
+		     checkbox: true,
 		       selectMode: TissueStack.desktop ? 2 : 1,
 		       children: treeData,
 		       onSelect : function(flag, node) {
@@ -422,7 +462,7 @@ TissueStack.DataSetNavigation.prototype = {
                        };
                    
 	    		   // brief check
-	    		   if (selectedNodes.length > 2) {
+	    		   if (/*!TissueStack.overlay_datasets && */ selectedNodes.length > 2) {
 	    			   // we cannot display more than 2 data sets ... let the user know
 	    			   alert("Please deselect a data set before you select a different one");
 	    			   
@@ -436,19 +476,25 @@ TissueStack.DataSetNavigation.prototype = {
 			    		   node.parent._select(false);
 			    	   }	    			   
 	    			   return;
-	    		   }
+	    		   } /* else if (TissueStack.overlay_datasets && selectedNodes.length > 2)
+                       alert("To overlay more than 2 datasets is not yet properly implemented!!!!!"); */
 
 	    		   if (selectedNodes.length == 0) {
 	    			   TissueStack.Utils.adjustScreenContentToActualScreenSize(0);
 	    			   return;
 	    		   }
 
+                   // used to check in case of sync/overlay if coordinates are compatible
+                   var previousWorldCoordinates = null;
+                   var coordinatesCompatible = true;
+                   
 	    		   // display/hide data sets left / not left
 	    		   for (var n=0;n<selectedNodes.length;n++) {
                        var selectedDataSetKey = selectedNodes[n].data.key;
 		    		   _this.addToOrReplaceSelectedDataSets(selectedDataSetKey, n);
                        var dataSetSelected =
                            TissueStack.dataSetStore.getDataSetById(selectedDataSetKey);
+                       
                        var dataSetOrdinal = n+1;
                        var dsDiv = "dataset_" + dataSetOrdinal;
                        TissueStack.ComponentFactory.createDataSetWidget(
@@ -467,11 +513,22 @@ TissueStack.DataSetNavigation.prototype = {
                            TissueStack.ComponentFactory.addDataSetSwapper(dsDiv);
                            TissueStack.ComponentFactory.initDataSetSwapper(dataSetSwapperHandler);
                        }
-                       
+
+                      // check if coordinates are compatible
+                       if (coordinatesCompatible && previousWorldCoordinates &&
+                           (TissueStack.overlay_datasets || TissueStack.sync_datasets) && selectedNodes.length > 1) {
+                            coordinatesCompatible = _this.checkCoordinateCompatibility(previousWorldCoordinates, dataSetSelected.realWorldCoords);
+                        }
+                        previousWorldCoordinates = dataSetSelected.realWorldCoords;
+
                        _this.showDataSet(n + 1, TissueStack.overlay_datasets && selectedNodes.length > 1);
 	    		   }
                    // adjust to screen size
                    TissueStack.Utils.adjustScreenContentToActualScreenSize(selectedNodes.length);
+                   
+                   if (!coordinatesCompatible)
+                       alert("WARNING: Your datasets' coordinates dont't seem to be compatible for overlaying!!!");
+                   
 					// set new canvas dimensions
 					for (var i=0;i<selectedNodes.length;i++) {
 						var dataSet = TissueStack.dataSetStore.getDataSetById(selectedNodes[i].data.key);
@@ -496,6 +553,30 @@ TissueStack.DataSetNavigation.prototype = {
 					if( $(".contextMenu:visible").length > 0 )
 						return false;
 				},
+            dnd: {
+                preventVoidMoves: true, // Prevent dropping nodes 'before self', etc.
+                onDragStart: function(node) {
+                    return true;
+                },
+                onDragEnter: function(node, sourceNode) {
+                    if(node.parent !== sourceNode.parent) return false;
+        
+                    // Don't allow dropping *over* a node (would create a child)
+                    return ["before", "after"];
+                },
+                onDrop: function(node, sourceNode, hitMode, ui, draggable) {
+                    sourceNode.move(node, hitMode);
+
+                    if (node.tree && node.tree.getSelectedNodes(true).length > 1) {
+                        setTimeout(function() {
+                            sourceNode.toggleSelect();}, 0);
+
+                        setTimeout(function() {
+                            sourceNode.toggleSelect();}, 50);
+                    }
+                }
+            }
+             
  		  });
 	},
 	buildTabletMenu : function() {
