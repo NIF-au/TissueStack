@@ -31,7 +31,9 @@ namespace tissuestack
 {
 	namespace imaging
 	{
+
 		class SimpleCacheHeuristics; // forward declarations
+		class NoCacheAdapter;
 		template <typename CachingStrategy>
 		class ImageExtraction;
 		class PreTiler;

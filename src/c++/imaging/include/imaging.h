@@ -652,6 +652,34 @@ namespace tissuestack
 				static TissueStackSliceCache * _instance;
 		};
 
+		class NoCacheAdapter final
+		{
+			public:
+				NoCacheAdapter & operator=(const NoCacheAdapter&) = delete;
+				NoCacheAdapter(const NoCacheAdapter&) = delete;
+				NoCacheAdapter();
+				explicit NoCacheAdapter(const tissuestack::imaging::UncachedImageExtraction * image_extraction);
+				~NoCacheAdapter();
+
+				const Image * extractImage(
+					const tissuestack::common::ProcessingStrategy * processing_strategy,
+					const TissueStackRawData * image,
+					const tissuestack::networking::TissueStackImageRequest * request) const;
+
+				Image * applyPostExtractionTasks(
+						Image * img,
+						const tissuestack::imaging::TissueStackRawData * image,
+						const tissuestack::networking::TissueStackImageRequest * request) const;
+
+				const std::array<unsigned long long int, 3> performQuery(
+					const tissuestack::common::ProcessingStrategy * processing_strategy,
+					const tissuestack::imaging::TissueStackRawData * image,
+					const tissuestack::networking::TissueStackQueryRequest * request) const;
+
+			private:
+				const UncachedImageExtraction * _uncached_extraction = nullptr;
+		};
+
 		class SimpleCacheHeuristics final
 		{
 			public:

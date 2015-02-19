@@ -65,6 +65,7 @@ tissuestack::execution::TissueStackOnlineExecutor::TissueStackOnlineExecutor()
 	           	new tissuestack::networking::TissueStackRequestFilter(),
 	           	nullptr
 	        }), _imageExtractor(new tissuestack::imaging::ImageExtraction<tissuestack::imaging::SimpleCacheHeuristics>),
+			 	 //_imageExtractor(new tissuestack::imaging::ImageExtraction<tissuestack::imaging::NoCacheAdapter>),
 	        	_serviesDelegator(new tissuestack::services::TissueStackServicesDelegator()),
 	        	_tissueStackRawConverter(new tissuestack::imaging::RawConverter()),
 	        	_tissueStackPreTiler(new tissuestack::imaging::PreTiler()) {}
