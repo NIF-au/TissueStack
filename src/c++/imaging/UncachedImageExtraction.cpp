@@ -439,12 +439,19 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::degradeImage0(
 	ExceptionInfo exception;
 	GetExceptionInfo(&exception);
 
+	const float reducedWidth = static_cast<const float>(width) * quality_factor;
+	const float reducedHeight = static_cast<const float>(height) * quality_factor;
+
+	if (reducedWidth < 1 || reducedHeight < 1) // obviously less than 1 pixel is bad/nonsensical
+		return img;
+
 	Image * tmp = img;
+
 	img =
 		SampleImage(
 			img,
-			static_cast<const float>(width) * quality_factor,
-			static_cast<const float>(height) * quality_factor,
+			reducedWidth,
+			reducedHeight,
 			&exception);
 	DestroyImage(tmp);
 	if (img == NULL)
@@ -479,17 +486,24 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::scaleImage(
 	ExceptionInfo exception;
 	GetExceptionInfo(&exception);
 
+	if (width < 1 || height < 1) // obviously less than 1 pixel is bad/nonsensical
+		return img;
+
+
 	Image * tmp = img;
 	img =
-		ScaleImage(
+		SampleImage(
 			img,
 			width,
 			height,
 			&exception);
 	DestroyImage(tmp);
 	if (img == NULL)
+	{
+		CatchException(&exception);
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Image Extraction: Failed to scale image!");
+	}
 
 	return img;
 }
