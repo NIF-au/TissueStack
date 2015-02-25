@@ -126,7 +126,7 @@ TissueStack.Queue.prototype = {
 				}
 				clearInterval(lowResBackdrop);
 			}
-		}, 50);		
+		}, 25);		
 	},
 	clearRequestQueue : function() {
 		this.requests = [];
@@ -213,22 +213,15 @@ TissueStack.Queue.prototype = {
 				&& !this.canvas.is_color_map_tiled) {
 			colorMap = 'grey'; // fall back onto grey
 		}
-		
+
 		var src =
 			TissueStack.Utils.assembleTissueStackImageRequest(
 					"http",
-					dataSet.host,
-					this.canvas.getDataExtent().getIsTiled(),
-					dataSet.filename,
-					dataSet.local_id,
-					true,
-					this.canvas.getDataExtent().getIsTiled() ?
-							this.canvas.getDataExtent().zoom_level : 
-								this.canvas.getDataExtent().getZoomLevelFactorForZoomLevel(this.canvas.getDataExtent().zoom_level),
-					this.canvas.getDataExtent().getOriginalPlane(),
+					dataSet,
+					this.canvas,
+                    true,
 					slice,
-					colorMap,
-					this.canvas.image_format
+					colorMap
 		);
 		
 		// conduct the actual color tile check. This happens only once or when the colormap is changed
@@ -326,7 +319,7 @@ TissueStack.Queue.prototype = {
             if (this.canvas.data_extent.one_to_one_y != this.canvas.data_extent.origY &&
                 draw_request.max_coords_of_event_triggering_plane.step != this.canvas.getDataExtent().step)
                 draw_request.slice *= (this.canvas.data_extent.one_to_one_y / this.canvas.data_extent.origY);
-
+            
 			// get slice changes
 			var sliceX = draw_request.slice;
 			var sliceY = this.canvas.data_extent.one_to_one_y - draw_request.slice;

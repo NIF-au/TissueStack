@@ -302,6 +302,9 @@ TissueStack.Events.prototype = {
 		if (slice < 0) slice = 0;
 		if (slice > this.canvas.data_extent.max_slices) slice = this.canvas.data_extent.max_slices;
 		
+        if (this.canvas.slice == slice) // no need for change
+            return;
+        
 		this.canvas.data_extent.slice = slice;
 		
 		var upper_left_corner = {x: this.canvas.upper_left_x, y: this.canvas.upper_left_y};

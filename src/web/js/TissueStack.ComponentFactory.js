@@ -324,6 +324,9 @@ TissueStack.ComponentFactory = {
 			if (slice < 0) slice = 0;
 			else if (slice > actualDataSet.planes[id].data_extent.max_slices) slice = actualDataSet.planes[id].data_extent.max_slices;
 			
+            if (slice == actualDataSet.planes[id].getDataExtent().slice)
+                return;
+            
 			actualDataSet.planes[id].events.changeSliceForPlane(slice);
 			setTimeout(function(){actualDataSet.planes[id].events.updateCoordinateDisplay();}, 500);
 		};
@@ -622,12 +625,23 @@ TissueStack.ComponentFactory = {
         if (typeof(timeout) != 'number')
             timeout = 0;
         
+        // this is an adjustment for 2D data (3 dims with one having 1 slice only)
+        var twoDplane = TissueStack.ComponentFactory.is2Ddata(dataSet.data);
+        if (twoDplane != null)
+        	plane_id = twoDplane;
+        
         if (!TissueStack.phone)
             TissueStack.ComponentFactory.swapWithMainCanvas(dataSet.planes[plane_id].dataset_id, dataSet, plane_id);
 
         var plane = dataSet.planes[plane_id];
 
         setTimeout(function() {
+            if (twoDplane != null)
+        		for (var p in dataSet.planes)
+        			if (p != twoDplane &&
+        				!(TissueStack.overlay_datasets && TissueStack.dataSetNavigation.selectedDataSets.count > 1))
+        				dataSet.planes[p].hideCanvas();
+        
             if (initOpts['zoom'] != null && initOpts['zoom'] >= 0 && initOpts['zoom'] < plane.data_extent.zoom_levels.length) {
                 plane.changeToZoomLevel(initOpts['zoom']); 
             }
@@ -693,7 +707,7 @@ TissueStack.ComponentFactory = {
             var slider = TissueStack.phone ? 
                     $("#canvas_" + plane.data_extent.plane + "_slider") :
                     $("#" + (plane.dataset_id == "" ? "" : plane.dataset_id + "_") + "canvas_main_slider");
-            if (slider && slider.length == 1) {
+            if (slider && slider.length == 1 && slider.val() != givenCoords.z) {
                 try {
                     slider.val(givenCoords.z);
                     slider.blur();
@@ -899,5 +913,21 @@ TissueStack.ComponentFactory = {
 
 		$(".overlay_swapper").unbind("click");
 		$(".overlay_swapper").bind("click", handler);
+    }, is2Ddata : function(planes) {
+        if (typeof(planes) != 'object')
+            return null;
+        
+        if (!planes.length)
+            return null;
+        
+        var len = planes.length;
+        if (len == 1)
+            return planes[0].name;
+        
+        for (var i=0; i< len; i++)
+            if (planes[i].maxSlices == 0)
+                return planes[i].name;
+
+        return null;
     }
 };

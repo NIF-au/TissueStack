@@ -439,47 +439,60 @@ TissueStack.Utils = {
 		return url;
 	},
 	assembleTissueStackImageRequest : function(
-			protocol, host, isTiled, filename, dataset_id, is_preview,
-			zoom, plane, slice, colormap, image_extension, tile_size, row, col) {
-		if (typeof(protocol) != "string") {
+			protocol, dataSet, canvas, is_preview, slice, colormap, tile_size, row, col) {
+        
+        if (typeof(dataSet) != "object")
+            return null;
+                
+		if (typeof(protocol) != "string")
 			protocol = "http";
-		} 
 		protocol = $.trim(protocol);
-		if (typeof(host) != "string" || $.trim(host) == "localhost") {
+                
+        var host = dataSet.host;
+		if (typeof(host) != "string" || $.trim(host) == "localhost")
 			host = "";
-		}
+		
 		host = $.trim(host);
-		if (typeof(dataset_id) != "number" || dataset_id <= 0) {
+                
+        var dataset_id = dataSet.local_id;
+		if (typeof(dataset_id) != "number" || dataset_id <= 0)
 			return null;
-		}
+                
+        var isTiled = canvas.getDataExtent().getIsTiled();
 		//are we tiled or not
-		if (typeof(isTiled) != "boolean") {
+		if (typeof(isTiled) != "boolean")
 			isTiled = false; // if in doubt => false
-		}
-		if (!isTiled && typeof(filename) != "string") {
+		
+        var filename = dataSet.filename;
+		if (!isTiled && typeof(filename) != "string")
 			return null;
-		}
-		if (typeof(is_preview) != "boolean") {
+		
+		if (typeof(is_preview) != "boolean")
 			return null;
-		}
-		if (!is_preview && (typeof(tile_size) != "number" || zoom < 0)) {
+		
+		if (!is_preview && (typeof(tile_size) != "number" || zoom < 0))
 			tile_size = 256;
-		}
-		if (typeof(zoom) != "number" || zoom < 0) {
+
+        var zoom = 
+            canvas.getDataExtent().getIsTiled() ?
+                canvas.getDataExtent().zoom_level : 
+                canvas.getDataExtent().getZoomLevelFactorForZoomLevel(canvas.getDataExtent().zoom_level);
+		if (typeof(zoom) != "number" || zoom < 0)
 			return null;
-		}
-		if (typeof(plane) != "string") {
+                
+		var plane = canvas.getDataExtent().getOriginalPlane();
+		if (typeof(plane) != "string")
 			return null;
-		}
-		if (typeof(slice) != "number" || slice < 0) {
+		
+		if (typeof(slice) != "number" || slice < 0)
 			return null;
-		}
-		if (typeof(colormap) != "string") {
+		
+		if (typeof(colormap) != "string")
 			colormap = "grey";
-		}
-		if (typeof(image_extension) != "string") {
+		
+        var image_extension = canvas.image_format;
+		if (typeof(image_extension) != "string")
 			image_extension = "png";
-		}
 
 		// assemble what we have so far
 		var url = (host != "" ? (protocol + "://" + host.replace(/[_]/g,".")) : "");

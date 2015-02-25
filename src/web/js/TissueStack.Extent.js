@@ -179,7 +179,15 @@ TissueStack.Extent.prototype = {
 			return null;
 		}
 		
-		return {x: Math.floor(this.one_to_one_x * zoomLevelFactor), y: Math.floor(this.one_to_one_y * zoomLevelFactor)};
+        var dims = {x: Math.floor(this.one_to_one_x * zoomLevelFactor), y: Math.floor(this.one_to_one_y * zoomLevelFactor)};
+        
+        // correction for cases where we would have 0 pixels length due to scaling
+        if (dims.x < 1) 
+            dims.x = 1;
+        if (dims.y < 1) 
+            dims.y = 1;
+        
+		return dims;
 	}, setSliceWithRespectToZoomLevel : function(slice) {
 		this.slice = Math.round(slice / this.zoom_level_factor);
 		
@@ -200,8 +208,10 @@ TissueStack.Extent.prototype = {
 			
 			if (mainCanvas == this.plane && canvasSlider && canvasSlider.length > 0) {
 				slice = this.slice < 0 ? this.max_slices : (this.slice > this.max_slices ? 0 : this.slice);
+				if (slice == canvasSlider.val())
+					return;
 				try {
-					canvasSlider.val(slice > this.max_slices ? this.max_slices : slice);//.slider("refresh");
+					canvasSlider.val(slice);
 					canvasSlider.blur();
                 } catch(ignored) {}
 			}

@@ -103,6 +103,22 @@ TissueStack.Canvas.prototype = {
 	getCanvasElement : function() {
 		return $("#" + this.canvas_id);
 	},
+	hideCanvas : function() {
+		if (this.getCanvasElement() == null)
+			return;
+		if (this.getCanvasElement().parent() == null)
+			return;
+			
+		this.getCanvasElement().parent().hide();
+	},
+	showCanvas : function() {
+		if (this.getCanvasElement() == null)
+			return;
+		if (this.getCanvasElement().parent() == null)
+			return;
+			
+		this.getCanvasElement().parent().show();
+	},
 	getCanvasContext : function() {
 		return this.getCanvasElement()[0].getContext("2d");
 	},
@@ -482,7 +498,7 @@ TissueStack.Canvas.prototype = {
 			this.syncDataSetCoordinates(this, timestamp, true);
 			return;
 		}
-		
+
 		var ctx = this.getCanvasContext();
 		var tempCanvas = null;
 		
@@ -595,22 +611,15 @@ TissueStack.Canvas.prototype = {
 						&& !this.is_color_map_tiled) {
 					colorMap = 'grey'; // fall back onto grey
 				}
-				
+
 				var src = 
 					TissueStack.Utils.assembleTissueStackImageRequest(
 							"http",
-							dataSet.host,
-							this.getDataExtent().getIsTiled(),
-							dataSet.filename,
-							dataSet.local_id,
+							dataSet,
+                            this,
 							false,
-							this.getDataExtent().getIsTiled() ?
-									this.getDataExtent().zoom_level : 
-										this.getDataExtent().getZoomLevelFactorForZoomLevel(this.getDataExtent().zoom_level),
-							this.getDataExtent().getOriginalPlane(),
 							slice,
 							colorMap,
-							this.image_format,
 							this.getDataExtent().tile_size,
 							rowIndex,
 							colIndex
