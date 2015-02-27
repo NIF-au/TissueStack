@@ -707,7 +707,7 @@ TissueStack.ComponentFactory = {
             var slider = TissueStack.phone ? 
                     $("#canvas_" + plane.data_extent.plane + "_slider") :
                     $("#" + (plane.dataset_id == "" ? "" : plane.dataset_id + "_") + "canvas_main_slider");
-            if (slider && slider.length == 1 && slider.val() != givenCoords.z) {
+            if (slider && slider.length == 1) {
                 try {
                     slider.val(givenCoords.z);
                     slider.blur();

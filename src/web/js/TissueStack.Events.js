@@ -186,10 +186,11 @@ TissueStack.Events.prototype = {
 			
 			var slider = $("#" + _this.canvas.dataset_id + "_canvas_main_slider");
 			try {
-				slider.val(_this.canvas.data_extent.slice).slider("refresh");
+				slider.val(_this.canvas.data_extent.slice);
+                slider.blur();
             } catch(ignored) {}
 			
-			//_this.changeSliceForPlane(_this.canvas.data_extent.slice);
+			_this.changeSliceForPlane(_this.canvas.data_extent.slice);
 			setTimeout(function(){_this.updateCoordinateDisplay();}, 500);
 			e.stopPropagation();
 		});
@@ -302,9 +303,6 @@ TissueStack.Events.prototype = {
 		if (slice < 0) slice = 0;
 		if (slice > this.canvas.data_extent.max_slices) slice = this.canvas.data_extent.max_slices;
 		
-        if (this.canvas.slice == slice) // no need for change
-            return;
-        
 		this.canvas.data_extent.slice = slice;
 		
 		var upper_left_corner = {x: this.canvas.upper_left_x, y: this.canvas.upper_left_y};
@@ -497,7 +495,7 @@ TissueStack.Events.prototype = {
 				return;
 		}
 		
-		var relCrossCoords = this.canvas.getRelativeCrossCoordinates();
+		var relCrossCoords = this.canvas.getRelativeCrossCoordinates(true);
 		relCrossCoords.z = this.canvas.data_extent.slice;
 		var worldCoordinates = this.canvas.getDataExtent().getWorldCoordinatesForPixel(relCrossCoords);
 		

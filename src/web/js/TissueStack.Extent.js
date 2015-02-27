@@ -208,8 +208,10 @@ TissueStack.Extent.prototype = {
 			
 			if (mainCanvas == this.plane && canvasSlider && canvasSlider.length > 0) {
 				slice = this.slice < 0 ? this.max_slices : (this.slice > this.max_slices ? 0 : this.slice);
-				if (slice == canvasSlider.val())
-					return;
+
+                if (slice == canvasSlider.val())
+                    return;
+                
 				try {
 					canvasSlider.val(slice);
 					canvasSlider.blur();

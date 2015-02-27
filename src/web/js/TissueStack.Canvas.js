@@ -219,7 +219,10 @@ TissueStack.Canvas.prototype = {
 	getCoordinateCrossCanvas : function() {
 		return $("#" + this.canvas_id + "_cross_overlay");
 	},
-	getRelativeCrossCoordinates : function() {
+	getRelativeCrossCoordinates : function(ignoreIsotropy) {
+        if (typeof(ignoreIsotropy) != 'boolean' || !ignoreIsotropy)
+            ignoreIsotropy = false;
+        
         var data_extent_x = this.getDataExtent().x;
         var data_extent_y = this.getDataExtent().y;
 
@@ -227,7 +230,7 @@ TissueStack.Canvas.prototype = {
             data_extent_x /= (this.getDataExtent().origX / this.getDataExtent().one_to_one_x);
         if (this.getDataExtent().one_to_one_y != this.getDataExtent().origY)
             data_extent_y /= (this.getDataExtent().origY / this.getDataExtent().one_to_one_y);
-		
+        
 		var relCrossX = (this.cross_x > this.upper_left_x + data_extent_x) ? -(this.cross_x - (this.upper_left_x + data_extent_x)) : data_extent_x +  (this.upper_left_x - this.cross_x);
 		var relCrossY = ((this.dim_y - this.cross_y) > this.upper_left_y) ? (this.upper_left_y - (this.dim_y - this.cross_y)) : (data_extent_y + (this.upper_left_y - data_extent_y - (this.dim_y - this.cross_y)));
 		if (this.upper_left_x < 0 && this.cross_x <= (this.upper_left_x + data_extent_x)) {
