@@ -1,35 +1,21 @@
 ##################################################################################
-#########   TISSUE STACK - FRONTEND [ APACHE WEB SERVER, HTML, JS, CSS ]##########
+###########   TISSUE STACK - FRONTEND [ WEB SERVER, HTML, JS, CSS ]  #############
 ##################################################################################
 
-Technically any web server will do, we strongly recommend Apache 2.2 or later.
+Technically any web server will do, Apache 2.2 or later is what is used
+as a dependency for all Tissue Stack binary packages.
 
-If a different web server is used, the following list will give you an impression
-of what is needed to run the entirety of tissuestack components successfully:
-
+The following additional configuration steps are required:
 
 1) If you want to allow other TissueStack instances to access your data sets,
-   make sure your chosen web-server include this in its response:
+   make sure your chosen web-server includes this header in its response:
         
         Access-Control-Allow-Origin "*"
 
-2) The web services are accesssed in the front-end code via:
-         "/backend" 
-   In other words, the tomcat server is accessed through a proxy mechanism.
+2) The config and image services are accesssed in the front-end code via:
+         "/server" 
 
-   Instead of:      http://TissueStackApplicationServer:8080/TissueStack/whatever
-   the url becomes: http://TissueStackApplicationServer/backend/whatever
-
-   An typical apache web server configuration (using mod_proxy) is:
+   A typical apache configuration (using mod_proxy) is:
    
-        ProxyPass /backend http://localhost:8080/TissueStack
-        ProxyPassReverse /backend http://localhost:8080/TissueStack
-   
-3) Analogous to 2), the image service is expected to be proxied.
-   Instead of:      http://TissueStackApplicationServer:4242/whatever
-   the url becomes: http://TissueStackApplicationServer/image_service/whatever
-             
-   Once again, a typical apache web server solution could be:
-   
-       ProxyPass /image_service http://localhost:4242
-       ProxyPassReverse /image_service http://localhost:4242
+        ProxyPass /server http://localhost:8080/TissueStack
+        ProxyPassReverse /server http://localhost:8080/TissueStack

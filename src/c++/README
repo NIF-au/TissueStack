@@ -1,0 +1,19 @@
+##################################################################################
+###############   TISSUE STACK - BACKEND [ WEB & IMAGE SERVER ]  #################
+##################################################################################
+
+The C++ code can be built by simply typing: make
+
+Here are a few further options that may be useful:
+
+   "make compile" just compile the code after a change to any cpp (not .h !!!)
+   "make install" will compile (see above) and copy the binary to:
+                  /usr/local/tissustack/version.number
+   "make compile-tools" same as compile option (see above) but for the tools only
+   "make install-tools" same as install option (see above) but for the tools only
+
+    Note: the targets above are "shortcuts" and do deliberately not clean before
+          so as to not trigger a (slower) entire rebuild. If this is what you want
+          then use "make" (simply) or "make clean ...."
+
+For a more refined building based on targets, please consult the Makefile.
