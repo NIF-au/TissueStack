@@ -789,6 +789,7 @@ inline void tissuestack::imaging::RawConverter::reorientMincSlice(
     	}
     }
 
+    // TODO: check flipping
 	if ((dimsOrder[0].at(0) == 'x' && dimsOrder[1].at(0) == 'z' && dimsOrder[2].at(0) == 'y')
 		 && (dim->getName().at(0) == 'z' || dim->getName().at(0) == 'y'))
 	{
@@ -800,7 +801,7 @@ inline void tissuestack::imaging::RawConverter::reorientMincSlice(
 			delete [] data_out;
 			CatchException(&exception);
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-				"Could not flop Image!");
+				"Could not flip Image!");
 		}
 	}
 

@@ -733,8 +733,8 @@ TissueStack.Utils = {
 	 	if (canvas.getDataExtent().one_to_one_y != canvas.getDataExtent().origY)
             ys *= ( canvas.getDataExtent().origY / canvas.getDataExtent().one_to_one_y);
 
-		xes = Math.round(xes);
-		ys	= Math.round(ys);
+		xes = xes;
+		ys	= ys;
 
 		// augment it with any associated data sets that need to be queried as well
 		if (TissueStack.desktop)

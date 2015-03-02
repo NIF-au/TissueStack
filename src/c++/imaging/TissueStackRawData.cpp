@@ -176,11 +176,11 @@ void tissuestack::imaging::TissueStackRawData::parseHeader(const std::string & h
 				} else if (count == 4) // for a V1 and up: we have them all in there
 				{
 					tmpTokenString = tissuestack::utils::Misc::tokenizeString(t, ':');
-					count=5; // fast forward to 5 to stay compatible with switch logic
+					//count=5; // fast forward to 5 to stay compatible with switch logic
 				} else if (count == 5) // for a V1 and up: the original format
 				{
 					this->setFormat(atoi(t.c_str()));
-					count=6; // fast forward to 6 to stay compatible with switch logic
+					//count=6; // fast forward to 6 to stay compatible with switch logic
 				}
 				break;
 			case 7:

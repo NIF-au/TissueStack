@@ -380,9 +380,14 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::createImageFromDat
 		actualDimension->getHeight() != actualDimension->getAnisotropicHeight())
 		img = this->scaleImage(img, actualDimension->getAnisotropicWidth(), actualDimension->getAnisotropicHeight());
 
-	if (image->getFormat() == tissuestack::imaging::FORMAT::RAW) return img;
+	//if (image->getFormat() == tissuestack::imaging::FORMAT::RAW ||
+	//		image->getNumberOfDimensions() < 3) return img;
 
-	if (image->getNumberOfDimensions() < 3) return img;
+	if ((image->getRawVersion() == tissuestack::imaging::RAW_FILE_VERSION::LEGACY &&
+			image->getFormat() == tissuestack::imaging::FORMAT::RAW) ||
+			image->getRawVersion() == tissuestack::imaging::RAW_FILE_VERSION::V1 ||
+			image->getNumberOfDimensions() < 3)
+		return img;
 
 	Image * tmp = img;
 	if (image->getFormat() == tissuestack::imaging::FORMAT::NIFTI ||

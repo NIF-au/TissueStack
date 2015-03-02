@@ -77,8 +77,9 @@ const std::array<unsigned long long int, 3> tissuestack::imaging::SimpleCacheHeu
 		unsigned long long int actualOffset =
 			static_cast<unsigned long long int>(
 					static_cast<unsigned long long int>(
-						request->getYCoordinate())*actualDimension->getWidth()*multiplier +
-					static_cast<unsigned long long int>(request->getXCoordinate()*multiplier));
+						request->getYCoordinate())*
+						static_cast<unsigned long long int>(actualDimension->getWidth())*multiplier +
+					static_cast<unsigned long long int>(request->getXCoordinate())*multiplier);
 
 		pixel_value[0] = static_cast<unsigned long long int>(cache_data[actualOffset]);
 		pixel_value[1] = static_cast<unsigned long long int>(cache_data[actualOffset+1]);
