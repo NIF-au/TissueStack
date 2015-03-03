@@ -84,17 +84,17 @@ Image * tissuestack::imaging::UncachedImageExtraction::extractImageForPreTiling(
 		const tissuestack::imaging::TissueStackDataDimension * actualDimension,
 		const unsigned int sliceNumber) const
 {
-	unsigned char * data =
+	std::unique_ptr<unsigned char[]> data(
 		this->readRawSlice(
 				image,
 				actualDimension,
-				sliceNumber);
+				sliceNumber));
 
 	return
 		this->createImageFromDataRead0(
 			image,
 			actualDimension,
-			data);
+			data.get());
 }
 
 Image * tissuestack::imaging::UncachedImageExtraction::applyPreTilingProcessing(
