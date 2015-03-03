@@ -54,13 +54,24 @@ TissueStack.Admin.prototype = {
 	registerCreateSessionHandler : function () {
 	 	var _this = this;
 
+		// file upload for the desktop as well as log in
+		if (TissueStack.desktop) {
+			$('#submit_new_file').unbind("click");
+			$('#submit_new_file').bind("click", 
+				function() {
+					$('#uploadForm').submit();	
+			});
+		}
+
 	 	// make it possible to use ENTER to submit
+	 	$("#password").unbind("keyup");
 	 	$("#password").keyup(function(event){
 	 	    if(event.keyCode == 13){
 	 	        $("#login_btn").click();
 	 	    }
 	 	});
 	 	// make it possible to use ENTER to submit
+	 	$("#new_password").unbind("keyup");
 	 	$("#new_password").keyup(function(event){
 	 	    if(event.keyCode == 13){
 	 	        $("#passwd_change_btn").click();
@@ -68,6 +79,7 @@ TissueStack.Admin.prototype = {
 	 	});
 
 	 	// login handler
+	 	$('#login_btn').unbind("click");
 		$('#login_btn').click(function(){
 		 	var password = $('#password').val();
 
@@ -98,10 +110,7 @@ TissueStack.Admin.prototype = {
 						_this.replaceErrorMessage("Wrong password!");
 						return;
 					}
-					var session= data.response;
-					_this.session = session.id;
-					var value = $('#login_btn').val(100);
-					_this.checkCookie(session, value);
+					_this.checkCookie(data.response.id);
 
 					if(TissueStack.phone){
 						$('#phone_login').append("").fadeOut(500);
@@ -120,6 +129,7 @@ TissueStack.Admin.prototype = {
 		});
 
 	 	// passwd change handler
+	 	$('#passwd_change_btn').unbind("click");
 		$('#passwd_change_btn').click(function(){
 		 	var old_password = $('#old_password').val();
 		 	var new_password = $('#new_password').val();
@@ -149,10 +159,7 @@ TissueStack.Admin.prototype = {
 						_this.replaceErrorMessage(message);
 						return;
 					}
-					var session= data.response;
-					_this.session = session.id;
-					var value = $('#login_btn').val(100);
-					_this.checkCookie(session, value);
+					_this.checkCookie(data.response.id);
 
 					if(TissueStack.phone){
 						$('#phone_login').append("").fadeOut(500);
@@ -190,23 +197,17 @@ TissueStack.Admin.prototype = {
 		document.cookie=c_name + "=" + c_value;
 		//$.cookie(c_name,c_value, 1);
 	},
-	checkCookie: function (session, value){
-		var session_name=this.getCookie("session");
+	checkCookie: function (value){
+		var session_cookie=this.getCookie("session");
 
-		if ($(value).val() != null){
-			session_name = null;
-		}
+		if (value != null) {
+			value=value.trim();
+	  		this.session = value;
+		} else if (session_cookie != null)
+			this.session = session_cookie;
 
-		if (session_name!=null && session_name !="")
-		  	this.session = session_name;
-		else {
-		  session_name = session;
-		  if (session_name!=null && session_name!="")
-		    {
-		   		this.setCookie("session",session_name.id,1);
-		   		return;
-		    }
-		  }
+		if (this.session != null)
+   			this.setCookie("session",this.session,1);
 	},
 	initTaskView : function() {
 	  	if($.cookie("tasks") == null) return;
@@ -300,7 +301,15 @@ TissueStack.Admin.prototype = {
 				slashPos = filename.lastIndexOf('/');
 			if (slashPos > 0)
 				filename = filename.substring(slashPos+1);
-
+	
+			if (filename.lastIndexOf(".mnc") < 0 &&
+				filename.lastIndexOf(".nii") < 0 &&
+				filename.lastIndexOf(".nii.gz") < 0 &&
+				filename.lastIndexOf(".raw") < 0) {				
+				errorHandling2("Error: Uploaded file needs to be of the following type: .mnc, .nii, .nii.gz or .raw!");
+				return false;	
+			}
+				
 			// check existence of file in upload beforehand
 			var stopExecution = _this.checkExistenceOfFileInUploadDirectory(_this, filename);
 			if (stopExecution)

@@ -219,6 +219,11 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadRe
 			"File Name for file upload is missing!");
 	const std::string fileName = contentDisposition.substr(0, pos);
 
+	if (fileName.rfind(".mnc") == std::string::npos && fileName.rfind(".nii") == std::string::npos &&
+			fileName.rfind(".nii.gz") == std::string::npos && fileName.rfind(".raw") == std::string::npos)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackFileUploadException,
+		"Uploaded file needs to be of the following type: .mnc, .nii, .nii.gz or .raw!");
+
 	if (tissuestack::utils::System::fileExists(std::string(UPLOAD_PATH) + "/" + fileName))
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackFileUploadException,
 		"File already exists in the upload folder!");
