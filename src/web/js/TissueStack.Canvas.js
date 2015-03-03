@@ -693,8 +693,8 @@ TissueStack.Canvas.prototype = {
 
 						//console.info('Drawing [' + _this.getDataExtent().data_id + ']: ' + timestamp + ' (' + _this.getDataExtent().getOriginalPlane()  + ') R => ' + row + ' C => ' + col + ' Left: ' + counter);
 						ctx.drawImage(this,
-								imageOffsetX, imageOffsetY, width, height, // tile dimensions
-								canvasX, canvasY, width, height); // canvas dimensions
+							imageOffsetX, imageOffsetY, width, height, // tile dimensions
+							canvasX, canvasY, width, height); // canvas dimensions
 						_this.applyContrastAndColorMapToTiles(ctx, canvasX, canvasY, width, height);
 						
 						if ((TissueStack.overlay_datasets && _this.underlying_canvas) || _this.is_linked_dataset) {

@@ -290,7 +290,7 @@ inline void tissuestack::imaging::PreTiler::loopOverDimensions(
 							img_processed,
 							width,
 							height,
-							0.1);
+							0.05);
 					this->writeImageToFile(
 						img_processed,
 						subDir,

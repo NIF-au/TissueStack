@@ -126,7 +126,7 @@ TissueStack.Queue.prototype = {
 				}
 				clearInterval(lowResBackdrop);
 			}
-		}, 25);		
+		}, 15);		
 	},
 	clearRequestQueue : function() {
 		this.requests = [];
@@ -256,6 +256,7 @@ TissueStack.Queue.prototype = {
 			imageTile.onload = function() {
 				if (_this.latestDrawRequestTimestamp < 0 || timestamp < _this.latestDrawRequestTimestamp) {
 					//console.info('Aborting preview for ' + _this.canvas.getDataExtent().data_id + '[' +_this.canvas.getDataExtent().getOriginalPlane() +  ']: ' + timestamp);
+					_this.lowResolutionPreviewDrawn = true;
 					return;
 				}
 
@@ -283,7 +284,7 @@ TissueStack.Queue.prototype = {
 					if (!TissueStack.overlay_datasets || (!_this.canvas.underlying_canvas && !_this.canvas.overlay_canvas))
 						_this.canvas.getCanvasElement().show();		
 				} 
-				
+
 				_this.lowResolutionPreviewDrawn = true;
 			};
 		})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height);

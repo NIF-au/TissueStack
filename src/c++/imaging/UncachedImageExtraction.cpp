@@ -125,9 +125,11 @@ Image * tissuestack::imaging::UncachedImageExtraction::applyPreTilingProcessing(
 		width =
 			static_cast<unsigned int>(
 				static_cast<const float>(width) * scaleFactor);
+
 		height =
 			static_cast<unsigned int>(
 					static_cast<const float>(height) * scaleFactor);
+
 		img =
 			this->scaleImage(
 				img,
@@ -444,11 +446,14 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::degradeImage0(
 	ExceptionInfo exception;
 	GetExceptionInfo(&exception);
 
-	const float reducedWidth = static_cast<const float>(width) * quality_factor;
-	const float reducedHeight = static_cast<const float>(height) * quality_factor;
+	float reducedWidth = static_cast<const float>(width) * quality_factor;
+	float reducedHeight = static_cast<const float>(height) * quality_factor;
 
-	if (reducedWidth < 1 || reducedHeight < 1) // obviously less than 1 pixel is bad/nonsensical
-		return img;
+	if (reducedWidth < 1 || reducedHeight < 1) {
+		// obviously less than 1 pixel is bad/nonsensical
+		reducedWidth = reducedWidth < 1 ? 1 : reducedWidth;
+		reducedHeight = reducedHeight < 1 ? 1 : reducedHeight;
+	}
 
 	Image * tmp = img;
 
@@ -491,16 +496,15 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::scaleImage(
 	ExceptionInfo exception;
 	GetExceptionInfo(&exception);
 
-	if (width < 1 || height < 1) // obviously less than 1 pixel is bad/nonsensical
-		return img;
-
+	const unsigned int boundCheckedWidth = width < 1 ? 1 : width;
+	const unsigned int boundCheckedHeight = height < 1 ? 1 : height;
 
 	Image * tmp = img;
 	img =
 		SampleImage(
 			img,
-			width,
-			height,
+			boundCheckedWidth,
+			boundCheckedHeight,
 			&exception);
 	DestroyImage(tmp);
 	if (img == NULL)

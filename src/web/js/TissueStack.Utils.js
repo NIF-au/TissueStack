@@ -468,7 +468,7 @@ TissueStack.Utils = {
 			return null;
 		
 		if (typeof(is_preview) != "boolean")
-			return null;
+			is_preview = false;
 		
 		if (!is_preview && (typeof(tile_size) != "number" || zoom < 0))
 			tile_size = 256;
@@ -530,7 +530,7 @@ TissueStack.Utils = {
 
 		    url = url + "/" + path + "/?service=";
 		    if (is_preview)
-		    	url += "image_preview&quality=0.1";
+		    	url += "image_preview&quality=0.05";
 		    else
 		    	url += "image" + "&square=" + tile_size + '&y=' + col + "&x=" + row
 		    url += "&dataset=" + filename + "&image_type=PNG&scale=" + zoom + "&dimension="

@@ -417,7 +417,8 @@ inline void tissuestack::imaging::RawConverter::convertSlice(
 			"Could not find dimension of NIFTI file to read data!");
 
 	// set time slice to 0 for any data set with dimensionality greater than 3
-	if (nifti->getNiftiHandle()->ndim > 3) dims[4] = 0;
+	if (nifti->getNiftiHandle()->ndim > 3 ||
+			(nifti->getNiftiHandle()->ndim == 3 && nifti->isColor())) dims[4] = 0;
 	if (nifti->getNumberOfDimensions() == 2)
 	{
 		dims[dimension_number+1] = -1;
@@ -432,12 +433,13 @@ inline void tissuestack::imaging::RawConverter::convertSlice(
 	const unsigned long long int new_size_per_slice = size_per_slice * 3;
 
 	unsigned short rgb_channel = 0;
-	unsigned short rgb_total = (nifti->isColor()) ? 3 : 1;
+	unsigned short rgb_total = (nifti->isColor() && nifti->getNiftiHandle()->ndim > 3) ? 3 : 1;
 	unsigned char * data_out = new unsigned char[new_size_per_slice];
 
 	while (rgb_channel < rgb_total)  // this loop is done once only for any data type other than RGB
 	{
-		if (nifti->isColor()) dims[nifti->getNiftiHandle()->ndim] = rgb_channel;
+		if (nifti->isColor() && nifti->getNiftiHandle()->ndim > 3)
+			dims[nifti->getNiftiHandle()->ndim] = rgb_channel;
 
 		int ret = nifti_read_collapsed_image(
 				const_cast<nifti_image *>(nifti->getNiftiHandle()), dims, &data_in);
@@ -458,6 +460,7 @@ inline void tissuestack::imaging::RawConverter::convertSlice(
 				data_in = NULL;
 			}
 			delete [] data_out;
+
 			THROW_TS_EXCEPTION(
 				tissuestack::common::TissueStackApplicationException,
 				"NIFTI read: number of read bytes does not match expected bytes!");
@@ -789,7 +792,25 @@ inline void tissuestack::imaging::RawConverter::reorientMincSlice(
     	}
     }
 
-    // TODO: check flipping
+	if (!((dim->getName().at(0) == 'x' && dimsOrder[0].at(0) == 'y' && dimsOrder[1].at(0) == 'z' && dimsOrder[2].at(0) == 'x') ||
+				(dim->getName().at(0) == 'z' && dimsOrder[0].at(0) == 'z' && dimsOrder[1].at(0) == 'x' && dimsOrder[2].at(0) == 'y') ||
+				((dim->getName().at(0) == 'x' || dim->getName().at(0) == 'y') &&
+					dimsOrder[0].at(0) == 'y' && dimsOrder[1].at(0) == 'x' && dimsOrder[2].at(0) == 'z') ||
+				(dimsOrder[0].at(0) == 'x' && dimsOrder[1].at(0) == 'y' && dimsOrder[2].at(0) == 'z')))
+	{
+		tmp = img;
+		img = FlipImage(img, &exception);
+		DestroyImage(tmp);
+		if (img == NULL)
+		{
+			delete [] data_out;
+			CatchException(&exception);
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+					"Conversion: Failed to flip image!");
+		}
+	}
+
+	/*
 	if ((dimsOrder[0].at(0) == 'x' && dimsOrder[1].at(0) == 'z' && dimsOrder[2].at(0) == 'y')
 		 && (dim->getName().at(0) == 'z' || dim->getName().at(0) == 'y'))
 	{
@@ -801,9 +822,9 @@ inline void tissuestack::imaging::RawConverter::reorientMincSlice(
 			delete [] data_out;
 			CatchException(&exception);
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-				"Could not flip Image!");
+				"Conversion: Could not flip Image!");
 		}
-	}
+	}*/
 
 	// extract pixel info, looping over values
 	PixelPacket * pixels = GetImagePixels(img, 0, 0, dim->getWidth(), dim->getHeight());
