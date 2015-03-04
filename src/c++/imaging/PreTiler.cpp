@@ -85,9 +85,10 @@ void tissuestack::imaging::PreTiler::preTile(
 		if (processing_strategy->isOnlineStrategy())
 		{
 			tissuestack::logging::TissueStackLogger::instance()->error(
-				"Failed to pre-tile: %s => %s",
+				"Failed to pre-tile: %s => %s for the following reason:\n%s",
 				pre_tiling_task->getInputImageData()->getFileName().c_str(),
-				pre_tiling_task->getParametersForTaskFile().c_str());
+				pre_tiling_task->getParametersForTaskFile().c_str(),
+				bad.what());
 
 			tissuestack::services::TissueStackTaskQueue::instance()->flagTaskAsErroneous(
 				ptr_pretiling_task.release()->getId());

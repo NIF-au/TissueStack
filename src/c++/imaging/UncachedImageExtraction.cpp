@@ -470,12 +470,13 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::degradeImage0(
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Image Extraction: Failed to adjust quality!");
 	}
+
 	tmp = img;
 	img =
 		SampleImage(
 			img,
-			static_cast<const float>(width),
-			static_cast<const float>(height),
+			width < 1 ? 1 : width,
+			height < 1 ? 1 : height,
 			&exception);
 	DestroyImage(tmp);
 	if (img == NULL)
@@ -496,15 +497,12 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::scaleImage(
 	ExceptionInfo exception;
 	GetExceptionInfo(&exception);
 
-	const unsigned int boundCheckedWidth = width < 1 ? 1 : width;
-	const unsigned int boundCheckedHeight = height < 1 ? 1 : height;
-
 	Image * tmp = img;
 	img =
 		SampleImage(
 			img,
-			boundCheckedWidth,
-			boundCheckedHeight,
+			width < 1 ? 1 : width,
+			height < 1 ? 1 : height,
 			&exception);
 	DestroyImage(tmp);
 	if (img == NULL)

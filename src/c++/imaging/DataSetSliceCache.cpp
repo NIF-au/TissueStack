@@ -54,8 +54,10 @@ const bool tissuestack::imaging::DataSetSliceCache::setSlice(
 		return false;
 
 	if (this->_cache && this->_cache[slice])
-		//delete this->_cache[slice];
+	{
+		delete cache_data;
 		return true;
+	}
 
 	this->_cache[slice] = cache_data;
 
