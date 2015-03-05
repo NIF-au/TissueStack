@@ -42,7 +42,7 @@ CHECK_SIZE=`stat -c%s /tmp/build_mod_load`
 if [ $CHECK_SIZE -ne 0 ]; then echo -e "FAILED\nERROR: Could not locate needed gcc package (>=4.9.1). Please install it and load it: 'module load gcc' !!!!!\n"
 fi
 
-module load tissuestack/1.8 2> /tmp/build_mod_load
+module load tissuestack/1.9 2> /tmp/build_mod_load
 
 rm -rf /tmp/build_mod_load
 

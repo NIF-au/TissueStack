@@ -32,7 +32,7 @@ if [ $IS_CENTOS_6_X -gt 0 ]; then
 	echo -e "cc1plus: error: unrecognized command line option -std=gnu++11\n"
 fi;
 
-export TISSUESTACK_BUILD_VERSION=1.8
+export TISSUESTACK_BUILD_VERSION=1.9
 
 CURRENT_DIR=`pwd`
 
