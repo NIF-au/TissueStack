@@ -46,14 +46,13 @@ void tissuestack::imaging::TissueStackDataDimension::setWidthAndHeight(
 	const unsigned int width, const unsigned int height,
 	const unsigned int anisotropic_width, const unsigned int anisotropic_height)
 {
-	if (width <=0 || height <=0 || anisotropic_width <=0 || anisotropic_height <=0)
+	if (width <=0 || height <=0)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"DataDimension Initialization with an invalid width/height of less than or equal to 0");
 	this->_width = width;
 	this->_height = height;
-	this->_anisotropic_width = anisotropic_width;
-	this->_anisotropic_height = anisotropic_height;
-
+	this->_anisotropic_width = anisotropic_width < 1 ? 1 : anisotropic_width;
+	this->_anisotropic_height = anisotropic_height < 1 ? 1 : anisotropic_height;
 }
 
 void tissuestack::imaging::TissueStackDataDimension::setTransformationMatrix(const std::string transformationMatrix)

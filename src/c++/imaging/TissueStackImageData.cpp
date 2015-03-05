@@ -138,7 +138,7 @@ void tissuestack::imaging::TissueStackImageData::setIsotropyFactors()
 	float prvValue = -1;
 	for (auto step : copyOfSteps)
 	{
-		if (step == prvValue)
+		if (fabs(step) == prvValue)
 		{
 			base_value = static_cast<float>(fabs(step));
 			break;
@@ -147,18 +147,18 @@ void tissuestack::imaging::TissueStackImageData::setIsotropyFactors()
 	}
 	unsigned int numberOfBaseValues = 0;
 	for (auto step : copyOfSteps)
-		if (step == base_value)
+		if (fabs(step) == base_value)
 			numberOfBaseValues++;
 
-	if (numberOfBaseValues == copyOfSteps.size() || copyOfSteps.size() == 1)
+	if (numberOfBaseValues == copyOfSteps.size() || copyOfSteps.size() <= 1)
 		base_value = 1;
-	else // take smallest value
-		base_value = copyOfSteps[0];
+	else if (numberOfBaseValues == 0) // take smallest value
+		base_value = fabs(copyOfSteps[0]);
 
 	// now that we have the base value to compare to, let's compute the ratios
 	for (unsigned int i=0; i < this->_steps.size(); i++)
 	{
-		if (base_value == 1 || this->_steps[i] == base_value)
+		if (base_value == 1 || fabs(this->_steps[i]) == base_value)
 			const_cast<tissuestack::imaging::TissueStackDataDimension *>(
 				this->getDimensionByOrderIndex(i))->setIsotropyFactor(1);
 		else
