@@ -126,9 +126,15 @@ Image * tissuestack::imaging::UncachedImageExtraction::applyPreTilingProcessing(
 			static_cast<unsigned int>(
 				static_cast<const float>(width) * scaleFactor);
 
+		if (width < 1)
+			width = 1;
+
 		height =
 			static_cast<unsigned int>(
 					static_cast<const float>(height) * scaleFactor);
+
+		if (height < 1)
+			height = 1;
 
 		img =
 			this->scaleImage(
@@ -193,13 +199,18 @@ Image * tissuestack::imaging::UncachedImageExtraction::applyPostExtractionTasks(
 			"Old Image Request!");
 	}
 
+	const float scaledWith =
+		static_cast<const float>(actualDimension->getAnisotropicWidth()) * request->getScaleFactor();
+	const float scaledHeight =
+		static_cast<const float>(actualDimension->getAnisotropicHeight()) * request->getScaleFactor();
+
 	// adjust scale (if requested)
 	if (request->getScaleFactor() != static_cast<const float>(1.0))
 		img =
 			this->scaleImage(
 				img,
-				static_cast<const float>(actualDimension->getAnisotropicWidth()) * request->getScaleFactor(),
-				static_cast<const float>(actualDimension->getAnisotropicHeight()) * request->getScaleFactor());
+				scaledWith < 0 ? 1 : static_cast<const unsigned int>(scaledWith),
+				scaledHeight < 0 ? 1 : static_cast<const unsigned int>(scaledHeight));
 
 	// timeout/shutdown check
 	if (request->hasExpired())
@@ -214,8 +225,8 @@ Image * tissuestack::imaging::UncachedImageExtraction::applyPostExtractionTasks(
 		img =
 			this->degradeImage0(
 				img,
-				static_cast<const float>(actualDimension->getAnisotropicWidth()) * request->getScaleFactor(),
-				static_cast<const float>(actualDimension->getAnisotropicHeight()) * request->getScaleFactor(),
+				scaledWith < 0 ? 1 : static_cast<const unsigned int>(scaledWith),
+				scaledHeight < 0 ? 1 : static_cast<const unsigned int>(scaledHeight),
 				request->getQualityFactor());
 
 	// we don't have a preview => chop up into tiles
