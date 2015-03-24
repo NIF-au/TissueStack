@@ -48,6 +48,6 @@ void tissuestack::services::TissueStackService::checkMandatoryRequestParameters(
 						"Mandatory parameter " + p + " is missing!");
 	} catch (std::out_of_range & not_found) {
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
-				"The action parameter does not exist!");
+				"(A) mandatory parameter(s) for the action do(es) not exist!");
 	}
 }

@@ -18,11 +18,12 @@ INCLUDE			=	-Iinclude -I/usr/include/nifti \
 LIB_PATH		=
 
 LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid \
-					-lminc2 -lniftiio -lm -lz -lznz
+					-lminc2 -lniftiio -ldcmdata -ldcmimage -ldcmimgle -ldcmjpeg \
+					-loflog -lofstd -lm -lz -lznz -lzip
 
 EXE_NAME		=	TissueStackServer
 
-FLAGS			=	-Wall -Werror -ggdb -std=c++11 -std=gnu++11 -std=c++0x 
+FLAGS			=	-Wall -Werror -ggdb -std=c++11 -std=gnu++11 -std=c++0x
 
 CC				=	g++
 

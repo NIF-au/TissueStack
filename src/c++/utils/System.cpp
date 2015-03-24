@@ -246,3 +246,29 @@ const bool tissuestack::utils::System::makeSocketNonBlocking(int socket_fd)
 
 	return true;
 }
+
+const unsigned long long int tissuestack::utils::System::getFileSizeInBytes(const std::string & file)
+{
+	if (!tissuestack::utils::System::fileExists(file))
+		return 0;
+
+	struct stat buf;
+
+	if (stat(file.c_str(), &buf) == -1)
+		return 0;
+
+	return buf.st_size;
+}
+
+const unsigned long long int tissuestack::utils::System::getSpaceLeftGivenPathIntoPartition(const std::string & path)
+{
+	if (path.empty())
+		return 0;
+
+	struct statvfs buf;
+
+	if (statvfs(path.c_str(), &buf) != 0)
+		return 0;
+
+	return static_cast<unsigned long long int>(buf.f_bavail) * buf.f_bsize;
+}

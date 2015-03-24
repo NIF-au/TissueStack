@@ -26,7 +26,7 @@ tissuestack::services::TissueStackConversionTask::TissueStackConversionTask(
 {
 	if (this->isInputDataRaw())
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-			"Image does not need to converted to raw any more. It's already raw!");
+			"Image does not need to be converted to raw any more. It's already raw!");
 
 	if (output_file.empty())
 	{

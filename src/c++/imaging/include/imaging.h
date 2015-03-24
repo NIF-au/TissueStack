@@ -23,6 +23,9 @@
 #include <array>
 #include <fstream>
 
+// forward declaration
+class DcmFileFormat;
+
 namespace tissuestack
 {
 	namespace networking
@@ -67,7 +70,7 @@ namespace tissuestack
 		enum RAW_FILE_VERSION
 		{
 			LEGACY  = 0,
-			V1 	= 1,
+			V1 	= 1
 		};
 
 		enum FORMAT
@@ -75,7 +78,8 @@ namespace tissuestack
 			MINC    	= 1,	// BACKWARDS COMPATIBILITY FOR MINC
 			NIFTI 		= 2,	// BACKWARDS COMPATIBILITY FOR NIFTI
 			RAW			= 3,	// TISSUESTACK FORMAT
-			DATABASE	= 4		// DATABASE RECORD IMAGE DATA
+			DATABASE	= 4,	// DATABASE RECORD IMAGE DATA
+			DICOM		= 5		// DICOM
 		};
 
 		enum RAW_TYPE
@@ -388,6 +392,44 @@ namespace tissuestack
 				explicit TissueStackDataBaseData(
 						const unsigned long long int id,
 						const std::string filename = "");
+		};
+
+		class TissueStackDicomData final : public TissueStackImageData
+		{
+			public:
+				~TissueStackDicomData();
+				const bool isRaw() const;
+				const bool isColor() const;
+			private:
+				void addDicomFile(const std::string & file, const bool withinZippedArchive = false);
+				friend class TissueStackImageData;
+				TissueStackDicomData(const std::string & filename);
+				TissueStackDicomData(const std::string & filename_of_zip, const std::vector<std::string> & zippedFiles);
+				void initializeDicomImageFromFiles();
+				inline void initializeDicomTimeSeries(
+					const std::vector<unsigned long long int> & widths,
+					const std::vector<unsigned long long int> & heights,
+					const std::vector<std::string> & orientations,
+					const std::vector<std::string> & steps,
+					const std::vector<std::string> & coords);
+				inline void initializeDicom3Ddata(
+					const std::vector<unsigned long int> & dim_slices,
+					const std::vector<unsigned long long int> & widths,
+					const std::vector<unsigned long long int> & heights,
+					const std::vector<std::string> & orientations,
+					const std::vector<std::string> & steps,
+					const std::vector<std::string> & coords);
+				inline void addCoordinates(
+					const std::string & coords,
+					const unsigned short index);
+				inline void addSteps(
+					const std::string & steps,
+					const std::string & orientations,
+					const unsigned short index);
+				std::vector<DcmFileFormat *> _dicom_files;
+				std::vector<unsigned long int> _plane_index;
+				bool _is_color = false;
+				std::string _series_number = "";
 		};
 
 		class TissueStackNiftiData final : public TissueStackImageData

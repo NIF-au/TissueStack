@@ -284,6 +284,7 @@ namespace tissuestack
 				const std::string handleDataSetRawFilesRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
 				const std::string handleUploadProgressRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
 				const std::string handleProgressRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
+				const std::string handleDicomTest(const tissuestack::networking::TissueStackServicesRequest * request) const;
 				const bool readAndStoreFileUploadData(
 					const tissuestack::common::ProcessingStrategy * processing_strategy,
 					const std::string filename,

@@ -70,7 +70,55 @@ const tissuestack::imaging::TissueStackImageData * tissuestack::imaging::TissueS
 	std::string fileNameAllUpperCase = filename;
 	std::transform(fileNameAllUpperCase.begin(), fileNameAllUpperCase.end(), fileNameAllUpperCase.begin(), toupper);
 
-	size_t position = fileNameAllUpperCase.rfind(".NII");
+	// we accept zipped dicom series or single file zips
+	size_t position = fileNameAllUpperCase.rfind(".ZIP");
+	if (position + 4 == filename.length())
+	{
+		std::vector<std::string> zippedFiles =
+			tissuestack::utils::Misc::getContentsOfZipArchive(filename);
+
+		if (zippedFiles.empty())
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+					"Supposed zip file is either empty or corrupt!");
+
+		// rough preliminary check whether the zipped contents fit into /tmp
+		// which will be used for extraction
+		const unsigned long long int spaceAvail =
+			tissuestack::utils::System::getSpaceLeftGivenPathIntoPartition("/tmp");
+		const unsigned long long int spaceNeededAtAMinimum =
+			tissuestack::utils::System::getFileSizeInBytes(filename);
+
+		if (spaceNeededAtAMinimum > spaceAvail)
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Not enough room in the partition that holds '/tmp' which is where the zip contents get extracted to!");
+
+		unsigned int counter = 0;
+		for (auto zippedFile : zippedFiles)
+		{
+			if (zippedFile.find("/") != std::string::npos)
+				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+					"We don't accept zip files which contain directories!");
+			counter++;
+		}
+
+		if (counter > 1) // a whole series of files => we'll have to assume dicom
+			return new TissueStackDicomData(filename, zippedFiles);
+
+		// this leaves the 1 file scenario:
+		// we extract to the tmp location adjusting the file name
+		// and then continue with the extension checking for initial file determination
+		if (!tissuestack::utils::Misc::extractZippedFileFromArchive(
+			filename,
+			zippedFiles[0],
+			std::string("/tmp/") + zippedFiles[0],
+			true))
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Failed to extract zip to location: '/tmp'!");
+		const_cast<std::string &>(filename) = std::string("/tmp/") + zippedFiles[0];
+		fileNameAllUpperCase = filename;
+		std::transform(fileNameAllUpperCase.begin(), fileNameAllUpperCase.end(), fileNameAllUpperCase.begin(), toupper);
+	}
+	position = fileNameAllUpperCase.rfind(".NII");
 	if (position + 4 == filename.length())
 		return new TissueStackNiftiData(filename);
 	position = fileNameAllUpperCase.rfind(".NII.GZ");
@@ -79,6 +127,9 @@ const tissuestack::imaging::TissueStackImageData * tissuestack::imaging::TissueS
 	position = fileNameAllUpperCase.rfind(".MNC");
 	if (position + 4 == filename.length())
 		return new TissueStackMincData(filename);
+	position = fileNameAllUpperCase.rfind(".DCM");
+	if (position + 4 == filename.length())
+		return new TissueStackDicomData(filename);
 
 	// if not recognized by extension, we'll assume it's raw and if not the raw constructor will tell us otherwise
 	return new tissuestack::imaging::TissueStackRawData(filename);
@@ -151,14 +202,14 @@ void tissuestack::imaging::TissueStackImageData::setIsotropyFactors()
 			numberOfBaseValues++;
 
 	if (numberOfBaseValues == copyOfSteps.size() || copyOfSteps.size() <= 1)
-		base_value = 1;
+		base_value = -1;
 	else if (numberOfBaseValues == 0) // take smallest value
 		base_value = fabs(copyOfSteps[0]);
 
 	// now that we have the base value to compare to, let's compute the ratios
 	for (unsigned int i=0; i < this->_steps.size(); i++)
 	{
-		if (base_value == 1 || fabs(this->_steps[i]) == base_value)
+		if (base_value == -1 || fabs(this->_steps[i]) == base_value)
 			const_cast<tissuestack::imaging::TissueStackDataDimension *>(
 				this->getDimensionByOrderIndex(i))->setIsotropyFactor(1);
 		else
@@ -245,13 +296,13 @@ inline void tissuestack::imaging::TissueStackImageData::setWidthAndHeightByDimen
 			widthDimension = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('x'));
 			heightDimension = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('z'));
 		}
-	} else if (dimension.at(0) == 'z')
+	} else if (dimension.at(0) == 'z' || dimension.at(0) == 't')
 	{
 		widthDimension = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('x'));
 		heightDimension = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('y'));
 	} else
 		THROW_TS_EXCEPTION(
-				tissuestack::common::TissueStackApplicationException, "Dimension cannot be matched to x,y or z!");
+				tissuestack::common::TissueStackApplicationException, "Dimension cannot be matched to x,y, z or t!");
 
 	if (widthDimension)
 	{
@@ -273,6 +324,9 @@ inline void tissuestack::imaging::TissueStackImageData::setWidthAndHeightByDimen
 				static_cast<unsigned int>(
 					static_cast<float>(height) * heightDimension->getIsotropyFactor());
 	}
+
+	if (width == 0 || height == 0)
+		return;
 
 	presentDimension->setWidthAndHeight(
 		width, height, anisotropicWidth, anisotropicHeight);
@@ -750,6 +804,9 @@ void tissuestack::imaging::TissueStackImageData::dumpImageDataIntoDebugLog() con
 	for (auto v : this->_steps)
 		in << v << "\t";
 	tissuestack::logging::TissueStackLogger::instance()->debug("%s\n", in.str().c_str());
+
+	if (!this->_header.empty())
+		tissuestack::logging::TissueStackLogger::instance()->debug("Raw Header: %s", this->_header.c_str());
 
 	if (!this->isRaw()) return;
 

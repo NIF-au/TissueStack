@@ -213,14 +213,15 @@ void tissuestack::imaging::TissueStackRawData::parseHeader(const std::string & h
 		count++;
 	}
 
-	// special case 2D
-	if (numOfDims == 2)
+	// special case 2D:
+	// either 2 dims or triples where last dim is interpreted as time series slice
+	if (numOfDims == 2 || (numOfDims == 3 && tmpTokenString.size() == 2))
 	{
 		tissuestack::imaging::TissueStackDataDimension * TwoDPlane =
 			new tissuestack::imaging::TissueStackDataDimension(
 				"yspace",
 				this->_totalHeaderLength,
-				1,
+				static_cast<unsigned long long int>(numOfDims == 2 ? 1 : dims[2]),
 				dims[0]*dims[1]);
 		this->addDimension(TwoDPlane);
 		TwoDPlane->setWidthAndHeight(dims[0], dims[1], dims[0], dims[1]);
@@ -313,10 +314,5 @@ void tissuestack::imaging::TissueStackRawData::setRawType(int type)
 
 const unsigned long long int tissuestack::imaging::TissueStackRawData::getFileSizeInBytes() const
 {
-	struct stat buf;
-
-	if (stat(this->getFileName().c_str(), &buf) == -1)
-		return 0;
-
-	return buf.st_size;
+	return tissuestack::utils::System::getFileSizeInBytes(this->getFileName());
 }

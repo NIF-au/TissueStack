@@ -38,6 +38,9 @@ const tissuestack::imaging::TissueStackDataSet * tissuestack::imaging::TissueSta
 	if (image_data == nullptr)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackNullPointerException, "Cannot construct data set from null image data");
 
+	if (!image_data->isRaw() && image_data->getFormat() != tissuestack::imaging::FORMAT::DATABASE)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackNullPointerException, "Cannot construct data set from image data that is not raw or database!");
+
 	return new tissuestack::imaging::TissueStackDataSet(image_data);
 }
 
