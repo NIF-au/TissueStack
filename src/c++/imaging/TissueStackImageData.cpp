@@ -151,14 +151,14 @@ void tissuestack::imaging::TissueStackImageData::setIsotropyFactors()
 			numberOfBaseValues++;
 
 	if (numberOfBaseValues == copyOfSteps.size() || copyOfSteps.size() <= 1)
-		base_value = 1;
+		base_value = -1;
 	else if (numberOfBaseValues == 0) // take smallest value
 		base_value = fabs(copyOfSteps[0]);
 
 	// now that we have the base value to compare to, let's compute the ratios
 	for (unsigned int i=0; i < this->_steps.size(); i++)
 	{
-		if (base_value == 1 || fabs(this->_steps[i]) == base_value)
+		if (base_value == -1 || fabs(this->_steps[i]) == base_value)
 			const_cast<tissuestack::imaging::TissueStackDataDimension *>(
 				this->getDimensionByOrderIndex(i))->setIsotropyFactor(1);
 		else
