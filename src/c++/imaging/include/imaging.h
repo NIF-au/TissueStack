@@ -394,12 +394,53 @@ namespace tissuestack
 						const std::string filename = "");
 		};
 
+		class DicomFileWrapper final
+		{
+			public:
+				DicomFileWrapper & operator=(const DicomFileWrapper&) = delete;
+				DicomFileWrapper(const DicomFileWrapper&) = delete;
+				~DicomFileWrapper();
+
+				static DicomFileWrapper * createWrappedDicomFile(const std::string filename, const bool isTempFile = false);
+				const std::string getFileName() const;
+				const std::string getSeriesNumber() const;
+				const unsigned long getInstanceNumber() const;
+				const std::string getImagePositionPatient() const;
+				const std::string getPixelSpacing() const;
+				const std::string getImageOrientation() const;
+				const unsigned long long int getHeight() const;
+				const unsigned long long int getWidth() const;
+				const unsigned long getAllocatedBits() const;
+				const unsigned char * getData();
+				const bool containsSignedData() const;
+				const unsigned short getPlanarConfiguration() const;
+				const bool isColor() const;
+
+			private:
+				DicomFileWrapper(const std::string filename, const bool isTempFile = false);
+				std::string _file_name;
+				std::string _series_number;
+				unsigned long int _instance_number;
+				std::string _image_position_patient;
+				std::string _pixel_spacing;
+				std::string _image_orientation;
+				unsigned long long int _rows;
+				unsigned long long int _columns;
+				unsigned long _allocated_bits;
+				unsigned short _is_signed_data = 0;
+				unsigned short _planar_configuration = 0;
+				std::string _photometric_interpretation;
+				bool _isTemp = false;
+
+
+
+		};
+
 		class TissueStackDicomData final : public TissueStackImageData
 		{
 			public:
 				~TissueStackDicomData();
 				const bool isRaw() const;
-				const bool isColor() const;
 			private:
 				void addDicomFile(const std::string & file, const bool withinZippedArchive = false);
 				friend class TissueStackImageData;
@@ -426,9 +467,8 @@ namespace tissuestack
 					const std::string & steps,
 					const std::string & orientations,
 					const unsigned short index);
-				std::vector<DcmFileFormat *> _dicom_files;
+				std::vector<DicomFileWrapper *> _dicom_files;
 				std::vector<unsigned long int> _plane_index;
-				bool _is_color = false;
 				std::string _series_number = "";
 		};
 

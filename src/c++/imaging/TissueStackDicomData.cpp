@@ -19,20 +19,15 @@
 
 #ifndef	HAVE_CONFIG_H
 	#define HAVE_CONFIG_H
+	#include "dcmtk/dcmdata/dctk.h"
+	#include "dcmtk/dcmimgle/dcmimage.h"
+	#include "dcmtk/dcmimage/dipipng.h"
+	#include "dcmtk/dcmjpeg/dipijpeg.h"
 #endif
-#include "dcmtk/dcmdata/dctk.h"
-#include "dcmtk/dcmimgle/dcmimage.h"
-#include "dcmtk/dcmimage/dipipng.h"
-#include "dcmtk/dcmjpeg/dipijpeg.h"
 
 const bool tissuestack::imaging::TissueStackDicomData::isRaw() const
 {
 	return false;
-}
-
-const bool tissuestack::imaging::TissueStackDicomData::isColor() const
-{
-	return this->_is_color;
 }
 
 void tissuestack::imaging::TissueStackDicomData::addDicomFile(const std::string & file, const bool withinZippedArchive)
@@ -48,56 +43,42 @@ void tissuestack::imaging::TissueStackDicomData::addDicomFile(const std::string 
 				"Failed to extract dicom file from zip to location: '/tmp'!");
 	}
 
-	// TODO: writing out file
-	DicomImage * img = new DicomImage(potentialDicomFile.c_str());
+	std::unique_ptr<tissuestack::imaging::DicomFileWrapper> dicom_ptr(
+		tissuestack::imaging::DicomFileWrapper::createWrappedDicomFile(potentialDicomFile, true));
 
-	unsigned long size = img->getOutputDataSize(8);
-	char * buf = new char[size];
-	img->getOutputData(buf, size, 8);
+	// we will only allow same series numbers in one zip
+	if (this->_series_number.empty())
+		this->_series_number = dicom_ptr->getSeriesNumber();
+	else if (this->_series_number.compare(dicom_ptr->getSeriesNumber()) != 0)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"We allow only one series per zipped archive of dicom files!");
+
+	const unsigned char * data = dicom_ptr->getData();
 
 	ExceptionInfo exception;
 	GetExceptionInfo(&exception);
 	Image * image = NULL;
 	ImageInfo * imgInfo = NULL;
-	image = ConstituteImage(img->getWidth(), img->getHeight(), "I",CharPixel, buf, &exception);
+	image = ConstituteImage(dicom_ptr->getWidth(), dicom_ptr->getHeight(), "I",CharPixel, data, &exception);
  	if (image == NULL)
 	{
-		delete [] buf;
 		CatchException(&exception);
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"Could not constitute Image!");
 	}
+	delete [] data;
  	imgInfo = CloneImageInfo((ImageInfo *)NULL);
  	strcpy(image->filename, (potentialDicomFile + ".magick.png").c_str());
  	WriteImage(imgInfo, image);
  	DestroyImage(image);
  	DestroyImageInfo(imgInfo);
-	//img->writePluginFormat(new DiPNGPlugin(), (potentialDicomFile + ".png").c_str());
+	//DicomImage * img = new DicomImage(potentialDicomFile.c_str());
+ 	//img->writePluginFormat(new DiPNGPlugin(), (potentialDicomFile + ".png").c_str());
+ 	//delete img;
 	//img->writePluginFormat(new DiJPEGPlugin(), (potentialDicomFile + ".jpg").c_str());
-	delete img;
-	// TODO: remove after writing out file
 
-	DcmFileFormat * dicom = new DcmFileFormat();
-	OFCondition status = dicom->loadFile(potentialDicomFile.c_str());
-	if (!status.good())
-	{
-		delete dicom;
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-			"Given dicom file is no good!");
-	}
-
-	// we will only allow same series numbers in one zip
-	OFString value;
-	if (!dicom->getDataset()->findAndGetOFString(DCM_SeriesNumber, value).good())
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-			"Could not read series number of dicom file!");
-	if (this->_series_number.empty())
-		this->_series_number = std::string(value.c_str());
-	else if (this->_series_number.compare(value.c_str()) != 0)
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-			"We allow only one series per zipped archive of dicom files!");
-
-	this->_dicom_files.push_back(dicom);
+ 	// TODO: move this up
+	this->_dicom_files.push_back(dicom_ptr.release());
 }
 
 tissuestack::imaging::TissueStackDicomData::TissueStackDicomData(
@@ -120,22 +101,12 @@ tissuestack::imaging::TissueStackDicomData::TissueStackDicomData(
 
 	// sort according to instance numbers
 	std::sort (this->_dicom_files.begin(), this->_dicom_files.end(),
-		[](DcmFileFormat * d1, DcmFileFormat * d2) {
-		   OFString value;
-		   if (!d1->getDataset()->findAndGetOFString(DCM_InstanceNumber, value).good())
-				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-						"Could not read dicom instance number!");
-		   unsigned long int d1_ordinal = strtoul(value.c_str(), NULL, 10);
-		   if (!d2->getDataset()->findAndGetOFString(DCM_InstanceNumber, value).good())
-				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-						"Could not read dicom instance number!");
-		   unsigned long int d2_ordinal = strtoul(value.c_str(), NULL, 10);
-
-		   if (d1_ordinal == d2_ordinal)
+		[](DicomFileWrapper * d1, DicomFileWrapper * d2) {
+		   if (d1->getInstanceNumber() == d2->getInstanceNumber())
 				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 					"We have 2 same instance numbers for 2 different dicoms!");
 
-		   return (d1 < d2);
+		   return (d1->getInstanceNumber() < d2->getInstanceNumber());
 	});
 
 	this->initializeDicomImageFromFiles();
@@ -151,43 +122,28 @@ void tissuestack::imaging::TissueStackDicomData::initializeDicomImageFromFiles()
 	std::vector<std::string> steps;
 	std::vector<std::string> coords;
 
+	// TODO: create dicom file data object which is populated with attributes needed and store it
+	// include DicomImage pointer
+	// include iscolor
+	// include bit depth
+
 	std::string latestOrientation = "";
 	unsigned long int counter = 0;
 	for (auto dicom : this->_dicom_files)
 	{
-		OFString value;
-		std::string presentOrientation = "";
-		if (!dicom->getDataset()->findAndGetOFStringArray(DCM_ImageOrientationPatient, value).good())
-			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-						"ImageOrientationPatient tag is missing in given dicom!");
-
-		if (latestOrientation.empty() || latestOrientation.compare(value.c_str()) != 0)
+		if (latestOrientation.empty() || latestOrientation.compare(dicom->getImageOrientation()) != 0)
 		{
 			if (!latestOrientation.empty())
 				dim_slices.push_back(counter);
 
-			latestOrientation = std::string(value.c_str());
+			latestOrientation = dicom->getImageOrientation();
 			orientations.push_back(latestOrientation);
 
-			if (!dicom->getDataset()->findAndGetOFStringArray(DCM_ImagePositionPatient, value).good())
-				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-							"ImagePositionPatient tag is missing in given dicom!");
-			coords.push_back(std::string(value.c_str()));
+			coords.push_back(dicom->getImagePositionPatient());
+			steps.push_back(dicom->getPixelSpacing());
 
-			if (!dicom->getDataset()->findAndGetOFStringArray(DCM_PixelSpacing, value).good())
-				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-							"PixelSpacing tag is missing in given dicom!");
-			steps.push_back(std::string(value.c_str()));
-
-			if (!dicom->getDataset()->findAndGetOFString(DCM_Rows, value).good())
-				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-					"Could not extract number of rows for given dicom!");
-			heights.push_back(strtoull(value.c_str(), NULL, 10));
-
-			if (!dicom->getDataset()->findAndGetOFString(DCM_Columns, value).good())
-				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-					"Could not extract number of columns for given dicom!");
-			widths.push_back(strtoull(value.c_str(), NULL, 10));
+			heights.push_back(dicom->getHeight());
+			widths.push_back(dicom->getWidth());
 
 			this->_plane_index.push_back(counter == 0 ? 0 : counter-1);
 		}
