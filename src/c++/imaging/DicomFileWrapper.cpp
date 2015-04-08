@@ -23,6 +23,7 @@
 	#include "dcmtk/dcmimgle/dcmimage.h"
 	#include "dcmtk/dcmimage/dipipng.h"
 	#include "dcmtk/dcmjpeg/dipijpeg.h"
+	#include "dcmtk/dcmimage/diregist.h"
 #endif
 
 tissuestack::imaging::DicomFileWrapper * tissuestack::imaging::DicomFileWrapper::createWrappedDicomFile(
@@ -47,10 +48,13 @@ tissuestack::imaging::DicomFileWrapper::DicomFileWrapper(const std::string filen
 
 	// read mandatory header tags needed later
 	OFString value;
-	if (!dicomFormat.getDataset()->findAndGetOFString(DCM_SeriesNumber, value).good())
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-			"Could not read series number of dicom file!");
-	this->_series_number = std::string(value.c_str());
+	if (!dicomFormat.getDataset()->findAndGetOFString(DCM_SeriesInstanceUID, value).good())
+		if (!dicomFormat.getDataset()->findAndGetOFString(DCM_SeriesNumber, value).good())
+			this->_series_number = "0";
+		else
+			this->_series_number = std::string(value.c_str());
+	else
+		this->_series_number = std::string(value.c_str());
 
 	if (!dicomFormat.getDataset()->findAndGetOFString(DCM_InstanceNumber, value).good())
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
@@ -58,19 +62,19 @@ tissuestack::imaging::DicomFileWrapper::DicomFileWrapper(const std::string filen
 	this->_instance_number = strtoul(value.c_str(), NULL, 10);
 
 	if (!dicomFormat.getDataset()->findAndGetOFStringArray(DCM_ImagePositionPatient, value).good())
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-			"ImagePositionPatient tag is missing in given dicom!");
-	this->_image_position_patient = std::string(value.c_str());
+		this->_image_position_patient = "0\\0\\0";
+	else
+		this->_image_position_patient = std::string(value.c_str());
 
 	if (!dicomFormat.getDataset()->findAndGetOFStringArray(DCM_PixelSpacing, value).good())
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-			"PixelSpacing tag is missing in given dicom!");
-	this->_pixel_spacing = std::string(value.c_str());
+		this->_pixel_spacing = "1\\1";
+	else
+		this->_pixel_spacing = std::string(value.c_str());
 
 	if (!dicomFormat.getDataset()->findAndGetOFStringArray(DCM_ImageOrientationPatient, value).good())
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-			"ImageOrientationPatient tag is missing in given dicom!");
-	this->_image_orientation = std::string(value.c_str());
+		this->_image_orientation = "1\\0\\0\\0\\1\\0";
+	else
+		this->_image_orientation = std::string(value.c_str());
 
 	if (!dicomFormat.getDataset()->findAndGetOFString(DCM_Rows, value).good())
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
@@ -88,78 +92,154 @@ tissuestack::imaging::DicomFileWrapper::DicomFileWrapper(const std::string filen
 	this->_allocated_bits = strtoul(value.c_str(), NULL, 10);
 
 	if (!dicomFormat.getDataset()->findAndGetOFString(DCM_PixelRepresentation, value).good())
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-			"Could not extract pixel representation for given dicom!");
-	this->_is_signed_data = static_cast<unsigned short>(strtoul(value.c_str(), NULL, 10));
+		this->_is_signed_data = 0;
+	else
+		this->_is_signed_data = static_cast<unsigned short>(strtoul(value.c_str(), NULL, 10));
 
 	if (!dicomFormat.getDataset()->findAndGetOFString(DCM_PhotometricInterpretation, value).good())
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-			"Could not extract photometric interpretation for given dicom!");
-	this->_photometric_interpretation = std::string(value.c_str());
+		this->_photometric_interpretation = "MONOCHROME2";
+	else
+		this->_photometric_interpretation = std::string(value.c_str());
+
+	if (dicomFormat.getDataset()->findAndGetOFString(DCM_PixelPaddingValue, value).good())
+		this->_pixel_padding_value = atoi(value.c_str());
 
 	if (this->isColor())
 	{
 		if (!dicomFormat.getDataset()->findAndGetOFString(DCM_PlanarConfiguration, value).good())
-			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-				"Could not extract planar configuration for given dicom!");
-		this->_planar_configuration = static_cast<unsigned short>(strtoul(value.c_str(), NULL, 10));
+			this->_planar_configuration = 0;
+		else
+			this->_planar_configuration = static_cast<unsigned short>(strtoul(value.c_str(), NULL, 10));
 	}
 }
 
 const unsigned char * tissuestack::imaging::DicomFileWrapper::getData()
 {
-	// extract some more info from the dicom image object
-	std::unique_ptr<DicomImage> dcmTmp(new DicomImage(this->_file_name.c_str()));
+	// the dicom image
+	std::unique_ptr<DicomImage> dcmTmp(new DicomImage(this->_file_name.c_str(), CIF_AcrNemaCompatibility));
 
-	// the eventual data destination.
-	// regardless of the bit depth or whether color we converge on 8 bit unsigned
-	// because of our output choice
-	unsigned long size = dcmTmp->getOutputDataSize(this->getAllocatedBits());
-	std::unique_ptr<unsigned char[]> data_ptr(new unsigned char[size]);
+	unsigned long data_size = dcmTmp->getOutputDataSize(
+		(this->getAllocatedBits() <= 8 || this->isColor()) ? 8 : 16);
+	unsigned long image_size = this->getWidth() * this->getHeight();
+	if (data_size == 0)
+		data_size = image_size * (this->getAllocatedBits() / 2);
+	if (image_size == 0)
+		image_size = data_size;
+	const unsigned long finished_image_size = image_size * 3;
 
-	double min = 0;
-	double max = pow(2, this->getAllocatedBits())-1;
+	// we converge on an RGB format 8 bit per channel which is what our raw format is
+	std::unique_ptr<unsigned char[]> data_ptr(new unsigned char[finished_image_size]);
+
+	double min = pow(2, this->getAllocatedBits())-1;
+	double max = 0;
 	dcmTmp->getMinMaxValues(min,max);
 
 	int two_power8 = static_cast<int>(pow(2, 8));
 	int two_power_16 = static_cast<int>(pow(2, 16));
 
-	// TODO: evaluate actual bit depth
-
-	// 8 bit grey and 8 bit per channel color images should be easiest actually!
-	if (this->isColor() || this->getAllocatedBits() == 8)
+	if (this->isColor()) // COLOR
 	{
-		if (this->containsSignedData()) // deal with signed
-		{
-			std::unique_ptr<char> tmp_ptr(new char[size]);
-			if (dcmTmp->getOutputData(tmp_ptr.get(), size, 8, 0, this->getPlanarConfiguration()) <= 0)
-				return nullptr;
-
-			// cast to unsigned
-			for (unsigned long i=0;i<size;i++)
-				data_ptr.get()[i] =
-					static_cast<unsigned char>(tmp_ptr.get()[i]);
-		} else if (dcmTmp->getOutputData(data_ptr.get(), size, 8, 0, this->getPlanarConfiguration()) <= 0)
+		if (dcmTmp->getOutputData(data_ptr.get(), data_size, 8, 0, 0) <= 0)
 			return nullptr;
-	} else if (this->getAllocatedBits() == 16) // 16 bit data
+
+		return data_ptr.release();
+	}
+
+	if (this->getAllocatedBits() <= 8) // 8 BIT
 	{
-		std::unique_ptr<unsigned short[]> tmp_16bit_ptr(new unsigned short[size]);
-		if (this->containsSignedData()) // deal with signed
+		if (this->containsSignedData()) // SIGNED
 		{
-			std::unique_ptr<short[]> tmp_ptr(new short[size]);
-			if (dcmTmp->getOutputData(tmp_ptr.get(), size, 16, 0, this->getPlanarConfiguration()) <= 0)
+			std::unique_ptr<char[]> tmp_ptr(new char[image_size]);
+			if (dcmTmp->getOutputData(tmp_ptr.get(), data_size, 8, 0, 0) <= 0)
 				return nullptr;
 
-			// cast to unsigned
-			for (unsigned long i=0;i<size;i++)
-				tmp_16bit_ptr.get()[i] =
-					static_cast<unsigned short>(tmp_ptr.get()[i]);
-		} else if (dcmTmp->getOutputData(tmp_16bit_ptr.get(), size, 16, 0, this->getPlanarConfiguration()) <= 0)
+			// convert to unsigned
+			min = pow(2, this->getAllocatedBits())-1;
+			max = 0;
+			for (unsigned long i=0;i<image_size;i++)
+			{
+				const unsigned long rgbOffset = i * 3;
+				const unsigned char val =
+					static_cast<unsigned char>(static_cast<int>(tmp_ptr.get()[i]) + (two_power8 / 2));
+				data_ptr.get()[rgbOffset] = data_ptr.get()[rgbOffset+1] = data_ptr.get()[rgbOffset+2] = val;
+
+				if (val < min)
+					min = val;
+				if (val > max)
+					max = val;
+			}
+
+			// now that we have min and max ... fit to contrast range linearly
+			for (unsigned long i=0;i<finished_image_size;i++)
+				data_ptr.get()[i] =
+					static_cast<unsigned char>(((static_cast<double>(data_ptr.get()[i])-min) * (two_power8-1)) / (max-min));
+
+			// return
+			return data_ptr.release();
+		}
+
+		// UNSIGNED
+		std::unique_ptr<unsigned char[]> tmp_ptr(new unsigned char[image_size]);
+		if (dcmTmp->getOutputData(tmp_ptr.get(), data_size, 8, 0, 0) <= 0)
+			return nullptr;
+
+		// make RGB data
+		for (unsigned long i=0;i<image_size;i++)
+		{
+			const unsigned long rgbOffset = i * 3;
+			data_ptr.get()[rgbOffset] =
+			data_ptr.get()[rgbOffset+1] =
+			data_ptr.get()[rgbOffset+2] = tmp_ptr.get()[i];
+		}
+
+		return data_ptr.release();
+	}
+
+	if (this->getAllocatedBits() > 8) // 12/16 BITS
+	{
+		std::unique_ptr<unsigned short[]> tmp_16bit_ptr(new unsigned short[finished_image_size]);
+
+		if (this->containsSignedData()) // SIGNED
+		{
+			std::unique_ptr<short[]> tmp_ptr(new short[image_size]);
+			if (dcmTmp->getOutputData(tmp_ptr.get(), data_size, 16, 0, 0) <= 0)
+				return nullptr;
+
+			// convert to unsigned
+			min = pow(2, this->getAllocatedBits())-1;
+			max = 0;
+			for (unsigned long i=0;i<image_size;i++)
+			{
+				const unsigned long rgbOffset = i * 3;
+				const unsigned short val =
+					static_cast<unsigned short>(static_cast<int>(tmp_ptr.get()[i]) + (two_power_16 / 2));
+				tmp_16bit_ptr.get()[rgbOffset] = tmp_16bit_ptr.get()[rgbOffset+1] = tmp_16bit_ptr.get()[rgbOffset+2] = val;
+
+				if (val < min)
+					min = val;
+				if (val > max)
+					max = val;
+			}
+
+			// now that we have min and max ... fit to contrast range linearly to make it 8 bit
+			for (unsigned long i=0;i<finished_image_size;i++)
+				data_ptr.get()[i] =
+					static_cast<unsigned char>(((static_cast<double>(tmp_16bit_ptr.get()[i])-min) * (two_power8-1)) / (max-min));
+
+			return data_ptr.release();
+		}
+
+		// UNSIGNED
+		if (dcmTmp->getOutputData(tmp_16bit_ptr.get(), data_size, 16, 0, 0) <= 0)
 			return nullptr;
 
 		// turn 16 bit into 8 bit
-		for (unsigned long i=0;i<size;i++)
-			data_ptr.get()[i] = static_cast<unsigned char>((tmp_16bit_ptr.get()[i] * (two_power8-1)) / (two_power_16-1));
+		for (unsigned long i=0;i<image_size;i++)
+		{
+			const unsigned long rgbOffset = i * 3;
+			data_ptr.get()[rgbOffset] = data_ptr.get()[rgbOffset+1] = data_ptr.get()[rgbOffset+2] =
+				static_cast<unsigned char>((static_cast<double>(tmp_16bit_ptr.get()[i]) * (two_power8-1)) / (two_power_16-1));
+		}
 	}
 
 	return data_ptr.release();
@@ -219,6 +299,11 @@ const bool tissuestack::imaging::DicomFileWrapper::containsSignedData() const
 const unsigned short tissuestack::imaging::DicomFileWrapper::getPlanarConfiguration() const
 {
 	return this->_planar_configuration;
+}
+
+const int tissuestack::imaging::DicomFileWrapper::getPixelPadddingValue() const
+{
+	return this->_pixel_padding_value;
 }
 
 

@@ -408,6 +408,7 @@ namespace tissuestack
 				const std::string getImagePositionPatient() const;
 				const std::string getPixelSpacing() const;
 				const std::string getImageOrientation() const;
+				const int getPixelPadddingValue() const;
 				const unsigned long long int getHeight() const;
 				const unsigned long long int getWidth() const;
 				const unsigned long getAllocatedBits() const;
@@ -430,6 +431,7 @@ namespace tissuestack
 				unsigned short _is_signed_data = 0;
 				unsigned short _planar_configuration = 0;
 				std::string _photometric_interpretation;
+				int _pixel_padding_value = INFINITY;
 				bool _isTemp = false;
 
 
@@ -442,6 +444,8 @@ namespace tissuestack
 				~TissueStackDicomData();
 				const bool isRaw() const;
 			private:
+				void registerDcmtkDecoders();
+				void deregisterDcmtkDecoders();
 				void addDicomFile(const std::string & file, const bool withinZippedArchive = false);
 				friend class TissueStackImageData;
 				TissueStackDicomData(const std::string & filename);

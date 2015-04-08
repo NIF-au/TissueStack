@@ -23,6 +23,9 @@
 	#include "dcmtk/dcmimgle/dcmimage.h"
 	#include "dcmtk/dcmimage/dipipng.h"
 	#include "dcmtk/dcmjpeg/dipijpeg.h"
+	#include "dcmtk/dcmjpeg/djdecode.h"
+	#include "dcmtk/dcmjpls/djdecode.h"
+	#include "dcmtk/dcmdata/dcrledrg.h"
 #endif
 
 const bool tissuestack::imaging::TissueStackDicomData::isRaw() const
@@ -44,7 +47,7 @@ void tissuestack::imaging::TissueStackDicomData::addDicomFile(const std::string 
 	}
 
 	std::unique_ptr<tissuestack::imaging::DicomFileWrapper> dicom_ptr(
-		tissuestack::imaging::DicomFileWrapper::createWrappedDicomFile(potentialDicomFile, true));
+		tissuestack::imaging::DicomFileWrapper::createWrappedDicomFile(potentialDicomFile, withinZippedArchive ? true : false));
 
 	// we will only allow same series numbers in one zip
 	if (this->_series_number.empty())
@@ -53,13 +56,25 @@ void tissuestack::imaging::TissueStackDicomData::addDicomFile(const std::string 
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"We allow only one series per zipped archive of dicom files!");
 
+	this->registerDcmtkDecoders();
 	const unsigned char * data = dicom_ptr->getData();
+	this->deregisterDcmtkDecoders();
+
+	if (data == nullptr)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Failed to extract dicom data!");
 
 	ExceptionInfo exception;
 	GetExceptionInfo(&exception);
 	Image * image = NULL;
 	ImageInfo * imgInfo = NULL;
-	image = ConstituteImage(dicom_ptr->getWidth(), dicom_ptr->getHeight(), "I",CharPixel, data, &exception);
+	image = ConstituteImage(
+		dicom_ptr->getWidth(),
+		dicom_ptr->getHeight(),
+		"RGB",
+		CharPixel,
+		data, &exception);
+
  	if (image == NULL)
 	{
 		CatchException(&exception);
@@ -78,7 +93,8 @@ void tissuestack::imaging::TissueStackDicomData::addDicomFile(const std::string 
 	//img->writePluginFormat(new DiJPEGPlugin(), (potentialDicomFile + ".jpg").c_str());
 
  	// TODO: move this up
-	this->_dicom_files.push_back(dicom_ptr.release());
+
+ 	this->_dicom_files.push_back(dicom_ptr.release());
 }
 
 tissuestack::imaging::TissueStackDicomData::TissueStackDicomData(
@@ -93,7 +109,8 @@ tissuestack::imaging::TissueStackDicomData::TissueStackDicomData(
 		std::string ext = potential_dicom.substr(potential_dicom.length()-4);
 		std::transform(ext.begin(), ext.end(), ext.begin(), toupper);
 
-		if (ext.compare(".DCM") != 0) // ignore all but .dcm
+		if (ext.compare(".DCM") != 0 && ext.compare(".IMG") != 0 &&
+				ext.find("0") != 0) // ignore all but .dcm, .img or blank extensions
 			continue;
 
 		this->addDicomFile(potential_dicom, true);
@@ -121,11 +138,6 @@ void tissuestack::imaging::TissueStackDicomData::initializeDicomImageFromFiles()
 	std::vector<std::string> orientations;
 	std::vector<std::string> steps;
 	std::vector<std::string> coords;
-
-	// TODO: create dicom file data object which is populated with attributes needed and store it
-	// include DicomImage pointer
-	// include iscolor
-	// include bit depth
 
 	std::string latestOrientation = "";
 	unsigned long int counter = 0;
@@ -338,4 +350,18 @@ tissuestack::imaging::TissueStackDicomData::~TissueStackDicomData()
 	for (auto dicom : this->_dicom_files)
 		if (dicom != nullptr)
 			delete dicom;
+}
+
+void tissuestack::imaging::TissueStackDicomData::registerDcmtkDecoders()
+{
+	DJDecoderRegistration::registerCodecs(EDC_photometricInterpretation);
+	DJLSDecoderRegistration::registerCodecs();
+	DcmRLEDecoderRegistration::registerCodecs();
+}
+
+void tissuestack::imaging::TissueStackDicomData::deregisterDcmtkDecoders()
+{
+	DJDecoderRegistration::cleanup();
+	DJLSDecoderRegistration::cleanup();
+	DcmRLEDecoderRegistration::cleanup();
 }
