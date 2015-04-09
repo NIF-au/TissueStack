@@ -82,6 +82,13 @@ namespace tissuestack
 			DICOM		= 5		// DICOM
 		};
 
+		enum DICOM_TYPE
+		{
+			SINGLE_IMAGE	= 1,	// single image (2D)
+			TIME_SERIES 	= 2,	// 3D with dimension t for time
+			VOLUME			= 3		// 3D volume
+		};
+
 		enum RAW_TYPE
 		{
 			UCHAR_8_BIT  	= 1,	// FOR BACKWARDS COMPATIBILITY
@@ -443,6 +450,7 @@ namespace tissuestack
 			public:
 				~TissueStackDicomData();
 				const bool isRaw() const;
+				const DICOM_TYPE getType() const;
 			private:
 				void registerDcmtkDecoders();
 				void deregisterDcmtkDecoders();
@@ -464,6 +472,7 @@ namespace tissuestack
 					const std::vector<std::string> & orientations,
 					const std::vector<std::string> & steps,
 					const std::vector<std::string> & coords);
+				inline void initializeSingleDicomFile(const DicomFileWrapper * dicom);
 				inline void addCoordinates(
 					const std::string & coords,
 					const unsigned short index);
@@ -474,6 +483,7 @@ namespace tissuestack
 				std::vector<DicomFileWrapper *> _dicom_files;
 				std::vector<unsigned long int> _plane_index;
 				std::string _series_number = "";
+				DICOM_TYPE _type;
 		};
 
 		class TissueStackNiftiData final : public TissueStackImageData

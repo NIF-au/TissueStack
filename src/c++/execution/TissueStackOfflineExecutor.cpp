@@ -93,6 +93,7 @@ void tissuestack::execution::TissueStackOfflineExecutor::convert(
 	} catch (const std::exception& ex)
 	{
 		std::cerr << "Failed to convert: " << ex.what() << std::endl;
+		this->setRunningFlag(false);
 	}
 }
 void tissuestack::execution::TissueStackOfflineExecutor::process(const std::function<void (const tissuestack::common::ProcessingStrategy * _this)> * functionality)

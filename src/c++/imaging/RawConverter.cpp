@@ -173,6 +173,29 @@ inline void tissuestack::imaging::RawConverter::loopOverDimensions(
 				"Failed to open supposed MINC file!");
 	}
 
+	// TODO: for dicom distinguish beetween 3 scenarios:
+	// 1. single 2D image
+	// 2. time series: 3 dims with third being time (2 coords/steps)
+	// 3. true 3D data: address problem of gaps!
+	if (converter_task->getInputImageData()->getFormat() == tissuestack::imaging::FORMAT::DICOM)
+	{
+		const tissuestack::imaging::TissueStackDicomData * dicomData =
+			static_cast<const tissuestack::imaging::TissueStackDicomData *>(converter_task->getInputImageData());
+
+		if (dicomData->getType() == tissuestack::imaging::DICOM_TYPE::SINGLE_IMAGE)
+		{
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"DICOM SINGLE IMAGE NOT IMPLEMENTED YET!");
+		}
+		else if (dicomData->getType() == tissuestack::imaging::DICOM_TYPE::TIME_SERIES)
+		{
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+					"DICOM TIME SERIES NOT IMPLEMENTED YET!");
+		} else if (dicomData->getType() == tissuestack::imaging::DICOM_TYPE::VOLUME)
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+					"DICOM VOLUME NOT IMPLEMENTED YET!");
+	}
+
 	unsigned short order = 0;
 	for (auto d : dimensionsToBeConverted) // the dimension loop
 	{

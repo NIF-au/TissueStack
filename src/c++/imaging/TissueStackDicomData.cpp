@@ -33,6 +33,11 @@ const bool tissuestack::imaging::TissueStackDicomData::isRaw() const
 	return false;
 }
 
+const tissuestack::imaging::DICOM_TYPE tissuestack::imaging::TissueStackDicomData::getType() const
+{
+	return this->_type;
+}
+
 void tissuestack::imaging::TissueStackDicomData::addDicomFile(const std::string & file, const bool withinZippedArchive)
 {
 	std::string potentialDicomFile = file;
@@ -99,7 +104,8 @@ void tissuestack::imaging::TissueStackDicomData::addDicomFile(const std::string 
 
 tissuestack::imaging::TissueStackDicomData::TissueStackDicomData(
 	const std::string & filename_of_zip, const std::vector<std::string> & zippedFiles) :
-		tissuestack::imaging::TissueStackImageData(filename_of_zip, tissuestack::imaging::FORMAT::DICOM)
+		tissuestack::imaging::TissueStackImageData(filename_of_zip, tissuestack::imaging::FORMAT::DICOM),
+		_type(tissuestack::imaging::DICOM_TYPE::VOLUME)
 {
 	for (auto potential_dicom : zippedFiles) // weed out the non .dcm files
 	{
@@ -109,8 +115,7 @@ tissuestack::imaging::TissueStackDicomData::TissueStackDicomData(
 		std::string ext = potential_dicom.substr(potential_dicom.length()-4);
 		std::transform(ext.begin(), ext.end(), ext.begin(), toupper);
 
-		if (ext.compare(".DCM") != 0 && ext.compare(".IMG") != 0 &&
-				ext.find("0") != 0) // ignore all but .dcm, .img or blank extensions
+		if (ext.compare(".DCM") != 0 && ext.find("0") != 0) // ignore all but .dcm, .img or blank extensions
 			continue;
 
 		this->addDicomFile(potential_dicom, true);
@@ -140,6 +145,8 @@ void tissuestack::imaging::TissueStackDicomData::initializeDicomImageFromFiles()
 	std::vector<std::string> coords;
 
 	std::string latestOrientation = "";
+	unsigned long long int latestWidth = 0;
+	unsigned long long int latestHeight = 0;
 	unsigned long int counter = 0;
 	for (auto dicom : this->_dicom_files)
 	{
@@ -149,6 +156,8 @@ void tissuestack::imaging::TissueStackDicomData::initializeDicomImageFromFiles()
 				dim_slices.push_back(counter);
 
 			latestOrientation = dicom->getImageOrientation();
+			latestWidth = dicom->getWidth();
+			latestHeight = dicom->getHeight();
 			orientations.push_back(latestOrientation);
 
 			coords.push_back(dicom->getImagePositionPatient());
@@ -158,7 +167,10 @@ void tissuestack::imaging::TissueStackDicomData::initializeDicomImageFromFiles()
 			widths.push_back(dicom->getWidth());
 
 			this->_plane_index.push_back(counter == 0 ? 0 : counter-1);
-		}
+		} else if (latestWidth != dicom->getWidth() || latestHeight != dicom->getHeight())
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Slices within same dimension have to have same width and height!");
+
 		counter++;
 	}
 	dim_slices.push_back(counter);
@@ -167,8 +179,17 @@ void tissuestack::imaging::TissueStackDicomData::initializeDicomImageFromFiles()
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"Zero Dimensions after dicom file header read!");
 
+	if (this->_dicom_files.size() == 1)
+	{
+		this->initializeSingleDicomFile(this->_dicom_files[0]);
+		this->dumpImageDataIntoDebugLog();
+
+		return;
+	}
+
 	if (this->_plane_index.size() == 1) // time series
 	{
+		this->_type = tissuestack::imaging::DICOM_TYPE::TIME_SERIES;
 		this->initializeDicomTimeSeries(widths, heights, orientations, steps, coords);
 		this->dumpImageDataIntoDebugLog();
 
@@ -224,6 +245,40 @@ inline void tissuestack::imaging::TissueStackDicomData::initializeDicomTimeSerie
 	this->initializeDimensions(true);
 	this->initializeOffsetsForNonRawFiles();
 }
+
+inline void tissuestack::imaging::TissueStackDicomData::initializeSingleDicomFile(const tissuestack::imaging::DicomFileWrapper * dicom)
+{
+	if (dicom == nullptr)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackNullPointerException,
+			"Dicom wrapper object is NULL!");
+
+	this->addDimension(
+		new tissuestack::imaging::TissueStackDataDimension(
+			std::string("x"),
+			0, // bogus offset for now, we'll calculate later
+			dicom->getWidth(),
+			0));
+	this->addCoordinates(dicom->getImagePositionPatient(), 0);
+	this->addSteps(dicom->getPixelSpacing(), dicom->getImageOrientation(), 0);
+	this->addDimension(
+		new tissuestack::imaging::TissueStackDataDimension(
+			std::string("y"),
+			0, // bogus offset for now, we'll calculate later
+			dicom->getHeight(),
+			0));
+	this->addCoordinates(dicom->getImagePositionPatient(), 1);
+	this->addSteps(dicom->getPixelSpacing(), dicom->getImageOrientation(), 1);
+
+	this->generateRawHeader();
+
+	// further dimension info initialization
+	this->initializeDimensions(true);
+	this->initializeOffsetsForNonRawFiles();
+
+	this->dumpImageDataIntoDebugLog();
+}
+
+
 
 inline void tissuestack::imaging::TissueStackDicomData::initializeDicom3Ddata(
 	const std::vector<unsigned long int> & dim_slices,
@@ -339,10 +394,11 @@ inline void tissuestack::imaging::TissueStackDicomData::addSteps(
 }
 
 tissuestack::imaging::TissueStackDicomData::TissueStackDicomData(const std::string & filename) :
-		tissuestack::imaging::TissueStackImageData(filename, tissuestack::imaging::FORMAT::DICOM)
+		tissuestack::imaging::TissueStackImageData(filename, tissuestack::imaging::FORMAT::DICOM),
+		_type(tissuestack::imaging::DICOM_TYPE::SINGLE_IMAGE)
 {
 	this->addDicomFile(filename);
-	// TODO: add dimensions x, y (read dicom dimensions)
+	this->initializeSingleDicomFile(this->_dicom_files[0]);
 }
 
 tissuestack::imaging::TissueStackDicomData::~TissueStackDicomData()

@@ -191,18 +191,9 @@ int		main(int argc, char **argv)
 		// our strategy is that we use processes in cases where there are at least 3 cores
 		if (dimensions.size() < 3 || tissuestack::utils::System::getNumberOfCores() < 3)
 		{
-			try
-		   {
-			   // delegate to the offline executor
-				OfflineExecutor->convert(conversion);
-				exit(EXIT_SUCCESS);
-		   } catch (const std::exception & any)
-			{
-				if (conversion) delete conversion;
-
-				std::cerr << "Failed to convert: " << any.what() << std::endl;
-				exit(EXIT_FAILURE);
-			}
+		   // delegate to the offline executor
+			OfflineExecutor->convert(conversion);
+			exit(EXIT_SUCCESS);
 		}
 
 		// now touch a file to be as big as we need it for the final conversion product
@@ -234,6 +225,10 @@ int		main(int argc, char **argv)
 
 			   try
 			   {
+				   // brief preliminary check
+				   if (!tissuestack::utils::System::fileExists(out_file))
+					   exit(EXIT_FAILURE);
+
 				   // delegate to the offline executor
 					OfflineExecutor->convert(
 						conversion,
@@ -242,8 +237,8 @@ int		main(int argc, char **argv)
 					exit(EXIT_SUCCESS);
 			   } catch (const std::exception & any)
 				{
-					std::cerr << "Failed to convert: " << any.what() << std::endl;
-					exit(EXIT_FAILURE);
+				   std::cerr << "\nConversion failed: " << any.what() << std::endl;
+				   exit(EXIT_FAILURE);
 				}
 		   }
 		}
@@ -251,9 +246,13 @@ int		main(int argc, char **argv)
 		// ONLY PARENT IS ALLOWED TO GET TO HERE !
 
 		// the periodic check whether the children have terminated or not
-		while (number_of_children_running > 0)
+		while (number_of_children_running > 0  && tissuestack::utils::System::fileExists(out_file))
 			sleep(1);
-		 std::cout << "\nConversion finished successfully." << std::endl;
+
+		if (tissuestack::utils::System::fileExists(out_file))
+			std::cout << "\nConversion finished successfully." << std::endl;
+		else
+			std::cerr << "\nConversion aborted." << std::endl;
 	} catch (const std::exception & any)
 	{
 		std::cerr << "Failed to convert: " << any.what() << std::endl;
