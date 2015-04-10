@@ -17,15 +17,6 @@
 #include "networking.h"
 #include "imaging.h"
 
-#ifndef	HAVE_CONFIG_H
-	#define HAVE_CONFIG_H
-	#include "dcmtk/dcmdata/dctk.h"
-	#include "dcmtk/dcmimgle/dcmimage.h"
-	#include "dcmtk/dcmimage/dipipng.h"
-	#include "dcmtk/dcmjpeg/dipijpeg.h"
-	#include "dcmtk/dcmimage/diregist.h"
-#endif
-
 tissuestack::imaging::DicomFileWrapper * tissuestack::imaging::DicomFileWrapper::createWrappedDicomFile(
 	const std::string filename, const bool isTempFile)
 {
@@ -100,9 +91,6 @@ tissuestack::imaging::DicomFileWrapper::DicomFileWrapper(const std::string filen
 		this->_photometric_interpretation = "MONOCHROME2";
 	else
 		this->_photometric_interpretation = std::string(value.c_str());
-
-	if (dicomFormat.getDataset()->findAndGetOFString(DCM_PixelPaddingValue, value).good())
-		this->_pixel_padding_value = atoi(value.c_str());
 
 	if (this->isColor())
 	{
@@ -300,12 +288,6 @@ const unsigned short tissuestack::imaging::DicomFileWrapper::getPlanarConfigurat
 {
 	return this->_planar_configuration;
 }
-
-const int tissuestack::imaging::DicomFileWrapper::getPixelPadddingValue() const
-{
-	return this->_pixel_padding_value;
-}
-
 
 const bool tissuestack::imaging::DicomFileWrapper::isColor() const
 {

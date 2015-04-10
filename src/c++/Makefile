@@ -15,10 +15,12 @@ INCLUDE			=	-Iinclude -I/usr/include/nifti \
 					-Inetworking/include -Iimaging/include \
 					-Iutils/include
 
-LIB_PATH		=
+LIB_PATH		=	-L/usr/lib64/dcmtk
 
 LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid \
-					-lminc2 -lniftiio -ldcmdata -ldcmimage -ldcmimgle -ldcmjpeg -ldcmjpls \
+					-lminc2 -lniftiio -ldcmdata -ldcmimgle -ldcmimage \
+					-lpng -ltiff -ldcmjpls -lCharLS \
+					-ldcmjpeg -lijg8 -lijg12 -lijg16 \
 					-loflog -lofstd -lm -lz -lznz -lzip
 
 EXE_NAME		=	TissueStackServer
@@ -76,7 +78,7 @@ compile:	$(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_DATABASE) $(OBJS_IMAGING) \
 	@$(CC) -DAPPLICATION_PATH='"$(DATA_PATH)"' $(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_EXECUTION) $(OBJS_DATABASE) \
 							$(OBJS_SERVICES) $(OBJS_IMAGING) $(OBJS_UTILS) $(OBJS) \
 							`GraphicsMagick-config --cppflags --libs --ldflags` -o $(EXE_NAME) \
-							$(LIBS) $(FLAGS) $(INCLUDE)
+							$(LIB_PATH) $(LIBS) $(FLAGS) $(INCLUDE)
 
 compile-tools:
 	@make --no-print-directory -C tools/ compile

@@ -16,10 +16,12 @@ INCLUDE			=	-Iinclude -I/usr/include/nifti \
 					-I../networking/include -I../imaging/include \
 					-I../utils/include
 
-LIB_PATH		=
+LIB_PATH		=	-L/usr/lib64/dcmtk
 
 LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid \
-					-lminc2 -lniftiio -ldcmdata -ldcmimage -ldcmimgle -ldcmjpeg -ldcmjpls \
+					-lminc2 -lniftiio -ldcmdata -ldcmimgle -ldcmimage \
+					-lpng -ltiff -ldcmjpls -lCharLS \
+					-ldcmjpeg -lijg8 -lijg12 -lijg16 \
 					-loflog -lofstd -lm -lz -lznz -lzip
 
 BINS_PATH		?= /tmp
@@ -53,12 +55,12 @@ compile:	$(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_DATABASE) $(OBJS_IMAGING) \
 	@$(CC)   $(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_EXECUTION) $(OBJS_DATABASE) \
 							$(OBJS_SERVICES) $(OBJS_IMAGING) $(OBJS_UTILS) $(SRCS_TILER) \
 							`GraphicsMagick-config --cppflags --libs --ldflags` -o $(TILER_EXE_NAME) \
-							$(LIBS) $(FLAGS) $(INCLUDE)
+							$(LIB_PATH) $(LIBS) $(FLAGS) $(INCLUDE)
 	@echo -e "\tCompiling \"$(NAME)\" => $(CONVERTER_EXE_NAME)"
 	@$(CC)   $(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_EXECUTION) $(OBJS_DATABASE) \
 							$(OBJS_SERVICES) $(OBJS_IMAGING) $(OBJS_UTILS) $(SRCS_CONVERTER) \
 							`GraphicsMagick-config --cppflags --libs --ldflags` -o $(CONVERTER_EXE_NAME) \
-							$(LIBS) $(FLAGS) $(INCLUDE)
+							$(LIB_PATH) $(LIBS) $(FLAGS) $(INCLUDE)
 
 install:
 	@echo -e "\n\tInstalling $(NAME) (requires super user priviledges):"

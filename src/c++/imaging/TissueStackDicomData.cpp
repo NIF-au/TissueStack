@@ -17,17 +17,6 @@
 #include "networking.h"
 #include "imaging.h"
 
-#ifndef	HAVE_CONFIG_H
-	#define HAVE_CONFIG_H
-	#include "dcmtk/dcmdata/dctk.h"
-	#include "dcmtk/dcmimgle/dcmimage.h"
-	#include "dcmtk/dcmimage/dipipng.h"
-	#include "dcmtk/dcmjpeg/dipijpeg.h"
-	#include "dcmtk/dcmjpeg/djdecode.h"
-	#include "dcmtk/dcmjpls/djdecode.h"
-	#include "dcmtk/dcmdata/dcrledrg.h"
-#endif
-
 const bool tissuestack::imaging::TissueStackDicomData::isRaw() const
 {
 	return false;
