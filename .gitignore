@@ -10,21 +10,15 @@ tiles
 *.la
 *.o
 *.so
-config.status
 libtool
 *.class
 target
 autom4te.cache
 *.scan
 *.tar.gz
-aclocal.m4
-configure
 Build (GNU)
 .autotools
 *.esproj
-TissueStackServer
-TissueStackPreTiler
-TissueStackConverter
 binaries
 *.war
 bin
