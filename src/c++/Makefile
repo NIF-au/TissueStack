@@ -19,9 +19,9 @@ LIB_PATH		=	-L/usr/lib64/dcmtk
 
 LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid \
 					-lminc2 -lniftiio -ldcmdata -ldcmimgle -ldcmimage \
-					-lpng -ltiff -ldcmjpls -lCharLS \
-					-ldcmjpeg -lijg8 -lijg12 -lijg16 \
+					-ldcmjpls -ldcmjpeg -lijg8 -lijg12 -lijg16 \
 					-loflog -lofstd -lm -lz -lznz -lzip
+#-lpng -ltiff -ldcmjpls -lCharLS \
 
 EXE_NAME		=	TissueStackServer
 
