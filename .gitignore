@@ -15,7 +15,6 @@ libtool
 target
 autom4te.cache
 *.scan
-*.tar.gz
 Build (GNU)
 .autotools
 *.esproj
