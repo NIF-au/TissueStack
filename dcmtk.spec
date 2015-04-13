@@ -42,25 +42,26 @@ if [ $? -ne 0 ]; then
 fi
 
 %install
-cp -r /tmp/dcmtk_build/* %{buildroot}
+mkdir -p %{buildroot}/usr
+cp -r /tmp/dcmtk_build/bin %{buildroot}/usr/bin
 # stupid rpath stripping
-for file in %{buildroot}/bin/*; do if [ `file $file | grep -i elf | wc -c` -ne 0 ]; then chrpath --delete $file; fi; done;
+for file in %{buildroot}/usr/bin/*; do if [ `file $file | grep -i elf | wc -c` -ne 0 ]; then chrpath --delete $file; fi; done;
+cp -r /tmp/dcmtk_build/lib %{buildroot}/usr/lib64
+cp -r /tmp/dcmtk_build/include %{buildroot}/usr/include
+cp -r /tmp/dcmtk_build/etc %{buildroot}/etc
+cp -r /tmp/dcmtk_build/share %{buildroot}/usr/share
+
 
 %files
-%{_prefix}/bin/*
-%{_prefix}/lib/*
-%{_prefix}/include/*
-%{_prefix}/share/perl5/*
-%{_prefix}/share/man/*
-%{_prefix}/share/doc/*
-
-#%doc
+/usr/bin/*
+/usr/lib64/*
+/usr/include/*
+/usr/share/*
+/etc/*
 
 %clean
 rm -rf /tmp/dcmtk_build
 
 %post -p /sbin/ldconfig
 %postun -p /sbin/ldconfig
-
-#%changelog
 
