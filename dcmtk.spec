@@ -11,7 +11,7 @@ License:        GPLv3+
 URL:            http://dicom.offis.de
 Source:         %{name}-%{version}.tar.gz
 
-BuildRequires:  chrpath CharLS
+BuildRequires:  chrpath CharLS-devel
 Requires:       CharLS
 
 %description
