@@ -257,7 +257,7 @@ const std::vector<std::string> tissuestack::utils::Misc::getContentsOfZipArchive
 	 if (zipped_archive == NULL)
 		 return archiveContents;
 
-	 zip_uint64_t numArchFiles =
+	 uint64_t numArchFiles =
 		zip_get_num_entries(zipped_archive, 0);
 	 if (numArchFiles == 0)
 	 {
@@ -268,7 +268,7 @@ const std::vector<std::string> tissuestack::utils::Misc::getContentsOfZipArchive
 	 struct zip_stat zippedFile;
 	 zip_stat_init(&zippedFile);
 
-	 for (zip_uint64_t i=0;i<numArchFiles;i++)
+	 for (uint64_t i=0;i<numArchFiles;i++)
 		 if (zip_stat_index(zipped_archive, i, 0, &zippedFile) == 0)
 			 archiveContents.push_back(std::string(zippedFile.name));
 
@@ -329,7 +329,7 @@ const bool tissuestack::utils::Misc::extractZippedFileFromArchive(
 
     // read in chunks
     char buffer[1024];
-    zip_uint64_t bytesLeft = zippedFileInfo.size;
+    uint64_t bytesLeft = zippedFileInfo.size;
 	int bytesRead = 0;
     while (bytesLeft > 0)
     {
