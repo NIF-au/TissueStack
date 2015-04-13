@@ -1,23 +1,22 @@
 #!/bin/sh
-make distclean 2> /dev/null
-
-#./configure --prefix=/tmp/dcmtk
-
-if [ ! -f config/Makefile.def ]; then
-	echo "Configure must have failed. There is no config/Makefile.def"
-	exit 1
-fi
-
-#replacement to affect build of shared libs
-sed -i "/^AR[ ]*=/c\AR = gcc " config/Makefile.def
-sed -i "/^ARFLAGS[ ]*=/c\ARFLAGS = -shared -o " config/Makefile.def
-sed -i "/^LIBEXT[ ]*=/c\LIBEXT = so " config/Makefile.def
-sed -i "/^RANLIB[ ]*=/c\RANLIB = : " config/Makefile.def
-sed -i "/^CXXFLAGS[ ]*=/s/$/ -fPIC/" config/Makefile.def
-sed -i "/^CFLAGS[ ]*=/s/$/ -fPIC/" config/Makefile.def
-
-make install && make install-lib
+clear
+echo "Setting up development tree in $HOME"
+rm -rf $HOME/rpmbuild
+rpmdev-setuptree
 if [ $? -ne 0 ]; then
-	echo "make/install failed" 
-	exit 1
-fi
+	        echo "Install the rpm development tools first!"
+		        exit -1
+		fi;
+
+REDHAT_RPM_CONFIG=`yum list installed | grep "redhat-rpm-config" | wc -l`
+if [ $REDHAT_RPM_CONFIG -eq 0 ]; then
+	echo "Install redhat-rpm-config first!"
+        exit -1
+fi;
+
+cp -f dcmtk.spec $HOME/rpmbuild/SPECS
+cp -rf SOURCES/* $HOME/rpmbuild/SOURCES/
+cd $HOME/rpmbuild/SPECS/
+
+export QA_RPATHS=$[ 0x0002 ]
+rpmbuild -bb dcmtk.spec
