@@ -258,7 +258,7 @@ const std::vector<std::string> tissuestack::utils::Misc::getContentsOfZipArchive
 		 return archiveContents;
 
 	 uint64_t numArchFiles =
-		zip_get_num_entries(zipped_archive, 0);
+		zip_get_num_files(zipped_archive);
 	 if (numArchFiles == 0)
 	 {
 		 zip_close(zipped_archive);
