@@ -17,14 +17,20 @@ INCLUDE			=	-I../include \
 					-I../utils/include \
 					-I/usr/local/graphicsmagick/1.3.18/include/GraphicsMagick \
 					-I/usr/local/minc/2.1.0/include \
-					-I/usr/local/nifticlib/2.0.0/include
+					-I/usr/local/nifticlib/2.0.0/include \
+					-I/usr/local/dcmtk/3.6.0/include
 
 LIB_PATH		=	-L/usr/local/graphicsmagick/1.3.18/lib \
 					-L/usr/local/minc/2.1.0/lib \
-					-L/usr/local/nifticlib/2.0.0/lib
+					-L/usr/local/nifticlib/2.0.0/lib \
+					-L/usr/local/dcmtk/3.6.0/lib
 					
 LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid \
-					-lminc2 -lniftiio -lm -lz -lznz
+					-lminc2 -lniftiio -lm -lz -lznz \
+					-ldcmdata -ldcmimgle -ldcmimage \
+					-ldcmjpls -ldcmjpeg -lijg8 -lijg12 -lijg16 \
+					-loflog -lofstd
+					
 
 BINS_PATH		?= /tmp
 
