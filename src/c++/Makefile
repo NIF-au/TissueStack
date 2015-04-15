@@ -27,7 +27,7 @@ LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid \
 else
 LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid \
 					-lminc2 -lniftiio -ldcmdata -ldcmimgle -ldcmimage \
-					-ldcmjpls -ldcmjpeg -lijg8 -lijg12 -lijg16 -png \
+					-ldcmjpls -ldcmjpeg -lijg8 -lijg12 -lijg16 -lpng \
 					-loflog -lofstd -lm -lz -lznz -lzip -lCharLS -ltiff
 endif
 
