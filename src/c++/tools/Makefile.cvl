@@ -27,9 +27,9 @@ LIB_PATH		=	-L/usr/local/graphicsmagick/1.3.18/lib \
 					
 LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid \
 					-lminc2 -lniftiio -lm -lz -lznz \
-					-ldcmdata -ldcmimgle -ldcmimage \
+					-ldcmdata -ldcmimgle -ldcmimage -lzip \
 					-ldcmjpls -ldcmjpeg -lijg8 -lijg12 -lijg16 \
-					-loflog -lofstd
+					-loflog -lofstd -lCharLS
 					
 
 BINS_PATH		?= /tmp
