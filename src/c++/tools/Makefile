@@ -18,11 +18,19 @@ INCLUDE			=	-Iinclude -I/usr/include/nifti \
 
 LIB_PATH		=	-L/usr/lib64/dcmtk
 
+IS_CENTOS_OR_FEDORA	?= 0;
+
+ifeq ($(IS_CENTOS_OR_FEDORA), 0)
 LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid \
 					-lminc2 -lniftiio -ldcmdata -ldcmimgle -ldcmimage \
 					-ldcmjpls -ldcmjpeg -lijg8 -lijg12 -lijg16 \
 					-loflog -lofstd -lm -lz -lznz -lzip
-#-lpng -ltiff -lCharLS
+else
+LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid \
+					-lminc2 -lniftiio -ldcmdata -ldcmimgle -ldcmimage \
+					-ldcmjpls -ldcmjpeg -lijg8 -lijg12 -lijg16 \
+					-loflog -lofstd -lm -lz -lznz -lzip -lCharLS
+endif
 
 BINS_PATH		?= /tmp
 

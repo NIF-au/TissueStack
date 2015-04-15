@@ -32,6 +32,13 @@ if [ $IS_CENTOS_6_X -gt 0 ]; then
 	echo -e "cc1plus: error: unrecognized command line option -std=gnu++11\n"
 fi;
 
+IS_FEDORA=`cat /etc/*-release | grep -i "fedora"| wc -c`
+IS_CENTOS=`cat /etc/*-release | grep -i "centos"| wc -c`
+
+if [ $IS_CENTOS -ne 0 || $IS_FEDORA -ne 0 ]; then
+	export IS_CENTOS_OR_FEDORA=1
+fi
+
 export TISSUESTACK_BUILD_VERSION=1.9
 
 CURRENT_DIR=`pwd`
