@@ -49,6 +49,12 @@ tissuestack::services::TissueStackConversionTask::TissueStackConversionTask(
 
 	// set total number of slices we have to work off
 	unsigned long long int totalSlices = 0;
+	if (this->getInputImageData()->get2DDimension() != nullptr) // 2D data
+	{
+		this->setTotalSlices(this->getInputImageData()->get2DDimension()->getNumberOfSlices());
+		return;
+	}
+
 	for (auto d : this->getInputImageData()->getDimensionOrder())
 		totalSlices += this->getInputImageData()->getDimension(d.at(0))->getNumberOfSlices();
 	this->setTotalSlices(totalSlices);

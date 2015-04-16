@@ -256,9 +256,9 @@ inline void tissuestack::imaging::RawConverter::loopOverDimensions(
 				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 					"Image Format is not suitable for RAW conversion!");
 
-			if (converter_task->getInputImageData()->getNumberOfDimensions() == 2)
-				const_cast<tissuestack::services::TissueStackConversionTask *>(converter_task)->setSlicesDone(
-					converter_task->getTotalSlices()-1);
+			//if (converter_task->getInputImageData()->getNumberOfDimensions() == 2)
+			//	const_cast<tissuestack::services::TissueStackConversionTask *>(converter_task)->setSlicesDone(
+			//		converter_task->getTotalSlices()-1);
 
 			// shutdown/cancellation check
 			if (this->hasBeenCancelledOrShutDown(processing_strategy, converter_task))

@@ -134,12 +134,13 @@ tissuestack::imaging::TissueStackMincData::TissueStackMincData(const std::string
 		this->addStep(static_cast<float>(step));
 	}
 
+	// further dimension info initialization (order of function calls matter!)
+	this->initializeDimensions(true);
+	this->detectAndCorrectFor2DData();
+	this->initializeOffsetsForNonRawFiles();
+
 	// generate the raw header for conversion
 	this->generateRawHeader();
-
-	// further dimension info initialization
-	this->initializeDimensions(true);
-	this->initializeOffsetsForNonRawFiles();
 
 	miclose_volume(volume);
 }

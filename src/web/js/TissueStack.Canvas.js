@@ -72,7 +72,12 @@ TissueStack.Canvas.prototype = {
 	value_range_min: 0,
 	value_range_max: 255,
 	sessionId : 0,
-	updateScaleBar : function() {
+    is_2D : false,
+    flag2D : function() {
+        this.is_2D = true;
+    }, is2D : function() {
+        return this.is_2D;
+    }, updateScaleBar : function() {
 		// update scale bar if main view
 		if (this.is_main_view) this.getDataExtent().adjustScaleBar(100);
 	}, setIncludeCrossHair : function(include_cross_hair) {

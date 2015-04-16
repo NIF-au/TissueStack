@@ -93,14 +93,14 @@ tissuestack::imaging::TissueStackNiftiData::TissueStackNiftiData(const std::stri
 		i++;
 	}
 
+	// further dimension info initialization (order of function calls matter!)
+	this->initializeDimensions(true);
+	this->detectAndCorrectFor2DData();
+	this->initializeOffsetsForNonRawFiles();
+	this->setGlobalMinMax();
+
 	// generate the raw header for conversion
 	this->generateRawHeader();
-
-	// further dimension info initialization
-	this->initializeDimensions(true);
-	this->initializeOffsetsForNonRawFiles();
-
-	this->setGlobalMinMax();
 }
 
 tissuestack::imaging::TissueStackNiftiData::~TissueStackNiftiData()
@@ -135,11 +135,14 @@ void tissuestack::imaging::TissueStackNiftiData::setGlobalMinMax()
 	void *data_in = NULL, *in = NULL;
 
 	const tissuestack::imaging::TissueStackDataDimension * firstDim =
+		this->get2DDimension() != nullptr ?
+				this->get2DDimension() :
 			this->getDimensionByOrderIndex(0);
 	if (firstDim == nullptr)
 		THROW_TS_EXCEPTION(
 			tissuestack::common::TissueStackApplicationException,
 			"Could not find first dimension of read NIFTI file!");
+	short ind = this->getIndexForPlane(firstDim->getName()[0]);
 
 	unsigned long long int size_per_slice =
 		firstDim->getSliceSize();
@@ -149,7 +152,7 @@ void tissuestack::imaging::TissueStackNiftiData::setGlobalMinMax()
 	// we use the first dimension, why not, don't make a difference to me ...
 	while (slice < firstDim->getNumberOfSlices())  // SLICE LOOP
 	{
-		dims[1] = slice;
+		dims[1+ind] = slice;
 
 		int ret = nifti_read_collapsed_image(this->_volume, dims, &data_in);
 		if (ret < 0)

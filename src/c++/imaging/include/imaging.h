@@ -269,6 +269,7 @@ namespace tissuestack
 				void setOffSet(const unsigned long long int offSet);
 				friend class tissuestack::database::DataSetDataProvider;
 				void setTransformationMatrix(const std::string transformationMatrix);
+				void initialize2DData(const std::vector<float> & coords, const std::vector<float> & steps);
 				const unsigned long long int _id;
 				const std::string 	_name;
 				unsigned long long int 	_offset;
@@ -299,6 +300,7 @@ namespace tissuestack
 				const TissueStackDataDimension * getDimension(const char dimension_letter) const;
 				const TissueStackDataDimension * getDimensionByLongName(const std::string & dimension) const;
 				const TissueStackDataDimension * getDimensionByOrderIndex(const unsigned short index) const;
+				const TissueStackDataDimension * get2DDimension() const;
 				const std::vector<std::string> getDimensionOrder() const;
 				const std::vector<float> getCoordinates() const;
 				const std::vector<float> getSteps() const;
@@ -335,6 +337,7 @@ namespace tissuestack
 				const bool hasZeroDimensions() const;
 				const bool hasNoAssociatedDataSets() const;
 				void clearAssociatedDataSets();
+				void set2DDimension(const char dim);
 			protected:
 				friend class tissuestack::database::DataSetDataProvider;
 				void setImageDataBounds(const float min=0, const float max=255);
@@ -350,7 +353,9 @@ namespace tissuestack
 				void addDimension(TissueStackDataDimension * dimension);
 				void addCoordinate(float coord);
 				void addStep(float step);
+				void detectAndCorrectFor2DData();
 				void generateRawHeader();
+				const short getIndexForPlane(const char plane) const;
 			private:
 				inline const std::string constructIdentityMatrixForDimensionNumber() const;
 				inline const std::string getAdjointMatrix() const;
@@ -358,7 +363,7 @@ namespace tissuestack
 				inline void setTransformationMatrixByDimension(const std::string & dimension);
 				inline const std::string setTransformationMatrixByDimension0(
 						const short step_index, const short index);
-				inline const short getIndexForPlane(const char plane) const;
+				inline const short getIndexForPlane0(const char plane) const;
 				inline void setIsotropyFactors();
 				void openFileHandle(bool close_open_handle = false);
 				void closeFileHandle();
@@ -381,6 +386,7 @@ namespace tissuestack
 				std::vector<const TissueStackImageData *> _associated_data_sets;
 				std::string _header = "";
 				float _resolutionMm = 0;
+				char _2dDimension = '\0';
 		};
 
 		class TissueStackRawData final : public TissueStackImageData

@@ -221,6 +221,15 @@ void tissuestack::imaging::TissueStackImageData::setIsotropyFactors()
 void tissuestack::imaging::TissueStackImageData::initializeOffsetsForNonRawFiles()
 {
 	unsigned long long int offset = this->_header.length();
+	tissuestack::imaging::TissueStackDataDimension * d2d =
+		const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->get2DDimension());
+	if (d2d != nullptr) // 2D (single image and time series)
+	{
+		d2d->setOffSet(offset);
+		d2d->setSliceSizeFromGivenWidthAndHeight();
+		return;
+	}
+
 	for (auto dim : this->_dim_order)
 	{
 		tissuestack::imaging::TissueStackDataDimension * d =
@@ -348,17 +357,17 @@ inline void tissuestack::imaging::TissueStackImageData::setTransformationMatrixB
 	{
 		tmp =
 			this->setTransformationMatrixByDimension0(
-				0, this->getIndexForPlane('y'));
+				0, this->getIndexForPlane0('y'));
 		if (tmp.empty()) return;
 		transformationMatrix << tmp;
 		tmp =
 			this->setTransformationMatrixByDimension0(
-				1, this->getIndexForPlane('z'));
+				1, this->getIndexForPlane0('z'));
 		if (tmp.empty()) return;
 		transformationMatrix << "," << tmp;
 		tmp =
 			this->setTransformationMatrixByDimension0(
-				2, this->getIndexForPlane('x'));
+				2, this->getIndexForPlane0('x'));
 		if (tmp.empty()) return;
 		transformationMatrix << "," << tmp;
 		transformationMatrix << "," << this->getAdjointMatrix();
@@ -366,17 +375,17 @@ inline void tissuestack::imaging::TissueStackImageData::setTransformationMatrixB
 	{
 		tmp =
 			this->setTransformationMatrixByDimension0(
-				0, this->getIndexForPlane('x'));
+				0, this->getIndexForPlane0('x'));
 		if (tmp.empty()) return;
 		transformationMatrix << tmp;
 		tmp =
 			this->setTransformationMatrixByDimension0(
-				1, this->getIndexForPlane('z'));
+				1, this->getIndexForPlane0('z'));
 		if (tmp.empty()) return;
 		transformationMatrix << "," << tmp;
 		tmp =
 			this->setTransformationMatrixByDimension0(
-				2, this->getIndexForPlane('y'));
+				2, this->getIndexForPlane0('y'));
 		if (tmp.empty()) return;
 		transformationMatrix << "," << tmp;
 		transformationMatrix << "," << this->getAdjointMatrix();
@@ -384,17 +393,17 @@ inline void tissuestack::imaging::TissueStackImageData::setTransformationMatrixB
 	{
 		tmp =
 			this->setTransformationMatrixByDimension0(
-				0, this->getIndexForPlane('x'));
+				0, this->getIndexForPlane0('x'));
 		if (tmp.empty()) return;
 		transformationMatrix << tmp;
 		tmp =
 			this->setTransformationMatrixByDimension0(
-				1, this->getIndexForPlane('y'));
+				1, this->getIndexForPlane0('y'));
 		if (tmp.empty()) return;
 		transformationMatrix << "," << tmp;
 		tmp =
 			this->setTransformationMatrixByDimension0(
-				2, this->getIndexForPlane('z'));
+				2, this->getIndexForPlane0('z'));
 		if (tmp.empty()) return;
 		transformationMatrix << "," << tmp;
 		transformationMatrix << "," << this->getAdjointMatrix();
@@ -454,7 +463,12 @@ inline const std::string tissuestack::imaging::TissueStackImageData::setTransfor
 	return transformationMatrix.str();
 }
 
-inline const short tissuestack::imaging::TissueStackImageData::getIndexForPlane(const char plane) const
+const short tissuestack::imaging::TissueStackImageData::getIndexForPlane(const char plane) const
+{
+	return this->getIndexForPlane0(plane);
+}
+
+inline const short tissuestack::imaging::TissueStackImageData::getIndexForPlane0(const char plane) const
 {
 	if (plane == ' ') return -1;
 
@@ -482,6 +496,15 @@ const float tissuestack::imaging::TissueStackImageData::getResolutionMm() const
 void tissuestack::imaging::TissueStackImageData::setResolutionMm(const float resolution_mm)
 {
 	this->_resolutionMm = resolution_mm;
+}
+
+
+const  tissuestack::imaging::TissueStackDataDimension * tissuestack::imaging::TissueStackImageData::get2DDimension() const
+{
+	if (this->_2dDimension == '\0')
+		return nullptr;
+
+	return this->getDimension(this->_2dDimension);
 }
 
 const tissuestack::imaging::TissueStackDataDimension * tissuestack::imaging::TissueStackImageData::getDimensionByLongName(const std::string & dimension) const
@@ -579,6 +602,11 @@ const bool tissuestack::imaging::TissueStackImageData::hasNoAssociatedDataSets()
 	return this->_associated_data_sets.empty();
 }
 
+void tissuestack::imaging::TissueStackImageData::set2DDimension(const char dim)
+{
+	this->_2dDimension = dim;
+}
+
 void tissuestack::imaging::TissueStackImageData::clearAssociatedDataSets()
 {
 	this->_associated_data_sets.clear();
@@ -632,6 +660,7 @@ const std::string tissuestack::imaging::TissueStackImageData::toJson(
 			json << ", \"maxY\": " << std::to_string(dim->getAnisotropicHeight());
 			json << ", \"origX\": " << std::to_string(dim->getWidth());
 			json << ", \"origY\": " << std::to_string(dim->getHeight());
+			json << ", \"is2D\": " << (this->get2DDimension() != nullptr ? "true" : "false");
 			json << ", \"isTiled\": " << (this->_is_tiled ? "true" : "false");
 			json << ", \"oneToOneZoomLevel\": " << std::to_string(this->_one_to_one_zoom_level);
 			json << ", \"resolutionMm\": " << std::to_string(this->getResolutionMm());
@@ -833,6 +862,58 @@ const std::string tissuestack::imaging::TissueStackImageData::getHeader() const
 	return this->_header;
 }
 
+void tissuestack::imaging::TissueStackImageData::detectAndCorrectFor2DData()
+{
+	if (this->_dimensions.empty())
+		return;
+
+	if (this->_dimensions.size() == 1) // we have 2D already
+	{
+		const tissuestack::imaging::TissueStackDataDimension * onlyDim =
+				this->_dimensions.begin()->second;
+		if (onlyDim != nullptr && !onlyDim->getName().empty())
+			this->set2DDimension(onlyDim->getName()[0]);
+		return;
+	}
+
+	// the 2D is the case when there is a 1 slice total in one of the objects
+	char twoDdim = '\0';
+	for (auto d : this->_dim_order)
+		if (this->getDimensionByLongName(d) != nullptr &&
+				this->getDimensionByLongName(d)->getNumberOfSlices() == 1 &&
+				!this->getDimensionByLongName(d)->getName().empty())
+			twoDdim = this->getDimensionByLongName(d)->getName()[0];
+
+	if (twoDdim != '\0')
+		this->set2DDimension(twoDdim);
+
+	// correction phase
+	// first: drop steps/coords for 2D data dimension
+	unsigned short index = this->getIndexForPlane0(twoDdim);
+	if (index < this->_steps.size())
+		this->_steps.erase(this->_steps.begin()+index);
+	if (index < this->_coordinates.size())
+		this->_coordinates.erase(this->_coordinates.begin()+index);
+
+	//second: delete the 2 other 2 dimension objects from dimension map
+	short counter = 0;
+	for (auto d : this->_dim_order)
+	{
+		if (!d.empty() && counter != index)
+		{
+			if (this->_dimensions[d[0]] != nullptr)
+				delete this->_dimensions[d[0]];
+			this->_dimensions[d[0]] = nullptr;
+			this->_dimensions.erase(d[0]);
+		}
+		counter++;
+	}
+
+	// third finishe of by setting transformation matrix and isotropy factor
+	const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->get2DDimension())->initialize2DData(
+		this->getCoordinates(), this->getSteps());
+}
+
 void tissuestack::imaging::TissueStackImageData::generateRawHeader()
 {
 	const std::string headerBeginning =
@@ -846,12 +927,23 @@ void tissuestack::imaging::TissueStackImageData::generateRawHeader()
 			"Cannot generate raw header for 0 dimension image data!");
 
 	std::ostringstream header;
-
 	unsigned short i =0;
-	for (i=0; i < this->_dim_order.size();i++) // slice numbers
+
+	const tissuestack::imaging::TissueStackDataDimension * twoDdim =
+		this->get2DDimension();
+	if (twoDdim != nullptr) // 2D single images and time slices
 	{
-		header << std::to_string(this->getDimensionByOrderIndex(i)->getNumberOfSlices());
-		if (i < this->_dim_order.size()-1) header << ":";
+		header << std::to_string(twoDdim->getWidth())
+			<< ":" << std::to_string(twoDdim->getHeight());
+		if (twoDdim->getNumberOfSlices() > 1)
+			header << ":" << std::to_string(twoDdim->getNumberOfSlices());
+	} else // 3D data
+	{
+		for (i=0; i < this->_dim_order.size();i++) // slice numbers
+		{
+			header << std::to_string(this->getDimensionByOrderIndex(i)->getNumberOfSlices());
+			if (i < this->_dim_order.size()-1) header << ":";
+		}
 	}
 	header << "|";
 	i =0;
@@ -873,8 +965,15 @@ void tissuestack::imaging::TissueStackImageData::generateRawHeader()
 	i =0;
 	for (auto name : this->_dim_order) // dimension names
 	{
+		//if (this->_dim_order.size() > 2
+		//	&& !name.empty() && tolower(name[0]) == 't') // this addresses time series
+		//	break;
+		if (twoDdim != nullptr && twoDdim->getName().compare(name) == 0) // 2D single images and time slices)
+			continue;
+
+		if (i != 0) header << ":";
 		header << name;
-		if (i < this->_dim_order.size()-1) header << ":";
+
 		i++;
 	}
 	header << "|"; // finish off with original format
