@@ -63,23 +63,23 @@ void tissuestack::imaging::TissueStackDataDimension::setTransformationMatrix(con
 void tissuestack::imaging::TissueStackDataDimension::initialize2DData(
 		const std::vector<float> & coords, const std::vector<float> & steps)
 {
-	this->setIsotropyFactor(1);
-	const std::string defaultMatrix = "[[1,0,0],[0,1,0],[0,0,1]]";
-	if (coords.size() != 2 &&  steps.size() != 2)
-	{
-		this->setTransformationMatrix(defaultMatrix);
-		return;
-	}
+    this->setIsotropyFactor(1);
+    const std::string defaultMatrix = "[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]";
+    if (coords.size() != 2 &&  steps.size() != 2)
+    {
+            this->setTransformationMatrix(defaultMatrix);
+            return;
+    }
 
-	std::ostringstream matrix;
-	matrix << "[[";
-	matrix << std::to_string(steps[0]) << ",0,"
-		<< std::to_string(coords[0]) << "],";
-	matrix << "[0," << std::to_string(steps[1]) << ","
-		<< std::to_string(coords[1]) << "],";
-	matrix << "[0,0,1]]";
+    std::ostringstream matrix;
+    matrix << "[[";
+    matrix << std::to_string(steps[0]) << ",0,0,"
+            << std::to_string(coords[0]) << "],";
+    matrix << "[0," << std::to_string(steps[1]) << ",0,"
+            << std::to_string(coords[1]) << "],";
+    matrix << "[0,0,1,0],[0,0,0,1]]";
 
-	this->setTransformationMatrix(matrix.str());
+    this->setTransformationMatrix(matrix.str());
 }
 
 const std::string tissuestack::imaging::TissueStackDataDimension::getTransformationMatrix() const

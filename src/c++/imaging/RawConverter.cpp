@@ -90,8 +90,12 @@ void tissuestack::imaging::RawConverter::convert(
 		else if (dimension.empty())
 			std::cout << "Starting Conversion: " << fileName << " => " << outFile << std::endl;
 
-		// the dimension loop
-		this->loopOverDimensions(processing_strategy, converter_task, dimension);
+		// FORMAT CONVERSION
+		if (converter_task->getInputImageData()->getFormat() == tissuestack::imaging::FORMAT::DICOM) // DICOM CONVERSION
+			this->convertDicom(processing_strategy, converter_task, dimension);
+		else if (converter_task->getInputImageData()->getFormat() == tissuestack::imaging::FORMAT::MINC ||
+			converter_task->getInputImageData()->getFormat() == tissuestack::imaging::FORMAT::NIFTI) // MINC AND NIFTI CONVERSION
+			this->loopOverDimensions(processing_strategy, converter_task, dimension);
 
 		if (this->hasBeenCancelledOrShutDown(processing_strategy, converter_task))
 		{
@@ -144,12 +148,38 @@ void tissuestack::imaging::RawConverter::convert(
 	}
 }
 
+void tissuestack::imaging::RawConverter::convertDicom(
+		const tissuestack::common::ProcessingStrategy * processing_strategy,
+		const tissuestack::services::TissueStackConversionTask * converter_task,
+		const std::string & dimension) const
+{
+	// TODO: for dicom distinguish beetween 3 scenarios:
+	// 1. single 2D image
+	// 2. time series: 3 dims with third being time (2 coords/steps)
+	// 3. true 3D data: address problem of gaps!
+	const tissuestack::imaging::TissueStackDicomData * dicomData =
+		static_cast<const tissuestack::imaging::TissueStackDicomData *>(converter_task->getInputImageData());
+
+	if (dicomData->getType() == tissuestack::imaging::DICOM_TYPE::SINGLE_IMAGE)
+	{
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"DICOM SINGLE IMAGE NOT IMPLEMENTED YET!");
+	}
+	else if (dicomData->getType() == tissuestack::imaging::DICOM_TYPE::TIME_SERIES)
+	{
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"DICOM TIME SERIES NOT IMPLEMENTED YET!");
+	} else if (dicomData->getType() == tissuestack::imaging::DICOM_TYPE::VOLUME)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"DICOM VOLUME NOT IMPLEMENTED YET!");
+}
+
 inline void tissuestack::imaging::RawConverter::loopOverDimensions(
 		const tissuestack::common::ProcessingStrategy * processing_strategy,
 		const tissuestack::services::TissueStackConversionTask * converter_task,
 		const std::string & dimension) const
 {
-	const std::vector<std::string> dimensionsToBeConverted =
+	std::vector<std::string> dimensionsToBeConverted =
 			converter_task->getInputImageData()->getDimensionOrder();
 
 	// this is for the resume of the online conversion
@@ -173,40 +203,21 @@ inline void tissuestack::imaging::RawConverter::loopOverDimensions(
 				"Failed to open supposed MINC file!");
 	}
 
-	// TODO: for dicom distinguish beetween 3 scenarios:
-	// 1. single 2D image
-	// 2. time series: 3 dims with third being time (2 coords/steps)
-	// 3. true 3D data: address problem of gaps!
-	if (converter_task->getInputImageData()->getFormat() == tissuestack::imaging::FORMAT::DICOM)
-	{
-		const tissuestack::imaging::TissueStackDicomData * dicomData =
-			static_cast<const tissuestack::imaging::TissueStackDicomData *>(converter_task->getInputImageData());
-
-		if (dicomData->getType() == tissuestack::imaging::DICOM_TYPE::SINGLE_IMAGE)
-		{
-			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-				"DICOM SINGLE IMAGE NOT IMPLEMENTED YET!");
-		}
-		else if (dicomData->getType() == tissuestack::imaging::DICOM_TYPE::TIME_SERIES)
-		{
-			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-					"DICOM TIME SERIES NOT IMPLEMENTED YET!");
-		} else if (dicomData->getType() == tissuestack::imaging::DICOM_TYPE::VOLUME)
-			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-					"DICOM VOLUME NOT IMPLEMENTED YET!");
-	}
-
 	unsigned short order = 0;
 	for (auto d : dimensionsToBeConverted) // the dimension loop
 	{
 		const tissuestack::imaging::TissueStackDataDimension * dim =
 			converter_task->getInputImageData()->getDimensionByLongName(d);
 
-		if (!processing_strategy->isOnlineStrategy() &&
-			!dimension.empty() && dimension.compare(d) != 0)
+		// for offline version: we skip the dimensions not specified
+		// for any version: we skip all but the 2D object if we have 2D data
+		if ((!processing_strategy->isOnlineStrategy() &&
+			!dimension.empty() && dimension.compare(d) != 0) ||
+				(converter_task->getInputImageData()->get2DDimension() != nullptr &&
+				converter_task->getInputImageData()->get2DDimension()->getName().compare(d) != 0))
 		{
 			order++;
-			continue; // for offline version: we skip the dimensions not specified
+			continue;
 		}
 
 		accSliceNumber += dim->getNumberOfSlices();
@@ -360,8 +371,15 @@ inline void tissuestack::imaging::RawConverter::convertSlice(
 		starts[i] = (i == dimension_number) ? slice_number : 0;
 		if (i<3)
 		{
-			if (i != dimension_number && minc->getDimensionByOrderIndex(i))
-				counts[i] = minc->getDimensionByOrderIndex(i)->getNumberOfSlices();
+			if (i != dimension_number)
+			{
+				if (minc->get2DDimension() != nullptr)
+					counts[i] = minc->getSlicesForDimensionInOrder(i);
+				else if (minc->getDimensionByOrderIndex(i))
+					counts[i] = minc->getDimensionByOrderIndex(i)->getNumberOfSlices();
+				else
+					counts[i] = 0;
+			}
 			else
 				counts[i] = 1;
 		}

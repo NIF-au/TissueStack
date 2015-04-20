@@ -867,35 +867,51 @@ void tissuestack::imaging::TissueStackImageData::detectAndCorrectFor2DData()
 	if (this->_dimensions.empty())
 		return;
 
-	if (this->_dimensions.size() == 1) // we have 2D already
+	char twoDdim = '\0';
+	if (this->_dimensions.size() == 1) // we have converted to 2D already
 	{
 		const tissuestack::imaging::TissueStackDataDimension * onlyDim =
 				this->_dimensions.begin()->second;
 		if (onlyDim != nullptr && !onlyDim->getName().empty())
-			this->set2DDimension(onlyDim->getName()[0]);
+		{
+			twoDdim = onlyDim->getName()[0];
+			this->set2DDimension(twoDdim);
+			const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->get2DDimension())->initialize2DData(
+				this->getCoordinates(), this->getSteps());
+		}
 		return;
 	}
 
-	// the 2D is the case when there is a 1 slice total in one of the objects
-	char twoDdim = '\0';
-	for (auto d : this->_dim_order)
-		if (this->getDimensionByLongName(d) != nullptr &&
-				this->getDimensionByLongName(d)->getNumberOfSlices() == 1 &&
-				!this->getDimensionByLongName(d)->getName().empty())
-			twoDdim = this->getDimensionByLongName(d)->getName()[0];
+	if (this->_dimensions.size() == 2) // also 2D
+	{
+		// convention is that either the one that is one slice only, (single 2D image)
+		// or otherwise the second becomes the 2D object (time series)
+		const tissuestack::imaging::TissueStackDataDimension * d1 =
+			this->getDimensionByLongName(this->_dim_order[0]);
+		const tissuestack::imaging::TissueStackDataDimension * d2 =
+			this->getDimensionByLongName(this->_dim_order[1]);
+		if (d1->getNumberOfSlices() == 1 && d2->getNumberOfSlices() != 1)
+			twoDdim = d1->getName()[0];
+		if (twoDdim == '\0' && d2->getNumberOfSlices() == 1 && d1->getNumberOfSlices() != 1)
+			twoDdim = d2->getName()[0];
+		if (twoDdim == '\0')
+			twoDdim = d2->getName()[0];
+	} else // the 2D case when there are 3D but only 1 slice total for 1 dimension, making it 2D essentially
+	{
+		for (auto d : this->_dim_order)
+			if (this->getDimensionByLongName(d) != nullptr &&
+					this->getDimensionByLongName(d)->getNumberOfSlices() == 1 &&
+					!this->getDimensionByLongName(d)->getName().empty())
+				twoDdim = this->getDimensionByLongName(d)->getName()[0];
+	}
 
-	if (twoDdim != '\0')
-		this->set2DDimension(twoDdim);
+	if (twoDdim == '\0') // we are not 2D
+		return;
+
+	this->set2DDimension(twoDdim);
 
 	// correction phase
-	// first: drop steps/coords for 2D data dimension
 	unsigned short index = this->getIndexForPlane0(twoDdim);
-	if (index < this->_steps.size())
-		this->_steps.erase(this->_steps.begin()+index);
-	if (index < this->_coordinates.size())
-		this->_coordinates.erase(this->_coordinates.begin()+index);
-
-	//second: delete the 2 other 2 dimension objects from dimension map
 	short counter = 0;
 	for (auto d : this->_dim_order)
 	{
@@ -908,8 +924,15 @@ void tissuestack::imaging::TissueStackImageData::detectAndCorrectFor2DData()
 		}
 		counter++;
 	}
+	if (this->getNumberOfDimensions() > 2)
+	{
+		if (index < this->_steps.size())
+			this->_steps.erase(this->_steps.begin()+index);
+		if (index < this->_coordinates.size())
+			this->_coordinates.erase(this->_coordinates.begin()+index);
+	}
 
-	// third finishe of by setting transformation matrix and isotropy factor
+	// set transformation matrix and isotropy factor
 	const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->get2DDimension())->initialize2DData(
 		this->getCoordinates(), this->getSteps());
 }
@@ -968,7 +991,8 @@ void tissuestack::imaging::TissueStackImageData::generateRawHeader()
 		//if (this->_dim_order.size() > 2
 		//	&& !name.empty() && tolower(name[0]) == 't') // this addresses time series
 		//	break;
-		if (twoDdim != nullptr && twoDdim->getName().compare(name) == 0) // 2D single images and time slices)
+		if (twoDdim != nullptr && this->getNumberOfDimensions() > 2 &&
+				twoDdim->getName().compare(name) == 0) // 2D single images and time slices)
 			continue;
 
 		if (i != 0) header << ":";

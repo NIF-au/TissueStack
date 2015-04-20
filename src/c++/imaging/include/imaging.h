@@ -263,9 +263,10 @@ namespace tissuestack
 			private:
 				friend class TissueStackImageData;
 				friend class TissueStackRawData;
+				friend class TissueStackNiftiData;
 				void setWidthAndHeight(
-						const unsigned int width, const unsigned int height,
-						const unsigned int anisotropic_width, const unsigned int anisotropic_height);
+					const unsigned int width, const unsigned int height,
+					const unsigned int anisotropic_width, const unsigned int anisotropic_height);
 				void setOffSet(const unsigned long long int offSet);
 				friend class tissuestack::database::DataSetDataProvider;
 				void setTransformationMatrix(const std::string transformationMatrix);
@@ -531,8 +532,10 @@ namespace tissuestack
 				const mitype_t getMincType() const;
 				const misize_t getMincTypeSize() const;
 				const mihandle_t & getMincHandle() const;
+				const unsigned int getSlicesForDimensionInOrder(unsigned short index) const;
 			private:
 				bool _is_color = false;
+				std::vector<unsigned int> _sliceNumbersInOrder;
 				friend class TissueStackImageData;
 				TissueStackMincData(const std::string & filename);
 		};
@@ -1111,6 +1114,11 @@ namespace tissuestack
 					const short dimension_number) const;
 
 				inline void loopOverDimensions(
+						const tissuestack::common::ProcessingStrategy * processing_strategy,
+						const tissuestack::services::TissueStackConversionTask * converter_task,
+						const std::string & dimension) const;
+
+				void convertDicom(
 						const tissuestack::common::ProcessingStrategy * processing_strategy,
 						const tissuestack::services::TissueStackConversionTask * converter_task,
 						const std::string & dimension) const;

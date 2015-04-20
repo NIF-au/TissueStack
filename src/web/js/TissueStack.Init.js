@@ -423,14 +423,6 @@ TissueStack.BindDataSetDependentEvents = function () {
 				var yCoord = parseFloat($('#canvas_point_y').val());
 				var zCoord = parseFloat($('#canvas_point_z').val());
 				
-				// this is a hack for 1 plane (simple 2D) data
-				// we set z min/max to +/- infinity to pass the test
-				if (event.data[0].actualDataSet.data.length == 1) {
-					zCoord = 0;
-					event.data[0].actualDataSet.realWorldCoords[planeId].min_z = Number.NEGATIVE_INFINITY;
-					event.data[0].actualDataSet.realWorldCoords[planeId].max_z = Number.POSITIVE_INFINITY;
-				}
-				
 				if (isNaN(xCoord) || isNaN(yCoord) || isNaN(zCoord)) {
 					alert("Illegal coords");
 					return;
@@ -443,6 +435,9 @@ TissueStack.BindDataSetDependentEvents = function () {
 					givenCoords = plane.getDataExtent().getPixelForWorldCoordinates(givenCoords);
 				}
 
+                if (givenCoords == null) // revert to pixel coords
+                    givenCoords = {x: xCoord, y: yCoord, z: zCoord};
+                
 				// this is for slight floating point inaccuracies (+/- 1 slice/pixel)
 				givenCoords.x = (givenCoords.x < 0 && givenCoords.x > -1) ? 0 : givenCoords.x;  
 				givenCoords.y = (givenCoords.y < 0 && givenCoords.y > -1) ? 0 : givenCoords.y;
@@ -474,25 +469,19 @@ TissueStack.BindDataSetDependentEvents = function () {
 				var now = new Date().getTime();
 				plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, true, now, true);
 				setTimeout(function() {plane.events.updateCoordinateDisplay();},500);
-				
-				if (event.data[0].actualDataSet.data.length > 1) {
-					var slider = $("#" + (plane.dataset_id == "" ? "" : plane.dataset_id + "_") + "canvas_main_slider");
-					if (slider) {
-						slider.val(givenCoords.z).slider("refresh");
-						setTimeout(function() {
-							plane.events.changeSliceForPlane(givenCoords.z);
-							}, 150);
-					}
-				}
+
+                // TODO: time series vs single 2D image differantiation
+                var slider = $("#" + (plane.dataset_id == "" ? "" : plane.dataset_id + "_") + "canvas_main_slider");
+                if (slider) {
+                    slider.val(givenCoords.z).slider("refresh");
+                    setTimeout(function() {
+                        plane.events.changeSliceForPlane(givenCoords.z);
+                        }, 150);
+                }
 			});
 
-			// if we have only one plangetDataSetByIndexe, we don't need to register maximize or slider 
-			if (dataSet.data.length == 1) {
-				continue;
-			}
-
-			// MAXIMIZING SIDE VIEWS
-            TissueStack.ComponentFactory.registerMaximizeEventsForDataSetWidget("dataset_" + (y+1), dataSet);
+            if (!dataSet.is2DData)  // MAXIMIZING SIDE VIEWS (only for non 2D data)
+                TissueStack.ComponentFactory.registerMaximizeEventsForDataSetWidget("dataset_" + (y+1), dataSet);
         }
 
         // COLOR MAP SWITCHER

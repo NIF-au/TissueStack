@@ -71,6 +71,7 @@ tissuestack::imaging::TissueStackNiftiData::TissueStackNiftiData(const std::stri
 
 	// get the volume dimensions
 	unsigned short i = 0;
+	unsigned int width2D = 0;
 	while (i < numberOfDimensions)
 	{
 		if (i > 2) // this is for non spatial, higher dimensions
@@ -81,26 +82,42 @@ tissuestack::imaging::TissueStackNiftiData::TissueStackNiftiData(const std::stri
 		name[0] = 'x' + i;
 
 		// create our dimension object and add it
+		if ((numberOfDimensions == 2 && i == 0) || numberOfDimensions > 2)
+		{
+			width2D = static_cast<unsigned int>(this->_volume->dim[i+1]);
 			this->addDimension(
 				new tissuestack::imaging::TissueStackDataDimension(
 					name,
 					0, // bogus offset for NIFTI
-					static_cast<unsigned long long int>(this->_volume->dim[i+1]),
+					static_cast<unsigned long long int>(width2D),
 					0)); // bogus slice size for NIFTI
-			// add start and step
-			this->addCoordinate(static_cast<float>(this->_volume->sto_xyz.m[i][3]));
-			this->addStep(static_cast<float>(this->_volume->pixdim[i + 1]));
+		} else if (numberOfDimensions == 2 && i ==1)
+		{
+			unsigned long long int height2D =
+					static_cast<unsigned long long int>(this->_volume->dim[i+1]);
+			tissuestack::imaging::TissueStackDataDimension * d =
+				new tissuestack::imaging::TissueStackDataDimension(
+					name,
+					0, // bogus offset for NIFTI
+					1,
+					height2D * width2D);
+			d->setWidthAndHeight(width2D, height2D, width2D, height2D);
+			this->addDimension(d);
+		}
+
+		// add start and step
+		this->addCoordinate(static_cast<float>(this->_volume->sto_xyz.m[i][3]));
+		this->addStep(static_cast<float>(this->_volume->pixdim[i + 1]));
 		i++;
 	}
 
 	// further dimension info initialization (order of function calls matter!)
-	this->initializeDimensions(true);
+	if (numberOfDimensions > 2)
+		this->initializeDimensions(true);
 	this->detectAndCorrectFor2DData();
+	this->generateRawHeader();
 	this->initializeOffsetsForNonRawFiles();
 	this->setGlobalMinMax();
-
-	// generate the raw header for conversion
-	this->generateRawHeader();
 }
 
 tissuestack::imaging::TissueStackNiftiData::~TissueStackNiftiData()

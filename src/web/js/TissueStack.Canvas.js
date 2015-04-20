@@ -819,11 +819,7 @@ TissueStack.Canvas.prototype = {
 
 		$("#canvas_point_x").val(Math.round(x *1000) / 1000);
 		$("#canvas_point_y").val(Math.round(y *1000) / 1000);
-		if (this.data_extent.max_slices > 1) {
-			$("#canvas_point_z").val(Math.round(z *1000) / 1000);
-		} else {
-			$("#canvas_point_z").val("");
-		}
+		$("#canvas_point_z").val(Math.round(z *1000) / 1000);
 		
 		// get at pixel value
 		var dataSet = TissueStack.dataSetStore.getDataSetById(this.getDataExtent().data_id);
