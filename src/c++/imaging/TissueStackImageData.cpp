@@ -130,6 +130,9 @@ const tissuestack::imaging::TissueStackImageData * tissuestack::imaging::TissueS
 	position = fileNameAllUpperCase.rfind(".DCM");
 	if (position + 4 == filename.length())
 		return new TissueStackDicomData(filename);
+	position = fileNameAllUpperCase.rfind(".IMG");
+	if (position + 4 == filename.length())
+		return new TissueStackDicomData(filename);
 
 	// if not recognized by extension, we'll assume it's raw and if not the raw constructor will tell us otherwise
 	return new tissuestack::imaging::TissueStackRawData(filename);
@@ -572,6 +575,9 @@ void tissuestack::imaging::TissueStackImageData::setFormat(int original_format)
 		case tissuestack::imaging::FORMAT::RAW:
 			this->_format = tissuestack::imaging::FORMAT::RAW;
 			break;
+		case tissuestack::imaging::FORMAT::DICOM:
+			this->_format = tissuestack::imaging::FORMAT::DICOM;
+			break;
 		default:
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Incompatible Original Format!");
 			break;
@@ -745,7 +751,8 @@ const std::vector<float> tissuestack::imaging::TissueStackImageData::getSteps() 
 void tissuestack::imaging::TissueStackImageData::dumpDataDimensionInfoIntoDebugLog() const
 {
 	for (const std::string dim : this->_dim_order)
-		this->getDimensionByLongName(dim)->dumpDataDimensionInfoIntoDebugLog();
+		if (this->getDimensionByLongName(dim) != nullptr)
+			this->getDimensionByLongName(dim)->dumpDataDimensionInfoIntoDebugLog();
 }
 
 void tissuestack::imaging::TissueStackImageData::addAssociatedDataSet(
@@ -896,13 +903,19 @@ void tissuestack::imaging::TissueStackImageData::detectAndCorrectFor2DData()
 			twoDdim = d2->getName()[0];
 		if (twoDdim == '\0')
 			twoDdim = d2->getName()[0];
-	} else // the 2D case when there are 3D but only 1 slice total for 1 dimension, making it 2D essentially
+	} else // the 2D case when there are 3 dimension objects/name with one being time (series) or 1 slice (aka single image)
 	{
 		for (auto d : this->_dim_order)
-			if (this->getDimensionByLongName(d) != nullptr &&
-					this->getDimensionByLongName(d)->getNumberOfSlices() == 1 &&
+		{
+			if (d.compare("time") == 0)
+			{
+				twoDdim = d[0];
+				break;
+			} else if (this->getDimensionByLongName(d) != nullptr &&
+				this->getDimensionByLongName(d)->getNumberOfSlices() == 1 &&
 					!this->getDimensionByLongName(d)->getName().empty())
 				twoDdim = this->getDimensionByLongName(d)->getName()[0];
+		}
 	}
 
 	if (twoDdim == '\0') // we are not 2D

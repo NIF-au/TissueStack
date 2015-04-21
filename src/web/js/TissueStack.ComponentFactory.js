@@ -394,14 +394,14 @@ TissueStack.ComponentFactory = {
 					}
                 
                     if (!dataSet.planes[id]) {
-                        $(this).attr("min", 0);
-                        $(this).attr("max", 0);
-                        $(this).attr("value", 0);
+                        $(div).attr("min", 0);
+                        $(div).attr("max", 0);
+                        $(div).attr("value", 0);
                         return;
                     }
             
-                    $(this).attr("min", 0);
-                    $(this).attr("max", dataSet.planes[id].data_extent.max_slices);
+                    $(div).attr("min", 0);
+                    $(div).attr("max", dataSet.planes[id].data_extent.max_slices);
                 
                      try {
                             $(div).slider();

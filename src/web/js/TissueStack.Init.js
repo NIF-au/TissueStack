@@ -470,7 +470,6 @@ TissueStack.BindDataSetDependentEvents = function () {
 				plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, true, now, true);
 				setTimeout(function() {plane.events.updateCoordinateDisplay();},500);
 
-                // TODO: time series vs single 2D image differantiation
                 var slider = $("#" + (plane.dataset_id == "" ? "" : plane.dataset_id + "_") + "canvas_main_slider");
                 if (slider) {
                     slider.val(givenCoords.z).slider("refresh");

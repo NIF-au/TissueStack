@@ -202,6 +202,7 @@ int		main(int argc, char **argv)
 				out_file, conversion->getFutureRawFileSize()))
 		{
 			std::cerr << "Failed to convert: Unable to touch future RAW file!" << std::endl;
+			if (conversion) delete conversion;
 			exit(EXIT_FAILURE);
 		}
 		std::cout << "Created raw file for multi-process conversion." << std::endl;
@@ -248,6 +249,8 @@ int		main(int argc, char **argv)
 		// the periodic check whether the children have terminated or not
 		while (number_of_children_running > 0  && tissuestack::utils::System::fileExists(out_file))
 			sleep(1);
+
+		if (conversion) delete conversion;
 
 		if (tissuestack::utils::System::fileExists(out_file))
 			std::cout << "\nConversion finished successfully." << std::endl;

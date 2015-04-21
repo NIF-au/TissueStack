@@ -264,6 +264,7 @@ namespace tissuestack
 				friend class TissueStackImageData;
 				friend class TissueStackRawData;
 				friend class TissueStackNiftiData;
+				friend class TissueStackDicomData;
 				void setWidthAndHeight(
 					const unsigned int width, const unsigned int height,
 					const unsigned int anisotropic_width, const unsigned int anisotropic_height);
@@ -339,6 +340,7 @@ namespace tissuestack
 				const bool hasNoAssociatedDataSets() const;
 				void clearAssociatedDataSets();
 				void set2DDimension(const char dim);
+				const short getIndexForPlane(const char plane) const;
 			protected:
 				friend class tissuestack::database::DataSetDataProvider;
 				void setImageDataBounds(const float min=0, const float max=255);
@@ -356,7 +358,6 @@ namespace tissuestack
 				void addStep(float step);
 				void detectAndCorrectFor2DData();
 				void generateRawHeader();
-				const short getIndexForPlane(const char plane) const;
 			private:
 				inline const std::string constructIdentityMatrixForDimensionNumber() const;
 				inline const std::string getAdjointMatrix() const;
@@ -469,9 +470,10 @@ namespace tissuestack
 				~TissueStackDicomData();
 				const bool isRaw() const;
 				const DICOM_TYPE getType() const;
-			private:
+				const DicomFileWrapper * getDicomFileWrapper(unsigned int index) const;
 				void registerDcmtkDecoders();
 				void deregisterDcmtkDecoders();
+			private:
 				void addDicomFile(const std::string & file, const bool withinZippedArchive = false);
 				friend class TissueStackImageData;
 				TissueStackDicomData(const std::string & filename);
@@ -1122,6 +1124,12 @@ namespace tissuestack
 						const tissuestack::common::ProcessingStrategy * processing_strategy,
 						const tissuestack::services::TissueStackConversionTask * converter_task,
 						const std::string & dimension) const;
+
+				inline const bool convertDicom0(
+						const tissuestack::common::ProcessingStrategy * processing_strategy,
+						const tissuestack::services::TissueStackConversionTask * converter_task,
+						const std::string & dimension,
+						const unsigned int dicom_index) const;
 
 				inline void iteratOverPixelsAndConvert(
 					void * in,

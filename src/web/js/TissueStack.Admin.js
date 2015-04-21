@@ -302,11 +302,16 @@ TissueStack.Admin.prototype = {
 			if (slashPos > 0)
 				filename = filename.substring(slashPos+1);
 	
-			if (filename.lastIndexOf(".mnc") < 0 &&
-				filename.lastIndexOf(".nii") < 0 &&
-				filename.lastIndexOf(".nii.gz") < 0 &&
-				filename.lastIndexOf(".raw") < 0) {				
-				errorHandling2("Error: Uploaded file needs to be of the following type: .mnc, .nii, .nii.gz or .raw!");
+			var lowerCaseFileName = filename.toLowerCase();
+	
+			if (lowerCaseFileName.lastIndexOf(".mnc") < 0 &&
+				lowerCaseFileName.lastIndexOf(".nii") < 0 &&
+				lowerCaseFileName.lastIndexOf(".nii.gz") < 0 &&
+				lowerCaseFileName.lastIndexOf(".dcm") < 0 &&
+				lowerCaseFileName.lastIndexOf(".img") < 0 &&
+				lowerCaseFileName.lastIndexOf(".zip") < 0 &&
+				lowerCaseFileName.lastIndexOf(".raw") < 0) {				
+				errorHandling2("Error: Uploaded file needs to be of the following type: .mnc, .nii, .nii.gz, .dcm, .img, .zip or .raw!");
 				return false;	
 			}
 				

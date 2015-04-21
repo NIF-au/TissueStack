@@ -215,7 +215,7 @@ TissueStack.DataSetNavigation.prototype = {
 		if (ds_id)
 		{
 			var ds = TissueStack.dataSetStore.getDataSetById(ds_id);
-			if (ds && !ds.is2DData)
+			if (ds && (!ds.is2DData || (ds.is2DData && ds.data[0].maxSlices > 0)))
                 $("#dataset_" + index  + "_right_panel").removeClass("hidden");
 		}
 		

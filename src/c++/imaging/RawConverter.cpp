@@ -63,6 +63,15 @@ void tissuestack::imaging::RawConverter::convert(
 					"Could not write header for RAW conversion!");
 		}
 
+		// 2D data check for offline processor which might come in as several processes
+		if (!processing_strategy->isOnlineStrategy() &&
+			converter_task->getInputImageData()->get2DDimension() != nullptr &&
+			converter_task->getInputImageData()->getDimensionByLongName(dimension) == nullptr)
+		{
+			ptr_converter_task.release();
+			return;
+		}
+
 		// in the case of an offline multi-process we have to fast-forward to the desired offset
 		if (!processing_strategy->isOnlineStrategy() && !dimension.empty())
 		{
@@ -148,30 +157,132 @@ void tissuestack::imaging::RawConverter::convert(
 	}
 }
 
+inline const bool tissuestack::imaging::RawConverter::convertDicom0(
+		const tissuestack::common::ProcessingStrategy * processing_strategy,
+		const tissuestack::services::TissueStackConversionTask * converter_task,
+		const std::string & dimension,
+		const unsigned int dicom_index) const
+{
+	tissuestack::imaging::TissueStackDicomData * dicomData =
+		const_cast<tissuestack::imaging::TissueStackDicomData *>(
+			static_cast<const tissuestack::imaging::TissueStackDicomData *>(converter_task->getInputImageData()));
+
+	const tissuestack::imaging::DicomFileWrapper * dicom =
+		dicomData->getDicomFileWrapper(dicom_index);
+	if (dicom == nullptr)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Single Image Dicom not found");
+
+	const unsigned long long int new_size_per_slice =
+		dicom->getWidth() * dicom->getHeight() * 3;
+
+	dicomData->registerDcmtkDecoders();
+	const unsigned char * data_out =
+			const_cast<tissuestack::imaging::DicomFileWrapper *>(dicom)->getData();
+	dicomData->deregisterDcmtkDecoders();
+
+	ssize_t bytesWritten =
+		write(this->_file_descriptor, data_out, new_size_per_slice);
+	delete [] data_out;
+	if (bytesWritten != static_cast<ssize_t>(new_size_per_slice))
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Dicom Conversion: written bytes do not match expected bytes!");
+
+	const bool finished =
+		const_cast<tissuestack::services::TissueStackConversionTask *>(converter_task)->incrementSlicesDone();
+
+	// persist for the online tiling
+	if (processing_strategy->isOnlineStrategy())
+		tissuestack::services::TissueStackTaskQueue::instance()->persistTaskProgress(
+			converter_task->getId());
+	else if (!processing_strategy->isOnlineStrategy() && dimension.empty())
+	{
+		const std::string output =
+			std::string("Progress:\t") +
+			std::to_string(converter_task->getSlicesDone()) + "\t[" +
+			std::to_string(converter_task->getTotalSlices()) + "]\t => " +
+			std::to_string(converter_task->getProgress()) + "%\r";
+		std::cout << output << std::flush;
+	}else if (!processing_strategy->isOnlineStrategy() && !dimension.empty())
+	{
+		std::string output = "";
+		const tissuestack::imaging::TissueStackDataDimension * d =
+			dicomData->getDimensionByLongName(dimension);
+		const unsigned short order =
+			d == nullptr ? 0 :
+				dicomData->getIndexForPlane(dimension[0]);
+		for (unsigned short pos=0;pos<order;pos++)
+			output += "\t\t\t";
+		output += (dimension + ": ");
+		output += std::to_string(converter_task->getSlicesDone());
+		output += (" [" + std::to_string(d->getNumberOfSlices()) + "]");
+		std::cout << output << "\r" << std::flush;
+	}
+
+	return finished;
+}
+
 void tissuestack::imaging::RawConverter::convertDicom(
 		const tissuestack::common::ProcessingStrategy * processing_strategy,
 		const tissuestack::services::TissueStackConversionTask * converter_task,
 		const std::string & dimension) const
 {
-	// TODO: for dicom distinguish beetween 3 scenarios:
-	// 1. single 2D image
-	// 2. time series: 3 dims with third being time (2 coords/steps)
-	// 3. true 3D data: address problem of gaps!
-	const tissuestack::imaging::TissueStackDicomData * dicomData =
-		static_cast<const tissuestack::imaging::TissueStackDicomData *>(converter_task->getInputImageData());
+	tissuestack::imaging::TissueStackDicomData * dicomData =
+		const_cast<tissuestack::imaging::TissueStackDicomData *>(
+			static_cast<const tissuestack::imaging::TissueStackDicomData *>(converter_task->getInputImageData()));
 
-	if (dicomData->getType() == tissuestack::imaging::DICOM_TYPE::SINGLE_IMAGE)
-	{
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-			"DICOM SINGLE IMAGE NOT IMPLEMENTED YET!");
-	}
+	if (dicomData->getType() == tissuestack::imaging::DICOM_TYPE::SINGLE_IMAGE) // SINGLE IMAGE
+		this->convertDicom0(processing_strategy, converter_task, dimension, 0);
 	else if (dicomData->getType() == tissuestack::imaging::DICOM_TYPE::TIME_SERIES)
 	{
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-				"DICOM TIME SERIES NOT IMPLEMENTED YET!");
+		for (unsigned int ind=0;ind < dicomData->get2DDimension()->getNumberOfSlices();ind++)
+			if (this->convertDicom0(processing_strategy, converter_task, dimension, ind))
+				return;
 	} else if (dicomData->getType() == tissuestack::imaging::DICOM_TYPE::VOLUME)
+	{
+		/*
+		this->registerDcmtkDecoders();
+		const unsigned char * data = dicom_ptr->getData();
+		this->deregisterDcmtkDecoders();
+
+		if (data == nullptr)
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Failed to extract dicom data!");
+
+		ExceptionInfo exception;
+		GetExceptionInfo(&exception);
+		Image * image = NULL;
+		ImageInfo * imgInfo = NULL;
+		image = ConstituteImage(
+			dicom_ptr->getWidth(),
+			dicom_ptr->getHeight(),
+			"RGB",
+			CharPixel,
+			data, &exception);
+
+	 	if (image == NULL)
+		{
+			CatchException(&exception);
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Could not constitute Image!");
+		}
+		delete [] data;
+	 	imgInfo = CloneImageInfo((ImageInfo *)NULL);
+	 	strcpy(image->filename, (potentialDicomFile + ".magick.png").c_str());
+	 	WriteImage(imgInfo, image);
+	 	DestroyImage(image);
+	 	DestroyImageInfo(imgInfo);
+		//DicomImage * img = new DicomImage(potentialDicomFile.c_str());
+	 	//img->writePluginFormat(new DiPNGPlugin(), (potentialDicomFile + ".png").c_str());
+	 	//delete img;
+		//img->writePluginFormat(new DiJPEGPlugin(), (potentialDicomFile + ".jpg").c_str());
+
+	 	// TODO: move this up
+		*/
+
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"DICOM VOLUME NOT IMPLEMENTED YET!");
+	}
 }
 
 inline void tissuestack::imaging::RawConverter::loopOverDimensions(

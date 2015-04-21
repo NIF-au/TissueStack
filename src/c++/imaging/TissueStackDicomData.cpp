@@ -27,6 +27,14 @@ const tissuestack::imaging::DICOM_TYPE tissuestack::imaging::TissueStackDicomDat
 	return this->_type;
 }
 
+const tissuestack::imaging::DicomFileWrapper * tissuestack::imaging::TissueStackDicomData::getDicomFileWrapper(unsigned int index) const
+{
+	if (index >= this->_dicom_files.size())
+		return nullptr;
+
+	return this->_dicom_files[index];
+}
+
 void tissuestack::imaging::TissueStackDicomData::addDicomFile(const std::string & file, const bool withinZippedArchive)
 {
 	std::string potentialDicomFile = file;
@@ -50,44 +58,6 @@ void tissuestack::imaging::TissueStackDicomData::addDicomFile(const std::string 
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"We allow only one series per zipped archive of dicom files!");
 
-	this->registerDcmtkDecoders();
-	const unsigned char * data = dicom_ptr->getData();
-	this->deregisterDcmtkDecoders();
-
-	if (data == nullptr)
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-			"Failed to extract dicom data!");
-
-	ExceptionInfo exception;
-	GetExceptionInfo(&exception);
-	Image * image = NULL;
-	ImageInfo * imgInfo = NULL;
-	image = ConstituteImage(
-		dicom_ptr->getWidth(),
-		dicom_ptr->getHeight(),
-		"RGB",
-		CharPixel,
-		data, &exception);
-
- 	if (image == NULL)
-	{
-		CatchException(&exception);
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-			"Could not constitute Image!");
-	}
-	delete [] data;
- 	imgInfo = CloneImageInfo((ImageInfo *)NULL);
- 	strcpy(image->filename, (potentialDicomFile + ".magick.png").c_str());
- 	WriteImage(imgInfo, image);
- 	DestroyImage(image);
- 	DestroyImageInfo(imgInfo);
-	//DicomImage * img = new DicomImage(potentialDicomFile.c_str());
- 	//img->writePluginFormat(new DiPNGPlugin(), (potentialDicomFile + ".png").c_str());
- 	//delete img;
-	//img->writePluginFormat(new DiJPEGPlugin(), (potentialDicomFile + ".jpg").c_str());
-
- 	// TODO: move this up
-
  	this->_dicom_files.push_back(dicom_ptr.release());
 }
 
@@ -104,7 +74,9 @@ tissuestack::imaging::TissueStackDicomData::TissueStackDicomData(
 		std::string ext = potential_dicom.substr(potential_dicom.length()-4);
 		std::transform(ext.begin(), ext.end(), ext.begin(), toupper);
 
-		if (ext.compare(".DCM") != 0 && ext.find("0") != 0) // ignore all but .dcm, .img or blank extensions
+		if (ext.compare(".DCM") != 0 &&
+				ext.compare(".IMG") != 0 &&
+				ext.find("0") != 0) // ignore all but .dcm, .img or blank extensions
 			continue;
 
 		this->addDicomFile(potential_dicom, true);
@@ -215,12 +187,14 @@ inline void tissuestack::imaging::TissueStackDicomData::initializeDicomTimeSerie
 			0, // bogus offset for now, we'll calculate later
 			heights[0],
 			widths[0] * heights[0]));
-	this->addDimension( // time dimension
+	tissuestack::imaging::TissueStackDataDimension * timeDim =
 		new tissuestack::imaging::TissueStackDataDimension(
-			std::string("t"),
-			0, // bogus offset for now, we'll calculate later
-			this->_dicom_files.size(),
-			widths[0] * heights[0]));
+				std::string("time"),
+				0, // bogus offset for now, we'll calculate later
+				this->_dicom_files.size(),
+				widths[0] * heights[0]);
+	timeDim->setWidthAndHeight(widths[0], heights[0], widths[0], heights[0]);
+	this->addDimension(timeDim);
 
 	this->addCoordinates(coords[0],0);
 	this->addCoordinates(coords[0],1);
@@ -228,10 +202,9 @@ inline void tissuestack::imaging::TissueStackDicomData::initializeDicomTimeSerie
 	this->addSteps(steps[0], orientations[0], 0);
 	this->addSteps(steps[0], orientations[0], 1);
 
+	// further dimension info initialization (order of function calls matter!)
+	this->detectAndCorrectFor2DData();
 	this->generateRawHeader();
-
-	// further dimension info initialization
-	this->initializeDimensions(true);
 	this->initializeOffsetsForNonRawFiles();
 }
 
@@ -263,8 +236,6 @@ inline void tissuestack::imaging::TissueStackDicomData::initializeSingleDicomFil
 	// further dimension info initialization
 	this->initializeDimensions(true);
 	this->initializeOffsetsForNonRawFiles();
-
-	this->dumpImageDataIntoDebugLog();
 }
 
 
