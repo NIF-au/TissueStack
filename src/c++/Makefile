@@ -17,7 +17,7 @@ INCLUDE			=	-Iinclude -I/usr/include/nifti \
 
 LIB_PATH		=	-L/usr/lib64/dcmtk
 
-IS_CENTOS_OR_FEDORA	?= 0;
+IS_CENTOS_OR_FEDORA	?= 0
 
 ifeq ($(IS_CENTOS_OR_FEDORA), 0)
 LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid \
