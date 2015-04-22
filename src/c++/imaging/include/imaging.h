@@ -329,7 +329,7 @@ namespace tissuestack
 				void dumpImageDataIntoDebugLog() const;
 				const TissueStackLabelLookup * getLookup() const;
 				const int getFileDescriptor();
-				void initializeDimensions(const bool omitTransformationMatrix = false);
+				void initializeDimensions(const bool omitTransformationMatrix = false, const bool setWidthAndHeight = true);
 				void initializeOffsetsForNonRawFiles();
 				const std::string toJson(
 					const bool includePlanes = false,
@@ -471,6 +471,9 @@ namespace tissuestack
 				const bool isRaw() const;
 				const DICOM_TYPE getType() const;
 				const DicomFileWrapper * getDicomFileWrapper(unsigned int index) const;
+				const unsigned long int getNumberOfFiles(const unsigned short dimension_index);
+				const unsigned long int getPlaneIndex(const unsigned short dimension_index);
+				void writeDicomDataAsPng(DicomFileWrapper * dicom);
 				void registerDcmtkDecoders();
 				void deregisterDcmtkDecoders();
 			private:
@@ -486,7 +489,6 @@ namespace tissuestack
 					const std::vector<std::string> & steps,
 					const std::vector<std::string> & coords);
 				inline void initializeDicom3Ddata(
-					const std::vector<unsigned long int> & dim_slices,
 					const std::vector<unsigned long long int> & widths,
 					const std::vector<unsigned long long int> & heights,
 					const std::vector<std::string> & orientations,
@@ -502,6 +504,7 @@ namespace tissuestack
 					const unsigned short index);
 				std::vector<DicomFileWrapper *> _dicom_files;
 				std::vector<unsigned long int> _plane_index;
+				std::vector<unsigned long int> _plane_number_of_files;
 				std::string _series_number = "";
 				DICOM_TYPE _type;
 		};
@@ -1118,12 +1121,14 @@ namespace tissuestack
 				inline void loopOverDimensions(
 						const tissuestack::common::ProcessingStrategy * processing_strategy,
 						const tissuestack::services::TissueStackConversionTask * converter_task,
-						const std::string & dimension) const;
+						const std::string & dimension,
+						bool & resumed) const;
 
 				void convertDicom(
 						const tissuestack::common::ProcessingStrategy * processing_strategy,
 						const tissuestack::services::TissueStackConversionTask * converter_task,
-						const std::string & dimension) const;
+						const std::string & dimension,
+						bool & resumed) const;
 
 				inline const bool convertDicom0(
 						const tissuestack::common::ProcessingStrategy * processing_strategy,

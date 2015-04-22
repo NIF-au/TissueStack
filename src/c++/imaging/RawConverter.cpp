@@ -34,6 +34,11 @@ void tissuestack::imaging::RawConverter::convert(
 		const std::string fileName = converter_task->getInputImageData()->getFileName();
 		const std::string outFile = converter_task->getOutFile();
 
+		// this is for the resume of the online conversion
+		bool resumed = false;
+		if (processing_strategy->isOnlineStrategy() && converter_task->getSlicesDone() != 0)
+			resumed = true;
+
 		// open our out file for writing and perform some basic checks
 		if ((!processing_strategy->isOnlineStrategy() && dimension.empty()) || // offline (not multi processed)
 				(processing_strategy->isOnlineStrategy() && converter_task->getSlicesDone() == 0)) // online (not resume)
@@ -101,10 +106,10 @@ void tissuestack::imaging::RawConverter::convert(
 
 		// FORMAT CONVERSION
 		if (converter_task->getInputImageData()->getFormat() == tissuestack::imaging::FORMAT::DICOM) // DICOM CONVERSION
-			this->convertDicom(processing_strategy, converter_task, dimension);
+			this->convertDicom(processing_strategy, converter_task, dimension, resumed);
 		else if (converter_task->getInputImageData()->getFormat() == tissuestack::imaging::FORMAT::MINC ||
 			converter_task->getInputImageData()->getFormat() == tissuestack::imaging::FORMAT::NIFTI) // MINC AND NIFTI CONVERSION
-			this->loopOverDimensions(processing_strategy, converter_task, dimension);
+			this->loopOverDimensions(processing_strategy, converter_task, dimension, resumed);
 
 		if (this->hasBeenCancelledOrShutDown(processing_strategy, converter_task))
 		{
@@ -225,7 +230,8 @@ inline const bool tissuestack::imaging::RawConverter::convertDicom0(
 void tissuestack::imaging::RawConverter::convertDicom(
 		const tissuestack::common::ProcessingStrategy * processing_strategy,
 		const tissuestack::services::TissueStackConversionTask * converter_task,
-		const std::string & dimension) const
+		const std::string & dimension,
+		bool & resumed) const
 {
 	tissuestack::imaging::TissueStackDicomData * dicomData =
 		const_cast<tissuestack::imaging::TissueStackDicomData *>(
@@ -235,68 +241,97 @@ void tissuestack::imaging::RawConverter::convertDicom(
 		this->convertDicom0(processing_strategy, converter_task, dimension, 0);
 	else if (dicomData->getType() == tissuestack::imaging::DICOM_TYPE::TIME_SERIES)
 	{
-		for (unsigned int ind=0;ind < dicomData->get2DDimension()->getNumberOfSlices();ind++)
+		unsigned int ind=0;
+		if (processing_strategy->isOnlineStrategy() && resumed)
+		{
+			// we resumed so, let's fast forward...
+			ind = converter_task->getSlicesDone();
+			unsigned long long int toBeContinuedAt =
+					dicomData->get2DDimension()->getOffset() +
+					dicomData->get2DDimension()->getSliceSize() * ind * 3;
+			lseek(this->_file_descriptor, toBeContinuedAt, SEEK_SET);
+		}
+
+		for (;ind < dicomData->get2DDimension()->getNumberOfSlices();ind++)
 			if (this->convertDicom0(processing_strategy, converter_task, dimension, ind))
 				return;
+
 	} else if (dicomData->getType() == tissuestack::imaging::DICOM_TYPE::VOLUME)
 	{
-		/*
-		this->registerDcmtkDecoders();
-		const unsigned char * data = dicom_ptr->getData();
-		this->deregisterDcmtkDecoders();
+		unsigned short ind=0;
+		unsigned long int slice = converter_task->getSlicesDone();
 
-		if (data == nullptr)
-			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-				"Failed to extract dicom data!");
-
-		ExceptionInfo exception;
-		GetExceptionInfo(&exception);
-		Image * image = NULL;
-		ImageInfo * imgInfo = NULL;
-		image = ConstituteImage(
-			dicom_ptr->getWidth(),
-			dicom_ptr->getHeight(),
-			"RGB",
-			CharPixel,
-			data, &exception);
-
-	 	if (image == NULL)
+		for (auto d : dicomData->getDimensionOrder())
 		{
-			CatchException(&exception);
-			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-				"Could not constitute Image!");
+			// if a specific dimension was chosen, skip the others
+			if (!dimension.empty() && dimension.compare(d) != 0)
+			{
+				ind++;
+				continue;
+			}
+
+			const tissuestack::imaging::TissueStackDataDimension * dim =
+				dicomData->getDimensionByLongName(d);
+
+			if (dim == nullptr)
+			{
+				ind++;
+				continue;
+			}
+
+			// resumption check
+			if (processing_strategy->isOnlineStrategy() && resumed)
+			{
+				// let's fast forward...
+				if (slice >= dim->getNumberOfSlices())
+				{
+					slice -= dim->getNumberOfSlices();
+					ind++;
+					continue;
+				}
+
+				unsigned long long int toBeContinuedAt =
+						dim->getOffset() + dim->getSliceSize() * slice * 3;
+				lseek(this->_file_descriptor, toBeContinuedAt, SEEK_SET);
+				resumed = false;
+			}
+
+			// we have to check now whether the expected number of slices
+			// according to the corresponding width and height of the other dimensions
+			// matches the number of dicom files we have for that plane.
+			// in the unusual event of having more dicom files we throw an error
+			// if we have to few we have to 'make up' for the gaps
+			if (dicomData->getNumberOfFiles(ind) > dim->getNumberOfSlices())
+				THROW_TS_EXCEPTION(
+					tissuestack::common::TissueStackApplicationException,
+					"We have more dicom files for a plane than expected!");
+
+			if (dicomData->getNumberOfFiles(ind) < dim->getNumberOfSlices())
+			{
+				// TODO: implement gap filling
+
+
+			} else // this is the ideal case
+			{
+				for (;slice < dim->getNumberOfSlices();slice++)
+					if (this->convertDicom0(processing_strategy, converter_task, dimension, slice))
+						return;
+			}
+
+			ind++;
 		}
-		delete [] data;
-	 	imgInfo = CloneImageInfo((ImageInfo *)NULL);
-	 	strcpy(image->filename, (potentialDicomFile + ".magick.png").c_str());
-	 	WriteImage(imgInfo, image);
-	 	DestroyImage(image);
-	 	DestroyImageInfo(imgInfo);
-		//DicomImage * img = new DicomImage(potentialDicomFile.c_str());
-	 	//img->writePluginFormat(new DiPNGPlugin(), (potentialDicomFile + ".png").c_str());
-	 	//delete img;
-		//img->writePluginFormat(new DiJPEGPlugin(), (potentialDicomFile + ".jpg").c_str());
-
-	 	// TODO: move this up
-		*/
-
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-				"DICOM VOLUME NOT IMPLEMENTED YET!");
 	}
 }
 
 inline void tissuestack::imaging::RawConverter::loopOverDimensions(
 		const tissuestack::common::ProcessingStrategy * processing_strategy,
 		const tissuestack::services::TissueStackConversionTask * converter_task,
-		const std::string & dimension) const
+		const std::string & dimension,
+		bool & resumed) const
 {
 	std::vector<std::string> dimensionsToBeConverted =
 			converter_task->getInputImageData()->getDimensionOrder();
 
-	// this is for the resume of the online conversion
-	bool resumed = false;
-	if (processing_strategy->isOnlineStrategy() && converter_task->getSlicesDone() != 0)
-		resumed = true;
 	unsigned long long int dimOffset = 0;
 	unsigned long long int accSliceNumber = 0;
 

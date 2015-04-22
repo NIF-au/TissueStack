@@ -158,7 +158,8 @@ tissuestack::imaging::TissueStackImageData::TissueStackImageData(
 		tissuestack::imaging::FORMAT format) :
 			_file_name(filename), _format(format) {}
 
-void tissuestack::imaging::TissueStackImageData::initializeDimensions(const bool omitTransformationMatrix)
+void tissuestack::imaging::TissueStackImageData::initializeDimensions(
+		const bool omitTransformationMatrix, const bool setWidthAndHeight)
 {
 	// fallback identity matrix for missing transformation info
 	const std::string identity = this->constructIdentityMatrixForDimensionNumber();
@@ -168,7 +169,8 @@ void tissuestack::imaging::TissueStackImageData::initializeDimensions(const bool
 	// set width and height
 	for (auto dim : this->_dim_order)
 	{
-		this->setWidthAndHeightByDimension(dim);
+		if (setWidthAndHeight)
+			this->setWidthAndHeightByDimension(dim);
 		if (!omitTransformationMatrix)
 			this->setTransformationMatrixByDimension(dim);
 

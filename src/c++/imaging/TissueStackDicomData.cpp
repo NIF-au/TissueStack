@@ -98,7 +98,6 @@ tissuestack::imaging::TissueStackDicomData::TissueStackDicomData(
 void tissuestack::imaging::TissueStackDicomData::initializeDicomImageFromFiles()
 {
 	// now determine whether we have 3D or time series as well as coordinate matrix
-	std::vector<unsigned long int> dim_slices;
 	std::vector<unsigned long long int> widths;
 	std::vector<unsigned long long int> heights;
 	std::vector<std::string> orientations;
@@ -114,7 +113,7 @@ void tissuestack::imaging::TissueStackDicomData::initializeDicomImageFromFiles()
 		if (latestOrientation.empty() || latestOrientation.compare(dicom->getImageOrientation()) != 0)
 		{
 			if (!latestOrientation.empty())
-				dim_slices.push_back(counter);
+				this->_plane_number_of_files.push_back(counter);
 
 			latestOrientation = dicom->getImageOrientation();
 			latestWidth = dicom->getWidth();
@@ -134,7 +133,7 @@ void tissuestack::imaging::TissueStackDicomData::initializeDicomImageFromFiles()
 
 		counter++;
 	}
-	dim_slices.push_back(counter);
+	this->_plane_number_of_files.push_back(counter);
 
 	if (this->_plane_index.empty())
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
@@ -164,7 +163,7 @@ void tissuestack::imaging::TissueStackDicomData::initializeDicomImageFromFiles()
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"We need triples for a 3D data dicom!");
 
-	this->initializeDicom3Ddata(dim_slices, widths, heights, orientations, steps, coords);
+	this->initializeDicom3Ddata(widths, heights, orientations, steps, coords);
 	this->dumpImageDataIntoDebugLog();
 }
 
@@ -241,7 +240,6 @@ inline void tissuestack::imaging::TissueStackDicomData::initializeSingleDicomFil
 
 
 inline void tissuestack::imaging::TissueStackDicomData::initializeDicom3Ddata(
-	const std::vector<unsigned long int> & dim_slices,
 	const std::vector<unsigned long long int> & widths,
 	const std::vector<unsigned long long int> & heights,
 	const std::vector<std::string> & orientations,
@@ -250,10 +248,6 @@ inline void tissuestack::imaging::TissueStackDicomData::initializeDicom3Ddata(
 {
 	// z plane
 	unsigned long long int numSlices = heights[1];
-
-	if (dim_slices[0] != numSlices)
-		void(); // TODO: implement possible correction
-
 	this->addDimension(
 		new tissuestack::imaging::TissueStackDataDimension(
 			std::string("z"),
@@ -265,10 +259,6 @@ inline void tissuestack::imaging::TissueStackDicomData::initializeDicom3Ddata(
 
 	// x plane
 	numSlices = widths[0];
-
-	if (dim_slices[1] != numSlices)
-		void(); // TODO: implement possible correction
-
 	this->addDimension(
 		new tissuestack::imaging::TissueStackDataDimension(
 			std::string("x"),
@@ -280,10 +270,6 @@ inline void tissuestack::imaging::TissueStackDicomData::initializeDicom3Ddata(
 
 	// y plane
 	numSlices = heights[0];
-
-	if (dim_slices[2] != numSlices)
-		void(); // TODO: implement possible correction
-
 	this->addDimension(
 		new tissuestack::imaging::TissueStackDataDimension(
 			std::string("y"),
@@ -293,10 +279,9 @@ inline void tissuestack::imaging::TissueStackDicomData::initializeDicom3Ddata(
 	this->addCoordinates(coords[0],1);
 	this->addSteps(steps[0], orientations[0], 1);
 
-	this->generateRawHeader();
-	// further dimension info initialization
-	this->initializeDimensions(true);
+	this->initializeDimensions(true, false);
 	this->initializeOffsetsForNonRawFiles();
+	this->generateRawHeader();
 }
 
 inline void tissuestack::imaging::TissueStackDicomData::addCoordinates(
@@ -366,6 +351,68 @@ tissuestack::imaging::TissueStackDicomData::~TissueStackDicomData()
 	for (auto dicom : this->_dicom_files)
 		if (dicom != nullptr)
 			delete dicom;
+}
+
+const unsigned long int tissuestack::imaging::TissueStackDicomData::getNumberOfFiles(const unsigned short dimension_index)
+{
+	if (this->_plane_number_of_files.empty() || dimension_index >= this->_plane_number_of_files.size())
+		return 0;
+
+	return this->_plane_number_of_files[dimension_index];
+}
+
+const unsigned long int tissuestack::imaging::TissueStackDicomData::getPlaneIndex(const unsigned short dimension_index)
+{
+	if (this->_plane_index.empty() || dimension_index >= this->_plane_index.size())
+		return 0;
+
+	return this->_plane_index[dimension_index];
+}
+
+void tissuestack::imaging::TissueStackDicomData::writeDicomDataAsPng(tissuestack::imaging::DicomFileWrapper * dicom)
+{
+	if (dicom == nullptr)
+		return;
+
+
+	this->registerDcmtkDecoders();
+	const unsigned char * data = dicom->getData();
+	this->deregisterDcmtkDecoders();
+
+	if (data == nullptr)
+		return;
+
+	ExceptionInfo exception;
+	GetExceptionInfo(&exception);
+	Image * image = NULL;
+
+	image = ConstituteImage(
+		dicom->getWidth(),
+		dicom->getHeight(),
+		"RGB",
+		CharPixel,
+		data, &exception);
+
+ 	if (image == NULL)
+	{
+		CatchException(&exception);
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Could not constitute Image!");
+	}
+	delete [] data;
+
+	ImageInfo * imgInfo = CloneImageInfo((ImageInfo *)NULL);
+ 	strcpy(image->filename, (dicom->getFileName() + ".png").c_str());
+
+ 	WriteImage(imgInfo, image);
+
+ 	DestroyImage(image);
+ 	DestroyImageInfo(imgInfo);
+
+ 	//DicomImage * img = new DicomImage(potentialDicomFile.c_str());
+ 	//img->writePluginFormat(new DiPNGPlugin(), (potentialDicomFile + ".png").c_str());
+ 	//delete img;
+	//img->writePluginFormat(new DiJPEGPlugin(), (potentialDicomFile + ".jpg").c_str());
 }
 
 void tissuestack::imaging::TissueStackDicomData::registerDcmtkDecoders()
