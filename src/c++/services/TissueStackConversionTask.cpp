@@ -47,6 +47,21 @@ tissuestack::services::TissueStackConversionTask::TissueStackConversionTask(
 			this->_output_file = output_file;
 	}
 
+	if (this->getStatus() == tissuestack::services::TissueStackTaskStatus::UNZIPPING)
+		return;
+
+	this->initializeTotalSlices();
+}
+
+void tissuestack::services::TissueStackConversionTask::lazyLoadZipData()
+{
+	this->readImageData();
+	this->initializeTotalSlices();
+	this->setStatus(tissuestack::services::TissueStackTaskStatus::IN_PROCESS);
+}
+
+void tissuestack::services::TissueStackConversionTask::initializeTotalSlices()
+{
 	// set total number of slices we have to work off
 	unsigned long long int totalSlices = 0;
 	if (this->getInputImageData()->get2DDimension() != nullptr) // 2D data

@@ -31,6 +31,12 @@ void tissuestack::imaging::RawConverter::convert(
 
 	try
 	{
+		if (processing_strategy->isOnlineStrategy() && !converter_task->hasBeenUnzipped()) // zip data will need to processed now!
+		{
+		   const_cast<tissuestack::services::TissueStackConversionTask *>(converter_task)->lazyLoadZipData();
+		   tissuestack::services::TissueStackTaskQueue::instance()->persistTaskProgress(
+				  converter_task->getId());
+		}
 		const std::string fileName = converter_task->getInputImageData()->getFileName();
 		const std::string outFile = converter_task->getOutFile();
 
@@ -136,8 +142,9 @@ void tissuestack::imaging::RawConverter::convert(
 				fileName.c_str(),
 				outFile.c_str());
 		}
-		else if (dimension.empty())
-			std::cout << "Finished Conversion: " << fileName << " => " << outFile << std::endl;
+		else if (dimension.empty() ||
+			(!dimension.empty() && converter_task->getInputImageData()->get2DDimension() != nullptr))
+			std::cout << "\nFinished Conversion: " << fileName << " => " << outFile << std::endl;
 	} catch (const std::exception & bad)
 	{
 		close(this->_file_descriptor);
@@ -168,6 +175,9 @@ inline const bool tissuestack::imaging::RawConverter::convertDicom0(
 		const std::string & dimension,
 		const unsigned int dicom_index) const
 {
+	if (this->hasBeenCancelledOrShutDown(processing_strategy, converter_task))
+		return true; // a false positive which is later evaluated and recognized as a shutdown/cancelation
+
 	tissuestack::imaging::TissueStackDicomData * dicomData =
 		const_cast<tissuestack::imaging::TissueStackDicomData *>(
 			static_cast<const tissuestack::imaging::TissueStackDicomData *>(converter_task->getInputImageData()));
@@ -185,6 +195,8 @@ inline const bool tissuestack::imaging::RawConverter::convertDicom0(
 	const unsigned char * data_out =
 			const_cast<tissuestack::imaging::DicomFileWrapper *>(dicom)->getData();
 	dicomData->deregisterDcmtkDecoders();
+
+	//dicomData->writeDicomDataAsPng(const_cast<tissuestack::imaging::DicomFileWrapper *>(dicom));
 
 	ssize_t bytesWritten =
 		write(this->_file_descriptor, data_out, new_size_per_slice);
@@ -308,8 +320,9 @@ void tissuestack::imaging::RawConverter::convertDicom(
 
 			if (dicomData->getNumberOfFiles(ind) < dim->getNumberOfSlices())
 			{
-				// TODO: implement gap filling
-
+				// TODO: implement gap filling & check cancelation
+				//if (this->hasBeenCancelledOrShutDown(processing_strategy, converter_task))
+				//	return true; // a false positive which is later evaluated and recognized as a shutdown/cancelation
 
 			} else // this is the ideal case
 			{

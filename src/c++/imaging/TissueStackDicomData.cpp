@@ -76,7 +76,7 @@ tissuestack::imaging::TissueStackDicomData::TissueStackDicomData(
 
 		if (ext.compare(".DCM") != 0 &&
 				ext.compare(".IMG") != 0 &&
-				ext.find("0") != 0) // ignore all but .dcm, .img or blank extensions
+				ext.find(".") != std::string::npos) // ignore all but .dcm, .img or blank extensions
 			continue;
 
 		this->addDicomFile(potential_dicom, true);
@@ -142,7 +142,6 @@ void tissuestack::imaging::TissueStackDicomData::initializeDicomImageFromFiles()
 	if (this->_dicom_files.size() == 1)
 	{
 		this->initializeSingleDicomFile(this->_dicom_files[0]);
-		this->dumpImageDataIntoDebugLog();
 
 		return;
 	}
@@ -151,7 +150,6 @@ void tissuestack::imaging::TissueStackDicomData::initializeDicomImageFromFiles()
 	{
 		this->_type = tissuestack::imaging::DICOM_TYPE::TIME_SERIES;
 		this->initializeDicomTimeSeries(widths, heights, orientations, steps, coords);
-		this->dumpImageDataIntoDebugLog();
 
 		return;
 	}
@@ -164,7 +162,6 @@ void tissuestack::imaging::TissueStackDicomData::initializeDicomImageFromFiles()
 			"We need triples for a 3D data dicom!");
 
 	this->initializeDicom3Ddata(widths, heights, orientations, steps, coords);
-	this->dumpImageDataIntoDebugLog();
 }
 
 inline void tissuestack::imaging::TissueStackDicomData::initializeDicomTimeSeries(

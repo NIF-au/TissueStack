@@ -29,8 +29,6 @@ tissuestack::services::TissueStackAdminService::TissueStackAdminService() {
 		std::vector<std::string>{ "FILE"});
 	this->addMandatoryParametersForRequest("PROGRESS",
 		std::vector<std::string>{ "TASK_ID"});
-	this->addMandatoryParametersForRequest("DICOM_TEST",
-		std::vector<std::string>{ "FILE"});
 	/* need session */
 	this->addMandatoryParametersForRequest("UPLOAD",
 		std::vector<std::string>{ "SESSION"});
@@ -74,8 +72,6 @@ void tissuestack::services::TissueStackAdminService::streamResponse(
 		json = this->handleUploadProgressRequest(request);
 	else if (action.compare("PROGRESS") == 0)
 		json = this->handleProgressRequest(request);
-	else if (action.compare("DICOM_TEST") == 0)
-		json = this->handleDicomTest(request);
 	else
 	{
 		// the following resources need a valid session
@@ -726,13 +722,6 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadPr
 			std::to_string(fProgress) + "}}";
 }
 
-const std::string tissuestack::services::TissueStackAdminService::handleDicomTest(const tissuestack::networking::TissueStackServicesRequest * request) const
-{
-	const std::string file = request->getRequestParameter("FILE");
-	delete tissuestack::imaging::TissueStackImageData::fromFile(file);
-	return std::string("{\"response\": \"") + file + "\"}";
-}
-
 const std::string tissuestack::services::TissueStackAdminService::handleProgressRequest(
 	const tissuestack::networking::TissueStackServicesRequest * request) const
 {
@@ -772,7 +761,10 @@ const std::string tissuestack::services::TissueStackAdminService::handleProgress
 	}
 
 	return std::string("{\"response\": {\"filename\": \"") +
-		hit->getInputImageData()->getFileName() + "\", \"progress\":" +
+		(hit->getInputImageData() == nullptr ?
+			hit->getInputFileName() :
+			hit->getInputImageData()->getFileName()) +
+			"\", \"progress\":" +
 		std::to_string(hit->getProgress()) + ", \"status\": " +
 		std::to_string(hit->getStatus()) + "}}";
 }

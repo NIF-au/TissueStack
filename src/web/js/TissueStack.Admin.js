@@ -893,7 +893,7 @@ TissueStack.Admin.prototype = {
 					$('#task_status_' + id).html(TissueStack.Tasks.getStatusAsString(TissueStack.tasks[id].status));
 
 					if (!(TissueStack.tasks[id].status == 0 || TissueStack.tasks[id].status == 1
-							|| TissueStack.tasks[id].status == 2)) {
+							|| TissueStack.tasks[id].status == 2 || TissueStack.tasks[id].status == 5)) {
 						// we are not queued or running or recently finished
 						// disable cancel
 						$('#cancel_' + id).addClass('ui-disabled');

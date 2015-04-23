@@ -109,7 +109,8 @@ namespace tissuestack
 			IN_PROCESS = 1,
 			FINISHED = 2,
 			CANCELLED = 3,
-			ERRONEOUS = 4
+			ERRONEOUS = 4,
+			UNZIPPING = 5
 		};
 
 		enum TissueStackTaskType
@@ -136,20 +137,26 @@ namespace tissuestack
 				virtual ~TissueStackTask();
 				const bool isInputDataRaw() const;
 				const tissuestack::imaging::TissueStackImageData * getInputImageData() const;
+				const bool hasBeenUnzipped() const;
+				const std::string getInputFileName() const;
 			protected:
 				friend class TissueStackTaskQueue;
+				void readImageData();
 				void setSlicesDone(const unsigned long long int slicesDone);
 				void setTotalSlices(const unsigned long long int totalSlices);
 				friend class tissuestack::imaging::PreTiler;
 				friend class tissuestack::imaging::RawConverter;
 				const bool incrementSlicesDone();
 			private:
+				void checkWhetherZipFile(const std::string filename);
 				const std::string _id;
 				const std::string _input_file;
 				TissueStackTaskStatus _status;
 				unsigned long long int _slices_done = 0;
 				unsigned long long int _total_slices = 0;
 				tissuestack::imaging::TissueStackImageData * _input_data = nullptr;
+				bool _is_zip_file = false;
+				bool _has_been_Unzipped = false;
 		};
 
 		class TissueStackConversionTask : public TissueStackTask
@@ -167,7 +174,9 @@ namespace tissuestack
 				void dumpTaskToDebugLog() const;
 				const unsigned long long int getFutureRawFileSize() const;
 				const unsigned long long int calculatePureDataSize() const;
+				void lazyLoadZipData();
 			private:
+				void initializeTotalSlices();
 				std::string _output_file;
 				std::string _raw_header;
 		};
@@ -284,7 +293,6 @@ namespace tissuestack
 				const std::string handleDataSetRawFilesRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
 				const std::string handleUploadProgressRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
 				const std::string handleProgressRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
-				const std::string handleDicomTest(const tissuestack::networking::TissueStackServicesRequest * request) const;
 				const bool readAndStoreFileUploadData(
 					const tissuestack::common::ProcessingStrategy * processing_strategy,
 					const std::string filename,

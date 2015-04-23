@@ -164,6 +164,13 @@ int		main(int argc, char **argv)
 					out_file);
 		   if (conversion)
 		   {
+			   if (!conversion->hasBeenUnzipped()) // zip data will need to processed now!
+			   {
+				   std::cout <<
+						  "Input file appears to be a zip archive. Please wait until it's been unzipped (can take a while!)..." << std::endl;
+				   conversion->lazyLoadZipData();
+			   }
+
 			   dimensions = conversion->getInputImageData()->getDimensionOrder();
 			   if (dimensions.empty()) // check if we have dimensions
 			   {
@@ -189,10 +196,24 @@ int		main(int argc, char **argv)
 		}
 
 		// our strategy is that we use processes in cases where there are at least 3 cores
-		if (dimensions.size() < 3 || tissuestack::utils::System::getNumberOfCores() < 3)
+		if (dimensions.size() < 3 ||
+			tissuestack::utils::System::getNumberOfCores() < 3 ||
+			conversion->getInputImageData()->get2DDimension() != nullptr)
 		{
 		   // delegate to the offline executor
-			OfflineExecutor->convert(conversion);
+			std::string dimParam = "";
+			if (conversion->getInputImageData()->get2DDimension() != nullptr)
+			{
+				dimParam = conversion->getInputImageData()->get2DDimension()->getName();
+				if (!tissuestack::utils::System::touchFile(
+								out_file, 0))
+				{
+					std::cerr << "Failed to convert: Unable to create RAW file!" << std::endl;
+					if (conversion) delete conversion;
+					exit(EXIT_FAILURE);
+				}
+			}
+			OfflineExecutor->convert(conversion, dimParam);
 			exit(EXIT_SUCCESS);
 		}
 
