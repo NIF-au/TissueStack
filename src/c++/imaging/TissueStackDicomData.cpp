@@ -146,6 +146,13 @@ void tissuestack::imaging::TissueStackDicomData::initializeDicomImageFromFiles()
 		return;
 	}
 
+	// here we need to distinguish
+	// check first: MRAcquisitionTpe for 3D
+	// then both tag ImageType for 'mosaic'
+	//  & NumberOfImagesInMosaic
+	// then ASCONF lSize
+	// if 3D => reconstruct via slices
+	// if mosaic => leave for now
 	if (this->_plane_index.size() == 1) // time series
 	{
 		this->_type = tissuestack::imaging::DICOM_TYPE::TIME_SERIES;
