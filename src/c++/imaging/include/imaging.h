@@ -443,7 +443,10 @@ namespace tissuestack
 				const bool containsSignedData() const;
 				const unsigned short getPlanarConfiguration() const;
 				const bool isColor() const;
-
+				const bool isMosaic() const;
+				const std::string getAcquisitionType() const;
+				const DcmElement * findDcmElement(
+					const DcmDataset * dataSet, const DcmTagKey & tagKey) const;
 			private:
 				DicomFileWrapper(const std::string filename, const bool isTempFile = false);
 				std::string _file_name;
@@ -458,6 +461,9 @@ namespace tissuestack
 				unsigned short _is_signed_data = 0;
 				unsigned short _planar_configuration = 0;
 				std::string _photometric_interpretation;
+				unsigned int _number_of_images_in_mosaic = 0;
+				std::string _acquisitionType;
+				std::string _ascconv;
 				bool _isTemp = false;
 
 

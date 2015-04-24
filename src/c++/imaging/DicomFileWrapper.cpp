@@ -17,6 +17,14 @@
 #include "networking.h"
 #include "imaging.h"
 
+#define CSA_ImageHeaderInfo DcmTagKey(0x0029,0x1010)
+#define CSA_ImageSeriesHeaderInfo DcmTagKey(0x0029,0x1020)
+#define CSA_NumberOfImagesInMosaic DcmTagKey(0x0019,0x100a)
+
+#define ASCCONV_BEGIN "### ASCCONV BEGIN ###"
+#define ASCCONV_END "### ASCCONV END ###"
+#define LSIZE "sSliceArray.lSize"
+
 tissuestack::imaging::DicomFileWrapper * tissuestack::imaging::DicomFileWrapper::createWrappedDicomFile(
 	const std::string filename, const bool isTempFile)
 {
@@ -56,6 +64,78 @@ tissuestack::imaging::DicomFileWrapper::DicomFileWrapper(const std::string filen
 		this->_image_position_patient = "0\\0\\0";
 	else
 		this->_image_position_patient = std::string(value.c_str());
+
+	if (dicomFormat.getDataset()->findAndGetOFString(DCM_MRAcquisitionType, value).good()) // are we 3D
+		this->_acquisitionType = std::string(value.c_str());
+
+	if (dicomFormat.getDataset()->findAndGetOFStringArray(DCM_ImageType, value).good()) // are we a mosaic
+	{
+		std::string v = std::string(value.c_str());
+		std::transform(v.begin(), v.end(), v.begin(), toupper);
+		if (v.find("MOSAIC") != std::string::npos) // have a look for numbers of images in mosaic
+		{
+			if (dicomFormat.getDataset()->findAndGetOFString(CSA_NumberOfImagesInMosaic, value).good())
+				this->_number_of_images_in_mosaic = strtoul(value.c_str(), NULL, 10);
+
+			DcmElement * csaImageHeaderInfo =
+				const_cast<DcmElement *>(
+						this->findDcmElement(dicomFormat.getDataset(), CSA_ImageSeriesHeaderInfo));
+			if (csaImageHeaderInfo != nullptr)
+			{
+				Uint8 * csaImageHeaderContent = nullptr;
+				unsigned long int length =
+					csaImageHeaderInfo->getLength();
+				status = csaImageHeaderInfo->getUint8Array(csaImageHeaderContent);
+				if (status.good())
+				{
+					std::string tmp = std::string((const char *) csaImageHeaderContent, length);
+					size_t ascconf_start = tmp.find(ASCCONV_BEGIN);
+					if (ascconf_start == std::string::npos) // plan B: try other header
+					{
+						csaImageHeaderInfo =
+							const_cast<DcmElement *>(
+								this->findDcmElement(dicomFormat.getDataset(), CSA_ImageHeaderInfo));
+						if (csaImageHeaderInfo != nullptr)
+						{
+							csaImageHeaderContent = nullptr;
+							length = csaImageHeaderInfo->getLength();
+							status = csaImageHeaderInfo->getUint8Array(csaImageHeaderContent);
+							tmp = std::string((const char *) csaImageHeaderContent, length);
+							ascconf_start = tmp.find(ASCCONV_BEGIN); // try again with backup header
+						}
+					}
+					if (ascconf_start != std::string::npos)
+					{
+						ascconf_start += strlen(ASCCONV_BEGIN) + 1;
+						size_t ascconf_end = tmp.find(ASCCONV_END) - 1;
+						if (ascconf_end != std::string::npos)
+							this->_ascconv = tmp.substr(ascconf_start, ascconf_end-ascconf_start);
+					}
+				}
+			}
+
+			if (this->_number_of_images_in_mosaic == 0 &&
+				!this->_ascconv.empty()) // plan B for number of images in mosaic
+			{
+				size_t lSize_start = this->_ascconv.find(LSIZE);
+				if (lSize_start != std::string::npos)
+				{
+					lSize_start = this->_ascconv.find("=", lSize_start);
+					if (lSize_start != std::string::npos)
+					{
+						lSize_start++;
+						size_t lSize_end = this->_ascconv.find("\n", lSize_start);
+						if (lSize_end != std::string::npos)
+						{
+							std::string lSizeString = this->_ascconv.substr(lSize_start, lSize_start-lSize_end);
+							this->_number_of_images_in_mosaic = strtoul(lSizeString.c_str(), NULL, 10);
+						}
+					}
+				}
+			}
+		}
+
+	}
 
 	if (!dicomFormat.getDataset()->findAndGetOFStringArray(DCM_PixelSpacing, value).good())
 		this->_pixel_spacing = "1\\1";
@@ -99,6 +179,34 @@ tissuestack::imaging::DicomFileWrapper::DicomFileWrapper(const std::string filen
 		else
 			this->_planar_configuration = static_cast<unsigned short>(strtoul(value.c_str(), NULL, 10));
 	}
+}
+
+const DcmElement * tissuestack::imaging::DicomFileWrapper::findDcmElement(
+	const DcmDataset * dataSet, const DcmTagKey & tagKey) const
+{
+	DcmStack stack;
+	OFCondition status = const_cast<DcmDataset *>(dataSet)->nextObject(stack, OFTrue);
+	while (status.good())
+	{
+		const  DcmObject * dobject = stack.top();
+		const DcmElement * delem = (DcmElement *) dobject;
+		if (delem->getTag().getXTag() == tagKey)
+			return delem;
+
+		status = const_cast<DcmDataset *>(dataSet)->nextObject(stack, OFTrue);
+	}
+
+	return nullptr;
+}
+
+const bool tissuestack::imaging::DicomFileWrapper::isMosaic() const
+{
+	return (this->_number_of_images_in_mosaic != 0);
+}
+
+const std::string tissuestack::imaging::DicomFileWrapper::getAcquisitionType() const
+{
+	return this->_acquisitionType;
 }
 
 const unsigned char * tissuestack::imaging::DicomFileWrapper::getData()
