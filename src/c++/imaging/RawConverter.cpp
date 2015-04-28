@@ -169,6 +169,184 @@ void tissuestack::imaging::RawConverter::convert(
 	}
 }
 
+inline const bool tissuestack::imaging::RawConverter::reconstructSliceFromDicom(
+		const tissuestack::common::ProcessingStrategy * processing_strategy,
+		const tissuestack::services::TissueStackConversionTask * converter_task,
+		const std::string & dimension,
+		const unsigned int slice) const
+{
+	if (this->hasBeenCancelledOrShutDown(processing_strategy, converter_task))
+		return true; // a false positive which is later evaluated and recognized as a shutdown/cancelation
+
+	tissuestack::imaging::TissueStackDicomData * dicomData =
+		const_cast<tissuestack::imaging::TissueStackDicomData *>(
+			static_cast<const tissuestack::imaging::TissueStackDicomData *>(converter_task->getInputImageData()));
+
+	// TODO: big construction site: clean up
+	// look into multi process and check touching
+	// check slice count in that case
+	// combine with slice traversal
+	// check order of real world coords
+	if (dimension[0] != 'y' || slice != 0)
+	{
+		return false;
+	}
+
+	const tissuestack::imaging::TissueStackDataDimension * x_dim =
+		dicomData->getDimension('y');
+	const tissuestack::imaging::TissueStackDataDimension * y_dim =
+		dicomData->getDimension('z');
+
+	const unsigned long int numOfDicomFiles = dicomData->getNumberOfFiles(0);
+	for (unsigned long long int j=0;j<numOfDicomFiles;j++)
+	{
+		const tissuestack::imaging::DicomFileWrapper * dicom =
+			dicomData->getDicomFileWrapper(j);
+		const unsigned char * sliceData =
+			const_cast<tissuestack::imaging::DicomFileWrapper *>(dicom)->getData();
+
+		for (unsigned long long int h=0;h<dicom->getHeight();h++)
+		{
+			for (unsigned long long int w=0;w<dicom->getWidth();w++)
+			{
+				const unsigned long long int dicomOffset =
+					h * dicom->getWidth() * 3 + w * 3;
+				const unsigned long long int xPlaneOffset =
+					x_dim->getOffset() + w * x_dim->getSliceSize() * 3 +
+						h * numOfDicomFiles * 3 + j * 3;
+				const unsigned long long int yPlaneOffset =
+					y_dim->getOffset() + (dicom->getHeight() - h - 1) * y_dim->getSliceSize() * 3 +
+						w * numOfDicomFiles * 3 + j * 3;
+
+				lseek(this->_file_descriptor, xPlaneOffset, SEEK_SET);
+				ssize_t bytesWritten =
+					write(this->_file_descriptor, &sliceData[dicomOffset], 3);
+				if (bytesWritten != 3)
+					THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+						"Dicom Conversion: written bytes do not match expected bytes!");
+				lseek(this->_file_descriptor, yPlaneOffset, SEEK_SET);
+				bytesWritten =
+					write(this->_file_descriptor, &sliceData[dicomOffset], 3);
+				if (bytesWritten != 3)
+					THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+						"Dicom Conversion: written bytes do not match expected bytes!");
+			}
+		}
+
+		const_cast<tissuestack::services::TissueStackConversionTask *>(converter_task)->incrementSlicesDone();
+	}
+
+	/*
+	const unsigned long int new_size_per_slice =
+		dim->getSliceSize() * 3;
+	unsigned char * newSliceData = new unsigned char[new_size_per_slice];
+	const unsigned long int numOfDicomFiles = dicomData->getNumberOfFiles(0);
+
+	if (dimension[0] == 'x')
+	{
+		for (unsigned long long int j=0;j<numOfDicomFiles;j++)
+		{
+			const tissuestack::imaging::DicomFileWrapper * dicom =
+				dicomData->getDicomFileWrapper(j);
+			const unsigned char * sliceData =
+				const_cast<tissuestack::imaging::DicomFileWrapper *>(dicom)->getData();
+
+
+			std::cout << "DIM dicom file: " << std::to_string(dicom->getWidth()) <<
+					"x" << std::to_string(dicom->getHeight()) << std::endl;
+			std::cout << "DIM plane: " << std::to_string(dim->getWidth()) <<
+					"x" << std::to_string(dim->getHeight()) << std::endl;
+
+
+			for (unsigned long long int k=0;k<dicom->getHeight();k++)
+			{
+				unsigned long long int offset = k * dicom->getWidth() * 3 + (dim->getNumberOfSlices()-slice-1) * 3;
+				unsigned long int cursor = k * dim->getHeight() * 3 + j * 3;
+
+				newSliceData[cursor] = sliceData[offset];
+				newSliceData[cursor+1] = sliceData[offset+1];
+				newSliceData[cursor+2] = sliceData[offset+2];
+			}
+
+			delete [] sliceData;
+		}
+		*/
+/*
+			ExceptionInfo exception;
+			GetExceptionInfo(&exception);
+			Image * image = NULL;
+
+			image = ConstituteImage(
+				dim->getHeight(),
+				dim->getWidth(),
+				"RGB",
+				CharPixel,
+				newSliceData, &exception);
+
+			if (image == NULL)
+			{
+				CatchException(&exception);
+				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+					"Could not constitute Image!");
+			}
+
+			ImageInfo * imgInfo = CloneImageInfo((ImageInfo *)NULL);
+			strcpy(image->filename, (dicomData->getFileName() + "." + std::to_string(slice) + ".png").c_str());
+			std::cout << image->filename << std::endl;
+
+			WriteImage(imgInfo, image);
+
+			DestroyImage(image);
+			DestroyImageInfo(imgInfo);
+
+
+
+		ssize_t bytesWritten =
+			write(this->_file_descriptor, newSliceData, new_size_per_slice);
+		delete [] newSliceData;
+		if (bytesWritten != static_cast<ssize_t>(new_size_per_slice))
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Dicom Conversion: written bytes do not match expected bytes!");
+	}
+*/
+
+	const bool finished =
+		const_cast<tissuestack::services::TissueStackConversionTask *>(converter_task)->incrementSlicesDone();
+
+	// persist for the online tiling
+	if (processing_strategy->isOnlineStrategy())
+		tissuestack::services::TissueStackTaskQueue::instance()->persistTaskProgress(
+			converter_task->getId());
+
+	if (!processing_strategy->isOnlineStrategy()) // && dimension.empty())
+	{
+		const std::string output =
+			std::string("Progress:\t") +
+			std::to_string(converter_task->getSlicesDone()) + "\t[" +
+			std::to_string(converter_task->getTotalSlices()) + "]\t => " +
+			std::to_string(converter_task->getProgress()) + "%\r";
+		std::cout << output << std::flush;
+	}/*
+	else if (!processing_strategy->isOnlineStrategy() && !dimension.empty())
+	{
+		std::string output = "";
+		const tissuestack::imaging::TissueStackDataDimension * d =
+			dicomData->getDimensionByLongName(dimension);
+		const unsigned short order =
+			d == nullptr ? 0 :
+				dicomData->getIndexForPlane(dimension[0]);
+		for (unsigned short pos=0;pos<order;pos++)
+			output += "\t\t\t";
+		output += (dimension + ": ");
+		output += std::to_string(converter_task->getSlicesDone());
+		output += (" [" + std::to_string(d->getNumberOfSlices()) + "]");
+		std::cout << output << "\r" << std::flush;
+	} */
+
+	return finished;
+}
+
+
 inline const bool tissuestack::imaging::RawConverter::convertDicom0(
 		const tissuestack::common::ProcessingStrategy * processing_strategy,
 		const tissuestack::services::TissueStackConversionTask * converter_task,
@@ -212,7 +390,8 @@ inline const bool tissuestack::imaging::RawConverter::convertDicom0(
 	if (processing_strategy->isOnlineStrategy())
 		tissuestack::services::TissueStackTaskQueue::instance()->persistTaskProgress(
 			converter_task->getId());
-	else if (!processing_strategy->isOnlineStrategy() && dimension.empty())
+
+	if (!processing_strategy->isOnlineStrategy() && dimension.empty())
 	{
 		const std::string output =
 			std::string("Progress:\t") +
@@ -308,28 +487,43 @@ void tissuestack::imaging::RawConverter::convertDicom(
 				resumed = false;
 			}
 
-			// we have to check now whether the expected number of slices
-			// according to the corresponding width and height of the other dimensions
-			// matches the number of dicom files we have for that plane.
-			// in the unusual event of having more dicom files we throw an error
-			// if we have to few we have to 'make up' for the gaps
-			if (dicomData->getNumberOfFiles(ind) > dim->getNumberOfSlices())
-				THROW_TS_EXCEPTION(
-					tissuestack::common::TissueStackApplicationException,
-					"We have more dicom files for a plane than expected!");
-
-			if (dicomData->getNumberOfFiles(ind) < dim->getNumberOfSlices())
+			// this means we have only 1 plane data
+			// and have to reconstruct the other planes from the slices
+			if (dicomData->getPlaneIndex(1) == 0)
 			{
-				// TODO: implement gap filling & check cancelation
-				//if (this->hasBeenCancelledOrShutDown(processing_strategy, converter_task))
-				//	return true; // a false positive which is later evaluated and recognized as a shutdown/cancelation
-
-			} else // this is the ideal case
-			{
+				// we defined 'z' to be the plane that we have the slices/dicoms for
+				// so we can just loop over the files and write them out
+				for (;slice < dim->getNumberOfSlices();slice++)
+				{
+					if (dim->getName()[0] == 'x')
+					{
+						if (this->convertDicom0(processing_strategy, converter_task, dimension, slice))
+							return;
+					}
+					else
+					{
+						 if (this->reconstructSliceFromDicom(processing_strategy, converter_task, d, slice))
+							 return;
+					}
+				}
+				// reset slice
+				slice = 0;
+			} else if (dicomData->getNumberOfFiles(ind) == dim->getNumberOfSlices())
+			{   // this is the 'ideal' case which never happens:
+				// we have exactly the files/slices per dimension to have a proper volume
 				for (;slice < dim->getNumberOfSlices();slice++)
 					if (this->convertDicom0(processing_strategy, converter_task, dimension, slice))
 						return;
-			}
+			} else if (dicomData->getNumberOfFiles(ind) < dim->getNumberOfSlices())
+			{
+				// this means that we have per meta-data 3 planes
+				// BUT the file number does not match the dimensions of the planes,
+				// in concrete: we have fewer files than needed to fill a volume properly
+				// TODO: fill the gaps by recursive averaging or perhaps deal with it like 2d to 3d reconstruction...
+			} else // this leaves unreal the scenario of more files per plane than needed
+				THROW_TS_EXCEPTION(
+					tissuestack::common::TissueStackApplicationException,
+					"We have more dicom files for a plane than expected!");
 
 			ind++;
 		}

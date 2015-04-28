@@ -286,34 +286,26 @@ inline void tissuestack::imaging::TissueStackImageData::setWidthAndHeightByDimen
 
 	if (dimension.at(0) == 'x')
 	{
-		if (this->getNumberOfDimensions() == 2)
-		{
-			widthDimension = nullptr;
-			heightDimension = nullptr;
-			width = presentDimension->getNumberOfSlices();
-			height = this->getDimension('y')->getNumberOfSlices();
-		} else
-		{
-			widthDimension = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('y'));
-			heightDimension = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('z'));
-		}
+		widthDimension =
+			const_cast<tissuestack::imaging::TissueStackDataDimension *>(
+				this->getDimension('y'));
+		heightDimension =
+			const_cast<tissuestack::imaging::TissueStackDataDimension *>(
+				this->getDimension('z'));
 	} else if (dimension.at(0) == 'y')
 	{
-		if (this->getNumberOfDimensions() == 2)
-		{
-			widthDimension = nullptr;
-			heightDimension = nullptr;
-			width = presentDimension->getNumberOfSlices();
-			height = this->getDimension('x')->getNumberOfSlices();
-		} else
-		{
-			widthDimension = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('x'));
-			heightDimension = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('z'));
-		}
+		widthDimension =
+			const_cast<tissuestack::imaging::TissueStackDataDimension *>(
+				this->getDimension('x'));
+		heightDimension =
+			const_cast<tissuestack::imaging::TissueStackDataDimension *>(
+				this->getDimension('z'));
 	} else if (dimension.at(0) == 'z' || dimension.at(0) == 't')
 	{
-		widthDimension = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('x'));
-		heightDimension = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('y'));
+		widthDimension =
+			const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('x'));
+		heightDimension =
+			const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('y'));
 	} else
 		THROW_TS_EXCEPTION(
 				tissuestack::common::TissueStackApplicationException, "Dimension cannot be matched to x,y, z or t!");
@@ -362,12 +354,14 @@ inline void tissuestack::imaging::TissueStackImageData::setTransformationMatrixB
 	{
 		tmp =
 			this->setTransformationMatrixByDimension0(
-				0, this->getIndexForPlane0('y'));
+				0, this->getIndexForPlane0(
+					(this->getFormat() == tissuestack::imaging::FORMAT::DICOM ? 'z' : 'y')));
 		if (tmp.empty()) return;
 		transformationMatrix << tmp;
 		tmp =
 			this->setTransformationMatrixByDimension0(
-				1, this->getIndexForPlane0('z'));
+				1, this->getIndexForPlane0(
+					(this->getFormat() == tissuestack::imaging::FORMAT::DICOM ? 'y' : 'z')));
 		if (tmp.empty()) return;
 		transformationMatrix << "," << tmp;
 		tmp =
@@ -380,12 +374,14 @@ inline void tissuestack::imaging::TissueStackImageData::setTransformationMatrixB
 	{
 		tmp =
 			this->setTransformationMatrixByDimension0(
-				0, this->getIndexForPlane0('x'));
+				0, this->getIndexForPlane0(
+					(this->getFormat() == tissuestack::imaging::FORMAT::DICOM ? 'z' : 'x')));
 		if (tmp.empty()) return;
 		transformationMatrix << tmp;
 		tmp =
 			this->setTransformationMatrixByDimension0(
-				1, this->getIndexForPlane0('z'));
+				1, this->getIndexForPlane0(
+					(this->getFormat() == tissuestack::imaging::FORMAT::DICOM ? 'x' : 'z')));
 		if (tmp.empty()) return;
 		transformationMatrix << "," << tmp;
 		tmp =

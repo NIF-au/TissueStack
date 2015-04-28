@@ -447,6 +447,7 @@ namespace tissuestack
 				const std::string getAcquisitionType() const;
 				const DcmElement * findDcmElement(
 					const DcmDataset * dataSet, const DcmTagKey & tagKey) const;
+				const unsigned long int getNumberOfImagesInSeriesOrAcquision() const;
 			private:
 				DicomFileWrapper(const std::string filename, const bool isTempFile = false);
 				std::string _file_name;
@@ -464,6 +465,7 @@ namespace tissuestack
 				unsigned int _number_of_images_in_mosaic = 0;
 				std::string _acquisitionType;
 				std::string _ascconv;
+				unsigned long int _number_of_images_in_series_or_acquisition = 0;
 				bool _isTemp = false;
 
 
@@ -495,6 +497,12 @@ namespace tissuestack
 					const std::vector<std::string> & steps,
 					const std::vector<std::string> & coords);
 				inline void initializeDicom3Ddata(
+					const std::vector<unsigned long long int> & widths,
+					const std::vector<unsigned long long int> & heights,
+					const std::vector<std::string> & orientations,
+					const std::vector<std::string> & steps,
+					const std::vector<std::string> & coords);
+				inline void initializePartialDicom3Ddata(
 					const std::vector<unsigned long long int> & widths,
 					const std::vector<unsigned long long int> & heights,
 					const std::vector<std::string> & orientations,
@@ -1141,6 +1149,12 @@ namespace tissuestack
 						const tissuestack::services::TissueStackConversionTask * converter_task,
 						const std::string & dimension,
 						const unsigned int dicom_index) const;
+
+				inline const bool reconstructSliceFromDicom(
+						const tissuestack::common::ProcessingStrategy * processing_strategy,
+						const tissuestack::services::TissueStackConversionTask * converter_task,
+						const std::string & dimension,
+						const unsigned int slice) const;
 
 				inline void iteratOverPixelsAndConvert(
 					void * in,

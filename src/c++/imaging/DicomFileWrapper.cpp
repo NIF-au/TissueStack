@@ -137,6 +137,13 @@ tissuestack::imaging::DicomFileWrapper::DicomFileWrapper(const std::string filen
 
 	}
 
+	if (dicomFormat.getDataset()->findAndGetOFStringArray(DCM_ImagesInAcquisition, value).good())
+		this->_number_of_images_in_series_or_acquisition = strtoul(value.c_str(), NULL, 10);
+
+	if (this->_number_of_images_in_series_or_acquisition == 0 &&
+		dicomFormat.getDataset()->findAndGetOFStringArray(DCM_ACR_NEMA_ImagesInSeries, value).good())
+		this->_number_of_images_in_series_or_acquisition = strtoul(value.c_str(), NULL, 10);
+
 	if (!dicomFormat.getDataset()->findAndGetOFStringArray(DCM_PixelSpacing, value).good())
 		this->_pixel_spacing = "1\\1";
 	else
@@ -197,6 +204,11 @@ const DcmElement * tissuestack::imaging::DicomFileWrapper::findDcmElement(
 	}
 
 	return nullptr;
+}
+
+const unsigned long int tissuestack::imaging::DicomFileWrapper::getNumberOfImagesInSeriesOrAcquision() const
+{
+	return this->_number_of_images_in_series_or_acquisition;
 }
 
 const bool tissuestack::imaging::DicomFileWrapper::isMosaic() const

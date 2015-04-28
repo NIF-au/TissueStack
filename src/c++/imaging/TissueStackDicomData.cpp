@@ -146,14 +146,14 @@ void tissuestack::imaging::TissueStackDicomData::initializeDicomImageFromFiles()
 		return;
 	}
 
-	// here we need to distinguish
-	// check first: MRAcquisitionTpe for 3D
-	// then both tag ImageType for 'mosaic'
-	//  & NumberOfImagesInMosaic
-	// then ASCONF lSize
-	// if 3D => reconstruct via slices
-	// if mosaic => leave for now
-	if (this->_plane_index.size() == 1) // time series
+	// here are the cases that we deal with as a 'time series':
+	// 1) mosaic
+	// 2) if the data type is declared 2D and the ImagesInSeries tag
+	//    is present, being a number that is a multiple of the overall number of files
+	if (this->_plane_index.size() == 1 &&
+		(this->_dicom_files[0]->isMosaic() ||
+			(this->_dicom_files[0]->getNumberOfImagesInSeriesOrAcquision() != 0 &&
+				this->_dicom_files.size() % this->_dicom_files[0]->getNumberOfImagesInSeriesOrAcquision() == 0)))
 	{
 		this->_type = tissuestack::imaging::DICOM_TYPE::TIME_SERIES;
 		this->initializeDicomTimeSeries(widths, heights, orientations, steps, coords);
@@ -161,8 +161,16 @@ void tissuestack::imaging::TissueStackDicomData::initializeDicomImageFromFiles()
 		return;
 	}
 
-	// we go by standard dicom dimension ordering => z, x, y
-	// preliminary checks first
+	// these are the cases where we have -on the surface- 2D but we'll try to make it 3D
+	// by reconstruction taking the data from the slices into 1 direction
+	if (this->_plane_index.size() == 1)
+	{
+		this->initializePartialDicom3Ddata(widths, heights, orientations, steps, coords);
+		return;
+	}
+
+	// this is the case where we seem to have files for 3 spatial dimensions
+	// note that this could leave us with gaps that we have to fill
 	if (this->_plane_index.size() != 3 || widths.size() != 3 || heights.size() != 3 ||
 		steps.size() != 3 || coords.size() != 3)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
@@ -241,7 +249,46 @@ inline void tissuestack::imaging::TissueStackDicomData::initializeSingleDicomFil
 	this->initializeOffsetsForNonRawFiles();
 }
 
+inline void tissuestack::imaging::TissueStackDicomData::initializePartialDicom3Ddata(
+		const std::vector<unsigned long long int> & widths,
+		const std::vector<unsigned long long int> & heights,
+		const std::vector<std::string> & orientations,
+		const std::vector<std::string> & steps,
+		const std::vector<std::string> & coords)
+	{
+	this->addDimension(
+		new tissuestack::imaging::TissueStackDataDimension(
+			std::string("x"),
+			0, // bogus offset for now, we'll calculate later
+			this->_dicom_files.size(),
+			0)); // we'll calculate later
+	this->addCoordinates(coords[0],2);
+	this->addSteps(steps[0], orientations[0], 1);
 
+	this->addDimension(
+		new tissuestack::imaging::TissueStackDataDimension(
+			std::string("y"),
+			0, // bogus offset for now, we'll calculate later
+			widths[0],
+			0)); // we'll calculate later
+	this->addCoordinates(coords[0],0);
+	this->addSteps(steps[0], orientations[0], 0);
+
+	this->addDimension(
+		new tissuestack::imaging::TissueStackDataDimension(
+			std::string("z"),
+			0, // bogus offset for now, we'll calculate later
+			heights[0],
+			0)); // we'll calculate later
+	this->addCoordinates(coords[0],1);
+	this->addSteps(steps[0], orientations[0], 1);
+
+
+	this->initializeDimensions(true);
+	this->generateRawHeader();
+	this->initializeOffsetsForNonRawFiles();
+	this->dumpImageDataIntoDebugLog();
+}
 
 inline void tissuestack::imaging::TissueStackDicomData::initializeDicom3Ddata(
 	const std::vector<unsigned long long int> & widths,
