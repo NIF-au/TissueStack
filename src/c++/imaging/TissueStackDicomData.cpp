@@ -153,6 +153,7 @@ void tissuestack::imaging::TissueStackDicomData::initializeDicomImageFromFiles()
 	if (this->_plane_index.size() == 1 &&
 		(this->_dicom_files[0]->isMosaic() ||
 			(this->_dicom_files[0]->getNumberOfImagesInSeriesOrAcquision() != 0 &&
+				this->_dicom_files[0]->getNumberOfImagesInSeriesOrAcquision() != this->_dicom_files.size() &&
 				this->_dicom_files.size() % this->_dicom_files[0]->getNumberOfImagesInSeriesOrAcquision() == 0)))
 	{
 		this->_type = tissuestack::imaging::DICOM_TYPE::TIME_SERIES;
