@@ -102,6 +102,14 @@ namespace tissuestack
 			VOLUME			= 3		// 3D volume
 		};
 
+		enum DICOM_PLANAR_ORIENTATION
+		{
+			AXIAL		= 1,
+			CORONAL 	= 2,
+			SAGITTAL	= 3,
+			UNDETERMINED= 4
+		};
+
 		enum RAW_TYPE
 		{
 			UCHAR_8_BIT  	= 1,	// FOR BACKWARDS COMPATIBILITY
@@ -478,6 +486,7 @@ namespace tissuestack
 				~TissueStackDicomData();
 				const bool isRaw() const;
 				const DICOM_TYPE getType() const;
+				const DICOM_PLANAR_ORIENTATION getPlanarOrientation() const;
 				const DicomFileWrapper * getDicomFileWrapper(unsigned int index) const;
 				const unsigned long int getNumberOfFiles(const unsigned short dimension_index);
 				const unsigned long int getPlaneIndex(const unsigned short dimension_index);
@@ -516,11 +525,14 @@ namespace tissuestack
 					const std::string & steps,
 					const std::string & orientations,
 					const unsigned short index);
+				void determinePlanarOrientation();
+				const char determinePlanarOrientation0(float x, float y, float z);
 				std::vector<DicomFileWrapper *> _dicom_files;
 				std::vector<unsigned long int> _plane_index;
 				std::vector<unsigned long int> _plane_number_of_files;
 				std::string _series_number = "";
 				DICOM_TYPE _type;
+				DICOM_PLANAR_ORIENTATION _planar_orientation = DICOM_PLANAR_ORIENTATION::UNDETERMINED;
 		};
 
 		class TissueStackNiftiData final : public TissueStackImageData
@@ -1182,6 +1194,9 @@ namespace tissuestack
 					const tissuestack::imaging::TissueStackDataDimension * dim,
 					unsigned char * out,
 					const unsigned long int slice_number = 0) const;
+
+				void reorientDicomSlices(
+					const tissuestack::imaging::TissueStackDicomData * dicom) const;
 
 				inline const bool hasBeenCancelledOrShutDown(
 					const tissuestack::common::ProcessingStrategy * processing_strategy,

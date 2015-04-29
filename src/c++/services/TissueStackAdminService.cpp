@@ -224,10 +224,10 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadRe
 	std::transform(lowerCaseFileName.begin(), lowerCaseFileName.end(), lowerCaseFileName.begin(), tolower);
 	if (fileName.rfind(".mnc") == std::string::npos && fileName.rfind(".nii") == std::string::npos &&
 			fileName.rfind(".nii.gz") == std::string::npos && fileName.rfind(".raw") == std::string::npos &&
-			fileName.rfind(".dcm") == std::string::npos && fileName.rfind(".img") == std::string::npos &&
+			fileName.rfind(".dcm") == std::string::npos && fileName.rfind(".ima") == std::string::npos &&
 			fileName.rfind(".zip") == std::string::npos)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackFileUploadException,
-		"Uploaded file needs to be of the following type: .mnc, .nii, .nii.gz, .img, .dcm, .zip or .raw!");
+		"Uploaded file needs to be of the following type: .mnc, .nii, .nii.gz, .ima, .dcm, .zip or .raw!");
 
 	if (tissuestack::utils::System::fileExists(std::string(UPLOAD_PATH) + "/" + fileName))
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackFileUploadException,
@@ -590,7 +590,7 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadDi
 				|| ext.compare(".NII") == 0
 				|| ext.compare("I.GZ") == 0
 				|| ext.compare(".DCM") == 0
-				|| ext.compare(".IMG") == 0
+				|| ext.compare(".IMA") == 0
 				|| ext.compare(".ZIP") == 0)))
 			continue;
 

@@ -130,7 +130,7 @@ const tissuestack::imaging::TissueStackImageData * tissuestack::imaging::TissueS
 	position = fileNameAllUpperCase.rfind(".DCM");
 	if (position + 4 == filename.length())
 		return new TissueStackDicomData(filename);
-	position = fileNameAllUpperCase.rfind(".IMG");
+	position = fileNameAllUpperCase.rfind(".IMA");
 	if (position + 4 == filename.length())
 		return new TissueStackDicomData(filename);
 

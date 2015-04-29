@@ -308,10 +308,10 @@ TissueStack.Admin.prototype = {
 				lowerCaseFileName.lastIndexOf(".nii") < 0 &&
 				lowerCaseFileName.lastIndexOf(".nii.gz") < 0 &&
 				lowerCaseFileName.lastIndexOf(".dcm") < 0 &&
-				lowerCaseFileName.lastIndexOf(".img") < 0 &&
+				lowerCaseFileName.lastIndexOf(".ima") < 0 &&
 				lowerCaseFileName.lastIndexOf(".zip") < 0 &&
 				lowerCaseFileName.lastIndexOf(".raw") < 0) {				
-				errorHandling2("Error: Uploaded file needs to be of the following type: .mnc, .nii, .nii.gz, .dcm, .img, .zip or .raw!");
+				errorHandling2("Error: Uploaded file needs to be of the following type: .mnc, .nii, .nii.gz, .dcm, .ima, .zip or .raw!");
 				return false;	
 			}
 				

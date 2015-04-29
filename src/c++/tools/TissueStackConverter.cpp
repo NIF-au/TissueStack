@@ -196,6 +196,7 @@ int		main(int argc, char **argv)
 		}
 
 		// our strategy is that we use processes in cases where there are at least 3 cores
+		// and for dicom which is 2D mainly and, also, dcmtk is not thread-safe
 		if (dimensions.size() < 3 ||
 			tissuestack::utils::System::getNumberOfCores() < 3 ||
 			conversion->getInputImageData()->get2DDimension() != nullptr ||
