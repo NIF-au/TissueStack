@@ -45,8 +45,16 @@ tissuestack::imaging::DicomFileWrapper::DicomFileWrapper(const std::string filen
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"Given dicom file is no good!");
 
-	// read mandatory header tags needed later
 	OFString value;
+	if (dicomFormat.getDataset()->findAndGetOFString(DCM_TransferSyntaxUID, value).good())
+	{
+		std::string transferSyntaxUID = value.c_str();
+		std::transform(transferSyntaxUID.begin(), transferSyntaxUID.end(), transferSyntaxUID.begin(), toupper);
+		if (transferSyntaxUID.find("JPEG2000") != std::string::npos)
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"We don't support JPEG2000!");
+	}
+
 	if (!dicomFormat.getDataset()->findAndGetOFString(DCM_SeriesInstanceUID, value).good())
 		if (!dicomFormat.getDataset()->findAndGetOFString(DCM_SeriesNumber, value).good())
 			this->_series_number = "0";

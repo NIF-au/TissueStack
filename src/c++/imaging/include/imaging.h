@@ -488,11 +488,11 @@ namespace tissuestack
 				const DICOM_TYPE getType() const;
 				const DICOM_PLANAR_ORIENTATION getPlanarOrientation() const;
 				const DicomFileWrapper * getDicomFileWrapper(unsigned int index) const;
-				const unsigned long int getNumberOfFiles(const unsigned short dimension_index);
-				const unsigned long int getPlaneIndex(const unsigned short dimension_index);
+				const unsigned long int getNumberOfFiles(const unsigned short dimension_index) const;
+				const unsigned long int getPlaneIndex(const unsigned short dimension_index) const;
 				void writeDicomDataAsPng(DicomFileWrapper * dicom);
-				void registerDcmtkDecoders();
-				void deregisterDcmtkDecoders();
+				void registerDcmtkDecoders() const;
+				void deregisterDcmtkDecoders() const;
 			private:
 				void addDicomFile(const std::string & file, const bool withinZippedArchive = false);
 				friend class TissueStackImageData;
@@ -502,31 +502,32 @@ namespace tissuestack
 				inline void initializeDicomTimeSeries(
 					const std::vector<unsigned long long int> & widths,
 					const std::vector<unsigned long long int> & heights,
-					const std::vector<std::string> & orientations,
 					const std::vector<std::string> & steps,
 					const std::vector<std::string> & coords);
 				inline void initializeDicom3Ddata(
 					const std::vector<unsigned long long int> & widths,
 					const std::vector<unsigned long long int> & heights,
-					const std::vector<std::string> & orientations,
 					const std::vector<std::string> & steps,
 					const std::vector<std::string> & coords);
 				inline void initializePartialDicom3Ddata(
 					const std::vector<unsigned long long int> & widths,
 					const std::vector<unsigned long long int> & heights,
-					const std::vector<std::string> & orientations,
 					const std::vector<std::string> & steps,
 					const std::vector<std::string> & coords);
 				inline void initializeSingleDicomFile(const DicomFileWrapper * dicom);
+
+				const bool checkWidthAndHeightConsistencyOfDicoms(
+						const unsigned short start, const unsigned short end) const;
+
 				inline void addCoordinates(
 					const std::string & coords,
 					const unsigned short index);
 				inline void addSteps(
 					const std::string & steps,
-					const std::string & orientations,
 					const unsigned short index);
 				void determinePlanarOrientation();
-				const char determinePlanarOrientation0(float x, float y, float z);
+				const DICOM_PLANAR_ORIENTATION findPlanarOrientationOfDicomFile(const DicomFileWrapper * dicom) const;
+				const char determinePlanarOrientation0(float x, float y, float z) const;
 				std::vector<DicomFileWrapper *> _dicom_files;
 				std::vector<unsigned long int> _plane_index;
 				std::vector<unsigned long int> _plane_number_of_files;
@@ -1153,20 +1154,22 @@ namespace tissuestack
 				void convertDicom(
 						const tissuestack::common::ProcessingStrategy * processing_strategy,
 						const tissuestack::services::TissueStackConversionTask * converter_task,
-						const std::string & dimension,
 						bool & resumed) const;
 
 				inline const bool convertDicom0(
 						const tissuestack::common::ProcessingStrategy * processing_strategy,
 						const tissuestack::services::TissueStackConversionTask * converter_task,
-						const std::string & dimension,
-						const unsigned int dicom_index) const;
+						const unsigned int dicom_index,
+						const char dicomDimension = '\0') const;
 
-				inline const bool reconstructSliceFromDicom(
+				inline void reconstructSliceFromDicom(
 						const tissuestack::common::ProcessingStrategy * processing_strategy,
 						const tissuestack::services::TissueStackConversionTask * converter_task,
-						const std::string & dimension,
-						const unsigned int slice) const;
+						const unsigned int dicom_index,
+						const unsigned long int dicom_width,
+						const unsigned long int dicom_height,
+						const unsigned long int dicom_slices,
+						const unsigned char * dicom_data) const;
 
 				inline void iteratOverPixelsAndConvert(
 					void * in,

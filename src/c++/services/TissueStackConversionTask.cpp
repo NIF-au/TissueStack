@@ -70,6 +70,18 @@ void tissuestack::services::TissueStackConversionTask::initializeTotalSlices()
 		return;
 	}
 
+	if (this->getInputImageData()->getFormat() == tissuestack::imaging::FORMAT::DICOM)
+	{
+		const tissuestack::imaging::TissueStackDicomData * dicom =
+			static_cast<const tissuestack::imaging::TissueStackDicomData *>(this->getInputImageData());
+		// we have what we deem partial 3d. for reconstruction we set the total to the dicom file number
+		if (dicom->getPlaneIndex(1) == 0)
+		{
+			this->setTotalSlices(dicom->getNumberOfFiles(0));
+			return;
+		}
+	}
+
 	for (auto d : this->getInputImageData()->getDimensionOrder())
 		totalSlices += this->getInputImageData()->getDimension(d.at(0))->getNumberOfSlices();
 	this->setTotalSlices(totalSlices);

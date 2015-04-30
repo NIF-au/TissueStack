@@ -139,7 +139,9 @@ const std::string tissuestack::services::TissueStackAdminService::handleTaskCanc
 			"Task does not exist!");
 
 	const std::string fileName =
-		hit->getInputImageData()->getFileName();
+		hit->getInputImageData() ?
+			hit->getInputImageData()->getFileName() :
+			hit->getInputFileName();
 	const std::string progress = std::to_string(hit->getProgress());
 	// cancel
 	tissuestack::services::TissueStackTaskQueue::instance()->flagTaskAsFinished(task_id, true, false);

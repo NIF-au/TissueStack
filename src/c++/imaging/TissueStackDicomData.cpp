@@ -113,12 +113,16 @@ void tissuestack::imaging::TissueStackDicomData::initializeDicomImageFromFiles()
 	unsigned long long int latestWidth = 0;
 	unsigned long long int latestHeight = 0;
 	unsigned long int counter = 0;
+	unsigned long int planeCounter = 0;
 	for (auto dicom : this->_dicom_files)
 	{
 		if (latestOrientation.empty() || latestOrientation.compare(dicom->getImageOrientation()) != 0)
 		{
 			if (!latestOrientation.empty())
-				this->_plane_number_of_files.push_back(counter);
+			{
+				this->_plane_number_of_files.push_back(planeCounter);
+				planeCounter = 0; // reset
+			}
 
 			latestOrientation = dicom->getImageOrientation();
 			latestWidth = dicom->getWidth();
@@ -131,14 +135,15 @@ void tissuestack::imaging::TissueStackDicomData::initializeDicomImageFromFiles()
 			heights.push_back(dicom->getHeight());
 			widths.push_back(dicom->getWidth());
 
-			this->_plane_index.push_back(counter == 0 ? 0 : counter-1);
+			this->_plane_index.push_back(counter == 0 ? 0 : counter);
 		} else if (latestWidth != dicom->getWidth() || latestHeight != dicom->getHeight())
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Slices within same dimension have to have same width and height!");
 
+		planeCounter++;
 		counter++;
 	}
-	this->_plane_number_of_files.push_back(counter);
+	this->_plane_number_of_files.push_back(planeCounter);
 
 	if (this->_plane_index.empty())
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
@@ -147,23 +152,22 @@ void tissuestack::imaging::TissueStackDicomData::initializeDicomImageFromFiles()
 	if (this->_dicom_files.size() == 1)
 	{
 		this->initializeSingleDicomFile(this->_dicom_files[0]);
-
 		return;
 	}
 
 	// here are the cases that we deal with as a 'time series':
-	// 1) mosaic
-	// 2) if the data type is declared 2D and the ImagesInSeries tag
+	// -) mosaic
+	// -) if the data type is declared 2D and the ImagesInSeries tag
 	//    is present, being a number that is a multiple of the overall number of files
-	if (this->_plane_index.size() == 1 &&
-		(this->_dicom_files[0]->isMosaic() ||
-			(this->_dicom_files[0]->getNumberOfImagesInSeriesOrAcquision() != 0 &&
+	// -) we have more than 3 different orientations
+	if (this->_plane_index.size() > 3 ||
+		(this->_plane_index.size() == 1 &&
+			(this->_dicom_files[0]->isMosaic() ||
+				(this->_dicom_files[0]->getNumberOfImagesInSeriesOrAcquision() != 0 &&
 				this->_dicom_files[0]->getNumberOfImagesInSeriesOrAcquision() != this->_dicom_files.size() &&
-				this->_dicom_files.size() % this->_dicom_files[0]->getNumberOfImagesInSeriesOrAcquision() == 0)))
+				this->_dicom_files.size() % this->_dicom_files[0]->getNumberOfImagesInSeriesOrAcquision() == 0))))
 	{
-		this->_type = tissuestack::imaging::DICOM_TYPE::TIME_SERIES;
-		this->initializeDicomTimeSeries(widths, heights, orientations, steps, coords);
-
+		this->initializeDicomTimeSeries(widths, heights, steps, coords);
 		return;
 	}
 
@@ -171,27 +175,29 @@ void tissuestack::imaging::TissueStackDicomData::initializeDicomImageFromFiles()
 	// by reconstruction taking the data from the slices into 1 direction
 	if (this->_plane_index.size() == 1)
 	{
-		this->initializePartialDicom3Ddata(widths, heights, orientations, steps, coords);
+		this->initializePartialDicom3Ddata(widths, heights, steps, coords);
 		return;
 	}
 
-	// this is the case where we seem to have files for 3 spatial dimensions
-	// note that this could leave us with gaps that we have to fill
-	if (this->_plane_index.size() != 3 || widths.size() != 3 || heights.size() != 3 ||
-		steps.size() != 3 || coords.size() != 3)
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-			"We need triples for a 3D data dicom!");
+	// we have 3 planes
+	if (this->_plane_index.size() == 3)
+	{
+		this->initializeDicom3Ddata(widths, heights, steps, coords);
+		return;
+	}
 
-	this->initializeDicom3Ddata(widths, heights, orientations, steps, coords);
+	THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+		"Dont't know what to do with this dicom ....!")
 }
 
 inline void tissuestack::imaging::TissueStackDicomData::initializeDicomTimeSeries(
 	const std::vector<unsigned long long int> & widths,
 	const std::vector<unsigned long long int> & heights,
-	const std::vector<std::string> & orientations,
 	const std::vector<std::string> & steps,
 	const std::vector<std::string> & coords)
 {
+	this->_type = tissuestack::imaging::DICOM_TYPE::TIME_SERIES;
+
 	this->addDimension(
 		new tissuestack::imaging::TissueStackDataDimension(
 			std::string("x"),
@@ -216,8 +222,8 @@ inline void tissuestack::imaging::TissueStackDicomData::initializeDicomTimeSerie
 	this->addCoordinates(coords[0],0);
 	this->addCoordinates(coords[0],1);
 
-	this->addSteps(steps[0], orientations[0], 0);
-	this->addSteps(steps[0], orientations[0], 1);
+	this->addSteps(steps[0], 0);
+	this->addSteps(steps[0], 1);
 
 	// further dimension info initialization (order of function calls matter!)
 	this->detectAndCorrectFor2DData();
@@ -225,21 +231,21 @@ inline void tissuestack::imaging::TissueStackDicomData::initializeDicomTimeSerie
 	this->initializeOffsetsForNonRawFiles();
 }
 
-void tissuestack::imaging::TissueStackDicomData::determinePlanarOrientation()
+const tissuestack::imaging::DICOM_PLANAR_ORIENTATION tissuestack::imaging::TissueStackDicomData::findPlanarOrientationOfDicomFile(const tissuestack::imaging::DicomFileWrapper * dicom) const
 {
-	if (this->_plane_index.size() != 1) // don't care for orientation if we don't have to reconstruct 3D
-		return;
+	if (dicom == nullptr)
+		return tissuestack::imaging::DICOM_PLANAR_ORIENTATION::UNDETERMINED;
 
 	const std::string orientation =
-		this->getDicomFileWrapper(0)->getImageOrientation();
+		dicom->getImageOrientation();
 	if (orientation.empty())
-		return;
+		return tissuestack::imaging::DICOM_PLANAR_ORIENTATION::UNDETERMINED;
 
 	const std::vector<std::string> cosines =
 		tissuestack::utils::Misc::tokenizeString(orientation, '\\');
 
 	if (cosines.size() != 6)
-		return;
+		return tissuestack::imaging::DICOM_PLANAR_ORIENTATION::UNDETERMINED;
 
 	const char xAxis =
 		this->determinePlanarOrientation0(
@@ -248,20 +254,31 @@ void tissuestack::imaging::TissueStackDicomData::determinePlanarOrientation()
 			atof(cosines[3].c_str()), atof(cosines[4].c_str()),atof(cosines[5].c_str()));
 
 	if (xAxis == '\0' || yAxis == '\0')
-		return;
+		return tissuestack::imaging::DICOM_PLANAR_ORIENTATION::UNDETERMINED;
 
 	if	(((xAxis == 'R' || xAxis == 'L') && (yAxis == 'A' || yAxis == 'P')) ||
 			((xAxis == 'A' || xAxis == 'P') && (yAxis == 'R' || yAxis == 'L'))			)
-		this->_planar_orientation = tissuestack::imaging::DICOM_PLANAR_ORIENTATION::AXIAL;
+		return tissuestack::imaging::DICOM_PLANAR_ORIENTATION::AXIAL;
 	else if	(((xAxis == 'R' || xAxis == 'L') && (yAxis == 'H' || yAxis == 'F')) ||
 			((xAxis == 'H' || xAxis == 'F') && (yAxis == 'R' || yAxis == 'L'))			)
-		this->_planar_orientation = tissuestack::imaging::DICOM_PLANAR_ORIENTATION::CORONAL;
+		return tissuestack::imaging::DICOM_PLANAR_ORIENTATION::CORONAL;
 	else if	(((xAxis == 'A' || xAxis == 'P') && (yAxis == 'H' || yAxis == 'F')) ||
 			((xAxis == 'H' || xAxis == 'F') && (yAxis == 'A' || yAxis == 'P'))			)
-		this->_planar_orientation = tissuestack::imaging::DICOM_PLANAR_ORIENTATION::SAGITTAL;
+		return tissuestack::imaging::DICOM_PLANAR_ORIENTATION::SAGITTAL;
+
+	return tissuestack::imaging::DICOM_PLANAR_ORIENTATION::UNDETERMINED;
 }
 
-const char tissuestack::imaging::TissueStackDicomData::determinePlanarOrientation0(float x, float y, float z)
+void tissuestack::imaging::TissueStackDicomData::determinePlanarOrientation()
+{
+	if (this->_plane_index.size() != 1) // don't care for orientation if we don't have to reconstruct 3D
+		return;
+
+	this->_planar_orientation =
+		this->findPlanarOrientationOfDicomFile(this->getDicomFileWrapper(0));
+}
+
+const char tissuestack::imaging::TissueStackDicomData::determinePlanarOrientation0(float x, float y, float z) const
 {
 	char orientationX = x < 0 ? 'R' : 'L';
 	char orientationY = y < 0 ? 'A' : 'P';
@@ -296,7 +313,7 @@ inline void tissuestack::imaging::TissueStackDicomData::initializeSingleDicomFil
 			dicom->getWidth(),
 			0));
 	this->addCoordinates(dicom->getImagePositionPatient(), 0);
-	this->addSteps(dicom->getPixelSpacing(), dicom->getImageOrientation(), 0);
+	this->addSteps(dicom->getPixelSpacing(), 0);
 	this->addDimension(
 		new tissuestack::imaging::TissueStackDataDimension(
 			std::string("y"),
@@ -304,7 +321,7 @@ inline void tissuestack::imaging::TissueStackDicomData::initializeSingleDicomFil
 			dicom->getHeight(),
 			0));
 	this->addCoordinates(dicom->getImagePositionPatient(), 1);
-	this->addSteps(dicom->getPixelSpacing(), dicom->getImageOrientation(), 1);
+	this->addSteps(dicom->getPixelSpacing(), 1);
 
 	this->generateRawHeader();
 
@@ -316,16 +333,13 @@ inline void tissuestack::imaging::TissueStackDicomData::initializeSingleDicomFil
 inline void tissuestack::imaging::TissueStackDicomData::initializePartialDicom3Ddata(
 		const std::vector<unsigned long long int> & widths,
 		const std::vector<unsigned long long int> & heights,
-		const std::vector<std::string> & orientations,
 		const std::vector<std::string> & steps,
 		const std::vector<std::string> & coords)
 	{
 	this->determinePlanarOrientation();
 
-	//TODO: tweaks for planar orientation.
-	// code as is covers SAGITTAL. AXIAL is lying on its side (90 degee rotation)
 	std::string planeIdentifiers[3] = {"x","y", "z"};
-	unsigned long long int planeSliceSizes[3] = {
+	unsigned long long int planeSliceSizes[3] = { // SAGGITAL default
 			this->_dicom_files.size(),
 			widths[0],
 			heights[0]
@@ -336,6 +350,11 @@ inline void tissuestack::imaging::TissueStackDicomData::initializePartialDicom3D
 		planeSliceSizes[0] = widths[0];
 		planeSliceSizes[1] = heights[0];
 		planeSliceSizes[2] = this->_dicom_files.size();
+	} else if (this->_planar_orientation == tissuestack::imaging::DICOM_PLANAR_ORIENTATION::CORONAL)
+	{
+		planeSliceSizes[0] = widths[0];
+		planeSliceSizes[1] = this->_dicom_files.size();
+		planeSliceSizes[2] = heights[0];
 	}
 
 	for (unsigned short i=0;i<3;i++)
@@ -347,55 +366,106 @@ inline void tissuestack::imaging::TissueStackDicomData::initializePartialDicom3D
 				planeSliceSizes[i],
 				0)); // we'll calculate later
 		this->addCoordinates(coords[0],i);
-		this->addSteps(steps[0], orientations[0], i > 1 ? 0 : i);
+		this->addSteps(steps[0], i > 1 ? 0 : i);
 
 	}
 
 	this->initializeDimensions(true);
 	this->generateRawHeader();
 	this->initializeOffsetsForNonRawFiles();
-	this->dumpImageDataIntoDebugLog();
 }
 
 inline void tissuestack::imaging::TissueStackDicomData::initializeDicom3Ddata(
 	const std::vector<unsigned long long int> & widths,
 	const std::vector<unsigned long long int> & heights,
-	const std::vector<std::string> & orientations,
 	const std::vector<std::string> & steps,
 	const std::vector<std::string> & coords)
 {
-	// z plane
-	unsigned long long int numSlices = heights[1];
-	this->addDimension(
-		new tissuestack::imaging::TissueStackDataDimension(
-			std::string("z"),
-			0, // bogus offset for now, we'll calculate later
-			numSlices,
-			widths[0] * heights[0]));
-	this->addCoordinates(coords[1],2);
-	this->addSteps(steps[1], orientations[1], 1);
+	// preliminary checks whether we can sensibly use series with 3 planes
+	short saggitalDimensionIndex = -1;
+	short coronalDimensionIndex = -1;
+	short axialDimensionIndex = -1;
 
-	// x plane
-	numSlices = widths[0];
+	for (unsigned short i=0;i<3;i++)
+	{
+		const tissuestack::imaging::DICOM_PLANAR_ORIENTATION planeOrientation =
+			this->findPlanarOrientationOfDicomFile(this->getDicomFileWrapper(this->getPlaneIndex(i)));
+
+		if (planeOrientation == tissuestack::imaging::DICOM_PLANAR_ORIENTATION::UNDETERMINED)
+			break;
+		if (planeOrientation == tissuestack::imaging::DICOM_PLANAR_ORIENTATION::AXIAL)
+			axialDimensionIndex = i;
+		else if (planeOrientation == tissuestack::imaging::DICOM_PLANAR_ORIENTATION::CORONAL)
+			coronalDimensionIndex = i;
+		else if (planeOrientation == tissuestack::imaging::DICOM_PLANAR_ORIENTATION::SAGITTAL)
+			saggitalDimensionIndex = i;
+	}
+
+	// without all of the planar orientations we'd rather not make a 3D volume given 3 planes
+	if (saggitalDimensionIndex < 0 || coronalDimensionIndex < 0 || axialDimensionIndex < 0)
+	{
+		// we have to check whether we have a consistent width and height
+		if (!this->checkWidthAndHeightConsistencyOfDicoms(0, this->_dicom_files.size()-1))
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Dicom Time Series contains a file whose width & height does not match the others!");
+
+		this->initializeDicomTimeSeries(widths, heights, steps, coords);
+		return;
+	}
+
+	// now the width/height have to match the slice numbers
+	const tissuestack::imaging::DicomFileWrapper * axialDimension =
+		this->getDicomFileWrapper(this->getPlaneIndex(axialDimensionIndex));
+	const tissuestack::imaging::DicomFileWrapper * coronalDimension =
+		this->getDicomFileWrapper(this->getPlaneIndex(coronalDimensionIndex));
+	const tissuestack::imaging::DicomFileWrapper * saggitalDimension =
+			this->getDicomFileWrapper(this->getPlaneIndex(saggitalDimensionIndex));
+
+	if (axialDimension->getWidth() != this->getNumberOfFiles(saggitalDimensionIndex) ||
+		axialDimension->getHeight() != this->getNumberOfFiles(coronalDimensionIndex) ||
+		coronalDimension->getWidth() != this->getNumberOfFiles(saggitalDimensionIndex) ||
+		coronalDimension->getHeight() != this->getNumberOfFiles(axialDimensionIndex) ||
+		saggitalDimension->getWidth() != this->getNumberOfFiles(coronalDimensionIndex) ||
+		saggitalDimension->getHeight() != this->getNumberOfFiles(axialDimensionIndex))
+	{
+		// we have to check whether we have a consistent width and height
+		if (!this->checkWidthAndHeightConsistencyOfDicoms(0, this->_dicom_files.size()-1))
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Dicom Time Series contains a file whose width & height does not match the others!");
+
+		this->initializeDicomTimeSeries(widths, heights, steps, coords);
+		return;
+	}
+
+	// x plane (saggital)
 	this->addDimension(
 		new tissuestack::imaging::TissueStackDataDimension(
 			std::string("x"),
-			0, // bogus offset for now, we'll calculate later
-			numSlices,
-			widths[1] * heights[1]));
-	this->addCoordinates(coords[0],0);
-	this->addSteps(steps[0], orientations[0], 0);
+			0, // we'll calculate later
+			this->getNumberOfFiles(saggitalDimensionIndex),
+			0));// we'll calculate later
+	this->addCoordinates(coords[saggitalDimensionIndex],0);
+	this->addSteps(steps[saggitalDimensionIndex], 0);
 
-	// y plane
-	numSlices = heights[0];
+	// y plane (coronal)
 	this->addDimension(
 		new tissuestack::imaging::TissueStackDataDimension(
 			std::string("y"),
-			0, // bogus offset for now, we'll calculate later
-			numSlices,
-			widths[2] * heights[2]));
-	this->addCoordinates(coords[0],1);
-	this->addSteps(steps[0], orientations[0], 1);
+			0, // we'll calculate later
+			this->getNumberOfFiles(coronalDimensionIndex),
+			0));// we'll calculate later
+	this->addCoordinates(coords[coronalDimensionIndex],1);
+	this->addSteps(steps[coronalDimensionIndex], 0);
+
+	// z plane (axial)
+	this->addDimension(
+		new tissuestack::imaging::TissueStackDataDimension(
+			std::string("z"),
+			0, // we'll calculate later
+			this->getNumberOfFiles(axialDimensionIndex),
+			0));// we'll calculate later
+	this->addCoordinates(coords[axialDimensionIndex],2);
+	this->addSteps(steps[axialDimensionIndex], 0);
 
 	this->initializeDimensions(true, false);
 	this->initializeOffsetsForNonRawFiles();
@@ -422,7 +492,6 @@ inline void tissuestack::imaging::TissueStackDicomData::addCoordinates(
 
 inline void tissuestack::imaging::TissueStackDicomData::addSteps(
 		const std::string & steps,
-		const std::string & orientations,
 		const unsigned short index)
 {
 	if (steps.empty() || index > 2)
@@ -436,24 +505,7 @@ inline void tissuestack::imaging::TissueStackDicomData::addSteps(
 		return;
 	}
 
-	float step = atof(s[index].c_str());
-
-	const std::vector<std::string> o =
-		tissuestack::utils::Misc::tokenizeString(orientations, '\\');
-	if (o.size() == 6 && index < 2)
-	{
-		for(unsigned short i=index*3;i<index*3+3;i++)
-		{
-			const float oTmp =  atof(o[i].c_str());
-			if (oTmp != 0 && oTmp < 0)
-			{
-				step = -step;
-				break;
-			}
-		}
-	}
-
-	this->addStep(step);
+	this->addStep(atof(s[index].c_str()));
 }
 
 tissuestack::imaging::TissueStackDicomData::TissueStackDicomData(const std::string & filename) :
@@ -471,7 +523,7 @@ tissuestack::imaging::TissueStackDicomData::~TissueStackDicomData()
 			delete dicom;
 }
 
-const unsigned long int tissuestack::imaging::TissueStackDicomData::getNumberOfFiles(const unsigned short dimension_index)
+const unsigned long int tissuestack::imaging::TissueStackDicomData::getNumberOfFiles(const unsigned short dimension_index) const
 {
 	if (this->_plane_number_of_files.empty() || dimension_index >= this->_plane_number_of_files.size())
 		return 0;
@@ -479,7 +531,7 @@ const unsigned long int tissuestack::imaging::TissueStackDicomData::getNumberOfF
 	return this->_plane_number_of_files[dimension_index];
 }
 
-const unsigned long int tissuestack::imaging::TissueStackDicomData::getPlaneIndex(const unsigned short dimension_index)
+const unsigned long int tissuestack::imaging::TissueStackDicomData::getPlaneIndex(const unsigned short dimension_index) const
 {
 	if (this->_plane_index.empty() || dimension_index >= this->_plane_index.size())
 		return 0;
@@ -533,14 +585,47 @@ void tissuestack::imaging::TissueStackDicomData::writeDicomDataAsPng(tissuestack
 	//img->writePluginFormat(new DiJPEGPlugin(), (potentialDicomFile + ".jpg").c_str());
 }
 
-void tissuestack::imaging::TissueStackDicomData::registerDcmtkDecoders()
+const bool tissuestack::imaging::TissueStackDicomData::checkWidthAndHeightConsistencyOfDicoms(
+		const unsigned short start, const unsigned short end) const
+{
+	if (this->_dicom_files.empty() || this->_dicom_files.size() == 1 || end-start == 1)
+		return true;
+
+	if (start >= end || start >= this->_dicom_files.size() || end >= this->_dicom_files.size())
+		return false;
+
+	unsigned long long int width = -1;
+	unsigned long long int height = -1;
+	for (int j=start;j<=end;j++)
+	{
+		const tissuestack::imaging::DicomFileWrapper * dicom =
+			this->getDicomFileWrapper(j);
+		if (dicom == nullptr)
+			return false;
+
+		if (j==start)
+		{
+			width = dicom->getWidth();
+			height = dicom->getHeight();
+			continue;
+		}
+
+		if (dicom->getWidth() != width ||
+				dicom->getHeight() != height)
+			return false;
+	}
+
+	return true;
+}
+
+void tissuestack::imaging::TissueStackDicomData::registerDcmtkDecoders() const
 {
 	DJDecoderRegistration::registerCodecs(EDC_photometricInterpretation);
 	DJLSDecoderRegistration::registerCodecs();
 	DcmRLEDecoderRegistration::registerCodecs();
 }
 
-void tissuestack::imaging::TissueStackDicomData::deregisterDcmtkDecoders()
+void tissuestack::imaging::TissueStackDicomData::deregisterDcmtkDecoders() const
 {
 	DJDecoderRegistration::cleanup();
 	DJLSDecoderRegistration::cleanup();

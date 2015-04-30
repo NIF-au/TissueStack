@@ -33,6 +33,7 @@ static std::string out_file = "";
 static pid_t parent = -1;
 static std::vector<pid_t> pids = {-1,-1,-1};
 static short number_of_children_running = 0;
+static tissuestack::services::TissueStackConversionTask * conversion = nullptr;
 
 void handle_signals(int sig) {
 	switch (sig) {
@@ -52,6 +53,8 @@ void handle_signals(int sig) {
 				kill(parent, SIGINT);
 			if (!out_file.empty())
 				unlink(out_file.c_str());
+			if (conversion)
+				delete conversion;
 			exit(EXIT_FAILURE);
 		case SIGCHLD:
 			if (getpid() == parent)
@@ -153,7 +156,6 @@ int		main(int argc, char **argv)
 
 		// check out the image data first and see how many dimensions we have
 		std::vector<std::string> dimensions;
-		tissuestack::services::TissueStackConversionTask * conversion = nullptr;
 
 		try
 		{
@@ -202,7 +204,7 @@ int		main(int argc, char **argv)
 			conversion->getInputImageData()->get2DDimension() != nullptr ||
 			conversion->getInputImageData()->getFormat() == tissuestack::imaging::FORMAT::DICOM)
 		{
-		   // delegate to the offline executor
+			// delegate to the offline executor
 			std::string dimParam = "";
 			if (conversion->getInputImageData()->get2DDimension() != nullptr)
 			{
