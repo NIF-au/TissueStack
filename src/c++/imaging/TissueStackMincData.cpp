@@ -27,6 +27,15 @@ const bool tissuestack::imaging::TissueStackMincData::isColor() const
 	return this->_is_color;
 }
 
+
+const unsigned int tissuestack::imaging::TissueStackMincData::getSlicesForDimensionInOrder(unsigned short index) const
+{
+	if (this->_sliceNumbersInOrder.empty() || index < 0 || index >= this->_sliceNumbersInOrder.size())
+		return 0;
+
+	return this->_sliceNumbersInOrder[index];
+}
+
 tissuestack::imaging::TissueStackMincData::TissueStackMincData(const std::string & filename) :
 		tissuestack::imaging::TissueStackImageData(filename, tissuestack::imaging::FORMAT::MINC)
 {
@@ -129,16 +138,17 @@ tissuestack::imaging::TissueStackMincData::TissueStackMincData(const std::string
 				0, // bogus offset for MINC
 				static_cast<unsigned long long int>(size),
 				0)); // bogus slice size for MINC
+		this->_sliceNumbersInOrder.push_back(size);
 		// add start and step
 		this->addCoordinate(static_cast<float>(start));
 		this->addStep(static_cast<float>(step));
 	}
 
-	// generate the raw header for conversion
+	// further dimension info initialization (order of function calls matter!)
+	if (numberOfDimensions > 2)
+		this->initializeDimensions(true);
+	this->detectAndCorrectFor2DData();
 	this->generateRawHeader();
-
-	// further dimension info initialization
-	this->initializeDimensions(true);
 	this->initializeOffsetsForNonRawFiles();
 
 	miclose_volume(volume);

@@ -69,7 +69,9 @@ const bool tissuestack::networking::TissueStackConversionRequest::isObsolete() c
 	// we regard a conversion request 'obsolete'
 	//if there exists a running conversion task that works on that file
 	return tissuestack::services::TissueStackTaskQueue::instance()->isBeingConverted(
-		this->_conversion->getInputImageData()->getFileName());
+		this->_conversion->getInputImageData() == nullptr ?
+			this->_conversion->getInputFileName() :
+			this->_conversion->getInputImageData()->getFileName());
 }
 
 const std::string tissuestack::networking::TissueStackConversionRequest::getContent() const

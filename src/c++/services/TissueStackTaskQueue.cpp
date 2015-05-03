@@ -129,7 +129,10 @@ inline void tissuestack::services::TissueStackTaskQueue::writeBackToIndividualTa
 	}
 
 	std::ostringstream taskFileContents;
-	taskFileContents << task->getInputImageData()->getFileName() << std::endl; // line 1 in_file
+	if (task->getInputImageData() == nullptr)
+		taskFileContents << task->getInputFileName() << std::endl; // line 1 in_file
+	else
+		taskFileContents << task->getInputImageData()->getFileName() << std::endl; // line 1 in_file
 	taskFileContents << task->getType() << std::endl; // line 2 type
 	std::string params = "";
 
@@ -228,6 +231,7 @@ void tissuestack::services::TissueStackTaskQueue::writeTasksToQueueFile()
 		taskFileContents << "";
 		for (auto task : this->_tasks)
 			if (task->getStatus() == tissuestack::services::TissueStackTaskStatus::QUEUED ||
+					task->getStatus() == tissuestack::services::TissueStackTaskStatus::UNZIPPING ||
 					task->getStatus() == tissuestack::services::TissueStackTaskStatus::IN_PROCESS)
 				taskFileContents << task->getId() << std::endl;
 	}
@@ -278,7 +282,13 @@ const bool tissuestack::services::TissueStackTaskQueue::doesTaskExistForDataSet(
 	unsigned int busyTasksForDataSet = 0;
 
 	for (auto t : this->_tasks)
-		if ((t->getInputImageData()->getFileName().compare(name) == 0))
+	{
+		const std::string input_data_file_name =
+			t->getInputImageData() == nullptr ?
+				t->getInputFileName() :
+				t->getInputImageData()->getFileName();
+
+		if (input_data_file_name.compare(name) == 0)
 		{
 			totalTasksForDataSet++;
 
@@ -294,12 +304,14 @@ const bool tissuestack::services::TissueStackTaskQueue::doesTaskExistForDataSet(
 			if (is_being_converted_check &&
 				t->getType() == tissuestack::services::TissueStackTaskType::CONVERSION &&
 				(t->getStatus() == tissuestack::services::TissueStackTaskStatus::QUEUED ||
-					t->getStatus() == tissuestack::services::TissueStackTaskStatus::IN_PROCESS))
+					t->getStatus() == tissuestack::services::TissueStackTaskStatus::IN_PROCESS ||
+					t->getStatus() == tissuestack::services::TissueStackTaskStatus::UNZIPPING))
 			{
 				busyTasksForDataSet++;
 				continue;
 			}
 		}
+	}
 
 	if (totalTasksForDataSet == 0)
 		return false;
@@ -317,7 +329,10 @@ const bool tissuestack::services::TissueStackTaskQueue::isBeingTiled(
 	if (check_t == nullptr)
 		return false;
 
-	const std::string in_file = check_t->getInputImageData()->getFileName();
+	const std::string in_file =
+		check_t->getInputImageData() == nullptr ?
+				check_t->getInputFileName() :
+				check_t->getInputImageData()->getFileName();
 	if (in_file.empty() || !tissuestack::utils::System::fileExists(in_file)) return false;
 
 	// this makes sure that we don't modify the tasks while we are doing this traversal
@@ -325,7 +340,11 @@ const bool tissuestack::services::TissueStackTaskQueue::isBeingTiled(
 
 	for (auto t : this->_tasks)
 	{
-		if ((t->getInputImageData()->getFileName().compare(in_file) == 0)
+		const std::string input_data_file_name =
+				t->getInputImageData() == nullptr ?
+					t->getInputFileName() :
+					t->getInputImageData()->getFileName();
+		if (input_data_file_name.compare(in_file) == 0
 				&& t->getType() == tissuestack::services::TissueStackTaskType::TILING
 				&& (t->getStatus() == tissuestack::services::TissueStackTaskStatus::QUEUED ||
 						t->getStatus() == tissuestack::services::TissueStackTaskStatus::IN_PROCESS)
@@ -394,7 +413,8 @@ const tissuestack::services::TissueStackTask * tissuestack::services::TissueStac
 	unsigned int t;
 	for (t=0;t<this->_tasks.size();t++) // fast forward past anything that is not queued
 	{
-		if (this->_tasks[t]->getStatus() == tissuestack::services::TissueStackTaskStatus::QUEUED)
+		if (this->_tasks[t]->getStatus() == tissuestack::services::TissueStackTaskStatus::QUEUED ||
+				this->_tasks[t]->getStatus() == tissuestack::services::TissueStackTaskStatus::UNZIPPING)
 			break;
 		t++;
 	}
@@ -402,7 +422,8 @@ const tissuestack::services::TissueStackTask * tissuestack::services::TissueStac
 	if (t >= this->_tasks.size())
 		return nullptr; // we found no candidates
 
-	if (set_processing_flag)
+	if (set_processing_flag &&
+		this->_tasks[t]->getStatus() != tissuestack::services::TissueStackTaskStatus::UNZIPPING)
 		const_cast<tissuestack::services::TissueStackTask *>(this->_tasks[t])->setStatus(
 			tissuestack::services::TissueStackTaskStatus::IN_PROCESS);
 
@@ -424,10 +445,16 @@ const bool tissuestack::services::TissueStackTaskQueue::isBeingConverted(const s
 		const tissuestack::services::TissueStackConversionTask * conv_task =
 			static_cast<const tissuestack::services::TissueStackConversionTask *>(t);
 
-		if ((conv_task->getInputImageData()->getFileName().compare(in_file) == 0 ||
+		const std::string input_data_file_name =
+				t->getInputImageData() == nullptr ?
+					t->getInputFileName() :
+					t->getInputImageData()->getFileName();
+
+		if ((input_data_file_name.compare(in_file) == 0 ||
 				conv_task->getOutFile().compare(in_file) == 0)
 				&& (conv_task->getStatus() == tissuestack::services::TissueStackTaskStatus::QUEUED ||
-						conv_task->getStatus() == tissuestack::services::TissueStackTaskStatus::IN_PROCESS))
+					conv_task->getStatus() == tissuestack::services::TissueStackTaskStatus::UNZIPPING ||
+					conv_task->getStatus() == tissuestack::services::TissueStackTaskStatus::IN_PROCESS))
 			return true;
 	}
 

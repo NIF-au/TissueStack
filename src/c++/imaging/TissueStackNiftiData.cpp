@@ -71,6 +71,7 @@ tissuestack::imaging::TissueStackNiftiData::TissueStackNiftiData(const std::stri
 
 	// get the volume dimensions
 	unsigned short i = 0;
+	unsigned int width2D = 0;
 	while (i < numberOfDimensions)
 	{
 		if (i > 2) // this is for non spatial, higher dimensions
@@ -81,25 +82,41 @@ tissuestack::imaging::TissueStackNiftiData::TissueStackNiftiData(const std::stri
 		name[0] = 'x' + i;
 
 		// create our dimension object and add it
+		if ((numberOfDimensions == 2 && i == 0) || numberOfDimensions > 2)
+		{
+			width2D = static_cast<unsigned int>(this->_volume->dim[i+1]);
 			this->addDimension(
 				new tissuestack::imaging::TissueStackDataDimension(
 					name,
 					0, // bogus offset for NIFTI
-					static_cast<unsigned long long int>(this->_volume->dim[i+1]),
+					static_cast<unsigned long long int>(width2D),
 					0)); // bogus slice size for NIFTI
-			// add start and step
-			this->addCoordinate(static_cast<float>(this->_volume->sto_xyz.m[i][3]));
-			this->addStep(static_cast<float>(this->_volume->pixdim[i + 1]));
+		} else if (numberOfDimensions == 2 && i ==1)
+		{
+			unsigned long long int height2D =
+					static_cast<unsigned long long int>(this->_volume->dim[i+1]);
+			tissuestack::imaging::TissueStackDataDimension * d =
+				new tissuestack::imaging::TissueStackDataDimension(
+					name,
+					0, // bogus offset for NIFTI
+					1,
+					height2D * width2D);
+			d->setWidthAndHeight(width2D, height2D, width2D, height2D);
+			this->addDimension(d);
+		}
+
+		// add start and step
+		this->addCoordinate(static_cast<float>(this->_volume->sto_xyz.m[i][3]));
+		this->addStep(static_cast<float>(this->_volume->pixdim[i + 1]));
 		i++;
 	}
 
-	// generate the raw header for conversion
+	// further dimension info initialization (order of function calls matter!)
+	if (numberOfDimensions > 2)
+		this->initializeDimensions(true);
+	this->detectAndCorrectFor2DData();
 	this->generateRawHeader();
-
-	// further dimension info initialization
-	this->initializeDimensions(true);
 	this->initializeOffsetsForNonRawFiles();
-
 	this->setGlobalMinMax();
 }
 
@@ -135,11 +152,14 @@ void tissuestack::imaging::TissueStackNiftiData::setGlobalMinMax()
 	void *data_in = NULL, *in = NULL;
 
 	const tissuestack::imaging::TissueStackDataDimension * firstDim =
+		this->get2DDimension() != nullptr ?
+				this->get2DDimension() :
 			this->getDimensionByOrderIndex(0);
 	if (firstDim == nullptr)
 		THROW_TS_EXCEPTION(
 			tissuestack::common::TissueStackApplicationException,
 			"Could not find first dimension of read NIFTI file!");
+	short ind = this->getIndexForPlane(firstDim->getName()[0]);
 
 	unsigned long long int size_per_slice =
 		firstDim->getSliceSize();
@@ -149,7 +169,7 @@ void tissuestack::imaging::TissueStackNiftiData::setGlobalMinMax()
 	// we use the first dimension, why not, don't make a difference to me ...
 	while (slice < firstDim->getNumberOfSlices())  // SLICE LOOP
 	{
-		dims[1] = slice;
+		dims[1+ind] = slice;
 
 		int ret = nifti_read_collapsed_image(this->_volume, dims, &data_in);
 		if (ret < 0)

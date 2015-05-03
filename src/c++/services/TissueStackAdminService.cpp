@@ -139,7 +139,9 @@ const std::string tissuestack::services::TissueStackAdminService::handleTaskCanc
 			"Task does not exist!");
 
 	const std::string fileName =
-		hit->getInputImageData()->getFileName();
+		hit->getInputImageData() ?
+			hit->getInputImageData()->getFileName() :
+			hit->getInputFileName();
 	const std::string progress = std::to_string(hit->getProgress());
 	// cancel
 	tissuestack::services::TissueStackTaskQueue::instance()->flagTaskAsFinished(task_id, true, false);
@@ -219,10 +221,15 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadRe
 			"File Name for file upload is missing!");
 	const std::string fileName = contentDisposition.substr(0, pos);
 
+	// for better comparison
+	std::string lowerCaseFileName = fileName;
+	std::transform(lowerCaseFileName.begin(), lowerCaseFileName.end(), lowerCaseFileName.begin(), tolower);
 	if (fileName.rfind(".mnc") == std::string::npos && fileName.rfind(".nii") == std::string::npos &&
-			fileName.rfind(".nii.gz") == std::string::npos && fileName.rfind(".raw") == std::string::npos)
+			fileName.rfind(".nii.gz") == std::string::npos && fileName.rfind(".raw") == std::string::npos &&
+			fileName.rfind(".dcm") == std::string::npos && fileName.rfind(".ima") == std::string::npos &&
+			fileName.rfind(".zip") == std::string::npos)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackFileUploadException,
-		"Uploaded file needs to be of the following type: .mnc, .nii, .nii.gz or .raw!");
+		"Uploaded file needs to be of the following type: .mnc, .nii, .nii.gz, .ima, .dcm, .zip or .raw!");
 
 	if (tissuestack::utils::System::fileExists(std::string(UPLOAD_PATH) + "/" + fileName))
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackFileUploadException,
@@ -578,13 +585,16 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadDi
 
 		if (bDisplayRawOnly &&
 				(!(ext.compare(".RAW") == 0)))
-				continue;
+			continue;
 
 		if (bDisplayConversionFormatsOnly &&
 			(!(ext.compare(".MNC") == 0
-					|| ext.compare(".NII") == 0
-					|| ext.compare("I.GZ") == 0)))
-				continue;
+				|| ext.compare(".NII") == 0
+				|| ext.compare("I.GZ") == 0
+				|| ext.compare(".DCM") == 0
+				|| ext.compare(".IMA") == 0
+				|| ext.compare(".ZIP") == 0)))
+			continue;
 
 		// don't show files that are at the moment being converted
 		if (ext.compare(".RAW") == 0 && tissuestack::services::TissueStackTaskQueue::instance()->isBeingConverted(f))
@@ -753,7 +763,10 @@ const std::string tissuestack::services::TissueStackAdminService::handleProgress
 	}
 
 	return std::string("{\"response\": {\"filename\": \"") +
-		hit->getInputImageData()->getFileName() + "\", \"progress\":" +
+		(hit->getInputImageData() == nullptr ?
+			hit->getInputFileName() :
+			hit->getInputImageData()->getFileName()) +
+			"\", \"progress\":" +
 		std::to_string(hit->getProgress()) + ", \"status\": " +
 		std::to_string(hit->getStatus()) + "}}";
 }

@@ -72,7 +72,12 @@ TissueStack.Canvas.prototype = {
 	value_range_min: 0,
 	value_range_max: 255,
 	sessionId : 0,
-	updateScaleBar : function() {
+    is_2D : false,
+    flag2D : function() {
+        this.is_2D = true;
+    }, is2D : function() {
+        return this.is_2D;
+    }, updateScaleBar : function() {
 		// update scale bar if main view
 		if (this.is_main_view) this.getDataExtent().adjustScaleBar(100);
 	}, setIncludeCrossHair : function(include_cross_hair) {
@@ -814,11 +819,7 @@ TissueStack.Canvas.prototype = {
 
 		$("#canvas_point_x").val(Math.round(x *1000) / 1000);
 		$("#canvas_point_y").val(Math.round(y *1000) / 1000);
-		if (this.data_extent.max_slices > 1) {
-			$("#canvas_point_z").val(Math.round(z *1000) / 1000);
-		} else {
-			$("#canvas_point_z").val("");
-		}
+		$("#canvas_point_z").val(Math.round(z *1000) / 1000);
 		
 		// get at pixel value
 		var dataSet = TissueStack.dataSetStore.getDataSetById(this.getDataExtent().data_id);

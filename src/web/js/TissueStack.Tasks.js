@@ -17,8 +17,8 @@
 TissueStack.Tasks = {
 	TypeLookupTable   : ["Tiling", "Conversion"],
 	ReverseTypeLookupTable   : {"Tiling" : 1, "Conversion" : 2},
-	StatusLookupTable : ["Queued", "Running", "Finished", "Canceled", "Error"],
-	ReverseStatusLookupTable : {"Queued" : 0, "Running": 1, "Finished": 2, "Canceled": 3, "Error": 4},
+	StatusLookupTable : ["Queued", "Running", "Finished", "Canceled", "Error", "Unzipping"],
+	ReverseStatusLookupTable : {"Queued" : 0, "Running": 1, "Finished": 2, "Canceled": 3, "Error": 4, "Unzipping": 5},
 	getStatusAsString : function(status_as_number) {
 		if (typeof(status_as_number) !== 'number' || status_as_number < 0
 				|| status_as_number > TissueStack.Tasks.StatusLookupTable.length-1) return;
@@ -62,7 +62,9 @@ TissueStack.Tasks = {
 		var content = "";
 		// loop through all tasks
 		for (var t in TissueStack.tasks) {
-			if (TissueStack.tasks[t].status != 0 && TissueStack.tasks[t].status != 1) continue; // only persist queued and running
+			if (TissueStack.tasks[t].status != 0 &&
+				TissueStack.tasks[t].status != 1 && 
+				TissueStack.tasks[t].status != 5) continue; // only persist queued, unzipped and running
 			
 			content += (TissueStack.tasks[t].id + "=");
 			for (var p in TissueStack.tasks[t]) {

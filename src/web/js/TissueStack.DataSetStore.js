@@ -88,6 +88,7 @@ TissueStack.DataSetStore.prototype = {
 				this.datasets[id].overlays = dataSet.overlays; 
 		// this is the data for initialization
 		this.datasets[id].data = dataSet.planes;
+        this.datasets[id].is2DData = TissueStack.ComponentFactory.is2Ddata(this.datasets[id].data);
 		// this is the map node where we store the actual runtime canvases which won't be set until we decide to display the data set
 		this.datasets[id].planes = {};
 		// this is the map node where we store the real world extents for the actual runtime canvases once they have been created

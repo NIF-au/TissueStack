@@ -23,6 +23,22 @@
 #include <array>
 #include <fstream>
 
+// DICOM STUFF
+#ifndef	HAVE_CONFIG_H
+	#define HAVE_CONFIG_H
+	#include "dcmtk/dcmdata/dctk.h"
+	#include "dcmtk/dcmimgle/dcmimage.h"
+	#include "dcmtk/dcmimage/dipipng.h"
+	#include "dcmtk/dcmjpeg/dipijpeg.h"
+	#include "dcmtk/dcmjpeg/djdecode.h"
+	#include "dcmtk/dcmjpls/djdecode.h"
+	#include "dcmtk/dcmdata/dcrledrg.h"
+	#include "dcmtk/dcmimage/diregist.h"
+#endif
+
+// forward declaration
+class DcmFileFormat;
+
 namespace tissuestack
 {
 	namespace networking
@@ -67,7 +83,7 @@ namespace tissuestack
 		enum RAW_FILE_VERSION
 		{
 			LEGACY  = 0,
-			V1 	= 1,
+			V1 	= 1
 		};
 
 		enum FORMAT
@@ -75,7 +91,23 @@ namespace tissuestack
 			MINC    	= 1,	// BACKWARDS COMPATIBILITY FOR MINC
 			NIFTI 		= 2,	// BACKWARDS COMPATIBILITY FOR NIFTI
 			RAW			= 3,	// TISSUESTACK FORMAT
-			DATABASE	= 4		// DATABASE RECORD IMAGE DATA
+			DATABASE	= 4,	// DATABASE RECORD IMAGE DATA
+			DICOM		= 5		// DICOM
+		};
+
+		enum DICOM_TYPE
+		{
+			SINGLE_IMAGE	= 1,	// single image (2D)
+			TIME_SERIES 	= 2,	// 3D with dimension t for time
+			VOLUME			= 3		// 3D volume
+		};
+
+		enum DICOM_PLANAR_ORIENTATION
+		{
+			AXIAL		= 1,
+			CORONAL 	= 2,
+			SAGITTAL	= 3,
+			UNDETERMINED= 4
 		};
 
 		enum RAW_TYPE
@@ -239,12 +271,15 @@ namespace tissuestack
 			private:
 				friend class TissueStackImageData;
 				friend class TissueStackRawData;
+				friend class TissueStackNiftiData;
+				friend class TissueStackDicomData;
 				void setWidthAndHeight(
-						const unsigned int width, const unsigned int height,
-						const unsigned int anisotropic_width, const unsigned int anisotropic_height);
+					const unsigned int width, const unsigned int height,
+					const unsigned int anisotropic_width, const unsigned int anisotropic_height);
 				void setOffSet(const unsigned long long int offSet);
 				friend class tissuestack::database::DataSetDataProvider;
 				void setTransformationMatrix(const std::string transformationMatrix);
+				void initialize2DData(const std::vector<float> & coords, const std::vector<float> & steps);
 				const unsigned long long int _id;
 				const std::string 	_name;
 				unsigned long long int 	_offset;
@@ -275,6 +310,7 @@ namespace tissuestack
 				const TissueStackDataDimension * getDimension(const char dimension_letter) const;
 				const TissueStackDataDimension * getDimensionByLongName(const std::string & dimension) const;
 				const TissueStackDataDimension * getDimensionByOrderIndex(const unsigned short index) const;
+				const TissueStackDataDimension * get2DDimension() const;
 				const std::vector<std::string> getDimensionOrder() const;
 				const std::vector<float> getCoordinates() const;
 				const std::vector<float> getSteps() const;
@@ -301,7 +337,7 @@ namespace tissuestack
 				void dumpImageDataIntoDebugLog() const;
 				const TissueStackLabelLookup * getLookup() const;
 				const int getFileDescriptor();
-				void initializeDimensions(const bool omitTransformationMatrix = false);
+				void initializeDimensions(const bool omitTransformationMatrix = false, const bool setWidthAndHeight = true);
 				void initializeOffsetsForNonRawFiles();
 				const std::string toJson(
 					const bool includePlanes = false,
@@ -311,6 +347,8 @@ namespace tissuestack
 				const bool hasZeroDimensions() const;
 				const bool hasNoAssociatedDataSets() const;
 				void clearAssociatedDataSets();
+				void set2DDimension(const char dim);
+				const short getIndexForPlane(const char plane) const;
 			protected:
 				friend class tissuestack::database::DataSetDataProvider;
 				void setImageDataBounds(const float min=0, const float max=255);
@@ -326,6 +364,7 @@ namespace tissuestack
 				void addDimension(TissueStackDataDimension * dimension);
 				void addCoordinate(float coord);
 				void addStep(float step);
+				void detectAndCorrectFor2DData();
 				void generateRawHeader();
 			private:
 				inline const std::string constructIdentityMatrixForDimensionNumber() const;
@@ -334,7 +373,7 @@ namespace tissuestack
 				inline void setTransformationMatrixByDimension(const std::string & dimension);
 				inline const std::string setTransformationMatrixByDimension0(
 						const short step_index, const short index);
-				inline const short getIndexForPlane(const char plane) const;
+				inline const short getIndexForPlane0(const char plane) const;
 				inline void setIsotropyFactors();
 				void openFileHandle(bool close_open_handle = false);
 				void closeFileHandle();
@@ -357,6 +396,7 @@ namespace tissuestack
 				std::vector<const TissueStackImageData *> _associated_data_sets;
 				std::string _header = "";
 				float _resolutionMm = 0;
+				char _2dDimension = '\0';
 		};
 
 		class TissueStackRawData final : public TissueStackImageData
@@ -390,6 +430,112 @@ namespace tissuestack
 						const std::string filename = "");
 		};
 
+		class DicomFileWrapper final
+		{
+			public:
+				DicomFileWrapper & operator=(const DicomFileWrapper&) = delete;
+				DicomFileWrapper(const DicomFileWrapper&) = delete;
+				~DicomFileWrapper();
+
+				static DicomFileWrapper * createWrappedDicomFile(const std::string filename, const bool isTempFile = false);
+				const std::string getFileName() const;
+				const std::string getSeriesNumber() const;
+				const unsigned long getInstanceNumber() const;
+				const std::string getImagePositionPatient() const;
+				const std::string getPixelSpacing() const;
+				const std::string getImageOrientation() const;
+				const unsigned long long int getHeight() const;
+				const unsigned long long int getWidth() const;
+				const unsigned long getAllocatedBits() const;
+				const unsigned char * getData();
+				const bool containsSignedData() const;
+				const unsigned short getPlanarConfiguration() const;
+				const bool isColor() const;
+				const bool isMosaic() const;
+				const std::string getAcquisitionType() const;
+				const DcmElement * findDcmElement(
+					const DcmDataset * dataSet, const DcmTagKey & tagKey) const;
+				const unsigned long int getNumberOfImagesInSeriesOrAcquision() const;
+			private:
+				DicomFileWrapper(const std::string filename, const bool isTempFile = false);
+				std::string _file_name;
+				std::string _series_number;
+				unsigned long int _instance_number;
+				std::string _image_position_patient;
+				std::string _pixel_spacing;
+				std::string _image_orientation;
+				unsigned long long int _rows;
+				unsigned long long int _columns;
+				unsigned long _allocated_bits;
+				unsigned short _is_signed_data = 0;
+				unsigned short _planar_configuration = 0;
+				std::string _photometric_interpretation;
+				unsigned int _number_of_images_in_mosaic = 0;
+				std::string _acquisitionType;
+				std::string _ascconv;
+				unsigned long int _number_of_images_in_series_or_acquisition = 0;
+				bool _isTemp = false;
+
+
+
+		};
+
+		class TissueStackDicomData final : public TissueStackImageData
+		{
+			public:
+				~TissueStackDicomData();
+				const bool isRaw() const;
+				const DICOM_TYPE getType() const;
+				const DICOM_PLANAR_ORIENTATION getPlanarOrientation() const;
+				const DicomFileWrapper * getDicomFileWrapper(unsigned int index) const;
+				const unsigned long int getNumberOfFiles(const unsigned short dimension_index) const;
+				const unsigned long int getPlaneIndex(const unsigned short dimension_index) const;
+				void writeDicomDataAsPng(DicomFileWrapper * dicom);
+				void registerDcmtkDecoders() const;
+				void deregisterDcmtkDecoders() const;
+			private:
+				void addDicomFile(const std::string & file, const bool withinZippedArchive = false);
+				friend class TissueStackImageData;
+				TissueStackDicomData(const std::string & filename);
+				TissueStackDicomData(const std::string & filename_of_zip, const std::vector<std::string> & zippedFiles);
+				void initializeDicomImageFromFiles();
+				inline void initializeDicomTimeSeries(
+					const std::vector<unsigned long long int> & widths,
+					const std::vector<unsigned long long int> & heights,
+					const std::vector<std::string> & steps,
+					const std::vector<std::string> & coords);
+				inline void initializeDicom3Ddata(
+					const std::vector<unsigned long long int> & widths,
+					const std::vector<unsigned long long int> & heights,
+					const std::vector<std::string> & steps,
+					const std::vector<std::string> & coords);
+				inline void initializePartialDicom3Ddata(
+					const std::vector<unsigned long long int> & widths,
+					const std::vector<unsigned long long int> & heights,
+					const std::vector<std::string> & steps,
+					const std::vector<std::string> & coords);
+				inline void initializeSingleDicomFile(const DicomFileWrapper * dicom);
+
+				const bool checkWidthAndHeightConsistencyOfDicoms(
+						const unsigned short start, const unsigned short end) const;
+
+				inline void addCoordinates(
+					const std::string & coords,
+					const unsigned short index);
+				inline void addSteps(
+					const std::string & steps,
+					const unsigned short index);
+				void determinePlanarOrientation();
+				const DICOM_PLANAR_ORIENTATION findPlanarOrientationOfDicomFile(const DicomFileWrapper * dicom) const;
+				const char determinePlanarOrientation0(float x, float y, float z) const;
+				std::vector<DicomFileWrapper *> _dicom_files;
+				std::vector<unsigned long int> _plane_index;
+				std::vector<unsigned long int> _plane_number_of_files;
+				std::string _series_number = "";
+				DICOM_TYPE _type;
+				DICOM_PLANAR_ORIENTATION _planar_orientation = DICOM_PLANAR_ORIENTATION::UNDETERMINED;
+		};
+
 		class TissueStackNiftiData final : public TissueStackImageData
 		{
 			public:
@@ -418,8 +564,10 @@ namespace tissuestack
 				const mitype_t getMincType() const;
 				const misize_t getMincTypeSize() const;
 				const mihandle_t & getMincHandle() const;
+				const unsigned int getSlicesForDimensionInOrder(unsigned short index) const;
 			private:
 				bool _is_color = false;
+				std::vector<unsigned int> _sliceNumbersInOrder;
 				friend class TissueStackImageData;
 				TissueStackMincData(const std::string & filename);
 		};
@@ -1000,7 +1148,28 @@ namespace tissuestack
 				inline void loopOverDimensions(
 						const tissuestack::common::ProcessingStrategy * processing_strategy,
 						const tissuestack::services::TissueStackConversionTask * converter_task,
-						const std::string & dimension) const;
+						const std::string & dimension,
+						bool & resumed) const;
+
+				void convertDicom(
+						const tissuestack::common::ProcessingStrategy * processing_strategy,
+						const tissuestack::services::TissueStackConversionTask * converter_task,
+						bool & resumed) const;
+
+				inline const bool convertDicom0(
+						const tissuestack::common::ProcessingStrategy * processing_strategy,
+						const tissuestack::services::TissueStackConversionTask * converter_task,
+						const unsigned int dicom_index,
+						const char dicomDimension = '\0') const;
+
+				inline void reconstructSliceFromDicom(
+						const tissuestack::common::ProcessingStrategy * processing_strategy,
+						const tissuestack::services::TissueStackConversionTask * converter_task,
+						const unsigned int dicom_index,
+						const unsigned long int dicom_width,
+						const unsigned long int dicom_height,
+						const unsigned long int dicom_slices,
+						const unsigned char * dicom_data) const;
 
 				inline void iteratOverPixelsAndConvert(
 					void * in,
@@ -1028,6 +1197,9 @@ namespace tissuestack
 					const tissuestack::imaging::TissueStackDataDimension * dim,
 					unsigned char * out,
 					const unsigned long int slice_number = 0) const;
+
+				void reorientDicomSlices(
+					const tissuestack::imaging::TissueStackDicomData * dicom) const;
 
 				inline const bool hasBeenCancelledOrShutDown(
 					const tissuestack::common::ProcessingStrategy * processing_strategy,

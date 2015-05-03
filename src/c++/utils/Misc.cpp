@@ -243,3 +243,112 @@ const bool tissuestack::utils::Misc::streamGzippedDataToDescriptor(unsigned char
 
 	return true;
 }
+
+const std::vector<std::string> tissuestack::utils::Misc::getContentsOfZipArchive(const std::string & archive)
+{
+	std::vector<std::string> archiveContents;
+
+	if (!tissuestack::utils::System::fileExists(archive))
+		return archiveContents;
+
+	 int err = 0;
+	 zip * zipped_archive =
+		zip_open(archive.c_str(), 0, &err);
+	 if (zipped_archive == NULL)
+		 return archiveContents;
+
+	 uint64_t numArchFiles =
+		zip_get_num_files(zipped_archive);
+	 if (numArchFiles == 0)
+	 {
+		 zip_close(zipped_archive);
+		 return archiveContents;
+	 }
+
+	 struct zip_stat zippedFile;
+	 zip_stat_init(&zippedFile);
+
+	 for (uint64_t i=0;i<numArchFiles;i++)
+		 if (zip_stat_index(zipped_archive, i, 0, &zippedFile) == 0)
+			 archiveContents.push_back(std::string(zippedFile.name));
+
+	 zip_close(zipped_archive);
+
+	 return archiveContents;
+}
+
+const bool tissuestack::utils::Misc::extractZippedFileFromArchive(
+	const std::string & archive,
+	const std::string & file_to_be_extracted,
+	const std::string & new_file_location,
+	const bool & overwriteExistingFile)
+{
+	if (archive.empty() || file_to_be_extracted.empty() || new_file_location.empty())
+		return false;
+
+	if (tissuestack::utils::System::fileExists(new_file_location)) // destination exists
+	{
+		if (overwriteExistingFile && (unlink(new_file_location.c_str()) < 0))
+			return false; // delete was tried but failed
+		else if (!overwriteExistingFile)
+			return false;
+	}
+
+	// check if our directory path exists
+	size_t position = new_file_location.rfind("/");
+	if (position == std::string::npos)
+		return false;
+
+	const std::string destDir = new_file_location.substr(0,position);
+	if (!tissuestack::utils::System::directoryExists(destDir) && // try to create the directory
+		!tissuestack::utils::System::createDirectory(destDir, 0755))
+		return false;
+
+	// now open the archive and extract our file
+	int err = 0;
+	zip * zipped_archive =
+			zip_open(archive.c_str(), 0, &err);
+	if (zipped_archive == NULL)
+		return false;
+
+    struct zip_stat zippedFileInfo;
+    zip_stat_init(&zippedFileInfo);
+    if (zip_stat(zipped_archive, file_to_be_extracted.c_str(), 0, &zippedFileInfo) < 0)
+    {
+    	zip_close(zipped_archive);
+    	return false;
+    }
+
+    int fd = open(new_file_location.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd <= 0)
+    {
+    	zip_close(zipped_archive);
+    	return false;
+    }
+    zip_file * zippedFile = zip_fopen(zipped_archive, file_to_be_extracted.c_str(), 0);
+
+    // read in chunks
+    char buffer[1024];
+    uint64_t bytesLeft = zippedFileInfo.size;
+	int bytesRead = 0;
+    while (bytesLeft > 0)
+    {
+    	bytesRead = zip_fread(zippedFile, &buffer, 1024);
+    	if (bytesRead < 0)
+    	{
+    		close(fd);
+    		unlink(new_file_location.c_str());
+    		zip_fclose(zippedFile);
+    		zip_close(zipped_archive);
+    		return false;
+    	}
+    	bytesLeft = bytesLeft - bytesRead;
+    	write(fd, buffer, bytesRead);
+    }
+    close(fd);
+	zip_fclose(zippedFile);
+	zip_close(zipped_archive);
+
+	return true;
+}
+

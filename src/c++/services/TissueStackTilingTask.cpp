@@ -82,12 +82,17 @@ tissuestack::services::TissueStackTilingTask::TissueStackTilingTask(
 	if (dimensions.empty())
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"We habe to have at least one dimension for tiling!");
-	for (auto d : dimensions)
-		if (this->getInputImageData()->getDimensionByLongName(d) == nullptr
-			&& this->getInputImageData()->getDimension(d.at(0)) == nullptr)
-			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-				"Data Set to be tiled does not have requested dimension");
-	this->_dimensions = dimensions;
+	if (this->getInputImageData()->get2DDimension() == nullptr)
+	{
+		for (auto d : dimensions)
+			if (this->getInputImageData()->getDimensionByLongName(d) == nullptr
+				&& this->getInputImageData()->getDimension(d.at(0)) == nullptr)
+				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+					"Data Set to be tiled does not have requested dimension");
+		this->_dimensions = dimensions;
+	} else // 2D DATA
+		this->_dimensions.push_back(this->getInputImageData()->get2DDimension()->getName());
+
 	//check the zoom levels
 	if (zoom_levels.empty())
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
@@ -100,8 +105,11 @@ tissuestack::services::TissueStackTilingTask::TissueStackTilingTask(
 
 	// set total number of slices we have to work off
 	unsigned long long int totalSlices = 0;
-	for (auto d : dimensions)
-		totalSlices += this->getInputImageData()->getDimension(d.at(0))->getNumberOfSlices();
+	if (this->getInputImageData()->get2DDimension() == nullptr)
+		for (auto d : dimensions)
+			totalSlices += this->getInputImageData()->getDimension(d.at(0))->getNumberOfSlices();
+	else
+		totalSlices = this->getInputImageData()->get2DDimension()->getNumberOfSlices();
 	this->setTotalSlices(totalSlices * static_cast<unsigned long long int>(this->_zoom_levels.size()));
 }
 

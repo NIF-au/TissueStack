@@ -291,11 +291,18 @@ TissueStack.Extent.prototype = {
 		
 		if (this.worldCoordinatesTransformationMatrix) {
 			var tmpTranslatedCoords = this.getWorldCoordinatesForPixel({x:0, y:0, z:0});
+            if (!tmpTranslatedCoords)
+                return realWorldCoords;
+            
 			realWorldCoords.min_x = tmpTranslatedCoords.x;
 			realWorldCoords.max_y = tmpTranslatedCoords.y;
 			realWorldCoords.min_z = tmpTranslatedCoords.z;
+            
 			tmpTranslatedCoords = this.getWorldCoordinatesForPixel({x:this.x -1, y:this.y -1, z:this.max_slices});
-			realWorldCoords.max_x = tmpTranslatedCoords.x;
+            if (!tmpTranslatedCoords)
+                return realWorldCoords;
+
+            realWorldCoords.max_x = tmpTranslatedCoords.x;
 			realWorldCoords.min_y = tmpTranslatedCoords.y;
 			realWorldCoords.max_z = tmpTranslatedCoords.z;
 		}

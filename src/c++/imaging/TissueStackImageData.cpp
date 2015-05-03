@@ -70,7 +70,55 @@ const tissuestack::imaging::TissueStackImageData * tissuestack::imaging::TissueS
 	std::string fileNameAllUpperCase = filename;
 	std::transform(fileNameAllUpperCase.begin(), fileNameAllUpperCase.end(), fileNameAllUpperCase.begin(), toupper);
 
-	size_t position = fileNameAllUpperCase.rfind(".NII");
+	// we accept zipped dicom series or single file zips
+	size_t position = fileNameAllUpperCase.rfind(".ZIP");
+	if (position + 4 == filename.length())
+	{
+		std::vector<std::string> zippedFiles =
+			tissuestack::utils::Misc::getContentsOfZipArchive(filename);
+
+		if (zippedFiles.empty())
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+					"Supposed zip file is either empty or corrupt!");
+
+		// rough preliminary check whether the zipped contents fit into /tmp
+		// which will be used for extraction
+		const unsigned long long int spaceAvail =
+			tissuestack::utils::System::getSpaceLeftGivenPathIntoPartition("/tmp");
+		const unsigned long long int spaceNeededAtAMinimum =
+			tissuestack::utils::System::getFileSizeInBytes(filename);
+
+		if (spaceNeededAtAMinimum > spaceAvail)
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Not enough room in the partition that holds '/tmp' which is where the zip contents get extracted to!");
+
+		unsigned int counter = 0;
+		for (auto zippedFile : zippedFiles)
+		{
+			if (zippedFile.find("/") != std::string::npos)
+				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+					"We don't accept zip files which contain directories!");
+			counter++;
+		}
+
+		if (counter > 1) // a whole series of files => we'll have to assume dicom
+			return new TissueStackDicomData(filename, zippedFiles);
+
+		// this leaves the 1 file scenario:
+		// we extract to the tmp location adjusting the file name
+		// and then continue with the extension checking for initial file determination
+		if (!tissuestack::utils::Misc::extractZippedFileFromArchive(
+			filename,
+			zippedFiles[0],
+			std::string("/tmp/") + zippedFiles[0],
+			true))
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Failed to extract zip to location: '/tmp'!");
+		const_cast<std::string &>(filename) = std::string("/tmp/") + zippedFiles[0];
+		fileNameAllUpperCase = filename;
+		std::transform(fileNameAllUpperCase.begin(), fileNameAllUpperCase.end(), fileNameAllUpperCase.begin(), toupper);
+	}
+	position = fileNameAllUpperCase.rfind(".NII");
 	if (position + 4 == filename.length())
 		return new TissueStackNiftiData(filename);
 	position = fileNameAllUpperCase.rfind(".NII.GZ");
@@ -79,6 +127,12 @@ const tissuestack::imaging::TissueStackImageData * tissuestack::imaging::TissueS
 	position = fileNameAllUpperCase.rfind(".MNC");
 	if (position + 4 == filename.length())
 		return new TissueStackMincData(filename);
+	position = fileNameAllUpperCase.rfind(".DCM");
+	if (position + 4 == filename.length())
+		return new TissueStackDicomData(filename);
+	position = fileNameAllUpperCase.rfind(".IMA");
+	if (position + 4 == filename.length())
+		return new TissueStackDicomData(filename);
 
 	// if not recognized by extension, we'll assume it's raw and if not the raw constructor will tell us otherwise
 	return new tissuestack::imaging::TissueStackRawData(filename);
@@ -104,7 +158,8 @@ tissuestack::imaging::TissueStackImageData::TissueStackImageData(
 		tissuestack::imaging::FORMAT format) :
 			_file_name(filename), _format(format) {}
 
-void tissuestack::imaging::TissueStackImageData::initializeDimensions(const bool omitTransformationMatrix)
+void tissuestack::imaging::TissueStackImageData::initializeDimensions(
+		const bool omitTransformationMatrix, const bool setWidthAndHeight)
 {
 	// fallback identity matrix for missing transformation info
 	const std::string identity = this->constructIdentityMatrixForDimensionNumber();
@@ -114,7 +169,8 @@ void tissuestack::imaging::TissueStackImageData::initializeDimensions(const bool
 	// set width and height
 	for (auto dim : this->_dim_order)
 	{
-		this->setWidthAndHeightByDimension(dim);
+		if (setWidthAndHeight)
+			this->setWidthAndHeightByDimension(dim);
 		if (!omitTransformationMatrix)
 			this->setTransformationMatrixByDimension(dim);
 
@@ -170,6 +226,15 @@ void tissuestack::imaging::TissueStackImageData::setIsotropyFactors()
 void tissuestack::imaging::TissueStackImageData::initializeOffsetsForNonRawFiles()
 {
 	unsigned long long int offset = this->_header.length();
+	tissuestack::imaging::TissueStackDataDimension * d2d =
+		const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->get2DDimension());
+	if (d2d != nullptr) // 2D (single image and time series)
+	{
+		d2d->setOffSet(offset);
+		d2d->setSliceSizeFromGivenWidthAndHeight();
+		return;
+	}
+
 	for (auto dim : this->_dim_order)
 	{
 		tissuestack::imaging::TissueStackDataDimension * d =
@@ -221,37 +286,29 @@ inline void tissuestack::imaging::TissueStackImageData::setWidthAndHeightByDimen
 
 	if (dimension.at(0) == 'x')
 	{
-		if (this->getNumberOfDimensions() == 2)
-		{
-			widthDimension = nullptr;
-			heightDimension = nullptr;
-			width = presentDimension->getNumberOfSlices();
-			height = this->getDimension('y')->getNumberOfSlices();
-		} else
-		{
-			widthDimension = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('y'));
-			heightDimension = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('z'));
-		}
+		widthDimension =
+			const_cast<tissuestack::imaging::TissueStackDataDimension *>(
+				this->getDimension('y'));
+		heightDimension =
+			const_cast<tissuestack::imaging::TissueStackDataDimension *>(
+				this->getDimension('z'));
 	} else if (dimension.at(0) == 'y')
 	{
-		if (this->getNumberOfDimensions() == 2)
-		{
-			widthDimension = nullptr;
-			heightDimension = nullptr;
-			width = presentDimension->getNumberOfSlices();
-			height = this->getDimension('x')->getNumberOfSlices();
-		} else
-		{
-			widthDimension = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('x'));
-			heightDimension = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('z'));
-		}
-	} else if (dimension.at(0) == 'z')
+		widthDimension =
+			const_cast<tissuestack::imaging::TissueStackDataDimension *>(
+				this->getDimension('x'));
+		heightDimension =
+			const_cast<tissuestack::imaging::TissueStackDataDimension *>(
+				this->getDimension('z'));
+	} else if (dimension.at(0) == 'z' || dimension.at(0) == 't')
 	{
-		widthDimension = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('x'));
-		heightDimension = const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('y'));
+		widthDimension =
+			const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('x'));
+		heightDimension =
+			const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->getDimension('y'));
 	} else
 		THROW_TS_EXCEPTION(
-				tissuestack::common::TissueStackApplicationException, "Dimension cannot be matched to x,y or z!");
+				tissuestack::common::TissueStackApplicationException, "Dimension cannot be matched to x,y, z or t!");
 
 	if (widthDimension)
 	{
@@ -274,6 +331,9 @@ inline void tissuestack::imaging::TissueStackImageData::setWidthAndHeightByDimen
 					static_cast<float>(height) * heightDimension->getIsotropyFactor());
 	}
 
+	if (width == 0 || height == 0)
+		return;
+
 	presentDimension->setWidthAndHeight(
 		width, height, anisotropicWidth, anisotropicHeight);
 }
@@ -294,17 +354,19 @@ inline void tissuestack::imaging::TissueStackImageData::setTransformationMatrixB
 	{
 		tmp =
 			this->setTransformationMatrixByDimension0(
-				0, this->getIndexForPlane('y'));
+				0, this->getIndexForPlane0(
+					(this->getFormat() == tissuestack::imaging::FORMAT::DICOM ? 'z' : 'y')));
 		if (tmp.empty()) return;
 		transformationMatrix << tmp;
 		tmp =
 			this->setTransformationMatrixByDimension0(
-				1, this->getIndexForPlane('z'));
+				1, this->getIndexForPlane0(
+					(this->getFormat() == tissuestack::imaging::FORMAT::DICOM ? 'y' : 'z')));
 		if (tmp.empty()) return;
 		transformationMatrix << "," << tmp;
 		tmp =
 			this->setTransformationMatrixByDimension0(
-				2, this->getIndexForPlane('x'));
+				2, this->getIndexForPlane0('x'));
 		if (tmp.empty()) return;
 		transformationMatrix << "," << tmp;
 		transformationMatrix << "," << this->getAdjointMatrix();
@@ -312,17 +374,19 @@ inline void tissuestack::imaging::TissueStackImageData::setTransformationMatrixB
 	{
 		tmp =
 			this->setTransformationMatrixByDimension0(
-				0, this->getIndexForPlane('x'));
+				0, this->getIndexForPlane0(
+					(this->getFormat() == tissuestack::imaging::FORMAT::DICOM ? 'z' : 'x')));
 		if (tmp.empty()) return;
 		transformationMatrix << tmp;
 		tmp =
 			this->setTransformationMatrixByDimension0(
-				1, this->getIndexForPlane('z'));
+				1, this->getIndexForPlane0(
+					(this->getFormat() == tissuestack::imaging::FORMAT::DICOM ? 'x' : 'z')));
 		if (tmp.empty()) return;
 		transformationMatrix << "," << tmp;
 		tmp =
 			this->setTransformationMatrixByDimension0(
-				2, this->getIndexForPlane('y'));
+				2, this->getIndexForPlane0('y'));
 		if (tmp.empty()) return;
 		transformationMatrix << "," << tmp;
 		transformationMatrix << "," << this->getAdjointMatrix();
@@ -330,17 +394,17 @@ inline void tissuestack::imaging::TissueStackImageData::setTransformationMatrixB
 	{
 		tmp =
 			this->setTransformationMatrixByDimension0(
-				0, this->getIndexForPlane('x'));
+				0, this->getIndexForPlane0('x'));
 		if (tmp.empty()) return;
 		transformationMatrix << tmp;
 		tmp =
 			this->setTransformationMatrixByDimension0(
-				1, this->getIndexForPlane('y'));
+				1, this->getIndexForPlane0('y'));
 		if (tmp.empty()) return;
 		transformationMatrix << "," << tmp;
 		tmp =
 			this->setTransformationMatrixByDimension0(
-				2, this->getIndexForPlane('z'));
+				2, this->getIndexForPlane0('z'));
 		if (tmp.empty()) return;
 		transformationMatrix << "," << tmp;
 		transformationMatrix << "," << this->getAdjointMatrix();
@@ -400,7 +464,12 @@ inline const std::string tissuestack::imaging::TissueStackImageData::setTransfor
 	return transformationMatrix.str();
 }
 
-inline const short tissuestack::imaging::TissueStackImageData::getIndexForPlane(const char plane) const
+const short tissuestack::imaging::TissueStackImageData::getIndexForPlane(const char plane) const
+{
+	return this->getIndexForPlane0(plane);
+}
+
+inline const short tissuestack::imaging::TissueStackImageData::getIndexForPlane0(const char plane) const
 {
 	if (plane == ' ') return -1;
 
@@ -428,6 +497,15 @@ const float tissuestack::imaging::TissueStackImageData::getResolutionMm() const
 void tissuestack::imaging::TissueStackImageData::setResolutionMm(const float resolution_mm)
 {
 	this->_resolutionMm = resolution_mm;
+}
+
+
+const  tissuestack::imaging::TissueStackDataDimension * tissuestack::imaging::TissueStackImageData::get2DDimension() const
+{
+	if (this->_2dDimension == '\0')
+		return nullptr;
+
+	return this->getDimension(this->_2dDimension);
 }
 
 const tissuestack::imaging::TissueStackDataDimension * tissuestack::imaging::TissueStackImageData::getDimensionByLongName(const std::string & dimension) const
@@ -495,6 +573,9 @@ void tissuestack::imaging::TissueStackImageData::setFormat(int original_format)
 		case tissuestack::imaging::FORMAT::RAW:
 			this->_format = tissuestack::imaging::FORMAT::RAW;
 			break;
+		case tissuestack::imaging::FORMAT::DICOM:
+			this->_format = tissuestack::imaging::FORMAT::DICOM;
+			break;
 		default:
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Incompatible Original Format!");
 			break;
@@ -523,6 +604,11 @@ const bool tissuestack::imaging::TissueStackImageData::hasZeroDimensions() const
 const bool tissuestack::imaging::TissueStackImageData::hasNoAssociatedDataSets() const
 {
 	return this->_associated_data_sets.empty();
+}
+
+void tissuestack::imaging::TissueStackImageData::set2DDimension(const char dim)
+{
+	this->_2dDimension = dim;
 }
 
 void tissuestack::imaging::TissueStackImageData::clearAssociatedDataSets()
@@ -578,6 +664,7 @@ const std::string tissuestack::imaging::TissueStackImageData::toJson(
 			json << ", \"maxY\": " << std::to_string(dim->getAnisotropicHeight());
 			json << ", \"origX\": " << std::to_string(dim->getWidth());
 			json << ", \"origY\": " << std::to_string(dim->getHeight());
+			json << ", \"is2D\": " << (this->get2DDimension() != nullptr ? "true" : "false");
 			json << ", \"isTiled\": " << (this->_is_tiled ? "true" : "false");
 			json << ", \"oneToOneZoomLevel\": " << std::to_string(this->_one_to_one_zoom_level);
 			json << ", \"resolutionMm\": " << std::to_string(this->getResolutionMm());
@@ -662,7 +749,8 @@ const std::vector<float> tissuestack::imaging::TissueStackImageData::getSteps() 
 void tissuestack::imaging::TissueStackImageData::dumpDataDimensionInfoIntoDebugLog() const
 {
 	for (const std::string dim : this->_dim_order)
-		this->getDimensionByLongName(dim)->dumpDataDimensionInfoIntoDebugLog();
+		if (this->getDimensionByLongName(dim) != nullptr)
+			this->getDimensionByLongName(dim)->dumpDataDimensionInfoIntoDebugLog();
 }
 
 void tissuestack::imaging::TissueStackImageData::addAssociatedDataSet(
@@ -751,6 +839,9 @@ void tissuestack::imaging::TissueStackImageData::dumpImageDataIntoDebugLog() con
 		in << v << "\t";
 	tissuestack::logging::TissueStackLogger::instance()->debug("%s\n", in.str().c_str());
 
+	if (!this->_header.empty())
+		tissuestack::logging::TissueStackLogger::instance()->debug("Raw Header: %s", this->_header.c_str());
+
 	if (!this->isRaw()) return;
 
 	in.str("");
@@ -776,6 +867,87 @@ const std::string tissuestack::imaging::TissueStackImageData::getHeader() const
 	return this->_header;
 }
 
+void tissuestack::imaging::TissueStackImageData::detectAndCorrectFor2DData()
+{
+	if (this->_dimensions.empty())
+		return;
+
+	char twoDdim = '\0';
+	if (this->_dimensions.size() == 1) // we have converted to 2D already
+	{
+		const tissuestack::imaging::TissueStackDataDimension * onlyDim =
+				this->_dimensions.begin()->second;
+		if (onlyDim != nullptr && !onlyDim->getName().empty())
+		{
+			twoDdim = onlyDim->getName()[0];
+			this->set2DDimension(twoDdim);
+			const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->get2DDimension())->initialize2DData(
+				this->getCoordinates(), this->getSteps());
+		}
+		return;
+	}
+
+	if (this->_dimensions.size() == 2) // also 2D
+	{
+		// convention is that either the one that is one slice only, (single 2D image)
+		// or otherwise the second becomes the 2D object (time series)
+		const tissuestack::imaging::TissueStackDataDimension * d1 =
+			this->getDimensionByLongName(this->_dim_order[0]);
+		const tissuestack::imaging::TissueStackDataDimension * d2 =
+			this->getDimensionByLongName(this->_dim_order[1]);
+		if (d1->getNumberOfSlices() == 1 && d2->getNumberOfSlices() != 1)
+			twoDdim = d1->getName()[0];
+		if (twoDdim == '\0' && d2->getNumberOfSlices() == 1 && d1->getNumberOfSlices() != 1)
+			twoDdim = d2->getName()[0];
+		if (twoDdim == '\0')
+			twoDdim = d2->getName()[0];
+	} else // the 2D case when there are 3 dimension objects/name with one being time (series) or 1 slice (aka single image)
+	{
+		for (auto d : this->_dim_order)
+		{
+			if (d.compare("time") == 0)
+			{
+				twoDdim = d[0];
+				break;
+			} else if (this->getDimensionByLongName(d) != nullptr &&
+				this->getDimensionByLongName(d)->getNumberOfSlices() == 1 &&
+					!this->getDimensionByLongName(d)->getName().empty())
+				twoDdim = this->getDimensionByLongName(d)->getName()[0];
+		}
+	}
+
+	if (twoDdim == '\0') // we are not 2D
+		return;
+
+	this->set2DDimension(twoDdim);
+
+	// correction phase
+	unsigned short index = this->getIndexForPlane0(twoDdim);
+	short counter = 0;
+	for (auto d : this->_dim_order)
+	{
+		if (!d.empty() && counter != index)
+		{
+			if (this->_dimensions[d[0]] != nullptr)
+				delete this->_dimensions[d[0]];
+			this->_dimensions[d[0]] = nullptr;
+			this->_dimensions.erase(d[0]);
+		}
+		counter++;
+	}
+	if (this->getNumberOfDimensions() > 2)
+	{
+		if (index < this->_steps.size())
+			this->_steps.erase(this->_steps.begin()+index);
+		if (index < this->_coordinates.size())
+			this->_coordinates.erase(this->_coordinates.begin()+index);
+	}
+
+	// set transformation matrix and isotropy factor
+	const_cast<tissuestack::imaging::TissueStackDataDimension *>(this->get2DDimension())->initialize2DData(
+		this->getCoordinates(), this->getSteps());
+}
+
 void tissuestack::imaging::TissueStackImageData::generateRawHeader()
 {
 	const std::string headerBeginning =
@@ -789,12 +961,23 @@ void tissuestack::imaging::TissueStackImageData::generateRawHeader()
 			"Cannot generate raw header for 0 dimension image data!");
 
 	std::ostringstream header;
-
 	unsigned short i =0;
-	for (i=0; i < this->_dim_order.size();i++) // slice numbers
+
+	const tissuestack::imaging::TissueStackDataDimension * twoDdim =
+		this->get2DDimension();
+	if (twoDdim != nullptr) // 2D single images and time slices
 	{
-		header << std::to_string(this->getDimensionByOrderIndex(i)->getNumberOfSlices());
-		if (i < this->_dim_order.size()-1) header << ":";
+		header << std::to_string(twoDdim->getWidth())
+			<< ":" << std::to_string(twoDdim->getHeight());
+		if (twoDdim->getNumberOfSlices() > 1)
+			header << ":" << std::to_string(twoDdim->getNumberOfSlices());
+	} else // 3D data
+	{
+		for (i=0; i < this->_dim_order.size();i++) // slice numbers
+		{
+			header << std::to_string(this->getDimensionByOrderIndex(i)->getNumberOfSlices());
+			if (i < this->_dim_order.size()-1) header << ":";
+		}
 	}
 	header << "|";
 	i =0;
@@ -816,8 +999,16 @@ void tissuestack::imaging::TissueStackImageData::generateRawHeader()
 	i =0;
 	for (auto name : this->_dim_order) // dimension names
 	{
+		//if (this->_dim_order.size() > 2
+		//	&& !name.empty() && tolower(name[0]) == 't') // this addresses time series
+		//	break;
+		if (twoDdim != nullptr && this->getNumberOfDimensions() > 2 &&
+				twoDdim->getName().compare(name) == 0) // 2D single images and time slices)
+			continue;
+
+		if (i != 0) header << ":";
 		header << name;
-		if (i < this->_dim_order.size()-1) header << ":";
+
 		i++;
 	}
 	header << "|"; // finish off with original format

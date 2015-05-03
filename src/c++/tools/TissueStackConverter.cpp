@@ -33,6 +33,7 @@ static std::string out_file = "";
 static pid_t parent = -1;
 static std::vector<pid_t> pids = {-1,-1,-1};
 static short number_of_children_running = 0;
+static tissuestack::services::TissueStackConversionTask * conversion = nullptr;
 
 void handle_signals(int sig) {
 	switch (sig) {
@@ -52,6 +53,8 @@ void handle_signals(int sig) {
 				kill(parent, SIGINT);
 			if (!out_file.empty())
 				unlink(out_file.c_str());
+			if (conversion)
+				delete conversion;
 			exit(EXIT_FAILURE);
 		case SIGCHLD:
 			if (getpid() == parent)
@@ -153,7 +156,6 @@ int		main(int argc, char **argv)
 
 		// check out the image data first and see how many dimensions we have
 		std::vector<std::string> dimensions;
-		tissuestack::services::TissueStackConversionTask * conversion = nullptr;
 
 		try
 		{
@@ -164,6 +166,13 @@ int		main(int argc, char **argv)
 					out_file);
 		   if (conversion)
 		   {
+			   if (!conversion->hasBeenUnzipped()) // zip data will need to processed now!
+			   {
+				   std::cout <<
+						  "Input file appears to be a zip archive. Please wait until it's been unzipped (can take a while!)..." << std::endl;
+				   conversion->lazyLoadZipData();
+			   }
+
 			   dimensions = conversion->getInputImageData()->getDimensionOrder();
 			   if (dimensions.empty()) // check if we have dimensions
 			   {
@@ -189,20 +198,27 @@ int		main(int argc, char **argv)
 		}
 
 		// our strategy is that we use processes in cases where there are at least 3 cores
-		if (dimensions.size() < 3 || tissuestack::utils::System::getNumberOfCores() < 3)
+		// and for dicom which is 2D mainly and, also, dcmtk is not thread-safe
+		if (dimensions.size() < 3 ||
+			tissuestack::utils::System::getNumberOfCores() < 3 ||
+			conversion->getInputImageData()->get2DDimension() != nullptr ||
+			conversion->getInputImageData()->getFormat() == tissuestack::imaging::FORMAT::DICOM)
 		{
-			try
-		   {
-			   // delegate to the offline executor
-				OfflineExecutor->convert(conversion);
-				exit(EXIT_SUCCESS);
-		   } catch (const std::exception & any)
+			// delegate to the offline executor
+			std::string dimParam = "";
+			if (conversion->getInputImageData()->get2DDimension() != nullptr)
 			{
-				if (conversion) delete conversion;
-
-				std::cerr << "Failed to convert: " << any.what() << std::endl;
-				exit(EXIT_FAILURE);
+				dimParam = conversion->getInputImageData()->get2DDimension()->getName();
+				if (!tissuestack::utils::System::touchFile(
+								out_file, 0))
+				{
+					std::cerr << "Failed to convert: Unable to create RAW file!" << std::endl;
+					if (conversion) delete conversion;
+					exit(EXIT_FAILURE);
+				}
 			}
+			OfflineExecutor->convert(conversion, dimParam);
+			exit(EXIT_SUCCESS);
 		}
 
 		// now touch a file to be as big as we need it for the final conversion product
@@ -211,6 +227,7 @@ int		main(int argc, char **argv)
 				out_file, conversion->getFutureRawFileSize()))
 		{
 			std::cerr << "Failed to convert: Unable to touch future RAW file!" << std::endl;
+			if (conversion) delete conversion;
 			exit(EXIT_FAILURE);
 		}
 		std::cout << "Created raw file for multi-process conversion." << std::endl;
@@ -234,6 +251,10 @@ int		main(int argc, char **argv)
 
 			   try
 			   {
+				   // brief preliminary check
+				   if (!tissuestack::utils::System::fileExists(out_file))
+					   exit(EXIT_FAILURE);
+
 				   // delegate to the offline executor
 					OfflineExecutor->convert(
 						conversion,
@@ -242,8 +263,8 @@ int		main(int argc, char **argv)
 					exit(EXIT_SUCCESS);
 			   } catch (const std::exception & any)
 				{
-					std::cerr << "Failed to convert: " << any.what() << std::endl;
-					exit(EXIT_FAILURE);
+				   std::cerr << "\nConversion failed: " << any.what() << std::endl;
+				   exit(EXIT_FAILURE);
 				}
 		   }
 		}
@@ -251,9 +272,15 @@ int		main(int argc, char **argv)
 		// ONLY PARENT IS ALLOWED TO GET TO HERE !
 
 		// the periodic check whether the children have terminated or not
-		while (number_of_children_running > 0)
+		while (number_of_children_running > 0  && tissuestack::utils::System::fileExists(out_file))
 			sleep(1);
-		 std::cout << "\nConversion finished successfully." << std::endl;
+
+		if (conversion) delete conversion;
+
+		if (tissuestack::utils::System::fileExists(out_file))
+			std::cout << "\nConversion finished successfully." << std::endl;
+		else
+			std::cerr << "\nConversion aborted." << std::endl;
 	} catch (const std::exception & any)
 	{
 		std::cerr << "Failed to convert: " << any.what() << std::endl;

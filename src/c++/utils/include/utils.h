@@ -48,6 +48,8 @@
 #include <uuid/uuid.h>
 
 #include <zlib.h>
+#include <zip.h>
+#include <sys/statvfs.h>
 
 namespace tissuestack
 {
@@ -76,6 +78,8 @@ namespace tissuestack
         static const std::string generatePseudoRandomNumberAsString(const unsigned short digits);
         static const std::vector<std::string> getFilesInDirectory(const std::string & directory);
         static const bool makeSocketNonBlocking(int socket_fd);
+        static const unsigned long long int getFileSizeInBytes(const std::string & file);
+        static const unsigned long long int getSpaceLeftGivenPathIntoPartition(const std::string & path);
       private:
         System();
         System & operator=(const System&) = delete;
@@ -100,6 +104,12 @@ namespace tissuestack
     	static const std::string eraseCharacterFromString(const std::string & someString, const char unwantedCharacter);
     	static const std::string eliminateWhitespaceAndUnwantedEscapeCharacters(const std::string & someString);
     	static const bool streamGzippedDataToDescriptor(unsigned char * data, const unsigned int length, const int descriptor);
+    	static const std::vector<std::string> getContentsOfZipArchive(const std::string & archive);
+    	static const bool extractZippedFileFromArchive(
+    		const std::string & archive,
+			const std::string & file_to_be_extracted,
+			const std::string & new_file_location,
+			const bool & overwriteExistingFile = false);
       private:
     	Misc();
     	Misc & operator=(const Misc&) = delete;

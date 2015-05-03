@@ -15,14 +15,25 @@ INCLUDE			=	-Iinclude -I/usr/include/nifti \
 					-Inetworking/include -Iimaging/include \
 					-Iutils/include
 
-LIB_PATH		=
+LIB_PATH		=	-L/usr/lib64/dcmtk
 
+IS_CENTOS_OR_FEDORA	?= 0
+
+ifeq ($(IS_CENTOS_OR_FEDORA), 0)
 LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid \
-					-lminc2 -lniftiio -lm -lz -lznz
+					-lminc2 -lniftiio -ldcmdata -ldcmimgle -ldcmimage \
+					-ldcmjpls -ldcmjpeg -lijg8 -lijg12 -lijg16 \
+					-loflog -lofstd -lm -lz -lznz -lzip
+else
+LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid \
+					-lminc2 -lniftiio -ldcmdata -ldcmimgle -ldcmimage \
+					-ldcmjpls -ldcmjpeg -lijg8 -lijg12 -lijg16 -lpng \
+					-loflog -lofstd -lm -lz -lznz -lzip -lCharLS -ltiff
+endif
 
 EXE_NAME		=	TissueStackServer
 
-FLAGS			=	-Wall -Werror -ggdb -std=c++11 -std=gnu++11 -std=c++0x 
+FLAGS			=	-Wall -Werror -ggdb -std=c++11 -std=gnu++11 -std=c++0x
 
 CC				=	g++
 
@@ -75,7 +86,7 @@ compile:	$(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_DATABASE) $(OBJS_IMAGING) \
 	@$(CC) -DAPPLICATION_PATH='"$(DATA_PATH)"' $(OBJS_COMMON) $(OBJS_NETWORKING) $(OBJS_EXECUTION) $(OBJS_DATABASE) \
 							$(OBJS_SERVICES) $(OBJS_IMAGING) $(OBJS_UTILS) $(OBJS) \
 							`GraphicsMagick-config --cppflags --libs --ldflags` -o $(EXE_NAME) \
-							$(LIBS) $(FLAGS) $(INCLUDE)
+							$(LIB_PATH) $(LIBS) $(FLAGS) $(INCLUDE)
 
 compile-tools:
 	@make --no-print-directory -C tools/ compile

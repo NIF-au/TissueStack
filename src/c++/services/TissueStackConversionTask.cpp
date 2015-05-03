@@ -26,7 +26,7 @@ tissuestack::services::TissueStackConversionTask::TissueStackConversionTask(
 {
 	if (this->isInputDataRaw())
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-			"Image does not need to converted to raw any more. It's already raw!");
+			"Image does not need to be converted to raw any more. It's already raw!");
 
 	if (output_file.empty())
 	{
@@ -47,8 +47,41 @@ tissuestack::services::TissueStackConversionTask::TissueStackConversionTask(
 			this->_output_file = output_file;
 	}
 
+	if (this->getStatus() == tissuestack::services::TissueStackTaskStatus::UNZIPPING)
+		return;
+
+	this->initializeTotalSlices();
+}
+
+void tissuestack::services::TissueStackConversionTask::lazyLoadZipData()
+{
+	this->readImageData();
+	this->initializeTotalSlices();
+	this->setStatus(tissuestack::services::TissueStackTaskStatus::IN_PROCESS);
+}
+
+void tissuestack::services::TissueStackConversionTask::initializeTotalSlices()
+{
 	// set total number of slices we have to work off
 	unsigned long long int totalSlices = 0;
+	if (this->getInputImageData()->get2DDimension() != nullptr) // 2D data
+	{
+		this->setTotalSlices(this->getInputImageData()->get2DDimension()->getNumberOfSlices());
+		return;
+	}
+
+	if (this->getInputImageData()->getFormat() == tissuestack::imaging::FORMAT::DICOM)
+	{
+		const tissuestack::imaging::TissueStackDicomData * dicom =
+			static_cast<const tissuestack::imaging::TissueStackDicomData *>(this->getInputImageData());
+		// we have what we deem partial 3d. for reconstruction we set the total to the dicom file number
+		if (dicom->getPlaneIndex(1) == 0)
+		{
+			this->setTotalSlices(dicom->getNumberOfFiles(0));
+			return;
+		}
+	}
+
 	for (auto d : this->getInputImageData()->getDimensionOrder())
 		totalSlices += this->getInputImageData()->getDimension(d.at(0))->getNumberOfSlices();
 	this->setTotalSlices(totalSlices);

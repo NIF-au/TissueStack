@@ -302,11 +302,16 @@ TissueStack.Admin.prototype = {
 			if (slashPos > 0)
 				filename = filename.substring(slashPos+1);
 	
-			if (filename.lastIndexOf(".mnc") < 0 &&
-				filename.lastIndexOf(".nii") < 0 &&
-				filename.lastIndexOf(".nii.gz") < 0 &&
-				filename.lastIndexOf(".raw") < 0) {				
-				errorHandling2("Error: Uploaded file needs to be of the following type: .mnc, .nii, .nii.gz or .raw!");
+			var lowerCaseFileName = filename.toLowerCase();
+	
+			if (lowerCaseFileName.lastIndexOf(".mnc") < 0 &&
+				lowerCaseFileName.lastIndexOf(".nii") < 0 &&
+				lowerCaseFileName.lastIndexOf(".nii.gz") < 0 &&
+				lowerCaseFileName.lastIndexOf(".dcm") < 0 &&
+				lowerCaseFileName.lastIndexOf(".ima") < 0 &&
+				lowerCaseFileName.lastIndexOf(".zip") < 0 &&
+				lowerCaseFileName.lastIndexOf(".raw") < 0) {				
+				errorHandling2("Error: Uploaded file needs to be of the following type: .mnc, .nii, .nii.gz, .dcm, .ima, .zip or .raw!");
 				return false;	
 			}
 				
@@ -888,7 +893,7 @@ TissueStack.Admin.prototype = {
 					$('#task_status_' + id).html(TissueStack.Tasks.getStatusAsString(TissueStack.tasks[id].status));
 
 					if (!(TissueStack.tasks[id].status == 0 || TissueStack.tasks[id].status == 1
-							|| TissueStack.tasks[id].status == 2)) {
+							|| TissueStack.tasks[id].status == 2 || TissueStack.tasks[id].status == 5)) {
 						// we are not queued or running or recently finished
 						// disable cancel
 						$('#cancel_' + id).addClass('ui-disabled');

@@ -76,6 +76,7 @@ TissueStack.ComponentFactory = {
         if (typeof(addScaleBar) !== 'boolean')
             addScaleBar = false;
 
+        var is2D = TissueStack.ComponentFactory.is2Ddata(dataSet.data);
 		// loop over all planes in the data, create canvas and extent objects, then display them
 		for (var i=0; i < dataSet.data.length; i++) {
 			var dataForPlane = dataSet.data[i];
@@ -83,7 +84,7 @@ TissueStack.ComponentFactory = {
 			
 			var zoomLevels = eval(dataForPlane.zoomLevels);
 			transformationMatrix = eval(dataForPlane.transformationMatrix);
-			
+            
 			// create extent
 			var extent = 
 				new TissueStack.Extent(
@@ -107,9 +108,11 @@ TissueStack.ComponentFactory = {
 					"canvas_" + planeId + "_plane",
 					div,
 					includeCrossHair);
+            if (is2D)
+                plane.flag2D();
 
 			// for scalebar to know its parent
-			if (i == 0) plane.is_main_view = true;
+			if (i == 0 || is2D) plane.is_main_view = true;
 			if (plane.is_main_view && addScaleBar) plane.updateScaleBar();
 			
             // set the internal db id
@@ -146,9 +149,12 @@ TissueStack.ComponentFactory = {
 			plane.updateExtentInfo(dataSet.realWorldCoords[planeId]);
 
 			// if we have more than 1 plane => show y as the main plane and make x and z the small views
-			if (i != 0) {
+			if (i != 0 && !is2D) {
 				plane.changeToZoomLevel(0);
-			} 
+			}
+            
+            if (is2D)
+                break;
 		}
 	},
     resizeDataSetWidget : function(parent, div) {
@@ -208,10 +214,17 @@ TissueStack.ComponentFactory = {
         if (typeof(addScaleBar) !== 'boolean')
             addScaleBar = false;
 
+        var is2D = TissueStack.ComponentFactory.is2Ddata(dataSet.data);
+        
 		// loop over all planes in the data
 		for (var i=0; i < dataSet.data.length; i++) {
 			var planeId = dataSet.data[i].name;
-			
+            
+            if (is2D && i > 0) {
+                 alert("ComponentFactory::createDataSetWidget => More than 1 dim data for 2D!");
+                 break;
+            }
+                              
 			switch(i) {
 				case 0:
 					html +=
@@ -381,14 +394,14 @@ TissueStack.ComponentFactory = {
 					}
                 
                     if (!dataSet.planes[id]) {
-                        $(this).attr("min", 0);
-                        $(this).attr("max", 0);
-                        $(this).attr("value", 0);
+                        $(div).attr("min", 0);
+                        $(div).attr("max", 0);
+                        $(div).attr("value", 0);
                         return;
                     }
             
-                    $(this).attr("min", 0);
-                    $(this).attr("max", dataSet.planes[id].data_extent.max_slices);
+                    $(div).attr("min", 0);
+                    $(div).attr("max", dataSet.planes[id].data_extent.max_slices);
                 
                      try {
                             $(div).slider();
@@ -626,9 +639,9 @@ TissueStack.ComponentFactory = {
             timeout = 0;
         
         // this is an adjustment for 2D data (3 dims with one having 1 slice only)
-        var twoDplane = TissueStack.ComponentFactory.is2Ddata(dataSet.data);
-        if (twoDplane != null)
-        	plane_id = twoDplane;
+        var is2D = TissueStack.ComponentFactory.is2Ddata(dataSet.data);
+        if (is2D)
+            plane_id = dataSet.data[0].name;
         
         if (!TissueStack.phone)
             TissueStack.ComponentFactory.swapWithMainCanvas(dataSet.planes[plane_id].dataset_id, dataSet, plane_id);
@@ -636,9 +649,9 @@ TissueStack.ComponentFactory = {
         var plane = dataSet.planes[plane_id];
 
         setTimeout(function() {
-            if (twoDplane != null)
+            if (is2D)
         		for (var p in dataSet.planes)
-        			if (p != twoDplane &&
+        			if (p != plane_id &&
         				!(TissueStack.overlay_datasets && TissueStack.dataSetNavigation.selectedDataSets.count > 1))
         				dataSet.planes[p].hideCanvas();
         
@@ -915,19 +928,14 @@ TissueStack.ComponentFactory = {
 		$(".overlay_swapper").bind("click", handler);
     }, is2Ddata : function(planes) {
         if (typeof(planes) != 'object')
-            return null;
+            return false;
         
-        if (!planes.length)
-            return null;
+        if (!planes.length || planes.length > 1)
+            return false;
         
-        var len = planes.length;
-        if (len == 1)
-            return planes[0].name;
+        if (typeof(planes[0].is2D) === 'boolean')
+            return planes[0].is2D;
         
-        for (var i=0; i< len; i++)
-            if (planes[i].maxSlices == 0)
-                return planes[i].name;
-
-        return null;
+        return false;
     }
 };
