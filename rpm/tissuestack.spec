@@ -2,7 +2,7 @@
 %global debug_package %{nil}
 %global __os_install_post /usr/lib/rpm/brp-compress %{nil}
 Name:		tissuestack
-Version:	1.9
+Version:	2.0
 Release:	0%{?dist}
 Summary:	The TissueStack Application
 
@@ -42,8 +42,6 @@ chmod 666 /tmp/pre-install.log
 service httpd stop  &>> /tmp/uninstall.log
 #clean directories that don't contain user data
 rm -rf /opt/tissuestack/web/* &>> /tmp/pre-install.log
-rm -rf /opt/tissuestack/jdk1.6.0_25 &>> /tmp/pre-install.log
-rm -rf /opt/tissuestack/apache-tomcat-7.0.35 &>> /tmp/pre-install.log
 rm -rf /opt/tissuestack/sql &>> /tmp/pre-install.log
 rm -rf /opt/tissuestack/conf &>> /tmp/pre-install.log
 exit 0
