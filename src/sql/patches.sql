@@ -1,5 +1,5 @@
 -- update version 
-UPDATE configuration SET value='1.9' WHERE name='version';
+UPDATE configuration SET value='2.0' WHERE name='version';
 -- remove wrong constraints
 ALTER TABLE dataset DROP CONSTRAINT dataset_lookup_id_fkey;
 ALTER TABLE dataset DROP CONSTRAINT dataset_lookup_fk;

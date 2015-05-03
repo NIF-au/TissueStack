@@ -48,7 +48,7 @@ OBJS			=	$(SRCS:%.cpp=%.o)
 
 # important configuration variables with defaults
 export APP_NAME		=	tissuestack
-export VERSION	=	1.9
+export VERSION	=	2.0
 export APPLICATION_PATH ?= /usr/local/$(APP_NAME)
 export DATA_PATH ?= /opt/$(APP_NAME)
 # the application path including the version
