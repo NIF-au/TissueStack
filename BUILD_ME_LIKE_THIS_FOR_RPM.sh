@@ -35,7 +35,7 @@ fi;
 IS_FEDORA=`cat /etc/*-release | grep -i "fedora"| wc -c`
 IS_CENTOS=`cat /etc/*-release | grep -i "centos"| wc -c`
 
-if [ $IS_CENTOS -ne 0 || $IS_FEDORA -ne 0 ]; then
+if [ $IS_CENTOS -ne 0 ] || [ $IS_FEDORA -ne 0 ]; then
 	export IS_CENTOS_OR_FEDORA=1
 fi
 
