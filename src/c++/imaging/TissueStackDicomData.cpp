@@ -46,7 +46,10 @@ void tissuestack::imaging::TissueStackDicomData::addDicomFile(const std::string 
 
 	if (withinZippedArchive)
 	{
-		potentialDicomFile = std::string("/tmp/") + potentialDicomFile;
+		const std::string tmpDir =
+			tissuestack::imaging::TissueStackImageData::assembleTemporaryDirectoryForZipFiles(this->getFileName());
+
+		potentialDicomFile = tmpDir + "/" + potentialDicomFile;
 		if (!tissuestack::utils::Misc::extractZippedFileFromArchive(
 			this->getFileName(), file, potentialDicomFile, true))
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
@@ -521,6 +524,16 @@ tissuestack::imaging::TissueStackDicomData::~TissueStackDicomData()
 	for (auto dicom : this->_dicom_files)
 		if (dicom != nullptr)
 			delete dicom;
+
+	std::string fileNameAllUpperCase = this->getFileName();
+	std::transform(fileNameAllUpperCase.begin(), fileNameAllUpperCase.end(), fileNameAllUpperCase.begin(), toupper);
+
+	if (fileNameAllUpperCase.rfind(".ZIP") != std::string::npos)
+	{
+		const std::string tmpDir =
+			tissuestack::imaging::TissueStackImageData::assembleTemporaryDirectoryForZipFiles(this->getFileName());
+		rmdir(tmpDir.c_str());
+	}
 }
 
 const unsigned long int tissuestack::imaging::TissueStackDicomData::getNumberOfFiles(const unsigned short dimension_index) const

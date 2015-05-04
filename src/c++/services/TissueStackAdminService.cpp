@@ -156,8 +156,9 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadRe
 	const tissuestack::networking::TissueStackServicesRequest * request,
 	int socketDescriptor)
 {
-	if (!tissuestack::utils::System::directoryExists(UPLOAD_PATH) &&
-			!tissuestack::utils::System::createDirectory(UPLOAD_PATH, 0755))
+	const std::string dir = tissuestack::services::TissueStackAdminService::getUploadDirectory();
+	if (!tissuestack::utils::System::directoryExists(dir) &&
+			!tissuestack::utils::System::createDirectory(dir, 0755))
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"Could not create upload directory!");
 
@@ -231,7 +232,7 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadRe
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackFileUploadException,
 		"Uploaded file needs to be of the following type: .mnc, .nii, .nii.gz, .ima, .dcm, .zip or .raw!");
 
-	if (tissuestack::utils::System::fileExists(std::string(UPLOAD_PATH) + "/" + fileName))
+	if (tissuestack::utils::System::fileExists(std::string(dir) + "/" + fileName))
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackFileUploadException,
 		"File already exists in the upload folder!");
 
@@ -262,8 +263,8 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadRe
 		boundaryLength))
 	{
 		// we have been cancelled, delete the incomplete file
-		unlink((std::string(UPLOAD_PATH) + "/" + fileName).c_str());
-		unlink((std::string(UPLOAD_PATH) + "/." + fileName + ".upload").c_str());
+		unlink((dir + "/" + fileName).c_str());
+		unlink((dir + "/." + fileName + ".upload").c_str());
 		return "{ \"response\": \"Upload of file '" + fileName + "' cancelled!\"}";
 	};
 
@@ -273,8 +274,9 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadRe
 int tissuestack::services::TissueStackAdminService::createUploadFiles(
 	const std::string file_name, const unsigned long long int supposedFileSize)
 {
+	const std::string dir = tissuestack::services::TissueStackAdminService::getUploadDirectory();
 	int fd =
-		open((std::string(UPLOAD_PATH) + "/." + file_name + ".upload" ).c_str(),
+		open((dir + "/." + file_name + ".upload" ).c_str(),
 		O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	if (fd <= 0)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
@@ -286,7 +288,7 @@ int tissuestack::services::TissueStackAdminService::createUploadFiles(
 	close(fd);
 
 	fd =
-		open((std::string(UPLOAD_PATH) + "/" + file_name).c_str(),
+		open((dir + "/" + file_name).c_str(),
 		O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	if (fd <= 0)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
@@ -396,14 +398,14 @@ const std::string tissuestack::services::TissueStackAdminService::handleDataSetA
 	const std::string description = request->getRequestParameter("DESCRIPTION");
 
 	const size_t pos = fileName.find_last_of("/");
-	std::string finalDestination = DATASET_PATH;
+	std::string finalDestination = tissuestack::imaging::TissueStackDataSetStore::getDataSetStoreDirectory();
 	std::string absoluteFileName = fileName;
 	if (pos != std::string::npos)
 		finalDestination += ("/" + fileName.substr(pos+1));
 	else
 	{
 		finalDestination += ("/" + fileName);
-		absoluteFileName = std::string(UPLOAD_PATH) + "/" + fileName;
+		absoluteFileName = tissuestack::services::TissueStackAdminService::getUploadDirectory() + "/" + fileName;
 	}
 
 	// check for existing file in data directory
@@ -488,8 +490,8 @@ const std::string tissuestack::services::TissueStackAdminService::handleFileExis
 	std::string file = request->getRequestParameter("FILE");
 
 	// we only allow this to happen in the upload and data directory
-	if ((file.find(UPLOAD_PATH) == std::string::npos &&
-			file.find(DATASET_PATH) == std::string::npos) ||
+	if ((file.find(tissuestack::services::TissueStackAdminService::getUploadDirectory()) == std::string::npos &&
+			file.find(tissuestack::imaging::TissueStackDataSetStore::getDataSetStoreDirectory()) == std::string::npos) ||
 			file.find("..") != std::string::npos)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 			"Only files in the data and upload directory are allowed to be queried!");
@@ -506,8 +508,8 @@ const std::string tissuestack::services::TissueStackAdminService::handleFileDele
 	std::string file = request->getRequestParameter("FILE");
 
 	// we only allow this to happen in the upload and data directory
-	if ((file.find(UPLOAD_PATH) == std::string::npos &&
-			file.find(DATASET_PATH) == std::string::npos) ||
+	if ((file.find(tissuestack::services::TissueStackAdminService::getUploadDirectory()) == std::string::npos &&
+			file.find(tissuestack::imaging::TissueStackDataSetStore::getDataSetStoreDirectory()) == std::string::npos) ||
 			file.find("..") != std::string::npos)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 			"Only files in the data and upload directory are allowed to be deleted!");
@@ -529,8 +531,9 @@ const std::string tissuestack::services::TissueStackAdminService::handleFileRena
 	std::string new_file = request->getRequestParameter("NEW_FILE");
 
 	// we only allow this to happen in the upload directory
-	if (file.find(UPLOAD_PATH) == std::string::npos ||
-			new_file.find(UPLOAD_PATH) == std::string::npos ||
+	const std::string dir = tissuestack::services::TissueStackAdminService::getUploadDirectory();
+	if (file.find(dir) == std::string::npos ||
+			new_file.find(dir) == std::string::npos ||
 			file.find("..") != std::string::npos)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 			"Only files in the upload directory are allowed to be renamed!");
@@ -569,8 +572,9 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadDi
 
 	std::vector<std::string> results;
 
+	const std::string dir = tissuestack::services::TissueStackAdminService::getUploadDirectory();
 	const std::vector<std::string> filesInUploadDirectory =
-		tissuestack::utils::System::getFilesInDirectory(UPLOAD_PATH);
+		tissuestack::utils::System::getFilesInDirectory(dir);
 
 	for (auto f : filesInUploadDirectory)
 	{
@@ -610,7 +614,7 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadDi
 			continue;
 
 		// if we have a file in upload progress => don't show it
-		if (tissuestack::utils::System::fileExists(std::string(UPLOAD_PATH) + "/." + tmp + ".upload"))
+		if (tissuestack::utils::System::fileExists(std::string(dir) + "/." + tmp + ".upload"))
 			continue;
 
 		results.push_back(tmp);
@@ -673,8 +677,9 @@ const std::string tissuestack::services::TissueStackAdminService::handleDataSetR
 const std::string tissuestack::services::TissueStackAdminService::handleUploadProgressRequest(
 	const tissuestack::networking::TissueStackServicesRequest * request) const
 {
-	if (!tissuestack::utils::System::directoryExists(UPLOAD_PATH) &&
-			!tissuestack::utils::System::createDirectory(UPLOAD_PATH, 0755))
+	const std::string dir = tissuestack::services::TissueStackAdminService::getUploadDirectory();
+	if (!tissuestack::utils::System::directoryExists(dir) &&
+			!tissuestack::utils::System::createDirectory(dir, 0755))
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"Could not create upload directory!");
 
@@ -683,7 +688,7 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadPr
 	int fd = -1;
 	{
 		fd =
-			open((std::string(UPLOAD_PATH) + "/." + filename + ".upload" ).c_str(),
+			open((std::string(dir) + "/." + filename + ".upload" ).c_str(),
 			O_RDONLY);
 		if (fd <= 0)
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackFileUploadException,
@@ -712,7 +717,7 @@ const std::string tissuestack::services::TissueStackAdminService::handleUploadPr
 	// we are finished
 	if (tokens[0].compare(tokens[1]) == 0)
 	{
-		unlink((std::string(UPLOAD_PATH) + "/." + filename + ".upload").c_str());
+		unlink((std::string(dir) + "/." + filename + ".upload").c_str());
 		fProgress = 100;
 	} else
 		fProgress =
@@ -735,7 +740,7 @@ const std::string tissuestack::services::TissueStackAdminService::handleProgress
 	if (hit == nullptr)
 	{
 		// check if we happen to be finished, cancelled or erroneous
-		const std::string pathToFile = std::string(TASKS_PATH) + "/" + task_id;
+		const std::string pathToFile = tissuestack::services::TissueStackTaskQueue::getTasksDirectory() + "/" + task_id;
 
 		if (tissuestack::utils::System::fileExists(pathToFile + ".done"))
 			return
@@ -779,7 +784,7 @@ inline void tissuestack::services::TissueStackAdminService::writeUploadProgress(
 {
 	{
 		int fd =
-			open((std::string(UPLOAD_PATH) + "/." + filename + ".upload" ).c_str(),
+			open((tissuestack::services::TissueStackAdminService::getUploadDirectory() + "/." + filename + ".upload" ).c_str(),
 			O_WRONLY | O_CREAT | O_TRUNC, 0644);
 		if (fd <= 0)
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
@@ -811,4 +816,14 @@ inline const std::string tissuestack::services::TissueStackAdminService::readHea
 	endOfHeader = posEnd;
 
 	return httpMessage.substr(pos, posEnd-pos);
+}
+
+const std::string tissuestack::services::TissueStackAdminService::getUploadDirectory()
+{
+	std::string dir =
+		tissuestack::database::ConfigurationDataProvider::findSpecificApplicationDirectory("upload_directory");
+	if (dir.empty())
+		dir = UPLOAD_PATH;
+
+	return dir;
 }

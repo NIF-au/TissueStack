@@ -20,12 +20,13 @@
 
 tissuestack::imaging::TissueStackDataSetStore::TissueStackDataSetStore()
 {
-	if (!tissuestack::utils::System::directoryExists(DATASET_PATH) &&
-		!tissuestack::utils::System::createDirectory(DATASET_PATH, 0755))
+	const std::string dir = tissuestack::imaging::TissueStackDataSetStore::getDataSetStoreDirectory();
+	if (!tissuestack::utils::System::directoryExists(dir) &&
+		!tissuestack::utils::System::createDirectory(dir, 0755))
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Could not create data store directory!");
 
-	const std::vector<std::string> fileList = tissuestack::utils::System::getFilesInDirectory(DATASET_PATH);
+	const std::vector<std::string> fileList = tissuestack::utils::System::getFilesInDirectory(dir);
 	for (std::string f : fileList)
 	{
 		std::string fAllUpperCase = f;
@@ -70,8 +71,32 @@ void tissuestack::imaging::TissueStackDataSetStore::integrateDataBaseResultsInto
 	for (unsigned int i=0;i<dataSets.size();i++)
 	{
 		const tissuestack::imaging::TissueStackImageData * rec = dataSets[i];
-		const tissuestack::imaging::TissueStackDataSet * foundDataSet =
-			tissuestack::imaging::TissueStackDataSetStore::instance()->findDataSet(rec->getFileName());
+
+		tissuestack::imaging::TissueStackDataSet * foundDataSet =
+			const_cast<tissuestack::imaging::TissueStackDataSet *>(
+				tissuestack::imaging::TissueStackDataSetStore::instance()->findDataSet(rec->getFileName()));
+
+		// double check if the referenced file is not raw, this could happen if the data directory was changed
+		// but the database record points to an old location
+		if (foundDataSet == nullptr)
+		{
+			try
+			{
+				const tissuestack::imaging::TissueStackImageData * testFileLocation =
+						tissuestack::imaging::TissueStackImageData::fromFile(rec->getFileName());
+				if (testFileLocation != nullptr && testFileLocation->isRaw())
+				{
+					const tissuestack::imaging::TissueStackDataSet * testDataSet =
+						tissuestack::imaging::TissueStackDataSet::fromTissueStackImageData(testFileLocation);
+					tissuestack::imaging::TissueStackDataSetStore::instance()->addDataSet(testDataSet);
+					foundDataSet =
+						const_cast<tissuestack::imaging::TissueStackDataSet *>(testDataSet);
+				}
+			} catch (std::exception & any) {
+				// ignore
+			}
+		}
+
 		if (foundDataSet)
 		{
 			const_cast<tissuestack::imaging::TissueStackImageData *>(foundDataSet->getImageData())->setMembersFromDataBaseInformation(
@@ -93,10 +118,12 @@ void tissuestack::imaging::TissueStackDataSetStore::integrateDataBaseResultsInto
 		// we have a data set that solely exists in the data base, i.e. has no corresponding physical raw file
 		// let's query all of its info and then add it to the data set store
 		foundDataSet = // check whether we have already queried it once and added it to the memory store
-			tissuestack::imaging::TissueStackDataSetStore::instance()->findDataSetByDataBaseId(rec->getDataBaseId());
+			const_cast<tissuestack::imaging::TissueStackDataSet *>(
+				tissuestack::imaging::TissueStackDataSetStore::instance()->findDataSetByDataBaseId(rec->getDataBaseId()));
 		if (foundDataSet == nullptr) // we did not: fetch the records
 			foundDataSet =
-				tissuestack::imaging::TissueStackDataSet::fromDataBaseRecordWithId(rec->getDataBaseId(), true);
+				const_cast<tissuestack::imaging::TissueStackDataSet *>(
+						tissuestack::imaging::TissueStackDataSet::fromDataBaseRecordWithId(rec->getDataBaseId(), true));
 		if (foundDataSet == nullptr)
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Data Set Record Missing!");
@@ -219,6 +246,16 @@ const std::vector<const tissuestack::imaging::TissueStackRawData *> tissuestack:
 			list.push_back(static_cast<const tissuestack::imaging::TissueStackRawData *>(entry.second->getImageData()));
 
 	return list;
+}
+
+const std::string tissuestack::imaging::TissueStackDataSetStore::getDataSetStoreDirectory()
+{
+	std::string dir =
+		tissuestack::database::ConfigurationDataProvider::findSpecificApplicationDirectory("data_directory");
+	if (dir.empty())
+		dir = DATASET_PATH;
+
+	return dir;
 }
 
 tissuestack::imaging::TissueStackDataSetStore * tissuestack::imaging::TissueStackDataSetStore::_instance = nullptr;

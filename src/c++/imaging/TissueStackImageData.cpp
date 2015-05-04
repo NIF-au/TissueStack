@@ -74,6 +74,14 @@ const tissuestack::imaging::TissueStackImageData * tissuestack::imaging::TissueS
 	size_t position = fileNameAllUpperCase.rfind(".ZIP");
 	if (position + 4 == filename.length())
 	{
+		const std::string tmpDir =
+			tissuestack::imaging::TissueStackImageData::assembleTemporaryDirectoryForZipFiles(filename);
+
+		if (!tissuestack::utils::System::directoryExists(tmpDir) &&
+				!tissuestack::utils::System::createDirectory(tmpDir, 0775))
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Unable to create temporary file for zip extraction!");
+
 		std::vector<std::string> zippedFiles =
 			tissuestack::utils::Misc::getContentsOfZipArchive(filename);
 
@@ -84,7 +92,7 @@ const tissuestack::imaging::TissueStackImageData * tissuestack::imaging::TissueS
 		// rough preliminary check whether the zipped contents fit into /tmp
 		// which will be used for extraction
 		const unsigned long long int spaceAvail =
-			tissuestack::utils::System::getSpaceLeftGivenPathIntoPartition("/tmp");
+			tissuestack::utils::System::getSpaceLeftGivenPathIntoPartition(tmpDir);
 		const unsigned long long int spaceNeededAtAMinimum =
 			tissuestack::utils::System::getFileSizeInBytes(filename);
 
@@ -107,14 +115,14 @@ const tissuestack::imaging::TissueStackImageData * tissuestack::imaging::TissueS
 		// this leaves the 1 file scenario:
 		// we extract to the tmp location adjusting the file name
 		// and then continue with the extension checking for initial file determination
+		const_cast<std::string &>(filename) = tmpDir + "/" + zippedFiles[0];
 		if (!tissuestack::utils::Misc::extractZippedFileFromArchive(
 			filename,
 			zippedFiles[0],
-			std::string("/tmp/") + zippedFiles[0],
+			filename,
 			true))
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Failed to extract zip to location: '/tmp'!");
-		const_cast<std::string &>(filename) = std::string("/tmp/") + zippedFiles[0];
 		fileNameAllUpperCase = filename;
 		std::transform(fileNameAllUpperCase.begin(), fileNameAllUpperCase.end(), fileNameAllUpperCase.begin(), toupper);
 	}
@@ -1020,4 +1028,16 @@ void tissuestack::imaging::TissueStackImageData::generateRawHeader()
 	this->_header = headerBeginning +
 		std::to_string(headerString.length()) +
 		"|" + headerString;
+}
+
+const std::string tissuestack::imaging::TissueStackImageData::assembleTemporaryDirectoryForZipFiles(const std::string zip_file)
+{
+	std::string zipFileNameStrippedOfPath = zip_file;
+	size_t firstSlashFromTheRight = zip_file.rfind("/");
+	if (firstSlashFromTheRight != std::string::npos)
+		zipFileNameStrippedOfPath = zipFileNameStrippedOfPath.substr(firstSlashFromTheRight);
+
+	return
+		tissuestack::database::ConfigurationDataProvider::getTemporaryDirectory() +
+		"/" + zipFileNameStrippedOfPath;
 }

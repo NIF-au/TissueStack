@@ -30,5 +30,6 @@
 #define LABEL_LOOKUP_PATH CONCAT_APP_PATH("lookup")
 #define TASKS_PATH CONCAT_APP_PATH("tasks")
 #define UPLOAD_PATH CONCAT_APP_PATH("upload")
+#define TISSUESTACK_TMP_DIR "/tmp"
 
 #endif	/* __GLOBALS_H__ */

@@ -102,6 +102,8 @@ namespace tissuestack
 				static const std::vector<const Configuration *> queryAllConfigurations();
 				static const bool persistConfiguration(const Configuration * conf);
 				static const bool updateConfiguration(const Configuration * conf);
+				static const std::string findSpecificApplicationDirectory(const std::string which);
+				static const std::string getTemporaryDirectory();
 			private:
 				static inline Configuration * readResult(pqxx::result::const_iterator result);
 		};

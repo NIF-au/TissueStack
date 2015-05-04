@@ -8,10 +8,11 @@ INSERT INTO configuration VALUES('server_proxy_path', 'server', 'server proxy pa
 INSERT INTO configuration VALUES('tile_directory', 'tiles', 'tile directory (relative to the application''s web root directory)');
 INSERT INTO configuration VALUES('server_tile_directory', '/opt/tissuestack/tiles', 'server side tile directory for pre-tiling');
 INSERT INTO configuration VALUES('upload_directory', '/opt/tissuestack/upload', 'upload directory (absolute system path on server)');
-INSERT INTO configuration VALUES('lookup_tables_directory', '/opt/tissuestack/lookup', 'directory that houses the lookup table files (absolute system path on server)');
+INSERT INTO configuration VALUES('lookup_directory', '/opt/tissuestack/lookup', 'directory that houses the lookup table files (absolute system path on server)');
 INSERT INTO configuration VALUES('colormaps_directory', '/opt/tissuestack/colormaps', 'directory that houses the color map files (absolute system path on server)');
-INSERT INTO configuration VALUES('tasks_queue_file', '/opt/tissuestack/tasks/general', 'task queue file (absolute system path on server)');
+INSERT INTO configuration VALUES('tasks_directory', '/opt/tissuestack/tasks/general', 'directory that houses task queue files (absolute system path on server)');
 INSERT INTO configuration VALUES('data_directory', '/opt/tissuestack/data', 'data directory (absolute system path on server)');
+INSERT INTO configuration VALUES('temp_directory', '/tmp', 'temporary directory (absolute system path on server)');
 INSERT INTO configuration VALUES('ands_dataset_xml', '/opt/tissuestack/ands/datasets.xml', 'ands data set xml');
 INSERT INTO configuration VALUES('max_upload_size', '10000000000', 'the maximum number of bytes allowed to upload in one go');
 INSERT INTO configuration VALUES('default_drawing_interval', '250', 'default drawing interval');
@@ -45,3 +46,4 @@ INSERT INTO configuration VALUES('color_maps',
 				   [0.95, 0.8, 0, 0],
 				   [1, 0.8, 0.8, 0.8]]
 		}', 'default color mapping: grey, hot and spectral');
+

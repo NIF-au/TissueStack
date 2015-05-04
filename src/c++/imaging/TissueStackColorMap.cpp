@@ -261,8 +261,9 @@ void tissuestack::imaging::TissueStackColorMap::marshallLookupFileContentsIntoJs
 
 const std::string tissuestack::imaging::TissueStackColorMap::getColorMapId() const
 {
-	if (this->_colormap_id.find(COLORMAP_PATH) == 0)
-		return this->_colormap_id.substr(strlen(COLORMAP_PATH) + 1);
+	const std::string dir = tissuestack::imaging::TissueStackColorMapStore::getColorMapDirectory();
+	if (this->_colormap_id.find(dir) == 0)
+		return this->_colormap_id.substr(dir.length() + 1);
 
 	return this->_colormap_id;
 }

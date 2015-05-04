@@ -16,6 +16,7 @@
  */
 #include "networking.h"
 #include "imaging.h"
+#include "database.h"
 
 tissuestack::imaging::TissueStackColorMapStore::TissueStackColorMapStore()
 {
@@ -91,12 +92,13 @@ const bool tissuestack::imaging::TissueStackColorMapStore::doesInstanceExist()
 
 void tissuestack::imaging::TissueStackColorMapStore::updateColorMapStore(bool initial)
 {
-	if (!tissuestack::utils::System::directoryExists(COLORMAP_PATH) &&
-		!tissuestack::utils::System::createDirectory(COLORMAP_PATH, 0755))
+	const std::string dir = tissuestack::imaging::TissueStackColorMapStore::getColorMapDirectory();
+	if (!tissuestack::utils::System::directoryExists(dir) &&
+		!tissuestack::utils::System::createDirectory(dir, 0755))
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Could not create color map directory!");
 
-	const std::vector<std::string> fileList = tissuestack::utils::System::getFilesInDirectory(COLORMAP_PATH);
+	const std::vector<std::string> fileList = tissuestack::utils::System::getFilesInDirectory(dir);
 	for (std::string f : fileList)
 	{
 		try
@@ -234,6 +236,16 @@ void tissuestack::imaging::TissueStackColorMapStore::dumpAllColorMapsToDebugLog(
 {
 	for (auto entry = this->_color_maps.begin(); entry != this->_color_maps.end(); ++entry)
 		entry->second->dumpColorMapToDebugLog();
+}
+
+const std::string tissuestack::imaging::TissueStackColorMapStore::getColorMapDirectory()
+{
+	std::string dir =
+		tissuestack::database::ConfigurationDataProvider::findSpecificApplicationDirectory("colormaps_directory");
+	if (dir.empty())
+		dir = COLORMAP_PATH;
+
+	return dir;
 }
 
 tissuestack::imaging::TissueStackColorMapStore * tissuestack::imaging::TissueStackColorMapStore::_instance = nullptr;

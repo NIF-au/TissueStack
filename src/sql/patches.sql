@@ -47,6 +47,8 @@ UPDATE configuration SET value='[0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.2
 ALTER TABLE dataset ADD COLUMN value_range_min numeric(18,5) NOT NULL DEFAULT 0;
 ALTER TABLE dataset ADD COLUMN value_range_max numeric(18,5) NOT NULL DEFAULT 255;
 ALTER TABLE dataset_planes ADD COLUMN step NUMERIC(18,10) NOT NULL DEFAULT 1;
+DELETE FROM configuration WHERE name='tasks_queue_file';
+DELETE FROM configuration WHERE name='lookup_tables_directory';
 -- copy resolutions if there 
 --UPDATE dataset SET resolution_mm = res
 --FROM (SELECT dataset_id, min(resolution_mm) AS res FROM dataset_planes group by dataset_id) AS sub_planes

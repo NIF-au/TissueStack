@@ -218,8 +218,9 @@ const std::string tissuestack::imaging::TissueStackLabelLookup::getLabelLookupId
 {
 	if (fullPath) return this->_labellookup_id;
 
-	if (this->_labellookup_id.find(LABEL_LOOKUP_PATH) == 0)
-		return this->_labellookup_id.substr(strlen(LABEL_LOOKUP_PATH) + 1);
+	const std::string lookup_path = tissuestack::imaging::TissueStackLabelLookupStore::getLabelLookupDirectory();
+	if (this->_labellookup_id.find(lookup_path) == 0)
+		return this->_labellookup_id.substr(lookup_path.length() + 1);
 
 	return this->_labellookup_id;
 }

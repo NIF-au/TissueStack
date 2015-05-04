@@ -23,8 +23,9 @@
 tissuestack::services::TissueStackTaskQueue::TissueStackTaskQueue()
 {
 
-	if (!tissuestack::utils::System::directoryExists(TASKS_PATH) &&
-		!tissuestack::utils::System::createDirectory(TASKS_PATH, 0755))
+	const std::string dir =	tissuestack::services::TissueStackTaskQueue::getTasksDirectory();
+	if (!tissuestack::utils::System::directoryExists(dir) &&
+		!tissuestack::utils::System::createDirectory(dir, 0755))
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Could not create tasks directory!");
 
@@ -119,7 +120,7 @@ inline void tissuestack::services::TissueStackTaskQueue::writeBackToIndividualTa
 {
 	if (task == nullptr) return;
 
-	const std::string taskFile = std::string(TASKS_PATH) + "/" + task->getId();
+	const std::string taskFile = tissuestack::services::TissueStackTaskQueue::getTasksDirectory() + "/" + task->getId();
 	int fd = open(taskFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	if (fd <= 0)
 	{
@@ -239,7 +240,7 @@ void tissuestack::services::TissueStackTaskQueue::writeTasksToQueueFile()
 	// this makes sure that we don't overwrite our queue file simultaneously
 	std::lock_guard<std::mutex> lock(this->_queue_mutex);
 
-	const std::string taskFile = std::string(TASKS_PATH) + "/general";
+	const std::string taskFile = tissuestack::services::TissueStackTaskQueue::getTasksDirectory() + "/general";
 	// rename old task file
 	if (rename(taskFile.c_str(), (taskFile + ".old").c_str()) != 0)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
@@ -464,7 +465,8 @@ const bool tissuestack::services::TissueStackTaskQueue::isBeingConverted(const s
 inline void tissuestack::services::TissueStackTaskQueue::buildTaskFromIndividualTaskFile(const std::string & task_id)
 {
 	const std::vector<std::string> lines =
-			tissuestack::utils::System::readTextFileLineByLine(std::string(TASKS_PATH) + "/" + task_id);
+			tissuestack::utils::System::readTextFileLineByLine(
+				tissuestack::services::TissueStackTaskQueue::getTasksDirectory() + "/" + task_id);
 
 	/*
 	 * Layout for task files is as follows:
@@ -608,7 +610,7 @@ const std::vector<std::string> tissuestack::services::TissueStackTaskQueue::getT
 	// this makes sure that we don't read/write to the queue file at the same time!
 	std::lock_guard<std::mutex> lock(this->_queue_mutex);
 
-	const std::string taskFile = std::string(TASKS_PATH) + "/general";
+	const std::string taskFile = tissuestack::services::TissueStackTaskQueue::getTasksDirectory() + "/general";
 	if (!tissuestack::utils::System::fileExists(taskFile))
 	{
 		// nothing there. perhaps we have an .old file from an interruption during queue file write
@@ -636,5 +638,16 @@ const std::vector<std::string> tissuestack::services::TissueStackTaskQueue::getT
 	for (auto task : this->_tasks)
 		task->dumpTaskToDebugLog();
  }
+
+const std::string tissuestack::services::TissueStackTaskQueue::getTasksDirectory()
+{
+	std::string dir =
+		tissuestack::database::ConfigurationDataProvider::findSpecificApplicationDirectory("tasks_directory");
+	if (dir.empty())
+		dir = TASKS_PATH;
+
+	return dir;
+}
+
 
 tissuestack::services::TissueStackTaskQueue * tissuestack::services::TissueStackTaskQueue::_instance = nullptr;

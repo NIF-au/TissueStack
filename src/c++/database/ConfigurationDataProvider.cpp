@@ -103,3 +103,37 @@ inline tissuestack::database::Configuration * tissuestack::database::Configurati
 			result["value"].as<std::string>(),
 			result["description"].is_null() ? "" : result["description"].as<std::string>());
 }
+
+const std::string tissuestack::database::ConfigurationDataProvider::findSpecificApplicationDirectory(const std::string which)
+{
+	if (which.empty())
+		return "";
+
+	tissuestack::database::Configuration * dirConf = nullptr;
+	try
+	{
+		dirConf =
+			const_cast<tissuestack::database::Configuration *>(
+				tissuestack::database::ConfigurationDataProvider::queryConfigurationById(which));
+	} catch (std::exception & any ) {
+		// ignored
+	}
+	if (dirConf == nullptr)
+		return "";
+
+	const std::string val = dirConf->getValue();
+	delete dirConf;
+
+	return val;
+}
+
+const std::string tissuestack::database::ConfigurationDataProvider::getTemporaryDirectory()
+{
+	std::string tmpDir =
+		tissuestack::database::ConfigurationDataProvider::findSpecificApplicationDirectory("temp_directory");
+
+	if (tmpDir.empty())
+		tmpDir = TISSUESTACK_TMP_DIR;
+
+	return tmpDir;
+}

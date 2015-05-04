@@ -25,12 +25,13 @@ tissuestack::imaging::TissueStackLabelLookupStore::TissueStackLabelLookupStore()
 
 void tissuestack::imaging::TissueStackLabelLookupStore::updateLabelLookupStore(bool initial)
 {
-	if (!tissuestack::utils::System::directoryExists(LABEL_LOOKUP_PATH) &&
-		!tissuestack::utils::System::createDirectory(LABEL_LOOKUP_PATH, 0755))
+	const std::string dir = tissuestack::imaging::TissueStackLabelLookupStore::getLabelLookupDirectory();
+	if (!tissuestack::utils::System::directoryExists(dir) &&
+		!tissuestack::utils::System::createDirectory(dir, 0755))
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 				"Could not create label lookup directory!");
 
-	const std::vector<std::string> fileList = tissuestack::utils::System::getFilesInDirectory(LABEL_LOOKUP_PATH);
+	const std::vector<std::string> fileList = tissuestack::utils::System::getFilesInDirectory(dir);
 	for (std::string f : fileList)
 	{
 		try
@@ -174,6 +175,16 @@ void tissuestack::imaging::TissueStackLabelLookupStore::synchronizeLabelLookupWi
 		tissuestack::database::LabelLookupDataProvider::persistLookupValues(labelLookup);
 	else // update
 		tissuestack::database::LabelLookupDataProvider::updateLookupValues(hit.get(), labelLookup);
+}
+
+const std::string tissuestack::imaging::TissueStackLabelLookupStore::getLabelLookupDirectory()
+{
+	std::string dir =
+		tissuestack::database::ConfigurationDataProvider::findSpecificApplicationDirectory("lookup_directory");
+	if (dir.empty())
+		dir = LABEL_LOOKUP_PATH;
+
+	return dir;
 }
 
 tissuestack::imaging::TissueStackLabelLookupStore * tissuestack::imaging::TissueStackLabelLookupStore::_instance = nullptr;

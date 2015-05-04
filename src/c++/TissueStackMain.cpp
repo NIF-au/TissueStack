@@ -27,9 +27,6 @@ void cleanUp()
 		if (tissuestack::database::TissueStackPostgresConnector::doesInstanceExist())
 			tissuestack::database::SessionDataProvider::deleteSessions(
 				tissuestack::utils::System::getSystemTimeInMillis());
-
-		if (tissuestack::database::TissueStackPostgresConnector::doesInstanceExist())
-			tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
 	} catch (...)
 	{
 		// can be safely ignored
@@ -38,9 +35,6 @@ void cleanUp()
 	try
 	{
 		// deallocate global singleton objects
-		if (tissuestack::TissueStackConfigurationParameters::doesInstanceExist())
-			tissuestack::TissueStackConfigurationParameters::instance()->purgeInstance();
-
 		if (tissuestack::common::RequestTimeStampStore::doesInstanceExist())
 			tissuestack::common::RequestTimeStampStore::instance()->purgeInstance();
 
@@ -58,6 +52,12 @@ void cleanUp()
 
 		if (tissuestack::imaging::TissueStackSliceCache::doesInstanceExist())
 			tissuestack::imaging::TissueStackSliceCache::instance()->purgeInstance();
+
+		if (tissuestack::database::TissueStackPostgresConnector::doesInstanceExist())
+			tissuestack::database::TissueStackPostgresConnector::instance()->purgeInstance();
+
+		if (tissuestack::TissueStackConfigurationParameters::doesInstanceExist())
+			tissuestack::TissueStackConfigurationParameters::instance()->purgeInstance();
 
 		if (tissuestack::logging::TissueStackLogger::doesInstanceExist())
 			tissuestack::logging::TissueStackLogger::instance()->purgeInstance();

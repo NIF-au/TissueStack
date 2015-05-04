@@ -154,8 +154,8 @@ dist: all
 	UPDATE configuration SET value='$(DATA_PATH)/colormaps' WHERE name='colormaps_directory';\n\
 	UPDATE configuration SET value='$(DATA_PATH)/tiles' WHERE name='server_tile_directory';\n\
 	UPDATE configuration SET value='$(DATA_PATH)/upload' WHERE name='upload_directory';\n\
-	UPDATE configuration SET value='$(DATA_PATH)/lookup' WHERE name='lookup_tables_directory';\n\
-	UPDATE configuration SET value='$(DATA_PATH)/tasks/general' WHERE name='tasks_queue_file';\n\
+	UPDATE configuration SET value='$(DATA_PATH)/lookup' WHERE name='lookup_directory';\n\
+	UPDATE configuration SET value='$(DATA_PATH)/tasks' WHERE name='tasks_directory';\n\
 	UPDATE configuration SET value='$(DATA_PATH)/data' WHERE name='data_directory';\n\
 	UPDATE configuration SET value='$(DATA_PATH)/ands/datasets.xml' WHERE name='ands_dataset_xml';\n\
 	" > $(BUILD_SRC_PATH)$(DATA_PATH)/sql/update_$(APP_NAME)_config.sql;

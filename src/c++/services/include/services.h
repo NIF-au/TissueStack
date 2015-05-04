@@ -241,6 +241,7 @@ namespace tissuestack
 				void flagTaskAsErroneous(const std::string & task_id, const bool erase_task = true);
 				void persistTaskProgress(const std::string & task_id);
 				const std::string generateTaskId();
+				static const std::string getTasksDirectory();
 			private:
 				TissueStackTaskQueue();
 				inline void buildTaskFromIndividualTaskFile(const std::string & task_file);
@@ -277,6 +278,7 @@ namespace tissuestack
 						const tissuestack::common::ProcessingStrategy * processing_strategy,
 						const tissuestack::networking::TissueStackServicesRequest * request,
 						const int file_descriptor) const;
+				static const std::string getUploadDirectory();
 			private:
 				static unsigned long long int FILE_UPLOAD_LIMIT;
 				const std::string handleSetTilingRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;

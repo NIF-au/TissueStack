@@ -179,6 +179,7 @@ namespace tissuestack
 				void addOrReplaceLabelLookup(const TissueStackLabelLookup * labelLookup);
 				const std::unordered_map<std::string, const tissuestack::imaging::TissueStackLabelLookup *> getAllLabelLookups() const;
 				void dumpAllLabelLookupsToDebugLog() const;
+				static const std::string getLabelLookupDirectory();
 			private:
 				friend class tissuestack::execution::TissueStackColorMapAndLookupUpdater;
 				void updateLabelLookupStore(bool initial=false);
@@ -232,6 +233,7 @@ namespace tissuestack
 		    		const TissueStackLabelLookup * labelLookup,
 					const time_t lastModified);
 		    	const std::string toJson(bool originalColorMapContents = true) const;
+		    	static const std::string getColorMapDirectory();
 		    	void dumpAllColorMapsToDebugLog() const;
 			private:
 				friend class tissuestack::execution::TissueStackColorMapAndLookupUpdater;
@@ -366,6 +368,7 @@ namespace tissuestack
 				void addStep(float step);
 				void detectAndCorrectFor2DData();
 				void generateRawHeader();
+				static const std::string assembleTemporaryDirectoryForZipFiles(const std::string zip_file);
 			private:
 				inline const std::string constructIdentityMatrixForDimensionNumber() const;
 				inline const std::string getAdjointMatrix() const;
@@ -610,6 +613,7 @@ namespace tissuestack
 		    	void replaceDataSet(const tissuestack::imaging::TissueStackDataSet * dataSet);
 		    	void dumpDataSetStoreIntoDebugLog() const;
 		    	const std::vector<const TissueStackRawData *> getDataSetList() const;
+		    	static const std::string getDataSetStoreDirectory();
 			private:
 		    	TissueStackDataSetStore();
 		    	std::unordered_map<std::string, const TissueStackDataSet *> _data_sets;
