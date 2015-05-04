@@ -62,6 +62,15 @@ cp -r /tmp/dcmtk_build/share %{buildroot}/usr/share
 %clean
 rm -rf /tmp/dcmtk_build
 
-%post -p /sbin/ldconfig
-%postun -p /sbin/ldconfig
+%post
+echo -e '#!/bin/bash\nexport DCMDICTPATH=/usr/share/dcmtk/dicom.dic' > /etc/profile.d/dcmtk.sh
+chmod 755 /etc/profile.d/dcmtk.sh
+source /etc/profile.d/dcmtk.sh
+/sbin/ldconfig
+
+%postun
+if [ $1 -ne 1 ]; then
+  rm -rf /etc/profile.d/dcmtk.sh
+fi
+/sbin/ldconfig
 
