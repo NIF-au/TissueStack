@@ -34,6 +34,7 @@ sed -i "/^LIBEXT[ ]*=/c\LIBEXT = so " config/Makefile.def
 sed -i "/^RANLIB[ ]*=/c\RANLIB = : " config/Makefile.def
 sed -i "/^CXXFLAGS[ ]*=/s/$/ -fPIC/" config/Makefile.def
 sed -i "/^CFLAGS[ ]*=/s/$/ -fPIC/" config/Makefile.def
+sed -i "/^LIBS[ ]*=/s/$/ -lpng -ltiff -lz/" config/Makefile.def
 
 make install && make install-lib
 if [ $? -ne 0 ]; then
