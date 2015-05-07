@@ -58,6 +58,7 @@ export BINS_PATH			=	$(APPLICATION_ROOT)/bin
 # packaging/install configuration
 export IS_DEBIAN_BASED=`cat /etc/*-release | grep -i debian | wc -c`
 export IS_UBUNTU_BASED=`cat /etc/*-release | grep -i ubuntu | wc -c`
+export IS_CENTOS_BASED=`cat /etc/*-release | grep -i centos | wc -c`
 
 #build path for binary distribution
 export BASE_DIR			= 	./../../
@@ -161,21 +162,15 @@ dist: all
 	" > $(BUILD_SRC_PATH)$(DATA_PATH)/sql/update_$(APP_NAME)_config.sql;
 
 	@echo -e "\tCreating environment script containing the desired paths..."
-	@if [ $(IS_DEBIAN_BASED) -gt 0 ] && [ $(IS_UBUNTU_BASED) -eq 0 ]; then \
-		 echo "#!/bin/bash\n\
+	@echo -e "#!/bin/bash\n\
 TISSUE_STACK_HOME=$(DATA_PATH)\n\
 IMAGE_SERVER_EXE=$(BINS_PATH)/$(EXE_NAME)\n\
 PATH=\$$PATH:$(BINS_PATH)\n\
 HDF5_DISABLE_VERSION_CHECK=1\n\
-export HDF5_DISABLE_VERSION_CHECK TISSUE_STACK_HOME IMAGE_SERVER_EXE PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(APP_NAME)_env.sh; \
-        else \
-                 echo -e "#!/bin/bash\n\
-TISSUE_STACK_HOME=$(DATA_PATH)\n\
-IMAGE_SERVER_EXE=$(BINS_PATH)/$(EXE_NAME)\n\
-PATH=\$$PATH:$(BINS_PATH)\n\
-HDF5_DISABLE_VERSION_CHECK=1\n\
-export HDF5_DISABLE_VERSION_CHECK TISSUE_STACK_HOME IMAGE_SERVER_EXE PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(APP_NAME)_env.sh; \
-        fi
+export HDF5_DISABLE_VERSION_CHECK TISSUE_STACK_HOME IMAGE_SERVER_EXE PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(APP_NAME)_env.sh;
+	@if [ $(IS_CENTOS_BASED) -gt 0 ]; then \
+		echo "export DCMDICTPATH=/usr/share/dcmtk/dicom.dic" >> $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(APP_NAME)_env.sh; \
+	fi
 
 	@chmod 755 $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(APP_NAME)_env.sh
 
