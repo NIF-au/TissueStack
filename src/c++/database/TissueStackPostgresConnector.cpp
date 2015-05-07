@@ -100,13 +100,17 @@ const pqxx::result tissuestack::database::TissueStackPostgresConnector::executeN
 			tissuestack::logging::TissueStackLogger::instance()->error("Failed to execute query: %s\n", bad.what());
 			try
 			{
-				this->_non_trans_connections[indexForIdleConnection]->activate();
+				if (this->_non_trans_connections[indexForIdleConnection])
+				{
+					this->_non_trans_connections[indexForIdleConnection]->activate();
+					THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+						"Reconnecting database ...");
+				}
 			} catch (...)
 			{
-				// ignored
+				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+					"Failure to execute database query because of connectivity issues!");
 			}
-			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-				"Failure to execute database query!");
 		}
 	}
 
@@ -119,7 +123,7 @@ const pqxx::result tissuestack::database::TissueStackPostgresConnector::executeN
 		{
 			if (this->_non_trans_backup_connection == nullptr)
 				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-							"Reconnecting database ...");
+					"Reconnecting database ...");
 
 			pqxx::nontransaction non_transaction(*this->_non_trans_backup_connection);
 
@@ -128,13 +132,15 @@ const pqxx::result tissuestack::database::TissueStackPostgresConnector::executeN
 			tissuestack::logging::TissueStackLogger::instance()->error("Failed to execute query: %s\n", bad.what());
 			try
 			{
-				this->_non_trans_backup_connection->activate();
-			} catch (...)
-			{
-				// ignored
-			}
+				if (this->_non_trans_backup_connection)
+				{
+					this->_non_trans_backup_connection->activate();
+					THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+							"Reconnecting database ...");
+				}
+			} catch (...) {}
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-				"Failure to execute database query!");
+				"Failure to execute database query because of connectivity issues!");
 		}
 	}
 
@@ -150,7 +156,7 @@ const unsigned long long int tissuestack::database::TissueStackPostgresConnector
 
 		if (this->_trans_connection == nullptr)
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-						"Reconnecting database ...");
+				"Reconnecting database ...");
 
 		unsigned long long int affectedRows = 0;
 
@@ -171,13 +177,16 @@ const unsigned long long int tissuestack::database::TissueStackPostgresConnector
 		tissuestack::logging::TissueStackLogger::instance()->error("Failed to execute query: %s\n", bad.what());
 		try
 		{
-			this->_trans_connection->activate();
-		} catch (...)
-		{
-			// ignored
-		}
+			if (this->_trans_connection)
+			{
+				this->_trans_connection->activate();
+				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+						"Reconnecting database ...");
+			}
+
+		} catch (...) {}
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-			"Failure to execute database query!");
+			"Failure to execute database query because of connectivity issues!");
 	}
 }
 
@@ -212,13 +221,15 @@ const pqxx::result tissuestack::database::TissueStackPostgresConnector::executeP
 			tissuestack::logging::TissueStackLogger::instance()->error("Failed to execute query: %s\n", bad.what());
 			try
 			{
-				this->_non_trans_connections[indexForIdleConnection]->activate();
-			} catch (...)
-			{
-				// ignored
-			}
+				if (this->_non_trans_connections[indexForIdleConnection])
+				{
+					this->_non_trans_connections[indexForIdleConnection]->activate();
+					THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+						"Reconnecting database ...");
+				}
+			} catch (...) {}
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-				"Failure to execute database query!");
+				"Failure to execute database query because of connectivity issues!");
 		}
 	}
 
@@ -245,13 +256,15 @@ const pqxx::result tissuestack::database::TissueStackPostgresConnector::executeP
 			tissuestack::logging::TissueStackLogger::instance()->error("Failed to execute query: %s\n", bad.what());
 			try
 			{
-				this->_non_trans_backup_connection->activate();
-			} catch (...)
-			{
-				// ignored
-			}
+				if (this->_non_trans_backup_connection)
+				{
+					this->_non_trans_backup_connection->activate();
+					THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+						"Reconnecting database ...");
+				}
+			} catch (...) {}
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-				"Failure to execute database query!");
+				"Failure to execute database query because of connectivity issues!");
 		}
 	}
 }

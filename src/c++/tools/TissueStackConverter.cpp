@@ -127,7 +127,7 @@ int		main(int argc, char **argv)
 
 			default:
 				std::cout << "Usage: " << argv[0] <<
-					" -i IN_FILE (*.mnc,*.nii,*.nii.gz) -o OUT_FILE\n";
+					" -i IN_FILE (*.mnc,*.nii,*.nii.gz, *.dcm, *.ima, *.zip) -o OUT_FILE (*.raw)\n";
 				exit(0);
 		}
 	}
@@ -186,6 +186,8 @@ int		main(int argc, char **argv)
 				   std::cerr <<
 						"Failed to convert: Unable to touch future RAW file because of already existing file!"
 						<< std::endl;
+				   if (conversion)
+					   delete conversion;
 					exit(EXIT_FAILURE);
 			   }
 		   }
