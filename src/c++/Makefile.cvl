@@ -32,7 +32,7 @@ LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid \
 
 EXE_NAME		=	TissueStackServer
 
-FLAGS			=	-Wall -Werror -ggdb -std=c++11 -std=gnu++11 -std=c++0x 
+FLAGS			=	-Wall -Werror -std=c++11 -std=gnu++11 -std=c++0x 
 
 CC				=	g++
 

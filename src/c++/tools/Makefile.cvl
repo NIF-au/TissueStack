@@ -37,7 +37,7 @@ BINS_PATH		?= /tmp
 TILER_EXE_NAME		=	TissueStackPreTiler
 CONVERTER_EXE_NAME	=	TissueStackConverter
 
-FLAGS			=	-Wall -Werror -ggdb -std=c++11 -std=gnu++11 -std=c++0x 
+FLAGS			=	-Wall -Werror -std=c++11 -std=gnu++11 -std=c++0x 
 
 CC				=	g++
 

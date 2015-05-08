@@ -19,6 +19,7 @@ INCLUDE			=	-Iinclude -I/usr/include/nifti \
 LIB_PATH		=	-L/usr/lib64/dcmtk
 
 IS_CENTOS_OR_FEDORA	?= 0
+IS_RELEASE		?= 0
 
 ifeq ($(IS_CENTOS_OR_FEDORA), 0)
 LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid \
@@ -37,7 +38,11 @@ BINS_PATH		?= /tmp
 TILER_EXE_NAME		=	TissueStackPreTiler
 CONVERTER_EXE_NAME	=	TissueStackConverter
 
-FLAGS			=	-Wall -Werror -ggdb -std=c++11 -std=gnu++11 -std=c++0x 
+ifeq ($(IS_RELEASE), 0)
+FLAGS			=	-Wall -Werror -ggdb -std=c++11 -std=gnu++11 -std=c++0x
+else
+FLAGS			=	-Wall -Werror -std=c++11 -std=gnu++11 -std=c++0x
+endif
 
 CC				=	g++
 
