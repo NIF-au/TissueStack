@@ -162,12 +162,21 @@ dist: all
 	" > $(BUILD_SRC_PATH)$(DATA_PATH)/sql/update_$(APP_NAME)_config.sql;
 
 	@echo -e "\tCreating environment script containing the desired paths..."
-	@echo -e "#!/bin/bash\n\
+		@if [ $(IS_DEBIAN_BASED) -gt 0 ] && [ $(IS_UBUNTU_BASED) -eq 0 ]; then \
+		 echo "#!/bin/bash\n\
 TISSUE_STACK_HOME=$(DATA_PATH)\n\
 IMAGE_SERVER_EXE=$(BINS_PATH)/$(EXE_NAME)\n\
 PATH=\$$PATH:$(BINS_PATH)\n\
 HDF5_DISABLE_VERSION_CHECK=1\n\
-export HDF5_DISABLE_VERSION_CHECK TISSUE_STACK_HOME IMAGE_SERVER_EXE PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(APP_NAME)_env.sh;
+export HDF5_DISABLE_VERSION_CHECK TISSUE_STACK_HOME IMAGE_SERVER_EXE PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(APP_NAME)_env.sh; \
+        else \
+                 echo -e "#!/bin/bash\n\
+TISSUE_STACK_HOME=$(DATA_PATH)\n\
+IMAGE_SERVER_EXE=$(BINS_PATH)/$(EXE_NAME)\n\
+PATH=\$$PATH:$(BINS_PATH)\n\
+HDF5_DISABLE_VERSION_CHECK=1\n\
+export HDF5_DISABLE_VERSION_CHECK TISSUE_STACK_HOME IMAGE_SERVER_EXE PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(APP_NAME)_env.sh; \
+        fi
 	@if [ $(IS_CENTOS_BASED) -gt 0 ]; then \
 		echo "export DCMDICTPATH=/usr/share/dcmtk/dicom.dic" >> $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(APP_NAME)_env.sh; \
 	fi
