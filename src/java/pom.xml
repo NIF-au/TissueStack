@@ -1,0 +1,67 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<properties>
+		<deployment.directory>${project.basedir}/bin</deployment.directory>
+	</properties>
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>au.edu.cai</groupId>
+	<artifactId>TissueStackBioFormatsConverter</artifactId>
+	<packaging>jar</packaging>
+	<version>1.0</version>
+	<name>Tissue Stack Bio Formats To Raw Converter</name>
+
+	<dependencies>
+   		<dependency>
+			<groupId>bioformats</groupId>
+			<artifactId>bioformats</artifactId>
+			<scope>system</scope>
+			<version>5.1.1</version>
+			<systemPath>${project.basedir}/bin/bioformats-5.1.1.jar</systemPath>
+		</dependency>
+	</dependencies>
+	
+	<build>
+		<finalName>TissueStackBioFormatsConverter</finalName>
+		<sourceDirectory>${project.basedir}/main</sourceDirectory>
+		<directory>/tmp/TissueStackBioFormatsConverter</directory>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
+				<configuration>
+					<source>1.5</source>
+					<target>1.5</target>
+					<debug>false</debug>
+      					<!--debuglevel>none</debuglevel-->
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.4.3</version>
+				<executions>
+					<execution>
+						<id>deploy-package</id>
+						<phase>install</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${deployment.directory}</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${project.build.directory}</directory>
+									<includes>
+										<include>${project.build.finalName}.${project.packaging}</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+		<filters>
+		</filters>
+	</build>
+</project>

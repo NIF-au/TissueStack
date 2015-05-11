@@ -27,7 +27,6 @@ TissueStackPreTiler
 TissueStackConverter
 binaries
 *.war
-bin
 test
 *~
 ~
