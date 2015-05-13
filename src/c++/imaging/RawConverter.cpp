@@ -267,7 +267,9 @@ inline const bool tissuestack::imaging::RawConverter::convertDicom0(
 			static_cast<const tissuestack::imaging::TissueStackDicomData *>(converter_task->getInputImageData()));
 
 	const tissuestack::imaging::DicomFileWrapper * dicom =
-		dicomData->getDicomFileWrapper(dicom_index);
+		dicomData->getDicomFileWrapper(
+			dicomData->getPlanarOrientation() == tissuestack::imaging::DICOM_PLANAR_ORIENTATION::AXIAL ?
+				(dicomData->getTotalNumberOfDicomFiles()-1) - dicom_index : dicom_index);
 	if (dicom == nullptr)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackNullPointerException,
 			"requested dicom file is null");
@@ -275,11 +277,8 @@ inline const bool tissuestack::imaging::RawConverter::convertDicom0(
 	const unsigned long long int new_size_per_slice =
 		dicom->getWidth() * dicom->getHeight() * 3;
 
-	//dicomData->registerDcmtkDecoders();
 	const unsigned char * data_out =
 			const_cast<tissuestack::imaging::DicomFileWrapper *>(dicom)->getData();
-	//dicomData->deregisterDcmtkDecoders();
-
 	//dicomData->writeDicomDataAsPng(const_cast<tissuestack::imaging::DicomFileWrapper *>(dicom));
 	if (data_out == nullptr)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
@@ -366,8 +365,14 @@ void tissuestack::imaging::RawConverter::convertDicom(
 			}
 
 
-	} else if (dicomData->getType() == tissuestack::imaging::DICOM_TYPE::VOLUME)
+	} else if (dicomData->getType() == tissuestack::imaging::DICOM_TYPE::VOLUME ||
+		dicomData->getType() == tissuestack::imaging::DICOM_TYPE::VOLUME_TO_BE_RECONSTRUCTED)
 	{
+		// TODO: assess memory usage of loading all slices into memory
+		// and build dimensions sequentially jumping memory locations
+		// rather than processing slice by slice and jumping file offsets
+		// we'd probably have to make this decision before deciding on the total number
+		// for the progress
 		unsigned short ind=0;
 		unsigned long int slice = converter_task->getSlicesDone();
 
@@ -1025,18 +1030,18 @@ inline void tissuestack::imaging::RawConverter::reorientNiftiSlice(
 void tissuestack::imaging::RawConverter::reorientDicomSlices(
 	const tissuestack::imaging::TissueStackDicomData * dicom) const
 {
-	if (dicom == nullptr || dicom->getType() != tissuestack::imaging::DICOM_TYPE::VOLUME)
+	if (dicom == nullptr || dicom->getType() != tissuestack::imaging::DICOM_TYPE::VOLUME_TO_BE_RECONSTRUCTED)
 		return;
 
-	if (dicom->getPlanarOrientation() == tissuestack::imaging::DICOM_PLANAR_ORIENTATION::SAGITTAL ||
-		dicom->getPlanarOrientation() == tissuestack::imaging::DICOM_PLANAR_ORIENTATION::UNDETERMINED)
+	if (dicom->getPlanarOrientation() == tissuestack::imaging::DICOM_PLANAR_ORIENTATION::UNDETERMINED)
 		return;
 
 	// loop over planes affected
 	for (auto d : dicom->getDimensionOrder())
 	{
 		if ((dicom->getPlanarOrientation() == tissuestack::imaging::DICOM_PLANAR_ORIENTATION::AXIAL && d[0] == 'z') ||
-			(dicom->getPlanarOrientation() == tissuestack::imaging::DICOM_PLANAR_ORIENTATION::CORONAL && d[0] != 'z'))
+			((dicom->getPlanarOrientation() == tissuestack::imaging::DICOM_PLANAR_ORIENTATION::CORONAL ||
+				dicom->getPlanarOrientation() == tissuestack::imaging::DICOM_PLANAR_ORIENTATION::SAGITTAL) && d[0] != 'z'))
 			continue;
 
 		const tissuestack::imaging::TissueStackDataDimension * dim =
@@ -1063,29 +1068,42 @@ void tissuestack::imaging::RawConverter::reorientDicomSlices(
 			Image * img = NULL;
 			Image * tmp = NULL;
 
-			img =
-				ConstituteImage(dim->getHeight(), dim->getWidth(), "RGB", CharPixel, slice_data, &exception);
-			if (img == NULL)
+			if (dicom->getPlanarOrientation() == tissuestack::imaging::DICOM_PLANAR_ORIENTATION::SAGITTAL)
 			{
-				delete [] slice_data;
-				CatchException(&exception);
-				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-					"Could not constitute Image!");
+				img =
+					ConstituteImage(dim->getWidth(), dim->getHeight(), "RGB", CharPixel, slice_data, &exception);
+				if (img == NULL)
+				{
+					delete [] slice_data;
+					CatchException(&exception);
+					THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+						"Could not constitute Image!");
+				}
+			} else
+			{
+				img =
+					ConstituteImage(dim->getHeight(), dim->getWidth(), "RGB", CharPixel, slice_data, &exception);
+				if (img == NULL)
+				{
+					delete [] slice_data;
+					CatchException(&exception);
+					THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+						"Could not constitute Image!");
+				}
+
+				tmp = img;
+				img = RotateImage(img, -90, &exception);
+				DestroyImage(tmp);
+				if (img == NULL)
+				{
+					delete [] slice_data;
+					CatchException(&exception);
+					THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+						"Could not rotate Image!");
+				}
 			}
 
-			tmp = img;
-			img = RotateImage(img, -90, &exception);
-			DestroyImage(tmp);
-			if (img == NULL)
-			{
-				delete [] slice_data;
-				CatchException(&exception);
-				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-					"Could not rotate Image!");
-			}
-
-			if (dicom->getPlanarOrientation() == tissuestack::imaging::DICOM_PLANAR_ORIENTATION::AXIAL &&
-						d[0] == 'x')
+			if (dicom->getPlanarOrientation() == tissuestack::imaging::DICOM_PLANAR_ORIENTATION::AXIAL && d[0] == 'x' )
 			{
 				tmp = img;
 				img = FlopImage(img, &exception);
@@ -1095,7 +1113,19 @@ void tissuestack::imaging::RawConverter::reorientDicomSlices(
 					delete [] slice_data;
 					CatchException(&exception);
 					THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-						"Could not rotate Image!");
+						"Could not flop Image!");
+				}
+			} else if (dicom->getPlanarOrientation() == tissuestack::imaging::DICOM_PLANAR_ORIENTATION::SAGITTAL && d[0] == 'z' )
+			{
+				tmp = img;
+				img = FlipImage(img, &exception);
+				DestroyImage(tmp);
+				if (img == NULL)
+				{
+					delete [] slice_data;
+					CatchException(&exception);
+					THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+						"Could not flop Image!");
 				}
 			}
 

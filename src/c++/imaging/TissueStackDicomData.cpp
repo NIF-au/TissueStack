@@ -339,6 +339,7 @@ inline void tissuestack::imaging::TissueStackDicomData::initializePartialDicom3D
 		const std::vector<std::string> & steps,
 		const std::vector<std::string> & coords)
 	{
+	this->_type = tissuestack::imaging::DICOM_TYPE::VOLUME_TO_BE_RECONSTRUCTED;
 	this->determinePlanarOrientation();
 
 	std::string planeIdentifiers[3] = {"x","y", "z"};
@@ -542,6 +543,11 @@ const unsigned long int tissuestack::imaging::TissueStackDicomData::getNumberOfF
 		return 0;
 
 	return this->_plane_number_of_files[dimension_index];
+}
+
+const unsigned long int tissuestack::imaging::TissueStackDicomData::getTotalNumberOfDicomFiles() const
+{
+	return this->_dicom_files.size();
 }
 
 const unsigned long int tissuestack::imaging::TissueStackDicomData::getPlaneIndex(const unsigned short dimension_index) const

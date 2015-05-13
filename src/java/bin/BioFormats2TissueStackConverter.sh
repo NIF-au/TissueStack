@@ -6,4 +6,4 @@ if [ "$#" -ne 2 ]; then
 	echo ""
 	exit -1
 fi
-java -Xmx2512m -cp bioformats-5.1.1.jar:TissueStackBioFormatsConverter.jar au.edu.cai.TissueStackBioFormatsConverter $1 $2
+java -Xmx1024m -cp bioformats-5.1.1.jar:TissueStackBioFormatsConverter.jar au.edu.cai.TissueStackBioFormatsConverter $1 $2

@@ -2,15 +2,20 @@ package au.edu.cai;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
+import loci.common.DebugTools;
 import loci.formats.IFormatReader;
 import loci.formats.ImageReader;
 
 public class TissueStackBioFormatsConverter {
 	
     public static void main(String[] args) {
+    	DebugTools.enableLogging("ERROR");
     	final File[] files =
     		TissueStackBioFormatsConverter.runChecks(args);
     	if (!TissueStackBioFormatsConverter.convert(files))
@@ -26,7 +31,16 @@ public class TissueStackBioFormatsConverter {
     		System.exit(-1);
     	}
     	
-    	final File input = new File(args[0]); 
+    	String input_file_name = args[0];
+    	final File input = new File(input_file_name);
+    	
+    	if (TissueStackBioFormatsConverter.checkFileNameForMincNiftiAndDicom(input_file_name) ||
+    			(input_file_name.toLowerCase().endsWith(".zip") &&
+    			TissueStackBioFormatsConverter.checkZipForMincNiftiAndDicom(input))) {
+    		System.err.println("Please use the native Tissue Stack Converter for the following input formats: minc, nifti and dicom!");
+    		System.exit(-1);
+    	}
+    	 
     	if (!input.exists() || !input.canRead()) { // input file existence and readability
     		System.err.println("Given input file does not exist or is not readible!");
     		System.exit(-1);
@@ -56,10 +70,11 @@ public class TissueStackBioFormatsConverter {
     	try {
     		reader = new ImageReader();
    			reader.setId(files[0].getAbsolutePath());
+   			
+   			System.out.println(reader.getFormat());
    			writer = new BufferedOutputStream(new FileOutputStream(files[1]));
    			// TODO: implement .raw conversion, read in tiles
-   			// perhaps rule out conversion of dicom, mnc and niftii
-   			// adjust log level
+   			// if we have a zip, think hard what to do ...
    			
     	} catch(Exception any) {
 			System.err.println(any.getMessage());
@@ -86,5 +101,47 @@ public class TissueStackBioFormatsConverter {
         	}
     	}
     	return true;
+    }
+    
+    private static boolean checkZipForMincNiftiAndDicom(final File zipFile) {
+    	ZipInputStream zip = null;
+    	try {
+	    	zip = new ZipInputStream(new FileInputStream(zipFile));
+	   	    ZipEntry ze = null;
+	   	    String entryName = null;
+	
+	   	    while (true) {
+	    	      ze = zip.getNextEntry();
+	    	      if (ze == null) break;
+	
+	    	      if (entryName == null) {
+	    	        entryName = ze.getName();
+	    	        break;
+	    	      }
+	   	    }
+	   	    
+	   	    if (entryName == null) return false;
+	   	    
+	   	    return TissueStackBioFormatsConverter.checkFileNameForMincNiftiAndDicom(entryName);
+    	} catch (Exception any) {
+    		return false;
+    	} finally {
+    		try {
+    			if (zip != null)
+    				zip.close();
+    		} catch (Exception ignored) {}
+    	}
+    }
+    
+    private static boolean checkFileNameForMincNiftiAndDicom(String fileName) {
+    	fileName = fileName.toLowerCase();
+    	if (fileName.endsWith(".mnc") ||
+    			fileName.endsWith(".nii") ||    			
+    			fileName.endsWith(".nii.gz") ||
+    			fileName.endsWith(".dcm") ||
+    			fileName.endsWith(".ima"))
+    		return true;
+    	
+    	return false;
     }
 }

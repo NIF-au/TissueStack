@@ -97,9 +97,10 @@ namespace tissuestack
 
 		enum DICOM_TYPE
 		{
-			SINGLE_IMAGE	= 1,	// single image (2D)
-			TIME_SERIES 	= 2,	// 3D with dimension t for time
-			VOLUME			= 3		// 3D volume
+			SINGLE_IMAGE		= 1,	// single image (2D)
+			TIME_SERIES 		= 2,	// 3D with dimension t for time
+			VOLUME				= 3,	// 3D volume
+			VOLUME_TO_BE_RECONSTRUCTED = 4 // series of slices in one plane
 		};
 
 		enum DICOM_PLANAR_ORIENTATION
@@ -447,6 +448,7 @@ namespace tissuestack
 				const std::string getImagePositionPatient() const;
 				const std::string getPixelSpacing() const;
 				const std::string getImageOrientation() const;
+				const std::string getPatientPosition() const;
 				const unsigned long long int getHeight() const;
 				const unsigned long long int getWidth() const;
 				const unsigned long getAllocatedBits() const;
@@ -478,6 +480,7 @@ namespace tissuestack
 				std::string _ascconv;
 				unsigned long int _number_of_images_in_series_or_acquisition = 0;
 				bool _isTemp = false;
+				std::string _patient_position = "HFS";
 
 
 
@@ -492,6 +495,7 @@ namespace tissuestack
 				const DICOM_PLANAR_ORIENTATION getPlanarOrientation() const;
 				const DicomFileWrapper * getDicomFileWrapper(unsigned int index) const;
 				const unsigned long int getNumberOfFiles(const unsigned short dimension_index) const;
+				const unsigned long int getTotalNumberOfDicomFiles() const;
 				const unsigned long int getPlaneIndex(const unsigned short dimension_index) const;
 				void writeDicomDataAsPng(DicomFileWrapper * dicom);
 				void registerDcmtkDecoders() const;

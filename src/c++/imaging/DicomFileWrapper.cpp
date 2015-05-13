@@ -76,6 +76,9 @@ tissuestack::imaging::DicomFileWrapper::DicomFileWrapper(const std::string filen
 	if (dicomFormat.getDataset()->findAndGetOFString(DCM_MRAcquisitionType, value).good()) // are we 3D
 		this->_acquisitionType = std::string(value.c_str());
 
+	if (dicomFormat.getDataset()->findAndGetOFString(DCM_PatientPosition, value).good())
+		this->_patient_position = std::string(value.c_str());
+
 	if (dicomFormat.getDataset()->findAndGetOFStringArray(DCM_ImageType, value).good()) // are we a mosaic
 	{
 		std::string v = std::string(value.c_str());
@@ -390,6 +393,11 @@ const std::string tissuestack::imaging::DicomFileWrapper::getPixelSpacing() cons
 const std::string tissuestack::imaging::DicomFileWrapper::getImageOrientation() const
 {
 	return this->_image_orientation;
+}
+
+const std::string tissuestack::imaging::DicomFileWrapper::getPatientPosition() const
+{
+	return this->_patient_position;
 }
 
 const unsigned long long int tissuestack::imaging::DicomFileWrapper::getHeight() const
