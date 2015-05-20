@@ -581,8 +581,14 @@ void tissuestack::imaging::TissueStackImageData::setFormat(int original_format)
 		case tissuestack::imaging::FORMAT::RAW:
 			this->_format = tissuestack::imaging::FORMAT::RAW;
 			break;
+		case tissuestack::imaging::FORMAT::DATABASE:
+			this->_format = tissuestack::imaging::FORMAT::DATABASE;
+			break;
 		case tissuestack::imaging::FORMAT::DICOM:
 			this->_format = tissuestack::imaging::FORMAT::DICOM;
+			break;
+		case tissuestack::imaging::FORMAT::BIOFORMATS:
+			this->_format = tissuestack::imaging::FORMAT::BIOFORMATS;
 			break;
 		default:
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException, "Incompatible Original Format!");
