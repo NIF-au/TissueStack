@@ -123,7 +123,18 @@ const bool tissuestack::utils::System::touchFile(
 	if (fd <= 0)
 		return false;
 
-	// we write zeroes in 100 MB chunks or less
+	// fast forward and write 1 byte to cause padding!
+	char buf[] = {'\0'};
+	if ((lseek(fd, size_in_bytes-1, SEEK_SET) < 0) ||
+			write(fd, (void *) buf, 1) < 0)
+	{
+		perror("what");
+		close(fd);
+		unlink(file.c_str());
+		return false;
+	}
+
+	/* we write zeroes in 100 MB chunks or less
 	const unsigned int BUFFER_SIZE = 1024 * 1000 * 100;
 	char * buffer = new char[BUFFER_SIZE];
 	memset(buffer, 0, BUFFER_SIZE);
@@ -144,6 +155,8 @@ const bool tissuestack::utils::System::touchFile(
 	}
 
 	delete [] buffer;
+	*/
+
 	close(fd);
 
 	return true;
