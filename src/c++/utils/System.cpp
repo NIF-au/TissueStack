@@ -128,7 +128,6 @@ const bool tissuestack::utils::System::touchFile(
 	if ((lseek(fd, size_in_bytes-1, SEEK_SET) < 0) ||
 			write(fd, (void *) buf, 1) < 0)
 	{
-		perror("what");
 		close(fd);
 		unlink(file.c_str());
 		return false;

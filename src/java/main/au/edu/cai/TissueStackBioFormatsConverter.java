@@ -9,17 +9,27 @@ import java.util.ArrayList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import ome.xml.meta.OMEXMLMetadataRoot;
+import ome.xml.model.Image;
+import ome.xml.model.Pixels;
+import ome.xml.model.TiffData;
 import loci.common.DebugTools;
+import loci.common.services.ServiceFactory;
 import loci.formats.FormatTools;
 import loci.formats.IFormatReader;
 import loci.formats.ImageReader;
+import loci.formats.in.OMETiffReader;
+import loci.formats.in.OMEXMLReader;
+import loci.formats.ome.OMEXMLMetadata;
+import loci.formats.services.OMEXMLService;
 
 public class TissueStackBioFormatsConverter {
 	
 	public static enum ConversionStrategy {
 		SINGLE_IMAGE(1),
 		TIME_SERIES(2),
-		VOLUME_TO_BE_RECONSTRUCTED(3);
+		VOLUME_TO_BE_RECONSTRUCTED(3),
+		UNKNOWN(4);
 
 		int i;
 
@@ -42,14 +52,15 @@ public class TissueStackBioFormatsConverter {
     	
 		 Runtime.getRuntime().addShutdownHook(new Thread() {
 			   public void run() {
-			    if (hasBeenTerminated)
-			    	System.out.println();
-			    	System.err.println("Process terminated: Ctrl-C or kill signal!");
-			    	try { // delete output
-						files[1].delete();
-					} catch(Exception anyElse) {
-						// ignored
-					}
+				   if (TissueStackBioFormatsConverter.hasBeenTerminated) {
+						System.out.println();
+						System.err.println("Process terminated: Ctrl-C or kill signal!");
+						try { // delete output
+							files[1].delete();
+						} catch(Exception anyElse) {
+							// ignored
+						}
+				   }
 			   }
 		  });
 
@@ -57,7 +68,7 @@ public class TissueStackBioFormatsConverter {
 			 System.err.println("\nConversion failed!!!!");
     	else {
     		System.out.println("\nConversions completed successfully");
-    		hasBeenTerminated = false;
+    		TissueStackBioFormatsConverter.hasBeenTerminated = false;
     	}
     }
     
@@ -119,7 +130,7 @@ public class TissueStackBioFormatsConverter {
     }
     
     private static final boolean convert(final File[] files) {
-    	final ArrayList<String> filesToBeProcessed =
+    	ArrayList<String> filesToBeProcessed =
     		new ArrayList<String>();
     	
     	// if we have a zip on our hands => extract each entry and have a look at its
@@ -132,13 +143,27 @@ public class TissueStackBioFormatsConverter {
     	} else
     		filesToBeProcessed.add(files[0].getAbsolutePath());
 
-    	// now for the main processing loop:
-    	// if there is more than one file (e.g. zip archive contents)
-    	// the format is determined by the first supported file encountered.
-    	// all other formats are ignored with a warning being issued
+    	// remember the prefix of the first
+    	if (filesToBeProcessed.isEmpty()) {
+    		System.err.println("Couldn't find an appropriate conversion strategy!");
+    		return false;
+    	}
+    	
+		System.out.println("Revisit file list and determine conversion strategy...");
+		
+		// this looks at the image (series) and tries to find an appropriate conversion method
+		ConversionStrategy strategy = 
+    		TissueStackBioFormatsConverter.revisitFileListAndDetermineStrategy(filesToBeProcessed);
+    	if (strategy == ConversionStrategy.UNKNOWN)
+    	{
+    		System.err.println("Couldn't find an appropriate conversion strategy!");
+    		return false;
+    	}
+    		
+		System.out.println("Chosen Conversion Strategy: " + strategy);
+		
     	BufferedOutputStream writer = null;
     	String format = null;
-    	ConversionStrategy strategy = null;
     	int sizeX = 0;
     	int sizeY = 0;
     	int numberOfSlicesToBeProcessed = 0;
@@ -147,9 +172,8 @@ public class TissueStackBioFormatsConverter {
     	int numberOfTimePointsProcessed = 0;
     	
     	for (String fileToBeProcessed : filesToBeProcessed) {
-	    	IFormatReader reader = null;
+	    	IFormatReader reader = new ImageReader();
 	    	try {
-	    		reader = new ImageReader();
 	    		try {
 	    			reader.setId(fileToBeProcessed);
 	    		} catch(Exception any) {
@@ -157,13 +181,15 @@ public class TissueStackBioFormatsConverter {
 	    			System.err.println("Error (BioFormatsReader): " + any.getMessage() +"! Skipping file: " +  fileToBeProcessed);
 	   				continue;
 	    		}
-	
+	    		
 	   			if (format == null) {
 	   				format = reader.getFormat();
+	   				
 	   				System.out.println("Format recognized: " +  format);	   				
 	   				if (TissueStackBioFormatsConverter.checkFormatStringForMincNiftiAndDicom(format))
 	   					throw new RuntimeException(
 	   						"Please use the native Tissue Stack Converter for the following input formats: minc, nifti and dicom!");
+	   				
 	   				// some more preliminary checks ...
 	   				System.out.println("Endian: " +  (reader.isLittleEndian() ? "little" : "big"));
 	   				if (reader.isRGB())
@@ -183,34 +209,27 @@ public class TissueStackBioFormatsConverter {
 	   				sizeY = reader.getSizeY();
 	   				numberOfSlicesToBeProcessed = reader.getSizeZ();
 	   				numberOfTimePointsToBeProcessed = reader.getSizeT();
+		   			// let's adjust our work figures to reflect the strategy
+	   				if (strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED) {
+	   					if (numberOfSlicesToBeProcessed <= 1)
+		   					numberOfSlicesToBeProcessed = filesToBeProcessed.size();
+	   					numberOfTimePointsToBeProcessed = 0;
+	   				} else if (strategy == ConversionStrategy.TIME_SERIES) {
+		   				if (numberOfTimePointsToBeProcessed <= 1)
+		   					numberOfTimePointsToBeProcessed = filesToBeProcessed.size();
+		   				numberOfSlicesToBeProcessed = 0;
+		   			}
 	   				
 	   				System.out.println("Number of Series: " + reader.getSeriesCount() + " [anything higher than 1 will be ignored!]");
 	   				System.out.println("Number of Images: " + reader.getImageCount());
 	   				System.out.println("Image Plane Dimension (X times Y): " + sizeX + " x " + sizeY);
 	   				System.out.println("Number of Slices (Z): " + numberOfSlicesToBeProcessed);
 	   				System.out.println("Number of Points in Time (T): " + numberOfTimePointsToBeProcessed);
-		   			// we only ever process 1 series
+
+	   				// we only ever process 1 series
 		   			if (reader.getSeriesCount() > 1)
 		   				reader.setSeries(0);
 	   				
-		   			// let's determine the conversion strategy
-		   			if (filesToBeProcessed.size() == 1 && numberOfSlicesToBeProcessed <= 1 && numberOfTimePointsToBeProcessed <= 1)
-		   				strategy = ConversionStrategy.SINGLE_IMAGE;
-		   			else if (filesToBeProcessed.size() == 1 && numberOfSlicesToBeProcessed > 1) {
-			   			strategy = ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED;
-			   			numberOfTimePointsToBeProcessed = 0;	
-		   			}else if (filesToBeProcessed.size() == 1 && numberOfTimePointsToBeProcessed > 1) {
-			   			strategy = ConversionStrategy.TIME_SERIES;
-			   			numberOfSlicesToBeProcessed = 0;	
-		   			} else if (filesToBeProcessed.size() > 1 && numberOfSlicesToBeProcessed <= 1 && numberOfTimePointsToBeProcessed <= 1) {
-		   				strategy = ConversionStrategy.TIME_SERIES;
-		   				numberOfSlicesToBeProcessed = 0;
-		   				numberOfTimePointsToBeProcessed = filesToBeProcessed.size();
-		   			} else
-	   					throw new RuntimeException(
-		   					"This configuration of multiple files with multiple slices/time points each is not currently supported!");
-		   			System.out.println("Conversion Strategy: " + strategy);	
-		   			
 	   				// open raw file for output
 		   			writer = new BufferedOutputStream(new FileOutputStream(files[1]));
 
@@ -261,11 +280,18 @@ public class TissueStackBioFormatsConverter {
    					throw new RuntimeException(
    						"The dimensions of this image don't match the dimensions of the first image in the series!");
 
-   				int end =
-   					(strategy == ConversionStrategy.SINGLE_IMAGE || strategy == ConversionStrategy.TIME_SERIES) ? 
-   						numberOfTimePointsToBeProcessed : numberOfSlicesToBeProcessed;
+   				// if we have one file in the list only, there is another loop with a minimum of 1 iteration (single 2D)
+   				// otherwise we read the file data from each file individually, representing what the conversion strategy
+   				// believes it is...
+   				int end = 1;
+   				if (filesToBeProcessed.size() == 1 && strategy == ConversionStrategy.TIME_SERIES)
+   					end = numberOfTimePointsToBeProcessed;
+   				else if (filesToBeProcessed.size() == 1 && strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED)
+   					end = numberOfSlicesToBeProcessed;
    				for (int j=0;j<end;j++) {
-   					int index = reader.getIndex(
+   					int index = 0; 
+   					if (end > 1)
+   						index = reader.getIndex(
    						(strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED ? j : 0), // z
    						0, // c TODO: adapt for interleaved
    						(strategy == ConversionStrategy.SINGLE_IMAGE || strategy == ConversionStrategy.TIME_SERIES ? j : 0)); // t
@@ -396,19 +422,20 @@ public class TissueStackBioFormatsConverter {
    					writer.write(imageData);
    					
    	   				// increment
-   	   				if (numberOfTimePointsToBeProcessed > 0 &&
-   	   					(strategy == ConversionStrategy.SINGLE_IMAGE || strategy == ConversionStrategy.TIME_SERIES)) {
-   	   					numberOfTimePointsProcessed++;
+   	   				if (numberOfTimePointsToBeProcessed > 0 && strategy == ConversionStrategy.TIME_SERIES) {
+   	   					++numberOfTimePointsProcessed;
    	   					numberOfSlicesProcessed = numberOfSlicesToBeProcessed;
-   	   				}
-   	   				if (numberOfSlicesToBeProcessed > 0 && strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED) {
-   	   					numberOfSlicesProcessed++;
+   	   	   				System.out.print("Time Point " + numberOfTimePointsProcessed + 
+   	    	   					" of " + numberOfTimePointsToBeProcessed + " [" +
+   	    	   					fileToBeProcessed + "]\t\t\t\r");
+   	   				} else if (numberOfSlicesToBeProcessed > 0 && (
+   	   					strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED || strategy == ConversionStrategy.SINGLE_IMAGE)) {
+   	   					++numberOfSlicesProcessed;
    	   					numberOfTimePointsProcessed = numberOfTimePointsToBeProcessed;
+   	   	   				System.out.print("Slice " + numberOfSlicesProcessed + 
+   	    	   					" of " + numberOfSlicesToBeProcessed + " [" +
+   	    	   					fileToBeProcessed + "]\t\t\t\r");
    	   				}
-   	   				
-   	   				System.out.print("Slice " + (j+1) + 
-   	   					" of " + end + " [" +
-   	   					fileToBeProcessed + "]\t\t\t\r");
    	   				System.out.flush();
    				}
 	    	} catch(Exception any) {
@@ -468,7 +495,7 @@ public class TissueStackBioFormatsConverter {
     		System.err.println("It seems we weren't given any supported files!");
     		return false;
     	}
-    	
+
     	return true;
     }
     
@@ -543,6 +570,118 @@ public class TissueStackBioFormatsConverter {
     	}
     }
 
+    private static ConversionStrategy revisitFileListAndDetermineStrategy(ArrayList<String> filesToBeProcessed) {
+    	ArrayList<String> alteredFileListToBeProcessed = new ArrayList<String>(filesToBeProcessed.size());
+    	IFormatReader metaDataFileReaderForSeries = null;
+    	
+		final ImageReader formatInspectorInstance = new ImageReader();
+    	
+    	String pathPrefix = new File(filesToBeProcessed.get(0)).getParent();
+		try {
+			for (String f : filesToBeProcessed) {
+				try {
+		    		final IFormatReader reader = formatInspectorInstance.getReader(f);
+		    		
+		    		// deal with special case OME XML and TIFF
+		    		if ((reader instanceof OMEXMLReader) ||  
+		    				(reader instanceof OMETiffReader))
+		    		{
+			    		// now get to the meta data ...
+						ServiceFactory serviceFactory = new ServiceFactory();
+						OMEXMLService omexmlService =
+							serviceFactory.getInstance(OMEXMLService.class);
+						OMEXMLMetadata meta = omexmlService.createOMEXMLMetadata();
+						reader.setMetadataStore(meta);
+		    		} 
+					reader.setId(f);
+					
+					if (reader.getImageCount() == 1) // we skip single image files
+						continue;
+					
+					// we remember the meta data file reader 
+					metaDataFileReaderForSeries = reader;
+					
+		    		// deal with special case OME XML and TIFF
+		    		if ((reader instanceof OMEXMLReader) || 
+		    				(reader instanceof OMETiffReader))
+		    		{
+						OMEXMLMetadataRoot root = (OMEXMLMetadataRoot) reader.getMetadataStoreRoot();
+						int timeOrSliceCounter = 0;
+						int imageCounter = 0;
+						while (true) {
+							try {
+								// loop over all images
+								final Image i = root.getImage(imageCounter);
+								final Pixels p = i.getPixels();
+								
+								if (p != null) {
+									int tiffDataCounter = 0;
+									while (true) {
+										try {
+											// loop over all tiff data
+											TiffData td = p.getTiffData(tiffDataCounter);
+											if (td != null && td.getUUID() != null &&
+												((reader.getSizeZ() > 1 && td.getFirstZ().getValue() == timeOrSliceCounter && td.getFirstT().getValue() == 0) ||
+												 (reader.getSizeT() > 1	&& td.getFirstT().getValue() == timeOrSliceCounter && td.getFirstZ().getValue() == 0 ))) {
+												timeOrSliceCounter++;
+												String fileName = td.getUUID().getFileName();
+												if (fileName != null && !fileName.isEmpty()) {
+													if (new File(fileName).getParent() == null &&
+															pathPrefix != null)
+														fileName = new File(pathPrefix, fileName).getAbsolutePath(); 
+													alteredFileListToBeProcessed.add(fileName);
+												}
+													
+											}
+											tiffDataCounter++;
+										} catch (Exception endOfTiffData)
+										{
+											break;
+										}
+									}
+								}
+								imageCounter++;
+							} catch (Exception endOfImages)
+							{
+								break;
+							}
+						}
+						break;
+		    		} else // other multi image formats
+		    			break;
+				} catch(Exception any) {
+					any.printStackTrace();
+					continue;
+				}
+			}
+			
+			// distinguish between 2 cases: do we have a metaDataFileReader => use it for strategy determination
+			// othewise => first/only file
+			if (metaDataFileReaderForSeries == null) {
+				metaDataFileReaderForSeries = new ImageReader();
+				try {
+					metaDataFileReaderForSeries.setId(filesToBeProcessed.get(0));
+				} catch(Exception any) {
+					return ConversionStrategy.UNKNOWN;
+				}
+				
+			}
+
+	    	ConversionStrategy strategy = 
+	    		TissueStackBioFormatsConverter.determineConversionStrategy(filesToBeProcessed, metaDataFileReaderForSeries);
+
+	    	if (!alteredFileListToBeProcessed.isEmpty()) {
+	    		filesToBeProcessed.clear();
+	    		filesToBeProcessed.addAll(alteredFileListToBeProcessed);
+	    	}
+	    	return strategy;
+		} finally {
+    		try {
+    			formatInspectorInstance.close();    			
+    		} catch(Exception ignored) {}
+		}
+    }
+    
 	private static boolean extractZip(final File[] files, final ArrayList<String> filesToBeProcessed) {
 		// first create our temporary extracton directory
 		final File zipContents = new File(files[2],files[0].getName());
@@ -617,5 +756,16 @@ public class TissueStackBioFormatsConverter {
 					zip.close();
 			} catch (Exception ignored) {}
 		}
+	}
+	
+	private static ConversionStrategy determineConversionStrategy(final ArrayList<String> filesToBeProcessed, final IFormatReader reader) {
+		if (reader.getSizeZ() > 1)
+			return ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED;
+		else if (reader.getSizeT() > 1)
+			return ConversionStrategy.TIME_SERIES;
+		else if (filesToBeProcessed.size() == 1) 
+			return ConversionStrategy.SINGLE_IMAGE;
+		else
+			return ConversionStrategy.TIME_SERIES;
 	}
 }
