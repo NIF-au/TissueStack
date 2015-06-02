@@ -1,11 +1,12 @@
 package au.edu.cai;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -42,7 +43,216 @@ public class TissueStackBioFormatsConverter {
 	    }
 	}
 	
+	public static class ConverterThread extends Thread {
+		private final List<IFormatReader> filesToBeProcessed;
+		private int start;
+		private int end;
+		private int offset;
+		private File files[];
+		
+		
+		public ConverterThread(
+			final List<IFormatReader> filesToBeProcessed,
+			final int start, final int end,
+			final int offset,
+			final File[] files) {
+			this.filesToBeProcessed = filesToBeProcessed;
+			this.start = start;
+			this.end = end;
+			this.files = files;
+			this.offset = offset;
+		}
+
+		 public void run() {
+			 RandomAccessFile writer = null;
+			 try {
+				 writer = new RandomAccessFile(this.files[1], "rw");
+				 for (int j=this.start;
+						j<(this.end > this.filesToBeProcessed.size() ? this.filesToBeProcessed.size() : this.end);
+						j++) {
+					 
+					 // check if some other thread caused an error
+					 if (TissueStackBioFormatsConverter.errorFlag) {
+						 System.err.println("ERROR SOMEWHERE ELSE");
+						 break;
+					 }
+						 
+					 
+					IFormatReader reader = this.filesToBeProcessed.get(j);
+					int index = 0; 
+					/*
+					if (end > 1)
+						index = reader.getIndex(
+						(strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED ? j : 0), // z
+						0, // c TODO: adapt for interleaved
+						(strategy == ConversionStrategy.SINGLE_IMAGE || strategy == ConversionStrategy.TIME_SERIES ? j : 0)); // t
+					*/
+					byte imageData[] = reader.openBytes(index);
+					int bitsPerPixelDivisionFactor = reader.getBitsPerPixel() / 8; //converge on byte
+					int image_size = reader.getSizeX() * reader.getSizeY();
+					
+					// here comes the nuisance: cater for all bit depths (incl. sign), color and endianess
+					// for all intents and purposes we can treat 8 bit types and color similarly
+					if (reader.isRGB() || bitsPerPixelDivisionFactor == 1) {
+						// first of all allocate the output 
+						byte tmpData[] = new byte[image_size * 3]; // we converge on an RGB
+						int channel = 0;
+		
+						for (int i=0;i<imageData.length;i++) {
+							byte val = imageData[i];
+							if (reader.isRGB() && !reader.isInterleaved())
+								tmpData[i] = val;
+							else if (reader.isRGB() && reader.isInterleaved()) {
+								int i_mod_image_size = 
+									(i < image_size) ? i : i % image_size;
+								if (i_mod_image_size == 0 && i != 0)
+									++channel;
+								
+								int k = channel * image_size + i_mod_image_size * 3;
+								tmpData[k] = imageData[i];
+							} else {
+								// do we have a lookup ?
+								if (!reader.isIndexed()) // plain 8 bit gray
+									tmpData[i*3] = tmpData[i*3+1] = tmpData[i*3+2] = imageData[i];
+								else {
+		   							final byte [][] lookupTable = reader.get8BitLookupTable();
+		   							if (lookupTable == null)
+		   								break;
+		   							tmpData[i*3] = lookupTable[imageData[i]][0];
+		   							tmpData[i*3+1] = lookupTable[imageData[i]][1];
+		   							tmpData[i*3+2] = lookupTable[imageData[i]][2];
+								}
+							}
+								 
+						}
+						imageData = tmpData; // set image data to final output data 
+					} else if (reader.getPixelType() == FormatTools.INT16 || reader.getPixelType() == FormatTools.UINT16 ||
+							reader.getPixelType() == FormatTools.INT32 || reader.getPixelType() == FormatTools.UINT32) {
+						// converge on the java type that covers 16 as well as 32 bits => long (64b)
+						long tmpData[] = new long[imageData.length / bitsPerPixelDivisionFactor];
+		
+						boolean isSignedType = 
+								reader.getPixelType() == FormatTools.INT16 || reader.getPixelType() == FormatTools.INT32; 
+		
+						// min/max for contrast range madness in case people use the sledge-hammer for a incy wincy nail
+						long min = Long.MAX_VALUE;
+						long max = Long.MIN_VALUE;
+		
+						for (int b=0;b<imageData.length;b+=bitsPerPixelDivisionFactor) {
+							long val = 0x0000000000000000;
+							for (int s=0;s<bitsPerPixelDivisionFactor;s++) {
+								int endianOffset =
+									reader.isLittleEndian() ? b+s : (bitsPerPixelDivisionFactor-s)-1;
+								long newVal = ((long)imageData[endianOffset]) << (s*8);
+								if (!isSignedType)
+									newVal &= ( ( (long) (0x00000000000000FF) ) << (s*8) );
+								val |= newVal;
+							}
+							if (val < min)
+								min = val;
+							if (val > max)
+								max = val;
+							
+							tmpData[b/bitsPerPixelDivisionFactor] = val;
+						}
+						// allocate new output data 
+						imageData = new byte[image_size * 3];
+						for (int i=0;i<tmpData.length;i++) {
+							if (!reader.isIndexed()) // plain 16 bit signed/unsigned data	
+								imageData[i*3] = imageData[i*3 + 1] = imageData[i*3 + 2] = 
+									(byte) (((double) tmpData[i] / (max-min)) * 255);
+							else { // lookup
+								final short [][] lookupTable = reader.get16BitLookupTable();
+								if (lookupTable == null)
+									break;
+								imageData[i*3] = (byte) lookupTable[(int)tmpData[i]][0];
+								imageData[i*3+1] = (byte) lookupTable[(int)tmpData[i]][1];
+								imageData[i*3+2] = (byte) lookupTable[(int)tmpData[i]][2];
+							}
+						} 
+					} else if (reader.getPixelType() == FormatTools.FLOAT || reader.getPixelType() == FormatTools.DOUBLE) {
+						// converge java type double
+						double tmpData[] = new double[imageData.length / bitsPerPixelDivisionFactor];
+		
+						// min/max for contrast range madness in case people use the sledge-hammer for a incy wincy nail
+						double min = Double.MAX_VALUE;
+						double max = Double.MIN_VALUE;
+						
+						for (int b=0;b<imageData.length;b+=bitsPerPixelDivisionFactor) {
+							double val = 0;
+							long tmpVal = 0;
+		   					for (int s=0;s<bitsPerPixelDivisionFactor;s++) {
+								int endianOffset =
+									reader.isLittleEndian() ? b+s : (bitsPerPixelDivisionFactor-s)-1;
+								tmpVal = ((long)imageData[endianOffset]) << (s*8) & ( ( (long) (0x00000000000000FF) ) << (s*8) );
+							}
+							if (reader.getPixelType() == FormatTools.FLOAT)
+								val = (double) Float.intBitsToFloat((int) tmpVal);
+							else
+								val = Double.longBitsToDouble(tmpVal);
+							if (val < min)
+								min = val;
+							if (val > max)
+								max = val;
+							
+							tmpData[b/bitsPerPixelDivisionFactor] = val;
+						}
+						// allocate new output data 
+						imageData = new byte[image_size * 3];
+						for (int i=0;i<tmpData.length;i++) {
+							imageData[i*3] = imageData[i*3 + 1] = imageData[i*3 + 2] = 
+								(byte) (((double) tmpData[i] / (max-min)) * 255);
+						} 
+					}   	
+					
+					int dims = TissueStackBioFormatsConverter.strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED ? 3 : 1;
+					for (int k=0;k<dims;k++) {
+						long actualOffset =	(long) this.offset;
+						
+						if (dims > 1)
+							actualOffset +=  (long) image_size * 3 * filesToBeProcessed.size() * k;
+						actualOffset += (long)image_size * 3 * j;
+					
+						writer.seek(actualOffset);
+						writer.write(imageData);
+						
+						// TODO: reconstruction logic, for now: break
+						 // check if some other thread caused an error
+						 if (TissueStackBioFormatsConverter.errorFlag) {
+							 System.err.println("ERROR SOMEWHERE ELSE");
+							 break;
+						 }
+						 
+						break;
+					}
+					
+					// increment and display progress
+					TissueStackBioFormatsConverter.incrementAndDisplayProgress(reader.getCurrentFile());
+				}
+			 } catch (Exception any) {
+				 errorFlag = true;
+				 System.err.println("");
+				 System.err.println("Error Conversion: " + any.getMessage());
+				 any.printStackTrace(System.err);
+			 } finally {
+		        	try {
+		        		if (writer != null)
+		        			writer.close();
+		        	} catch(Exception anyElse) {
+		        		// ignored
+		        	}
+			 }
+		 }
+	}
+	
 	static boolean hasBeenTerminated = true;
+	static ConversionStrategy strategy = null;
+	static int numberOfSlicesToBeProcessed = 0;
+	static int numberOfSlicesProcessed = 0;
+	static int numberOfTimePointsToBeProcessed = 0;
+	static int numberOfTimePointsProcessed = 0;
+
+	static boolean errorFlag = false;
 	
     public static void main(String[] args) {
     	DebugTools.enableLogging("ERROR");
@@ -152,24 +362,23 @@ public class TissueStackBioFormatsConverter {
 		System.out.println("Revisit file list and determine conversion strategy...");
 		
 		// this looks at the image (series) and tries to find an appropriate conversion method
-		ConversionStrategy strategy = 
+		TissueStackBioFormatsConverter.strategy = 
     		TissueStackBioFormatsConverter.revisitFileListAndDetermineStrategy(filesToBeProcessed);
-    	if (strategy == ConversionStrategy.UNKNOWN)
+    	if (TissueStackBioFormatsConverter.strategy == ConversionStrategy.UNKNOWN)
     	{
     		System.err.println("Couldn't find an appropriate conversion strategy!");
     		return false;
     	}
     		
-		System.out.println("Chosen Conversion Strategy: " + strategy);
+		System.out.println("Chosen Conversion Strategy: " + TissueStackBioFormatsConverter.strategy);
 		
-    	BufferedOutputStream writer = null;
+    	RandomAccessFile writer = null;
     	String format = null;
+    	int headerLength = 0;
     	int sizeX = 0;
     	int sizeY = 0;
-    	int numberOfSlicesToBeProcessed = 0;
-    	int numberOfSlicesProcessed = 0;
-    	int numberOfTimePointsToBeProcessed = 0;
-    	int numberOfTimePointsProcessed = 0;
+    	
+    	List<IFormatReader> readersToBeProcessedInParallel = new ArrayList<IFormatReader>(filesToBeProcessed.size());
     	
     	for (String fileToBeProcessed : filesToBeProcessed) {
 	    	IFormatReader reader = new ImageReader();
@@ -231,7 +440,7 @@ public class TissueStackBioFormatsConverter {
 		   				reader.setSeries(0);
 	   				
 	   				// open raw file for output
-		   			writer = new BufferedOutputStream(new FileOutputStream(files[1]));
+		   			writer = new RandomAccessFile(files[1], "rwd");
 
 		   			// write out header
 		   			StringBuffer header_buffer = new StringBuffer(100);
@@ -267,177 +476,44 @@ public class TissueStackBioFormatsConverter {
 		   			header_buffer.append("|");
 		   			header_buffer.append(partHeader);
 
-		   			writer.write(header_buffer.toString().getBytes());
-	   			} else if (!format.equals(reader.getFormat())) {
-	   				System.out.println("");
-	   				System.out.println("Format is different from initially detected one ("
-	   						+ format + "). Skipping file: " +  fileToBeProcessed);
-	   				continue;
+		   			final String head = header_buffer.toString();
+		   			headerLength = head.length();
+		   			writer.write(head.getBytes());
+		   			
+		   			// calculate data portion size
+		   			long dataSectionLength = 3 * sizeX * sizeY;
+		   			if (strategy != ConversionStrategy.TIME_SERIES) // if time series we need n timepoints of what we have  
+		   				dataSectionLength *= numberOfTimePointsToBeProcessed;
+		   			if (strategy != ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED) // if 3D reconstruction we need n slices * dimensions (3)  
+		   				dataSectionLength *= numberOfSlicesToBeProcessed * 3;
+
+		   			long prospectivefileSize = headerLength + dataSectionLength;
+		   			writer.setLength(prospectivefileSize);
+		   			writer.close();
 	   			}
+	   			
+	   			if (!format.equals(reader.getFormat()))
+   					throw new RuntimeException(
+   						"All image files have to have the same format!");
 
 	   			// dimension checks: they have to be the same as determined initially!
    				if (reader.getSizeX() != sizeX || reader.getSizeY() != sizeY)
    					throw new RuntimeException(
    						"The dimensions of this image don't match the dimensions of the first image in the series!");
 
-   				// if we have one file in the list only, there is another loop with a minimum of 1 iteration (single 2D)
-   				// otherwise we read the file data from each file individually, representing what the conversion strategy
-   				// believes it is...
-   				int end = 1;
-   				if (filesToBeProcessed.size() == 1 && strategy == ConversionStrategy.TIME_SERIES)
-   					end = numberOfTimePointsToBeProcessed;
-   				else if (filesToBeProcessed.size() == 1 && strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED)
-   					end = numberOfSlicesToBeProcessed;
-   				for (int j=0;j<end;j++) {
-   					int index = 0; 
-   					if (end > 1)
-   						index = reader.getIndex(
-   						(strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED ? j : 0), // z
-   						0, // c TODO: adapt for interleaved
-   						(strategy == ConversionStrategy.SINGLE_IMAGE || strategy == ConversionStrategy.TIME_SERIES ? j : 0)); // t
-
-   					byte imageData[] = reader.openBytes(index);
-   					if ((reader.getBitsPerPixel() % 8) != 0)
-   	   					throw new RuntimeException(
-   	   						"The bit depth is not a multiple of 8 bit!");
-   					int bitsPerPixelDivisionFactor = reader.getBitsPerPixel() / 8; //converge on byte
-   					int image_size = sizeX * sizeY;
-   					
-   					// here comes the nuisance: cater for all bit depths (incl. sign), color and endianess
-   					// for all intents and purposes we can treat 8 bit types and color similarly
-   					if (reader.isRGB() || bitsPerPixelDivisionFactor == 1) {
-   						// first of all allocate the output 
-   						byte tmpData[] = new byte[image_size * 3]; // we converge on an RGB
-   						int channel = 0;
-
-   						for (int i=0;i<imageData.length;i++) {
-   							byte val = imageData[i];
-   	   						if (reader.isRGB() && !reader.isInterleaved())
-   	   							tmpData[i] = val;
-   	   						else if (reader.isRGB() && reader.isInterleaved()) {
-   	   							int i_mod_image_size = 
-   	   								(i < image_size) ? i : i % image_size;
-   	   							if (i_mod_image_size == 0 && i != 0)
-   	   								++channel;
-   	   							
-   	   							int k = channel * image_size + i_mod_image_size * 3;
-   	   							tmpData[k] = imageData[i];
-   	   						} else {
-   	   							// do we have a lookup ?
-   	   							if (!reader.isIndexed()) // plain 8 bit gray
-   	   								tmpData[i*3] = tmpData[i*3+1] = tmpData[i*3+2] = imageData[i];
-   	   							else {
-   	   	   							final byte [][] lookupTable = reader.get8BitLookupTable();
-   	   	   							if (lookupTable == null)
-   	   	   								break;
-   	   	   							tmpData[i*3] = lookupTable[imageData[i]][0];
-   	   	   							tmpData[i*3+1] = lookupTable[imageData[i]][1];
-   	   	   							tmpData[i*3+2] = lookupTable[imageData[i]][2];
-   	   							}
-   	   						}
-   	   							 
-   						}
-   						imageData = tmpData; // set image data to final output data 
-   					} else if (reader.getPixelType() == FormatTools.INT16 || reader.getPixelType() == FormatTools.UINT16 ||
-   							reader.getPixelType() == FormatTools.INT32 || reader.getPixelType() == FormatTools.UINT32) {
-   						// converge on the java type that covers 16 as well as 32 bits => long (64b)
-   						long tmpData[] = new long[imageData.length / bitsPerPixelDivisionFactor];
-
-   						boolean isSignedType = 
-   	   							reader.getPixelType() == FormatTools.INT16 || reader.getPixelType() == FormatTools.INT32; 
-
-   						// min/max for contrast range madness in case people use the sledge-hammer for a incy wincy nail
-   						long min = Long.MAX_VALUE;
-   	   					long max = Long.MIN_VALUE;
-
-   	   					for (int b=0;b<imageData.length;b+=bitsPerPixelDivisionFactor) {
-   	   						long val = 0x0000000000000000;
-   	   						for (int s=0;s<bitsPerPixelDivisionFactor;s++) {
-   	   							int endianOffset =
-   	   								reader.isLittleEndian() ? b+s : (bitsPerPixelDivisionFactor-s)-1;
-   	   							long newVal = ((long)imageData[endianOffset]) << (s*8);
-   	   							if (!isSignedType)
-   	   								newVal &= ( ( (long) (0x00000000000000FF) ) << (s*8) );
-   	   							val |= newVal;
-   	   						}
-   	   						if (val < min)
-   	   							min = val;
-   	   						if (val > max)
-   	   							max = val;
-   	   						
-   	   						tmpData[b/bitsPerPixelDivisionFactor] = val;
-   	   					}
-   	   					// allocate new output data 
-   	   					imageData = new byte[image_size * 3];
-   	   					for (int i=0;i<tmpData.length;i++) {
-   	   						if (!reader.isIndexed()) // plain 16 bit signed/unsigned data	
-   	   							imageData[i*3] = imageData[i*3 + 1] = imageData[i*3 + 2] = 
-   	   								(byte) (((double) tmpData[i] / (max-min)) * 255);
-   	   						else { // lookup
-   	   							final short [][] lookupTable = reader.get16BitLookupTable();
-   	   							if (lookupTable == null)
-   	   								break;
-   	   							imageData[i*3] = (byte) lookupTable[(int)tmpData[i]][0];
-   	   							imageData[i*3+1] = (byte) lookupTable[(int)tmpData[i]][1];
-   	   							imageData[i*3+2] = (byte) lookupTable[(int)tmpData[i]][2];
-   	   						}
-   	   					} 
-   					} else if (reader.getPixelType() == FormatTools.FLOAT || reader.getPixelType() == FormatTools.DOUBLE) {
-   						// converge java type double
-   						double tmpData[] = new double[imageData.length / bitsPerPixelDivisionFactor];
-
-   						// min/max for contrast range madness in case people use the sledge-hammer for a incy wincy nail
-   						double min = Double.MAX_VALUE;
-   	   					double max = Double.MIN_VALUE;
-   	   					
-   	   					for (int b=0;b<imageData.length;b+=bitsPerPixelDivisionFactor) {
-   	   						double val = 0;
-   	   						long tmpVal = 0;
-	   	   					for (int s=0;s<bitsPerPixelDivisionFactor;s++) {
-	   							int endianOffset =
-	   								reader.isLittleEndian() ? b+s : (bitsPerPixelDivisionFactor-s)-1;
-	   							tmpVal = ((long)imageData[endianOffset]) << (s*8) & ( ( (long) (0x00000000000000FF) ) << (s*8) );
-	   						}
-   	   						if (reader.getPixelType() == FormatTools.FLOAT)
-   	   							val = (double) Float.intBitsToFloat((int) tmpVal);
-   	   						else
-   	   							val = Double.longBitsToDouble(tmpVal);
-   	   						if (val < min)
-   	   							min = val;
-   	   						if (val > max)
-   	   							max = val;
-   	   						
-   	   						tmpData[b/bitsPerPixelDivisionFactor] = val;
-   	   					}
-   	   					// allocate new output data 
-   	   					imageData = new byte[image_size * 3];
-   	   					for (int i=0;i<tmpData.length;i++) {
-   							imageData[i*3] = imageData[i*3 + 1] = imageData[i*3 + 2] = 
-   								(byte) (((double) tmpData[i] / (max-min)) * 255);
-   	   					} 
-   					} else {
-   						throw new RuntimeException("Unsupported Pixel Type (only RGB, 8/16/32 grayscale and float/double are allowed!");
-   					}
-   						
-   					writer.write(imageData);
-   					
-   	   				// increment
-   	   				if (numberOfTimePointsToBeProcessed > 0 && strategy == ConversionStrategy.TIME_SERIES) {
-   	   					++numberOfTimePointsProcessed;
-   	   					numberOfSlicesProcessed = numberOfSlicesToBeProcessed;
-   	   	   				System.out.print("Time Point " + numberOfTimePointsProcessed + 
-   	    	   					" of " + numberOfTimePointsToBeProcessed + " [" +
-   	    	   					fileToBeProcessed + "]\t\t\t\r");
-   	   				} else if (numberOfSlicesToBeProcessed > 0 && (
-   	   					strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED || strategy == ConversionStrategy.SINGLE_IMAGE)) {
-   	   					++numberOfSlicesProcessed;
-   	   					numberOfTimePointsProcessed = numberOfTimePointsToBeProcessed;
-   	   	   				System.out.print("Slice " + numberOfSlicesProcessed + 
-   	    	   					" of " + numberOfSlicesToBeProcessed + " [" +
-   	    	   					fileToBeProcessed + "]\t\t\t\r");
-   	   				}
-   	   				System.out.flush();
-   				}
+   				// bit depth check
+				if ((reader.getBitsPerPixel() % 8) != 0)
+   					throw new RuntimeException(
+   						"The bit depth is not a multiple of 8 bit!");
+   				
+				if (!(reader.getPixelType() == FormatTools.INT8 || reader.getPixelType() == FormatTools.UINT8 ||
+						reader.getPixelType() == FormatTools.INT16 || reader.getPixelType() == FormatTools.UINT16 ||
+						reader.getPixelType() == FormatTools.INT32 || reader.getPixelType() == FormatTools.UINT32 ||
+						reader.getPixelType() == FormatTools.FLOAT || reader.getPixelType() == FormatTools.DOUBLE || 
+						reader.isRGB()))
+					throw new RuntimeException("Unsupported Pixel Type (only RGB, 8/16/32 grayscale and float/double are allowed!");
+				
+				readersToBeProcessedInParallel.add(reader);
 	    	} catch(Exception any) {
 	    		System.out.println();
 				System.err.println("Error: " + any.getMessage());
@@ -456,44 +532,70 @@ public class TissueStackBioFormatsConverter {
 	        	}
 	        	
 	    		return false;
-	    	} finally { // close reader
-	        	try {
-	        		if (reader != null)
-	        			reader.close();
-	        	} catch(Exception anyElse) {
-	        		// ignored
-	        	}
 	    	}
     	}
 
-    	// spit out some warnings in the case where the number of slices/time points processed
-    	// does not match the total
-    	if (numberOfSlicesProcessed != numberOfSlicesToBeProcessed || 
-    		numberOfTimePointsProcessed != numberOfTimePointsToBeProcessed) {
-    		System.out.println("WARNING: The number of processed slices/time points [" +
-    			numberOfSlicesProcessed + "/" + numberOfTimePointsProcessed +
-    			"] did not match its supposed total [" +
-    			numberOfSlicesToBeProcessed + "/" + numberOfTimePointsToBeProcessed +
-    			"] !!!!");
-    	}
-    	
-    	// close raw file
     	try {
-    		if (writer != null)
-    			writer.close();
-    	} catch(Exception anyElse) {
-    		// ignored
-    	}
+	    	if (format == null) {
+	    		System.err.println("It seems we weren't given any supported files!");
+	    		return false;
+	    	}
 
-    	// erased temporay zip files if created
-    	if (files[0].getAbsolutePath().toLowerCase().endsWith(".zip")) {
-    		TissueStackBioFormatsConverter.deleteDirectory(
-	    		new File(files[2],files[0].getName()).getAbsoluteFile());
-    	}
+	    	if (readersToBeProcessedInParallel.isEmpty()) {
+	    		System.err.println("It seems we have no readers after perusing the file list. This is highly dubious!");
+	    		return false;
+	    	}
 
-    	if (format == null) {
-    		System.err.println("It seems we weren't given any supported files!");
-    		return false;
+	    	// now dedicate a thread to a batch of slices / time points 
+	    	int end = 1;
+	    	if (strategy == ConversionStrategy.TIME_SERIES)
+				end = numberOfTimePointsToBeProcessed;
+			else if (strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED)
+				end = numberOfSlicesToBeProcessed;
+			
+			// find a good divisor to distribute the work load for threads
+	    	// check how high we can go, we set 3 as a default
+			int highestDivisor = 3;
+			int tmpDivisor = highestDivisor;
+			while (tmpDivisor <= 10) {
+				if (end % tmpDivisor == 0)
+					highestDivisor = tmpDivisor;
+				tmpDivisor++;
+			}
+
+			final int modDivisor = end % highestDivisor;
+			final int numberOfThreads = 
+				modDivisor == 0 ? 
+					highestDivisor : highestDivisor + 1;
+			final int numberOfFilesPerThread = 
+					end / highestDivisor;
+			final Thread busyWorkerBees[] = new TissueStackBioFormatsConverter.ConverterThread[numberOfThreads];
+			for (int j=0;j<numberOfThreads;j++) {
+				busyWorkerBees[j] =
+					new TissueStackBioFormatsConverter.ConverterThread(
+						readersToBeProcessedInParallel, j*numberOfFilesPerThread, (j+1)*numberOfFilesPerThread, headerLength, files);
+				busyWorkerBees[j].setDaemon(false);
+				busyWorkerBees[j].start();
+			}
+    	} finally {
+    		// TODO: wait loop to wait for threads and then clean up
+    		/*
+    		// close all readers
+    		for (IFormatReader r : readersToBeProcessedInParallel) {
+	        	try {
+	        		if (r != null)
+	        			r.close();
+	        	} catch(Exception anyElse) {
+	        		// ignored
+	        	}
+    		}
+    		
+	    	// erased temporay zip files if created
+	    	if (files[0].getAbsolutePath().toLowerCase().endsWith(".zip")) {
+	    		TissueStackBioFormatsConverter.deleteDirectory(
+		    		new File(files[2],files[0].getName()).getAbsoluteFile());
+	    	}
+	    	*/
     	}
 
     	return true;
@@ -664,7 +766,6 @@ public class TissueStackBioFormatsConverter {
 				} catch(Exception any) {
 					return ConversionStrategy.UNKNOWN;
 				}
-				
 			}
 
 	    	ConversionStrategy strategy = 
@@ -767,5 +868,23 @@ public class TissueStackBioFormatsConverter {
 			return ConversionStrategy.SINGLE_IMAGE;
 		else
 			return ConversionStrategy.TIME_SERIES;
+	}
+	
+	private static synchronized void incrementAndDisplayProgress(final String fileToBeProcessed) {
+		if (numberOfTimePointsToBeProcessed > 0 && strategy == ConversionStrategy.TIME_SERIES) {
+				++numberOfTimePointsProcessed;
+				numberOfSlicesProcessed = numberOfSlicesToBeProcessed;
+   				System.out.print("Time Point " + numberOfTimePointsProcessed + 
+	   					" of " + numberOfTimePointsToBeProcessed + " [" +
+	   					fileToBeProcessed + "]\t\t\t\r");
+			} else if (numberOfSlicesToBeProcessed > 0 && (
+				strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED || strategy == ConversionStrategy.SINGLE_IMAGE)) {
+				++numberOfSlicesProcessed;
+				numberOfTimePointsProcessed = numberOfTimePointsToBeProcessed;
+   				System.out.print("Slice " + numberOfSlicesProcessed + 
+	   					" of " + numberOfSlicesToBeProcessed + " [" +
+	   					fileToBeProcessed + "]\t\t\t\r");
+			}
+			System.out.flush();
 	}
 }
