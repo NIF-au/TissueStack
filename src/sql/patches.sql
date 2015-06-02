@@ -44,13 +44,17 @@ ALTER TABLE dataset ADD COLUMN one_to_one_zoom_level INTEGER NOT NULL DEFAULT 3;
 ALTER TABLE dataset ADD COLUMN resolution_mm NUMERIC(18,10) DEFAULT 0;
 UPDATE configuration SET value='server',description='server proxy path (relative to the application''s web root directory)' WHERE name='server_proxy_path';
 UPDATE configuration SET value='[0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5]',description='default zoom levels' WHERE name='default_zoom_levels';
+UPDATE dataset SET zoom_levels = '[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2.00, 2.25, 2.5]';
 ALTER TABLE dataset ADD COLUMN value_range_min numeric(18,5) NOT NULL DEFAULT 0;
 ALTER TABLE dataset ADD COLUMN value_range_max numeric(18,5) NOT NULL DEFAULT 255;
 ALTER TABLE dataset_planes ADD COLUMN step NUMERIC(18,10) NOT NULL DEFAULT 1;
 DELETE FROM configuration WHERE name='tasks_queue_file';
 DELETE FROM configuration WHERE name='lookup_tables_directory';
 -- copy resolutions if there 
---UPDATE dataset SET resolution_mm = res
---FROM (SELECT dataset_id, min(resolution_mm) AS res FROM dataset_planes group by dataset_id) AS sub_planes
---WHERE dataset.id = sub_planes.dataset_id
---ALTER TABLE dataset_planes DROP COLUMN resolution_mm;
+UPDATE dataset SET resolution_mm = res
+FROM (SELECT dataset_id, min(resolution_mm) AS res FROM dataset_planes group by dataset_id) AS sub_planes
+WHERE dataset.id = sub_planes.dataset_id;
+ALTER TABLE dataset_planes DROP COLUMN resolution_mm;
+ALTER TABLE dataset_planes DROP COLUMN is_tiled;
+ALTER TABLE dataset_planes DROP COLUMN zoom_levels;
+ALTER TABLE dataset_planes DROP COLUMN one_to_one_zoom_level;

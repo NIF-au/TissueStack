@@ -26,6 +26,8 @@ void tissuestack::imaging::RawConverter::convert(
 	const std::string dimension,
 	const bool writeHeader)
 {
+	// TODO: consider using fread/fwrite
+
 	// this will be useful for offline tools to not need to keep track of pointer
 	std::unique_ptr<const tissuestack::services::TissueStackConversionTask> ptr_converter_task(converter_task);
 
@@ -417,6 +419,8 @@ void tissuestack::imaging::RawConverter::convertDicom(
 				}
 				resumed = false;
 			}
+
+			// TODO: do this using threads ...
 
 			for (;slice < dim->getNumberOfSlices();slice++)
 			{

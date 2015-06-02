@@ -245,12 +245,15 @@ const unsigned short tissuestack::database::DataSetDataProvider::addDataSet(
 	std::ostringstream tmpSql;
 
 	// main table insert
-	tmpSql << "INSERT INTO dataset (id, filename, resolution_mm, value_range_min, value_range_max";
+	tmpSql << "INSERT INTO dataset (id, filename, is_tiled, zoom_levels, one_to_one_zoom_level, resolution_mm, value_range_min, value_range_max";
 	if (!dataSet->getDescription().empty())
 		tmpSql << ",description";
 	tmpSql << ") VALUES (" << db_id << ",'"
 		<< dataSet->getFileName()
-		<< "'";
+		<< "','";
+	tmpSql << (dataSet->isTiled() ? "T" : "F") << "','";
+	tmpSql << dataSet->getZoomLevelsAsJson() << "',";
+	tmpSql << dataSet->getOneToOneZoomLevel();
 	if (dataSet->getResolutionMm() > 0)
 		tmpSql << ","
 			<< std::to_string(dataSet->getResolutionMm())
@@ -276,18 +279,15 @@ const unsigned short tissuestack::database::DataSetDataProvider::addDataSet(
 	{
 		const tissuestack::imaging::TissueStackDataDimension * dim =
 			dataSet->getDimensionByLongName(d);
-		tmpSql << "INSERT INTO dataset_planes (id, dataset_id, is_tiled, zoom_levels, name,"
-			<< " max_x, max_y, max_slices, one_to_one_zoom_level, step, transformation_matrix)"
+		tmpSql << "INSERT INTO dataset_planes (id, dataset_id, name,"
+			<< " max_x, max_y, max_slices, step, transformation_matrix)"
 			<< " VALUES(DEFAULT,"
 			<< db_id << ",'"
-			<< (dataSet->isTiled() ? "T" : "F")
-			<< "','" << dataSet->getZoomLevelsAsJson()
-			<< "','" << dim->getName().at(0)
+			<< dim->getName().at(0)
 			<< "',";
 		tmpSql << std::to_string(dim->getWidth())
 			<< "," << std::to_string(dim->getHeight())
 			<< "," << std::to_string(dim->getNumberOfSlices())
-			<< "," << std::to_string(dataSet->getOneToOneZoomLevel())
 			<< "," << ((i < dataSet->_steps.size()) ? std::to_string(dataSet->_steps[i]) : "1")
 			<< (dim->getTransformationMatrix().empty() ?
 					", NULL" :
