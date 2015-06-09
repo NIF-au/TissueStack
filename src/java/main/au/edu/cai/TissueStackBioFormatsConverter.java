@@ -5,7 +5,12 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryUsage;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -26,6 +31,9 @@ import loci.formats.services.OMEXMLService;
 
 public class TissueStackBioFormatsConverter {
 	
+	/*
+	 * ENUM DEFINING CONVERSION STRATEGIES
+	 */
 	public static enum ConversionStrategy {
 		SINGLE_IMAGE(1),
 		TIME_SERIES(2),
@@ -43,8 +51,11 @@ public class TissueStackBioFormatsConverter {
 	    }
 	}
 	
+	/*
+	 * A WORKER THREAD CLASS FOR CONVERSION
+	 */
 	public static class ConverterThread extends Thread {
-		private final List<IFormatReader> filesToBeProcessed;
+		private final List<String> filesToBeProcessed;
 		private int start;
 		private int end;
 		private int offset;
@@ -52,7 +63,7 @@ public class TissueStackBioFormatsConverter {
 		
 		
 		public ConverterThread(
-			final List<IFormatReader> filesToBeProcessed,
+			final List<String> filesToBeProcessed,
 			final int start, final int end,
 			final int offset,
 			final File[] files) {
@@ -63,12 +74,15 @@ public class TissueStackBioFormatsConverter {
 			this.offset = offset;
 		}
 
-		 public void run() {
+		@SuppressWarnings("resource")
+		public void run() {
 			 RandomAccessFile writer = null;
+			 IFormatReader reader = null;
+			 int actualEnd = this.end > this.filesToBeProcessed.size() ? this.filesToBeProcessed.size() : this.end;
 			 try {
 				 writer = new RandomAccessFile(this.files[1], "rw");
 				 for (int j=this.start;
-						j<(this.end > this.filesToBeProcessed.size() ? this.filesToBeProcessed.size() : this.end);
+						j<actualEnd;
 						j++) {
 					 
 					 // check if some other thread caused an error
@@ -76,165 +90,225 @@ public class TissueStackBioFormatsConverter {
 						 System.err.println("ERROR SOMEWHERE ELSE");
 						 break;
 					 }
-						 
-					 
-					IFormatReader reader = this.filesToBeProcessed.get(j);
-					int index = 0; 
-					/*
-					if (end > 1)
-						index = reader.getIndex(
-						(strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED ? j : 0), // z
-						0, // c TODO: adapt for interleaved
-						(strategy == ConversionStrategy.SINGLE_IMAGE || strategy == ConversionStrategy.TIME_SERIES ? j : 0)); // t
-					*/
-					byte imageData[] = reader.openBytes(index);
-					int bitsPerPixelDivisionFactor = reader.getBitsPerPixel() / 8; //converge on byte
-					int image_size = reader.getSizeX() * reader.getSizeY();
 					
-					// here comes the nuisance: cater for all bit depths (incl. sign), color and endianess
-					// for all intents and purposes we can treat 8 bit types and color similarly
-					if (reader.isRGB() || bitsPerPixelDivisionFactor == 1) {
-						// first of all allocate the output 
-						byte tmpData[] = new byte[image_size * 3]; // we converge on an RGB
-						int channel = 0;
-		
-						for (int i=0;i<imageData.length;i++) {
-							byte val = imageData[i];
-							if (reader.isRGB() && !reader.isInterleaved())
-								tmpData[i] = val;
-							else if (reader.isRGB() && reader.isInterleaved()) {
-								int i_mod_image_size = 
-									(i < image_size) ? i : i % image_size;
-								if (i_mod_image_size == 0 && i != 0)
-									++channel;
-								
-								int k = channel * image_size + i_mod_image_size * 3;
-								tmpData[k] = imageData[i];
-							} else {
-								// do we have a lookup ?
-								if (!reader.isIndexed()) // plain 8 bit gray
-									tmpData[i*3] = tmpData[i*3+1] = tmpData[i*3+2] = imageData[i];
-								else {
-		   							final byte [][] lookupTable = reader.get8BitLookupTable();
-		   							if (lookupTable == null)
-		   								break;
-		   							tmpData[i*3] = lookupTable[imageData[i]][0];
-		   							tmpData[i*3+1] = lookupTable[imageData[i]][1];
-		   							tmpData[i*3+2] = lookupTable[imageData[i]][2];
+			    	reader = new ImageReader();
+	    			reader.setId(this.filesToBeProcessed.get(j));
+					reader.setSeries(TissueStackBioFormatsConverter.series);
+
+					if (j > 0 && TissueStackBioFormatsConverter.metaInfoFileImageCount != reader.getImageCount() &&
+							(reader.getImageCount() / reader.getSizeC() > 1))
+						throw new RuntimeException("This configuration of a series is not supported (Multiple meta info files)!");
+					
+					
+					int internalLoopEnd = 1;
+					if (j == 0 && this.filesToBeProcessed.size() == 1 &&
+						TissueStackBioFormatsConverter.strategy == ConversionStrategy.TIME_SERIES)
+						internalLoopEnd = TissueStackBioFormatsConverter.numberOfTimePointsToBeProcessed;
+					else if (j == 0 && this.filesToBeProcessed.size() == 1 && 
+						TissueStackBioFormatsConverter.strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED)
+						internalLoopEnd = TissueStackBioFormatsConverter.numberOfSlicesToBeProcessed;
+					
+					int c=0;
+					int t=0;
+					int z=0;
+
+					for (int l=0;l<internalLoopEnd;l++) {
+						if (l > 0 && strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED) {
+							c = 0;
+							t = 0;
+							z = l;
+						} else if (l > 0 && strategy == ConversionStrategy.TIME_SERIES) {
+							c = 0;
+							z = 0;
+							t = l;
+						}
+							
+						int index = reader.getIndex(z, c, t);
+							
+						byte imageData[] = reader.openBytes(index);
+						int bitsPerPixelDivisionFactor = reader.getBitsPerPixel() / 8; //converge on byte
+	
+						int image_size = reader.getSizeX() * reader.getSizeY();
+						
+						// here comes the nuisance: cater for all bit depths (incl. sign), color and endianess
+						// for all intents and purposes we can treat 8 bit types and color similarly
+						if (reader.isRGB() || reader.getSizeC() == 3 || bitsPerPixelDivisionFactor == 1) {
+							// first of all allocate the output 
+							byte tmpData[] = new byte[image_size * 3]; // we converge on an RGB
+							int numOfChannels = reader.getSizeC() > 1 && !reader.isInterleaved() ? reader.getSizeC() : 1;
+			
+							for (c=0;c<numOfChannels;c++) {
+								if (c > 0) {
+									index = reader.getIndex(z, c, t);
+									imageData = reader.openBytes(index);
+									
+									// we map only to RGB
+									if (c>3) continue;
+								}
+									
+								for (int i=0;i<imageData.length;i++) {
+									byte val = imageData[i];
+									if (reader.isRGB() || (reader.getSizeC() > 1 && reader.isInterleaved()))
+										tmpData[i] = val;
+									else if (reader.getSizeC() > 1 && !reader.isInterleaved()) {
+										int k = i * 3 + c;
+										tmpData[k] = imageData[i];
+									} else {
+										// do we have a lookup ?
+										if (!reader.isIndexed()) // plain 8 bit gray
+											tmpData[i*3] = tmpData[i*3+1] = tmpData[i*3+2] = imageData[i];
+										else {
+				   							final byte [][] lookupTable = reader.get8BitLookupTable();
+				   							if (lookupTable == null)
+				   								break;
+				   							tmpData[i*3] = lookupTable[imageData[i]][0];
+				   							tmpData[i*3+1] = lookupTable[imageData[i]][1];
+				   							tmpData[i*3+2] = lookupTable[imageData[i]][2];
+										}
+									}
+										 
 								}
 							}
-								 
-						}
-						imageData = tmpData; // set image data to final output data 
-					} else if (reader.getPixelType() == FormatTools.INT16 || reader.getPixelType() == FormatTools.UINT16 ||
-							reader.getPixelType() == FormatTools.INT32 || reader.getPixelType() == FormatTools.UINT32) {
-						// converge on the java type that covers 16 as well as 32 bits => long (64b)
-						long tmpData[] = new long[imageData.length / bitsPerPixelDivisionFactor];
-		
-						boolean isSignedType = 
-								reader.getPixelType() == FormatTools.INT16 || reader.getPixelType() == FormatTools.INT32; 
-		
-						// min/max for contrast range madness in case people use the sledge-hammer for a incy wincy nail
-						long min = Long.MAX_VALUE;
-						long max = Long.MIN_VALUE;
-		
-						for (int b=0;b<imageData.length;b+=bitsPerPixelDivisionFactor) {
-							long val = 0x0000000000000000;
-							for (int s=0;s<bitsPerPixelDivisionFactor;s++) {
-								int endianOffset =
-									reader.isLittleEndian() ? b+s : (bitsPerPixelDivisionFactor-s)-1;
-								long newVal = ((long)imageData[endianOffset]) << (s*8);
-								if (!isSignedType)
-									newVal &= ( ( (long) (0x00000000000000FF) ) << (s*8) );
-								val |= newVal;
+							imageData = tmpData; // set image data to final output data 
+						} else if (reader.getPixelType() == FormatTools.INT16 || reader.getPixelType() == FormatTools.UINT16 ||
+								reader.getPixelType() == FormatTools.INT32 || reader.getPixelType() == FormatTools.UINT32) {
+							// converge on the java type that covers 16 as well as 32 bits => long (64b)
+							long tmpData[] = new long[imageData.length / bitsPerPixelDivisionFactor];
+			
+							boolean isSignedType = 
+									reader.getPixelType() == FormatTools.INT16 || reader.getPixelType() == FormatTools.INT32; 
+			
+							// min/max for contrast range madness in case people use the sledge-hammer for a incy wincy nail
+							long min = Long.MAX_VALUE;
+							long max = Long.MIN_VALUE;
+			
+							for (int b=0;b<imageData.length;b+=bitsPerPixelDivisionFactor) {
+								long val = 0x0000000000000000;
+								for (int s=0;s<bitsPerPixelDivisionFactor;s++) {
+									int endianOffset =
+										reader.isLittleEndian() ? b+s : (bitsPerPixelDivisionFactor-s)-1;
+									long newVal = ((long)imageData[endianOffset]) << (s*8);
+									if (!isSignedType)
+										newVal &= ( ( (long) (0x00000000000000FF) ) << (s*8) );
+									val |= newVal;
+								}
+								if (val < min)
+									min = val;
+								if (val > max)
+									max = val;
+								
+								tmpData[b/bitsPerPixelDivisionFactor] = val;
 							}
-							if (val < min)
-								min = val;
-							if (val > max)
-								max = val;
+							// allocate new output data 
+							imageData = new byte[image_size * 3];
+							for (int i=0;i<tmpData.length;i++) {
+								if (!reader.isIndexed()) // plain 16 bit signed/unsigned data	
+									imageData[i*3] = imageData[i*3 + 1] = imageData[i*3 + 2] = 
+										(byte) (((double) tmpData[i] / (max-min)) * 255);
+								else { // lookup
+									final short [][] lookupTable = reader.get16BitLookupTable();
+									if (lookupTable == null)
+										break;
+									imageData[i*3] = (byte) lookupTable[(int)tmpData[i]][0];
+									imageData[i*3+1] = (byte) lookupTable[(int)tmpData[i]][1];
+									imageData[i*3+2] = (byte) lookupTable[(int)tmpData[i]][2];
+								}
+							} 
+						} else if (reader.getPixelType() == FormatTools.FLOAT || reader.getPixelType() == FormatTools.DOUBLE) {
+							// converge java type double
+							double tmpData[] = new double[imageData.length / bitsPerPixelDivisionFactor];
+			
+							// min/max for contrast range madness in case people use the sledge-hammer for a incy wincy nail
+							double min = Double.MAX_VALUE;
+							double max = Double.MIN_VALUE;
 							
-							tmpData[b/bitsPerPixelDivisionFactor] = val;
-						}
-						// allocate new output data 
-						imageData = new byte[image_size * 3];
-						for (int i=0;i<tmpData.length;i++) {
-							if (!reader.isIndexed()) // plain 16 bit signed/unsigned data	
+							for (int b=0;b<imageData.length;b+=bitsPerPixelDivisionFactor) {
+								double val = 0;
+								long tmpVal = 0;
+			   					for (int s=0;s<bitsPerPixelDivisionFactor;s++) {
+									int endianOffset =
+										reader.isLittleEndian() ? b+s : (bitsPerPixelDivisionFactor-s)-1;
+									tmpVal = ((long)imageData[endianOffset]) << (s*8) & ( ( (long) (0x00000000000000FF) ) << (s*8) );
+								}
+								if (reader.getPixelType() == FormatTools.FLOAT)
+									val = (double) Float.intBitsToFloat((int) tmpVal);
+								else
+									val = Double.longBitsToDouble(tmpVal);
+								if (val < min)
+									min = val;
+								if (val > max)
+									max = val;
+								
+								tmpData[b/bitsPerPixelDivisionFactor] = val;
+							}
+							// allocate new output data 
+							imageData = new byte[image_size * 3];
+							for (int i=0;i<tmpData.length;i++) {
 								imageData[i*3] = imageData[i*3 + 1] = imageData[i*3 + 2] = 
 									(byte) (((double) tmpData[i] / (max-min)) * 255);
-							else { // lookup
-								final short [][] lookupTable = reader.get16BitLookupTable();
-								if (lookupTable == null)
-									break;
-								imageData[i*3] = (byte) lookupTable[(int)tmpData[i]][0];
-								imageData[i*3+1] = (byte) lookupTable[(int)tmpData[i]][1];
-								imageData[i*3+2] = (byte) lookupTable[(int)tmpData[i]][2];
-							}
-						} 
-					} else if (reader.getPixelType() == FormatTools.FLOAT || reader.getPixelType() == FormatTools.DOUBLE) {
-						// converge java type double
-						double tmpData[] = new double[imageData.length / bitsPerPixelDivisionFactor];
-		
-						// min/max for contrast range madness in case people use the sledge-hammer for a incy wincy nail
-						double min = Double.MAX_VALUE;
-						double max = Double.MIN_VALUE;
+							} 
+						}   	
 						
-						for (int b=0;b<imageData.length;b+=bitsPerPixelDivisionFactor) {
-							double val = 0;
-							long tmpVal = 0;
-		   					for (int s=0;s<bitsPerPixelDivisionFactor;s++) {
-								int endianOffset =
-									reader.isLittleEndian() ? b+s : (bitsPerPixelDivisionFactor-s)-1;
-								tmpVal = ((long)imageData[endianOffset]) << (s*8) & ( ( (long) (0x00000000000000FF) ) << (s*8) );
-							}
-							if (reader.getPixelType() == FormatTools.FLOAT)
-								val = (double) Float.intBitsToFloat((int) tmpVal);
-							else
-								val = Double.longBitsToDouble(tmpVal);
-							if (val < min)
-								min = val;
-							if (val > max)
-								max = val;
-							
-							tmpData[b/bitsPerPixelDivisionFactor] = val;
-						}
-						// allocate new output data 
-						imageData = new byte[image_size * 3];
-						for (int i=0;i<tmpData.length;i++) {
-							imageData[i*3] = imageData[i*3 + 1] = imageData[i*3 + 2] = 
-								(byte) (((double) tmpData[i] / (max-min)) * 255);
-						} 
-					}   	
-					
-					int dims = TissueStackBioFormatsConverter.strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED ? 3 : 1;
-					for (int k=0;k<dims;k++) {
-						long actualOffset =	(long) this.offset;
-						
-						if (dims > 1)
-							actualOffset +=  (long) image_size * 3 * filesToBeProcessed.size() * k;
-						actualOffset += (long)image_size * 3 * j;
-					
-						writer.seek(actualOffset);
+						long sliceDataOffset =
+							(long) this.offset + (long) image_size * 3 * (internalLoopEnd > 1 ? l : j);
+	
+						writer.seek(sliceDataOffset);
 						writer.write(imageData);
-						
-						// TODO: reconstruction logic, for now: break
-						 // check if some other thread caused an error
-						 if (TissueStackBioFormatsConverter.errorFlag) {
-							 System.err.println("ERROR SOMEWHERE ELSE");
-							 break;
-						 }
-						 
-						break;
+	
+						// TODO: correct and optimize this. does not work as is. just a skeleton copy of code
+						if (TissueStackBioFormatsConverter.strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED &&
+								!TissueStackBioFormatsConverter.avoid3DReconstruction) {
+							long dimensionSize = (long) image_size * filesToBeProcessed.size() * 3;
+							long secondDimensionOffset = (long) this.offset + dimensionSize;
+							long thirdDimensionOffset = secondDimensionOffset + dimensionSize;
+							long secondDimensionImageSize = (long) reader.getSizeX() * filesToBeProcessed.size() * 3;
+							long thirdDimensionImageSize = (long) reader.getSizeY() * filesToBeProcessed.size() * 3;
+							
+							for (int h=0 ; h < reader.getSizeY() ; h++)
+							{
+								 if (TissueStackBioFormatsConverter.errorFlag) {
+									 System.err.println("ERROR SOMEWHERE ELSE");
+									 break;
+								 }
+	
+								for (int w=0; w < reader.getSizeX() ; w++) {
+									final int dataOffset =
+										h * reader.getSizeX() * 3 + w * 3;
+									final long xPlaneOffset =
+										secondDimensionOffset + w * secondDimensionImageSize +
+											h * filesToBeProcessed.size() * 3 + j * 3;
+									final long yPlaneOffset =
+										thirdDimensionOffset + (reader.getSizeY() - (h + 1)) * thirdDimensionImageSize +
+											w * filesToBeProcessed.size() * 3 + j * 3;
+	
+									byte[] bytesToBeWritten = Arrays.copyOfRange(imageData, dataOffset, dataOffset+3);
+									writer.seek(xPlaneOffset);
+									writer.write(bytesToBeWritten);
+	
+									writer.seek(yPlaneOffset);
+									writer.write(bytesToBeWritten);
+								}
+							}
+							
+						}
+	
+						// increment and display progress
+						TissueStackBioFormatsConverter.incrementAndDisplayProgress(reader.getCurrentFile());
 					}
-					
-					// increment and display progress
-					TissueStackBioFormatsConverter.incrementAndDisplayProgress(reader.getCurrentFile());
-				}
+				 }
 			 } catch (Exception any) {
 				 errorFlag = true;
 				 System.err.println("");
 				 System.err.println("Error Conversion: " + any.getMessage());
 				 any.printStackTrace(System.err);
 			 } finally {
+		        	try {
+		        		if (reader != null)
+		        			reader.close();
+		        	} catch(Exception anyElse) {
+		        		// ignored
+		        	}
+
 		        	try {
 		        		if (writer != null)
 		        			writer.close();
@@ -245,15 +319,31 @@ public class TissueStackBioFormatsConverter {
 		 }
 	}
 	
-	static boolean hasBeenTerminated = true;
+	/*
+	 *  GLOBAL VARIABLE SECTION
+	 */
+
+	// avoid 3D construction
+	static boolean avoid3DReconstruction = true;
+	// the strategy to be accessed globally
 	static ConversionStrategy strategy = null;
+
+	// the workload parameters to be accessed globally
+	static int metaInfoFileImageCount = 0;
+	static int series = 0;
 	static int numberOfSlicesToBeProcessed = 0;
 	static int numberOfSlicesProcessed = 0;
 	static int numberOfTimePointsToBeProcessed = 0;
 	static int numberOfTimePointsProcessed = 0;
-
+	
+	// global termination flag as a sign to delete temporary files as well as an incomplete output
+	static boolean hasBeenTerminated = true;
+	// global error flag as a sign for other threads to stop
 	static boolean errorFlag = false;
 	
+	/*
+	 *  MAIN METHOD
+	 */
     public static void main(String[] args) {
     	DebugTools.enableLogging("ERROR");
     	
@@ -262,9 +352,10 @@ public class TissueStackBioFormatsConverter {
     	
 		 Runtime.getRuntime().addShutdownHook(new Thread() {
 			   public void run() {
-				   if (TissueStackBioFormatsConverter.hasBeenTerminated) {
+				   if (TissueStackBioFormatsConverter.hasBeenTerminated || TissueStackBioFormatsConverter.errorFlag) {
 						System.out.println();
-						System.err.println("Process terminated: Ctrl-C or kill signal!");
+						if (!TissueStackBioFormatsConverter.errorFlag)
+							System.err.println("Process terminated: Ctrl-C or kill signal!");
 						try { // delete output
 							files[1].delete();
 						} catch(Exception anyElse) {
@@ -277,15 +368,20 @@ public class TissueStackBioFormatsConverter {
 		 if (!TissueStackBioFormatsConverter.convert(files))
 			 System.err.println("\nConversion failed!!!!");
     	else {
-    		System.out.println("\nConversions completed successfully");
+    		System.out.println("\nConversion completed successfully");
     		TissueStackBioFormatsConverter.hasBeenTerminated = false;
     	}
     }
     
+    /*
+     * PRELIMINARY CHECKS BEFORE CONVERSION IS EVEN CONSIDERED
+     */
     private static final File[] runChecks(String[] args) {
       	// some preliminary checks
     	if (args.length < 2) { // number of args
-    		System.err.println("Please provide 2 input arguments at a minimum! First: input file; Second: output file; Third [optional]: temporary directory!");
+    		System.err.println("Please provide 2 input arguments at a minimum:\n"
+    				+ "First: input file; Second: output file;\n"
+    				+ "Third [optional, default: /tmp]: temporary directory; Fourth [optional, default: true]: avoid 3D reconstruction!");
     		System.exit(-1);
     	}
 
@@ -306,6 +402,9 @@ public class TissueStackBioFormatsConverter {
     		System.exit(-1);
     	}
 
+    	if (args.length > 3)
+    		TissueStackBioFormatsConverter.avoid3DReconstruction = Boolean.parseBoolean(args[3]);
+    	
     	// exclude formats dicom, nifti and minc (based on extension for now)
     	if (TissueStackBioFormatsConverter.checkFileNameForMincNiftiAndDicom(input_file_name) ||
     			(input_file_name.toLowerCase().endsWith(".zip") &&
@@ -339,6 +438,18 @@ public class TissueStackBioFormatsConverter {
     	return new File[] {input, output, temp};
     }
     
+    /*
+     *  CONVERSION FUNCTION:
+     *  -) optionally: unzips archives
+     *  -) adds files to processing list
+     *  -) determins conversions strategy, 
+     *     i.e. does something end up as a single image, time series or 3D reconstruction in the .raw 
+     *  -) special treatment for OME-XML and TIFF
+     *  -) performs further check on file list to weed out incompatible image dimensions and formats
+     *  -) set work load figures
+     *  -) created output file of proper size and writes header
+     *  -) instantiates actual worker threads and waits for completion
+     */
     private static final boolean convert(final File[] files) {
     	ArrayList<String> filesToBeProcessed =
     		new ArrayList<String>();
@@ -350,12 +461,12 @@ public class TissueStackBioFormatsConverter {
 	    		new File(files[2],files[0].getName()).getAbsoluteFile());
 
     		return false;
-    	} else
+    	} else if (!files[0].getAbsolutePath().toLowerCase().endsWith(".zip"))
     		filesToBeProcessed.add(files[0].getAbsolutePath());
 
     	// remember the prefix of the first
     	if (filesToBeProcessed.isEmpty()) {
-    		System.err.println("Couldn't find an appropriate conversion strategy!");
+    		System.err.println("File list for processing happens to be empty which is weird ...!");
     		return false;
     	}
     	
@@ -370,7 +481,8 @@ public class TissueStackBioFormatsConverter {
     		return false;
     	}
     		
-		System.out.println("Chosen Conversion Strategy: " + TissueStackBioFormatsConverter.strategy);
+		System.out.println("Chosen Conversion Strategy: " + TissueStackBioFormatsConverter.strategy + " [avoid 3D reconstruction flag: " +
+				TissueStackBioFormatsConverter.avoid3DReconstruction + "]");
 		
     	RandomAccessFile writer = null;
     	String format = null;
@@ -378,7 +490,7 @@ public class TissueStackBioFormatsConverter {
     	int sizeX = 0;
     	int sizeY = 0;
     	
-    	List<IFormatReader> readersToBeProcessedInParallel = new ArrayList<IFormatReader>(filesToBeProcessed.size());
+    	List<String> filesToBeProcessedInParallel = new ArrayList<String>(filesToBeProcessed.size());
     	
     	for (String fileToBeProcessed : filesToBeProcessed) {
 	    	IFormatReader reader = new ImageReader();
@@ -401,7 +513,7 @@ public class TissueStackBioFormatsConverter {
 	   				
 	   				// some more preliminary checks ...
 	   				System.out.println("Endian: " +  (reader.isLittleEndian() ? "little" : "big"));
-	   				if (reader.isRGB())
+	   				if (reader.isRGB() || reader.getSizeT() == 3)
 	   					System.out.println("Color Image [" +  (!reader.isInterleaved() ? "non " : "") + "interleaved]");
 	   				else {
 	   					String pixelType = "UNKNOWN";
@@ -412,7 +524,25 @@ public class TissueStackBioFormatsConverter {
 	   					}
 	   					System.out.println("Gray Scale Image [" + pixelType + "]");
 	   				}
-	   				
+
+	   				long freeMemEstimate = TissueStackBioFormatsConverter.getFreeMemoryEstimate();
+	   				// we only ever process 1 series
+		   			if (reader.getSeriesCount() > 1) {
+		   				long lowestFreeMemoryRemaining = Long.MAX_VALUE;
+		   				for (int s=0;s<reader.getSeriesCount();s++) {
+		   					reader.setSeries(s);
+		   					long projectedMemUsage = (long) reader.getSizeX() * reader.getSizeY() * 3 * 2 * 8;
+		   					long tmpFreeMemRemaining = freeMemEstimate - projectedMemUsage;
+		   					if (tmpFreeMemRemaining > 0 && tmpFreeMemRemaining < lowestFreeMemoryRemaining) {
+		   						lowestFreeMemoryRemaining = tmpFreeMemRemaining;
+		   						TissueStackBioFormatsConverter.series = s;
+		   					}
+		   				}
+		   					
+		   				reader.setSeries(TissueStackBioFormatsConverter.series);
+		   			} else 
+		   				reader.setSeries(TissueStackBioFormatsConverter.series);
+		   			
 	   				// read in essential parameters
 	   				sizeX = reader.getSizeX();
 	   				sizeY = reader.getSizeY();
@@ -429,22 +559,24 @@ public class TissueStackBioFormatsConverter {
 		   				numberOfSlicesToBeProcessed = 0;
 		   			}
 	   				
-	   				System.out.println("Number of Series: " + reader.getSeriesCount() + " [anything higher than 1 will be ignored!]");
-	   				System.out.println("Number of Images: " + reader.getImageCount());
+	   				System.out.println("Number of Series: " + reader.getSeriesCount() + " [using: " + 
+	   				TissueStackBioFormatsConverter.series + "]");
+	   				
+	   				TissueStackBioFormatsConverter.metaInfoFileImageCount = reader.getImageCount();
+	   				System.out.println("Number of Images (incl. channels/time/slice): " + TissueStackBioFormatsConverter.metaInfoFileImageCount);
 	   				System.out.println("Image Plane Dimension (X times Y): " + sizeX + " x " + sizeY);
-	   				System.out.println("Number of Slices (Z): " + numberOfSlicesToBeProcessed);
-	   				System.out.println("Number of Points in Time (T): " + numberOfTimePointsToBeProcessed);
-
-	   				// we only ever process 1 series
-		   			if (reader.getSeriesCount() > 1)
-		   				reader.setSeries(0);
+	   				System.out.println("Number of Slices (Z): " + reader.getSizeZ());
+	   				System.out.println("Number of Points in Time (T): " + reader.getSizeT());
+	   				System.out.println("Number of Channels: " + reader.getSizeC());
+	   				System.out.println("Looping over remaining files (might take a while) ... ");
 	   				
 	   				// open raw file for output
 		   			writer = new RandomAccessFile(files[1], "rwd");
 
 		   			// write out header
 		   			StringBuffer header_buffer = new StringBuffer(100);
-		   			if (strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED) {
+		   			if (strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED &&
+		   					!TissueStackBioFormatsConverter.avoid3DReconstruction) {
 			   			header_buffer.append(numberOfSlicesToBeProcessed);
 		   				header_buffer.append(":");
 		   			} 
@@ -454,17 +586,24 @@ public class TissueStackBioFormatsConverter {
 		   			if (strategy == ConversionStrategy.TIME_SERIES) {
 			   			header_buffer.append(":");		   				
 		   				header_buffer.append(numberOfTimePointsToBeProcessed);
+		   			} else if (strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED &&
+		   				TissueStackBioFormatsConverter.avoid3DReconstruction) {
+			   			header_buffer.append(":");		   				
+		   				header_buffer.append(numberOfSlicesToBeProcessed);
 		   			}
 		   			header_buffer.append("|"); // now coordinates TODO: extract meta-info
-		   			if (strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED)
+		   			if (strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED &&
+		   					!TissueStackBioFormatsConverter.avoid3DReconstruction)
 		   				header_buffer.append("0:");
 		   			header_buffer.append("0:0");
 		   			header_buffer.append("|");	// now spacing/step size TODO: extract meta-info
-		   			if (strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED)
+		   			if (strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED  &&
+		   					!TissueStackBioFormatsConverter.avoid3DReconstruction)
 		   				header_buffer.append("1:");
 		   			header_buffer.append("1:1"); 
 		   			header_buffer.append("|"); // now coordinate naming 
-		   			if (strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED)
+		   			if (strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED  &&
+		   					!TissueStackBioFormatsConverter.avoid3DReconstruction)
 			   			header_buffer.append("y:x:z");
 		   			else
 		   				header_buffer.append("x:y");
@@ -513,7 +652,7 @@ public class TissueStackBioFormatsConverter {
 						reader.isRGB()))
 					throw new RuntimeException("Unsupported Pixel Type (only RGB, 8/16/32 grayscale and float/double are allowed!");
 				
-				readersToBeProcessedInParallel.add(reader);
+				filesToBeProcessedInParallel.add(fileToBeProcessed);
 	    	} catch(Exception any) {
 	    		System.out.println();
 				System.err.println("Error: " + any.getMessage());
@@ -531,26 +670,34 @@ public class TissueStackBioFormatsConverter {
 			    		new File(files[2],files[0].getName()).getAbsoluteFile());
 	        	}
 	        	
+	        	TissueStackBioFormatsConverter.errorFlag = true;
 	    		return false;
+	    	} finally {
+	    		try {
+	    			if (reader != null)
+	    				reader.close();
+	    		} catch (Exception ignored) {}
 	    	}
     	}
 
     	try {
 	    	if (format == null) {
 	    		System.err.println("It seems we weren't given any supported files!");
+	        	TissueStackBioFormatsConverter.errorFlag = true;
 	    		return false;
 	    	}
 
-	    	if (readersToBeProcessedInParallel.isEmpty()) {
-	    		System.err.println("It seems we have no readers after perusing the file list. This is highly dubious!");
+	    	if (filesToBeProcessedInParallel.isEmpty()) {
+	    		System.err.println("It seems we have no files for the threads after perusing the file list. This is highly dubious!");
+	        	TissueStackBioFormatsConverter.errorFlag = true;
 	    		return false;
 	    	}
 
 	    	// now dedicate a thread to a batch of slices / time points 
 	    	int end = 1;
-	    	if (strategy == ConversionStrategy.TIME_SERIES)
+	    	if (filesToBeProcessedInParallel.size() > 1 && strategy == ConversionStrategy.TIME_SERIES)
 				end = numberOfTimePointsToBeProcessed;
-			else if (strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED)
+			else if (filesToBeProcessedInParallel.size() > 1 && strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED)
 				end = numberOfSlicesToBeProcessed;
 			
 			// find a good divisor to distribute the work load for threads
@@ -566,41 +713,56 @@ public class TissueStackBioFormatsConverter {
 			final int modDivisor = end % highestDivisor;
 			final int numberOfThreads = 
 				modDivisor == 0 ? 
-					highestDivisor : highestDivisor + 1;
+					highestDivisor :
+					end < highestDivisor ? end : highestDivisor;
 			final int numberOfFilesPerThread = 
-					end / highestDivisor;
+				end < highestDivisor ? end : end / highestDivisor;
+			
+			System.out.println("Number of Conversion Threads used: " + numberOfThreads + " [" + numberOfFilesPerThread + " files per thread].");
 			final Thread busyWorkerBees[] = new TissueStackBioFormatsConverter.ConverterThread[numberOfThreads];
 			for (int j=0;j<numberOfThreads;j++) {
 				busyWorkerBees[j] =
 					new TissueStackBioFormatsConverter.ConverterThread(
-						readersToBeProcessedInParallel, j*numberOfFilesPerThread, (j+1)*numberOfFilesPerThread, headerLength, files);
+						filesToBeProcessedInParallel, j*numberOfFilesPerThread, (j+1)*numberOfFilesPerThread, headerLength, files);
 				busyWorkerBees[j].setDaemon(false);
 				busyWorkerBees[j].start();
 			}
+
+			// wait until all threads have finished
+
+			while (true) {
+				int numberOfThreadsAlive = numberOfThreads;
+				for (int j=0;j<numberOfThreads;j++) 
+					if (!busyWorkerBees[j].isAlive())
+						numberOfThreadsAlive--;
+				
+				if (numberOfThreadsAlive == 0)
+					break;
+				
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					// don't care
+				}
+			}
+			
+			if (TissueStackBioFormatsConverter.errorFlag)
+				return false;
     	} finally {
-    		// TODO: wait loop to wait for threads and then clean up
-    		/*
-    		// close all readers
-    		for (IFormatReader r : readersToBeProcessedInParallel) {
-	        	try {
-	        		if (r != null)
-	        			r.close();
-	        	} catch(Exception anyElse) {
-	        		// ignored
-	        	}
-    		}
-    		
 	    	// erased temporay zip files if created
 	    	if (files[0].getAbsolutePath().toLowerCase().endsWith(".zip")) {
 	    		TissueStackBioFormatsConverter.deleteDirectory(
 		    		new File(files[2],files[0].getName()).getAbsoluteFile());
 	    	}
-	    	*/
     	}
 
     	return true;
     }
     
+    /*
+     * CHECKS FOR FILE FORMATS THAT ARE MEANT TO BE CONVERTED WITH THE TISSUESTACK CONVERTER:
+     * METHOD 1 
+     */
     private static boolean checkZipForMincNiftiAndDicom(final File zipFile) {
     	ZipInputStream zip = null;
     	try {
@@ -631,6 +793,10 @@ public class TissueStackBioFormatsConverter {
     	}
     }
     
+    /*
+     * CHECKS FOR FILE FORMATS THAT ARE MEANT TO BE CONVERTED WITH THE TISSUESTACK CONVERTER: 
+     * METHOD 2
+     */
     private static boolean checkFileNameForMincNiftiAndDicom(String fileName) {
     	fileName = fileName.toLowerCase();
     	if (fileName.endsWith(".mnc") ||
@@ -653,6 +819,9 @@ public class TissueStackBioFormatsConverter {
     	return false;
     }
     
+    /*
+     * RECURSIVE DELETION OF DIRECTORIES
+     */
     static private void deleteDirectory(File path) {
     	try { 
             if( path.exists() ) {
@@ -672,8 +841,13 @@ public class TissueStackBioFormatsConverter {
     	}
     }
 
+    /*
+     * 1) DEALS WITH META-DATA SPECIFICS FOR OME-XML AND TIFF
+     * 2) DETERMINES CONVERSION STRATEGY
+     * 3) POTENTIALLY MODIFIES PROCESSING LIST (BASED ON 1 and/or 2)
+     */
     private static ConversionStrategy revisitFileListAndDetermineStrategy(ArrayList<String> filesToBeProcessed) {
-    	ArrayList<String> alteredFileListToBeProcessed = new ArrayList<String>(filesToBeProcessed.size());
+    	LinkedHashSet<String> alteredFileListToBeProcessed = new LinkedHashSet<String>(filesToBeProcessed.size());
     	IFormatReader metaDataFileReaderForSeries = null;
     	
 		final ImageReader formatInspectorInstance = new ImageReader();
@@ -682,7 +856,7 @@ public class TissueStackBioFormatsConverter {
 		try {
 			for (String f : filesToBeProcessed) {
 				try {
-		    		final IFormatReader reader = formatInspectorInstance.getReader(f);
+					final IFormatReader reader = formatInspectorInstance.getReader(f);
 		    		
 		    		// deal with special case OME XML and TIFF
 		    		if ((reader instanceof OMEXMLReader) ||  
@@ -783,6 +957,9 @@ public class TissueStackBioFormatsConverter {
 		}
     }
     
+    /*
+     * ZIP ARCHIVE EXTRACTION HELPER
+     */
 	private static boolean extractZip(final File[] files, final ArrayList<String> filesToBeProcessed) {
 		// first create our temporary extracton directory
 		final File zipContents = new File(files[2],files[0].getName());
@@ -815,9 +992,13 @@ public class TissueStackBioFormatsConverter {
 		
 			    FileOutputStream fos = null;
 			    try {
-			        final File unzippedFile = new File(zipContents, ze.getName());
-			        System.out.println("Unzipping: " +  unzippedFile.getAbsoluteFile() + "...");
-			        new File(unzippedFile.getParent()).mkdirs();
+
+			    	final File unzippedFile = new File(zipContents, ze.getName());
+			        if (ze.isDirectory()) {
+			        	unzippedFile.mkdirs();
+			        	continue;
+			        }
+			    	System.out.println("Unzipping: " +  unzippedFile.getAbsoluteFile() + "...");
 			        
 			        // read zip entry and write out into new file
 		            fos = new FileOutputStream(unzippedFile);             
@@ -837,6 +1018,7 @@ public class TissueStackBioFormatsConverter {
 		        		// ignored
 		        	}
 		
+		        	TissueStackBioFormatsConverter.errorFlag = true;
 		    		return false;
 		    	} finally { // close writer
 		        	try {
@@ -859,6 +1041,9 @@ public class TissueStackBioFormatsConverter {
 		}
 	}
 	
+	/*
+	 * CONVERSION STRATEGY DETERMINATION RULES
+	 */
 	private static ConversionStrategy determineConversionStrategy(final ArrayList<String> filesToBeProcessed, final IFormatReader reader) {
 		if (reader.getSizeZ() > 1)
 			return ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED;
@@ -870,6 +1055,9 @@ public class TissueStackBioFormatsConverter {
 			return ConversionStrategy.TIME_SERIES;
 	}
 	
+	/*
+	 * HANDLED WORKLOAD PROGRESS INCREMENT AND DISPLAY (SYNCed FOR THREADS) 
+	 */
 	private static synchronized void incrementAndDisplayProgress(final String fileToBeProcessed) {
 		if (numberOfTimePointsToBeProcessed > 0 && strategy == ConversionStrategy.TIME_SERIES) {
 				++numberOfTimePointsProcessed;
@@ -886,5 +1074,12 @@ public class TissueStackBioFormatsConverter {
 	   					fileToBeProcessed + "]\t\t\t\r");
 			}
 			System.out.flush();
+	}
+	
+	private static long getFreeMemoryEstimate() {
+		MemoryMXBean memBean = ManagementFactory.getMemoryMXBean();
+		MemoryUsage heapMem = memBean.getHeapMemoryUsage();
+
+		return (long) ((heapMem.getMax()-heapMem.getUsed()) * 0.75);
 	}
 }
