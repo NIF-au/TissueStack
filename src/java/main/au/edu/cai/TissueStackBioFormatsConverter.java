@@ -9,7 +9,6 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -78,18 +77,21 @@ public class TissueStackBioFormatsConverter {
 		public void run() {
 			 RandomAccessFile writer = null;
 			 IFormatReader reader = null;
+			 int actualStart = this.start;
 			 int actualEnd = this.end > this.filesToBeProcessed.size() ? this.filesToBeProcessed.size() : this.end;
+			 if (this.filesToBeProcessed.size() == 1) {
+				 actualStart = 0;
+				 actualEnd = 1;
+			 }
+			 
 			 try {
 				 writer = new RandomAccessFile(this.files[1], "rw");
-				 for (int j=this.start;
+				 for (int j=actualStart;
 						j<actualEnd;
 						j++) {
 					 
 					 // check if some other thread caused an error
-					 if (TissueStackBioFormatsConverter.errorFlag) {
-						 System.err.println("ERROR SOMEWHERE ELSE");
-						 break;
-					 }
+					 if (TissueStackBioFormatsConverter.errorFlag) break;
 					
 			    	reader = new ImageReader();
 	    			reader.setId(this.filesToBeProcessed.get(j));
@@ -99,20 +101,24 @@ public class TissueStackBioFormatsConverter {
 							(reader.getImageCount() / reader.getSizeC() > 1))
 						throw new RuntimeException("This configuration of a series is not supported (Multiple meta info files)!");
 					
-					
+					int internalLoopStart = 0;
 					int internalLoopEnd = 1;
-					if (j == 0 && this.filesToBeProcessed.size() == 1 &&
-						TissueStackBioFormatsConverter.strategy == ConversionStrategy.TIME_SERIES)
-						internalLoopEnd = TissueStackBioFormatsConverter.numberOfTimePointsToBeProcessed;
-					else if (j == 0 && this.filesToBeProcessed.size() == 1 && 
-						TissueStackBioFormatsConverter.strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED)
-						internalLoopEnd = TissueStackBioFormatsConverter.numberOfSlicesToBeProcessed;
+					if (j == 0 && this.filesToBeProcessed.size() == 1) {
+						internalLoopStart = this.start;
+						internalLoopEnd = this.end;
+						if (TissueStackBioFormatsConverter.strategy == ConversionStrategy.TIME_SERIES &&
+								internalLoopEnd > TissueStackBioFormatsConverter.numberOfTimePointsToBeProcessed)
+							internalLoopEnd = TissueStackBioFormatsConverter.numberOfTimePointsToBeProcessed;
+						else if (TissueStackBioFormatsConverter.strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED &&
+								internalLoopEnd > TissueStackBioFormatsConverter.numberOfSlicesToBeProcessed)
+							internalLoopEnd = TissueStackBioFormatsConverter.numberOfSlicesToBeProcessed;
+					}
 					
 					int c=0;
 					int t=0;
 					int z=0;
 
-					for (int l=0;l<internalLoopEnd;l++) {
+					for (int l=internalLoopStart;l<internalLoopEnd;l++) {
 						if (l > 0 && strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED) {
 							c = 0;
 							t = 0;
@@ -258,6 +264,8 @@ public class TissueStackBioFormatsConverter {
 						// TODO: correct and optimize this. does not work as is. just a skeleton copy of code
 						if (TissueStackBioFormatsConverter.strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED &&
 								!TissueStackBioFormatsConverter.avoid3DReconstruction) {
+							throw new RuntimeException("3D volume reconstruction is work in progress. Sorry.");
+							/*
 							long dimensionSize = (long) image_size * filesToBeProcessed.size() * 3;
 							long secondDimensionOffset = (long) this.offset + dimensionSize;
 							long thirdDimensionOffset = secondDimensionOffset + dimensionSize;
@@ -289,7 +297,7 @@ public class TissueStackBioFormatsConverter {
 									writer.write(bytesToBeWritten);
 								}
 							}
-							
+							*/
 						}
 	
 						// increment and display progress
@@ -695,9 +703,11 @@ public class TissueStackBioFormatsConverter {
 
 	    	// now dedicate a thread to a batch of slices / time points 
 	    	int end = 1;
-	    	if (filesToBeProcessedInParallel.size() > 1 && strategy == ConversionStrategy.TIME_SERIES)
+	    	//if (filesToBeProcessedInParallel.size() > 1 && strategy == ConversionStrategy.TIME_SERIES)
+	    	if (strategy == ConversionStrategy.TIME_SERIES)
 				end = numberOfTimePointsToBeProcessed;
-			else if (filesToBeProcessedInParallel.size() > 1 && strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED)
+			//else if (filesToBeProcessedInParallel.size() > 1 && strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED)
+	    	else if (strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED)
 				end = numberOfSlicesToBeProcessed;
 			
 			// find a good divisor to distribute the work load for threads
