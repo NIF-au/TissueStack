@@ -769,8 +769,11 @@ namespace tissuestack
 				const bool isSliceCached(const unsigned long int slice) const;
 				void eraseSlice(const unsigned long int slice);
 				const unsigned long int getNumberOfCachedSlices() const;
+				const long int getMostRecentCacheFailure() const;
+				void setMostRecentCacheFailure(const long int slice);
 			private:
 				unsigned long int _numberOfCachedSlices = 0;
+				long int _mostRecentCacheFailure = -1;
 				SliceCacheEntry ** _cache = nullptr;
 		};
 

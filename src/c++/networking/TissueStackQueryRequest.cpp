@@ -25,7 +25,7 @@ tissuestack::networking::TissueStackQueryRequest::TissueStackQueryRequest(
 	this->setDataSetFromRequestParameters(request_parameters);
 	this->setDimensionFromRequestParameters(request_parameters);
 	this->setSliceFromRequestParameters(request_parameters);
-	this->setCoordinatesFromRequestParameters(request_parameters);
+	this->setCoordinatesFromRequestParameters(request_parameters, true);
 
 	// we have passed all preliminary checks => assign us the new type
 	this->setType(tissuestack::common::Request::Type::TS_QUERY);

@@ -73,7 +73,6 @@ public class TissueStackBioFormatsConverter {
 			this.offset = offset;
 		}
 
-		@SuppressWarnings("resource")
 		public void run() {
 			 RandomAccessFile writer = null;
 			 IFormatReader reader = null;
@@ -85,7 +84,9 @@ public class TissueStackBioFormatsConverter {
 			 }
 			 
 			 try {
+				 reader = new ImageReader();
 				 writer = new RandomAccessFile(this.files[1], "rw");
+				 
 				 for (int j=actualStart;
 						j<actualEnd;
 						j++) {
@@ -93,7 +94,7 @@ public class TissueStackBioFormatsConverter {
 					 // check if some other thread caused an error
 					 if (TissueStackBioFormatsConverter.errorFlag) break;
 					
-			    	reader = new ImageReader();
+
 	    			reader.setId(this.filesToBeProcessed.get(j));
 					reader.setSeries(TissueStackBioFormatsConverter.series);
 
@@ -311,15 +312,13 @@ public class TissueStackBioFormatsConverter {
 				 any.printStackTrace(System.err);
 			 } finally {
 		        	try {
-		        		if (reader != null)
-		        			reader.close();
+		        		reader.close();
 		        	} catch(Exception anyElse) {
 		        		// ignored
 		        	}
 
 		        	try {
-		        		if (writer != null)
-		        			writer.close();
+		        		writer.close();
 		        	} catch(Exception anyElse) {
 		        		// ignored
 		        	}

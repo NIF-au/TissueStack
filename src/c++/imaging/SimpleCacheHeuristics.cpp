@@ -57,7 +57,9 @@ const std::array<unsigned long long int, 3> tissuestack::imaging::SimpleCacheHeu
 
 	if (cache_data == nullptr)
 	{
-		needsToBeAddedToCache = true;
+		if (tissuestack::utils::System::getFreeRam() > actualDimension->getSliceSize() * 3)
+			needsToBeAddedToCache = true;
+
 		cache_data = this->_uncached_extraction->extractImageOnly(image, request);
 		if (cache_data == nullptr)
 			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
@@ -139,11 +141,12 @@ const Image *  tissuestack::imaging::SimpleCacheHeuristics::extractImage(
 
 	if (cache_data == nullptr)
 	{
-		needsToBeAddedToCache = true;
+		const tissuestack::imaging::TissueStackDataDimension * actualDimension =
+				image->getDimensionByLongName(request->getDimensionName());
 		cache_data = this->_uncached_extraction->extractImageOnly(image, request);
-		if (cache_data == nullptr)
-			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-					"Could not extract image data");
+
+		if (tissuestack::utils::System::getFreeRam() > actualDimension->getSliceSize() * 3)
+			needsToBeAddedToCache = true;
 	}
 
 	const tissuestack::imaging::TissueStackDataDimension * actualDimension =
@@ -151,7 +154,6 @@ const Image *  tissuestack::imaging::SimpleCacheHeuristics::extractImage(
 
 	Image * img =
 		this->_uncached_extraction->createImageFromDataRead(image, actualDimension, cache_data);
-
 
 	if (needsToBeAddedToCache)
 		this->addToCache(

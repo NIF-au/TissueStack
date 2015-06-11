@@ -47,6 +47,16 @@ const unsigned long int tissuestack::imaging::DataSetSliceCache::getNumberOfCach
 	return this->_numberOfCachedSlices;
 }
 
+const long int tissuestack::imaging::DataSetSliceCache::getMostRecentCacheFailure() const
+{
+	return this->_mostRecentCacheFailure;
+}
+
+void tissuestack::imaging::DataSetSliceCache::setMostRecentCacheFailure(const long int slice)
+{
+	this->_mostRecentCacheFailure = slice;
+}
+
 const bool tissuestack::imaging::DataSetSliceCache::setSlice(
 	const unsigned long int slice, tissuestack::imaging::SliceCacheEntry * cache_data)
 {

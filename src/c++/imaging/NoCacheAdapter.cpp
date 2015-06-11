@@ -107,6 +107,8 @@ const std::array<unsigned long long int, 3> tissuestack::imaging::NoCacheAdapter
 		DestroyImage(img);
 	}
 
+	delete [] cache_data;
+
 	return pixel_value;
 }
 
@@ -123,6 +125,11 @@ const Image *  tissuestack::imaging::NoCacheAdapter::extractImage(
 	const tissuestack::imaging::TissueStackDataDimension * actualDimension =
 			image->getDimensionByLongName(request->getDimensionName());
 
-	return
+	const Image * img =
 		this->_uncached_extraction->createImageFromDataRead(image, actualDimension, cache_data);
+
+	delete [] cache_data;
+
+	return img;
+
 }

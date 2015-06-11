@@ -97,6 +97,7 @@ const bool tissuestack::imaging::TissueStackSliceCache::addCacheEntry(
 	{
 		this->_is_empty = false;
 		tissuestack::imaging::DataSetSliceCache * cache = this->_cache.at(dataset);
+		cache->setMostRecentCacheFailure(-1);
 		return cache->setSlice(slice, new tissuestack::imaging::SliceCacheEntry(data));
 	} catch (std::out_of_range & not_found) {
 		// we did not have this data set before => add it to cache structure
@@ -128,6 +129,20 @@ const unsigned char *  tissuestack::imaging::TissueStackSliceCache::findCacheEnt
 	if (this->isBeingCleanedUp() || dataset.empty() || this->_is_empty)
 		return nullptr;
 
+	try
+	{
+		tissuestack::imaging::DataSetSliceCache * cache = this->_cache.at(dataset);
+
+		int waitLimit = 10000000;
+		while (waitLimit > 0 && cache->getMostRecentCacheFailure() == static_cast<long int>(slice))
+		{
+			usleep(100000); // 100,000 micro seconds /100 milli seconds
+			waitLimit -= 100000;
+		}
+	} catch (std::out_of_range & not_found) {
+		return nullptr;
+	}
+
 	std::lock_guard<std::mutex> lock(this->_cache_mutex);
 
 	try
@@ -136,8 +151,10 @@ const unsigned char *  tissuestack::imaging::TissueStackSliceCache::findCacheEnt
 		tissuestack::imaging::DataSetSliceCache * cache = this->_cache.at(dataset);
 		tissuestack::imaging::SliceCacheEntry * cached_slice = cache->getSlice(slice);
 		if (cached_slice == nullptr)
+		{
+			cache->setMostRecentCacheFailure(slice);
 			return nullptr;
-
+		}
 		return cached_slice->getCacheData();
 	} catch (std::out_of_range & not_found) {
 		return nullptr;
