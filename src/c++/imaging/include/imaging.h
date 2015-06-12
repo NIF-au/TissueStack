@@ -721,7 +721,8 @@ namespace tissuestack
 						Image * img,
 						const unsigned int xCoordinate,
 						const unsigned int yCoordinate,
-						const unsigned int squareLength,
+						const unsigned int width,
+						const unsigned int height,
 						const bool keepOriginalIntact) const;
 
 				inline Image * getImageTile(

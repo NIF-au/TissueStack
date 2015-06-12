@@ -175,18 +175,21 @@ TissueStack.Queue.prototype = {
 			return;
 		}
 
+		var isOnlyPortionOfImage = false;
 		var canvasX = 0;
 		var imageOffsetX = 0;
 		var width = this.canvas.getDataExtent().x;
 		if (this.canvas.upper_left_x < 0) {
 			width += this.canvas.upper_left_x;
 			imageOffsetX = this.canvas.getDataExtent().x - width;
+			isOnlyPortionOfImage = true;
 		} else {
 			canvasX = this.canvas.upper_left_x;
 		}
 		
 		if (canvasX + width > this.canvas.dim_x) {
 			width = this.canvas.dim_x - canvasX;
+			isOnlyPortionOfImage = true;
 		}
 
 		var canvasY = 0;
@@ -197,10 +200,12 @@ TissueStack.Queue.prototype = {
 		} else {
 			imageOffsetY = this.canvas.upper_left_y - this.canvas.dim_y;
 			height = this.canvas.getDataExtent().y - imageOffsetY;
+			isOnlyPortionOfImage = true;
 		}
 		
 		if (height > this.canvas.dim_y) {
 			height = this.canvas.dim_y;
+			isOnlyPortionOfImage = true;
 		}
 		
 		var imageTile = new Image();
@@ -238,9 +243,17 @@ TissueStack.Queue.prototype = {
 				src += ("&min=" + this.canvas.contrast.getMinimum());
 				src += ("&max=" + this.canvas.contrast.getMaximum());
 			}
+			
+			if (isOnlyPortionOfImage) {
+				src += ("&x=" + imageOffsetX + "&width=" + width);
+				src += ("&y=" + imageOffsetY + "&height=" + height);
+			}
+			
 			src += ("&id=" + this.canvas.sessionId);
 			src += ("&timestamp=" + timestamp);
-		}
+		} else
+			isOnlyPortionOfImage = false;
+		
 		if (_this.latestDrawRequestTimestamp < 0 || timestamp < _this.latestDrawRequestTimestamp)
 			return;
 
@@ -268,6 +281,11 @@ TissueStack.Queue.prototype = {
 					height = this.height;
 				}
 
+				if (isOnlyPortionOfImage) {
+					imageOffsetX = 0;
+					imageOffsetY = 0;
+				}
+				
 				//console.info('Drawing preview for ' +  _this.canvas.getDataExtent().data_id + '[' +_this.canvas.getDataExtent().getOriginalPlane() +  ']: ' + timestamp);
 				if (_this.canvas.getDataExtent().getIsTiled() && _this.canvas.hasColorMapOrContrastSetting())
 					_this.canvas.getCanvasElement().hide();

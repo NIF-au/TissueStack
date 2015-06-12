@@ -99,6 +99,7 @@ namespace tissuestack
 			const std::string getOutputImageFormat() const;
 			const unsigned short getContrastMinimum() const;
 			const unsigned short getContrastMaximum() const;
+			const bool showOnlyPortionOfImage() const;
 			const bool isPreview() const;
 			const bool hasExpired() const;
 		protected:

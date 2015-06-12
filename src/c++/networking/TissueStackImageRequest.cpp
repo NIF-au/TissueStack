@@ -308,6 +308,14 @@ const unsigned short tissuestack::networking::TissueStackImageRequest::getContra
 	return this->_contrast_min;
 }
 
+const bool tissuestack::networking::TissueStackImageRequest::showOnlyPortionOfImage() const
+{
+	if (this->_width > 0 || this->_height > 0)
+		return true;
+
+	return false;
+}
+
 const unsigned short tissuestack::networking::TissueStackImageRequest::getContrastMaximum() const
 {
 	return this->_contrast_max;

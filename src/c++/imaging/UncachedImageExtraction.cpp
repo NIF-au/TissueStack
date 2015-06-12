@@ -232,6 +232,8 @@ Image * tissuestack::imaging::UncachedImageExtraction::applyPostExtractionTasks(
 	// we don't have a preview => chop up into tiles
 	if (!request->isPreview())
 		img = this->getImageTile(img, request);
+	else if (request->showOnlyPortionOfImage())
+		img = this->getImageTile(img, request);
 
 	return img;
 }
@@ -771,30 +773,20 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::getImageTile0(
 		Image * img,
 		const unsigned int xCoordinate,
 		const unsigned int yCoordinate,
-		const unsigned int squareLength,
+		const unsigned int width,
+		const unsigned int height,
 		const bool keepOriginalIntact) const
 {
 	if (img == NULL) return NULL;
-
-	// check if we don't exceed bounds
-	unsigned int xOffset = xCoordinate * squareLength;
-	unsigned int yOffset = yCoordinate * squareLength;
-
-	if (xOffset >  img->columns || yOffset > img->rows)
-	{
-		DestroyImage(img);
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-			"Image Extraction: tile number(x/y) exceeds the width/height of the image (given the square length)");
-	}
 
 	ExceptionInfo exception;
 	GetExceptionInfo(&exception);
 
 	RectangleInfo * tile = static_cast<RectangleInfo *>(malloc(sizeof(*tile)));
-	tile->height = squareLength;
-	tile->width = squareLength;
-	tile->x = xOffset;
-	tile->y = yOffset;
+	tile->height = height;
+	tile->width = width;
+	tile->x = xCoordinate;
+	tile->y = yCoordinate;
 
 	Image * tmp = img;
 	img = CropImage(img, tile, &exception);
@@ -819,11 +811,23 @@ Image * tissuestack::imaging::UncachedImageExtraction::getImageTileForPreTiling(
 {
 	if (img == NULL) return NULL;
 
+	// check if we don't exceed bounds
+	unsigned int xOffset = xCoordinate * squareLength;
+	unsigned int yOffset = yCoordinate * squareLength;
+
+	if (xOffset >  img->columns || yOffset > img->rows)
+	{
+		DestroyImage(img);
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Image Extraction: tile number(x/y) exceeds the width/height of the image (given the square length)");
+	}
+
 	// delegate
 	return this->getImageTile0(
 		img,
-		xCoordinate,
-		yCoordinate,
+		xOffset,
+		yOffset,
+		squareLength,
 		squareLength,
 		true);
 }
@@ -835,11 +839,33 @@ inline Image * tissuestack::imaging::UncachedImageExtraction::getImageTile(
 {
 	if (img == NULL) return NULL;
 
+	// previews are only cropped if they don't fit the viewing window
+	if (request->isPreview() && !request->showOnlyPortionOfImage())
+		return img;
+
+	unsigned int width = request->isPreview() ? request->getWidth() : request->getLengthOfSquare();
+	unsigned int height = request->isPreview() ? request->getHeight() : request->getLengthOfSquare();
+	unsigned int xOffset =
+		request->isPreview() ? request->getXCoordinate() :
+			request->getXCoordinate() * width;
+	unsigned int yOffset =
+		request->isPreview() ? request->getYCoordinate() :
+			request->getYCoordinate() * height;
+
+	// check if we don't exceed bounds
+	if (xOffset >  img->columns || yOffset > img->rows)
+	{
+		DestroyImage(img);
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Image Extraction: tile number(x/y) exceeds the width/height of the image (given the square length)");
+	}
+
 	// delegate
 	return this->getImageTile0(
 		img,
-		request->getXCoordinate(),
-		request->getYCoordinate(),
-		request->getLengthOfSquare(),
+		xOffset,
+		yOffset,
+		width,
+		height,
 		false);
 }
