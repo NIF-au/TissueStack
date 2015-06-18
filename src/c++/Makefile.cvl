@@ -207,6 +207,7 @@ source:	clean
 	@cp Makefile.cvl $(BUILD_PATH)/sources/sources
 	@cp -r ../../cvl/* $(BUILD_PATH)/sources
 	@cp -r ../../src $(BUILD_PATH)/sources/sources
+	@cp -r ../../jars $(BUILD_PATH)/sources/sources
 	@cp -r ../../packaging $(BUILD_PATH)/sources/sources
 	@cp -r ../../data/colormaps $(BUILD_PATH)/sources/sources/data
 	@cd $(BUILD_PATH)/sources; tar cvzf ../$(SRC_DIST_NAME) * > /dev/null
