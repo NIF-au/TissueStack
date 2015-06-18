@@ -39,7 +39,7 @@ if [ $IS_CENTOS -ne 0 ] || [ $IS_FEDORA -ne 0 ]; then
 	export IS_CENTOS_OR_FEDORA=1
 fi
 
-export TISSUESTACK_BUILD_VERSION=2.0
+export TISSUESTACK_BUILD_VERSION=2.1
 export IS_RELEASE=1
 
 CURRENT_DIR=`pwd`

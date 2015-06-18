@@ -7,4 +7,4 @@ if [ $arg_num -lt 2 ]; then
 	echo ""
 	exit -1
 fi
-java -Xmx1024m -cp bioformats-5.1.1.jar:TissueStackBioFormatsConverter.jar au.edu.cai.TissueStackBioFormatsConverter $1 $2 $3 $4
+java -Xmx1024m -cp $TISSUE_STACK_JARS/bioformats-5.1.1.jar:$TISSUE_STACK_JARS/TissueStackBioFormatsConverter.jar au.edu.cai.TissueStackBioFormatsConverter $1 $2 $3 $4

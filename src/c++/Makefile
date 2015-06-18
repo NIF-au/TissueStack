@@ -53,13 +53,14 @@ OBJS			=	$(SRCS:%.cpp=%.o)
 
 # important configuration variables with defaults
 export APP_NAME		=	tissuestack
-export VERSION	=	2.0
+export VERSION	=	2.1
 export APPLICATION_PATH ?= /usr/local/$(APP_NAME)
 export DATA_PATH ?= /opt/$(APP_NAME)
 # the application path including the version
 export APPLICATION_ROOT	=	$(APPLICATION_PATH)/$(VERSION)
 # the destination for the binaries
 export BINS_PATH			=	$(APPLICATION_ROOT)/bin
+export LIBS_PATH			=	$(APPLICATION_ROOT)/lib
 # packaging/install configuration
 export IS_DEBIAN_BASED=`cat /etc/*-release | grep -i debian | wc -c`
 export IS_UBUNTU_BASED=`cat /etc/*-release | grep -i ubuntu | wc -c`
@@ -68,6 +69,7 @@ export IS_CENTOS_BASED=`cat /etc/*-release | grep -i centos | wc -c`
 #build path for binary distribution
 export BASE_DIR			= 	./../../
 export PACKAGING_CONFIG_PATH=	$(BASE_DIR)packaging
+export JARS_PATH		=	$(BASE_DIR)jars
 export PROFILE_PATH		= 	/etc/profile.d
 export BUILD_PATH		=	/tmp/$(APP_NAME)_build
 export BUILD_SRC_PATH		=	$(BUILD_PATH)/src
@@ -130,6 +132,7 @@ dist: all
 	@rm -rf $(BUILD_PATH)
 	@mkdir -p $(BUILD_PATH)/logs
 	@mkdir -p $(BUILD_SRC_PATH)$(BINS_PATH)
+	@mkdir -p $(BUILD_SRC_PATH)$(LIBS_PATH)
 	@mkdir -p $(BUILD_SRC_PATH)$(PROFILE_PATH)
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/ands
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/conf
@@ -137,7 +140,9 @@ dist: all
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/sql
 
 	@echo -e "\tCopying over Tissue Stack Image Server & Tools executables"
+	@cp $(PACKAGING_CONFIG_PATH)/BioFormats2TissueStackConverter.sh $(BUILD_SRC_PATH)$(BINS_PATH)
 	@cp $(BINS_PATH)/* $(BUILD_SRC_PATH)$(BINS_PATH)
+	@cp $(JARS_PATH)/*.jar $(BUILD_SRC_PATH)$(LIBS_PATH)
 	
 	@echo -e "\tCopying over front-end resources and colormaps..."
 	@cp $(BASE_DIR)data/colormaps/* $(BUILD_SRC_PATH)$(DATA_PATH)/colormaps
@@ -170,17 +175,19 @@ dist: all
 		@if [ $(IS_DEBIAN_BASED) -gt 0 ] && [ $(IS_UBUNTU_BASED) -eq 0 ]; then \
 		 echo "#!/bin/bash\n\
 TISSUE_STACK_HOME=$(DATA_PATH)\n\
+TISSUE_STACK_JARS=$(LIBS_PATH)\n\
 IMAGE_SERVER_EXE=$(BINS_PATH)/$(EXE_NAME)\n\
 PATH=\$$PATH:$(BINS_PATH)\n\
 HDF5_DISABLE_VERSION_CHECK=1\n\
-export HDF5_DISABLE_VERSION_CHECK TISSUE_STACK_HOME IMAGE_SERVER_EXE PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(APP_NAME)_env.sh; \
+export HDF5_DISABLE_VERSION_CHECK TISSUE_STACK_HOME TISSUE_STACK_JARS IMAGE_SERVER_EXE PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(APP_NAME)_env.sh; \
         else \
                  echo -e "#!/bin/bash\n\
 TISSUE_STACK_HOME=$(DATA_PATH)\n\
+TISSUE_STACK_JARS=$(LIBS_PATH)\n\
 IMAGE_SERVER_EXE=$(BINS_PATH)/$(EXE_NAME)\n\
 PATH=\$$PATH:$(BINS_PATH)\n\
 HDF5_DISABLE_VERSION_CHECK=1\n\
-export HDF5_DISABLE_VERSION_CHECK TISSUE_STACK_HOME IMAGE_SERVER_EXE PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(APP_NAME)_env.sh; \
+export HDF5_DISABLE_VERSION_CHECK TISSUE_STACK_HOME TISSUE_STACK_JARS IMAGE_SERVER_EXE PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(APP_NAME)_env.sh; \
         fi
 	@if [ $(IS_CENTOS_BASED) -gt 0 ]; then \
 		echo "export DCMDICTPATH=/usr/share/dcmtk/dicom.dic" >> $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(APP_NAME)_env.sh; \
