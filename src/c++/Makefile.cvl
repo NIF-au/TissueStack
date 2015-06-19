@@ -63,7 +63,6 @@ export IS_UBUNTU_BASED=`cat /etc/*-release | grep -i ubuntu | wc -c`
 export BASE_DIR			= 	./../../
 export PACKAGING_CONFIG_PATH=	$(BASE_DIR)packaging
 export JARS_PATH		=	$(BASE_DIR)jars
-export PROFILE_PATH		= 	/etc/profile.d
 export BUILD_PATH		=	/tmp/$(APP_NAME)_build
 export BUILD_SRC_PATH		=	$(BUILD_PATH)/src
 export DIST_NAME		=	$(APP_NAME)-$(VERSION).tar.gz

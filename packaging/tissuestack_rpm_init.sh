@@ -18,7 +18,7 @@ start () {
         if [ -d "/mnt/tissuestack/tiles" ]; then
                 su -c 'mkdir -p /mnt/tissuestack/tiles  >> /tmp/messages' tissuestack
         fi
-        su -c 'echo "Starting Tissuestack..." >> /tmp/messages;. /etc/profile.d/modules.sh >> /tmp/messages;. /etc/profile.d/tissuestack_modules.sh >> /tmp/messages;tissuestack start >> /tmp/messages' tissuestack >> /var/log/messages
+        su -c 'echo "Starting Tissuestack..." >> /tmp/messages;. /etc/profile.d/modules.sh >> /tmp/messages;. /opt/tissuestack/conf/tissuestack_modules.sh >> /tmp/messages;tissuestack start >> /tmp/messages' tissuestack >> /var/log/messages
         if [ $? -eq 1 ]; then
                 echo "OK"; echo "TissueStack started." >> /var/log/messages
         else
@@ -33,7 +33,7 @@ stop () {
         echo -n "Stopping Tissuestack..."
         echo "Stopping Tissuestack..." >> /var/log/messages
         . /etc/profile.d/modules.sh >> /var/log/messages
-        . /etc/profile.d/tissuestack_modules.sh >> /var/log/messages
+        . /opt/tissuestack/conf/tissuestack_modules.sh >> /var/log/messages
         tissuestack stop >> /var/log/messages
         if [ $? -eq 1 ]; then
                 echo "OK"; echo "TissueStack stopped." >> /var/log/messages
