@@ -7,4 +7,9 @@ if [ $arg_num -lt 2 ]; then
 	echo ""
 	exit -1
 fi
+
+#for cvl
+source /opt/tissuestack/conf/tissuestack_modules.sh 2> /dev/null
+source $TISSUE_STACK_ENV 2> /dev/null
+
 java -Xmx1024m -cp $TISSUE_STACK_JARS/bioformats-5.1.1.jar:$TISSUE_STACK_JARS/TissueStackBioFormatsConverter.jar au.edu.cai.TissueStackBioFormatsConverter $1 $2 $3 $4
