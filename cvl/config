@@ -85,8 +85,7 @@ function PatchCommand()
 # Note: Certain characters such as " and $ need be escaped by "\"
 #
 #prepend-path --delim \" \" TISSUE_STACK_ENV /usr/local/\$name/\$ver/tissuestack_env
-EnvironmentModuleList="
-setenv TISSUE_STACK_ENV /usr/local/\$name/\$ver/bin/tissuestack_env.sh;module load netcdf;module load hdf5;module load nifticlib;module load minc;module load graphicsmagick;module load libjpeg-turbo;module load dcmtk;"
+EnvironmentModuleList="setenv TISSUE_STACK_ENV /usr/local/\$name/\$ver/bin/tissuestack_env.sh;module load netcdf;module load hdf5;module load nifticlib;module load minc;module load graphicsmagick;module load libjpeg-turbo;module load dcmtk"
 #
 # Install configuration files to package in format of "<Source>:<Destination>",
 # multiple lines must be delimited by ";". Source files must be available in
