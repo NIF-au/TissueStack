@@ -27,6 +27,7 @@ echo -e "!!! THIS BUILD OF TISSUE STACK BUILDS FOR THE PARTICULAR NEEDS OF CVL e
 echo -e "*********************************************************************************************************\n\n"
 
 source packaging/tissuestack_modules.sh
+module load graphicsmagick
 
 cd src/c++
 echo -n "Cleaning..."
