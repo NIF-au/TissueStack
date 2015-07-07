@@ -264,42 +264,8 @@ public class TissueStackBioFormatsConverter {
 	
 						// TODO: correct and optimize this. does not work as is. just a skeleton copy of code
 						if (TissueStackBioFormatsConverter.strategy == ConversionStrategy.VOLUME_TO_BE_RECONSTRUCTED &&
-								!TissueStackBioFormatsConverter.avoid3DReconstruction) {
+								!TissueStackBioFormatsConverter.avoid3DReconstruction)
 							throw new RuntimeException("3D volume reconstruction is work in progress. Sorry.");
-							/*
-							long dimensionSize = (long) image_size * filesToBeProcessed.size() * 3;
-							long secondDimensionOffset = (long) this.offset + dimensionSize;
-							long thirdDimensionOffset = secondDimensionOffset + dimensionSize;
-							long secondDimensionImageSize = (long) reader.getSizeX() * filesToBeProcessed.size() * 3;
-							long thirdDimensionImageSize = (long) reader.getSizeY() * filesToBeProcessed.size() * 3;
-							
-							for (int h=0 ; h < reader.getSizeY() ; h++)
-							{
-								 if (TissueStackBioFormatsConverter.errorFlag) {
-									 System.err.println("ERROR SOMEWHERE ELSE");
-									 break;
-								 }
-	
-								for (int w=0; w < reader.getSizeX() ; w++) {
-									final int dataOffset =
-										h * reader.getSizeX() * 3 + w * 3;
-									final long xPlaneOffset =
-										secondDimensionOffset + w * secondDimensionImageSize +
-											h * filesToBeProcessed.size() * 3 + j * 3;
-									final long yPlaneOffset =
-										thirdDimensionOffset + (reader.getSizeY() - (h + 1)) * thirdDimensionImageSize +
-											w * filesToBeProcessed.size() * 3 + j * 3;
-	
-									byte[] bytesToBeWritten = Arrays.copyOfRange(imageData, dataOffset, dataOffset+3);
-									writer.seek(xPlaneOffset);
-									writer.write(bytesToBeWritten);
-	
-									writer.seek(yPlaneOffset);
-									writer.write(bytesToBeWritten);
-								}
-							}
-							*/
-						}
 	
 						// increment and display progress
 						TissueStackBioFormatsConverter.incrementAndDisplayProgress(reader.getCurrentFile());
@@ -867,17 +833,12 @@ public class TissueStackBioFormatsConverter {
 				try {
 					final IFormatReader reader = formatInspectorInstance.getReader(f);
 		    		
-		    		// deal with special case OME XML and TIFF
-		    		if ((reader instanceof OMEXMLReader) ||  
-		    				(reader instanceof OMETiffReader))
-		    		{
-			    		// now get to the meta data ...
-						ServiceFactory serviceFactory = new ServiceFactory();
-						OMEXMLService omexmlService =
-							serviceFactory.getInstance(OMEXMLService.class);
-						OMEXMLMetadata meta = omexmlService.createOMEXMLMetadata();
-						reader.setMetadataStore(meta);
-		    		} 
+		    		// now get to the meta data ...
+					ServiceFactory serviceFactory = new ServiceFactory();
+					OMEXMLService omexmlService =
+						serviceFactory.getInstance(OMEXMLService.class);
+					OMEXMLMetadata meta = omexmlService.createOMEXMLMetadata();
+					reader.setMetadataStore(meta);
 					reader.setId(f);
 					
 					if (reader.getImageCount() == 1) // we skip single image files
@@ -892,43 +853,30 @@ public class TissueStackBioFormatsConverter {
 		    		{
 						OMEXMLMetadataRoot root = (OMEXMLMetadataRoot) reader.getMetadataStoreRoot();
 						int timeOrSliceCounter = 0;
-						int imageCounter = 0;
-						while (true) {
-							try {
-								// loop over all images
-								final Image i = root.getImage(imageCounter);
-								final Pixels p = i.getPixels();
-								
-								if (p != null) {
-									int tiffDataCounter = 0;
-									while (true) {
-										try {
-											// loop over all tiff data
-											TiffData td = p.getTiffData(tiffDataCounter);
-											if (td != null && td.getUUID() != null &&
-												((reader.getSizeZ() > 1 && td.getFirstZ().getValue() == timeOrSliceCounter && td.getFirstT().getValue() == 0) ||
-												 (reader.getSizeT() > 1	&& td.getFirstT().getValue() == timeOrSliceCounter && td.getFirstZ().getValue() == 0 ))) {
-												timeOrSliceCounter++;
-												String fileName = td.getUUID().getFileName();
-												if (fileName != null && !fileName.isEmpty()) {
-													if (new File(fileName).getParent() == null &&
-															pathPrefix != null)
-														fileName = new File(pathPrefix, fileName).getAbsolutePath(); 
-													alteredFileListToBeProcessed.add(fileName);
-												}
-													
-											}
-											tiffDataCounter++;
-										} catch (Exception endOfTiffData)
-										{
-											break;
+						
+						for (int imageCounter = 0;imageCounter < root.sizeOfImageList(); imageCounter++) {
+							// loop over all images
+							final Image i = root.getImage(imageCounter);
+							final Pixels p = i.getPixels();
+							
+							if (p != null) {
+								for (int tiffDataCounter = 0; tiffDataCounter < p.sizeOfTiffDataList();tiffDataCounter++) {
+									// loop over all tiff data
+									TiffData td = p.getTiffData(tiffDataCounter);
+									if (td != null && td.getUUID() != null &&
+										((reader.getSizeZ() > 1 && td.getFirstZ().getValue() == timeOrSliceCounter && td.getFirstT().getValue() == 0) ||
+										 (reader.getSizeT() > 1	&& td.getFirstT().getValue() == timeOrSliceCounter && td.getFirstZ().getValue() == 0 ))) {
+										timeOrSliceCounter++;
+										String fileName = td.getUUID().getFileName();
+										if (fileName != null && !fileName.isEmpty()) {
+											if (new File(fileName).getParent() == null &&
+													pathPrefix != null)
+												fileName = new File(pathPrefix, fileName).getAbsolutePath(); 
+											alteredFileListToBeProcessed.add(fileName);
 										}
+											
 									}
 								}
-								imageCounter++;
-							} catch (Exception endOfImages)
-							{
-								break;
 							}
 						}
 						break;
