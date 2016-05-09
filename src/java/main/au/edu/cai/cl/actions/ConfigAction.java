@@ -1,6 +1,7 @@
 package au.edu.cai.cl.actions;
 
 import java.io.File;
+import java.net.URL;
 
 import au.edu.cai.cl.TissueStackCLConfig;
 
@@ -10,11 +11,11 @@ public class ConfigAction implements ClAction {
 	
 	public boolean setMandatoryParameters(String[] args) {
 		
-		if (args.length < 2) {
+		if (args.length < 1) {
 			System.err.println("ERROR: --config needs a configuration file as its first parameter");
 			return false;
 		}
-		final File newConfig = new File(args[1]);
+		final File newConfig = new File(args[0]);
 		if (!newConfig.exists() || !newConfig.canRead()) {
 			System.err.println("ERROR: --config file does not exist or cannot be read");
 			return false;
@@ -23,7 +24,7 @@ public class ConfigAction implements ClAction {
 		return true;
 	}
 
-	public ClActionResult performAction() {
+	public ClActionResult performAction(final URL TissueStackServerURL) {
 		final TissueStackCLConfig config = 
 			TissueStackCLConfig.instance(this.location.getAbsolutePath());
 		if (config.getException() == null)

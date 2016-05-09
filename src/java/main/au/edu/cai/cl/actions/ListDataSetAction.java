@@ -1,6 +1,8 @@
 package au.edu.cai.cl.actions;
 
-import au.edu.cai.cl.TissueStackCLConfig;
+import java.net.URL;
+
+import au.edu.cai.cl.TissueStackCLCommunicator;
 
 public class ListDataSetAction implements ClAction {
 
@@ -9,11 +11,17 @@ public class ListDataSetAction implements ClAction {
 		return true;
 	}
 
-	public ClActionResult performAction() {
-		// TODO implement sending request and retrieving response
-		final TissueStackCLConfig config = TissueStackCLConfig.instance();
-
-		return new ClActionResult(ClAction.STATUS.SUCCESS, "some list of items");
+	public ClActionResult performAction(final URL TissueStackServerURL) {
+		String response = null;
+		try {
+			response = TissueStackCLCommunicator.sendHttpRequest(
+				TissueStackServerURL,
+				"/server/?service=services&sub_service=admin&action=data_set_raw_files",
+				null);
+		} catch(Exception any) {
+			return new ClActionResult(ClAction.STATUS.ERROR, any.toString());
+		}
+		return new ClActionResult(ClAction.STATUS.SUCCESS, response);
 	}
 
 	public String getUsage() {

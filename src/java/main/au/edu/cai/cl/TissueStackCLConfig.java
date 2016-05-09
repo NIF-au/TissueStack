@@ -44,5 +44,13 @@ public final class TissueStackCLConfig {
 	public Exception getException() {
 		return this.exceptionLoadingConfig;
 	}
+	
+	public void setProperty(final String key, final String value) {
+		this.configuration.setProperty(key, value);
+	}
+	
+	public String get(final String key) {
+		return this.configuration.getProperty(key);
+	}
 
 }

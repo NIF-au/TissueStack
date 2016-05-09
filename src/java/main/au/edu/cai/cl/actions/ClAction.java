@@ -1,5 +1,6 @@
 package au.edu.cai.cl.actions;
 
+import java.net.URL;
 
 public interface ClAction {
 	enum STATUS {
@@ -12,5 +13,5 @@ public interface ClAction {
 	boolean setMandatoryParameters(String[] args);
 	String getUsage();
 
-	ClActionResult performAction();
+	ClActionResult performAction(final URL TissueStTissueStackServerURL);
 }
