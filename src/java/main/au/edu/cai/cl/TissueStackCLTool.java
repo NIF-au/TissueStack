@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import au.edu.cai.cl.actions.ClAction;
+import au.edu.cai.cl.actions.ClAction.STATUS;
 import au.edu.cai.cl.actions.ClActionResult;
 import au.edu.cai.cl.actions.ConfigAction;
 import au.edu.cai.cl.actions.ListDataSetAction;
@@ -126,8 +127,16 @@ public class TissueStackCLTool {
 			final ClActionResult result = actionChosen.performAction(tissueStackServerUrl);
 			
 			// display action results
-			System.out.println("\nStatus: " + result.getStatus());
-			System.out.println("Response: " + result.getResponse());
+			if (result.getStatus() == STATUS.ERROR) 
+				System.out.println("\nTissue Stack Request Error: \n" + result.getResponse());
+			else if (result.getStatus() == STATUS.UNDEFINED)
+				System.out.println("\nTissue Stack Response has status 'UNDEFINED': " + result.getResponse());
+			else 
+				System.out.println("\nReceived Response...");
+				System.out.println("_________________________");
+				System.out.println("\n" + result.getResponse());
+			
+			
 		}
 	}
 }

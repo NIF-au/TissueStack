@@ -342,6 +342,24 @@ namespace tissuestack
 				const std::string encodeSHA256(const std::string & expression) const;
 	 	};
 
+		class MetaDataService final : public TissueStackService
+		{
+			public:
+				static const std::string SUB_SERVICE_ID;
+					MetaDataService & operator=(const MetaDataService&) = delete;
+					MetaDataService(const MetaDataService&) = delete;
+					MetaDataService();
+					~MetaDataService();
+
+				void checkRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
+				void streamResponse(
+						const tissuestack::common::ProcessingStrategy * processing_strategy,
+						const tissuestack::networking::TissueStackServicesRequest * request,
+						const int file_descriptor) const;
+			private:
+				const std::string handleDataSetListRequest(
+						const tissuestack::networking::TissueStackServicesRequest * request) const;
+	 	};
 		class TissueStackServicesDelegator final
 		{
 			public:

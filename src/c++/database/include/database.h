@@ -191,6 +191,42 @@ namespace tissuestack
 					const tissuestack::imaging::TissueStackLabelLookup * hit,
 					const tissuestack::imaging::TissueStackLabelLookup * lookup);
 		};
+
+		class DataSetInfo final
+		{
+			public:
+				DataSetInfo & operator=(const DataSetInfo&) = delete;
+				DataSetInfo(const DataSetInfo&) = delete;
+				DataSetInfo(const unsigned long long int id, const std::string filename);
+				const unsigned long long int getId() const;
+				const std::string  getFileName() const;
+				void setDescription(const std::string description);
+				const std::string getDescription() const;
+				const std::string getJson() const;
+			private:
+				unsigned long long int _id;
+				std::string _filename;
+				std::string _description;
+		};
+
+		class ServicesDataProvider final
+		{
+			public:
+				ServicesDataProvider & operator=(const ServicesDataProvider&) = delete;
+				ServicesDataProvider(const ServicesDataProvider&) = delete;
+				ServicesDataProvider() = delete;
+				static const unsigned short MAX_RECORDS;
+				static const tissuestack::database::DataSetInfo * queryDataSetInfoById(const unsigned long long int id);
+				static const std::vector<const tissuestack::database::DataSetInfo *> queryAllDataSets(const unsigned int offset = 0, const unsigned int max_records = MAX_RECORDS);
+				static const bool updateDataSetInfo(const DataSetInfo * conf);
+			private:
+				static const std::vector<const tissuestack::database::DataSetInfo *> findResults(
+										const std::string sql,
+										const unsigned int from = 0,
+										const unsigned int to = MAX_RECORDS);
+				static const std::string DATASET_SQL;
+		};
+
 	}
 }
 

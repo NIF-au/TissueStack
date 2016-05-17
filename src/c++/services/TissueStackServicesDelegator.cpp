@@ -32,6 +32,8 @@ tissuestack::services::TissueStackServicesDelegator::TissueStackServicesDelegato
 			new tissuestack::services::ColorMapService();
 	this->_registeredServices[tissuestack::services::DataSetConfigurationService::SUB_SERVICE_ID] =
 			new tissuestack::services::DataSetConfigurationService();
+	this->_registeredServices[tissuestack::services::MetaDataService::SUB_SERVICE_ID] =
+			new tissuestack::services::MetaDataService();
 }
 
 tissuestack::services::TissueStackServicesDelegator::~TissueStackServicesDelegator()
