@@ -202,19 +202,31 @@ namespace tissuestack
 				const std::string  getFileName() const;
 				void setDescription(const std::string description);
 				const std::string getDescription() const;
-				const std::string getJson() const;
+				void setTiled(const bool is_tiled);
+				const bool isTiled() const;
+				void setZoomLevels(const std::string zoom_levels);
+				const std::string getZoomLevels() const;
+				void setOneToOneZoomLevel(const unsigned int one_to_one_zoom_level);
+				const unsigned int getOneToOneZoomLevel() const;
+				void setResolutionMm(const float resolution_mm);
+				const float getResolutionMm() const;
+				const std::string getJson(const bool everything = false) const;
 			private:
 				unsigned long long int _id;
 				std::string _filename;
 				std::string _description;
+				bool _is_tiled;
+				std::string _zoom_levels;
+				unsigned int _one_to_one_zoom_level;
+				float _resolution_mm;
 		};
 
-		class ServicesDataProvider final
+		class MetaDataProvider final
 		{
 			public:
-				ServicesDataProvider & operator=(const ServicesDataProvider&) = delete;
-				ServicesDataProvider(const ServicesDataProvider&) = delete;
-				ServicesDataProvider() = delete;
+				MetaDataProvider & operator=(const MetaDataProvider&) = delete;
+				MetaDataProvider(const MetaDataProvider&) = delete;
+				MetaDataProvider() = delete;
 				static const unsigned short MAX_RECORDS;
 				static const tissuestack::database::DataSetInfo * queryDataSetInfoById(const unsigned long long int id);
 				static const std::vector<const tissuestack::database::DataSetInfo *> queryAllDataSets(const unsigned int offset = 0, const unsigned int max_records = MAX_RECORDS);

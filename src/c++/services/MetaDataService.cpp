@@ -66,7 +66,7 @@ const std::string tissuestack::services::MetaDataService::handleDataSetListReque
 		const tissuestack::networking::TissueStackServicesRequest * request) const {
 
 	const std::vector<const tissuestack::database::DataSetInfo *> results =
-		tissuestack::database::ServicesDataProvider::queryAllDataSets();
+		tissuestack::database::MetaDataProvider::queryAllDataSets();
 
 	std::ostringstream json;
 	json << "{\"response\": [";
@@ -77,12 +77,7 @@ const std::string tissuestack::services::MetaDataService::handleDataSetListReque
 		if (i !=0)
 				json << ",";
 
-		json << "{";
-		json << "\"id\": " << std::to_string(ds->getId()) << ",";
-		json << "\"filename\": " << ds->getFileName();
-		if (!ds->getDescription().empty())
-			json << ",\"description\": " << ds->getDescription();
-		json << "}";
+		json << ds->getJson();
 		i++;
 		delete ds;
 	}

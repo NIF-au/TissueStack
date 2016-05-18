@@ -46,14 +46,64 @@ void tissuestack::database::DataSetInfo::setDescription(const std::string descri
 	this->_description = description;
 }
 
+const std::string tissuestack::database::DataSetInfo::getZoomLevels() const
+{
+	return this->_zoom_levels;
+}
 
-const std::string tissuestack::database::DataSetInfo::getJson() const
+void tissuestack::database::DataSetInfo::setZoomLevels(const std::string zoom_levels)
+{
+	if (zoom_levels.empty()) return;
+
+	this->_zoom_levels = zoom_levels;
+}
+
+const bool tissuestack::database::DataSetInfo::isTiled() const
+{
+	return this->_is_tiled;
+}
+
+void tissuestack::database::DataSetInfo::setTiled(const bool is_tiled)
+{
+	this->_is_tiled = is_tiled;
+}
+
+void tissuestack::database::DataSetInfo::setOneToOneZoomLevel(const unsigned int one_to_one_zoom_level)
+{
+	if (one_to_one_zoom_level < 0) return;
+
+	this->_one_to_one_zoom_level = one_to_one_zoom_level;
+}
+
+const unsigned int tissuestack::database::DataSetInfo::getOneToOneZoomLevel() const
+{
+	return this->_one_to_one_zoom_level;
+}
+
+void tissuestack::database::DataSetInfo::setResolutionMm(const float resolution_mm)
+{
+	if (resolution_mm < 0) return;
+
+	this->_resolution_mm = resolution_mm;
+}
+
+const float tissuestack::database::DataSetInfo::getResolutionMm() const
+{
+	return this->_resolution_mm;
+}
+
+
+const std::string tissuestack::database::DataSetInfo::getJson(const bool everything) const
 {
 	std::ostringstream json;
 	json << "{ \"id\": " << std::to_string(this->_id);
 	json << ", \"filename\": \"" << tissuestack::utils::Misc::maskQuotesInJson(this->_filename) << "\"";
 	if (!this->_description.empty())
 		json << ", \"description\": \"" << tissuestack::utils::Misc::maskQuotesInJson(this->_description) << "\"";
+	if (everything)
+	{
+		// TODO: add more
+	}
 	json << " }";
 
 	return json.str();
