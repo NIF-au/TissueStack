@@ -19,24 +19,24 @@
 #include "database.h"
 #include "services.h"
 
-const std::string tissuestack::services::MetaDataService::SUB_SERVICE_ID = "METADATA";
+const std::string tissuestack::services::TissueStackMetaDataService::SUB_SERVICE_ID = "METADATA";
 
 
 
-tissuestack::services::MetaDataService::MetaDataService() {
+tissuestack::services::TissueStackMetaDataService::TissueStackMetaDataService() {
 	this->addMandatoryParametersForRequest("DATASET_LIST",
 		std::vector<std::string>{ "SESSION" });
 };
 
-tissuestack::services::MetaDataService::~MetaDataService() {};
+tissuestack::services::TissueStackMetaDataService::~TissueStackMetaDataService() {};
 
-void tissuestack::services::MetaDataService::checkRequest(
+void tissuestack::services::TissueStackMetaDataService::checkRequest(
 		const tissuestack::networking::TissueStackServicesRequest * request) const
 {
 	this->checkMandatoryRequestParameters(request);
 }
 
-void tissuestack::services::MetaDataService::streamResponse(
+void tissuestack::services::TissueStackMetaDataService::streamResponse(
 		const tissuestack::common::ProcessingStrategy * processing_strategy,
 		const tissuestack::networking::TissueStackServicesRequest * request,
 		const int file_descriptor) const
@@ -62,7 +62,7 @@ void tissuestack::services::MetaDataService::streamResponse(
 	write(file_descriptor, response.c_str(), response.length());
 }
 
-const std::string tissuestack::services::MetaDataService::handleDataSetListRequest(
+const std::string tissuestack::services::TissueStackMetaDataService::handleDataSetListRequest(
 		const tissuestack::networking::TissueStackServicesRequest * request) const {
 
 	const std::vector<const tissuestack::database::DataSetInfo *> results =

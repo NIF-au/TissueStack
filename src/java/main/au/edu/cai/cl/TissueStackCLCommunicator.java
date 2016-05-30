@@ -9,13 +9,9 @@ import java.net.URL;
 
 public final class TissueStackCLCommunicator {
 	
-	public static String sendHttpRequest(
-			final URL TissueStackServer, 
-			final String actionAppendix,
-			final String request) throws Exception {
+	public static String sendHttpRequest(final URL url, final String request) throws Exception {
 	
-		final URL combinedURL = new URL(TissueStackServer.toString() + actionAppendix);
-		final HttpURLConnection connection = (HttpURLConnection) combinedURL.openConnection();
+		final HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 		
 		byte [] data = (request != null) ? request.getBytes() : null; 
 		

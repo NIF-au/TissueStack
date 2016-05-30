@@ -9,6 +9,14 @@ public class ConfigAction implements ClAction {
 
 	private File location = null;
 	
+	public boolean needsSession() {
+		return false;
+	}
+
+	public String getRequestUrl() {
+		return "";
+	}
+
 	public boolean setMandatoryParameters(String[] args) {
 		
 		if (args.length < 1) {
@@ -28,6 +36,7 @@ public class ConfigAction implements ClAction {
 		final TissueStackCLConfig config = 
 			TissueStackCLConfig.instance(this.location.getAbsolutePath());
 		if (config.getException() == null)
+
 			return new ClActionResult(ClAction.STATUS.SUCCESS, "{ config: " + this.location.getAbsolutePath() + "}");
 
 		return new ClActionResult(ClAction.STATUS.ERROR, "{ error: " + config.getException().getMessage());

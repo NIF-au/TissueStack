@@ -10,8 +10,10 @@ public interface ClAction {
 		ERROR
 	}
 	
+	String getRequestUrl();
+	boolean needsSession();
 	boolean setMandatoryParameters(String[] args);
 	String getUsage();
 
-	ClActionResult performAction(final URL TissueStTissueStackServerURL);
+	ClActionResult performAction(final URL TissueStackServerURL);
 }

@@ -342,14 +342,14 @@ namespace tissuestack
 				const std::string encodeSHA256(const std::string & expression) const;
 	 	};
 
-		class MetaDataService final : public TissueStackService
+		class TissueStackMetaDataService final : public TissueStackService
 		{
 			public:
 				static const std::string SUB_SERVICE_ID;
-					MetaDataService & operator=(const MetaDataService&) = delete;
-					MetaDataService(const MetaDataService&) = delete;
-					MetaDataService();
-					~MetaDataService();
+					TissueStackMetaDataService & operator=(const TissueStackMetaDataService&) = delete;
+					TissueStackMetaDataService(const TissueStackMetaDataService&) = delete;
+					TissueStackMetaDataService();
+					~TissueStackMetaDataService();
 
 				void checkRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
 				void streamResponse(

@@ -2,22 +2,22 @@ package au.edu.cai.cl.actions;
 
 import java.net.URL;
 
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import au.edu.cai.cl.TissueStackCLCommunicator;
 import au.edu.cai.cl.json.JsonParser;
 
-
-public class ListDataSetAction implements ClAction {
+public class DataSetImportAction implements ClAction {
 	private String session = null; 
+	private String filename = null; 
 	
 	public boolean setMandatoryParameters(String[] args) {
-		if (args.length != 1 ) {
-			System.err.println("-- list needs a session!");
+		if (args.length != 2 ) {
+			System.out.println("--import needs a filename");
 			return false;
 		}
 		this.session = args[0];
+		this.filename = args[1];
 		return true;
 	}
 
@@ -26,7 +26,8 @@ public class ListDataSetAction implements ClAction {
 	}
 
 	public String getRequestUrl() {
-		return "/server/?service=services&sub_service=metadata&action=dataset_list&session=" + this.session;
+		return "/server/?service=services&sub_service=admin&action=add_dataset&session=" +
+			this.session + "&filename=" + this.filename;
 	}
 	
 	public ClActionResult performAction(final URL TissueStackServerURL) {
@@ -38,33 +39,26 @@ public class ListDataSetAction implements ClAction {
 			
 			final JSONObject parseResponse = JsonParser.parseResponse(response);
 			if (parseResponse.get("response") != null) { // success it seems
-				JSONArray respObj = (JSONArray) parseResponse.get("response");
-				@SuppressWarnings("unchecked")
-				final JSONObject [] datasets = (JSONObject[]) respObj.toArray(new JSONObject[]{});
-				for (JSONObject dataset : datasets) {
-					formattedResponse.append("\tID:\t\t");
-					formattedResponse.append(dataset.get("id"));
+				JSONObject respObj = (JSONObject) parseResponse.get("response");
+				if (respObj.containsKey("id") && respObj.containsKey("filename")) {
+					formattedResponse.append("\n\tIMPORTED:\t");
+					formattedResponse.append(respObj.get("filename"));
+					formattedResponse.append("\n\tID:\t\t");
+					formattedResponse.append(respObj.get("id"));
 					formattedResponse.append("\n");
-					formattedResponse.append("\tFILENAME:\t");
-					formattedResponse.append(dataset.get("filename"));
-					formattedResponse.append("\n");
-					if (dataset.containsKey("description")) {
-						formattedResponse.append("\tDESCRIPTION:\t");
-						formattedResponse.append(dataset.get("description"));
-						formattedResponse.append("\n");
-					}
 				}
-				
-			} else  // potential error
+				return new ClActionResult(ClAction.STATUS.SUCCESS, formattedResponse.toString());
+			} else  {// potential error
 				formattedResponse = JsonParser.parseError(parseResponse, response);
+				return new ClActionResult(ClAction.STATUS.ERROR, formattedResponse.toString());
+			}
 		} catch(Exception any) {
 			return new ClActionResult(ClAction.STATUS.ERROR, any.toString());
 		}
-		return new ClActionResult(ClAction.STATUS.SUCCESS, formattedResponse.toString());
 	}
 
 	public String getUsage() {
-		return "--list";
+		return "--import filename";
 	}
 
 }
