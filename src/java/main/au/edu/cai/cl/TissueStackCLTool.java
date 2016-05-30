@@ -168,7 +168,7 @@ public class TissueStackCLTool {
 
 			// action requires login => do so
 			if (actionChosen.needsSession()) {
-				if (sessionToken == null) {
+				if (sessionToken == null || sessionToken.trim().isEmpty()) {
 					System.out.println("Action '" + action + "' requires a session!");
 					System.out.println("Please type in the admin password: ");
 					char [] password = System.console().readPassword();
