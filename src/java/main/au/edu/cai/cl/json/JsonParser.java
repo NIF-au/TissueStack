@@ -22,7 +22,7 @@ public final class JsonParser {
 			throw new RuntimeException("Json Parse didn't give us the expected json object!");
 	}
 	
-	public static StringBuilder parseError(JSONObject parseResponse, String response) {
+	public static String parseError(JSONObject parseResponse, String response) {
 		if (parseResponse == null)
 			return null;
 
@@ -41,6 +41,6 @@ public final class JsonParser {
 			formattedResponse.append(cause);
 		} else formattedResponse.append("Unexpected Response:\n" + response); 
 
-		return formattedResponse;
+		return formattedResponse.toString();
 	}
 }

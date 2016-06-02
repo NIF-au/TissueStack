@@ -13,8 +13,10 @@ import au.edu.cai.cl.actions.ClAction.STATUS;
 import au.edu.cai.cl.actions.ClActionResult;
 import au.edu.cai.cl.actions.ConfigAction;
 import au.edu.cai.cl.actions.DataSetImportAction;
+import au.edu.cai.cl.actions.DeleteDataSetAction;
 import au.edu.cai.cl.actions.ListDataSetAction;
 import au.edu.cai.cl.actions.LoginAction;
+import au.edu.cai.cl.actions.QueryDataSetAction;
 
 public class TissueStackCLTool {
 	
@@ -23,13 +25,15 @@ public class TissueStackCLTool {
         Map<String, ClAction> aMap = new LinkedHashMap<String, ClAction>();
         aMap.put("config", new ConfigAction());
         aMap.put("list", new ListDataSetAction());
+        aMap.put("query", new QueryDataSetAction());
         aMap.put("login", new LoginAction());
         aMap.put("import", new DataSetImportAction());
+        aMap.put("delete", new DeleteDataSetAction());
         clOpts = Collections.unmodifiableMap(aMap);
 	}
 	
 	private static String assembleUsage() {
-		StringBuffer usage = new StringBuffer("Available options:\n\t--v [verbose] \n"); 
+		StringBuffer usage = new StringBuffer("Available options:\n\t--v <== verbose\n"); 
 		for (String opt : TissueStackCLTool.clOpts.keySet())
 			usage.append("\t" + TissueStackCLTool.clOpts.get(opt).getUsage() + "\n");
 		return usage.toString();

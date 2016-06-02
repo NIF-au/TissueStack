@@ -215,7 +215,7 @@ const bool tissuestack::database::DataSetDataProvider::eraseDataSet(const unsign
 {
 	const std::string sql =
 		std::string("DELETE FROM dataset WHERE id=") +
-			 std::to_string(id) + ");";
+			 std::to_string(id) + ";";
 	if (tissuestack::database::TissueStackPostgresConnector::instance()->executeTransaction({sql}) == 1)
 		return true;
 

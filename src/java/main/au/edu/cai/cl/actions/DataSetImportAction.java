@@ -49,8 +49,7 @@ public class DataSetImportAction implements ClAction {
 				}
 				return new ClActionResult(ClAction.STATUS.SUCCESS, formattedResponse.toString());
 			} else  {// potential error
-				formattedResponse = JsonParser.parseError(parseResponse, response);
-				return new ClActionResult(ClAction.STATUS.ERROR, formattedResponse.toString());
+				return new ClActionResult(ClAction.STATUS.ERROR, JsonParser.parseError(parseResponse, response));
 			}
 		} catch(Exception any) {
 			return new ClActionResult(ClAction.STATUS.ERROR, any.toString());
@@ -58,7 +57,7 @@ public class DataSetImportAction implements ClAction {
 	}
 
 	public String getUsage() {
-		return "--import filename";
+		return "--import filename <== imports dataset";
 	}
 
 }

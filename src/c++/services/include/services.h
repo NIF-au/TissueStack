@@ -288,6 +288,7 @@ namespace tissuestack
 					const tissuestack::networking::TissueStackServicesRequest * request,
 					int fd);
 				const std::string handleDataSetAdditionRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
+				const std::string handleDataSetDeletionRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
 				const std::string handleUploadDirectoryRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
 				const std::string handleFileExistenceRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;
 				const std::string handleFileDeletionRequest(const tissuestack::networking::TissueStackServicesRequest * request) const;

@@ -44,6 +44,8 @@ tissuestack::services::TissueStackAdminService::TissueStackAdminService() {
 		std::vector<std::string>{ "SESSION", "FILE"});
 	this->addMandatoryParametersForRequest("FILE_RENAME",
 		std::vector<std::string>{ "SESSION", "FILE", "NEW_FILE"});
+	this->addMandatoryParametersForRequest("DELETE_DATASET",
+		std::vector<std::string>{ "SESSION", "ID"});
 };
 
 tissuestack::services::TissueStackAdminService::~TissueStackAdminService() {};
@@ -94,6 +96,8 @@ void tissuestack::services::TissueStackAdminService::streamResponse(
 					file_descriptor);
 		else if (action.compare("ADD_DATASET") == 0)
 			json = this->handleDataSetAdditionRequest(request);
+		else if (action.compare("DELETE_DATASET") == 0)
+				json = this->handleDataSetDeletionRequest(request);
 		else if (action.compare("FILE_EXISTS") == 0)
 			json = this->handleFileExistenceRequest(request);
 		else if (action.compare("FILE_DELETE") == 0)
@@ -105,6 +109,32 @@ void tissuestack::services::TissueStackAdminService::streamResponse(
 	const std::string response =
 			tissuestack::utils::Misc::composeHttpResponse("200 OK", "application/json", json);
 	write(file_descriptor, response.c_str(), response.length());
+}
+
+const std::string tissuestack::services::TissueStackAdminService::handleDataSetDeletionRequest(
+	const tissuestack::networking::TissueStackServicesRequest * request) const
+{
+	const unsigned long long int id =
+		strtoull(request->getRequestParameter("ID", true).c_str(), NULL, 10);
+
+	const tissuestack::imaging::TissueStackDataSet * dataSet =
+			tissuestack::imaging::TissueStackDataSetStore::instance()->findDataSetByDataBaseId(id);
+	if (dataSet == nullptr)
+		return std::string("{\"response\": {\"result\": \"given dataset (id) does not exist!\"}}");
+	const std::string file = dataSet->getDataSetId();
+
+	const std::string sDeleteFile =
+			request->getRequestParameter("DELETE_FILE", true);
+	const bool bDeleteFile =
+		(!sDeleteFile.empty() && sDeleteFile.compare("TRUE") == 0) ?
+			true : false;
+
+	tissuestack::imaging::TissueStackDataSetStore::instance()->removeDataSetByDataBaseId(id);
+	tissuestack::database::DataSetDataProvider::eraseDataSet(id);
+	if (bDeleteFile)
+		unlink(file.c_str());
+
+	return std::string("{\"response\": {\"result\": \"dataset deleted\"}}");
 }
 
 const std::string tissuestack::services::TissueStackAdminService::handleSetTilingRequest(

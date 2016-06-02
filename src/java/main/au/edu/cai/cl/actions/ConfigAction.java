@@ -43,7 +43,7 @@ public class ConfigAction implements ClAction {
 	}
 
 	public String getUsage() {
-		return "--config file_location";
+		return "--config file_location <== uses config file to get connect/session info";
 	}
 
 }

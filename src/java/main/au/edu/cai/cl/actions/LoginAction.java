@@ -28,7 +28,7 @@ public class LoginAction implements ClAction {
 	}
 
 	public String getUsage() {
-		return "--login password";
+		return "--login password <== logs you in returning a session";
 	}
 
 	public ClActionResult performAction(URL TissueStackServerURL) {
