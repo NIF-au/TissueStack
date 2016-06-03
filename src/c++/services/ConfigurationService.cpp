@@ -29,6 +29,7 @@ tissuestack::services::ConfigurationService::ConfigurationService() {
 	this->addMandatoryParametersForRequest("SUPPORTS_TILE_SERVICE", std::vector<std::string>{});
 	this->addMandatoryParametersForRequest("SUPPORTS_IMAGE_SERVICE", std::vector<std::string>{});
 	this->addMandatoryParametersForRequest("QUERY", std::vector<std::string>{"KEY"});
+	this->addMandatoryParametersForRequest("CHANGE", std::vector<std::string>{"SESSION", "KEY", "VALUE"});
 };
 
 tissuestack::services::ConfigurationService::~ConfigurationService() {};
@@ -61,6 +62,26 @@ void tissuestack::services::ConfigurationService::streamResponse(
 		conf.push_back(
 				tissuestack::database::ConfigurationDataProvider::queryConfigurationById(
 						request->getRequestParameter("KEY")));
+	else if (action.compare("CHANGE") == 0)
+	{
+		// the following resources need a valid session
+		if (tissuestack::services::TissueStackSecurityService::hasSessionExpired(
+			request->getRequestParameter("SESSION")))
+		{
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+				"Invalid Session! Please Log In.");
+		}
+
+		tissuestack::database::Configuration * oldConf =
+			const_cast<tissuestack::database::Configuration *>(
+			tissuestack::database::ConfigurationDataProvider::queryConfigurationById(
+				request->getRequestParameter("KEY")));
+		if (oldConf != nullptr) {
+			oldConf->setValue(request->getRequestParameter("VALUE"));
+			if (tissuestack::database::ConfigurationDataProvider::updateConfiguration(oldConf))
+				conf.push_back(oldConf);
+		}
+	}
 
 	std::ostringstream json;
 	if (!conf.empty() && conf[0] != nullptr)

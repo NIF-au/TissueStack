@@ -12,6 +12,7 @@ import au.edu.cai.cl.actions.ClAction;
 import au.edu.cai.cl.actions.ClAction.STATUS;
 import au.edu.cai.cl.actions.ClActionResult;
 import au.edu.cai.cl.actions.ConfigAction;
+import au.edu.cai.cl.actions.ConfigurationAction;
 import au.edu.cai.cl.actions.DataSetImportAction;
 import au.edu.cai.cl.actions.DeleteDataSetAction;
 import au.edu.cai.cl.actions.ListDataSetAction;
@@ -29,6 +30,7 @@ public class TissueStackCLTool {
         aMap.put("login", new LoginAction());
         aMap.put("import", new DataSetImportAction());
         aMap.put("delete", new DeleteDataSetAction());
+        aMap.put("ts-config", new ConfigurationAction());
         clOpts = Collections.unmodifiableMap(aMap);
 	}
 	
@@ -141,20 +143,21 @@ public class TissueStackCLTool {
 		// do we have a --login parameter
 		final List<String> loginParams = paramsMap.get("login");
 		if (loginParams != null) {
-			if (!loginParams.isEmpty()) { 
-				sessionToken = TissueStackCLTool.performExplicitLogin(tissueStackServerUrl, loginParams.get(0)) ;
-				// remove server param from map
-				paramsMap.remove("login");
-				if (sessionToken != null) {
-					System.out.println("\n\tSESSION:\t" + sessionToken + "\n");
-					TissueStackCLConfig.instance().setProperty("tissuestack.last_session_token", sessionToken);
-					TissueStackCLConfig.instance().saveConfig();
-				} else {
-					System.err.println("Login failed!");
-					System.exit(-1);
-				}
+			if (loginParams.isEmpty()) {
+				System.out.println("Login Action requires password. Please provide it now: ");
+				char [] password = System.console().readPassword();
+				loginParams.add( new String(password));
+			}
+			
+			sessionToken = TissueStackCLTool.performExplicitLogin(tissueStackServerUrl, loginParams.get(0)) ;
+			// remove server param from map
+			paramsMap.remove("login");
+			if (sessionToken != null) {
+				System.out.println("\n\tSESSION:\t" + sessionToken + "\n");
+				TissueStackCLConfig.instance().setProperty("tissuestack.last_session_token", sessionToken);
+				TissueStackCLConfig.instance().saveConfig();
 			} else {
-				System.err.println("Provide a password after --login!");
+				System.err.println("Login failed!");
 				System.exit(-1);
 			}
 		}

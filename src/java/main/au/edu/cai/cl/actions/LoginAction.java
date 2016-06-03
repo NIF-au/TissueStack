@@ -20,7 +20,7 @@ public class LoginAction implements ClAction {
 
 	public boolean setMandatoryParameters(String[] args) {
 		if (args.length != 1 || args[0] == null) {
-			System.err.println("Login requires a password parameter!");
+			System.err.println("Login requires a password parameter.");
 			return false;
 		}
 		this.password = args[0];

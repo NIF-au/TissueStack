@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 
 public final class TissueStackCLCommunicator {
 	
@@ -52,5 +53,24 @@ public final class TissueStackCLCommunicator {
 		}
 		
 		return respBuffer.toString();
+	}
+	
+
+	public static String encodeQueryStringParam(String param) {
+		 try {
+	        return URLEncoder.encode(param, "UTF-8")
+	                .replaceAll("\\+", "%20")
+	                .replaceAll("\\%21", "!")
+	                .replaceAll("\\%27", "'")
+	                .replaceAll("\\%28", "(")
+	                .replaceAll("\\%29", ")")
+	                .replaceAll("\\%7E", "~")
+	                .replaceAll("\\%2C", ",")
+	 	            .replaceAll("\\%5B", "[")
+	                .replaceAll("\\%5D", "]");
+		    } catch (Exception e) {
+		    	System.err.println("Failed to encode query string param");
+		    }
+		 return null;
 	}
 }
