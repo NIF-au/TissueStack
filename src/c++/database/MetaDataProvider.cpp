@@ -94,8 +94,46 @@ const std::vector<const tissuestack::database::DataSetInfo *> tissuestack::datab
 	return v_results;
 }
 
-const bool tissuestack::database::MetaDataProvider::updateDataSetInfo(const DataSetInfo * conf) {
+const bool tissuestack::database::MetaDataProvider::updateDataSetInfo(
+		const unsigned long long int id, const std::string column, std::string value) {
 
-	// TODO: implement
-	return true;
+	if (column.compare("description") != 0 && column.compare("is_tiled") != 0 &&
+		column.compare("zoom_levels") != 0 && column.compare("one_to_one_zoom_level") != 0 &&
+		column.compare("resolution_mm") != 0) {
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Only the following columns are allowed to be modified: description, is_tiled, zoom_levels, one_to_one_zoom_level and resolution_mm");
+	}
+
+	const tissuestack::database::DataSetInfo * hit =
+		tissuestack::database::MetaDataProvider::queryDataSetInfoById(id);
+	if (hit == nullptr)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Given ID does not match any data set!");
+
+	delete hit;
+
+	if (value.empty())
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Please supply a non empty value!");
+
+	const bool isNumeric =
+		(column.compare("one_to_one_zoom_level") == 0 || column.compare("resolution_mm") == 0);
+
+	if (column.compare("is_tiled") == 0) {
+		std::transform(value.begin(), value.end(), value.begin(), ::tolower);
+		if (value.compare("true") == 0) value = "T";
+		else value = "F";
+	}
+
+	value = tissuestack::utils::Misc::sanitizeSqlQuote(value);
+	const std::string sql =
+		std::string("UPDATE dataset SET ") + column + ("=") +
+			(!isNumeric ? ("'" + value + "'") : std::to_string(atof(value.c_str()))) +
+			" WHERE id=" +
+			 std::to_string(id) + ";";
+
+	if (tissuestack::database::TissueStackPostgresConnector::instance()->executeTransaction({sql}) == 1)
+		return true;
+
+	return false;
 }

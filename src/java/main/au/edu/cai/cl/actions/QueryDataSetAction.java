@@ -15,7 +15,7 @@ public class QueryDataSetAction implements ClAction {
 	public boolean setMandatoryParameters(String[] args) {
 		if (args.length < 1 ) return false;
 		try {
-			id = Long.parseLong(args[0]);
+			this.id = Long.parseLong(args[0]);
 		} catch(Exception notnumeric) {
 			System.err.println("ID is not numeric!");
 			return false;

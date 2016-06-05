@@ -20,12 +20,12 @@ public class ConfigAction implements ClAction {
 	public boolean setMandatoryParameters(String[] args) {
 		
 		if (args.length < 1) {
-			System.err.println("ERROR: --config needs a configuration file as its first parameter");
+			System.err.println("ERROR: --ts-conf needs a configuration file as its first parameter");
 			return false;
 		}
 		final File newConfig = new File(args[0]);
 		if (!newConfig.exists() || !newConfig.canRead()) {
-			System.err.println("ERROR: --config file does not exist or cannot be read");
+			System.err.println("ERROR: --ts-conf file does not exist or cannot be read");
 			return false;
 		}
 		this.location = newConfig;
@@ -43,7 +43,7 @@ public class ConfigAction implements ClAction {
 	}
 
 	public String getUsage() {
-		return "--config file_location <== uses config file to get connect/session info";
+		return "--ts-conf file_location <== uses config file to get connect/session info";
 	}
 
 }

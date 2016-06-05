@@ -38,7 +38,7 @@ public class ListDataSetAction implements ClAction {
 					@SuppressWarnings("unchecked")
 					final JSONObject [] datasets = (JSONObject[]) respObj.toArray(new JSONObject[]{});
 					for (JSONObject dataset : datasets) {
-						formattedResponse.append("\tID:\t\t");
+						formattedResponse.append("\n\tID:\t\t");
 						formattedResponse.append(dataset.get("id"));
 						formattedResponse.append("\n");
 						formattedResponse.append("\tFILENAME:\t");

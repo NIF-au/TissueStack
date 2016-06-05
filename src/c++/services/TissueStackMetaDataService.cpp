@@ -26,6 +26,8 @@ const std::string tissuestack::services::TissueStackMetaDataService::SUB_SERVICE
 tissuestack::services::TissueStackMetaDataService::TissueStackMetaDataService() {
 	this->addMandatoryParametersForRequest("DATASET_LIST",
 		std::vector<std::string>{ "SESSION" });
+	this->addMandatoryParametersForRequest("DATASET_MODIFY",
+		std::vector<std::string>{ "SESSION", "ID", "COLUMN", "VALUE" });
 };
 
 tissuestack::services::TissueStackMetaDataService::~TissueStackMetaDataService() {};
@@ -55,6 +57,8 @@ void tissuestack::services::TissueStackMetaDataService::streamResponse(
 
 	if (action.compare("DATASET_LIST") == 0)
 		json = this->handleDataSetListRequest(request);
+	else if (action.compare("DATASET_MODIFY") == 0)
+		json = this->handleDataSetModifyRequest(request);
 
 
 	const std::string response =
@@ -86,3 +90,22 @@ const std::string tissuestack::services::TissueStackMetaDataService::handleDataS
 	return json.str();
 }
 
+const std::string tissuestack::services::TissueStackMetaDataService::handleDataSetModifyRequest(
+		const tissuestack::networking::TissueStackServicesRequest * request) const {
+
+	const bool wasSuccessful =
+		tissuestack::database::MetaDataProvider::updateDataSetInfo(
+			strtoull(request->getRequestParameter("ID").c_str(), NULL, 10),
+			request->getRequestParameter("COLUMN"),
+			request->getRequestParameter("VALUE"));
+
+	std::ostringstream json;
+	json << "{\"response\": ";
+
+	if (wasSuccessful)
+		json << "\"modified dataset successfully\"";
+	else
+		json << "\"failed to modify dataset\"";
+	json << "}";
+	return json.str();
+}

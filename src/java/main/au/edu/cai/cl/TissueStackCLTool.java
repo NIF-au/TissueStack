@@ -14,8 +14,11 @@ import au.edu.cai.cl.actions.ClActionResult;
 import au.edu.cai.cl.actions.ConfigAction;
 import au.edu.cai.cl.actions.ConfigurationAction;
 import au.edu.cai.cl.actions.DataSetImportAction;
+import au.edu.cai.cl.actions.DataSetModifyAction;
 import au.edu.cai.cl.actions.DeleteDataSetAction;
+import au.edu.cai.cl.actions.FileAction;
 import au.edu.cai.cl.actions.ListDataSetAction;
+import au.edu.cai.cl.actions.ListUploadDirectoryAction;
 import au.edu.cai.cl.actions.LoginAction;
 import au.edu.cai.cl.actions.QueryDataSetAction;
 
@@ -24,13 +27,18 @@ public class TissueStackCLTool {
 	private static final Map<String, ClAction> clOpts;
 	static {
         Map<String, ClAction> aMap = new LinkedHashMap<String, ClAction>();
-        aMap.put("config", new ConfigAction());
+        aMap.put("ts-conf", new ConfigAction());
+        aMap.put("login", new LoginAction());
         aMap.put("list", new ListDataSetAction());
         aMap.put("query", new QueryDataSetAction());
-        aMap.put("login", new LoginAction());
         aMap.put("import", new DataSetImportAction());
         aMap.put("delete", new DeleteDataSetAction());
-        aMap.put("ts-config", new ConfigurationAction());
+        aMap.put("modify", new DataSetModifyAction());
+        aMap.put("file", new FileAction());
+        aMap.put("upload-dir", new ListUploadDirectoryAction());
+        // tile actions: start, pause, cancel, status
+        // data set modify
+        aMap.put("config", new ConfigurationAction());
         clOpts = Collections.unmodifiableMap(aMap);
 	}
 	
@@ -92,11 +100,11 @@ public class TissueStackCLTool {
 		// in the end we need a tissuestack server at a minimum
 		String tissueStackInstance = null;
 		String sessionToken = null;
-		final List<String> configParams = paramsMap.get("config");
+		final List<String> configParams = paramsMap.get("ts-conf");
 		if (configParams != null) {
 			if (verbose) System.out.print("Reading handed in config ..." );
 
-			final ClAction configAction = TissueStackCLTool.clOpts.get("config");
+			final ClAction configAction = TissueStackCLTool.clOpts.get("ts-conf");
 			if (configAction.setMandatoryParameters(configParams.toArray(new String[] {})) &&
 					configAction.performAction(null).getStatus() == ClAction.STATUS.SUCCESS) {
 				tissueStackInstance = TissueStackCLConfig.instance().get("tissuestack.instance");
@@ -107,7 +115,7 @@ public class TissueStackCLTool {
 			if (verbose) System.out.println("");
 			
 			// remove config action from map
-			paramsMap.remove("config");
+			paramsMap.remove("ts-conf");
 		} else {
 			if (verbose) System.out.println("Using default config file ..." );
 			tissueStackInstance = TissueStackCLConfig.instance().get("tissuestack.instance");
@@ -126,7 +134,7 @@ public class TissueStackCLTool {
 		// at this point we need to have the url for a tissuestack instance, otherwise we are screwed
 		if (tissueStackInstance == null) {
 			System.err.println(
-				"Please provide tissue stack server via the --config OR --server parameter!");
+				"Please provide tissue stack server via the --ts-conf OR --server parameter!");
 			System.exit(0);
 		}
 

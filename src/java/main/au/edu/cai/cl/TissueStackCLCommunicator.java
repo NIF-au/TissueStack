@@ -67,7 +67,11 @@ public final class TissueStackCLCommunicator {
 	                .replaceAll("\\%7E", "~")
 	                .replaceAll("\\%2C", ",")
 	 	            .replaceAll("\\%5B", "[")
-	                .replaceAll("\\%5D", "]");
+	                .replaceAll("\\%5D", "]")
+	                .replaceAll("\\%5C", "\\")
+	                .replaceAll("\\%40", "@")
+	                .replaceAll("\\%7C", "|")
+	                .replaceAll("\\%5E", "^");
 		    } catch (Exception e) {
 		    	System.err.println("Failed to encode query string param");
 		    }

@@ -106,11 +106,9 @@ const pqxx::result tissuestack::database::TissueStackPostgresConnector::executeN
 					THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 						"Reconnecting database ...");
 				}
-			} catch (...)
-			{
-				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-					"Failure to execute database query because of connectivity issues!");
-			}
+			} catch (...) {}
+			throw tissuestack::common::TissueStackApplicationException(
+				"ERROR: Failure to execute database query: " + std::string(bad.what()));
 		}
 	}
 
@@ -139,8 +137,8 @@ const pqxx::result tissuestack::database::TissueStackPostgresConnector::executeN
 							"Reconnecting database ...");
 				}
 			} catch (...) {}
-			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-				"Failure to execute database query because of connectivity issues!");
+			throw tissuestack::common::TissueStackApplicationException(
+				"ERROR: Failure to execute database query: " + std::string(bad.what()));
 		}
 	}
 
@@ -185,8 +183,8 @@ const unsigned long long int tissuestack::database::TissueStackPostgresConnector
 			}
 
 		} catch (...) {}
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-			"Failure to execute database query because of connectivity issues!");
+		throw tissuestack::common::TissueStackApplicationException(
+			"ERROR: Failure to execute database query: " + std::string(bad.what()));
 	}
 }
 
@@ -228,8 +226,8 @@ const pqxx::result tissuestack::database::TissueStackPostgresConnector::executeP
 						"Reconnecting database ...");
 				}
 			} catch (...) {}
-			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-				"Failure to execute database query because of connectivity issues!");
+			throw tissuestack::common::TissueStackApplicationException(
+				"ERROR: Failure to execute database query: " + std::string(bad.what()));
 		}
 	}
 
@@ -263,8 +261,8 @@ const pqxx::result tissuestack::database::TissueStackPostgresConnector::executeP
 						"Reconnecting database ...");
 				}
 			} catch (...) {}
-			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-				"Failure to execute database query because of connectivity issues!");
+			throw tissuestack::common::TissueStackApplicationException(
+				"ERROR: Failure to execute database query: " + std::string(bad.what()));
 		}
 	}
 }

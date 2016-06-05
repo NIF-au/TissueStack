@@ -360,6 +360,8 @@ namespace tissuestack
 			private:
 				const std::string handleDataSetListRequest(
 						const tissuestack::networking::TissueStackServicesRequest * request) const;
+				const std::string  handleDataSetModifyRequest(
+						const tissuestack::networking::TissueStackServicesRequest * request) const;
 	 	};
 		class TissueStackServicesDelegator final
 		{

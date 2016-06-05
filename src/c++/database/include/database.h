@@ -230,7 +230,7 @@ namespace tissuestack
 				static const unsigned short MAX_RECORDS;
 				static const tissuestack::database::DataSetInfo * queryDataSetInfoById(const unsigned long long int id);
 				static const std::vector<const tissuestack::database::DataSetInfo *> queryAllDataSets(const unsigned int offset = 0, const unsigned int max_records = MAX_RECORDS);
-				static const bool updateDataSetInfo(const DataSetInfo * conf);
+				static const bool updateDataSetInfo(const unsigned long long int id, const std::string column, std::string value);
 			private:
 				static const std::vector<const tissuestack::database::DataSetInfo *> findResults(
 										const std::string sql,
