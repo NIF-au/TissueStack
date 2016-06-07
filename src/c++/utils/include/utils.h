@@ -28,6 +28,7 @@
 #include <ctime>
 #include <sstream>
 #include <cstring>
+#include <ctype.h>
 
 #include <unistd.h>
 
@@ -110,6 +111,7 @@ namespace tissuestack
 			const std::string & file_to_be_extracted,
 			const std::string & new_file_location,
 			const bool & overwriteExistingFile = false);
+    	static const bool isNumber(const std::string some_string);
       private:
     	Misc();
     	Misc & operator=(const Misc&) = delete;

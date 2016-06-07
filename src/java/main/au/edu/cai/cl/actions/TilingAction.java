@@ -100,8 +100,8 @@ public class TilingAction implements ClAction {
 						@SuppressWarnings("unchecked")
 						final JSONObject [] tasks = (JSONObject[]) respObj.toArray(new JSONObject[]{});
 						for (JSONObject task : tasks) {
-							formattedResponse.append("\n\tTASK ID:\t" + task.get("id"));
-							formattedResponse.append("\n\tSTATUS:\t" + task.get("status"));
+							formattedResponse.append("\n\tTASK ID:\t" + task.get("task_id"));
+							formattedResponse.append("\n\tSTATUS:\t\t" + task.get("status"));
 						}
 						return new ClActionResult(ClAction.STATUS.SUCCESS, formattedResponse.toString());
 					}
@@ -121,7 +121,9 @@ public class TilingAction implements ClAction {
 						final JSONObject respObj = (JSONObject) parseResponse.get("response");
 						if (respObj.containsKey("status")) {
 							StringBuilder formattedResponse = new StringBuilder();
-							formattedResponse.append("\n\tSTATUS:\t" + respObj.get("status"));
+							formattedResponse.append("\n\tTASK_ID:\t" + respObj.get("task_id"));
+							formattedResponse.append("\n\tFILE:\t\t" + respObj.get("filename"));
+							formattedResponse.append("\n\tSTATUS:\t\t" + respObj.get("status"));
 							if (respObj.containsKey("progress"))
 								formattedResponse.append("\n\tPROGRESS:\t" + respObj.get("progress") + "%");
 								

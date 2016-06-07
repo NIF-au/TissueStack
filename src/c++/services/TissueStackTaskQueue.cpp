@@ -465,8 +465,8 @@ const bool tissuestack::services::TissueStackTaskQueue::isBeingConverted(const s
 inline void tissuestack::services::TissueStackTaskQueue::buildTaskFromIndividualTaskFile(const std::string & task_id)
 {
 	const std::vector<std::string> lines =
-			tissuestack::utils::System::readTextFileLineByLine(
-				tissuestack::services::TissueStackTaskQueue::getTasksDirectory() + "/" + task_id);
+		tissuestack::utils::System::readTextFileLineByLine(
+			tissuestack::services::TissueStackTaskQueue::getTasksDirectory() + "/" + task_id);
 
 	/*
 	 * Layout for task files is as follows:

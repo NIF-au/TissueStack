@@ -367,7 +367,10 @@ namespace tissuestack
 						const tissuestack::networking::TissueStackServicesRequest * request) const;
 				const std::string handleTaskStatusRequest(
 						const tissuestack::networking::TissueStackServicesRequest * request) const;
-				inline std::string getStatusFromTaskFile(const std::string & task_file, const std::string & task_type);
+				inline const std::string getTaskStatus(
+						const std::string & task_id, const std::string & task_type, const bool pure_task_id = false) const;
+				inline const std::string getStatusFromTaskFile(const std::string & task_file, const std::string & task_type) const;
+				const std::vector<std::string> filterTasksDirectory(const std::string status) const;
 	 	};
 		class TissueStackServicesDelegator final
 		{

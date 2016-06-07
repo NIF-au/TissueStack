@@ -620,12 +620,12 @@ TissueStack.Admin.prototype = {
 		            var fullyQualifiedFileName = 
 		                TissueStack.configuration['data_directory'].value + "/" + uploaded_file.value;
 		            if (TissueStack.dataSetStore.datasetCount > 0) {
-		                task_zoom_level = [];
 		                for (var d in TissueStack.dataSetStore.datasets) {
 		                    if (fullyQualifiedFileName === 
-		                        TissueStack.dataSetStore.datasets[d].filename) 
+		                        TissueStack.dataSetStore.datasets[d].filename) {
 		                        task_zoom_level = 
 		                            eval(TissueStack.dataSetStore.datasets[d].data[0].zoomLevels);
+		                    }
 		                }
 		            }
 

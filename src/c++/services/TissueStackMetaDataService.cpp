@@ -120,16 +120,35 @@ const std::string tissuestack::services::TissueStackMetaDataService::handleDataS
 const std::string tissuestack::services::TissueStackMetaDataService::handleTaskListingRequest(
 		const tissuestack::networking::TissueStackServicesRequest * request) const {
 
-	const std::string task_id =
-		request->getRequestParameter("TASK_ID", true);
+	const std::string status =
+		request->getRequestParameter("STATUS", true);
+	const std::string type =
+		request->getRequestParameter("TYPE", true);
+	if (type.compare("TILING") != 0 && type.compare("CONVERSION") != 0)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Task type has to be 'TILING' or 'CONVERSION'!");
 
-	// TODO: loop over files in directory and filter if necessary
-	return "";
+	const std::vector<std::string> filteredFiles = this->filterTasksDirectory(status);
+
+	std::ostringstream json;
+	json << "{\"response\": [";
+
+	int counter = 0;
+	for (auto f : filteredFiles) {
+		const std::string resp = this->getTaskStatus(f, type);
+		if (!resp.empty()) {
+			if (counter != 0) json << ",";
+			json << resp;
+			counter++;
+		}
+	}
+
+	json << "]}";
+	return json.str();
 }
 
 const std::string tissuestack::services::TissueStackMetaDataService::handleTaskStatusRequest(
 		const tissuestack::networking::TissueStackServicesRequest * request) const {
-
 	const std::string task_id =
 		request->getRequestParameter("TASK_ID");
 
@@ -139,25 +158,53 @@ const std::string tissuestack::services::TissueStackMetaDataService::handleTaskS
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"Task type has to be 'TILING' or 'CONVERSION'!");
 
+	const std::string resp = this->getTaskStatus(task_id, task_type, true);
+	std::ostringstream json;
+	json << "{\"response\": ";
+	json << (resp.empty() ?
+		"\"given task type does not match actual task type, e.g. supposed tiling task could be conversion\"" :
+			resp);
+	json << "}";
+	return json.str();
+}
+
+inline const std::string tissuestack::services::TissueStackMetaDataService::getTaskStatus(
+		const std::string & task_id, const std::string & task_type, const bool pure_task_id) const {
+
+	std::string taskFile = task_id;
+	if (!pure_task_id) { // for files with endings
+		std::size_t dotPos = taskFile.find(".");
+		std::size_t slashPos = taskFile.find_last_of("/");
+		if (dotPos != std::string::npos && dotPos > 0) {
+			taskFile = taskFile.substr(slashPos+1,dotPos-slashPos-1);
+		} else
+			taskFile = taskFile.substr(slashPos+1);
+	}
+
+	if (!tissuestack::utils::Misc::isNumber(taskFile))
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"Task file name can be numeric only!");
+
 	// check in memory first
 	const tissuestack::services::TissueStackTask * hit =
-		tissuestack::services::TissueStackTaskQueue::instance()->findTaskById(task_id);
+		tissuestack::services::TissueStackTaskQueue::instance()->findTaskById(taskFile);
 	if (hit) {
+		tissuestack::logging::TissueStackLogger::instance()->info("HIT");
 		// good we don't need to fish in the file
 		if ((task_type.compare("TILING") == 0 &&
 				hit->getType() == tissuestack::services::TissueStackTaskType::CONVERSION) ||
 			(task_type.compare("CONVERSION") == 0 &&
 				hit->getType() == tissuestack::services::TissueStackTaskType::TILING))
-			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-				"Given task type does not correspond to actual, e.g. you gave a supposed tile task id for a conversion or vice versa!");
+			return "";
 
 		std::ostringstream json;
-		json << "{\"response\": ";
-		json << "{\"filename\": \"";
+		json << "{\"task_id\": ";
+		json << taskFile;
+		json << ", \"filename\": \"";
 		json << hit->getInputFileName();
 		json << "\", \"progress\": ";
 		json << hit->getProgress();
-		json << ",\"status\": \"";
+		json << ", \"status\": \"";
 		switch (hit->getStatus()) {
 			case tissuestack::services::TissueStackTaskStatus::QUEUED:
 				json << "queued";
@@ -175,27 +222,39 @@ const std::string tissuestack::services::TissueStackMetaDataService::handleTaskS
 				json << "unzipping";
 				break;
 			case tissuestack::services::TissueStackTaskStatus::CANCELLED:
-				json << "canceled";
+				json << "cancelled";
 				break;
 			default:
 				json << "unknown";
 		}
-		json << "\"}}";
+		json << "\"}";
 		return json.str();
 	} else {
-		// we have to go and look for the file....
-		// TODO: check a few options: done error
-		//tissuestack::services::TissueStackTaskQueue::getTasksDirectory() + "/" + task_id
+		// for files that fell through above but have come in as pure task ids
+		// we need to test for file endings ...
+		std::string actualTaskId = task_id;
+		if (pure_task_id) {
+			actualTaskId = tissuestack::services::TissueStackTaskQueue::getTasksDirectory() + "/" + actualTaskId;
+			if (tissuestack::utils::System::fileExists(std::string(actualTaskId + ".done")))
+				actualTaskId += ".done";
+			else if (tissuestack::utils::System::fileExists(std::string(actualTaskId + ".error")))
+				actualTaskId += ".error";
+			else if (tissuestack::utils::System::fileExists(std::string(actualTaskId + ".cancelled")))
+				actualTaskId += ".cancelled";
+		}
+		tissuestack::logging::TissueStackLogger::instance()->info("%s\n", actualTaskId.c_str());
 
+		// we have to go and look for the file....
+		return this->getStatusFromTaskFile(actualTaskId, task_type);
 	}
 
 	THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"Task does not exist!");
 }
 
-inline std::string tissuestack::services::TissueStackMetaDataService::getStatusFromTaskFile(
+inline const std::string tissuestack::services::TissueStackMetaDataService::getStatusFromTaskFile(
 		const std::string & task_id,
-		const std::string & task_type)
+		const std::string & task_type) const
 {
 	// existence check
 	if (task_id.empty() || !tissuestack::utils::System::fileExists(task_id))
@@ -265,9 +324,7 @@ inline std::string tissuestack::services::TissueStackMetaDataService::getStatusF
 			type == tissuestack::services::TissueStackTaskType::CONVERSION) ||
 		(task_type.compare("CONVERSION") == 0 &&
 			type == tissuestack::services::TissueStackTaskType::TILING))
-	THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-		"Given task type does not correspond to actual, e.g. you gave a supposed tile task id for a conversion or vice versa!");
-
+		return "";
 
 	// get the progress/total figures
 	if (sliceProgress > totalSlices) // we cannot have more progress than total work...
@@ -280,14 +337,97 @@ inline std::string tissuestack::services::TissueStackMetaDataService::getStatusF
 			static_cast<float>(100);
 	}
 
+	std::string id = task_id;
+	std::size_t dotPos = id.find(".");
+	std::size_t slashPos = id.find_last_of("/");
+	if (dotPos != std::string::npos && dotPos > 0) {
+		id = id.substr(slashPos+1,dotPos-slashPos-1);
+	} else
+		id = id.substr(slashPos+1);
+
 	std::ostringstream json;
-	json << "{\"response\": ";
-	json << "{\"filename\": \"";
+	json << "{\"task_id\": ";
+	json << id;
+	json << ", \"filename\": \"";
 	json << in_file;
 	json << "\", \"progress\": ";
 	json << std::to_string(progress);
-	json << ",\"status\": \"";
-	// TODO: gather status from file name and progress
-	json << "\"}}";
+	json << ", \"status\": \"";
+	if (task_id.find(".done") != std::string::npos)
+		json << "done";
+	else if (task_id.find(".error") != std::string::npos)
+		json << "error";
+	else if (task_id.find(".cancelled") != std::string::npos)
+		json << "cancelled";
+	else if (progress == 100)
+		json << "done";
+	else json << "active";
+	json << "\"}";
 	return json.str();
+}
+
+const std::vector<std::string> tissuestack::services::TissueStackMetaDataService::filterTasksDirectory(const std::string status) const
+{
+
+	if (status.compare("ALL") != 0 && status.compare("DONE") != 0 && status.compare("CANCELLED") != 0
+			&& status.compare("ERROR") != 0 && status.compare("ACTIVE") != 0)
+		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+			"task filter for statuses can only take on values: ALL, DONE, ACTIVE, CANCELLED and ERROR!");
+
+	std::vector<std::string> results;
+
+	const std::string dir = tissuestack::services::TissueStackTaskQueue::getTasksDirectory();
+	const std::vector<std::string> filesInUploadDirectory =
+		tissuestack::utils::System::getFilesInDirectory(dir);
+
+	for (auto f : filesInUploadDirectory)
+	{
+		// if file is 'general', we'll ignore it.
+		if (f.find("general") != std::string::npos) continue;
+
+		// numeric task number check
+		// we have to chop off ending
+		std::size_t dotPos = f.find(".");
+		std::size_t slashPos = f.find_last_of("/");
+		std::string potentialTaskFile = f;
+		if (dotPos != std::string::npos && dotPos > 0) {
+			potentialTaskFile = potentialTaskFile.substr(slashPos + 1,dotPos-slashPos-1);
+		} else
+			potentialTaskFile = potentialTaskFile.substr(slashPos + 1);
+
+		if (!tissuestack::utils::Misc::isNumber(potentialTaskFile))
+			continue; // we are not a number
+
+		if (status.compare("ALL") == 0) {
+			results.push_back(f);
+			continue;
+		}
+
+		// status: done
+		if (status.compare("DONE") == 0 && f.find(".done") != std::string::npos) {
+			results.push_back(f);
+			continue;
+		}
+
+		// status: cancelled
+		if (status.compare("CANCELLED") == 0 && f.find(".cancelled") != std::string::npos) {
+			results.push_back(f);
+			continue;
+		}
+
+		// status: error
+		if (status.compare("ERROR") == 0 && f.find(".error") != std::string::npos) {
+			results.push_back(f);
+			continue;
+		}
+
+		// status: error
+		if (status.compare("ACTIVE") == 0 && f.find(".") == std::string::npos) {
+			results.push_back(f);
+			continue;
+		}
+
+	}
+
+	return results;
 }
