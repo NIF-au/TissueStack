@@ -137,6 +137,7 @@ namespace tissuestack
 				virtual ~TissueStackTask();
 				const bool isInputDataRaw() const;
 				const tissuestack::imaging::TissueStackImageData * getInputImageData() const;
+				void setInputImageData(const tissuestack::imaging::TissueStackImageData * input_data);
 				const bool hasBeenUnzipped() const;
 				const std::string getInputFileName() const;
 			protected:
@@ -360,8 +361,13 @@ namespace tissuestack
 			private:
 				const std::string handleDataSetListRequest(
 						const tissuestack::networking::TissueStackServicesRequest * request) const;
-				const std::string  handleDataSetModifyRequest(
+				const std::string handleDataSetModifyRequest(
 						const tissuestack::networking::TissueStackServicesRequest * request) const;
+				const std::string handleTaskListingRequest(
+						const tissuestack::networking::TissueStackServicesRequest * request) const;
+				const std::string handleTaskStatusRequest(
+						const tissuestack::networking::TissueStackServicesRequest * request) const;
+				inline std::string getStatusFromTaskFile(const std::string & task_file, const std::string & task_type);
 	 	};
 		class TissueStackServicesDelegator final
 		{

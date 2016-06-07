@@ -65,6 +65,13 @@ const tissuestack::imaging::TissueStackImageData * tissuestack::services::Tissue
 	return this->_input_data;
 }
 
+void tissuestack::services::TissueStackTask::setInputImageData(const tissuestack::imaging::TissueStackImageData * input_data)
+{
+	if (input_data == nullptr) return;
+	delete this->_input_data;
+	this->_input_data = const_cast<tissuestack::imaging::TissueStackImageData *>(input_data);
+}
+
 void tissuestack::services::TissueStackTask::checkWhetherZipFile(const std::string filename)
 {
 	// a very superficial extension check since we'll discover zip file problems later anyhow

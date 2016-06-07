@@ -21,6 +21,7 @@ import au.edu.cai.cl.actions.ListDataSetAction;
 import au.edu.cai.cl.actions.ListUploadDirectoryAction;
 import au.edu.cai.cl.actions.LoginAction;
 import au.edu.cai.cl.actions.QueryDataSetAction;
+import au.edu.cai.cl.actions.TilingAction;
 
 public class TissueStackCLTool {
 	
@@ -36,8 +37,7 @@ public class TissueStackCLTool {
         aMap.put("modify", new DataSetModifyAction());
         aMap.put("file", new FileAction());
         aMap.put("upload-dir", new ListUploadDirectoryAction());
-        // tile actions: start, pause, cancel, status
-        // data set modify
+        aMap.put("tile", new TilingAction());
         aMap.put("config", new ConfigurationAction());
         clOpts = Collections.unmodifiableMap(aMap);
 	}

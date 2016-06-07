@@ -10,7 +10,7 @@ INSERT INTO configuration VALUES('server_tile_directory', '/opt/tissuestack/tile
 INSERT INTO configuration VALUES('upload_directory', '/opt/tissuestack/upload', 'upload directory (absolute system path on server)');
 INSERT INTO configuration VALUES('lookup_directory', '/opt/tissuestack/lookup', 'directory that houses the lookup table files (absolute system path on server)');
 INSERT INTO configuration VALUES('colormaps_directory', '/opt/tissuestack/colormaps', 'directory that houses the color map files (absolute system path on server)');
-INSERT INTO configuration VALUES('tasks_directory', '/opt/tissuestack/tasks/general', 'directory that houses task queue files (absolute system path on server)');
+INSERT INTO configuration VALUES('tasks_directory', '/opt/tissuestack/tasks', 'directory that houses task queue files (absolute system path on server)');
 INSERT INTO configuration VALUES('data_directory', '/opt/tissuestack/data', 'data directory (absolute system path on server)');
 INSERT INTO configuration VALUES('temp_directory', '/tmp', 'temporary directory (absolute system path on server)');
 INSERT INTO configuration VALUES('ands_dataset_xml', '/opt/tissuestack/ands/datasets.xml', 'ands data set xml');

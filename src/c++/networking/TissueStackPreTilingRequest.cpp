@@ -16,6 +16,7 @@
  */
 #include "networking.h"
 #include "imaging.h"
+#include "database.h"
 #include "services.h"
 
 const std::string tissuestack::networking::TissueStackPreTilingRequest::SERVICE = "TILING";
@@ -33,28 +34,40 @@ tissuestack::networking::TissueStackPreTilingRequest::TissueStackPreTilingReques
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
 				"Invalid Session! Please Log In.");
 
-	const std::string in_file =
+	std::string in_file =
 		tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "file");
-	if (in_file.empty())
+	const std::string id =
+		tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters, "id");
+	if (id.empty() && in_file.empty())
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
-			"Mandatory parameter 'file' was not supplied!");
+			"Mandatory parameter 'file' or 'id' was not supplied!");
 	const tissuestack::imaging::TissueStackDataSet * foundDataSet =
-		tissuestack::imaging::TissueStackDataSetStore::instance()->findDataSet(in_file);
+		!in_file.empty() ?
+			tissuestack::imaging::TissueStackDataSetStore::instance()->findDataSet(in_file) :
+			tissuestack::imaging::TissueStackDataSetStore::instance()->findDataSetByDataBaseId(
+				strtoull(id.c_str(), NULL, 10));
 	if (foundDataSet == nullptr || foundDataSet->getImageData()->getDataBaseId() == 0)
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
-			"Could not find associated dataset to retrieve database id!");
-
+			"Could not find dataset for given file/id!");
+	if (in_file.empty())
+		in_file = foundDataSet->getDataSetId();
 	std::string tile_dir =
 		tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters,"tile_dir");
-	if (tile_dir.empty())
-		THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
-			"Mandatory parameter 'tile_dir' was not supplied!");
+	if (tile_dir.empty()) {
+		tile_dir =
+			tissuestack::database::ConfigurationDataProvider::findSpecificApplicationDirectory("server_tile_directory");
+		if (tile_dir.empty())
+			THROW_TS_EXCEPTION(tissuestack::common::TissueStackInvalidRequestException,
+				"Mandatory parameter 'tile_dir' was not supplied!");
+	}
 	tile_dir = tile_dir + "/" + std::to_string(foundDataSet->getImageData()->getDataBaseId());
 
 	const std::vector<std::string> dimensions =
-		tissuestack::utils::Misc::tokenizeString(
-			tissuestack::utils::Misc::eliminateWhitespaceAndUnwantedEscapeCharacters(
-				tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters,"dimensions")), ',');
+		tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters,"dimensions").compare("*") == 0 ?
+			foundDataSet->getImageData()->getDimensionOrder() :
+			tissuestack::utils::Misc::tokenizeString(
+				tissuestack::utils::Misc::eliminateWhitespaceAndUnwantedEscapeCharacters(
+					tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters,"dimensions")), ',');
 	const std::vector<std::string> zoom_levels =
 		tissuestack::utils::Misc::tokenizeString(
 			tissuestack::utils::Misc::eliminateWhitespaceAndUnwantedEscapeCharacters(
@@ -62,6 +75,12 @@ tissuestack::networking::TissueStackPreTilingRequest::TissueStackPreTilingReques
 	std::vector<unsigned short> numLevels;
 	for (auto z : zoom_levels)
 		numLevels.push_back(static_cast<unsigned short>(atoi(z.c_str())));
+	if (numLevels.empty()) {
+		for (unsigned short c = 0;c<foundDataSet->getImageData()->getZoomLevels().size();c++) {
+			numLevels.push_back(c);
+		}
+	}
+
 	const std::string tile_size =
 		tissuestack::utils::Misc::findUnorderedMapEntryWithUpperCaseStringKey(request_parameters,"tile_size");
 

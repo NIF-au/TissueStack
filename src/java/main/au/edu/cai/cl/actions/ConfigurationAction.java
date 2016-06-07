@@ -91,7 +91,7 @@ public class ConfigurationAction implements ClAction {
 	}
 
 	public String getUsage() {
-		return "--config list <== lists configuration table contents\n" +
+		return "\t--config list <== lists configuration table contents\n" +
 			   "\t--config query key <== displays a given configuration table value\n" +
 			   "\t--config change key value <== changes value for a configuration table entry";
 	}

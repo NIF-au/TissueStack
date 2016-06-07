@@ -586,9 +586,6 @@ TissueStack.Admin.prototype = {
 			var actonType = null;
 			var actionStatus = TissueStack.Tasks.ReverseStatusLookupTable["Queued"];
 			var fileSelected = false;
-
-			var task_zoom_level = eval(TissueStack.configuration.default_zoom_levels.value).length;
-
 			var successHandler = null;
 
 			// the common code part for all actions
@@ -619,7 +616,20 @@ TissueStack.Admin.prototype = {
 						return;
 					}
 
-			  		for(var i = 0; i < task_zoom_level ; i++) {
+					var task_zoom_level =  eval(TissueStack.configuration['default_zoom_levels'].value);
+		            var fullyQualifiedFileName = 
+		                TissueStack.configuration['data_directory'].value + "/" + uploaded_file.value;
+		            if (TissueStack.dataSetStore.datasetCount > 0) {
+		                task_zoom_level = [];
+		                for (var d in TissueStack.dataSetStore.datasets) {
+		                    if (fullyQualifiedFileName === 
+		                        TissueStack.dataSetStore.datasets[d].filename) 
+		                        task_zoom_level = 
+		                            eval(TissueStack.dataSetStore.datasets[d].data[0].zoomLevels);
+		                }
+		            }
+
+			  		for(var i = 0; i < task_zoom_level.length ; i++) {
 				  		// don't be confused by the outer loop, it will only apply for pre-tile
 			  			if (action != "PreTile" && i > 0) break;
 

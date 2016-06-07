@@ -58,3 +58,4 @@ ALTER TABLE dataset_planes DROP COLUMN resolution_mm;
 ALTER TABLE dataset_planes DROP COLUMN is_tiled;
 ALTER TABLE dataset_planes DROP COLUMN zoom_levels;
 ALTER TABLE dataset_planes DROP COLUMN one_to_one_zoom_level;
+UPDATE configuration SET value='/opt/tissuestack/tasks',description='directory that houses task queue files (absolute system path on server)' WHERE name='tasks_directory';

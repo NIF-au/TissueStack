@@ -43,6 +43,30 @@ void tissuestack::imaging::PreTiler::preTile(
 			return;
 		}
 
+		if (processing_strategy->isOnlineStrategy()) {
+			// get additional database info
+				const tissuestack::imaging::TissueStackDataSet * ds =
+					tissuestack::imaging::TissueStackDataSetStore::instance()->findDataSet(
+						pre_tiling_task->getInputImageData()->getFileName());
+				const_cast<tissuestack::imaging::TissueStackImageData *>(pre_tiling_task->getInputImageData())
+						->setMembersFromDataBaseInformation(
+							ds->getImageData()->getDataBaseId(),
+							ds->getImageData()->getDescription(),
+							ds->getImageData()->isTiled(),
+							ds->getImageData()->getZoomLevels(),
+							ds->getImageData()->getOneToOneZoomLevel(),
+							ds->getImageData()->getResolutionMm(),
+							ds->getImageData()->getImageDataMinumum(),
+							ds->getImageData()->getImageDataMaximum(),
+							nullptr);
+		}
+		// check zoom levels requested
+		const unsigned int max_zoom_level = pre_tiling_task->getInputImageData()->getZoomLevels().size()-1;
+		for (auto l : pre_tiling_task->getZoomLevels())
+			if (l > max_zoom_level)
+				THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
+					"Requested zoom level exceeds available zoom levels!");
+
 		const std::string fileName = pre_tiling_task->getInputImageData()->getFileName();
 		const std::string params = pre_tiling_task->getParametersForTaskFile();
 		if (processing_strategy->isOnlineStrategy())

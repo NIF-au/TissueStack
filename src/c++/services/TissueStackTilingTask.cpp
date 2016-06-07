@@ -81,7 +81,7 @@ tissuestack::services::TissueStackTilingTask::TissueStackTilingTask(
 	// check dimensions
 	if (dimensions.empty())
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-			"We habe to have at least one dimension for tiling!");
+			"We have to have at least one dimension for tiling!");
 	if (this->getInputImageData()->get2DDimension() == nullptr)
 	{
 		for (auto d : dimensions)
@@ -97,10 +97,6 @@ tissuestack::services::TissueStackTilingTask::TissueStackTilingTask(
 	if (zoom_levels.empty())
 		THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
 			"We habe to have at least one zoom level for tiling!");
-	for (auto z : zoom_levels)
-		if (z > this->getInputImageData()->getZoomLevels().size())
-			THROW_TS_EXCEPTION(tissuestack::common::TissueStackApplicationException,
-				"Requested zoom level exceeds zoom factor size!");
 	this->_zoom_levels = zoom_levels;
 
 	// set total number of slices we have to work off
