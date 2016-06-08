@@ -238,6 +238,39 @@ const unsigned short tissuestack::database::DataSetDataProvider::addDataSet(
 	if (!description.empty())
 		const_cast<tissuestack::imaging::TissueStackImageData *>(dataSet)->setDescription(description);
 
+	// we'll set the default zoom levels
+	const tissuestack::database::Configuration * defaultZoomLevels =
+		tissuestack::database::ConfigurationDataProvider::queryConfigurationById("default_zoom_levels");
+	if (defaultZoomLevels != nullptr && !defaultZoomLevels->getValue().empty()) {
+		std::vector<float> v_zoom_levels;
+		std::string zoom_levels =
+			tissuestack::utils::Misc::eraseCharacterFromString(
+				defaultZoomLevels->getValue(), '[');
+		zoom_levels = tissuestack::utils::Misc::eraseCharacterFromString(zoom_levels, ']');
+		zoom_levels = tissuestack::utils::Misc::eliminateWhitespaceAndUnwantedEscapeCharacters(zoom_levels);
+
+		const std::vector<std::string> s_zoom_levels =
+				tissuestack::utils::Misc::tokenizeString(zoom_levels, ',');
+		bool isSyntacticallyCorrect = true;
+		unsigned short counter = 0;
+		unsigned short oneToOne = 0;
+		for (auto z : s_zoom_levels) {
+			if (!tissuestack::utils::Misc::isNumber(z, true)) {
+				isSyntacticallyCorrect = false;
+				break;
+			}
+			float zLevel = static_cast<float>(atof(z.c_str()));
+			if (zLevel == 1) oneToOne = counter;
+			v_zoom_levels.push_back(zLevel);
+			counter++;
+		}
+
+		if (isSyntacticallyCorrect)
+			const_cast<tissuestack::imaging::TissueStackImageData *>(dataSet)->setDefaultZoomLevels(
+				v_zoom_levels, oneToOne);
+	}
+	if (defaultZoomLevels) delete defaultZoomLevels;
+
 	const std::string db_id = std::to_string(dataSet->getDataBaseId());
 
 	std::vector<std::string> sqls;

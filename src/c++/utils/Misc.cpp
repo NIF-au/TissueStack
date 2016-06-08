@@ -15,7 +15,6 @@
  * along with TissueStack.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "utils.h"
-#include "logging.h"
 
 tissuestack::utils::Misc::Misc() {}
 
@@ -353,11 +352,13 @@ const bool tissuestack::utils::Misc::extractZippedFileFromArchive(
 	return true;
 }
 
-const bool tissuestack::utils::Misc::isNumber(const std::string some_string) {
+const bool tissuestack::utils::Misc::isNumber(const std::string some_string, const bool is_float) {
 	if (some_string.empty()) return false;
 
-	for(auto c : some_string)
+	for(auto c : some_string) {
+		if (is_float && c == '.') continue; // decimals
 		if (isdigit(c) == 0) return false;
+	}
 
 	return true;
 }

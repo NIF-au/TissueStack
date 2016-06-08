@@ -630,6 +630,12 @@ void tissuestack::imaging::TissueStackImageData::clearAssociatedDataSets()
 	this->_associated_data_sets.clear();
 }
 
+void tissuestack::imaging::TissueStackImageData::setDefaultZoomLevels(std::vector<float> zoom_levels, unsigned short one_to_one)
+{
+	this->_zoom_levels = zoom_levels;
+	this->_one_to_one_zoom_level = one_to_one;
+}
+
 const std::string tissuestack::imaging::TissueStackImageData::getZoomLevelsAsJson() const
 {
 	if (this->_zoom_levels.empty()) // return default

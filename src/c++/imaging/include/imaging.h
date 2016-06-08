@@ -347,6 +347,7 @@ namespace tissuestack
 					const bool includePlanes = false,
 					const bool dontDescendIntoAssociated = true) const;
 				const std::string getZoomLevelsAsJson() const;
+				void setDefaultZoomLevels(std::vector<float> zoom_levels, unsigned short one_to_one);
 				const bool containsAssociatedDataSet(unsigned long long int dataset_id) const;
 				const bool hasZeroDimensions() const;
 				const bool hasNoAssociatedDataSets() const;

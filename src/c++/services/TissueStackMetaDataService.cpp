@@ -189,7 +189,6 @@ inline const std::string tissuestack::services::TissueStackMetaDataService::getT
 	const tissuestack::services::TissueStackTask * hit =
 		tissuestack::services::TissueStackTaskQueue::instance()->findTaskById(taskFile);
 	if (hit) {
-		tissuestack::logging::TissueStackLogger::instance()->info("HIT");
 		// good we don't need to fish in the file
 		if ((task_type.compare("TILING") == 0 &&
 				hit->getType() == tissuestack::services::TissueStackTaskType::CONVERSION) ||
@@ -242,7 +241,6 @@ inline const std::string tissuestack::services::TissueStackMetaDataService::getT
 			else if (tissuestack::utils::System::fileExists(std::string(actualTaskId + ".cancelled")))
 				actualTaskId += ".cancelled";
 		}
-		tissuestack::logging::TissueStackLogger::instance()->info("%s\n", actualTaskId.c_str());
 
 		// we have to go and look for the file....
 		return this->getStatusFromTaskFile(actualTaskId, task_type);

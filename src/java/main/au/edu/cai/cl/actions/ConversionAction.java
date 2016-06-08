@@ -9,15 +9,13 @@ import au.edu.cai.cl.TissueStackCLCommunicator;
 import au.edu.cai.cl.json.JsonParser;
 
 
-public class TilingAction implements ClAction {
+public class ConversionAction implements ClAction {
 	private String option = null;
 	private String list_option = "ALL";
 	private String session = null;
 	private String task_id = null;
-	private String dataset_id = null;
-	private String dimensions = "*";
-	private String zoom_levels = null;
-	
+	private String in_file = null;	
+	private String out_file = null;	
 	
 	public boolean setMandatoryParameters(String[] args) {
 		if (args.length < 2 ) return false;
@@ -33,12 +31,9 @@ public class TilingAction implements ClAction {
 			return true;
 		}
 		if (this.option.equals("START")) {
-			if (args.length < 3) return false;
-			this.dataset_id =  args[2];
-			if (args.length > 3 && !args[3].trim().equals("*")) 
-				this.dimensions = args[3];
-			if (args.length > 4 && !args[4].trim().equals("*")) 
-				this.zoom_levels = args[4];
+			if (args.length < 4) return false;
+			this.in_file =  args[2];
+			this.out_file =  args[3];
 			return true;
 		}
 		if (this.option.equals("CANCEL")) {
@@ -63,12 +58,11 @@ public class TilingAction implements ClAction {
 		
 		if (this.option.equals("LIST"))
 			return "/server/?service=services&sub_service=metadata&session=" + this.session
-					+ "&action=list_tasks&type=tiling&status=" + this.list_option;
+					+ "&action=list_tasks&type=conversion&status=" + this.list_option;
 		
 		if (this.option.equals("START"))
-			return "/server/?service=tiling&session=" + this.session + "&id=" + this.dataset_id
-				+ "&dimensions=" + this.dimensions + (this.zoom_levels == null ? "" : "&zoom=" +
-					this.zoom_levels);
+			return "/server/?service=conversion&session=" + this.session + "&file=" + this.in_file
+				+ "&new_raw_file=" + this.out_file;
 		
 		if (this.option.equals("CANCEL")) 
 			return "/server/?service=services&sub_service=admin&action=cancel&session=" +
@@ -76,7 +70,7 @@ public class TilingAction implements ClAction {
 		
 		if (this.option.equals("STATUS")) 
 			return "/server/?service=services&sub_service=metadata&action=task_status&session=" +
-					this.session + "&type=tiling&task_id=" + this.task_id;
+					this.session + "&type=conversion&task_id=" + this.task_id;
 		
 		return null;
 	}
@@ -84,9 +78,9 @@ public class TilingAction implements ClAction {
 	public ClActionResult performAction(final URL TissueStackServerURL) {
 		String response = null;
 		try {
-			final URL combinedURL = new URL(TissueStackServerURL.toString() + this.getRequestUrl());			
+			final URL combinedURL = new URL(TissueStackServerURL.toString() + this.getRequestUrl());
 			response = TissueStackCLCommunicator.sendHttpRequest(combinedURL, null);
-
+			
 			final JSONObject parseResponse = JsonParser.parseResponse(response);
 			if (parseResponse.get("response") != null) { // success it seems
 				try {					
@@ -107,13 +101,13 @@ public class TilingAction implements ClAction {
 					}
 					else if (this.option.equals("START")) {
 						return new ClActionResult(ClAction.STATUS.SUCCESS, 
-							"Tiling started. Task id: " + (String) parseResponse.get("response"));
+							"Conversion started. Task id: " + (String) parseResponse.get("response"));
 					}
 					else if (this.option.equals("CANCEL")) {
 						final JSONObject respObj = (JSONObject) parseResponse.get("response");
 						if (respObj.containsKey("filename") && respObj.containsKey("progress"))
 							return new ClActionResult(ClAction.STATUS.SUCCESS,
-								"Tiling of '" + respObj.get("filename") + "' canceled at: " +
+								"Conversion of '" + respObj.get("filename") + "' canceled at: " +
 									respObj.get("progress") + "%");
 						else
 							return new ClActionResult(ClAction.STATUS.SUCCESS, "Cancellation of task failed!");
@@ -151,10 +145,10 @@ public class TilingAction implements ClAction {
 	}
 
 	public String getUsage() {
-		return "\t--tile start dataset_id [dimensions (x,y,z)] [zooms_levels (0,1,2)] <== start tiling\n" +
-				"\t--tile list [status (active|done|error|canceled)] <== lists tiling tasks\n" +
-			   "\t--tile status task_id <== displays status information on tiling task\n" +
-			   "\t--tile cancel task_id <== cancel a tiling task";
+		return "\t--convert start file_to_be_converted raw_file_name <== start conversion\n" +
+				"\t--convert list [status (active|done|error|canceled)] <== lists conversion tasks\n" +
+			   "\t--convert status task_id <== displays status information on conversion task\n" +
+			   "\t--convert cancel task_id <== cancel a conversion task";
 	}
 
 }

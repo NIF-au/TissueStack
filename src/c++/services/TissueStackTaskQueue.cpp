@@ -376,7 +376,6 @@ void tissuestack::services::TissueStackTaskQueue::addTask(const tissuestack::ser
 			this->isBeingTiled(static_cast<const tissuestack::services::TissueStackTilingTask *>(task))))
 		{
 			// we are already being processed, not need to do anything
-			//tissuestack::logging::TissueStackLogger::instance()->debug("WE ARE BEING TILED/CONVERTED !!!\n");
 			delete task;
 			return;
 		}

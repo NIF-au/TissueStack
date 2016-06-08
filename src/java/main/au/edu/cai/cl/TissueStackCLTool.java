@@ -13,6 +13,7 @@ import au.edu.cai.cl.actions.ClAction.STATUS;
 import au.edu.cai.cl.actions.ClActionResult;
 import au.edu.cai.cl.actions.ConfigAction;
 import au.edu.cai.cl.actions.ConfigurationAction;
+import au.edu.cai.cl.actions.ConversionAction;
 import au.edu.cai.cl.actions.DataSetImportAction;
 import au.edu.cai.cl.actions.DataSetModifyAction;
 import au.edu.cai.cl.actions.DeleteDataSetAction;
@@ -20,6 +21,7 @@ import au.edu.cai.cl.actions.FileAction;
 import au.edu.cai.cl.actions.ListDataSetAction;
 import au.edu.cai.cl.actions.ListUploadDirectoryAction;
 import au.edu.cai.cl.actions.LoginAction;
+import au.edu.cai.cl.actions.PasswordChangeAction;
 import au.edu.cai.cl.actions.QueryDataSetAction;
 import au.edu.cai.cl.actions.TilingAction;
 
@@ -30,6 +32,7 @@ public class TissueStackCLTool {
         Map<String, ClAction> aMap = new LinkedHashMap<String, ClAction>();
         aMap.put("ts-conf", new ConfigAction());
         aMap.put("login", new LoginAction());
+        aMap.put("password", new PasswordChangeAction());
         aMap.put("list", new ListDataSetAction());
         aMap.put("query", new QueryDataSetAction());
         aMap.put("import", new DataSetImportAction());
@@ -38,6 +41,7 @@ public class TissueStackCLTool {
         aMap.put("file", new FileAction());
         aMap.put("upload-dir", new ListUploadDirectoryAction());
         aMap.put("tile", new TilingAction());
+        aMap.put("convert", new ConversionAction());
         aMap.put("config", new ConfigurationAction());
         clOpts = Collections.unmodifiableMap(aMap);
 	}
