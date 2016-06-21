@@ -139,6 +139,7 @@ dist: all
 
 	@echo -e "\tCopying over Tissue Stack Image Server & Tools executables"
 	@cp $(PACKAGING_CONFIG_PATH)/BioFormats2TissueStackConverter.sh $(BUILD_SRC_PATH)$(BINS_PATH)
+	@cp $(PACKAGING_CONFIG_PATH)/ts_cl.sh $(BUILD_SRC_PATH)$(BINS_PATH)
 	@cp $(BINS_PATH)/* $(BUILD_SRC_PATH)$(BINS_PATH)
 	@cp $(JARS_PATH)/*.jar $(BUILD_SRC_PATH)$(LIBS_PATH)
 	
