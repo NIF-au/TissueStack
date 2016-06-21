@@ -151,7 +151,7 @@ public class TilingAction implements ClAction {
 	}
 
 	public String getUsage() {
-		return "\t--tile start dataset_id [dimensions (x,y,z)] [zooms_levels (0,1,2)] <== start tiling\n" +
+		return "--tile start dataset_id [dimensions (x,y,z)] [zooms_levels (0,1,2)] <== start tiling\n" +
 				"\t--tile list [status (active|done|error|canceled)] <== lists tiling tasks\n" +
 			   "\t--tile status task_id <== displays status information on tiling task\n" +
 			   "\t--tile cancel task_id <== cancel a tiling task";

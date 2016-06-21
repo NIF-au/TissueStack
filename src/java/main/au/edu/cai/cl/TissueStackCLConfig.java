@@ -3,6 +3,7 @@ package au.edu.cai.cl;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Properties;
@@ -17,8 +18,14 @@ public final class TissueStackCLConfig {
 	private Exception exceptionLoadingConfig = null;
 	
 	private TissueStackCLConfig(String location) {
-		if (location == null || location.isEmpty())
+		if (location == null || location.isEmpty()) {
 			location = TissueStackCLConfig.DEFAULT_CONFIG;
+			if (!new File(location).exists()) {
+				try {
+					new File(location).createNewFile();
+				} catch (IOException ignored) {}
+			}			
+		}
 		this.config_file = new File(location);
 		this.configuration = new Properties();
 		if (this.config_file.exists() && this.config_file.canRead()) {

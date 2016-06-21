@@ -145,7 +145,7 @@ public class ConversionAction implements ClAction {
 	}
 
 	public String getUsage() {
-		return "\t--convert start file_to_be_converted raw_file_name <== start conversion\n" +
+		return "--convert start file_to_be_converted raw_file_name <== start conversion\n" +
 				"\t--convert list [status (active|done|error|canceled)] <== lists conversion tasks\n" +
 			   "\t--convert status task_id <== displays status information on conversion task\n" +
 			   "\t--convert cancel task_id <== cancel a conversion task";

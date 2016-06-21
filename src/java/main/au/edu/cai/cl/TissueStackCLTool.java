@@ -62,12 +62,7 @@ public class TissueStackCLTool {
 		return result.getResponse();
 	}
 
-	private static Map<String, List<String>> initParamsMap(String[] args) {
-		if (args.length == 0) {
-			System.out.println(TissueStackCLTool.assembleUsage());
-			System.exit(0);
-		}
-		
+	private static Map<String, List<String>> initParamsMap(String[] args) {		
 		Map<String, List<String>> paramsMap = new HashMap<String, List<String>>();
 		String action = null;
 		for (String arg : args) {
@@ -97,6 +92,11 @@ public class TissueStackCLTool {
 		if (verbosity != null) {
 			verbose = true;
 			paramsMap.remove("v");
+		}
+		
+		if (paramsMap.isEmpty()) {
+			System.out.println(TissueStackCLTool.assembleUsage());
+			System.exit(0);
 		}
 		
 		// there is an order => we can have a config at any rate
@@ -131,6 +131,10 @@ public class TissueStackCLTool {
 		if (serverParams != null && !serverParams.isEmpty()) {
 			tissueStackInstance = serverParams.get(0);
 			if (verbose) System.out.println("Overriding TissueStack instance with server value: " + tissueStackInstance);
+			if (TissueStackCLConfig.instance().get("tissuestack.instance") == null) {
+				TissueStackCLConfig.instance().setProperty("tissuestack.instance", tissueStackInstance);
+				TissueStackCLConfig.instance().saveConfig();
+			}
 			// remove server param from map
 			paramsMap.remove("server");
 		}
