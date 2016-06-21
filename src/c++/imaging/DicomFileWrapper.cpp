@@ -152,7 +152,8 @@ tissuestack::imaging::DicomFileWrapper::DicomFileWrapper(const std::string filen
 		this->_number_of_images_in_series_or_acquisition = strtoul(value.c_str(), NULL, 10);
 
 	if (this->_number_of_images_in_series_or_acquisition == 0 &&
-		dicomFormat.getDataset()->findAndGetOFStringArray(DCM_RETIRED_ImagesInSeries, value).good())
+		//dicomFormat.getDataset()->findAndGetOFStringArray(DCM_RETIRED_ImagesInSeries, value).good())
+		dicomFormat.getDataset()->findAndGetOFStringArray(DCM_ACR_NEMA_ImagesInSeries, value).good())
 		this->_number_of_images_in_series_or_acquisition = strtoul(value.c_str(), NULL, 10);
 
 	if (!dicomFormat.getDataset()->findAndGetOFStringArray(DCM_PixelSpacing, value).good())
