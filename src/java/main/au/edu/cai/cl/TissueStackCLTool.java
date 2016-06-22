@@ -225,8 +225,19 @@ public class TissueStackCLTool {
 			// display action results
 			if (result.getStatus() == STATUS.UNDEFINED)
 				System.err.println("\nTissue Stack Response has status 'UNDEFINED': " + result.getResponse());
-			else 
-				System.out.println("\n" + result.getResponse());
+			else {
+				final String respText = result.getResponse();
+				// this covers the session expired scenario
+				if (respText.indexOf("Invalid Session! Please Log In.") != -1) {
+					actionParams.remove(sessionToken);
+					sessionToken = null;
+					TissueStackCLConfig.instance().setProperty("tissuestack.last_session_token", "");
+					TissueStackCLConfig.instance().saveConfig();
+					paramsMap.put(action, actionParams); // this forces a retry
+					continue;
+				}
+				System.out.println("\n" + respText);
+			}
 		}
 	}
 }
