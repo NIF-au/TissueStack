@@ -10,7 +10,7 @@ import java.util.Properties;
 
 public final class TissueStackCLConfig {
 	private static final String DEFAULT_CONFIG = 
-		System.getProperty("user.home") + File.separatorChar + "tissuestack_config";
+		System.getProperty("user.home") + File.separatorChar + ".tissuestack.conf";
 	private static TissueStackCLConfig myself;
 	
 	private File config_file = null;
@@ -18,14 +18,15 @@ public final class TissueStackCLConfig {
 	private Exception exceptionLoadingConfig = null;
 	
 	private TissueStackCLConfig(String location) {
-		if (location == null || location.isEmpty()) {
+		if (location == null || location.isEmpty())
 			location = TissueStackCLConfig.DEFAULT_CONFIG;
-			if (!new File(location).exists()) {
-				try {
-					new File(location).createNewFile();
-				} catch (IOException ignored) {}
-			}			
-		}
+
+		if (!new File(location).exists()) {
+			try {
+				new File(location).createNewFile();
+			} catch (IOException ignored) {}
+		}			
+		
 		this.config_file = new File(location);
 		this.configuration = new Properties();
 		if (this.config_file.exists() && this.config_file.canRead()) {
@@ -85,6 +86,10 @@ public final class TissueStackCLConfig {
 	    		out.close();
 			} catch (Exception e) {}
 	    }
+	}
+	
+	public void deletePropertiesFile() {
+		this.config_file.delete();
 	}
 
 }

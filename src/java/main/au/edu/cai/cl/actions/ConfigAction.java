@@ -25,8 +25,7 @@ public class ConfigAction implements ClAction {
 		}
 		final File newConfig = new File(args[0]);
 		if (!newConfig.exists() || !newConfig.canRead()) {
-			System.err.println("ERROR: --ts-conf file does not exist or cannot be read");
-			return false;
+			System.out.println("WARNING: --ts-conf file does not exist or cannot be read (but might be created with --server)");
 		}
 		this.location = newConfig;
 		return true;
@@ -36,7 +35,6 @@ public class ConfigAction implements ClAction {
 		final TissueStackCLConfig config = 
 			TissueStackCLConfig.instance(this.location.getAbsolutePath());
 		if (config.getException() == null)
-
 			return new ClActionResult(ClAction.STATUS.SUCCESS, "{ config: " + this.location.getAbsolutePath() + "}");
 
 		return new ClActionResult(ClAction.STATUS.ERROR, "{ error: " + config.getException().getMessage());

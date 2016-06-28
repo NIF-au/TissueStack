@@ -59,7 +59,7 @@ public class DeleteDataSetAction implements ClAction {
 	}
 
 	public String getUsage() {
-		return "--delete [delete_file (value: true/false)] <== deletes dataset (configuration and optionally file)";
+		return "--delete id [delete_file (value: true/false)] <== deletes dataset (configuration and optionally file)";
 	}
 
 }

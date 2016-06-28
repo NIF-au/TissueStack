@@ -106,15 +106,13 @@ public class TissueStackCLTool {
 		String sessionToken = null;
 		final List<String> configParams = paramsMap.get("ts-conf");
 		if (configParams != null) {
-			if (verbose) System.out.print("Reading handed in config ..." );
+			if (verbose) System.out.println("Reading handed in config ..." );
 
 			final ClAction configAction = TissueStackCLTool.clOpts.get("ts-conf");
 			if (configAction.setMandatoryParameters(configParams.toArray(new String[] {})) &&
 					configAction.performAction(null).getStatus() == ClAction.STATUS.SUCCESS) {
 				tissueStackInstance = TissueStackCLConfig.instance().get("tissuestack.instance");
-				sessionToken = TissueStackCLConfig.instance().get("tissuestack.last_session_token");
-						
-				if (verbose) System.out.println("read.");
+				sessionToken = TissueStackCLConfig.instance().get("tissuestack.last_session_token");						
 			} 
 			if (verbose) System.out.println("");
 			
@@ -141,6 +139,7 @@ public class TissueStackCLTool {
 
 		// at this point we need to have the url for a tissuestack instance, otherwise we are screwed
 		if (tissueStackInstance == null) {
+			TissueStackCLConfig.instance().deletePropertiesFile();
 			System.err.println(
 				"Please provide tissue stack server via the --ts-conf OR --server parameter!");
 			System.exit(0);
