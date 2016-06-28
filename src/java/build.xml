@@ -18,7 +18,7 @@
   	        <attribute name="Main-Class" value="au.edu.cai.cl.TissueStackCLTool"/>  
   	    </manifest>
 
-    <javac includeantruntime="false" 
+    <javac includeantruntime="false" source="1.6" target="1.6"
     	srcdir="${src}" 
     	includes="au/edu/cai/cl/**/*.java" 
     	classpath="${libs}/json-simple-1.1.1.jar" destdir="${build}"/>

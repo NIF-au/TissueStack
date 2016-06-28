@@ -80,7 +80,7 @@ public class QueryDataSetAction implements ClAction {
 									formattedResponse.append("\n\tONE_TO_ONE_ZOOM_LEVEL:\t");
 									formattedResponse.append(plane.get("oneToOneZoomLevel"));
 									if (plane.containsKey("resolutionMm") &&
-											((double) plane.get("resolutionMm")) != 0) {
+											((Double) plane.get("resolutionMm")) != 0) {
 											formattedResponse.append("\n\tRESOLUTION_MM:\t");
 											formattedResponse.append(plane.get("resolutionMm"));
 									}
