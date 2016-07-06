@@ -18,12 +18,10 @@
         <header class="inner">
           <a id="forkme_banner" href="https://github.com/NIF-au/TissueStack">View on GitHub</a>
 
-          <h1 id="project_title">Tissuestack</h1>
-          <h2 id="project_tagline">Web based Image Viewer developed @ Center for Advanced Imaging [University of Queensland]</h2>
+          <h1 id="project_title">Tissuestack Commandline Tool</h1>
 
             <section id="downloads">
-              <a class="zip_download_link" href="https://github.com/NIF-au/TissueStack/zipball/master">Download this project as a .zip file</a>
-              <a class="tar_download_link" href="https://github.com/NIF-au/TissueStack/tarball/master">Download this project as a tar.gz file</a>
+              <a class="zip_download_link" href="https://github.com/NIF-au/TissueStack/raw/master/jars/TS_CL_Tool.jar">Download TS_CL_Tool.jar</a>
             </section>
         </header>
     </div>
@@ -31,7 +29,328 @@
     <!-- MAIN CONTENT -->
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
-	Docs coming soon
+	         <h4>What can I do with CL tool?</h4>
+                <p>
+                 You can connect to your Tissue Stack servers from a remote machine,
+                 query, modify, delete and import information.
+                 For a list of options available please have a look at the <a href="#options">options</a>.
+                <p>
+
+             <h4>Where can I get it?</h4>
+                You can use the download link above or use the TS client packages for linux (work in progress).
+
+            <h4>Are there any pre-requisites to using the CL tool?</h4>
+                <p>
+                   You need to have a physical connection from your machine to the remote server instance.
+                   The protocol used is http so that it should be sufficient to have port 80 open
+                   which is ordinarily the case.
+               </p>
+               <p>After a download and following the instructions for running the tool below
+                   you should be good to go. Some <a href="#options">options</a> will
+                   require the admin password for the TS instance:<br/>
+                 <a href="#login">Do I need the admin password for the TS instance?</a>
+                </p>
+
+             <h4>How can I run the CL tool?</h4>
+                 <p>You'll need to have a java runtime installed on your machine (>=1.6).</br>
+                 After downloading the package, you can place it whereever you like
+                 and execute it like this:</p>
+                 <code>java -jar TS_CL_Tool.jar</code>
+                 <p>Since this makes for a kind of ugly/inconvenient calling,
+                 it's better to wrap the call in a shell script and add the location
+                 to your system's default lookup path. This gives you the benefit of
+                 being able to choose an alias name and call from any location.</p>
+                 Here is an example of such a file for linux and bash:
+                 <a href="files/ts_cl">ts_cl</a><br/>
+                 Simply replace <span style="font-weight: bold;">$SOME_DIRECTORY</span>
+                 with the actual directory that holds the jar file.
+
+            <h4 id="options">What options does the CL tool give me?</h4>
+                <p>
+                 Running the CL tool without further argumens will provide you with some help.
+                </p>
+                <code>./ts_cl</code>
+                 <div style="border: solid 1px;">
+                     <strong style="text-decoration: underline;">Output:</strong></br>
+                     <div style="background-color: white;">
+                    Available options:<br/>
+                    --v <== verbose<br/>
+                    --ts-conf file_location <== uses config file to get connect/session info<br/>
+                    --login password <== logs you in returning a session<br/>
+                    --password old new <== changes the present admin password<br/>
+                    --list <== lists all datasets, for details use --query<br/>
+                    --query id [detailed (value: true/false)] <== lists details for an individual dataset<br/>
+                    --import filename <== imports dataset<br/>
+                    --delete id [delete_file (value: true/false)] <== deletes dataset (configuration and optionally file)<br/>
+                    --modify dataset_id column value <== modifies dataset table<br/>
+                    --file delete file <== deletes a file on the server<br/>
+                    --file rename old_location new_location <== renames a file on the server<br/>
+                    --upload-dir [raw-files-only (value: true/false)] <== lists contents of upload directory<br/>
+                    --tile start dataset_id [dimensions (x,y,z)] [zooms_levels (0,1,2)] <== start tiling<br/>
+                    --tile list [status (active|done|error|canceled)] <== lists tiling tasks<br/>
+                    --tile status task_id <== displays status information on tiling task<br/>
+                    --tile cancel task_id <== cancel a tiling task<br/>
+                    --convert start file_to_be_converted raw_file_name <== start conversion<br/>
+                    --convert list [status (active|done|error|canceled)] <== lists conversion tasks<br/>
+                    --convert status task_id <== displays status information on conversion task<br/>
+                    --convert cancel task_id <== cancel a conversion task<br/>
+                    --config list <== lists configuration table contents<br/>
+                    --config query key <== displays a given configuration table value<br/>
+                    --config change key value <== changes value for a configuration table entry<br/>
+                </div></div></br>
+
+                <strong>
+                    IMPORTANT:</br></br>
+                    Options HAVE be prefixed by a dash or double dash</br>
+                    They MAY have no further arguments or required/optional ones.</br>
+                    These arguments MUST be separated by space only and not be prefixed</br>
+                    String arguments with spaces and special characters that are used in shell environments
+                    such as [ or ~ (to name 2 only) HAVE to be escaped/quoted!<br/>
+                </strong>
+
+                <p> For example, an unquoted change of a dataset description<br/>
+                <code>
+                    ./ts_cl --modify 2 description mouse blockface
+                </code>
+                <div style="border: solid 1px;">
+                    <strong style="text-decoration: underline;">Output:</strong></br>
+                    <div style="background-color: white;">
+                    ID:		2</br>
+                    FILENAME:	/opt/tissuestack/data/ambmc-c57bl6-model-symmet_v0.8.raw/br>
+                    DESCRIPTION:	<em>mouse</em>/br>
+                    </div>
+                </div><br/> whereas<br/>
+                <code>
+                    ./ts_cl --modify 2 description "mouse blockface"
+                </code><br/> will result in:<br/>
+                <div style="border: solid 1px;">
+                    <strong style="text-decoration: underline;">Output:</strong></br>
+                    <div style="background-color: white;">
+                    ID:		2<br/>
+                    FILENAME:	/opt/tissuestack/data/ambmc-c57bl6-model-symmet_v0.8.raw<br/>
+                    DESCRIPTION:	<em>mouse blockface</em><br/>
+                    </div>
+                </div>
+
+               <p>The upcoming sections are going to address the available options individiually
+                   depending on the task that needs to be performed.
+              </p>
+
+            <h4 id="login">Do I need the admin password for the TS instance?</h4>
+            <p>For some options e.g. dataset delete and import you'll need to supply
+                the admin password for the server instance in question. There should,
+                however, not be a need to, explicitly, execute the <em>--login</em>
+                option (unless you wish to do so) since you are prompted when login
+                is required.
+            </p>
+            <p>
+                After successful login a session token is returned by the server
+                which is remembered in the respective (default) config file
+                (see <a href="#ts-conf">--ts-conf</a>) you have been using.
+                It will be valid until expiry upon which you'll be asked to provide
+                the admin password again.
+            </p>
+
+            <h4 id="ts-conf">Connecting to a TS server instance</h4>
+            <p>
+                The best way to connect to a specific TS server is to specify a
+                configuration file with the <em>--ts-conf</em> option.
+                This has the advantage that you can have multiple configurations
+                ready to be used.
+            </p>
+            <p>
+                If you don't specify a configuration file, the tool will look
+                for a <em>.tissuestack.conf</em> in your user's home directory.
+            </p>
+            <p>
+                You can either create this file the first time or have it created
+                for you when you connect to a TS instance the first time.
+            </p>
+            <p>
+                The <em>--server</em> option will provide a means to both override
+                any configuration provided AND setting a non-existing one like the default.
+                Note how in the example below <em>--server</em> is not given with
+                successives calls!
+            </p>
+            <code>./ts_cl --server http://tissuestack.org --list</code></br>
+            <div style="border: solid 1px;">
+                <strong style="text-decoration: underline;">Output:</strong></br>
+                <div style="background-color: white;">
+                ID:		2</br>
+                FILENAME:	/opt/tissuestack/data/ambmc-c57bl6-model-symmet_v0.8.raw</br>
+                DESCRIPTION:	ambmc c57bl6 symmetric model 0.8
+                </div>
+            </div>
+            <code>./ts_cl --server http://tissuestack.org --list</code>
+            <div style="border: solid 1px;">
+                <strong style="text-decoration: underline;">Output:</strong></br>
+                <div style="background-color: white;">
+                ID:		2</br>
+                FILENAME:	/opt/tissuestack/data/ambmc-c57bl6-model-symmet_v0.8.raw</br>
+                DESCRIPTION:	ambmc c57bl6 symmetric model 0.8
+                </div>
+            </div>
+
+            <h4 id="ts-conf2">What does a CL tool configuration file look like?</h4>
+            <p>
+                Given what you know about  <a href="#ts-conf"><em>--ts-conf</em></a>
+                you can create and use as many server configuration files as you like.
+            </p>
+            <p>
+                Here are the contents of one such file that has 2 lines with only
+                the first one being required really. The second one is filled in
+                for you after login:
+            </p>
+            <div style="border: solid 1px;">
+                <strong style="text-decoration: underline;">Contents:</strong></br>
+                <div style="background-color: white;">
+                tissuestack.instance=http://tissuestack.org</br>
+                tissuestack.last_session_token=85a9ff52433011e69a9dfa163e38b228
+            </div>
+            </div>
+
+            <h4 id="verbose">How to use verbose output?</h4>
+            <p>add <em>-v</em>/<em>--v</em> to the options...
+            <code>./ts_cl --v --query 2 false</code></p>
+            <div style="border: solid 1px;">
+                <strong style="text-decoration: underline;">Output:</strong></br>
+                <div style="background-color: white;">
+                Using default config file ...</br></br>
+                Checking handed in parameters for action 'query' ... OK</br>
+                Requesting '/server/?service=services&sub_service=data&action=query&id=2&include_planes=false' ...</br></br>
+                	ID:		2</br>
+                	FILENAME:	/opt/tissuestack/data/ambmc-c57bl6-model-symmet_v0.8.raw</br>
+                	DESCRIPTION:	mouse blockface
+                </div>
+            </div>
+
+            <h4 id="list">How to list datasets?</h4>
+            <p>use: <em>--list</em><code>./ts_cl --list</code></p>
+            <div style="border: solid 1px;">
+                <strong style="text-decoration: underline;">Output:</strong></br>
+                <div style="background-color: white;">
+                	ID:		2</br>
+                	FILENAME:	/opt/tissuestack/data/ambmc-c57bl6-model-symmet_v0.8.raw</br>
+                	DESCRIPTION:	mouse blockface</br>
+                	ID:		7</br>
+                	FILENAME:	/opt/tissuestack/data/ambmc-combined-labels.b.raw</br>
+                	DESCRIPTION:	AMBMC labels
+                </div>
+            </div>
+
+            <h4 id="query">How to query datasets?</h4>
+            <p>use: <em>--query id [detailed: true/false]</em></br>
+                <code>./ts_cl --query 2</code>
+            </p>
+            <div style="border: solid 1px;">
+                <strong style="text-decoration: underline;">Output:</strong></br>
+                <div style="background-color: white;">
+                    FILENAME:	/opt/tissuestack/data/ambmc-c57bl6-model-symmet_v0.8.raw</br>
+                    DESCRIPTION:	mouse blockface</br>
+                    IS_TILED:	false</br>
+                    ZOOM_LEVELS:	[0.250000,0.500000,0.750000,1.000000,1.250000,1.500000,1.750000,2.000000,2.250000,2.500000]</br>
+                    ONE_TO_ONE_ZOOM_LEVEL:	3</br>
+                    RESOLUTION_MM:	0.015</br>
+                    PLANE:	z</br>
+                    [X/Y]:	679 x 1311</br>
+                    SLICES:	498</br>
+                    MATRIX:	[[0.015000,0,0,-5.076000],[0,0.015000,0,-9.814500],[0,0,0.015000,-3.726000],[0,0,0,1]]</br>
+                    PLANE:	y</br>
+                    [X/Y]:	679 x 499</br>
+                    SLICES:	1310</br>
+                    MATRIX:	[[0.015000,0,0,-5.076000],[0,0.015000,0,-3.726000],[0,0,0.015000,-9.814500],[0,0,0,1]]</br>
+                    PLANE:	x</br>
+                    [X/Y]:	1311 x 499</br>
+                    SLICES:	678</br>
+                    MATRIX:	[[0.015000,0,0,-9.814500],[0,0.015000,0,-3.726000],[0,0,0.015000,-5.076000],[0,0,0,1]]</br>
+                </div>
+            </div>
+
+            <h4 id="import">How to import a dataset</h4>
+            <p>use: <em>--import file</em></br>
+                <code>./ts_cl --import /opt/tissuestack/upload/test.raw</code>
+            </p>
+            <div style="border: solid 1px;">
+                <strong style="text-decoration: underline;">Output:</strong></br>
+                <div style="background-color: white;">
+                	IMPORTED:	/opt/tissuestack/data/test.raw</br>
+                	ID:		25
+                </div>
+            </div>
+
+            <h4 id="delete">How to delete a dataset</h4>
+            <p>use: <em>--delete id [delete_file (value: true/false)]</em></br>
+                <code>./ts_cl --delete 25 true</code>
+            </p>
+            <div style="border: solid 1px;">
+                <strong style="text-decoration: underline;">Output:</strong></br>
+                <div style="background-color: white;">
+                    dataset deleted
+                </div>
+            </div>
+
+            <h4 id="modify">How to modify a dataset's configuration?</h4>
+            <p>Note that only a very limited number of database values can be altered.
+                Ids and file names cannot for instance, neither can dataset dimensions.
+                What can be altered are the following list that is also included in the query
+                view as well:
+                <ul>
+                    <li>is_tiled</li>
+                    <li>zoom_levels</li>
+                    <li>one_to_one_zoom_level</li>
+                    <li>description</li>
+                    <li>resolution_mm</li>
+                </ul>
+
+            </p>
+            <p>use: <em>--modify id column value</em></br>
+                <code>./ts_cl --modify 2 zoom_levels</br> "[0.250000,0.500000,0.750000,1.000000,1.250000,1.500000,1.750000,2.000000,2.250000,2.500000]"</code>
+            </p>
+            <div style="border: solid 1px;">
+                <strong style="text-decoration: underline;">Output:</strong></br>
+                <div style="background-color: white;">
+                    modified dataset successfully
+                </div>
+            </div>
+
+            <h4 id="file-delete">How to delete a file on the server?</h4>
+            <p>IMPORTANT: Do not use this method to delete imported datasets but instead:
+                <a href="#delete"><em>--delete</em></a>
+            </p>
+            <p>use: <em>--file delete file</em></br>
+                <code>./ts_cl --file delete /tmp/wrongly_uploaded.mnc</code>
+            </p>
+            <div style="border: solid 1px;">
+                <strong style="text-decoration: underline;">Output:</strong></br>
+                <div style="background-color: white;">
+                    file deleted
+                </div>
+            </div>
+
+            <h4 id="file-rename">How to rename a file on the server?</h4>
+            <p>IMPORTANT: Do not use this method to rename imported datasets!
+            </p>
+            <p>use: <em>--file rename old_file new_file</em></br>
+                <code>./ts_cl --file rename /tmp/wrongly_named.mnc /tmp/rightly_named.mnc</code>
+            </p>
+            <div style="border: solid 1px;">
+                <strong style="text-decoration: underline;">Output:</strong></br>
+                <div style="background-color: white;">
+                    file renamed
+                </div>
+            </div>
+
+            <h4 id="upload-dir">How to list files in the upload directory of the server?</h4>
+            <p>use: <em>--upload-dir [raw-files-only (value: true/false)]</em></br>
+                <code>./ts_cl --upload-dir true</code>
+            </p>
+            <div style="border: solid 1px;">
+                <strong style="text-decoration: underline;">Output:</strong></br>
+                <div style="background-color: white;">
+                    FILE:	something.raw
+                </div>
+            </div>
+
       </section>
     </div>
 
@@ -43,7 +362,7 @@
       </footer>
     </div>
 
-    
+
 
   </body>
 </html>

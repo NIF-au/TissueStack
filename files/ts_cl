@@ -1,0 +1,2 @@
+#!/bin/bash
+java -jar $SOME_DIRECTORY/TS_CL_Tool.jar "$@"
