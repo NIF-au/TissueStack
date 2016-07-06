@@ -170,7 +170,7 @@
                 The <em>--server</em> option will provide a means to both override
                 any configuration provided AND setting a non-existing one like the default.
                 Note how in the example below <em>--server</em> is not given with
-                successives calls!
+                successive calls!
             </p>
             <code>./ts_cl --server http://tissuestack.org --list</code></br>
             <div style="border: solid 1px;">
@@ -180,7 +180,7 @@
                 FILENAME:	/opt/tissuestack/data/ambmc-c57bl6-model-symmet_v0.8.raw</br>
                 DESCRIPTION:	ambmc c57bl6 symmetric model 0.8
                 </div>
-            </div>
+            </div></br>
             <code>./ts_cl --server http://tissuestack.org --list</code>
             <div style="border: solid 1px;">
                 <strong style="text-decoration: underline;">Output:</strong></br>
@@ -348,6 +348,167 @@
                 <strong style="text-decoration: underline;">Output:</strong></br>
                 <div style="background-color: white;">
                     FILE:	something.raw
+                </div>
+            </div>
+
+            <h4 id="tile-start">How to tile a dataset?</h4>
+            <p>use: <em>--tile start id [dimensions (x,y,z)] [zooms_levels (0,1,2)]</em></br>
+                <code>./ts_cl --tile start 2</code>
+            </p>
+            <div style="border: solid 1px;">
+                <strong style="text-decoration: underline;">Output:</strong></br>
+                <div style="background-color: white;">
+                    Tiling started. Task id: 1467787217144615
+                </div>
+            </div>
+
+            <h4 id="tile-list">How to list tiling tasks?</h4>
+            <p>use: <em>--tile list [status (active|done|error|canceled)]</em></br>
+                <code>./ts_cl --tile list active</code>
+            </p>
+            <div style="border: solid 1px;">
+                <strong style="text-decoration: underline;">Output:</strong></br>
+                <div style="background-color: white;">
+                    TASK ID:	1467787217144615</br>
+                    STATUS:		running
+                </div>
+            </div>
+
+            <h4 id="tile-status">How to check the status of a tiling task?</h4>
+            <p>use: <em>--tile status task_id</em></br>
+                <code>./ts_cl --tile status 1467787217144615</code>
+            </p>
+            <div style="border: solid 1px;">
+                <strong style="text-decoration: underline;">Output:</strong></br>
+                <div style="background-color: white;">
+                    TASK_ID:	1467787217144615</br>
+                	FILE:		/opt/tissuestack/data/ambmc-c57bl6-model-symmet_v0.8.raw</br>
+                	STATUS:		running</br>
+                	PROGRESS:	5.3636%
+                </div>
+            </div>
+
+            <h4 id="tile-cancel">How to cancel a running tiling task?</h4>
+            <p>use: <em>--tile cancel task_id</em></br>
+                <code>./ts_cl --tile cancel 1467787217144615</code>
+            </p>
+            <div style="border: solid 1px;">
+                <strong style="text-decoration: underline;">Output:</strong></br>
+                <div style="background-color: white;">
+                Tiling of '/opt/tissuestack/data/ambmc-c57bl6-model-symmet_v0.8.raw' canceled at: 6.862193%
+                </div>
+            </div>
+
+            <h4 id="convert-start">How to convert a dataset?</h4>
+            <p>use: <em>--convert start file_to_be_converted raw_file_name</em></br>
+                <code>./ts_cl --convert start /opt/tissuestack/upload/test.mnc /opt/tissuestack/upload/test.raw</code>
+            </p>
+            <div style="border: solid 1px;">
+                <strong style="text-decoration: underline;">Output:</strong></br>
+                <div style="background-color: white;">
+                    Conversion started. Task id: 1467788266134444
+                </div>
+            </div>
+
+            <h4 id="convert-list">How to list conversion tasks?</h4>
+            <p>use: <em>--convert list [status (active|done|error|canceled)]</em></br>
+                <code>./ts_cl --convert list</code>
+            </p>
+            <div style="border: solid 1px;">
+                <strong style="text-decoration: underline;">Output:</strong></br>
+                <div style="background-color: white;">
+                    TASK ID:	1467788266134444</br>
+                	STATUS:		done</br>
+                	TASK ID:	1467789806366574</br>
+                	STATUS:		error</br>
+                </div>
+            </div>
+
+            <h4 id="comvert-status">How to check the status of a conversion task?</h4>
+            <p>use: <em>--convert status task_id</em></br>
+                <code>./ts_cl --convert status 1467788266134444</code>
+            </p>
+            <div style="border: solid 1px;">
+                <strong style="text-decoration: underline;">Output:</strong></br>
+                <div style="background-color: white;">
+                    TASK_ID:	1467788266134444</br>
+                    FILE:		/opt/tissuestack/upload/test.mnc</br>
+                    STATUS:		done</br>
+                    PROGRESS:	100.0%
+                </div>
+            </div>
+
+            <h4 id="convert-cancel">How to cancel a running conversion task?</h4>
+            <p>use: <em>--convert cancel task_id</em></br>
+                <code>./ts_cl --convert cancel 1467788266134444</code>
+            </p>
+            <div style="border: solid 1px;">
+                <strong style="text-decoration: underline;">Output:</strong></br>
+                <div style="background-color: white;">
+                    Conversion of '/opt/tissuestack/upload/test.mnc' canceled at: 59.731544%
+                </div>
+            </div>
+
+            <h4 id="config-list">How to list the configuration table contents of a TS server?</h4>
+            <p>The configuration table of a TS instance holds key/value entries used
+                for running TissueStack. The following is a non-exhaustive list of
+                entries that the command may output:</br>
+                <ul>
+                    <li>session_timeout_minutes</li>
+                    <li>data_directory</li>
+                    <li>default_drawing_interval</li>
+                    <li>version</li>
+                    <li>server_tile_directory</li>
+                    <li>upload_directory</li>
+                    <li>default_zoom_levels</li>
+                </ul>
+            </p>
+
+            <p>use: <em>--config list</em></br>
+                <code>./ts_cl --config list</code>
+            </p>
+            <div style="border: solid 1px;">
+                <strong style="text-decoration: underline;">Output:</strong></br>
+                <div style="background-color: white;">
+                    KEY:		version</br>
+                    VALUE:		2.1</br>
+                    DESCRIPTION:	version</br>
+                    KEY:		max_upload_size</br>
+                    VALUE:		107374182400</br>
+                    DESCRIPTION:	the maximum number of bytes allowed to upload in one go: 100 gig by default</br>
+                    KEY:		server_proxy_path</br>
+                    VALUE:		server</br>
+                    DESCRIPTION:	server proxy path (relative to the application's web root directory)</br>
+                    KEY:		default_zoom_levels</br>
+                    VALUE:		[0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5]</br>
+                    DESCRIPTION:	default zoom levels
+                </div>
+            </div>
+
+            <h4 id="config-query">How to query the TS server configuration table by key?</h4>
+            <p>use: <em>--config query key</em></br>
+                <code>./ts_cl --config query default_zoom_levels</code>
+            </p>
+            <div style="border: solid 1px;">
+                <strong style="text-decoration: underline;">Output:</strong></br>
+                <div style="background-color: white;">
+                    KEY:		default_zoom_levels</br>
+                    VALUE:		[0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5]</br>
+                    DESCRIPTION:	default zoom levels</br>
+                </div>
+            </div>
+
+            <h4 id="config-change">How to change a TS server configuration entry?</h4>
+            <p>IMPORTANT: use with caution and only if you know what you are doing!</p>
+            <p>use: <em>--config change key value</em></br>
+                <code>./ts_cl --config change default_zoom_levels</br>"[0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5]"</code>
+            </p>
+            <div style="border: solid 1px;">
+                <strong style="text-decoration: underline;">Output:</strong></br>
+                <div style="background-color: white;">
+                    KEY:		default_zoom_levels</br>
+                    VALUE:		[0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5]</br>
+                    DESCRIPTION:	default zoom levels</br>
                 </div>
             </div>
 
