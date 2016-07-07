@@ -53,7 +53,7 @@ OBJS			=	$(SRCS:%.cpp=%.o)
 
 # important configuration variables with defaults
 export APP_NAME		=	tissuestack
-export VERSION	=	2.1
+export VERSION	=	2.2
 export APPLICATION_PATH ?= /usr/local/$(APP_NAME)
 export DATA_PATH ?= /opt/$(APP_NAME)
 # the application path including the version
@@ -74,14 +74,13 @@ export PROFILE_PATH		= 	/etc/profile.d
 export BUILD_PATH		=	/tmp/$(APP_NAME)_build
 export BUILD_SRC_PATH		=	$(BUILD_PATH)/src
 export DIST_NAME		=	$(APP_NAME)-$(VERSION).tar.gz
+export CLIENTS_DIST_NAME		=	$(APP_NAME)-clients-$(VERSION).tar.gz
 export SRC_DIST_NAME		=	$(APP_NAME)-$(VERSION)-sources.tar.gz
 
-all:	clean prepare compile install compile-tools install-tools
-
 %.o: %.cpp
-	@echo -e "\tCompiling \"$(NAME)\" => [$(@)]"
+	@echo -e "\tCompiling \"$(APP_NAME)\" => [$(@)]"
 	@$(CC) -DAPPLICATION_PATH='"$(DATA_PATH)"' -c $(LIBS) $(FLAGS) $(INCLUDE) `GraphicsMagick-config --cppflags --libs --ldflags` -o $@ -fPIC -pie $<
-	
+
 prepare:
 	@echo -e "\n\t###################### TISSUE STACK BUILD [Version: $(VERSION)] ###################"
 	@echo -e "\t    APPLICATION DATA:      $(DATA_PATH)"
@@ -101,7 +100,7 @@ compile-tools:
 
 install-tools:
 	@make --no-print-directory -C tools/ install
-	
+
 install: compile
 	@echo -e "\n\tInstalling $(NAME) (requires super user priviledges):"
 	@echo -e "\t-----------------------------------------------\n"
@@ -110,8 +109,8 @@ install: compile
 	@sudo mkdir -p $(BINS_PATH)
 	@if [ ! -f $(EXE_NAME) ]; then echo "\nExecutable '$(EXE_NAME)' does not exist!"; fi;
 	@sudo cp $(EXE_NAME) $(BINS_PATH)/$(EXE_NAME)
-	@echo -e "\n\tFinished installation of $(NAME).\n"  
-        
+	@echo -e "\n\tFinished installation of $(NAME).\n"
+
 clean:
 	@rm -rf *.o *.so *~ core $(EXE_NAME)
 	@rm -rf common/*.o common/*.so common/core
@@ -122,34 +121,30 @@ clean:
 	@rm -rf imaging/*.o imaging/*.so imaging/*~ imaging/core
 	@rm -rf execution/*.o execution/*.so execution/*~ utils/core
 	@make --no-print-directory -C tools/ clean > /dev/null
-	@echo -e "\n\tCleaned \"$(NAME)\"\n"
-	
-dist: all
+	@echo -e "\n\tCleaned \"$(APP_NAME)\"\n"
+
+server: clean prepare compile install
 	@echo -e "\n\n\tBuilding binary archive: $(DIST_NAME):"
 	@echo -e "\t---------------------------------------------------"
-	
+
 	@echo -e "\n\tPreparing build directory..."
 	@rm -rf $(BUILD_PATH)
 	@mkdir -p $(BUILD_PATH)/logs
 	@mkdir -p $(BUILD_SRC_PATH)$(BINS_PATH)
-	@mkdir -p $(BUILD_SRC_PATH)$(LIBS_PATH)
 	@mkdir -p $(BUILD_SRC_PATH)$(PROFILE_PATH)
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/ands
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/conf
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/colormaps
 	@mkdir -p $(BUILD_SRC_PATH)$(DATA_PATH)/sql
 
-	@echo -e "\tCopying over Tissue Stack Image Server & Tools executables"
-	@cp $(PACKAGING_CONFIG_PATH)/BioFormats2TissueStackConverter.sh $(BUILD_SRC_PATH)$(BINS_PATH)
-	@cp $(PACKAGING_CONFIG_PATH)/ts_cl.sh $(BUILD_SRC_PATH)$(BINS_PATH)
+	@echo -e "\tCopying over Tissue Stack Server executables"
 	@cp $(BINS_PATH)/* $(BUILD_SRC_PATH)$(BINS_PATH)
-	@cp $(JARS_PATH)/*.jar $(BUILD_SRC_PATH)$(LIBS_PATH)
-	
+
 	@echo -e "\tCopying over front-end resources and colormaps..."
 	@cp $(BASE_DIR)data/colormaps/* $(BUILD_SRC_PATH)$(DATA_PATH)/colormaps
 	@cp -r $(BASE_DIR)/src/web $(BUILD_SRC_PATH)$(DATA_PATH)
 	@ln -s $(DATA_PATH)/tiles $(BUILD_SRC_PATH)$(DATA_PATH)/web/tiles
-	
+
 	@echo -e "\tCopying over tissue stack start/conf scripts [error logs: $(BUILD_PATH)/logs/*.log]..."
 	@cp -f $(PACKAGING_CONFIG_PATH)/$(APP_NAME)-httpd.conf $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(APP_NAME).conf &>> $(BUILD_PATH)/logs/$(APP_NAME)_copy.log
 	@cp -f $(PACKAGING_CONFIG_PATH)/$(APP_NAME).sh $(BUILD_SRC_PATH)$(BINS_PATH)/$(APP_NAME) &>> $(BUILD_PATH)/logs/$(APP_NAME)_copy.log
@@ -176,19 +171,17 @@ dist: all
 		@if [ $(IS_DEBIAN_BASED) -gt 0 ] && [ $(IS_UBUNTU_BASED) -eq 0 ]; then \
 		 echo "#!/bin/bash\n\
 TISSUE_STACK_HOME=$(DATA_PATH)\n\
-TISSUE_STACK_JARS=$(LIBS_PATH)\n\
 IMAGE_SERVER_EXE=$(BINS_PATH)/$(EXE_NAME)\n\
 PATH=\$$PATH:$(BINS_PATH)\n\
 HDF5_DISABLE_VERSION_CHECK=1\n\
-export HDF5_DISABLE_VERSION_CHECK TISSUE_STACK_HOME TISSUE_STACK_JARS IMAGE_SERVER_EXE PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(APP_NAME)_env.sh; \
+export HDF5_DISABLE_VERSION_CHECK TISSUE_STACK_HOME IMAGE_SERVER_EXE PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(APP_NAME)_env.sh; \
         else \
                  echo -e "#!/bin/bash\n\
 TISSUE_STACK_HOME=$(DATA_PATH)\n\
-TISSUE_STACK_JARS=$(LIBS_PATH)\n\
 IMAGE_SERVER_EXE=$(BINS_PATH)/$(EXE_NAME)\n\
 PATH=\$$PATH:$(BINS_PATH)\n\
 HDF5_DISABLE_VERSION_CHECK=1\n\
-export HDF5_DISABLE_VERSION_CHECK TISSUE_STACK_HOME TISSUE_STACK_JARS IMAGE_SERVER_EXE PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(APP_NAME)_env.sh; \
+export HDF5_DISABLE_VERSION_CHECK TISSUE_STACK_HOME IMAGE_SERVER_EXE PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(APP_NAME)_env.sh; \
         fi
 	@if [ $(IS_CENTOS_BASED) -gt 0 ]; then \
 		echo "export DCMDICTPATH=/usr/share/dcmtk/dicom.dic" >> $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(APP_NAME)_env.sh; \
@@ -210,6 +203,49 @@ export HDF5_DISABLE_VERSION_CHECK TISSUE_STACK_HOME TISSUE_STACK_JARS IMAGE_SERV
 	fi
 
 	@echo -e "\tZipping up everything [log: $(BUILD_PATH)/logs/$(APP_NAME)_tar.log ]..."
-	@cd $(BUILD_SRC_PATH); tar cvzf $(BUILD_PATH)/$(DIST_NAME) * &> $(BUILD_PATH)/logs/$(APP_NAME)_tar.log
-	
+	@cd $(BUILD_SRC_PATH); tar cvzf $(BUILD_PATH)/$(DIST_NAME) * &> $(BUILD_PATH)/logs/$(APP_NAME)_server_tar.log
+
 	@echo -e "\n\tFinished creating binary archive:  $(BUILD_PATH)/$(DIST_NAME)"
+
+clients: clean prepare compile-tools install-tools
+	@echo -e "\n\n\tBuilding binary archive: $(CLIENTS_DIST_NAME):"
+	@echo -e "\t---------------------------------------------------"
+
+	@echo -e "\n\tPreparing build directory..."
+	@rm -rf $(BUILD_PATH)
+	@mkdir -p $(BUILD_PATH)/logs
+	@mkdir -p $(BUILD_SRC_PATH)$(BINS_PATH)
+	@mkdir -p $(BUILD_SRC_PATH)$(LIBS_PATH)
+	@mkdir -p $(BUILD_SRC_PATH)$(PROFILE_PATH)
+
+	@echo -e "\tCopying over Tissue Stack Clients executables"
+	@cp $(PACKAGING_CONFIG_PATH)/BioFormats2TissueStackConverter $(BUILD_SRC_PATH)$(BINS_PATH)
+	@cp $(PACKAGING_CONFIG_PATH)/ts_cl $(BUILD_SRC_PATH)$(BINS_PATH)
+	@cp $(BINS_PATH)/* $(BUILD_SRC_PATH)$(BINS_PATH)
+	@rm $(BUILD_SRC_PATH)$(BINS_PATH)/TissueStackServer
+	@cp $(JARS_PATH)/*.jar $(BUILD_SRC_PATH)$(LIBS_PATH)
+
+	@echo -e "\tCreating environment script containing the desired paths..."
+		@if [ $(IS_DEBIAN_BASED) -gt 0 ] && [ $(IS_UBUNTU_BASED) -eq 0 ]; then \
+		 echo "#!/bin/bash\n\
+TISSUE_STACK_JARS=$(LIBS_PATH)\n\
+PATH=\$$PATH:$(BINS_PATH)\n\
+HDF5_DISABLE_VERSION_CHECK=1\n\
+export HDF5_DISABLE_VERSION_CHECK TISSUE_STACK_JARS PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(APP_NAME)_clients_env.sh; \
+        else \
+                 echo -e "#!/bin/bash\n\
+TISSUE_STACK_JARS=$(LIBS_PATH)\n\
+PATH=\$$PATH:$(BINS_PATH)\n\
+HDF5_DISABLE_VERSION_CHECK=1\n\
+export HDF5_DISABLE_VERSION_CHECK TISSUE_STACK_JARS PATH" > $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(APP_NAME)_clients_env.sh; \
+        fi
+	@if [ $(IS_CENTOS_BASED) -gt 0 ]; then \
+		echo "export DCMDICTPATH=/usr/share/dcmtk/dicom.dic" >> $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(APP_NAME)_clients_env.sh; \
+	fi
+
+	@chmod 755 $(BUILD_SRC_PATH)$(PROFILE_PATH)/$(APP_NAME)_clients_env.sh
+
+	@echo -e "\tZipping up everything [log: $(BUILD_PATH)/logs/$(APP_NAME)_tar.log ]..."
+	@cd $(BUILD_SRC_PATH); tar cvzf $(BUILD_PATH)/$(CLIENTS_DIST_NAME) * &> $(BUILD_PATH)/logs/$(APP_NAME)_clients_tar.log
+
+	@echo -e "\n\tFinished creating binary archive:  $(BUILD_PATH)/$(CLIENTS_DIST_NAME)"

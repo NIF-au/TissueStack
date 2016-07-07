@@ -9,8 +9,13 @@ if [ $? -ne 0 ]; then
 	exit -1
 fi
 
-IS_SUSE=`cat /etc/*-release | grep -i "suse"| wc -c`
+export TISSUESTACK_BUILD_VERSION=2.2
+export IS_RELEASE=1
 
+SPEC_FILE=tissuestack.spec
+TARGET=server
+
+IS_SUSE=`cat /etc/*-release | grep -i "suse"| wc -c`
 REDHAT_RPM_CONFIG=`yum list installed | grep "redhat-rpm-config" | wc -l`
 if [ $IS_SUSE -eq 0 ] && [ $REDHAT_RPM_CONFIG -eq 0 ]; then
 	echo "Install redhat-rpm-config first!"
@@ -39,31 +44,37 @@ if [ $IS_CENTOS -ne 0 ] || [ $IS_FEDORA -ne 0 ]; then
 	export IS_CENTOS_OR_FEDORA=1
 fi
 
-export TISSUESTACK_BUILD_VERSION=2.1
-export IS_RELEASE=1
+if [ $IS_SUSE -ne 0 ]; then
+    SPEC_FILE=tissuestack_suse.spec
+fi;
+
+PKI_BUILD=0
+if [ $# -ne 0 ]; then
+    if [ "$1" == "CLIENTS" ]; then
+        TARGET=clients
+        SPEC_FILE=tissuestack_clients.spec
+    else
+        PKI_BUILD=1
+    fi;
+fi;
 
 CURRENT_DIR=`pwd`
 
-echo "Calling TissueStack make with target dist"
-cd $CURRENT_DIR/src/c++;make dist
+echo "Calling TissueStack make with target $TARGET"
+cd $CURRENT_DIR/src/c++;make $TARGET
 if [ $? -ne 0 ]; then
 	echo "Build was NOT successful"
 	exit -1
 fi;
 
 echo "Copying spec file and source tar"
-cp -f $CURRENT_DIR/rpm/*.spec $HOME/rpmbuild/SPECS 
-#cp -f /tmp/tissuestack_build/tissuestack-$TISSUESTACK_BUILD_VERSION.tar.gz $HOME/rpmbuild/SOURCES
+cp -f $CURRENT_DIR/rpm/$SPEC_FILE $HOME/rpmbuild/SPECS
 cd $HOME/rpmbuild/SPECS/
 
-# alter the standard apache port
-if [ $# -ne 0 ]; then
-	sed -i "s/APACHE_PORT=80/APACHE_PORT=$1/g" tissuestack.spec
+# alter the standard apache port for PKI build
+if [ $PKI_BUILD -ne 0 ]; then
+	sed -i "s/APACHE_PORT=80/APACHE_PORT=$1/g" $SPEC_FILE
 fi
 
 echo "Calling RPM build now ..."
-if [ $IS_SUSE -eq 0 ]; then
-	rpmbuild -bb tissuestack.spec
-else
-	rpmbuild -bb tissuestack_suse.spec
-fi;
+rpmbuild -bb $SPEC_FILE

@@ -32,7 +32,7 @@ LIBS			=	-lrt -lpthread -ldl -lpqxx -lpq -lcrypto -luuid \
 
 EXE_NAME		=	TissueStackServer
 
-FLAGS			=	-Wall -Werror -std=c++11 -std=gnu++11 -std=c++0x 
+FLAGS			=	-Wall -Werror -std=c++11 -std=gnu++11 -std=c++0x
 
 CC				=	g++
 
@@ -74,7 +74,7 @@ all:	clean prepare compile install compile-tools install-tools
 %.o: %.cpp
 	@echo -e "\tCompiling \"$(NAME)\" => [$(@)]"
 	@$(CC) -DAPPLICATION_PATH='"$(DATA_PATH)"' -c $(LIBS) $(FLAGS) $(INCLUDE) `GraphicsMagick-config --cppflags --libs` -o $@ -fPIC -pie $<
-	
+
 prepare:
 	@if [ ! -f /etc/profile.d/modules.sh ]; then echo "ERROR: Modules package is not installed !!!!!"; exit -1; fi;
 	@/etc/profile.d/modules.sh;module load hdf5/1.8.5 2> /tmp/build_mod_load; CHECK_SIZE=`stat -c%s /tmp/build_mod_load`; if [ $$CHECK_SIZE -ne 0 ]; then echo "ERROR: Could not locate needed hdf5 package (1.8.5). Please install it and load it: 'module load hdf5/1.8.5' !!!!!"; exit -1; fi;
@@ -102,7 +102,7 @@ compile-tools:
 
 install-tools:
 	@make -f Makefile.cvl --no-print-directory -C tools install
-	
+
 install: compile
 	@echo -e "\n\tInstalling $(NAME) (requires super user priviledges):"
 	@echo -e "\t-----------------------------------------------\n"
@@ -111,15 +111,15 @@ install: compile
 	@sudo mkdir -p $(BINS_PATH)
 	@if [ ! -f $(EXE_NAME) ]; then echo "\nExecutable '$(EXE_NAME)' does not exist!"; fi;
 	@sudo cp $(EXE_NAME) $(BINS_PATH)/$(EXE_NAME)
-	@echo -e "\n\tFinished installation of $(NAME).\n"  
-        
+	@echo -e "\n\tFinished installation of $(NAME).\n"
+
 clean:
 	@make -f Makefile --no-print-directory clean > /dev/null
-	
+
 dist: all
 	@echo -e "\n\n\tBuilding binary archive: $(DIST_NAME):"
 	@echo -e "\t---------------------------------------------------"
-	
+
 	@echo -e "\n\tPreparing build directory..."
 	@rm -rf $(BUILD_PATH)
 	@mkdir -p $(BUILD_PATH)/logs
@@ -138,16 +138,16 @@ dist: all
 	@ echo "This is a binary build" > $(BUILD_SRC_PATH)/readme.txt
 
 	@echo -e "\tCopying over Tissue Stack Image Server & Tools executables"
-	@cp $(PACKAGING_CONFIG_PATH)/BioFormats2TissueStackConverter.sh $(BUILD_SRC_PATH)$(BINS_PATH)
-	@cp $(PACKAGING_CONFIG_PATH)/ts_cl.sh $(BUILD_SRC_PATH)$(BINS_PATH)
+	@cp $(PACKAGING_CONFIG_PATH)/BioFormats2TissueStackConverter $(BUILD_SRC_PATH)$(BINS_PATH)
+	@cp $(PACKAGING_CONFIG_PATH)/ts_cl $(BUILD_SRC_PATH)$(BINS_PATH)
 	@cp $(BINS_PATH)/* $(BUILD_SRC_PATH)$(BINS_PATH)
 	@cp $(JARS_PATH)/*.jar $(BUILD_SRC_PATH)$(LIBS_PATH)
-	
+
 	@echo -e "\tCopying over front-end resources and colormaps..."
 	@cp $(BASE_DIR)data/colormaps/* $(BUILD_SRC_PATH)$(DATA_PATH)/colormaps
 	@cp -r $(BASE_DIR)/src/web $(BUILD_SRC_PATH)$(DATA_PATH)
 	@ln -s $(DATA_PATH)/tiles $(BUILD_SRC_PATH)$(DATA_PATH)/web/tiles
-	
+
 	@echo -e "\tCopying over tissue stack start/conf scripts [error logs: $(BUILD_PATH)/logs/*.log]..."
 	@cp -f $(PACKAGING_CONFIG_PATH)/$(APP_NAME)-httpd.conf $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(APP_NAME).conf &>> $(BUILD_PATH)/logs/$(APP_NAME)_copy.log
 	@cp -f $(PACKAGING_CONFIG_PATH)/$(APP_NAME)_modules.sh $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(APP_NAME)_modules.sh &>> $(BUILD_PATH)/logs/$(APP_NAME)_copy.log
@@ -193,10 +193,10 @@ dist: all
 	@chmod 755 $(BUILD_SRC_PATH)/pre-uninstall.sh
 	@cp -f $(PACKAGING_CONFIG_PATH)/post-uninstall-cvl.sh $(BUILD_SRC_PATH)/post-uninstall.sh
 	@chmod 755 $(BUILD_SRC_PATH)/post-uninstall.sh
-		
+
 	@echo -e "\tZipping up everything [log: $(BUILD_PATH)/logs/$(APP_NAME)_tar.log ]..."
 	@cd $(BUILD_SRC_PATH); tar cvzf $(BUILD_PATH)/$(DIST_NAME) * &> $(BUILD_PATH)/logs/$(APP_NAME)_tar.log
-	
+
 	@echo -e "\n\tFinished creating binary archive:  $(BUILD_PATH)/$(DIST_NAME)"
 
 source:	clean

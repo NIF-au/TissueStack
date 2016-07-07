@@ -1,0 +1,24 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
+
+# Uncomment this to turn on verbose mode.
+export DH_VERBOSE=1
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	mkdir install_files
+	cd install_files; tar xvzf /tmp/tissuestack_build/tissuestack-clients-${TISSUESTACK_BUILD_VERSION}.tar.gz
+
+override_dh_auto_install:
+
+override_dh_usrlocal:
+
+override_dh_shlibdeps:
+	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info

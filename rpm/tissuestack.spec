@@ -2,14 +2,14 @@
 %global debug_package %{nil}
 %global __os_install_post /usr/lib/rpm/brp-compress %{nil}
 Name:		tissuestack
-Version:	2.1
+Version:	2.2
 Release:	0%{?dist}
 Summary:	The TissueStack Application
 
 Group:		Graphics
 License:	GPLv3+
 URL:		https://github.com/NIF-au/TissueStack
-Source:		%{name}-%{version}.tar.gz	
+Source:		%{name}-%{version}.tar.gz
 
 BuildRequires:	minc GraphicsMagick-devel
 Requires:	minc nifticlib GraphicsMagick dcmtk postgresql-server httpd

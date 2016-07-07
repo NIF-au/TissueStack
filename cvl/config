@@ -11,7 +11,7 @@ ModuleFileDescription="tissuestack"
 # Package release number.
 #
 PACKAGE_RELEASE="4.1.7"
-PACKAGE_VERSION="2.1"
+PACKAGE_VERSION="2.2"
 
 #
 # For source package, set it "ON", for binary package, set it "OFF".
@@ -19,7 +19,7 @@ PACKAGE_VERSION="2.1"
 SOURCE_BUILD_FLAG="ON"
 
 #
-# Set RPM package dependency requires, using following string format and 
+# Set RPM package dependency requires, using following string format and
 # delimited by ",". <package1 >= version, package2 >= version, .....>
 #
 RPM_PACKAGE_REQUIRES="postgresql-server >= 8.4, httpd >= 2.1, cvl-dcmtk3_6_0, cvl-gcc4_9_1"
@@ -34,7 +34,7 @@ export PROJECT_SOURCE_PATH=/usr/local/src/`echo $ModuleFileDescription | tr '[:l
 #
 # Build configuration set up.
 #
-function ConfigurationCommand() 
+function ConfigurationCommand()
 {
     SOURCE=$1
     INSTALL=$2
@@ -94,14 +94,14 @@ EnvironmentModuleList="setenv TISSUE_STACK_ENV /usr/local/\$name/\$ver/bin/tissu
 #PackageInstallFileList=/:/
 
 #
-# Install configuration directories to package in format of 
-# "<Source>:<Destination>", multiple lines must be delimited by ";". 
+# Install configuration directories to package in format of
+# "<Source>:<Destination>", multiple lines must be delimited by ";".
 # Source files must be available in current source directory.
 #
 PackageInstallDirectoryList=opt:/
 
 #
-# Set menu layout in format <project_type>:<application_menu>. If this is not 
+# Set menu layout in format <project_type>:<application_menu>. If this is not
 # set, the following MeuDirectory and MenuDesktop will be ignored.
 #
 # The <project_type> is currently only defined for "cvl" project.
@@ -118,15 +118,15 @@ PackageInstallDirectoryList=opt:/
 #
 # Set module category menu, the syntax is in following format:
 #
-# <name>:<icon>:<category> 
-# 
-# (1) <name> is the module name showing on menu. 
+# <name>:<icon>:<category>
 #
-# (2) <icon> is the icon file, if the icon file is from the package, using "~" 
+# (1) <name> is the module name showing on menu.
+#
+# (2) <icon> is the icon file, if the icon file is from the package, using "~"
 #     for package parent path.
 #
-# (3) <category> is optional, it does not need to be specified if the <name> 
-#     is the application name. Otherwise, it can be defined similar to the 
+# (3) <category> is optional, it does not need to be specified if the <name>
+#     is the application name. Otherwise, it can be defined similar to the
 #     <name> without white spaces. Make sure there are NO SPACES in <category>.
 
 #MenuDirectory=
@@ -142,13 +142,13 @@ PackageInstallDirectoryList=opt:/
 #
 # (2) <name> is the application name showing on menu.
 #
-# (3) <icon> is the name of icon file, if the icon file is from the package, 
+# (3) <icon> is the name of icon file, if the icon file is from the package,
 #     using "~" for package parent path.
 #
 # (4) <add_terminal> is a flag with two values of "true" or false".
 #
 # (5) <license> is optional, ignore it if there is no license requirement.
-#     It should point to the license file in the package. For example, 
+#     It should point to the license file in the package. For example,
 #     /usr/local/fsl/5.0/bin/license.txt should be set to "bin/license.txt"
 #
 # Multiple lines should be delimited by ";".
@@ -182,8 +182,8 @@ BUILD_IN_SOURCE="OFF"
 INSTALL_MODULE_FILE="ON"
 
 #
-# Binary installation directory "<Source>:<Destination>". This field is only 
-# for applications which have special requirement of source code in different 
+# Binary installation directory "<Source>:<Destination>". This field is only
+# for applications which have special requirement of source code in different
 # structure or different binary destination directory.
 #
 #InstallDirectory=opt:/
@@ -195,15 +195,15 @@ INSTALL_MODULE_FILE="ON"
 AutoDependencyCheck="true"
 
 #
-# Pre installation script for RPM package only. The bash script file 
-# should be available in the source location. Edit following variable for 
+# Pre installation script for RPM package only. The bash script file
+# should be available in the source location. Edit following variable for
 # file name (no path) and only one script can be defined.
 #
 PreInstallScript="pre-install.sh"
 
 #
-# Post installation script for RPM package only. The bash script file 
-# should be available in the source location. Edit following variable for 
+# Post installation script for RPM package only. The bash script file
+# should be available in the source location. Edit following variable for
 # file name (no path) and only one script can be defined.
 #
 PostInstallScript="post-install.sh"

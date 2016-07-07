@@ -20,6 +20,9 @@
 #define CSA_ImageHeaderInfo DcmTagKey(0x0029,0x1010)
 #define CSA_ImageSeriesHeaderInfo DcmTagKey(0x0029,0x1020)
 #define CSA_NumberOfImagesInMosaic DcmTagKey(0x0019,0x100a)
+#ifndef DCM_ACR_NEMA_ImagesInSeries
+    #define DCM_ACR_NEMA_ImagesInSeries DcmTagKey(0x0020, 0x1003)
+#endif
 
 #define ASCCONV_BEGIN "### ASCCONV BEGIN ###"
 #define ASCCONV_END "### ASCCONV END ###"
@@ -152,7 +155,6 @@ tissuestack::imaging::DicomFileWrapper::DicomFileWrapper(const std::string filen
 		this->_number_of_images_in_series_or_acquisition = strtoul(value.c_str(), NULL, 10);
 
 	if (this->_number_of_images_in_series_or_acquisition == 0 &&
-		//dicomFormat.getDataset()->findAndGetOFStringArray(DCM_RETIRED_ImagesInSeries, value).good())
 		dicomFormat.getDataset()->findAndGetOFStringArray(DCM_ACR_NEMA_ImagesInSeries, value).good())
 		this->_number_of_images_in_series_or_acquisition = strtoul(value.c_str(), NULL, 10);
 

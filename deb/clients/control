@@ -1,0 +1,12 @@
+Source: tissuestack-clients
+Section: graphics
+Priority: extra
+Maintainer: Tissue Stack <tissuestack@tissuestack.org>
+Build-Depends: debhelper (>= 7.5.0), libminc-dev, libnifti-dev, libgraphicsmagick-dev, libglib2.0-dev, libc6-dev
+Standards-Version: 3.9.3
+Homepage: http://tissuestack.com
+
+Package: tissuestack-clients
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Tissue Stack Clients

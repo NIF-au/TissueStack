@@ -1,0 +1,2 @@
+install_files/etc/profile.d/tissuestack_clients_env.sh etc/profile.d
+install_files/usr/local/tissuestack/* usr/local/tissuestack

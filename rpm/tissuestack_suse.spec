@@ -2,14 +2,14 @@
 %global debug_package %{nil}
 %global __os_install_post /usr/lib/rpm/brp-compress %{nil}
 Name:		tissuestack
-Version:	2.1
+Version:	2.2
 Release:	0%{?dist}
 Summary:	The TissueStack Application
 
 Group:		Graphics
 License:	GPLv3+
 URL:		https://github.com/NIF-au/TissueStack
-Source:		%{name}-%{version}.tar.gz	
+Source:		%{name}-%{version}.tar.gz
 
 BuildRequires:	minc GraphicsMagick-devel
 Requires:	minc nifticlib GraphicsMagick dcmtk postgresql-server httpd
@@ -107,15 +107,15 @@ touch /etc/apache2/sysconfig.d/include.conf
 if [ `grep headers_module /etc/apache2/sysconfig.d/loadmodule.conf | wc -c` -eq 0 ]; then
 	echo "LoadModule headers_module /usr/lib64/apache2-prefork/mod_headers.so" >> /etc/apache2/sysconfig.d/loadmodule.conf
 	a2enmod headers
-fi;	 
+fi;
 if [ `grep proxy_module /etc/apache2/sysconfig.d/loadmodule.conf | wc -c` -eq 0 ]; then
 	echo "LoadModule proxy_module /usr/lib64/apache2-prefork/mod_proxy.so" >> /etc/apache2/sysconfig.d/loadmodule.conf
 	a2enmod proxy
-fi;	 
+fi;
 if [ `grep proxy_http_module /etc/apache2/sysconfig.d/loadmodule.conf | wc -c` -eq 0 ]; then
 	echo "LoadModule proxy_http_module /usr/lib64/apache2-prefork/mod_proxy_http.so" >> /etc/apache2/sysconfig.d/loadmodule.conf
 	a2enmod proxy_http
-fi;	 
+fi;
 if [ `iptables -S | grep -e "-A INPUT -i lo -j ACCEPT" | wc -c` -eq 0 ]; then
         iptables -I INPUT 1 -i lo -p all -j ACCEPT &>> /tmp/post-install.log
 fi

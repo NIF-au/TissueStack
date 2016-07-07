@@ -1,7 +1,7 @@
 -- !!!!! SWITCH TO tissuestack NOW before executing the following lines !!!!!
 
 -- GENERAL INSTANCE CONFIGURATION - some default values
-INSERT INTO configuration VALUES('version', '2.1', 'version');
+INSERT INTO configuration VALUES('version', '2.2', 'version');
 INSERT INTO configuration VALUES('session_timeout_minutes', '15', 'The session timeout given in minutes');
 INSERT INTO configuration VALUES('admin_passwd', '101ee9fe7aceaa8bea949e75a529d796da02e08bced78c6c4dde60768183fa14', 'Admin Password');
 INSERT INTO configuration VALUES('server_proxy_path', 'server', 'server proxy path (relative to the application''s web root directory)');
@@ -17,7 +17,7 @@ INSERT INTO configuration VALUES('ands_dataset_xml', '/opt/tissuestack/ands/data
 INSERT INTO configuration VALUES('max_upload_size', '10000000000', 'the maximum number of bytes allowed to upload in one go');
 INSERT INTO configuration VALUES('default_drawing_interval', '250', 'default drawing interval');
 INSERT INTO configuration VALUES('default_zoom_levels', '[0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5]', 'default zoom levels');
-INSERT INTO configuration VALUES('color_maps', 
+INSERT INTO configuration VALUES('color_maps',
 	'{"grey" : [[0, 0, 0, 0],[1, 1, 1, 1]],
 	"hot" 		: [[0, 0, 0, 0],
 	      		   [0.25, 0.5, 0, 0],
@@ -46,4 +46,3 @@ INSERT INTO configuration VALUES('color_maps',
 				   [0.95, 0.8, 0, 0],
 				   [1, 0.8, 0.8, 0.8]]
 		}', 'default color mapping: grey, hot and spectral');
-
