@@ -730,6 +730,8 @@ TissueStack.Canvas.prototype = {
 								for (var z=0;z<_this.overlays.length;z++)
 									_this.overlays[z].drawMe();
 							_this.syncDataSetCoordinates(_this, timestamp, false);
+                            if (_this.is_main_view && _this.checkMeasurements(
+                                    {x: 0, y: 0, z: _this.data_extent.slice})) _this.drawMeasuring();
 						}
 					};
 				})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, this.getDataExtent().tile_size, rowIndex, colIndex);
@@ -1000,17 +1002,38 @@ TissueStack.Canvas.prototype = {
 			this.is_color_map_tiled = TissueStack.Utils.testHttpFileExistence(url);
 		}
 		return this.is_color_map_tiled;
+    }, checkMeasurements : function(point) {
+        if (typeof point !== 'object' || point === null ||
+            typeof point.x !== 'number' || typeof point.y !== 'number' ||
+            typeof point.z !== 'number')
+            return false;
+
+        for (var p in this.measurements) // plane check
+            if (this.measurements[p].z !== point.z) {
+                this.resetMeasurements();
+                break;
+            }
+        return true;
 	}, addMeasure : function(point, isPixelMeasure) {
-        if (typeof point !== 'object' || typeof point.x !== 'number' ||
-            typeof point.y !== 'number' || typeof point.z !== 'number')
-            return;
+        if (!this.checkMeasurements(point)) return;
 
         if (typeof isPixelMeasure !== 'boolean')
             isPixelMeasure = true;
 
-        if (isPixelMeasure)
-            point = this.data_extent.getWorldCoordinatesForPixel(point);
-        if (point) this.measurements.push(point);
+        // note: store them as pixels and convert only when measuring
+        var realWorldCoords = point;
+        if (isPixelMeasure) {
+            realWorldCoords = this.data_extent.getWorldCoordinatesForPixel(point);
+            if (typeof realWorldCoords === 'object')
+                realWorldCoords.z = point.z;
+        }
+        if (this.checkMeasurements(realWorldCoords)) {
+            this.measurements.push(realWorldCoords);
+
+            // clear and draw
+            this.drawMe();
+            this.drawMeasuring();
+        }
     }, endMeasure : function() {
         if (this.measurements.length <= 1) return 0.0;
 
@@ -1021,7 +1044,39 @@ TissueStack.Canvas.prototype = {
                 Math.pow(this.measurements[j].x - this.measurements[i].x, 2) +
                 Math.pow(this.measurements[j].y - this.measurements[i].y, 2));
 
-        this.measurements = [];
         return distance;
+    }, resetMeasurements : function() {
+        this.measurements = [];
+        this.drawMe(0);
+    }, drawMeasuring : function() {
+        if (this.measurements.length === 0) return;
+
+        var ctx = this.getCanvasContext();
+        ctx.strokeStyle="rgba(255,255,0,1)";
+        ctx.fillStyle="rgba(255,255,0,1)";
+
+        var numOfPoints = this.measurements.length;
+        var lastCoords = null;
+        for (var i=0;i<numOfPoints;i++) {
+            var pixelCoords =
+                this.data_extent.getPixelForWorldCoordinates(
+                    this.measurements[i]);
+            // correct by image offset
+            pixelCoords.x += this.upper_left_x;
+            pixelCoords.y += (this.dim_y - this.upper_left_y);
+
+            if (i !== 0) {
+                ctx.beginPath();
+                ctx.moveTo(lastCoords.x, lastCoords.y);
+                ctx.lineTo(pixelCoords.x, pixelCoords.y);
+                ctx.stroke();
+                ctx.closePath();
+            }
+            ctx.beginPath();
+            ctx.arc(pixelCoords.x, pixelCoords.y, 1.5, 0, 2* Math.PI);
+            ctx.fill();
+            ctx.closePath();
+            lastCoords = pixelCoords;
+        }
     }
 };

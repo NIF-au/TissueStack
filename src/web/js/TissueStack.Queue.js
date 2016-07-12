@@ -38,16 +38,16 @@ TissueStack.Queue.prototype = {
 		if (this.queue_handle) { // already active
 			return;
 		}
-		
+
 		var _this = this;
-		
+
 		this.queue_handle = setInterval(function() {
 			// sanity check, if we still have some requests queued
 			if (_this.requests.length == 0) {
 				_this.stopQueue();
 				return;
 			};
-			
+
 			// work with deep copy, is safer and also leave last request in there instead of popping it
 			var latestRequest = $.extend(true, {}, _this.requests[_this.requests.length-1]);
 			_this.clearRequestQueue();
@@ -55,7 +55,7 @@ TissueStack.Queue.prototype = {
 				_this.stopQueue();
 				return;
 			}
-			
+
 			// double check if we are obsolete already
 			if (_this.presentlyQueuedZoomLevelAndSlice !== (latestRequest.dataset_id + "_" + latestRequest.data_id + "_" + latestRequest.zoom_level + '_' + latestRequest.slice)) {
 				_this.clearRequestQueue();
@@ -65,7 +65,7 @@ TissueStack.Queue.prototype = {
 
 			_this.latestDrawRequestTimestamp = latestRequest.timestamp;
 			//console.info('Action: ' + latestRequest.action + ' @ '  + latestRequest.timestamp + ' [' + latestRequest.data_id + ']');
-			
+
 			if (_this.prepareDrawRequest(latestRequest)) {
 				_this.drawLowResolutionPreview(_this.latestDrawRequestTimestamp);
 				_this.drawRequestAfterLowResolutionPreview(latestRequest);
@@ -87,14 +87,14 @@ TissueStack.Queue.prototype = {
 			this.clearRequestQueue();
 			this.stopQueue();
 		}
-		
+
 		// clicks and zooms are processed instantly
 		if (draw_request.action == "CLICK" || draw_request.action == "ZOOM" || draw_request.action == "POINT") {
 			var deepCopyOfRequest = $.extend(true, {}, draw_request);
 			this.latestDrawRequestTimestamp = deepCopyOfRequest.timestamp;
-			
+
 			//console.info('Action: ' + deepCopyOfRequest.action + ' @ '  + deepCopyOfRequest.timestamp + ' [' + draw_request.data_id + ']');
-			
+
 			// work with a deep copy
 			if (this.prepareDrawRequest(deepCopyOfRequest)) {
 				this.drawLowResolutionPreview(deepCopyOfRequest.timestamp);
@@ -106,7 +106,7 @@ TissueStack.Queue.prototype = {
 
 		// queue pans
 		this.requests.push(draw_request);
-		
+
 		// process through queue
 		this.startQueue();
 	},
@@ -126,7 +126,7 @@ TissueStack.Queue.prototype = {
 				}
 				clearInterval(lowResBackdrop);
 			}
-		}, 25);		
+		}, 25);
 	},
 	clearRequestQueue : function() {
 		this.requests = [];
@@ -149,7 +149,7 @@ TissueStack.Queue.prototype = {
 		}
 
 		var ctx = this.canvas.getCanvasContext();
-		
+
 		// nothing to do if we are totally outside
 		if (this.canvas.upper_left_x < 0 && (this.canvas.upper_left_x + this.canvas.getDataExtent().x) <=0
 				|| this.canvas.upper_left_x > 0 && this.canvas.upper_left_x > this.canvas.dim_x
@@ -158,17 +158,17 @@ TissueStack.Queue.prototype = {
 			this.canvas.displayLoadingProgress(0,0, true);
 
 			return;
-		} 
-		
+		}
+
 		var dataSet = TissueStack.dataSetStore.getDataSetById(this.canvas.data_extent.data_id);
-		if (!dataSet) 
+		if (!dataSet)
 			return;
-		
+
 		if (this.canvas.is_linked_dataset) {
 			this.eraseCanvasContent();
 			ctx.globalAlpha = TissueStack.transparency;
 		}
-		
+
 		if (TissueStack.overlay_datasets && (this.canvas.overlay_canvas || this.canvas.underlying_canvas)) {
 			this.canvas.getCanvasElement().hide();
 			this.lowResolutionPreviewDrawn = true;
@@ -186,7 +186,7 @@ TissueStack.Queue.prototype = {
 		} else {
 			canvasX = this.canvas.upper_left_x;
 		}
-		
+
 		if (canvasX + width > this.canvas.dim_x) {
 			width = this.canvas.dim_x - canvasX;
 			isOnlyPortionOfImage = true;
@@ -202,19 +202,19 @@ TissueStack.Queue.prototype = {
 			height = this.canvas.getDataExtent().y - imageOffsetY;
 			isOnlyPortionOfImage = true;
 		}
-		
+
 		if (height > this.canvas.dim_y) {
 			height = this.canvas.dim_y;
 			isOnlyPortionOfImage = true;
 		}
-		
+
 		var imageTile = new Image();
 		imageTile.crossOrigin = '';
-		
+
 		// did we check whether we have existing color map tiles?
 		var colorMap = this.canvas.color_map; // default
-		if (this.canvas.getDataExtent().getIsTiled() 
-				&& this.canvas.is_color_map_tiled != null 
+		if (this.canvas.getDataExtent().getIsTiled()
+				&& this.canvas.is_color_map_tiled != null
 				&& !this.canvas.is_color_map_tiled) {
 			colorMap = 'grey'; // fall back onto grey
 		}
@@ -228,39 +228,39 @@ TissueStack.Queue.prototype = {
 					slice,
 					colorMap
 		);
-		
+
 		// conduct the actual color tile check. This happens only once or when the colormap is changed
-		if (this.canvas.getDataExtent().getIsTiled() && colorMap != 'grey' 
+		if (this.canvas.getDataExtent().getIsTiled() && colorMap != 'grey'
 				&& this.canvas.is_color_map_tiled == null
 				&& !this.canvas.checkIfWeAreColorMapTiled(src)) {
 				// nope => replace the colormap with grey!
 				src = src.replace("." + colorMap, "");
 		}
-		
+
 		// append session id & timestamp for image service
 		if (!this.canvas.getDataExtent().getIsTiled()) {
 			if (this.canvas.contrast && (this.canvas.contrast.getMinimum() != this.canvas.contrast.dataset_min || this.canvas.contrast.getMaximum() != this.canvas.contrast.dataset_max)) {
 				src += ("&min=" + this.canvas.contrast.getMinimum());
 				src += ("&max=" + this.canvas.contrast.getMaximum());
 			}
-			
+
 			if (isOnlyPortionOfImage) {
 				src += ("&x=" + imageOffsetX + "&width=" + width);
 				src += ("&y=" + imageOffsetY + "&height=" + height);
 			}
-			
+
 			src += ("&id=" + this.canvas.sessionId);
 			src += ("&timestamp=" + timestamp);
 		} else
 			isOnlyPortionOfImage = false;
-		
+
 		if (_this.latestDrawRequestTimestamp < 0 || timestamp < _this.latestDrawRequestTimestamp)
 			return;
 
-		imageTile.src = src; 
+		imageTile.src = src;
 
 		this.canvas.displayLoadingProgress(0, 1, true);
-		
+
 		(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height) {
 			imageTile.onerror = function() {
 				_this.lowResolutionPreviewDrawn = true;
@@ -285,23 +285,23 @@ TissueStack.Queue.prototype = {
 					imageOffsetX = 0;
 					imageOffsetY = 0;
 				}
-				
+
 				//console.info('Drawing preview for ' +  _this.canvas.getDataExtent().data_id + '[' +_this.canvas.getDataExtent().getOriginalPlane() +  ']: ' + timestamp);
 				if (_this.canvas.getDataExtent().getIsTiled() && _this.canvas.hasColorMapOrContrastSetting())
 					_this.canvas.getCanvasElement().hide();
 
 				ctx.drawImage(this, imageOffsetX, imageOffsetY, width, height, canvasX, canvasY, width, height);
-				
+
 				if (_this.latestDrawRequestTimestamp < 0 || timestamp < _this.latestDrawRequestTimestamp) {
 					_this.lowResolutionPreviewDrawn = true;
 					return;
 				}
-				
+
 				if (_this.canvas.getDataExtent().getIsTiled() && _this.canvas.hasColorMapOrContrastSetting()) {
 					_this.canvas.applyContrastAndColorMapToCanvasContent();
 					if (!TissueStack.overlay_datasets || (!_this.canvas.underlying_canvas && !_this.canvas.overlay_canvas))
-						_this.canvas.getCanvasElement().show();		
-				} 
+						_this.canvas.getCanvasElement().show();
+				}
 
 				_this.lowResolutionPreviewDrawn = true;
 			};
@@ -309,7 +309,7 @@ TissueStack.Queue.prototype = {
 	}, prepareDrawRequest : function(draw_request) {
 		var thisHerePlane = this.canvas.getDataExtent().plane;
 		var thisHereDataSet = this.canvas.dataset_id;
-		
+
 		// if more than 1 data set is displayed, we stop propagation to the other here !
 		if (thisHereDataSet != draw_request.dataset_id) {
 			return false;
@@ -322,11 +322,11 @@ TissueStack.Queue.prototype = {
 		}
 
 		// for all the following actions do only the other planes,
-		// not the plane that triggered the event, otherwise it will get "served" twice !! 
-		if (draw_request.plane === thisHerePlane) { 
+		// not the plane that triggered the event, otherwise it will get "served" twice !!
+		if (draw_request.plane === thisHerePlane) {
 			return true;
 		}
-		
+
 		// SLICE CHANGE ACTION
 		if (draw_request.action == 'SLICE') {
 			// crosshair focus
@@ -338,11 +338,11 @@ TissueStack.Queue.prototype = {
             if (this.canvas.data_extent.one_to_one_y != this.canvas.data_extent.origY &&
                 draw_request.max_coords_of_event_triggering_plane.step != this.canvas.getDataExtent().step)
                 draw_request.slice *= (this.canvas.data_extent.one_to_one_y / this.canvas.data_extent.origY);
-            
+
 			// get slice changes
 			var sliceX = draw_request.slice;
 			var sliceY = this.canvas.data_extent.one_to_one_y - draw_request.slice;
-            
+
 			// adjust for zoom level
 			sliceX = sliceX * (this.canvas.getDataExtent().x / this.canvas.data_extent.one_to_one_x);
 			sliceY = sliceY * (this.canvas.getDataExtent().y / this.canvas.data_extent.one_to_one_y);
@@ -365,13 +365,13 @@ TissueStack.Queue.prototype = {
 			}
 			return true;
 		}
-		
+
 		// POINT FOCUS ACTION
 		if (draw_request.action == 'POINT') {
 			this.canvas.drawCoordinateCross(this.canvas.getCenter());
 		}
 
-		// CLICK ACTION 
+		// CLICK ACTION
 		if (thisHerePlane === 'x' && draw_request.plane === 'z' && draw_request.action == 'CLICK') {
 			this.canvas.drawCoordinateCross(
 					{x: draw_request.canvasDims.y - (draw_request.crossCoords.y + ((draw_request.canvasDims.y - draw_request.crossCoords.y)- this.canvas.cross_x)),
@@ -397,8 +397,8 @@ TissueStack.Queue.prototype = {
 					{x: this.canvas.cross_x,
 					 y: this.canvas.dim_y - (draw_request.crossCoords.x + ((this.canvas.dim_y - this.canvas.cross_y) - draw_request.crossCoords.x))});
 		}
-	
-		// COORDINATE CHANGES DUE TO VARYING ZOOM LEVELS BETWEEN THE CANVASES 
+
+		// COORDINATE CHANGES DUE TO VARYING ZOOM LEVELS BETWEEN THE CANVASES
 		var originalZoomLevelDims = this.canvas.getDataExtent().getZoomLevelDimensions(draw_request.zoom_level);
 		var crossXOutsideOfExtentX = (draw_request.coords.x < 0) ? -1 : 0;
 		if (draw_request.coords.x > (draw_request.max_coords_of_event_triggering_plane.max_x)) {
@@ -412,21 +412,21 @@ TissueStack.Queue.prototype = {
 		if (draw_request.zoom_level != this.canvas.getDataExtent().zoom_level) {
 			if (draw_request.coords.x < 0) {
 				draw_request.coords.x = Math.abs(draw_request.coords.x - draw_request.max_coords_of_event_triggering_plane.max_x);
-				draw_request.upperLeftCorner.x = draw_request.crossCoords.x - draw_request.coords.x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x);				
+				draw_request.upperLeftCorner.x = draw_request.crossCoords.x - draw_request.coords.x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x);
 			} else if (draw_request.coords.x > (draw_request.max_coords_of_event_triggering_plane.max_x )) {
 				draw_request.coords.x = draw_request.coords.x - (draw_request.max_coords_of_event_triggering_plane.max_x );
 				draw_request.upperLeftCorner.x = draw_request.crossCoords.x + draw_request.coords.x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x);
 			} else {
-				draw_request.upperLeftCorner.x = draw_request.crossCoords.x - draw_request.coords.x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x);				
+				draw_request.upperLeftCorner.x = draw_request.crossCoords.x - draw_request.coords.x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x);
 			}
 
 			if (draw_request.coords.y < 0) {
 				draw_request.coords.y = Math.abs(draw_request.coords.y);
-				draw_request.upperLeftCorner.y = (draw_request.canvasDims.y - draw_request.crossCoords.y) - draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);				
+				draw_request.upperLeftCorner.y = (draw_request.canvasDims.y - draw_request.crossCoords.y) - draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);
 			} else if (draw_request.coords.y > (draw_request.max_coords_of_event_triggering_plane.max_y )) {
 				draw_request.upperLeftCorner.y = (draw_request.canvasDims.y - draw_request.crossCoords.y) + draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);
 			} else {
-				draw_request.upperLeftCorner.y = (draw_request.canvasDims.y - draw_request.crossCoords.y) + draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);				
+				draw_request.upperLeftCorner.y = (draw_request.canvasDims.y - draw_request.crossCoords.y) + draw_request.coords.y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);
 			}
 
 			draw_request.coords.x = draw_request.coords.x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x);
@@ -436,10 +436,10 @@ TissueStack.Queue.prototype = {
 					draw_request.max_coords_of_event_triggering_plane.max_x * (this.canvas.getDataExtent().x / originalZoomLevelDims.x);
 			draw_request.max_coords_of_event_triggering_plane.max_y =
 					draw_request.max_coords_of_event_triggering_plane.max_y * (this.canvas.getDataExtent().y / originalZoomLevelDims.y);
-		} 
+		}
 
         if (draw_request.max_coords_of_event_triggering_plane.aniso_factor_x &&
-        	draw_request.max_coords_of_event_triggering_plane.aniso_factor_x != 1 && 
+        	draw_request.max_coords_of_event_triggering_plane.aniso_factor_x != 1 &&
             draw_request.max_coords_of_event_triggering_plane.step != this.canvas.getDataExtent().step) {
             draw_request.max_coords_of_event_triggering_plane.max_x /= draw_request.max_coords_of_event_triggering_plane.aniso_factor_x;
             draw_request.coords.x /= draw_request.max_coords_of_event_triggering_plane.aniso_factor_x;
@@ -450,7 +450,7 @@ TissueStack.Queue.prototype = {
             draw_request.max_coords_of_event_triggering_plane.max_y /= draw_request.max_coords_of_event_triggering_plane.aniso_factor_y;
             draw_request.coords.y /= draw_request.max_coords_of_event_triggering_plane.aniso_factor_y;
         }
-        
+
 		// PAN AND CLICK ACTION
 		if (thisHerePlane === 'x' && draw_request.plane === 'z') {
 			this.canvas.getDataExtent().setSliceWithRespectToZoomLevel(
@@ -495,14 +495,14 @@ TissueStack.Queue.prototype = {
 					this.canvas.upper_left_x ,
 					((draw_request.max_coords_of_event_triggering_plane.max_x ) + draw_request.upperLeftCorner.x + ((this.canvas.dim_y - this.canvas.cross_y) - draw_request.crossCoords.x)));
 		}
-		
+
 		return true;
 	}, drawRequest : function(draw_request) {
-		// redraw 
+		// redraw
 		this.canvas.drawMe(draw_request.timestamp);
 		this.tidyUp();
 	}, tidyUp : function() {
-		if (this.canvas.getDataExtent().slice < 0 || this.canvas.getDataExtent().slice > this.canvas.getDataExtent().max_slices 
+		if (this.canvas.getDataExtent().slice < 0 || this.canvas.getDataExtent().slice > this.canvas.getDataExtent().max_slices
 				|| this.canvas.upper_left_x > this.canvas.dim_x || this.canvas.upper_left_x + this.canvas.data_extent.x < 0
 				|| this.canvas.upper_left_y < 0 || this.canvas.upper_left_y - this.canvas.data_extent.y > this.canvas.dim_y) {
 			this.canvas.eraseCanvasContent(); // in these cases we erase the entire content
@@ -511,21 +511,23 @@ TissueStack.Queue.prototype = {
 
 		// tidy up where we left debris
 		if (this.canvas.upper_left_x > 0) { // in front of us
-			this.canvas.eraseCanvasPortion(0, 0, Math.ceil(this.canvas.upper_left_x), this.canvas.dim_y);
+            var tillX = Math.floor(this.canvas.upper_left_x);
+            if (tillX < 0) tillX = 0;
+			this.canvas.eraseCanvasPortion(0, 0, tillX, this.canvas.dim_y);
 		}
 		if (this.canvas.upper_left_x <= 0 || (this.canvas.upper_left_x >= 0 && (this.canvas.upper_left_x + this.canvas.getDataExtent().x-1) < this.canvas.dim_x)){ // behind us
 			this.canvas.eraseCanvasPortion(
 					Math.floor(this.canvas.upper_left_x + this.canvas.getDataExtent().x-1), 0,
 					this.canvas.dim_x - Math.floor(this.canvas.upper_left_x + this.canvas.getDataExtent().x-1), this.canvas.dim_y);
 		}
-		
+
 		if (this.canvas.upper_left_y < 0 || (this.canvas.upper_left_y < this.canvas.dim_y && this.canvas.upper_left_y >= 0)) { // in front of us
 			this.canvas.eraseCanvasPortion(0, 0, this.canvas.dim_x, (this.canvas.upper_left_y <= 0) ? this.canvas.dim_y : Math.ceil(this.canvas.dim_y - this.canvas.upper_left_y));
 		}
 		if ((this.canvas.upper_left_y - this.canvas.getDataExtent().y-1) >= this.canvas.dim_y || (this.canvas.upper_left_y - this.canvas.getDataExtent().y-1) > 0) { // behind us
 			this.canvas.eraseCanvasPortion(
 				0, (this.canvas.upper_left_y >= this.canvas.dim_y && this.canvas.upper_left_y - this.canvas.getDataExtent().y-1 >= this.canvas.dim_y) ? 0 : Math.floor(this.canvas.dim_y - (this.canvas.upper_left_y - this.canvas.getDataExtent().y)),
-				this.canvas.dim_x, 
+				this.canvas.dim_x,
 				(this.canvas.upper_left_y >= this.canvas.dim_y && this.canvas.upper_left_y - this.canvas.getDataExtent().y-1 >= this.canvas.dim_y) ?
 						this.canvas.dim_y : this.canvas.dim_y - Math.floor(this.canvas.dim_y - (this.canvas.upper_left_y - this.canvas.getDataExtent().y)));
 		}

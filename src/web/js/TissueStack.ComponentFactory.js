@@ -746,9 +746,6 @@ TissueStack.ComponentFactory = {
 		var myMeasuringContext = $("#measuringContextMenu");
 		if (!myMeasuringContext || myMeasuringContext.length === 0) return;
 
-
-		var _this = this;
-
         $("#" + div + "_main_view_canvas").off("contextmenu");
 		$("#" + div + "_main_view_canvas").on("contextmenu",
 			function(event) {
@@ -779,11 +776,17 @@ TissueStack.ComponentFactory = {
                 });
 
                 if (withinImage) {
+                    var point =
+                        {x: offsets.x - mainCanvas.upper_left_x,
+                         y: mainCanvas.upper_left_y - offsets.y,
+                         z: mainCanvas.data_extent.slice};
+                    mainCanvas.checkMeasurements(point);
                     if (mainCanvas.measurements.length > 0)
                         myMeasuringContext.children(".menue_item").show();
                     else {
                         myMeasuringContext.children(".addPoint").show();
-                        myMeasuringContext.children(".endPath").hide();
+                        myMeasuringContext.children(".result").html("Distance: 0.00000")
+                        myMeasuringContext.children(".resetPath").hide();
                     }
                     myMeasuringContext.children(".outside_image").hide();
 
@@ -797,20 +800,21 @@ TissueStack.ComponentFactory = {
 
                     // add point action
                     myMeasuringContext.children(".addPoint").on("click", function(event) {
-                        mainCanvas.addMeasure(
-                            {x: mainCanvas.upper_left_x - offsets.x,
-                             y: mainCanvas.upper_left_y - offsets.y,
-                             z: mainCanvas.data_extent.slice});
-                        myMeasuringContext.hide();
+                        mainCanvas.addMeasure(point);
+                        var res = mainCanvas.endMeasure();
+                        if (typeof res === 'number')
+                            res = res.toFixed(5);
+                        else res = 'NaN';
+                        $(this).hide();
+                        myMeasuringContext.children(".resetPath").show();
+                        myMeasuringContext.children(".result").html("Distance: " + res);
                     });
-                    // add end path action
-                    myMeasuringContext.children(".endPath").on("click", function(event) {
-                        mainCanvas.addMeasure(
-                            {x: mainCanvas.upper_left_x - offsets.x,
-                             y: mainCanvas.upper_left_y - offsets.y,
-                             z: mainCanvas.data_extent.slice});
-                        myMeasuringContext.hide();
-                        alert("Distance: " + mainCanvas.endMeasure());
+                    // add reset action
+                    myMeasuringContext.children(".resetPath").on("click", function(event) {
+                        mainCanvas.resetMeasurements();
+                        myMeasuringContext.children(".result").html("Distance: 0.00000");
+                        myMeasuringContext.children(".addPoint").show();
+                        $(this).hide();
                     });
                 } else {
                     myMeasuringContext.children(".menue_item").hide();
