@@ -40,14 +40,14 @@ TissueStack.Canvas.prototype = {
 	underlying_canvas: null, // if this is not null we are an overlay
 	overlay_canvas: null,	// if this is not null we are under something
 	/*
-	 *  these overlays are the 'true' overlays 
+	 *  these overlays are the 'true' overlays
 	 *  whereas the 2 properties above are used to display 2 data sets on the same level on top of each other !
 	 *  Differences:
 	 *    -) contrary to the 2 objects above the overlay does usually not exist independently
 	 *    -) Tightly coupled with the above fact, these overlays have to have a matching reference system with their base layers
 	 *    -) They can come in 'non base dataset' formats such as svg or be an internal format for canvas drawing instructions
 	 */
-	overlays: null,  
+	overlays: null,
 	is_linked_dataset: false,
 	is_main_view: false,
 	data_extent: null,
@@ -73,6 +73,7 @@ TissueStack.Canvas.prototype = {
 	value_range_max: 255,
 	sessionId : 0,
     is_2D : false,
+    measurements : [],
     flag2D : function() {
         this.is_2D = true;
     }, is2D : function() {
@@ -113,7 +114,7 @@ TissueStack.Canvas.prototype = {
 			return;
 		if (this.getCanvasElement().parent() == null)
 			return;
-			
+
 		this.getCanvasElement().parent().hide();
 	},
 	showCanvas : function() {
@@ -121,7 +122,7 @@ TissueStack.Canvas.prototype = {
 			return;
 		if (this.getCanvasElement().parent() == null)
 			return;
-			
+
 		this.getCanvasElement().parent().show();
 	},
 	getCanvasContext : function() {
@@ -133,18 +134,18 @@ TissueStack.Canvas.prototype = {
 	setValueRange : function(min, max) {
 		if (typeof(min) != 'number' || typeof(max) != 'number') return;
 		if (min > max) return;
-		
+
 		this.value_range_min = min;
 		this.value_range_max = max;
 	},
 	getCanvasPixelValue : function(coords) {
 		if (!this.getCanvasElement() || this.getCanvasElement().length == 0 || !coords) return;
-		
+
 		var ctx = this.getCanvasContext();
 		if ((TissueStack.overlay_datasets && this.underlying_canvas) || this.is_linked_dataset) {
 			ctx = TissueStack.overlay_values[this.data_extent.plane].getContext("2d");
 		}
-		
+
 		var dataForPixel = ctx.getImageData(coords.x, coords.y, 1, 1);
 		if (!dataForPixel || !dataForPixel.data) return;
 
@@ -169,10 +170,10 @@ TissueStack.Canvas.prototype = {
             centerAfterZoom.x *= (this.getDataExtent().origX / this.getDataExtent().one_to_one_x);
         if (this.getDataExtent().one_to_one_y != this.getDataExtent().origY)
             centerAfterZoom.y *= (this.getDataExtent().origY / this.getDataExtent().one_to_one_y);
-        */  
-        
+        */
+
 		if (centerAfterZoom) this.setUpperLeftCorner(centerAfterZoom.x, centerAfterZoom.y);
-		
+
 		// update displayed info
 		if (TissueStack.phone || this.is_main_view)
 			this.updateExtentInfo(this.getDataExtent().getExtentCoordinates());
@@ -192,7 +193,7 @@ TissueStack.Canvas.prototype = {
 		if (this.upper_left_y > 0 && this.upper_left_y - this.getDataExtent().y < this.dim_y && this.dim_y - relative_mouse_coords.y <= this.upper_left_y && this.dim_y - relative_mouse_coords.y >= this.upper_left_y - this.getDataExtent().y) {
 			relDataY = this.upper_left_y - (this.dim_y - relative_mouse_coords.y);
 		}
-		
+
 		return {x: relDataX, y: relDataY};
 	},
 	setDimensions : function(x,y) {
@@ -227,7 +228,7 @@ TissueStack.Canvas.prototype = {
 	getRelativeCrossCoordinates : function(ignoreIsotropy) {
         if (typeof(ignoreIsotropy) != 'boolean' || !ignoreIsotropy)
             ignoreIsotropy = false;
-        
+
         var data_extent_x = this.getDataExtent().x;
         var data_extent_y = this.getDataExtent().y;
 
@@ -235,7 +236,7 @@ TissueStack.Canvas.prototype = {
             data_extent_x /= (this.getDataExtent().origX / this.getDataExtent().one_to_one_x);
         if (this.getDataExtent().one_to_one_y != this.getDataExtent().origY)
             data_extent_y /= (this.getDataExtent().origY / this.getDataExtent().one_to_one_y);
-        
+
 		var relCrossX = (this.cross_x > this.upper_left_x + data_extent_x) ? -(this.cross_x - (this.upper_left_x + data_extent_x)) : data_extent_x +  (this.upper_left_x - this.cross_x);
 		var relCrossY = ((this.dim_y - this.cross_y) > this.upper_left_y) ? (this.upper_left_y - (this.dim_y - this.cross_y)) : (data_extent_y + (this.upper_left_y - data_extent_y - (this.dim_y - this.cross_y)));
 		if (this.upper_left_x < 0 && this.cross_x <= (this.upper_left_x + data_extent_x)) {
@@ -246,7 +247,7 @@ TissueStack.Canvas.prototype = {
 		if (this.upper_left_y > 0 && this.upper_left_y - data_extent_y < this.dim_y && this.dim_y - this.cross_y <= this.upper_left_y && this.dim_y - this.cross_y >= this.upper_left_y - data_extent_y) {
 			relCrossY = this.upper_left_y - (this.dim_y - this.cross_y);
 		}
-		
+
 		return {x: relCrossX, y: relCrossY};
 	},drawCoordinateCross : function(coords) {
 		// store cross coords
@@ -257,14 +258,14 @@ TissueStack.Canvas.prototype = {
 		if (!coordinateCrossCanvas || !coordinateCrossCanvas[0]) {
 			return;
 		}
-		
+
 		var ctx = coordinateCrossCanvas[0].getContext("2d");
 		// clear overlay
 		ctx.save();
 		ctx.setTransform(1, 0, 0, 1, 0, 0);
 		ctx.clearRect(0,0, this.dim_x, this.dim_y);
 		ctx.restore();
-		
+
 		// draw bulls eye
 		ctx.beginPath();
 		ctx.strokeStyle="rgba(200,0,0,0.3)";
@@ -299,37 +300,37 @@ TissueStack.Canvas.prototype = {
 		return {x: (this.dim_x - this.getDataExtent().x) / 2,
 				y: this.dim_y - ((this.dim_y - this.getDataExtent().y) / 2)
 		};
-	}, 
+	},
 	getNewUpperLeftCornerForPointZoom : function(coords, zoom_level) {
   		var newZoomLevelDims = this.getDataExtent().getZoomLevelDimensions(zoom_level);
-		
-		var deltaXBetweenCrossAndUpperLeftCorner = (this.upper_left_x < 0) ? (coords.x - this.upper_left_x) : Math.abs(coords.x - this.upper_left_x); 
+
+		var deltaXBetweenCrossAndUpperLeftCorner = (this.upper_left_x < 0) ? (coords.x - this.upper_left_x) : Math.abs(coords.x - this.upper_left_x);
 		var deltaYBetweenCrossAndUpperLeftCorner = (this.upper_left_y < 0) ? ((this.dim_y - coords.y) - this.upper_left_y) : Math.abs((this.dim_y - coords.y) - this.upper_left_y);
-		
+
 		var zoomLevelCorrectionX = deltaXBetweenCrossAndUpperLeftCorner * (newZoomLevelDims.x / this.data_extent.x);
 		var zoomLevelCorrectionY = deltaYBetweenCrossAndUpperLeftCorner * (newZoomLevelDims.y / this.data_extent.y);
-		
+
 		var newX = Math.floor((this.upper_left_x <= coords.x) ? (coords.x - zoomLevelCorrectionX) : (coords.x + zoomLevelCorrectionX));
 		var newY = Math.floor((this.upper_left_y <= (this.dim_y - coords.y)) ? ((this.dim_y - coords.y) - zoomLevelCorrectionY) : ((this.dim_y - coords.y) + zoomLevelCorrectionY));
 
 		return {x: newX, y: newY};
 	},
 	redrawWithCenterAndCrossAtGivenPixelCoordinates: function(coords, sync, timestamp, center) {
-		// this stops any still running draw requests 
-		var now = typeof(timestamp) == 'number' ? timestamp : new Date().getTime(); 
-		
+		// this stops any still running draw requests
+		var now = typeof(timestamp) == 'number' ? timestamp : new Date().getTime();
+
 		if (typeof(center) != 'boolean')
 			center = false;
-		
+
 		var crossHairPosition = this.getCenter();
-		if (!center && TissueStack.overlay_datasets && this.underlying_canvas) 
+		if (!center && TissueStack.overlay_datasets && this.underlying_canvas)
 			crossHairPosition = {x: this.underlying_canvas.cross_x, y: this.underlying_canvas.cross_y};
 		else if (!center && TissueStack.overlay_datasets && this.overlay_canvas)
 			crossHairPosition = {x: this.overlay_canvas.cross_x, y: this.overlay_canvas.cross_y};
-			
+
 		// make sure crosshair is centered:
 		this.drawCoordinateCross(crossHairPosition);
-		
+
 		this.setUpperLeftCorner(
 				crossHairPosition.x - coords.x,
 				(this.dim_y - crossHairPosition.y) + coords.y
@@ -338,7 +339,7 @@ TissueStack.Canvas.prototype = {
 		if (coords.z) {
 			this.data_extent.slice = coords.z;
 		}
-		
+
 		// look for the cross overlay which will be the top layer
 		var canvas = this.getCoordinateCrossCanvas();
 		if (!canvas || !canvas[0]) {
@@ -346,7 +347,7 @@ TissueStack.Canvas.prototype = {
 		}
 
 		if (typeof(sync) == 'boolean' && !sync) return;
-		
+
         var aniso_factor_x = 1;
         var aniso_factor_y = 1;
 
@@ -354,7 +355,7 @@ TissueStack.Canvas.prototype = {
             aniso_factor_x = (this.data_extent.one_to_one_x / this.data_extent.origX);
         if (this.data_extent.one_to_one_y != this.data_extent.origY)
             aniso_factor_y = (this.data_extent.one_to_one_y / this.data_extent.origY);
-        
+
 		// send message out to others that they need to redraw as well
 		canvas.trigger("sync", [this.data_extent.data_id,
 		                        this.dataset_id,
@@ -364,7 +365,7 @@ TissueStack.Canvas.prototype = {
 		                        this.getDataExtent().zoom_level,
 		                        this.getDataExtent().slice,
 		                        coords,
-		                        {max_x: this.getDataExtent().x, max_y: this.getDataExtent().y, 
+		                        {max_x: this.getDataExtent().x, max_y: this.getDataExtent().y,
                                  aniso_factor_x : aniso_factor_x, aniso_factor_y: aniso_factor_y,
                                  step: this.getDataExtent().step},
 								{x: this.upper_left_x, y: this.upper_left_y},
@@ -385,7 +386,7 @@ TissueStack.Canvas.prototype = {
 		if (x<0 || y<0 || x>this.dim_x || y>this.dim_y || w <=0 || h<=0 || w>this.dim_x || h>this.dim_y) {
 			return;
 		}
-		
+
     	var ctx = this.getCanvasContext();
     	var myImageData = ctx.getImageData(x, y, w, h);
     	for ( var i = 0; i < w * h * 4; i += 4) {
@@ -397,7 +398,7 @@ TissueStack.Canvas.prototype = {
 	  	if (this.upper_left_x > this.dim_x || this.upper_left_x + this.data_extent.x < 0 || this.upper_left_y < 0 || this.upper_left_y - this.data_extent.y > this.dim_y) {
     		return;
     	}
-	  	
+
     	var ctx = typeof(tempCtx) === 'object' ? tempCtx :  this.getCanvasContext();
     	var xStart = this.upper_left_x < 0 ? 0 : this.upper_left_x;
     	var yStart = this.upper_left_y > this.dim_y ? 0 : this.dim_y - this.upper_left_y;
@@ -406,10 +407,10 @@ TissueStack.Canvas.prototype = {
     	if (width > this.dim_x) {
     		width = this.dim_x - xStart;
     	}
-    	
+
     	// apply color map and contrast
     	var myImageData = this.applyContrastAndColorMapToImageData(ctx.getImageData(xStart, yStart, width, height));
-    	
+
     	// put altered data back into canvas
     	if (typeof(tempCtx) === 'object') {
     		// let's copy from the temporary canvas
@@ -436,16 +437,16 @@ TissueStack.Canvas.prototype = {
     	if (this.getDataExtent().getIsTiled()) {
 	    	for ( var x = 0; x < myImageData.data.length; x += 4) {
 	    		var val = myImageData.data[x];
-	
+
 	    		if (this.hasColorMapOrContrastSetting()) {
 					// apply contrast settings first
-					if (this.contrast && 
+					if (this.contrast &&
 							(this.contrast.getMinimum() != this.contrast.dataset_min || this.contrast.getMaximum() != this.contrast.dataset_max)) {
 						var channelIndex = 0;
 						var channels = 1;
 						// for pre-tiled color we need to go through all 3 channels
-						if (this.color_map && this.color_map != "grey" 
-							&& this.is_color_map_tiled != null 
+						if (this.color_map && this.color_map != "grey"
+							&& this.is_color_map_tiled != null
 							&& this.is_color_map_tiled) {
 							channels = 3;
 						}
@@ -457,7 +458,7 @@ TissueStack.Canvas.prototype = {
 				    		} else if (val >= this.contrast.getMaximum()) {
 				    			val = this.contrast.dataset_max;
 				    		} else {
-				    			val = Math.round(((val - this.contrast.getMinimum()) / (this.contrast.getMaximum() - this.contrast.getMinimum())) * 
+				    			val = Math.round(((val - this.contrast.getMinimum()) / (this.contrast.getMaximum() - this.contrast.getMinimum())) *
 				    					(this.contrast.dataset_max - this.contrast.dataset_min));
 				    		}
 				    		if (channels == 1)	myImageData.data[x] = myImageData.data[x+1] = myImageData.data[x+2] = val;
@@ -465,15 +466,15 @@ TissueStack.Canvas.prototype = {
 				    		channelIndex++;
 						}
 					}
-					
+
 					// apply the color map but only if we are not grey or do not have colored tiles already
-					if (this.color_map && this.color_map != "grey" 
-							&& this.is_color_map_tiled != null 
+					if (this.color_map && this.color_map != "grey"
+							&& this.is_color_map_tiled != null
 							&& !this.is_color_map_tiled) {
 						// set new red value
 						myImageData.data[x] = TissueStack.indexed_color_maps[this.color_map][val][0];
 						// set new green value
-						myImageData.data[x + 1] = TissueStack.indexed_color_maps[this.color_map][val][1];			
+						myImageData.data[x + 1] = TissueStack.indexed_color_maps[this.color_map][val][1];
 						// set new blue value
 						myImageData.data[x + 2] = TissueStack.indexed_color_maps[this.color_map][val][2];
 					}
@@ -486,11 +487,11 @@ TissueStack.Canvas.prototype = {
 				(!this.contrast || (this.contrast.getMinimum() == this.contrast.dataset_min && this.contrast.getMaximum() == this.contrast.dataset_max)) ) {
 			return false;
 		}
-		
+
 		return true;
 	}, isColorMapOn : function() {
 		if (!this.color_map || this.color_map == "grey") return false;
-		
+
 		return true;
 	}, drawMe : function(timestamp) {
 		// damn you async loads
@@ -499,7 +500,7 @@ TissueStack.Canvas.prototype = {
 			//console.info('Beginning abort for ' + this.getDataExtent().data_id + '[' + this.getDataExtent().getOriginalPlane() + ']: ' + timestamp);
 			return;
 		}
-		
+
 		// preliminary check if we are within the slice range
 		var slice = this.getDataExtent().slice;
 		if (slice < 0 || slice > this.getDataExtent().max_slices) {
@@ -509,7 +510,7 @@ TissueStack.Canvas.prototype = {
 
 		var ctx = this.getCanvasContext();
 		var tempCanvas = null;
-		
+
 		// nothing to do if we are totally outside
 		if (this.upper_left_x < 0 && (this.upper_left_x + this.getDataExtent().x) <=0
 				|| this.upper_left_x > 0 && this.upper_left_x > this.dim_x
@@ -524,7 +525,7 @@ TissueStack.Canvas.prototype = {
 			alert("Couldn't find data set with id: " + this.data_extent.data_id);
 			return;
 		}
-		
+
 		var counter = 0;
 		var startTileX = this.upper_left_x / this.getDataExtent().tile_size;
 		var canvasX = 0;
@@ -537,7 +538,7 @@ TissueStack.Canvas.prototype = {
 			startTileX = 0;
 			canvasX = this.upper_left_x;
 		}
-		
+
 		var startTileY = 0;
 		var canvasY = 0;
 		var deltaStartTileYAndUpperLeftCornerY = 0;
@@ -562,28 +563,28 @@ TissueStack.Canvas.prototype = {
 			TissueStack.overlay_values[this.data_extent.plane].width = this.dim_x;
 			TissueStack.overlay_values[this.data_extent.plane].height = this.dim_y;
 		}
-		
+
 		var totalOfTiles = 0;
-		
+
 		// loop over rows
-		for (var tileX = startTileX  ; tileX < endTileX ; tileX++) {			
+		for (var tileX = startTileX  ; tileX < endTileX ; tileX++) {
 			var tileOffsetX = startTileX * this.getDataExtent().tile_size;
 			var imageOffsetX = 0;
 			var width =  this.getDataExtent().tile_size;
-			var rowIndex = tileX; 
-			
+			var rowIndex = tileX;
+
 			// reset to initial canvasX
 			canvasY = copyOfCanvasY;
-			
+
 			// we are at the beginning, do we have a partial?
 			if (canvasX == 0 && deltaStartTileXAndUpperLeftCornerX !=0) {
 				width = deltaStartTileXAndUpperLeftCornerX;
 				imageOffsetX =  this.getDataExtent().tile_size - width;
 			}
-			
+
 			// we exceed canvas
 			if (canvasX == this.dim_x) {
-				tileX = endTileX; // this will make us stop in the next iteration 
+				tileX = endTileX; // this will make us stop in the next iteration
 				width =  this.dim_x - tileOffsetX;
 			} else if (canvasX > this.dim_x) {
 				break;
@@ -593,7 +594,7 @@ TissueStack.Canvas.prototype = {
 			for (var tileY = startTileY ; tileY < endTileY ; tileY++) {
 				var imageOffsetY = 0;
 				var height =  this.getDataExtent().tile_size;
-				var colIndex = tileY; 
+				var colIndex = tileY;
 
 				// we are at the beginning, do we have a partial?
 				if (canvasY == 0 && deltaStartTileYAndUpperLeftCornerY !=0) {
@@ -602,7 +603,7 @@ TissueStack.Canvas.prototype = {
 				}
 
 				if (canvasY  == this.dim_y) {
-					tileY = endTileY; // this will make us stop in the next iteration 
+					tileY = endTileY; // this will make us stop in the next iteration
 					height = this.dim_y - canvasY;
 				} else if (canvasY > this.dim_y) {
 					break;
@@ -611,16 +612,16 @@ TissueStack.Canvas.prototype = {
 				// create the image object that loads the tile we need
 				var imageTile = new Image();
 				imageTile.crossOrigin = '';
-				
+
 				// did we check whether we have existing color map tiles?
 				var colorMap = this.color_map; // default
-				if (this.getDataExtent().getIsTiled() 
-						&& this.is_color_map_tiled != null 
+				if (this.getDataExtent().getIsTiled()
+						&& this.is_color_map_tiled != null
 						&& !this.is_color_map_tiled) {
 					colorMap = 'grey'; // fall back onto grey
 				}
 
-				var src = 
+				var src =
 					TissueStack.Utils.assembleTissueStackImageRequest(
 							"http",
 							dataSet,
@@ -632,16 +633,16 @@ TissueStack.Canvas.prototype = {
 							rowIndex,
 							colIndex
 					);
-				
-				
+
+
 				// conduct the actual color tile check. This happens only for overlays, in the other cases the preview logic takes care of it
-				if (TissueStack.overlay_datasets && (this.overlay_canvas || this.underlying_canvas) && this.getDataExtent().getIsTiled() && colorMap != 'grey' 
+				if (TissueStack.overlay_datasets && (this.overlay_canvas || this.underlying_canvas) && this.getDataExtent().getIsTiled() && colorMap != 'grey'
 						&& this.is_color_map_tiled == null
 						&& !this.checkIfWeAreColorMapTiled(src)) {
 						// nope => replace the colormap with grey!
 						src = src.replace("_" + colorMap, "");
 				}
-				
+
 				// append session id & timestamp for image service as well as contrast (if deviates from original range)
 				if (!this.getDataExtent().getIsTiled()) {
 					if (this.contrast && (this.contrast.getMinimum() != this.contrast.dataset_min || this.contrast.getMaximum() != this.contrast.dataset_max)) {
@@ -662,12 +663,12 @@ TissueStack.Canvas.prototype = {
 
 				totalOfTiles++;
 				counter++;
-				imageTile.src = src; 
-				
+				imageTile.src = src;
+
 				(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, tile_size, row, col) {
 					imageTile.onerror = function() {
 						counter--;
-						_this.displayLoadingProgress(totalOfTiles - counter, totalOfTiles);						
+						_this.displayLoadingProgress(totalOfTiles - counter, totalOfTiles);
 					};
 					imageTile.onload = function() {
 
@@ -687,7 +688,7 @@ TissueStack.Canvas.prototype = {
 						}
 
 						counter--;
-						
+
 						// damn you async loads
 						if (_this.queue.latestDrawRequestTimestamp < 0 ||
 								(timestamp && timestamp < _this.queue.latestDrawRequestTimestamp)) {
@@ -701,15 +702,15 @@ TissueStack.Canvas.prototype = {
 							imageOffsetX, imageOffsetY, width, height, // tile dimensions
 							canvasX, canvasY, width, height); // canvas dimensions
 						_this.applyContrastAndColorMapToTiles(ctx, canvasX, canvasY, width, height);
-						
+
 						if ((TissueStack.overlay_datasets && _this.underlying_canvas) || _this.is_linked_dataset) {
-							if (TissueStack.overlay_values[_this.data_extent.plane] && 
+							if (TissueStack.overlay_values[_this.data_extent.plane] &&
                                 TissueStack.overlay_values[_this.data_extent.plane].getContext("2d"))
 							     TissueStack.overlay_values[_this.data_extent.plane].getContext("2d").drawImage(this,
 									imageOffsetX, imageOffsetY, width, height, // tile dimensions
 									canvasX, canvasY, width, height); // canvas dimensions
 						}
-						
+
 						// damn you async loads
 						if (_this.queue.latestDrawRequestTimestamp < 0 ||
 								(timestamp && timestamp < _this.queue.latestDrawRequestTimestamp)) {
@@ -717,7 +718,7 @@ TissueStack.Canvas.prototype = {
 							_this.displayLoadingProgress(0, totalOfTiles, true);
 							return;
 						}
-						
+
 						if (counter == 0 && (TissueStack.overlay_datasets && (_this.overlay_canvas || _this.underlying_canvas))) {
 							_this.getCanvasElement().show();
 						}
@@ -732,11 +733,11 @@ TissueStack.Canvas.prototype = {
 						}
 					};
 				})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, this.getDataExtent().tile_size, rowIndex, colIndex);
-				
+
 				// increment canvasY
 				canvasY += height;
 			}
-			
+
 			// increment canvasX
 			canvasX += width;
 		};
@@ -748,7 +749,7 @@ TissueStack.Canvas.prototype = {
 
 		if (TissueStack.overlay_datasets && !_this.underlying_canvas)
 			return;
-		
+
 		if (typeof(eraseCanvase) != 'boolean') eraseCanvase = false;
 		TissueStack.dataSetNavigation.syncDataSetCoordinates(_this, timestamp, eraseCanvas);
 		_this.has_been_synced = false; // reset flag to accept syncing forwards again
@@ -756,12 +757,12 @@ TissueStack.Canvas.prototype = {
 	},
 	updateExtentInfo : function(realWorldCoords) {
 		var log = (TissueStack.desktop || TissueStack.tablet) ? $('#canvas_extent') : $('#canvas_' + this.getDataExtent().plane + '_extent');
-		
+
 		if (!realWorldCoords) {
 			log.html('<br/><br/>');
 			return;
 		}
-		
+
 		if(TissueStack.phone)
 			log.html("Zoom Level: " + this.getDataExtent().zoom_level);
 		else {
@@ -782,14 +783,14 @@ TissueStack.Canvas.prototype = {
 		};
 		pixelCoords = this.getXYCoordinatesWithRespectToZoomLevel(pixelCoords);
 		// outside of extent check
-		if (!oneToOnePixelCoords || oneToOnePixelCoords.x < 0 || oneToOnePixelCoords.x > this.data_extent.x -1 
+		if (!oneToOnePixelCoords || oneToOnePixelCoords.x < 0 || oneToOnePixelCoords.x > this.data_extent.x -1
 				||  oneToOnePixelCoords.y < 0 || oneToOnePixelCoords.y > this.data_extent.y -1
 				|| oneToOnePixelCoords.z < 0 || oneToOnePixelCoords.z > this.data_extent.max_slices) {
 			$("#canvas_point_x").val("");
 			$("#canvas_point_y").val("");
 			$("#canvas_point_z").val("");
 			$("#canvas_point_value").val("");
-			
+
             var ontTree = $("#ontology_tree");
             if (ontTree && ontTree.length > 0 && ontTree.empty) {
                 ontTree.empty();
@@ -797,21 +798,21 @@ TissueStack.Canvas.prototype = {
 
 			return;
 		}
-		
+
 		// phone
 		if (TissueStack.phone) {
 			var log;
-	
+
 			if (worldCoords) {
 				log = $('.coords');
 				log.html("World > X: " +  Math.round(worldCoords.x * 1000) / 1000 + ", Y: " +  Math.round(worldCoords.y * 1000) / 1000);
-			} else { 
+			} else {
 				log = $('.coords');
 				log.html("Pixels > X: " + oneToOnePixelCoords.x + ", Y: " + oneToOnePixelCoords.y);
 			}
 			return;
-		}		
-		
+		}
+
 		// for desktop and tablet
 		var x = worldCoords ? worldCoords.x : pixelCoords.x;
 		var y = worldCoords ? worldCoords.y : pixelCoords.y;
@@ -820,11 +821,11 @@ TissueStack.Canvas.prototype = {
 		$("#canvas_point_x").val(Math.round(x *1000) / 1000);
 		$("#canvas_point_y").val(Math.round(y *1000) / 1000);
 		$("#canvas_point_z").val(Math.round(z *1000) / 1000);
-		
+
 		// get at pixel value
 		var dataSet = TissueStack.dataSetStore.getDataSetById(this.getDataExtent().data_id);
 		TissueStack.Utils.queryVoxelValue(dataSet, this, pixelCoords);
-		
+
 		// update url link info
 		this.getUrlLinkString(dataSet.realWorldCoords[this.data_extent.plane]);
 	}, displayPixelValue : function(dataSet, pixelValues) {
@@ -832,14 +833,14 @@ TissueStack.Canvas.prototype = {
 			|| typeof(dataSet) != 'object' || !dataSet) {
 			$("#canvas_point_value").val("");
 			return;
-		}			
-		
+		}
+
 		var ontologies = [];
 		var children = [];
-		
+
 		var dataSetPixelValues = pixelValues[dataSet.filename];
         if (!dataSetPixelValues) return;
-            
+
 		var info = "Value";
 
 		// we have a label info for the data set
@@ -877,18 +878,18 @@ TissueStack.Canvas.prototype = {
 			if ((dataSetPixelValues.red == dataSetPixelValues.green) && (dataSetPixelValues.green == dataSetPixelValues.blue))
 				v = ": " + dataSetPixelValues.red;
 			info += v;
-			$("#canvas_point_value").show(); 
+			$("#canvas_point_value").show();
 		} else {// display r/g/b triples
 			info += " [R/G/B]: ";
 			info += ("" + dataSetPixelValues.red + "/"
 					+ dataSetPixelValues.green + "/"
-					+ dataSetPixelValues.blue); 
+					+ dataSetPixelValues.blue);
 			$("#canvas_point_value").show();
 		}
 		$("#canvas_point_value").val(info);
-		
+
 		// loop over associated data sets if they exist and integrate them in the tree structure
-		if (TissueStack.desktop && dataSet.associatedDataSets && dataSet.associatedDataSets.length > 0) 
+		if (TissueStack.desktop && dataSet.associatedDataSets && dataSet.associatedDataSets.length > 0)
 			for (i=0; i<dataSet.associatedDataSets.length;i++) {
 				var assocDs = dataSet.associatedDataSets[i];
 				if (!assocDs) continue;
@@ -904,7 +905,7 @@ TissueStack.Canvas.prototype = {
 				else info += assocDs.description;
 				info += ": " + assocLabel;
 			}
-		
+
 		// construct tree if we have associated ontologies...
 		if (ontologies && ontologies.length > 0) {
 			 $("#ontology_tree").dynatree({
@@ -914,7 +915,7 @@ TissueStack.Canvas.prototype = {
 			 $("#canvas_point_value").hide();
 			 $("#ontology_tree").dynatree("getTree").reload();
 			 $("#ontology_tree").show();
-			 
+
 		} else {
 			$("#canvas_point_value").show();
 			$("#ontology_tree").hide();
@@ -927,22 +928,22 @@ TissueStack.Canvas.prototype = {
 			return;
 		}
 
-		if (this.cross_x < this.upper_left_x 
+		if (this.cross_x < this.upper_left_x
 				|| this.cross_x > (this.upper_left_x + (this.getDataExtent().x - 1))) {
 			return;
 		}*/
 
 		return this.data_extent.getXYCoordinatesWithRespectToZoomLevel(coords);
-	}, getUrlLinkString : function (realWorldCoords) {	
+	}, getUrlLinkString : function (realWorldCoords) {
 		var url_link_message = "";
 		var ds, x_link, y_link, z_link, zoom;
-		
+
 		ds = this.data_extent.data_id;
 		x_link = $('#canvas_point_x').val();
 		y_link = $('#canvas_point_y').val();
 		z_link = $('#canvas_point_z').val();
 		zoom = this.getDataExtent().zoom_level;
-		
+
 		//need to fix localhost or image server link later
 		if(ds.search("localhost_") != -1){
 			ds = ds.replace("localhost_", "");
@@ -952,36 +953,36 @@ TissueStack.Canvas.prototype = {
 			$('#'+this.dataset_id +'_link_message').html(url_link_message);
 			return;
 		}
-		
+
 		// Show Url Link info (solve the problem (used split ?) when user entering website by query string link)
 		if(x_link != "" || y_link != "" || z_link != ""){
 			var hostPart = document.location.href.split('?')[0];
 			var potentialHash = hostPart.indexOf('#');
 			if (potentialHash > 0) hostPart = hostPart.substring(0,potentialHash);
-			url_link_message = 
+			url_link_message =
 				hostPart + "?ds=" + ds + "&plane=" + this.data_extent.plane
 					+ "&x=" + x_link + "&y=" + y_link + "&z=" + z_link + "&zoom=" + zoom;
 		}
 		if (typeof(this.color_map) == 'string' && this.color_map != 'grey') {
-			url_link_message += ("&color=" + this.color_map); 
+			url_link_message += ("&color=" + this.color_map);
 		}
 		if (this.contrast && this.contrast.isMinOrMaxDifferentFromDataSetMinOrMax()) {
-			url_link_message += ("&min=" + this.contrast.getMinimum() + "&max=" + this.contrast.getMaximum()); 
+			url_link_message += ("&min=" + this.contrast.getMinimum() + "&max=" + this.contrast.getMaximum());
 		}
-		
+
 		$('#'+this.dataset_id +'_link_message').html('<a href="' + url_link_message + '" target="_blank">' + url_link_message + '</a>');
 	}, displayLoadingProgress : function(fraction, total, reset) {
-		if (this.is_linked_dataset) // no display for overlay 
+		if (this.is_linked_dataset) // no display for overlay
 			return;
-		
+
 		if (typeof(fraction) != 'number' || typeof(total) != 'number') return;
-		
+
 		if (typeof(reset) == 'boolean' && reset) {
 			$("#" + this.dataset_id + " .tile_count_div progress").val(0);
 			$("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).html("0%");
 			$("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).hide();
 		}
-		
+
 		// 100 percent => set to 100 and hide
 		if (fraction == total) {
 			$("#" + this.dataset_id + " .tile_count_div progress").val(100);
@@ -999,5 +1000,28 @@ TissueStack.Canvas.prototype = {
 			this.is_color_map_tiled = TissueStack.Utils.testHttpFileExistence(url);
 		}
 		return this.is_color_map_tiled;
-	}
+	}, addMeasure : function(point, isPixelMeasure) {
+        if (typeof point !== 'object' || typeof point.x !== 'number' ||
+            typeof point.y !== 'number' || typeof point.z !== 'number')
+            return;
+
+        if (typeof isPixelMeasure !== 'boolean')
+            isPixelMeasure = true;
+
+        if (isPixelMeasure)
+            point = this.data_extent.getWorldCoordinatesForPixel(point);
+        if (point) this.measurements.push(point);
+    }, endMeasure : function() {
+        if (this.measurements.length <= 1) return 0.0;
+
+        var distance = 0.0;
+
+        for (var i=0,j=1;j<this.measurements.length;i++,j++)
+            distance += Math.sqrt(
+                Math.pow(this.measurements[j].x - this.measurements[i].x, 2) +
+                Math.pow(this.measurements[j].y - this.measurements[i].y, 2));
+
+        this.measurements = [];
+        return distance;
+    }
 };

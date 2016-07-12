@@ -752,6 +752,22 @@ TissueStack.ComponentFactory = {
         $("#" + div + "_main_view_canvas").off("contextmenu");
 		$("#" + div + "_main_view_canvas").on("contextmenu",
 			function(event) {
+                // we measure only within main canvas
+                if (event.currentTarget.id !== ("" + div + "_main_view_canvas"))
+                    return;
+                var mainCanvas =
+                    TissueStack.Utils.findMainCanvasInDataSet(dataSet);
+                if (mainCanvas === null) return;
+
+                var offsets = { x: event.offsetX, y: mainCanvas.dim_y - event.offsetY};
+                // check if we are within the image boundaries
+                var withinImage =
+                    (offsets.x >= mainCanvas.upper_left_x &&
+                        offsets.y <= mainCanvas.upper_left_y &&
+                        offsets.x <= mainCanvas.upper_left_x + mainCanvas.data_extent.x &&
+                        offsets.y >= mainCanvas.upper_left_y - mainCanvas.data_extent.y)
+                        ? true : false;
+
                 // context menu style and behavior
                 myMeasuringContext.css({top: event.clientY, left: event.clientX});
                 myMeasuringContext.off("mouseover mouseout");
@@ -761,24 +777,46 @@ TissueStack.ComponentFactory = {
                 myMeasuringContext.on("mouseout", function() {
                     myMeasuringContext.hide();
                 });
-                myMeasuringContext.children(".menue_item").off("mouseover mouseout click");
-                myMeasuringContext.children(".menue_item").on("mouseover", function(event) {
-                    $(this).addClass("hover");
-                });
-                myMeasuringContext.children().on("mouseout", function(event) {
-                    $(this).removeClass("hover");
-                });
 
-                // add point action
-                myMeasuringContext.children(".addPoint").on("click", function(event) {
-                    // TODO: implement
-                    console.info(dataSet);
-                });
-                // add end path action
-                myMeasuringContext.children(".endPath").on("click", function(event) {
-                    // TODO: implement
-                    console.info(dataSet);
-                });
+                if (withinImage) {
+                    if (mainCanvas.measurements.length > 0)
+                        myMeasuringContext.children(".menue_item").show();
+                    else {
+                        myMeasuringContext.children(".addPoint").show();
+                        myMeasuringContext.children(".endPath").hide();
+                    }
+                    myMeasuringContext.children(".outside_image").hide();
+
+                    myMeasuringContext.children(".menue_item").off("mouseover mouseout click");
+                    myMeasuringContext.children(".menue_item").on("mouseover", function(event) {
+                        $(this).addClass("hover");
+                    });
+                    myMeasuringContext.children().on("mouseout", function(event) {
+                        $(this).removeClass("hover");
+                    });
+
+                    // add point action
+                    myMeasuringContext.children(".addPoint").on("click", function(event) {
+                        mainCanvas.addMeasure(
+                            {x: mainCanvas.upper_left_x - offsets.x,
+                             y: mainCanvas.upper_left_y - offsets.y,
+                             z: mainCanvas.data_extent.slice});
+                        myMeasuringContext.hide();
+                    });
+                    // add end path action
+                    myMeasuringContext.children(".endPath").on("click", function(event) {
+                        mainCanvas.addMeasure(
+                            {x: mainCanvas.upper_left_x - offsets.x,
+                             y: mainCanvas.upper_left_y - offsets.y,
+                             z: mainCanvas.data_extent.slice});
+                        myMeasuringContext.hide();
+                        alert("Distance: " + mainCanvas.endMeasure());
+                    });
+                } else {
+                    myMeasuringContext.children(".menue_item").hide();
+                    myMeasuringContext.children(".outside_image").show();
+                }
+
                 myMeasuringContext.show();
 
 				// stop browser from showing you its context menu
