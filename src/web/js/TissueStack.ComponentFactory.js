@@ -746,15 +746,16 @@ TissueStack.ComponentFactory = {
 		var myMeasuringContext = $("#measuringContextMenu");
 		if (!myMeasuringContext || myMeasuringContext.length === 0) return;
 
+        var mainCanvas =
+            TissueStack.Utils.findMainCanvasInDataSet(dataSet);
+        if (mainCanvas === null) return;
+
         $("#" + div + "_main_view_canvas").off("contextmenu");
 		$("#" + div + "_main_view_canvas").on("contextmenu",
 			function(event) {
                 // we measure only within main canvas
                 if (event.currentTarget.id !== ("" + div + "_main_view_canvas"))
                     return;
-                var mainCanvas =
-                    TissueStack.Utils.findMainCanvasInDataSet(dataSet);
-                if (mainCanvas === null) return;
 
                 var offsets = { x: event.offsetX, y: mainCanvas.dim_y - event.offsetY};
                 // check if we are within the image boundaries
@@ -808,6 +809,8 @@ TissueStack.ComponentFactory = {
                         $(this).hide();
                         myMeasuringContext.children(".resetPath").show();
                         myMeasuringContext.children(".result").html("Distance: " + res);
+                        if (mainCanvas.measurements.length <= 1)
+                            myMeasuringContext.hide();
                     });
                     // add reset action
                     myMeasuringContext.children(".resetPath").on("click", function(event) {
@@ -815,6 +818,7 @@ TissueStack.ComponentFactory = {
                         myMeasuringContext.children(".result").html("Distance: 0.00000");
                         myMeasuringContext.children(".addPoint").show();
                         $(this).hide();
+                        myMeasuringContext.hide();
                     });
                 } else {
                     myMeasuringContext.children(".menue_item").hide();

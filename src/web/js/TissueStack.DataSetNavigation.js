@@ -126,6 +126,7 @@ TissueStack.DataSetNavigation.prototype = {
 			if (dataSet.planes[plane].overlay_canvas) dataSet.planes[plane].overlay_canvas = null;
 			dataSet.planes[plane].queue.latestDrawRequestTimestamp = -1;
 			dataSet.planes[plane].queue.stopQueue();
+            dataSet.planes[plane].resetMeasurements();
 			if (dataSet.planes[plane].is_main_view) {
                 dataSet.planes[plane].displayPixelValue();
                 dataSet.planes[plane].events.updateCoordinateDisplay(true, true);

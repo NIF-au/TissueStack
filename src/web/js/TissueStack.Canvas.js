@@ -33,6 +33,7 @@ TissueStack.Canvas = function(data_extent, canvas_id, dataset_id, include_cross_
 	this.contrast = null; // a shared instance of a contrast slider
 	// make parent and ourselves visible
 	this.getCanvasElement().parent().removeClass("hidden");
+    this.measurements = [];
 };
 
 TissueStack.Canvas.prototype = {
@@ -73,7 +74,7 @@ TissueStack.Canvas.prototype = {
 	value_range_max: 255,
 	sessionId : 0,
     is_2D : false,
-    measurements : [],
+    measurements : null,
     flag2D : function() {
         this.is_2D = true;
     }, is2D : function() {
