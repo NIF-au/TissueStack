@@ -807,7 +807,7 @@ TissueStack.ComponentFactory = {
                         $(this).hide();
                         myMeasuringContext.children(".resetPath").show();
                         myMeasuringContext.children(".result").html(
-                            "Distance: " +  mainCanvas.endMeasure());
+                            "Distance: " +  mainCanvas.endMeasure().toFixed(5));
                         if (mainCanvas.measurements.length <= 1)
                             myMeasuringContext.hide();
                     });
