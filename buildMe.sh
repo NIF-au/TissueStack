@@ -16,7 +16,12 @@ if [ $IS_SUSE -eq 0 ] && [ $REDHAT_RPM_CONFIG -eq 0 ]; then
 	exit -1
 fi;
 
-cp -f SPECS/minc.spec $HOME/rpmbuild/SPECS 
+if [ $IS_SUSE -eq 0 ]; then
+       cp -f SPECS/minc.spec $HOME/rpmbuild/SPECS
+else 
+       cp -f SPECS/minc_suse.spec $HOME/rpmbuild/SPECS/minc.spec
+fi;
+
 cp -rf SOURCES/* $HOME/rpmbuild/SOURCES/
 cd $HOME/rpmbuild/SPECS/
 
