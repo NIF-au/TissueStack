@@ -782,11 +782,13 @@ TissueStack.ComponentFactory = {
                          y: mainCanvas.upper_left_y - offsets.y,
                          z: mainCanvas.data_extent.slice};
                     mainCanvas.checkMeasurements(point);
+                    myMeasuringContext.children(".result").html(
+                        "Distance: " + mainCanvas.endMeasure().toFixed(5));
+                    myMeasuringContext.children(".result").show();
                     if (mainCanvas.measurements.length > 0)
                         myMeasuringContext.children(".menue_item").show();
                     else {
                         myMeasuringContext.children(".addPoint").show();
-                        myMeasuringContext.children(".result").html("Distance: 0.00000")
                         myMeasuringContext.children(".resetPath").hide();
                     }
                     myMeasuringContext.children(".outside_image").hide();
@@ -802,26 +804,22 @@ TissueStack.ComponentFactory = {
                     // add point action
                     myMeasuringContext.children(".addPoint").on("click", function(event) {
                         mainCanvas.addMeasure(point);
-                        var res = mainCanvas.endMeasure();
-                        if (typeof res === 'number')
-                            res = res.toFixed(5);
-                        else res = 'NaN';
                         $(this).hide();
                         myMeasuringContext.children(".resetPath").show();
-                        myMeasuringContext.children(".result").html("Distance: " + res);
+                        myMeasuringContext.children(".result").html(
+                            "Distance: " +  mainCanvas.endMeasure());
                         if (mainCanvas.measurements.length <= 1)
                             myMeasuringContext.hide();
                     });
                     // add reset action
                     myMeasuringContext.children(".resetPath").on("click", function(event) {
                         mainCanvas.resetMeasurements();
-                        myMeasuringContext.children(".result").html("Distance: 0.00000");
                         myMeasuringContext.children(".addPoint").show();
                         $(this).hide();
                         myMeasuringContext.hide();
                     });
                 } else {
-                    myMeasuringContext.children(".menue_item").hide();
+                    myMeasuringContext.children(".menue_item,.result").hide();
                     myMeasuringContext.children(".outside_image").show();
                 }
 
