@@ -782,9 +782,11 @@ TissueStack.ComponentFactory = {
                          y: mainCanvas.upper_left_y - offsets.y,
                          z: mainCanvas.data_extent.slice};
                     mainCanvas.checkMeasurements(point);
-                    myMeasuringContext.children(".result").html(
-                        "Distance: " + mainCanvas.endMeasure().toFixed(5));
-                    myMeasuringContext.children(".result").show();
+                    myMeasuringContext.children(".distance").html(
+                        "Distance: " + mainCanvas.measureDistance().toFixed(5));
+                    myMeasuringContext.children(".area").html(
+                        "Area: " + mainCanvas.measureArea().toFixed(5));
+                    myMeasuringContext.children(".distance,.area").show();
                     if (mainCanvas.measurements.length > 0)
                         myMeasuringContext.children(".menue_item").show();
                     else {
@@ -806,8 +808,10 @@ TissueStack.ComponentFactory = {
                         mainCanvas.addMeasure(point);
                         $(this).hide();
                         myMeasuringContext.children(".resetPath").show();
-                        myMeasuringContext.children(".result").html(
-                            "Distance: " +  mainCanvas.endMeasure().toFixed(5));
+                        myMeasuringContext.children(".distance").html(
+                            "Distance: " +  mainCanvas.measureDistance().toFixed(5));
+                        myMeasuringContext.children(".area").html(
+                            "Area: " + mainCanvas.measureArea().toFixed(5));
                         if (mainCanvas.measurements.length <= 1)
                             myMeasuringContext.hide();
                     });
@@ -819,7 +823,7 @@ TissueStack.ComponentFactory = {
                         myMeasuringContext.hide();
                     });
                 } else {
-                    myMeasuringContext.children(".menue_item,.result").hide();
+                    myMeasuringContext.children(".menue_item,.distance,.area").hide();
                     myMeasuringContext.children(".outside_image").show();
                 }
 

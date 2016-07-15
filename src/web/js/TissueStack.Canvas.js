@@ -1030,12 +1030,9 @@ TissueStack.Canvas.prototype = {
         }
         if (this.checkMeasurements(realWorldCoords)) {
             this.measurements.push(realWorldCoords);
-
-            // clear and draw
-            this.drawMe();
-            this.drawMeasuring();
+            this.drawMe(0);
         }
-    }, endMeasure : function() {
+    }, measureDistance : function() {
         if (this.measurements.length <= 1) return 0.0;
 
         var distance = 0.0;
@@ -1046,6 +1043,19 @@ TissueStack.Canvas.prototype = {
                 Math.pow(this.measurements[j].y - this.measurements[i].y, 2));
 
         return distance;
+    }, measureArea : function() {
+        if (this.measurements.length <= 2) return 0.0;
+
+        var area = 0.0;
+
+        var closedMeasurements =
+            this.measurements.concat(this.measurements[0]);
+        for (var i=0,j=1;j<closedMeasurements.length;i++,j++)
+            area +=
+                closedMeasurements[i].x * closedMeasurements[j].y -
+                closedMeasurements[i].y * closedMeasurements[j].x;
+
+        return Math.abs(area) / 2;
     }, resetMeasurements : function() {
         this.measurements = [];
         this.drawMe(0);
@@ -1057,6 +1067,7 @@ TissueStack.Canvas.prototype = {
         ctx.fillStyle="rgba(255,255,0,1)";
 
         var numOfPoints = this.measurements.length;
+        var firstCoords = null;
         var lastCoords = null;
         for (var i=0;i<numOfPoints;i++) {
             var pixelCoords =
@@ -1066,7 +1077,9 @@ TissueStack.Canvas.prototype = {
             pixelCoords.x += this.upper_left_x;
             pixelCoords.y += (this.dim_y - this.upper_left_y);
 
-            if (i !== 0) {
+            if (i === 0)
+                firstCoords = pixelCoords;
+            else {
                 ctx.beginPath();
                 ctx.moveTo(lastCoords.x, lastCoords.y);
                 ctx.lineTo(pixelCoords.x, pixelCoords.y);
@@ -1078,6 +1091,17 @@ TissueStack.Canvas.prototype = {
             ctx.fill();
             ctx.closePath();
             lastCoords = pixelCoords;
+            if (i > 1 && i === numOfPoints-1) {
+                ctx.beginPath();
+                ctx.save();
+                ctx.setLineDash([1, 1]);
+                ctx.strokeStyle="rgba(0,255,0,1)";
+                ctx.moveTo(pixelCoords.x, pixelCoords.y);
+                ctx.lineTo(firstCoords.x, firstCoords.y);
+                ctx.stroke();
+                ctx.restore();
+                ctx.closePath();
+            }
         }
     }
 };
