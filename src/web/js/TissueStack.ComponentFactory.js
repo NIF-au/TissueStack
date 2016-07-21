@@ -711,11 +711,10 @@ TissueStack.ComponentFactory = {
                 givenCoords = plane.getRelativeCrossCoordinates();
                 givenCoords.z = plane.getDataExtent().slice;
             }
-            var now = new Date().getTime();
-            plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, true, now);
             plane.events.changeSliceForPlane(givenCoords.z);
-            plane.queue.drawLowResolutionPreview(now);
-            plane.queue.drawRequestAfterLowResolutionPreview(null, now);
+            var now = new Date().getTime();
+            plane.queue.latestDrawRequestTimestamp = now;
+            plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, true, now);
 
             var slider = TissueStack.phone ?
                     $("#canvas_" + plane.data_extent.plane + "_slider") :
@@ -914,8 +913,8 @@ TissueStack.ComponentFactory = {
                     for (var id in dataSet.planes) {
                         dataSet.planes[id].color_map = e.target.value;
                         dataSet.planes[id].is_color_map_tiled = null;
-                        dataSet.planes[id].queue.drawLowResolutionPreview(now);
-                        dataSet.planes[id].queue.drawRequestAfterLowResolutionPreview(null, now);
+                        dataSet.planes[id].queue.latestDrawRequestTimestamp = now;
+                        dataSet.planes[id].drawMe(now);
                     }
             });
             return;
@@ -934,8 +933,8 @@ TissueStack.ComponentFactory = {
             for (var id in dataSet.planes) {
                 dataSet.planes[id].color_map = event.target.value;
                 dataSet.planes[id].is_color_map_tiled = null;
-                dataSet.planes[id].queue.drawLowResolutionPreview(now);
-                dataSet.planes[id].queue.drawRequestAfterLowResolutionPreview(null, now);
+                dataSet.planes[id].queue.latestDrawRequestTimestamp = now;
+                dataSet.planes[id].drawMe(now);
             }
         });
     },

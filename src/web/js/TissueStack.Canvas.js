@@ -286,12 +286,12 @@ TissueStack.Canvas.prototype = {
 		ctx.closePath();
 	},
 	setUpperLeftCorner : function(x,y) {
-		this.upper_left_x = x;
-		this.upper_left_y = y;
+		this.upper_left_x = Math.floor(x);
+		this.upper_left_y = Math.floor(y);
 	},
 	moveUpperLeftCorner : function(deltaX,deltaY) {
-		this.upper_left_x += deltaX;
-		this.upper_left_y += deltaY;
+		this.upper_left_x +=  Math.floor(deltaX);
+		this.upper_left_y +=  Math.floor(deltaY);
 	},
 	centerUpperLeftCorner : function() {
 		var center = this.getCenteredUpperLeftCorner();
@@ -505,6 +505,7 @@ TissueStack.Canvas.prototype = {
 		// preliminary check if we are within the slice range
 		var slice = this.getDataExtent().slice;
 		if (slice < 0 || slice > this.getDataExtent().max_slices) {
+            this.eraseCanvasContent();
 			this.syncDataSetCoordinates(this, timestamp, true);
 			return;
 		}
@@ -517,7 +518,7 @@ TissueStack.Canvas.prototype = {
 				|| this.upper_left_x > 0 && this.upper_left_x > this.dim_x
 				|| this.upper_left_y <=0 || (this.upper_left_y - this.getDataExtent().y) >= this.dim_y) {
 			this.syncDataSetCoordinates(this, timestamp, true);
-			this.displayLoadingProgress(0,0, true);
+			this.displayLoadingProgress(1,1, true);
 			return;
 		}
 
@@ -650,8 +651,8 @@ TissueStack.Canvas.prototype = {
 						src += ("&min=" + this.contrast.getMinimum());
 						src += ("&max=" + this.contrast.getMaximum());
 					}
-					src += ("&id=" + this.sessionId);
-					src += ("&timestamp=" + timestamp);
+					//src += ("&id=" + this.sessionId);
+					//src += ("&timestamp=" + timestamp);
 				}
 
 				// damn you async loads
@@ -688,15 +689,14 @@ TissueStack.Canvas.prototype = {
 								height = this.height;
 						}
 
-						counter--;
-
-						// damn you async loads
+                        // damn you async loads
 						if (_this.queue.latestDrawRequestTimestamp < 0 ||
 								(timestamp && timestamp < _this.queue.latestDrawRequestTimestamp)) {
 							//console.info('Abort for ' + _this.getDataExtent().data_id + '[' + _this.getDataExtent().getOriginalPlane() + ']: R: ' + row + ' C: ' + col + ' t: ' + timestamp + ' qt: ' + _this.queue.latestDrawRequestTimestamp);
 							_this.displayLoadingProgress(0, totalOfTiles, true);
 							return;
 						}
+                        counter--;
 
 						//console.info('Drawing [' + _this.getDataExtent().data_id + ']: ' + timestamp + ' (' + _this.getDataExtent().getOriginalPlane()  + ') R => ' + row + ' C => ' + col + ' Left: ' + counter);
 						ctx.drawImage(this,
@@ -712,27 +712,21 @@ TissueStack.Canvas.prototype = {
 									canvasX, canvasY, width, height); // canvas dimensions
 						}
 
-						// damn you async loads
-						if (_this.queue.latestDrawRequestTimestamp < 0 ||
-								(timestamp && timestamp < _this.queue.latestDrawRequestTimestamp)) {
-							//console.info('Abort for ' + _this.getDataExtent().data_id + '[' + _this.getDataExtent().getOriginalPlane() + ']: R: ' + row + ' C: ' + col + ' t: ' + timestamp + ' qt: ' + _this.queue.latestDrawRequestTimestamp);
-							_this.displayLoadingProgress(0, totalOfTiles, true);
-							return;
-						}
-
 						if (counter == 0 && (TissueStack.overlay_datasets && (_this.overlay_canvas || _this.underlying_canvas))) {
 							_this.getCanvasElement().show();
 						}
 
 						_this.displayLoadingProgress(totalOfTiles - counter, totalOfTiles);
 
-						if (typeof(TissueStack.dataSetNavigation) === 'object' && counter == 0) {
-							if (_this.overlays)
-								for (var z=0;z<_this.overlays.length;z++)
-									_this.overlays[z].drawMe();
+                        if (counter == 0) {
+                            if (typeof TissueStack.dataSetNavigation === 'object' && _this.overlays)
+                                for (var z=0;z<_this.overlays.length;z++)
+                                    _this.overlays[z].drawMe();
+
+                            _this.queue.tidyUp();
 							_this.syncDataSetCoordinates(_this, timestamp, false);
                             if (_this.is_main_view && _this.checkMeasurements(
-                                    {x: 0, y: 0, z: _this.data_extent.slice})) _this.drawMeasuring();
+                                {x: 0, y: 0, z: _this.data_extent.slice})) _this.drawMeasuring();
 						}
 					};
 				})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height, deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, this.getDataExtent().tile_size, rowIndex, colIndex);

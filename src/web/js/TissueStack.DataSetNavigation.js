@@ -444,8 +444,7 @@ TissueStack.DataSetNavigation.prototype = {
                                         actualDs.planes[pl].has_been_synced = true;
                                         actualDs.planes[pl].queue.latestDrawRequestTimestamp = sync_time;
                                         setTimeout(function() {
-                                            actualDs.planes[pl].queue.drawLowResolutionPreview(sync_time);
-                                            actualDs.planes[pl].queue.drawRequestAfterLowResolutionPreview(null, sync_time);
+                                            actualDs.planes[pl].drawMe(sync_time);
                                         },actualDs.planes[pl].queue.drawingIntervalInMillis);
                                     })(p);
                                 }

@@ -2,41 +2,41 @@
 <html>
   <head>
         <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-        
+
         <title> Tissue Stack - Embedded Example </title>
-        
+
         <!-- ATTENTION: A jquery include and the TissueStack.Embedded.js are mandatory. The rest is fetched dynamically -->
         <script src="js/libs/jquery/jquery-2.1.1.min.js"></script>
         <script src="js/TissueStack.Embedded.js"></script>
 
         <script type="text/javascript">
         $(document).ready(function() {
-          // specify intiial zoom and coordinates	
+          // specify intiial zoom and coordinates
           var initOpts = {
         		    plane: 'y',
         		    zoom : 5,
-        		    x:    0,
+        		    x:    100,
         		    y:    0,
-        		    z:    200,
+        		    z:    100,
         		    color: 'spectral'
           };
-       	  
+
           new TissueStack.Embedded(
-       		  "test", // id of parent div that will hold the TissueStack Canvas elements 
+       		  "test", // id of parent div that will hold the TissueStack Canvas elements
        		  "localhost", // server name of the TissueStack instance that houses the data as well as the js and css
-       		  1, // id of data set that is requested
+       		  18, // id of data set that is requested
        		  true, // display cross hair canvas on top (defaults to: true)
        		  true, // use direct querying as opposed to pre tiles (defaults to: false)
-       	      initOpts); 
+       	      initOpts);
 
             new TissueStack.Embedded(
-       		  "test2", // id of parent div that will hold the TissueStack Canvas elements 
+       		  "test2", // id of parent div that will hold the TissueStack Canvas elements
        		  "localhost", // server name of the TissueStack instance that houses the data as well as the js and css
-       		  3, // id of data set that is requested
+       		  19, // id of data set that is requested
        		  true, // display cross hair canvas on top (defaults to: true)
        		  true, // use direct querying as opposed to pre tiles (defaults to: false)
-       	      null); 
-            
+       	      null);
+
         });
         </script>
   </head>
@@ -45,7 +45,7 @@
             <div>Header</div>
             <div>Some header</div>
             <div>Some header</div>
-            <hr />            
+            <hr />
         </div>
 
         <div style="width: 1700px;">
@@ -63,7 +63,7 @@
 		        <div>Some text</div>
 		        <div>Some text</div>
 	        </div>
-            
+
             <!-- ATTENTION: setting width and height is vital and determines the canvas dimensions !!! -->
 	        <div id="test" style="margin: 10px; width: 1500px; height: 800px;  float: left"></div>
 
@@ -91,6 +91,6 @@
             <div>Some footer</div>
             <div>Some footer</div>
         </div>
-        
+
   </body>
 </html>

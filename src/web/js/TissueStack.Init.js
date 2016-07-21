@@ -20,7 +20,7 @@ TissueStack.Init = function () {
 		TissueStack.dataSetNavigation = new TissueStack.DataSetNavigation();
 
 		var ds = TissueStack.dataSetStore.getDataSetByIndex(0);
-					
+
 		// see if we have received initial values for data set incl. coords and zoom level
 		var initOpts = TissueStack.Utils.readQueryStringFromAddressBar();
 		if (initOpts) {
@@ -43,10 +43,10 @@ TissueStack.Init = function () {
 			TissueStack.BindDataSetDependentEvents();
             TissueStack.dataSetNavigation.showDataSet(1);
 		}
-        TissueStack.Utils.adjustBorderColorWhenMouseOver();	
-			
+        TissueStack.Utils.adjustBorderColorWhenMouseOver();
+
         TissueStack.useUserParameters = false;
-        
+
 		TissueStack.BindGlobalEvents();
 		if (initOpts) {
             TissueStack.ComponentFactory.applyUserParameters(initOpts, ds);
@@ -54,7 +54,7 @@ TissueStack.Init = function () {
         }
 
 		//if (TissueStack.dataSetStore && TissueStack.dataSetStore.datasetCount && TissueStack.dataSetStore.datasetCount > 1) TissueStack.dataSetNavigation.showDataSet(1);
-		
+
 		// add admin functionality to all versions
 		TissueStack.admin = new TissueStack.Admin();
 	};
@@ -67,19 +67,19 @@ TissueStack.Init = function () {
 				alert("Did not receive anyting, neither success nor error ....");
 				return;
 			}
-			
+
 			if (data.error) {
 				var message = "Application Error: " + (data.error.description ? data.error.description : " no more info available. check logs.");
 				alert(message);
 				return;
 			}
-			
+
 			if (data.response.noResults) {
 				alert("No configuration info found in database");
 				return;
 			}
 			var configuration = data.response;
-			
+
 			for (var x=0;x<configuration.length;x++) {
 				if (!configuration[x] || !configuration[x].name || $.trim(!configuration[x].name.length) == 0) {
 					continue;
@@ -88,34 +88,34 @@ TissueStack.Init = function () {
 				TissueStack.configuration[configuration[x].name].value = configuration[x].value;
 				TissueStack.configuration[configuration[x].name].description = configuration[x].description ? configuration[x].description : "";
 			};
-			
-			// hide second jquery coordinate search button  
+
+			// hide second jquery coordinate search button
 			if (TissueStack.desktop) {
 				$('#dataset_2_center_point_in_canvas').closest('.ui-btn').hide();
 			}
-		
+
 			// prepare color maps
 			TissueStack.Utils.loadColorMaps();
-		
+
 			// add phone menu for page navigation
 			if (TissueStack.phone) {
 				new TissueStack.PhoneMenu();
 			}
-		
+
 			// create data store and load it with backend data
 			TissueStack.dataSetStore = new TissueStack.DataSetStore(afterLoadingRoutine);
-			
+
 			// handle window resizing
 			$(window).resize(function() {
 				// this needs to be checked in cases where the resize fires before the creation of the dataSetNavigation
 				if (typeof(TissueStack.dataSetNavigation) == "undefined" || typeof(TissueStack.dataSetNavigation.selectedDataSets) == 'undefined') {
 					return;
-				} 
-				
+				}
+
 				var dataSetCount = TissueStack.dataSetNavigation.selectedDataSets.count;
 				var now = new Date().getTime();
 				TissueStack.lastWindowResizing = now;
-				
+
 				setTimeout(function() {
 					if (now < TissueStack.lastWindowResizing) return;
 					TissueStack.Utils.adjustScreenContentToActualScreenSize(dataSetCount);
@@ -142,26 +142,26 @@ TissueStack.InitPhoneUserInterface = function (drawMe) {
 
     if (typeof(drawMe) != 'boolean')
         drawMe = true;
-    
+
 	TissueStack.Utils.adjustScreenContentToActualScreenSize(1);
-	
+
 	// initialize the color map chooser for desktop and tablet and (now in phone version)
 	TissueStack.Utils.updateColorMapChooser();
-	
+
 	var dataSet =
 		TissueStack.dataSetStore.getDataSetById(
 			TissueStack.dataSetNavigation.selectedDataSets["dataset_1"]);
-	
+
 	if (!dataSet.data || dataSet.data.length == 0) {
 		alert("Data set '" + dataSet.id + "' does not have any planes associated with it!");
-		return; 
+		return;
 	}
-	
+
 	// crate a contrast slider per data set
 	var contrast = null;
 	if (TissueStack.phone)
 		contrast = new TissueStack.ContrastCanvas("dataset_1_toolbox_canvas_phone");
-	
+
 	// loop over all planes in the data, create canvas and extent objects, then display them
 	var main_view_plane = null;
 	for (var i=0; i < dataSet.data.length; i++) {
@@ -170,9 +170,9 @@ TissueStack.InitPhoneUserInterface = function (drawMe) {
 
         var zoomLevels = eval(dataForPlane.zoomLevels);
 		transformationMatrix = eval(dataForPlane.transformationMatrix);
-		
+
 		// create extent
-		var extent = 
+		var extent =
 			new TissueStack.Extent(
 				dataSet.id,
 				dataForPlane.isTiled,
@@ -185,56 +185,56 @@ TissueStack.InitPhoneUserInterface = function (drawMe) {
 				dataForPlane.origY,
 				dataForPlane.step,
 				zoomLevels,
-				transformationMatrix, 
+				transformationMatrix,
 				dataForPlane.resolutionMm);
 
 		// create canvas
 		var plane = new TissueStack.Canvas(extent, "canvas_" + planeId + "_plane", "dataset_1", true);
 
         // this is a bit of a hack to not have to change the fixed html layout if we have only 1 plane (classic 2D data):
-		// in order to use the main view which is hard-coded to plane with id 'y', we'll make the only plane that we have 'y' 
+		// in order to use the main view which is hard-coded to plane with id 'y', we'll make the only plane that we have 'y'
 		if (dataSet.is2DData) {
             main_view_plane = plane;
 			planeId = 'y';
 			extent.plane = planeId;
 		}
-        
+
 		// set the internal db id
 		plane.id = dataForPlane.id;
-		
+
 		var localHost = document.location.host;
 		if (!localHost)
 			localHost = dataSet.host;
-		
-		// set original value range 
+
+		// set original value range
 		plane.setValueRange(dataForPlane.valueRangeMin, dataForPlane.valueRangeMax);
-		
+
 		// set bidirectional relationship for contrast
 		plane.contrast = contrast;
 		if (contrast) contrast.canvas = plane;
-		
+
 		// for scalebar to know its parent
 		if (planeId == 'y') {
 			main_view_plane = plane;
 			plane.is_main_view = true;
 		}
 		plane.updateScaleBar();
-		
-		// store plane  
+
+		// store plane
 		dataSet.planes[planeId] = plane;
-		
-		// get the real world coordinates 
+
+		// get the real world coordinates
 		dataSet.realWorldCoords[planeId] = plane.getDataExtent().getExtentCoordinates();
-		
+
 		plane.changeToZoomLevel(0);
         plane.eraseCanvasContent();
-		
+
         if (!drawMe) continue;
-        
+
 		var now = new Date().getTime();
-		
-		plane.queue.drawLowResolutionPreview(now);
-		plane.queue.drawRequestAfterLowResolutionPreview(null, now);
+
+        plane.queue.latestDrawRequestTimestamp = now;
+		plane.drawMe(now);
 
        if (main_view_plane) {
            main_view_plane.updateExtentInfo(main_view_plane.getDataExtent().getExtentCoordinates());
@@ -257,7 +257,7 @@ TissueStack.BindGlobalEvents = function () {
 				});
 			}
 	);
-	
+
 	// DATA SET SEARCH AND ADDITION
 	// avoid potential double binding by un-binding
 	$('#server_search_button').unbind("click");
@@ -269,14 +269,14 @@ TissueStack.BindGlobalEvents = function () {
 			alert("You entered an invalid url!");
 			return;
 		}
-		
+
 		if (typeof(window.location.hostname) == "string" && val.indexOf(window.location.hostname) >=0) {
 			alert("Your local instance's configuration is already in the list!");
 			return;
 		}
-		
+
 		$('#server_search_input').val(url);
-		
+
 		// get the actual host/domain name
 		var domain = TissueStack.Utils.extractHostNameFromUrl(val);
 		if (!domain) {
@@ -285,13 +285,13 @@ TissueStack.BindGlobalEvents = function () {
 		}
 		// replace . with _
 		domain = domain.replace(/[.]/g,"_");
-		
+
 		if (url.substring(url.length-1) != '/') {
 			url += "/";
 		}
-		
+
 		url += (TissueStack.configuration['server_proxy_path'].value + "/?service=services&sub_service=data&action=all&include_planes=true");
-		
+
 		// contact server
 		TissueStack.Utils.sendAjaxRequest(
 			url, 'GET', true,
@@ -300,20 +300,20 @@ TissueStack.BindGlobalEvents = function () {
 					alert("Did not receive anyting, neither success nor error ....");
 					return;
 				}
-				
+
 				if (data.error) {
 					var message = "Application Error: " + (data.error.description ? data.error.description : " no more info available. check logs.");
 					alert(message);
 					return;
 				}
-				
+
 				if (data.response.noResults) {
 					alert("No data sets found in configuration database");
 					return;
 				}
-				
+
 				var dataSets = data.response;
-				
+
 				for (var x=0;x<dataSets.length;x++) {
 					var addedDataSet = TissueStack.dataSetStore.addDataSetToStore(dataSets[x], domain);
 					if (addedDataSet) {
@@ -341,8 +341,8 @@ TissueStack.BindDataSetDependentEvents = function () {
 	// get all data sets that have been selected from the store and stuff them into the array for binding its events
 	var datasets = [];
 	for (var x=0;x<TissueStack.dataSetNavigation.selectedDataSets.count;x++) {
-		var selectedKey = TissueStack.dataSetNavigation.selectedDataSets["dataset_" + (x+1)]; 
-		datasets.push(TissueStack.dataSetStore.getDataSetById(selectedKey)); 
+		var selectedKey = TissueStack.dataSetNavigation.selectedDataSets["dataset_" + (x+1)];
+		datasets.push(TissueStack.dataSetStore.getDataSetById(selectedKey));
 	}
 
 	// determine the maximum number of data sets that are displayed. depends on the type of display
@@ -374,7 +374,7 @@ TissueStack.BindDataSetDependentEvents = function () {
         	TissueStack.Utils.transitionToDataSetView();
         });
     }
-    
+
 	// DRAWING INTERVAL CHANGE HANDLER
 	// avoid potential double binding by un-binding at this stage
 	$('#drawing_interval_button').unbind("click");
@@ -390,16 +390,16 @@ TissueStack.BindDataSetDependentEvents = function () {
 			$('#drawing_interval').val(oldVal);
 			return false;
 		}
-				
+
 		for (var x=0;x<maxDataSets;x++) {
 			var dataSet = datasets[x];
-			
-			for (var id in dataSet.planes) {	
+
+			for (var id in dataSet.planes) {
 				dataSet.planes[id].queue.setDrawingInterval(val);
 			}
 		}
 	});
-	
+
 	// now let's bind events that are intimately linked to their own data set
 	for (var y=0;y<maxDataSets;y++) {
 		var dataSet = datasets[y];
@@ -418,16 +418,16 @@ TissueStack.BindDataSetDependentEvents = function () {
 				}
 				var startPos = "canvas_".length;
 				var planeId = plane.substring(startPos, startPos + 1);
-				
+
 				var xCoord = parseFloat($('#canvas_point_x').val());
 				var yCoord = parseFloat($('#canvas_point_y').val());
 				var zCoord = parseFloat($('#canvas_point_z').val());
-				
+
 				if (isNaN(xCoord) || isNaN(yCoord) || isNaN(zCoord)) {
 					alert("Illegal coords");
 					return;
 				}
-				
+
 				// if we had a transformation matrix, we know we have been handed in real word coords and therefore need to convert back to pixel
 				var givenCoords = {x: xCoord, y: yCoord, z: zCoord};
 				plane = event.data[0].actualDataSet.planes[planeId];
@@ -437,27 +437,27 @@ TissueStack.BindDataSetDependentEvents = function () {
 
                 if (givenCoords == null) // revert to pixel coords
                     givenCoords = {x: xCoord, y: yCoord, z: zCoord};
-                
+
 				// this is for slight floating point inaccuracies (+/- 1 slice/pixel)
-				givenCoords.x = (givenCoords.x < 0 && givenCoords.x > -1) ? 0 : givenCoords.x;  
+				givenCoords.x = (givenCoords.x < 0 && givenCoords.x > -1) ? 0 : givenCoords.x;
 				givenCoords.y = (givenCoords.y < 0 && givenCoords.y > -1) ? 0 : givenCoords.y;
 				givenCoords.z = (givenCoords.z < 0 && givenCoords.z > -1) ? 0 : givenCoords.z;
-				givenCoords.x = 
-					(givenCoords.x > event.data[0].actualDataSet.planes[planeId].data_extent.x && 
+				givenCoords.x =
+					(givenCoords.x > event.data[0].actualDataSet.planes[planeId].data_extent.x &&
 							givenCoords.x < (event.data[0].actualDataSet.planes[planeId].data_extent.x + 1)) ?
 									Math.floor(givenCoords.x) : Math.round(givenCoords.x);
-				givenCoords.y = 
-					(givenCoords.y > event.data[0].actualDataSet.planes[planeId].data_extent.y && 
+				givenCoords.y =
+					(givenCoords.y > event.data[0].actualDataSet.planes[planeId].data_extent.y &&
 							givenCoords.y < (event.data[0].actualDataSet.planes[planeId].data_extent.y + 1)) ?
 									Math.floor(givenCoords.y) : Math.round(givenCoords.y);
-				givenCoords.z = 
-					(givenCoords.z > event.data[0].actualDataSet.planes[planeId].data_extent.max_slices && 
+				givenCoords.z =
+					(givenCoords.z > event.data[0].actualDataSet.planes[planeId].data_extent.max_slices &&
 							givenCoords.z < (event.data[0].actualDataSet.planes[planeId].data_extent.max_slices + 1)) ?
 									Math.floor(givenCoords.z) : Math.round(givenCoords.z);
-									
+
 
 				if ((event.data[0].actualDataSet.planes[planeId] && (givenCoords.x < 0
-						|| givenCoords.x > event.data[0].actualDataSet.planes[planeId].data_extent.x)) 
+						|| givenCoords.x > event.data[0].actualDataSet.planes[planeId].data_extent.x))
 						|| (event.data[0].actualDataSet.planes[planeId] && (givenCoords.y < 0
 								|| givenCoords.y > event.data[0].actualDataSet.planes[planeId].y))
 								|| (event.data[0].actualDataSet.planes['z'] && (givenCoords.z < 0
@@ -465,7 +465,7 @@ TissueStack.BindDataSetDependentEvents = function () {
 					alert("Illegal coords");
 					return;
 				}
-				
+
 				var now = new Date().getTime();
 				plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, true, now, true);
 				setTimeout(function() {plane.events.updateCoordinateDisplay();},500);
@@ -485,8 +485,8 @@ TissueStack.BindDataSetDependentEvents = function () {
 
         // COLOR MAP SWITCHER
         TissueStack.ComponentFactory.initColorMapSwitcher('dataset_' + (y+1), dataSet);
-        
-        // Z PLANE AKA SLICE SLIDER 
+
+        // Z PLANE AKA SLICE SLIDER
         TissueStack.ComponentFactory.initDataSetSlider("dataset_" + (y+1), dataSet);
         if (!TissueStack.PhoneMenu) TissueStack.ComponentFactory.resizeDataSetSlider(TissueStack.canvasDimensions.height);
 	}
@@ -516,10 +516,10 @@ TissueStack.CommonBootStrap = function() {
 if (TissueStack.phone) {
     $(document).bind ("pageinit", function(event) {
         if (TissueStack.initTimeStamp) return;
-        
+
         TissueStack.CommonBootStrap();
         TissueStack.initTimeStamp = event.timeStamp;
-    });    
+    });
 }
 
 if (!TissueStack.phone) {
@@ -527,8 +527,8 @@ if (!TissueStack.phone) {
  	if (TissueStack.desktop)
  		$(document).bind ("pageshow", function(event) {
 			TissueStack.Utils.adjustCollapsibleSectionsHeight('treedataset');
-		});	
-        
+		});
+
         TissueStack.CommonBootStrap();
     });
 }
