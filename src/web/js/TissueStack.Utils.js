@@ -519,7 +519,7 @@ TissueStack.Utils = {
 				return null;
 			}
 
-			return url + row + '_' + col + ((colormap == 'grey' || colormap == 'gray') ? "" : ("_" + colormap)) + "." + image_extension + "?" + new Date().getTime();
+			return url + row + '_' + col + ((colormap == 'grey' || colormap == 'gray') ? "" : ("_" + colormap)) + "." + image_extension;
 		} else {
 			// seems to work for server so why not use it
 		    //url = url + "/" + path + "/?volume=" + filename + "&image_type=PNG&scale=" + zoom + "&dimension="

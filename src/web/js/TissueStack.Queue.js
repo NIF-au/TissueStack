@@ -69,6 +69,7 @@ TissueStack.Queue.prototype = {
                 if (_this.canvas.is_linked_dataset)
                     _this.canvas.eraseCanvasContent();
                 _this.canvas.drawMe(latestRequest.timestamp);
+                //_this.tidyUp();
             }
 		}, this.drawingIntervalInMillis);
 	},

@@ -511,7 +511,9 @@ TissueStack.Canvas.prototype = {
 		}
 
 		var ctx = this.getCanvasContext();
-		var tempCanvas = null;
+		var tempCanvas = document.createElement("canvas");
+        tempCanvas.width = this.getCanvasElement().width();
+        tempCanvas.height = this.getCanvasElement().height();
 
 		// nothing to do if we are totally outside
 		if (this.upper_left_x < 0 && (this.upper_left_x + this.getDataExtent().x) <=0
@@ -699,7 +701,7 @@ TissueStack.Canvas.prototype = {
                         counter--;
 
 						//console.info('Drawing [' + _this.getDataExtent().data_id + ']: ' + timestamp + ' (' + _this.getDataExtent().getOriginalPlane()  + ') R => ' + row + ' C => ' + col + ' Left: ' + counter);
-						ctx.drawImage(this,
+						tempCanvas.getContext("2d").drawImage(this,
 							imageOffsetX, imageOffsetY, width, height, // tile dimensions
 							canvasX, canvasY, width, height); // canvas dimensions
 						_this.applyContrastAndColorMapToTiles(ctx, canvasX, canvasY, width, height);
@@ -723,6 +725,7 @@ TissueStack.Canvas.prototype = {
                                 for (var z=0;z<_this.overlays.length;z++)
                                     _this.overlays[z].drawMe();
 
+                            ctx.drawImage(tempCanvas, 0,0);
                             _this.queue.tidyUp();
 							_this.syncDataSetCoordinates(_this, timestamp, false);
                             if (_this.is_main_view && _this.checkMeasurements(
