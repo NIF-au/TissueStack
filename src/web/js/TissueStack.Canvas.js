@@ -34,6 +34,7 @@ TissueStack.Canvas = function(data_extent, canvas_id, dataset_id, include_cross_
 	// make parent and ourselves visible
 	this.getCanvasElement().parent().removeClass("hidden");
     this.measurements = [];
+    this.cache = {};
 };
 
 TissueStack.Canvas.prototype = {
@@ -75,6 +76,7 @@ TissueStack.Canvas.prototype = {
 	sessionId : 0,
     is_2D : false,
     measurements : null,
+    cache : null,
     flag2D : function() {
         this.is_2D = true;
     }, is2D : function() {
@@ -614,10 +616,6 @@ TissueStack.Canvas.prototype = {
 					break;
 				}
 
-				// create the image object that loads the tile we need
-				var imageTile = new Image();
-				imageTile.crossOrigin = '';
-
 				// did we check whether we have existing color map tiles?
 				var colorMap = this.color_map; // default
 				if (this.getDataExtent().getIsTiled()
@@ -667,74 +665,101 @@ TissueStack.Canvas.prototype = {
 				totalOfTiles++;
 				counter++;
 
-                imageTile.src = src;
+                // create the image object that loads the tile we need
+                if (this.cache[src] instanceof Image) {
+                    this.cache[src].render(
+                        this, timestamp, counter, totalOfTiles,
+                        imageOffsetX, imageOffsetY, canvasX, canvasY, width, height,
+                        deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY,
+                        this.getDataExtent().tile_size,src);
+                } else {
+                    var imageTile = new Image();
 
-				(function(_this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height,
-                     deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY, tile_size) {
-					imageTile.onerror = function() {
-						counter--;
-						_this.displayLoadingProgress(totalOfTiles - counter, totalOfTiles);
-					};
-					imageTile.onload = function() {
-                        // check with actual image dimensions ...
-                        if (canvasX == 0 && width != tile_size && deltaStartTileXAndUpperLeftCornerX !=0) {
-                            imageOffsetX = (tile_size - deltaStartTileXAndUpperLeftCornerX);
-                            width = this.width - imageOffsetX;
-                        } else if (this.width < width) {
-                                width = this.width;
-                        }
+                    imageTile.crossOrigin = '';
+                    imageTile.src = src;
 
-                        if (canvasY == 0 && height != tile_size && deltaStartTileYAndUpperLeftCornerY !=0) {
-                            imageOffsetY = (tile_size - deltaStartTileYAndUpperLeftCornerY);
-                            height = this.height - imageOffsetY;
-                        } else	if (this.height < height) {
-                                height = this.height;
-                        }
+                    imageTile.render = function(
+                        _this, timestamp, counter, totalOfTiles,
+                        imageOffsetX, imageOffsetY, canvasX, canvasY, width, height,
+                        deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY,
+                        tile_size, src) {
+                            // check with actual image dimensions ...
+                            if (canvasX == 0 && width != tile_size && deltaStartTileXAndUpperLeftCornerX !=0) {
+                                imageOffsetX = (tile_size - deltaStartTileXAndUpperLeftCornerX);
+                                width = this.width - imageOffsetX;
+                            } else if (this.width < width) {
+                                    width = this.width;
+                            }
 
-                        // damn you async loads
-                        if (_this.queue.latestDrawRequestTimestamp < 0 ||
-                                (timestamp && timestamp < _this.queue.latestDrawRequestTimestamp)) {
-                            return;
-                        }
-                        counter--;
+                            if (canvasY == 0 && height != tile_size && deltaStartTileYAndUpperLeftCornerY !=0) {
+                                imageOffsetY = (tile_size - deltaStartTileYAndUpperLeftCornerY);
+                                height = this.height - imageOffsetY;
+                            } else	if (this.height < height) {
+                                    height = this.height;
+                            }
 
-                        tempCanvas.getContext("2d").drawImage(this,
-                            imageOffsetX, imageOffsetY, width, height, // tile dimensions
-                            canvasX, canvasY, width, height); // canvas dimensions
-                        _this.applyContrastAndColorMapToTiles(tempCanvas, canvasX, canvasY, width, height);
+                            // damn you async loads
+                            if (_this.queue.latestDrawRequestTimestamp < 0 ||
+                                    (timestamp && timestamp < _this.queue.latestDrawRequestTimestamp)) {
+                                return;
+                            }
 
-                        if ((TissueStack.overlay_datasets && _this.underlying_canvas) || _this.is_linked_dataset) {
-                            if (TissueStack.overlay_values[_this.data_extent.plane] &&
-                                TissueStack.overlay_values[_this.data_extent.plane].getContext("2d"))
-                                 TissueStack.overlay_values[_this.data_extent.plane].getContext("2d").drawImage(this,
-                                    imageOffsetX, imageOffsetY, width, height, // tile dimensions
-                                    canvasX, canvasY, width, height); // canvas dimensions
-                        }
+                            _this.getCanvasContext().drawImage(this,
+                                imageOffsetX, imageOffsetY, width, height, // tile dimensions
+                                canvasX, canvasY, width, height); // canvas dimensions
+                            counter--;
 
-                        if (counter == 0 && (TissueStack.overlay_datasets && (_this.overlay_canvas || _this.underlying_canvas))) {
-                            _this.getCanvasElement().show();
-                        }
+                            _this.applyContrastAndColorMapToTiles(tempCanvas, canvasX, canvasY, width, height);
 
-                        _this.displayLoadingProgress(totalOfTiles - counter, totalOfTiles);
+                            if ((TissueStack.overlay_datasets && _this.underlying_canvas) || _this.is_linked_dataset) {
+                                if (TissueStack.overlay_values[_this.data_extent.plane] &&
+                                    TissueStack.overlay_values[_this.data_extent.plane].getContext("2d"))
+                                     TissueStack.overlay_values[_this.data_extent.plane].getContext("2d").drawImage(this,
+                                        imageOffsetX, imageOffsetY, width, height, // tile dimensions
+                                        canvasX, canvasY, width, height); // canvas dimensions
+                            }
 
-                        if (counter == 0) {
-                            if (typeof TissueStack.dataSetNavigation === 'object' && _this.overlays)
-                                for (var z=0;z<_this.overlays.length;z++)
-                                    _this.overlays[z].drawMe();
+                            if (counter == 0 && (TissueStack.overlay_datasets && (_this.overlay_canvas || _this.underlying_canvas))) {
+                                _this.getCanvasElement().show();
+                            }
 
-                            //_this.eraseCanvasContent();
-                            _this.queue.tidyUp();
-                            ctx.drawImage(tempCanvas, 0,0);
+                            _this.displayLoadingProgress(totalOfTiles - counter, totalOfTiles);
+
+                            if (counter == 0) {
+                                if (typeof TissueStack.dataSetNavigation === 'object' && _this.overlays)
+                                    for (var z=0;z<_this.overlays.length;z++)
+                                        _this.overlays[z].drawMe();
+
+                                _this.queue.tidyUp();
+
+                                _this.syncDataSetCoordinates(_this, timestamp, false);
+                                if (_this.is_main_view && _this.checkMeasurements(
+                                    {x: 0, y: 0, z: _this.data_extent.slice})) _this.drawMeasuring();
+                            };
+                    };
 
 
-                            _this.syncDataSetCoordinates(_this, timestamp, false);
-                            if (_this.is_main_view && _this.checkMeasurements(
-                                {x: 0, y: 0, z: _this.data_extent.slice})) _this.drawMeasuring();
-                        };
-					};
-				})(this, imageOffsetX, imageOffsetY, canvasX, canvasY, width, height,
-                     deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY,
-                     this.getDataExtent().tile_size);
+                    (function(_this, timestamp, counter, totalOfTiles,
+                        imageOffsetX, imageOffsetY, canvasX, canvasY, width, height,
+                        deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY,
+                        tile_size, src) {
+    					imageTile.onerror = function() {
+    						counter--;
+    						_this.displayLoadingProgress(totalOfTiles - counter, totalOfTiles);
+    					};
+    					imageTile.onload = function() {
+                            if (!(_this.cache[src] instanceof Image))
+                                _this.cache[src] = this;
+                            this.render(_this, timestamp, counter, totalOfTiles,
+                                imageOffsetX, imageOffsetY, canvasX, canvasY, width, height,
+                                deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY,
+                                tile_size, src);
+    					};
+    				})(this, timestamp, counter, totalOfTiles,
+                        imageOffsetX, imageOffsetY, canvasX, canvasY, width, height,
+                         deltaStartTileXAndUpperLeftCornerX, deltaStartTileYAndUpperLeftCornerY,
+                         this.getDataExtent().tile_size, src);
+                }
 
 				// increment canvasY
 				canvasY += height;
@@ -985,7 +1010,7 @@ TissueStack.Canvas.prototype = {
 			$("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).hide();
             return;
 		}
-        
+
 		if (fraction == total) {
 			$("#" + this.dataset_id + " .tile_count_div progress").val(100);
 			$("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).html("100%");

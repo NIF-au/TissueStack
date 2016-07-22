@@ -56,12 +56,12 @@ TissueStack.Queue.prototype = {
 				return;
 			}
 
-			/* double check if we are obsolete already
+			// double check if we are obsolete already
 			if (_this.presentlyQueuedZoomLevelAndSlice !== (latestRequest.dataset_id + "_" + latestRequest.data_id + "_" + latestRequest.zoom_level + '_' + latestRequest.slice)) {
 				_this.clearRequestQueue();
 				_this.stopQueue();
 				return;
-			}*/
+			}
 
 			_this.latestDrawRequestTimestamp = latestRequest.timestamp;
 
@@ -69,7 +69,6 @@ TissueStack.Queue.prototype = {
                 if (_this.canvas.is_linked_dataset)
                     _this.canvas.eraseCanvasContent();
                 _this.canvas.drawMe(latestRequest.timestamp);
-                //_this.tidyUp();
             }
 		}, this.drawingIntervalInMillis);
 	},
