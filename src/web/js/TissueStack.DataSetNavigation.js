@@ -834,9 +834,6 @@ TissueStack.DataSetNavigation.prototype = {
                         slider.val(pixel_coords_for_other_plane.z);
                         slider.blur();
                 }
-                setTimeout(function() {
-                    other_plane.queue.tidyUp();
-                }, 250);
             }
         }
 		canvas.queue.last_sync_timestamp = -1; // reset
