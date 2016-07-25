@@ -511,14 +511,13 @@ TissueStack.Canvas.prototype = {
 		}
 
 		var dataSet = TissueStack.dataSetStore.getDataSetById(this.data_extent.data_id);
-		if (!dataSet) {
-			alert("Couldn't find data set with id: " + this.data_extent.data_id);
-			return;
-		}
+		if (!dataSet) return;
 
         this.preCanvas = document.createElement("canvas");
         this.preCanvas.width = this.dim_x;
         this.preCanvas.height = this.dim_y;
+
+        this.queue.prefetchTiles(dataSet, timestamp);
 
 		var startTileX = this.upper_left_x < 0 ?
             Math.floor(-this.upper_left_x / this.getDataExtent().tile_size) : 0;
@@ -920,16 +919,6 @@ TissueStack.Canvas.prototype = {
 		//TissueStack.Utils.adjustCollapsibleSectionsHeight('ontology_tree', 150);
 		TissueStack.Utils.adjustCollapsibleSectionsHeight('treedataset');
 	}, getXYCoordinatesWithRespectToZoomLevel : function(coords) {
-		/*
-		if (this.upper_left_y < this.dim_y - this.cross_y || this.upper_left_y - (this.data_extent.y - 1) > this.dim_y - this.cross_y) {
-			return;
-		}
-
-		if (this.cross_x < this.upper_left_x
-				|| this.cross_x > (this.upper_left_x + (this.getDataExtent().x - 1))) {
-			return;
-		}*/
-
 		return this.data_extent.getXYCoordinatesWithRespectToZoomLevel(coords);
 	}, getUrlLinkString : function (realWorldCoords) {
 		var url_link_message = "";
@@ -982,6 +971,7 @@ TissueStack.Canvas.prototype = {
 		if (this.tilesRendered == this.totalNumberOfTiles) {
 			$("#" + this.dataset_id + " .tile_count_div progress").val(100);
 			$("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).html("100%");
+            $("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).css('color', '');
 			$("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).show();
 			return;
 		}
@@ -989,6 +979,7 @@ TissueStack.Canvas.prototype = {
 		var perCent = Math.round((this.tilesRendered / this.totalNumberOfTiles) * 100);
 		$("#" + this.dataset_id + " .tile_count_div progress").val(Math.round(perCent));
 		$("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).html(perCent + "%");
+        $("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).css('color', 'red');
 		$("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).show();
 	}, checkIfWeAreColorMapTiled : function(url) {
 		if (this.is_color_map_tiled == null && !(this.color_map == 'grey' || this.color_map == 'gray')) {

@@ -285,6 +285,56 @@ TissueStack.Queue.prototype = {
 		}
 
 		return true;
+    }, prefetchTiles(dataSet, timestamp) {
+        var extent = this.canvas.getDataExtent();
+        if (!this.canvas.is_main_view || extent.getIsTiled()) return;
+
+        var endTileX =
+            (extent.x % extent.tile_size) === 0 ?
+                extent.x / extent.tile_size :
+                parseInt(extent.x / extent.tile_size)+1;
+        var endTileY =
+            (extent.y % extent.tile_size) === 0 ?
+                extent.y / extent.tile_size :
+                parseInt(extent.y / extent.tile_size)+1;
+
+        for (var tileX = 0  ; tileX < endTileX ; tileX++) {
+            for (var tileY = 0 ; tileY < endTileY ; tileY++) {
+                var src =
+                    TissueStack.Utils.assembleTissueStackImageRequest(
+                            "http",
+                            dataSet,
+                            this.canvas,
+                            false,
+                            extent.slice,
+                            this.canvas.color_map,
+                            extent.tile_size,
+                            tileX,
+                            tileY);
+
+                if (this.contrast &&
+                    (this.contrast.getMinimum() != this.contrast.dataset_min ||
+                     this.contrast.getMaximum() != this.contrast.dataset_max)) {
+                    src += ("&min=" + this.canvas.contrast.getMinimum());
+                    src += ("&max=" + this.canvas.contrast.getMaximum());
+                }
+
+                if (!(this.canvas.cache[src] instanceof Image)) {
+                    var imageTile = new Image();
+
+                    imageTile.crossOrigin = '';
+                    var appendix = "&id=" + this.canvas.sessionId +
+                    "&timestamp=" + timestamp;
+                    imageTile.src = src + appendix;
+
+                    (function(this_, src) {
+                        imageTile.onload = function() {
+                            this_.cache[src] = this;
+                        }
+                    })(this.canvas, src);
+                }
+            }
+        }
 	}, tidyUp : function() {
 		if (this.canvas.getDataExtent().slice < 0 || this.canvas.getDataExtent().slice > this.canvas.getDataExtent().max_slices
 				|| this.canvas.upper_left_x > this.canvas.dim_x || this.canvas.upper_left_x + this.canvas.data_extent.x < 0
