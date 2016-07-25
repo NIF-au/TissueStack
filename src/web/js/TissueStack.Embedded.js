@@ -33,12 +33,12 @@ TissueStack = {
 
 TissueStack.Embedded = function (div, server, data_set_id, include_cross_hair, use_image_service, initOpts) {
 	// evaluate input and conduct peliminary checks
-	
+
 	if (typeof(div) != 'string' || $.trim(div) == '') {
 		alert("Empty div ids are invalid!");
 		return;
 	}
-	
+
 	this.div = $("#" + div);
 	if (this.div.length == 0) {
 		alert("Given div id does not exist!");
@@ -50,7 +50,7 @@ TissueStack.Embedded = function (div, server, data_set_id, include_cross_hair, u
 		return;
 	}
     this.server = server;
-    
+
 	if (typeof(data_set_id) != 'number' || data_set_id <= 0) {
 		this.writeErrorMessageIntoDiv("Data Set id has to be greater than 0!");
 		return;
@@ -91,7 +91,7 @@ TissueStack.Embedded = function (div, server, data_set_id, include_cross_hair, u
         // this is for when the window dimensions & the div dimensions may change dynamically
         _this.registerWindowResizeEvent();
 	};
-	
+
 	// include the java script and css that is needed for the rest of the functionality
 	this.includeJavaScriptAndCssNeeded(afterLoadActions);
 };
@@ -119,18 +119,18 @@ TissueStack.Embedded.prototype = {
 		head.append(this.createElement("link", "http://" + this.server + "/css/default.css"));
 
 		_this = this;
-		
+
 		var checkLoadOfLibraries = function() {
 			_this.librariesLoaded++;
 			if (_this.librariesLoaded == TissueStack.requiredLibs.length) {
 				afterLoadActions(_this);
 			}
 		};
-		
+
 		var error = function() {
 			alert("Failed to load required library!");
 		};
-		
+
 		for (var i=0;i<TissueStack.requiredLibs.length;i++) {
 			(function () {
 				$.ajax({
@@ -149,7 +149,7 @@ TissueStack.Embedded.prototype = {
 		if (typeof(tag) != "string" || typeof(value) != "string" || tag.length == 0 || value.length == 0) {
 			return null;
 		}
-		
+
 		var newEl = document.createElement(tag);
 		if (tag == "script") {
 			newEl.src = value;
@@ -164,28 +164,28 @@ TissueStack.Embedded.prototype = {
 	},
 	loadDataSetConfigurationFromServer : function() {
 		var _this = this;
-		var url = "http://" + _this.server + "/" + 
-			TissueStack.configuration['server_proxy_path'].value + "/?service=services&sub_service=data&action=query&id=" 
+		var url = "http://" + _this.server + "/" +
+			TissueStack.configuration['server_proxy_path'].value + "/?service=services&sub_service=data&action=query&id="
 			+ _this.data_set_id + "&include_planes=true";
-		
+
 		// create a new data store
         if (!TissueStack.dataSetStore)
             TissueStack.dataSetStore = new TissueStack.DataSetStore(null, true);
 
 		TissueStack.Utils.sendAjaxRequest(
-			url, 'GET',	true,	
+			url, 'GET',	true,
 			function(data, textStatus, jqXHR) {
 				if (!data.response && !data.error) {
 					_this.writeErrorMessageIntoDiv("Did not receive anyting from backend, neither success nor error ....");
 					return;
 				}
-				
+
 				if (data.error) {
 					var message = "Application Error: " + (data.error.description ? data.error.description : " no more info available. check logs.");
 					_this.writeErrorMessageIntoDiv(message);
 					return;
 				}
-				
+
 				if (data.response.noResults) {
 					_this.writeErrorMessageIntoDiv("No data set found in configuration database for given id");
 					return;
@@ -196,7 +196,7 @@ TissueStack.Embedded.prototype = {
 				dataSet = TissueStack.dataSetStore.addDataSetToStore(dataSet, _this.server);
 				if (!dataSet.data || dataSet.data.length == 0) {
 					this.writeErrorMessageIntoDiv("Data set '" + dataSet.id + "' does not have any planes associated with it!");
-					return; 
+					return;
 				}
 
                 // look for the next dataset_x that's available ...
@@ -209,7 +209,7 @@ TissueStack.Embedded.prototype = {
                 }
 
 				// create the HTML necessary for display and initialize the canvas objects
-                if (_this.initOpts) 
+                if (_this.initOpts)
                    _this.getDiv().hide();
                 var ds_div = TissueStack.ComponentFactory.createDataSetWidget(
                     _this.getDiv().attr("id"), dataSet, nextAvailableOrdinal, _this.server, _this.include_cross_hair, true, _this.use_image_service);
@@ -218,8 +218,7 @@ TissueStack.Embedded.prototype = {
                 //TissueStack.ComponentFactory.initColorMapSwitcher("dataset_" + nextAvailableOrdinal, dataSet);
 				if (_this.initOpts) {
                     TissueStack.ComponentFactory.applyUserParameters(_this.initOpts, dataSet);
-                    setTimeout(function() {
-                     _this.getDiv().show();}, 1000);
+                    _this.getDiv().show();
                 } else
                     TissueStack.ComponentFactory.redrawDataSet(dataSet);
 			},
@@ -238,19 +237,19 @@ TissueStack.Embedded.prototype = {
 					alert("Did not receive anyting, neither success nor error ....");
 					return;
 				}
-				
+
 				if (data.error) {
 					var message = "Application Error: " + (data.error.description ? data.error.description : " no more info available. check logs.");
 					alert(message);
 					return;
 				}
-				
+
 				if (data.response.noResults) {
 					alert("No configuration info found in database");
 					return;
 				}
 				var configuration = data.response;
-				
+
 				for (var x=0;x<configuration.length;x++) {
 					if (!configuration[x] || !configuration[x].name || $.trim(!configuration[x].name.length) == 0) {
 						continue;
@@ -259,7 +258,7 @@ TissueStack.Embedded.prototype = {
 					TissueStack.configuration[configuration[x].name].value = configuration[x].value;
 					TissueStack.configuration[configuration[x].name].description = configuration[x].description ? configuration[x].description : "";
 				};
-				
+
 				TissueStack.Utils.loadColorMaps();
 			},
 			function(jqXHR, textStatus, errorThrown) {

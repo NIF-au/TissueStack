@@ -4,20 +4,20 @@
         <meta name="viewport" content="width=device-width initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-        
+
         <title> Tissue Stack - Tablet </title>
        	<link rel="icon" type="image/png" href="images/favicon.png" />
 
         <!--Apple Device Start Up Splash Screen and ICON-->
 		<link rel="apple-touch-startup-image" href="images/mobile/ipadscreen.png" /> <!--For iPad-->
 		<link rel="apple-touch-icon" href="images/favicon_icon.png" />
-       	
+
         <link rel="stylesheet" href="css/tissuestack-theme.min.css" />
 		<link rel="stylesheet" href="css/jquery.mobile.icons.min.css" />
 		<link rel="stylesheet" href="css/jquery.mobile.structure-1.4.5.min.css" />
         <link rel="stylesheet" href="css/default.css" />
         <link rel="stylesheet" href="css/admin_login.css" />
-        
+
         <script src="js/libs/jquery/jquery-2.1.1.min.js"></script>
         <script src="js/libs/jquery/jquery.mobile-1.4.5.min.js"></script>
         <script src="js/libs/jquery/jquery.form.js"></script>
@@ -25,7 +25,7 @@
 		<script src="js/libs/sylvester/sylvester.js"></script>
         <script src="js/libs/jquery/jquery.cookie.js"></script>
 		<script src="js/libs/jquery/jquery.contextMenu-custom.js" type="text/javascript"></script>
-		
+
 		<script src="js/TissueStack.MouseWheel.js"></script>
 		<script src="js/TissueStack.js"></script>
 		<script src="js/TissueStack.Utils.js"></script>
@@ -44,9 +44,9 @@
         <script src="js/TissueStack.DataSetOverlay.js"></script>
         <script src="js/TissueStack.ComponentFactory.js"></script>
 		<script src="js/TissueStack.Init.js"></script>
-		
+
 		<script type="text/javascript">
-		    TissueStack.tablet = true;		    
+		    TissueStack.tablet = true;
 		</script>
   </head>
 <body>
@@ -58,14 +58,14 @@
 						<ul>
 							<li><a href="#data" data-icon="plus" data-prefetch="true"  class="ui-btn-active ui-state-persist">Data</a></li>
 							<li><a id="tab_admin_data" href="#admin" data-icon="minus" data-prefetch="true" >Admin</a></li>
-							<li><a href="#about" data-icon="minus" data-prefetch="true">About</a></li>								
+							<li><a href="#about" data-icon="minus" data-prefetch="true">About</a></li>
 						</ul>
 			  		 </div>
                 </div>
      	    </div>
             <div class="ui-icon-video" style="height: 100px"></div>
      	    <div style="min-width: 1400px;">
-     	    	<div class="left_panel"> 
+     	    	<div class="left_panel">
      	    		<div data-mini="true" data-role="collapsible" class="text-align-center">
      	    			<h6>Extent/Zoom</h6>
      	    			<div id="canvas_extent" class="text-align-center"></div>
@@ -75,7 +75,7 @@
 	     	    		<input data-mini="true" size="8" maxlength="10" type="text" id="canvas_point_x" value=""/>
 	     	    		<input data-mini="true" size="8" maxlength="10" type="text" id="canvas_point_y" value=""/>
 	     	    		<input data-mini="true" size="8" maxlength="10" type="text" id="canvas_point_z" value=""/>
-	                    <input data-mini="true" readonly="readonly" style="background-color: gray;color: white;" size="8" maxlength="10" type="text" id="canvas_point_value" value=""/>	     	    		
+	                    <input data-mini="true" readonly="readonly" style="background-color: gray;color: white;" size="8" maxlength="10" type="text" id="canvas_point_value" value=""/>
 	     	    		<button data-mini="true" type="button" id="dataset_1_center_point_in_canvas">Center Coordinates</button>
      	    		</div>
      	    		<div data-mini="true" data-role="collapsible">
@@ -86,7 +86,7 @@
      	    		<div id="menutransition_div" data-mini="true" data-collapsed="false" data-role="collapsible">
      	    			<h6>Data Sets</h6>
 	     	    		<!--ADD TREE DATA SET NAVI BAR-->
-	     	    		<div id="menutransition" style="height:245px; position:relative; overflow:auto;"> 				
+	     	    		<div id="menutransition" style="height:245px; position:relative; overflow:auto;">
 							<div id="mobile_style_tree_dataset" style="height:500px;margin: 8px;">
 								<div data-role="collapsible-set" data-theme="a" data-content-theme="d" data-mini="true">
 								<div id="treedataset"></div>
@@ -96,13 +96,13 @@
 					</div>
 					<!--END -->
      	    	</div>
-     	    	
+
                 <div id="datasets" style="width: 1000px; height: 500px"></div>
             </div>
     </div>
-    <!-- END OF TILE PAGE -->  
-       
-	<!-- ADMIN PAGE --> 
+    <!-- END OF TILE PAGE -->
+
+	<!-- ADMIN PAGE -->
 	  <div data-role="page" data-theme="a" id="admin" data-id="Head1"  >
 	        <div data-role="content">
 				<div data-theme="a" data-role="header" data-position="fixed">
@@ -121,7 +121,7 @@
  	     		<div class="content clearfix">
  	     			<div class="left">
  	     				<h1>Welcome to Tissue Stack</h1>
- 	     				<h2>Login to upload or add dataset</h2>		
+ 	     				<h2>Login to upload or add dataset</h2>
  	     				<p class="grey">
  	     				Its purpose is to allow researchers to view multi-TB imaging datasets online through an interface on machines local to the network segment of the TissueStack server.
  	     				</p>
@@ -138,7 +138,7 @@
  	     					<input data-mini="true" type="button" accesskey="l" class="login_btn_check" id="login_btn" name="login" value="Login" />
  	     				</form>
  	     			</div>
-	 		  			<div class="left right">			
+	 		  			<div class="left right">
 	 		  				<!-- Password Change Form -->
 	 		  				<form class="clearfix" action="#" method="post">
 	 		  					<label data-mini="true" class="white" for="password">Old Password:</label><br/><br/>
@@ -150,7 +150,7 @@
 	 		  			</div>
  	     		</div>
  	     	</div>
- 	     	<!-- The tab on top -->	
+ 	     	<!-- The tab on top -->
  	     	<div class="tab">
  	     		<ul class="login">
  	     			<li class="left"></li>
@@ -158,18 +158,18 @@
  	     			<li class="sep">|</li>
  	     			<li id="toggle">
  	     				<a id="open" class="open" href="#">Open Panel</a>
- 	     				<a id="close" style="display: none;" class="close" href="#">Close Panel</a>			
+ 	     				<a id="close" style="display: none;" class="close" href="#">Close Panel</a>
  	     			</li>
  	     			<li class="right"></li>
- 	     		</ul> 
+ 	     		</ul>
  	      	</div> <!-- / top -->
- 	    </div> <!-- /login -->	
+ 	    </div> <!-- /login -->
  	   <!--END OF ADMIN LOGIN-->
- 	    	<div class="settings-tablet-left-column">  
+ 	    	<div class="settings-tablet-left-column">
                 <h3 id="setting_name">Settings</h3>
                 <hr/>
                 <div data-role="fieldcontain">
-                    <input id="drawing_interval"  data-mini="true" type="text" value="150" style="width: 90px;">
+                    <input id="drawing_interval"  data-mini="true" type="text" value="100" style="width: 90px;">
                     <a  data-mini="true" href="tablet.html#data" data-role="button" data-inline="true" id="drawing_interval_button" data-mini="true">Set Drawing Interval (ms)</a>
                 </div>
                 <hr/>
@@ -217,7 +217,7 @@
  	    	<div id="file_uploaded_message" ></div>
 	 	</div>
  	    <!--END OF ADMIN PAGE-->
- 	    <!-- ABOUT PAGE --> 
+ 	    <!-- ABOUT PAGE -->
  	    <div data-role="page" data-theme="a" id="about" data-id="Head1"  >
  	          <div data-role="content">
  	    			  <div data-theme="a" data-role="header" data-position="fixed">
@@ -243,12 +243,12 @@
  	    		   	    <h4>Member of - </h4>
  	     	    			<p><a style="text-decoration: none" href="http://uq.edu.au" target="_blank"> The University of Queensland </a><br/><br/>
  	     	    			Brisbane St Lucia, QLD 4072<br/>
- 	     	    			+61 7 3365 1111<br/> 	      
- 	    		   	    	© 2012-2013 Centre for Advanced Imaging | ABN 63 942 912 684 | CRICOS Provider No:00025B</p>	    
+ 	     	    			+61 7 3365 1111<br/>
+ 	    		   	    	© 2012-2013 Centre for Advanced Imaging | ABN 63 942 912 684 | CRICOS Provider No:00025B</p>
  	     	    	</div>
- 	    	   	    	<img style="height: 50px;" src="/images/ands-full-b.png" alt="ANDS"/> 
- 	    	   	    	<img style="height: 50px;" src="/images/logo_EIF.gif" alt="EIF"/> 
- 	    	   	    	<img style="width: 50px; height: 50px;" src="/images/favicon_icon.png" alt="TissueStack Phone"/> 
+ 	    	   	    	<img style="height: 50px;" src="/images/ands-full-b.png" alt="ANDS"/>
+ 	    	   	    	<img style="height: 50px;" src="/images/logo_EIF.gif" alt="EIF"/>
+ 	    	   	    	<img style="width: 50px; height: 50px;" src="/images/favicon_icon.png" alt="TissueStack Phone"/>
  	     	    </div>
  	     </div>
  	     <!--END OF ABOUT PAGE-->

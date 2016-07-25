@@ -381,12 +381,12 @@ TissueStack.BindDataSetDependentEvents = function () {
 	//rebind
 	$('#drawing_interval_button').bind("click", function() {
 		var oldVal = (TissueStack.configuration['default_drawing_interval'] ?
-				TissueStack.configuration['default_drawing_interval'].value : 150);
+				TissueStack.configuration['default_drawing_interval'].value : 100);
 		var val = ($('#drawing_interval') && $('#drawing_interval').length > 0) ?
 				parseInt($('#drawing_interval').val()) : oldVal;
-		if (typeof(val) != 'number' || isNaN(val)) val = 150;
-		if (val < 10 || val > 1000) {
-			alert("Please enter a number in between 10ms and 1000ms (=1s)");
+		if (typeof(val) != 'number' || isNaN(val)) val = 100;
+		if (val < 10 || val > 250) {
+			alert("Please enter a number in between 10ms and 250ms");
 			$('#drawing_interval').val(oldVal);
 			return false;
 		}
@@ -468,15 +468,16 @@ TissueStack.BindDataSetDependentEvents = function () {
 
 				var now = new Date().getTime();
 				plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, true, now, true);
-				setTimeout(function() {plane.events.updateCoordinateDisplay();},500);
+                plane.events.changeSliceForPlane(givenCoords.z);
 
                 var slider = $("#" + (plane.dataset_id == "" ? "" : plane.dataset_id + "_") + "canvas_main_slider");
                 if (slider) {
-                    slider.val(givenCoords.z).slider("refresh");
-                    setTimeout(function() {
-                        plane.events.changeSliceForPlane(givenCoords.z);
-                        }, 150);
+                    try {
+                        slider.val(givenCoords.z).slider("refresh");
+                    } catch(ignored) {}
                 }
+
+                setTimeout(function() {plane.events.updateCoordinateDisplay();},500);
 			});
 
             if (!dataSet.is2DData)  // MAXIMIZING SIDE VIEWS (only for non 2D data)

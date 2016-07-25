@@ -34,7 +34,7 @@ TissueStack.Extent = function (
 TissueStack.Extent.prototype = {
 	canvas : null,
 	is_tiled : false,
-	tile_size : 256,	
+	tile_size : 256,
 	x : 0,
 	origX : 0,
 	y : 0,
@@ -117,7 +117,7 @@ TissueStack.Extent.prototype = {
 		if (typeof(origX) == "string") {
 			origX = parseInt(origX);
 		}
-		
+
 		if (typeof(origX) != "number" || Math.floor(origX) < 0) {
 			origX = this.one_to_one_x;
 		}
@@ -131,11 +131,11 @@ TissueStack.Extent.prototype = {
 		this.origY = Math.floor(origY);
 	}, changeToZoomLevel : function(zoom_level) {
 		var zoom_level_factor = this.getZoomLevelFactorForZoomLevel(zoom_level);
-		
+
 		if (zoom_level_factor == -1) {
 			return;
 		}
-		
+
 		// calculate bounds for extent (relative to 1:1 bounds given) if they haven't already been calculated once before
 		// we floor the values by default
 		this.zoom_level_factor = zoom_level_factor;
@@ -145,7 +145,7 @@ TissueStack.Extent.prototype = {
 			return;
 		}
 		this.setDimensions(zoom_level_dim.x, zoom_level_dim.y);
-		
+
 		// update scale bar if main view
 		this.canvas.updateScaleBar();
 	}, getZoomLevelFactorForZoomLevel : function(zoom_level) {
@@ -159,62 +159,61 @@ TissueStack.Extent.prototype = {
 		}
 		zoom_level1 = Math.floor(zoom_level1);
 		zoom_level2 = Math.floor(zoom_level2);
-		
+
 		if (zoom_level1 == zoom_level2) {
 			return 0;
 		}
-		
+
 		var dimZoomLevel1 =  this.getZoomLevelDimensions(zoom_level1);
 		var dimZoomLevel2 =  this.getZoomLevelDimensions(zoom_level2);
-		
+
 		if (!dimZoomLevel1 || !dimZoomLevel2) {
 			return null;
 		}
-		
+
 		return {x: dimZoomLevel1.x - dimZoomLevel2.x, y: dimZoomLevel1.y - dimZoomLevel2.y};
 	}, getZoomLevelDimensions : function(zoom_level) {
 		var zoomLevelFactor = this.getZoomLevelFactorForZoomLevel(zoom_level);
-		
+
 		if (zoomLevelFactor == -1) {
 			return null;
 		}
-		
+
         var dims = {x: Math.floor(this.one_to_one_x * zoomLevelFactor), y: Math.floor(this.one_to_one_y * zoomLevelFactor)};
-        
+
         // correction for cases where we would have 0 pixels length due to scaling
-        if (dims.x < 1) 
+        if (dims.x < 1)
             dims.x = 1;
-        if (dims.y < 1) 
+        if (dims.y < 1)
             dims.y = 1;
-        
+
 		return dims;
 	}, setSliceWithRespectToZoomLevel : function(slice) {
 		this.slice = Math.round(slice / this.zoom_level_factor);
-		
+
 		var canvasSlider = $("#" + (this.canvas.dataset_id == "" ? "canvas_" : this.canvas.dataset_id + "_canvas_") + "main_slider");
 		if (canvasSlider.length == 0) {
 			return;
 		}
-		
+
 		var mainCanvas = this.plane;
-		
+
 		if(!TissueStack.phone){
-			var planeId = 
+			var planeId =
 				TissueStack.Utils.returnFirstOccurranceOfPatternInStringArray(canvasSlider.attr("class").split(" "), "^canvas_");
 			if (planeId) {
 				var startPos = "canvas_".length;
 				mainCanvas = planeId.substring(startPos, startPos + 1);
 			}
-			
+
 			if (mainCanvas == this.plane && canvasSlider && canvasSlider.length > 0) {
 				slice = this.slice < 0 ? this.max_slices : (this.slice > this.max_slices ? 0 : this.slice);
 
                 if (slice == canvasSlider.val())
                     return;
-                
+
 				try {
-					canvasSlider.val(slice);
-					canvasSlider.blur();
+					canvasSlider.val(slice).slider("refresh");
                 } catch(ignored) {}
 			}
 		}
@@ -226,7 +225,7 @@ TissueStack.Extent.prototype = {
 			y : pixelCoords.y,
 			z : pixelCoords.z,
 		};
-		
+
 		// now we'll have to correct x and y according to their zoom level to get the 1:1 pixel Coordinates which can then be transformed
 		worldCoords.x = worldCoords.x * (this.one_to_one_x / this.x);
         if (this.one_to_one_x != this.origX)
@@ -236,7 +235,7 @@ TissueStack.Extent.prototype = {
             worldCoords.y *= ( this.origY / this.one_to_one_y);
 
 		worldCoords = TissueStack.Utils.transformPixelCoordinatesToWorldCoordinates(
-				[worldCoords.x, worldCoords.y, worldCoords.z, 1], 
+				[worldCoords.x, worldCoords.y, worldCoords.z, 1],
 				this.worldCoordinatesTransformationMatrix);
 		if (!worldCoords) return null;
 
@@ -246,17 +245,17 @@ TissueStack.Extent.prototype = {
 	getWorldCoordinatesForPixelWithBoundsCheck : function(pixelCoords) {
 		var worldCoords = this.getWorldCoordinatesForPixel(pixelCoords);
 		if (!worldCoords) return null;
-		
+
 		// clamp to min/max
 		var bounds = this.getExtentCoordinates();
 		if (worldCoords.x < bounds.min_x) worldCoords.x = bounds.min_x;
 		if (worldCoords.y < bounds.min_y) worldCoords.y = bounds.min_y;
 		if (worldCoords.z < bounds.min_z) worldCoords.z = bounds.min_z;
-		
+
 		if (worldCoords.x > bounds.max_x) worldCoords.x = bounds.max_x;
 		if (worldCoords.y > bounds.max_y) worldCoords.y = bounds.max_y;
 		if (worldCoords.z > bounds.max_z) worldCoords.z = bounds.max_z;
-		
+
 		return worldCoords;
 	},
 	getPixelForWorldCoordinates : function(worldCoords) {
@@ -270,14 +269,14 @@ TissueStack.Extent.prototype = {
 		if (pixelCoords == null) {
 			return null;
 		}
-		
+
 		pixelCoords = {x: pixelCoords[0], y: pixelCoords[1], z: pixelCoords[2]};
-		
+
         if (this.one_to_one_x != this.origX)
             pixelCoords.x *= (this.one_to_one_x / this.origX);
         if (this.one_to_one_y != this.origY)
             pixelCoords.y *= (this.one_to_one_y / this.origY);
-        
+
 		// now we have to correct x and y according to their zoom level
 		pixelCoords.z = pixelCoords.z;
 		pixelCoords.x = pixelCoords.x * (this.x / this.one_to_one_x);
@@ -286,18 +285,18 @@ TissueStack.Extent.prototype = {
 		return pixelCoords;
 	},
 	getExtentCoordinates : function() {
-		// if world coords translation matrix is missing => use the pixel coords as a fallback 
+		// if world coords translation matrix is missing => use the pixel coords as a fallback
 		var realWorldCoords = {min_x: 0, max_x: this.x - 1, min_y: 0, max_y: this.y - 1, min_z: 0, max_z: this.max_slices};
-		
+
 		if (this.worldCoordinatesTransformationMatrix) {
 			var tmpTranslatedCoords = this.getWorldCoordinatesForPixel({x:0, y:0, z:0});
             if (!tmpTranslatedCoords)
                 return realWorldCoords;
-            
+
 			realWorldCoords.min_x = tmpTranslatedCoords.x;
 			realWorldCoords.max_y = tmpTranslatedCoords.y;
 			realWorldCoords.min_z = tmpTranslatedCoords.z;
-            
+
 			tmpTranslatedCoords = this.getWorldCoordinatesForPixel({x:this.x -1, y:this.y -1, z:this.max_slices});
             if (!tmpTranslatedCoords)
                 return realWorldCoords;
@@ -306,22 +305,22 @@ TissueStack.Extent.prototype = {
 			realWorldCoords.min_y = tmpTranslatedCoords.y;
 			realWorldCoords.max_z = tmpTranslatedCoords.z;
 		}
-		
+
 		return realWorldCoords;
 	}, getXYCoordinatesWithRespectToZoomLevel : function(coords) {
 		if (!coords) {
 			return;
 		}
-		
+
 		// correct x and y according to their zoom level to get the 1:1 pixel Coordinates which can then be transformed
 		coords.x = coords.x * (this.one_to_one_x / this.x);
 		coords.y = coords.y * (this.one_to_one_y / this.y);
-	
+
 		return coords;
-	}, adjustScaleBar :function (length) { 
+	}, adjustScaleBar :function (length) {
 		var scaleMiddle = $('#'+this.canvas.dataset_id+'_scale_middle, .scalecontrol_image');
 		if (!scaleMiddle || scaleMiddle.length == 0) return;
-		
+
 		scaleMiddle.css({"width" : length + 3});
 		$('#'+this.canvas.dataset_id+'_scale_center_right').css({"left" : length + 3});
 		$('#'+this.canvas.dataset_id+'_scale_up').css({"left" : length});

@@ -19,12 +19,12 @@ if (typeof(TissueStack) == 'undefined') {
 };
 
 TissueStack.configuration = {
-		server_proxy_path : 
-		{ 	value: "server", 
+		server_proxy_path :
+		{ 	value: "server",
 			description: "tissue stack server proxy path (relative to the application''s web root directory)"
 		},
 		tile_directory :
-		{ 	value: "tile_directory", 
+		{ 	value: "tile_directory",
 			description: "tissue stack tile directory (relative to the application''s web root directory)"
 		}
 };
@@ -44,6 +44,5 @@ TissueStack.lastWindowResizing = new Date().getTime();
 TissueStack.transparency = 0.5;
 TissueStack.reverseOverlayOrder = false;
 TissueStack.swappedOverlayOrder = false;
-TissueStack.overlay_values = {};
 TissueStack.mouseOverDataSet = -1;
 TissueStack.useUserParameters = false;

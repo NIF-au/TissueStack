@@ -134,10 +134,10 @@ TissueStack.DataSetNavigation.prototype = {
             }
 			dataSet.planes[plane].events.unbindAllEvents();
 			if (dataSet.planes[plane].contrast) dataSet.planes[plane].contrast.unregisterListeners();
+            dataSet.planes[plane].cache = null;
 			dataSet.planes[plane].overlays = null;
 		}
 		dataSet.planes = {};
-		TissueStack.overlay_values = {};
 
         if (!TissueStack.phone) {
             TissueStack.ComponentFactory.destroyDataSetWidget(dataset);
@@ -826,13 +826,12 @@ TissueStack.DataSetNavigation.prototype = {
                         pixel_coords_for_other_plane, false, timestamp);
                 if (TissueStack.overlay_datasets && canvas.getDataExtent().zoom_level != other_plane.getDataExtent().zoom_level)
                     other_plane.changeToZoomLevel(canvas.getDataExtent().zoom_level);
-                other_plane.drawMe(timestamp);
+                other_plane.events.changeSliceForPlane(pixel_coords_for_other_plane.z);
 
                 if (other_plane.is_main_view) {
                     var slider = $("#" + (other_plane.dataset_id == "" ? "" : other_plane.dataset_id + "_") + "canvas_main_slider");
                     if (slider && slider.val() != pixel_coords_for_other_plane.z)
-                        slider.val(pixel_coords_for_other_plane.z);
-                        slider.blur();
+                        slider.val(pixel_coords_for_other_plane.z).slider("refresh");
                 }
             }
         }

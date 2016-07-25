@@ -625,7 +625,7 @@ TissueStack.ComponentFactory = {
             TissueStack.ComponentFactory.swapWithMainCanvas(div, dataSet, sideViewPlaneId);
         });
 	},
-    applyUserParameters : function(initOpts, dataSet, timeout) {
+    applyUserParameters : function(initOpts, dataSet) {
         if (!initOpts) return;
 
         var plane_id = typeof(initOpts['plane']) === 'string' ?  initOpts['plane'] : 'y';
@@ -634,9 +634,6 @@ TissueStack.ComponentFactory = {
             alert("TissueStack::applyUserParameters => given initialization parameters are invalid!");
             return;
         }
-
-        if (typeof(timeout) != 'number')
-            timeout = 0;
 
         // this is an adjustment for 2D data (3 dims with one having 1 slice only)
         var is2D = TissueStack.ComponentFactory.is2Ddata(dataSet.data);
@@ -648,85 +645,84 @@ TissueStack.ComponentFactory = {
 
         var plane = dataSet.planes[plane_id];
 
-        setTimeout(function() {
-            if (is2D)
-        		for (var p in dataSet.planes)
-        			if (p != plane_id &&
-        				!(TissueStack.overlay_datasets && TissueStack.dataSetNavigation.selectedDataSets.count > 1))
-        				dataSet.planes[p].hideCanvas();
+        if (is2D)
+    		for (var p in dataSet.planes)
+    			if (p != plane_id &&
+    				!(TissueStack.overlay_datasets && TissueStack.dataSetNavigation.selectedDataSets.count > 1))
+    				dataSet.planes[p].hideCanvas();
 
-            if (initOpts['zoom'] != null && initOpts['zoom'] >= 0 && initOpts['zoom'] < plane.data_extent.zoom_levels.length) {
-                plane.changeToZoomLevel(initOpts['zoom']);
+        if (initOpts['zoom'] != null && initOpts['zoom'] >= 0 && initOpts['zoom'] < plane.data_extent.zoom_levels.length) {
+            plane.changeToZoomLevel(initOpts['zoom']);
+        }
+
+        if (initOpts['color'] && initOpts['color'] != 'grey' && TissueStack.indexed_color_maps[initOpts['color']]) {
+            // change color map collectively for all planes
+            for (var id in dataSet.planes) {
+                dataSet.planes[id].color_map = initOpts['color'];
+                dataSet.planes[id].is_color_map_tiled = null;
             }
 
-            if (initOpts['color'] && initOpts['color'] != 'grey' && TissueStack.indexed_color_maps[initOpts['color']]) {
-                // change color map collectively for all planes
-                for (var id in dataSet.planes) {
-                    dataSet.planes[id].color_map = initOpts['color'];
-                    dataSet.planes[id].is_color_map_tiled = null;
-                }
-
-                // set right radio button
-                if (TissueStack.phone) {
-                    try {
-                        $("#colormap_choice input").removeAttr("checked").checkboxradio("refresh");
-                        $("#colormap_" + initOpts['color']).attr("checked", "checked").checkboxradio("refresh");
-                    } catch (e) {
-                        // we don't care, stupid jquery mobile ...
-                        $("#colormap_" + initOpts['color']).attr("checked", "checked");
-                    }
-                } else {
-                    $("#" + plane.dataset_id + "_color_map .color_map_select").val(initOpts['color']);
-                    try {
-                        $("#" + plane.dataset_id + "_color_map .color_map_select").selectmenu("refresh");
-                    } catch (any){
-                        // we don't care, stupid jquery mobile ...
-                    }
-                }
-            }
-            if (typeof(initOpts['min']) === 'number' &&  typeof(initOpts['max']) === 'number') {
-                // change contrast collectively for all planes
-                for (var id in dataSet.planes) {
-                    if (dataSet.planes[id].contrast) {
-                        dataSet.planes[id].contrast.drawContrastSlider();
-                        dataSet.planes[id].contrast.moveBar('min',
-                                dataSet.planes[id].contrast.getMinimumBarPositionForValue(initOpts['min']));
-                        dataSet.planes[id].contrast.moveBar('max',
-                                dataSet.planes[id].contrast.getMaximumBarPositionForValue(initOpts['max']));
-                        dataSet.planes[id].contrast.drawMinMaxValues();
-                    }
-                }
-            }
-
-            var givenCoords = {};
-            if (initOpts['x'] != null || initOpts['y'] != null || initOpts['z'] != null) {
-                givenCoords = {x: initOpts['x'] != null ? initOpts['x'] : 0,
-                        y: initOpts['y'] != null ? initOpts['y'] : 0,
-                        z: initOpts['z'] != null ? initOpts['z'] : 0};
-
-                if (plane.getDataExtent().worldCoordinatesTransformationMatrix) {
-                    givenCoords = plane.getDataExtent().getPixelForWorldCoordinates(givenCoords);
+            // set right radio button
+            if (TissueStack.phone) {
+                try {
+                    $("#colormap_choice input").removeAttr("checked").checkboxradio("refresh");
+                    $("#colormap_" + initOpts['color']).attr("checked", "checked").checkboxradio("refresh");
+                } catch (e) {
+                    // we don't care, stupid jquery mobile ...
+                    $("#colormap_" + initOpts['color']).attr("checked", "checked");
                 }
             } else {
-                givenCoords = plane.getRelativeCrossCoordinates();
-                givenCoords.z = plane.getDataExtent().slice;
-            }
-            plane.events.changeSliceForPlane(givenCoords.z);
-            var now = new Date().getTime();
-            plane.queue.latestDrawRequestTimestamp = now;
-            plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, true, now);
-
-            var slider = TissueStack.phone ?
-                    $("#canvas_" + plane.data_extent.plane + "_slider") :
-                    $("#" + (plane.dataset_id == "" ? "" : plane.dataset_id + "_") + "canvas_main_slider");
-            if (slider && slider.length == 1) {
+                $("#" + plane.dataset_id + "_color_map .color_map_select").val(initOpts['color']);
                 try {
-                    slider.val(givenCoords.z);
-                    slider.blur();
-                } catch(ignored) {}
-            };
-            plane.events.updateCoordinateDisplay();
-        }, timeout);
+                    $("#" + plane.dataset_id + "_color_map .color_map_select").selectmenu("refresh");
+                } catch (any){
+                    // we don't care, stupid jquery mobile ...
+                }
+            }
+        }
+        if (typeof(initOpts['min']) === 'number' &&  typeof(initOpts['max']) === 'number') {
+            // change contrast collectively for all planes
+            for (var id in dataSet.planes) {
+                if (dataSet.planes[id].contrast) {
+                    dataSet.planes[id].contrast.drawContrastSlider();
+                    dataSet.planes[id].contrast.moveBar('min',
+                            dataSet.planes[id].contrast.getMinimumBarPositionForValue(initOpts['min']));
+                    dataSet.planes[id].contrast.moveBar('max',
+                            dataSet.planes[id].contrast.getMaximumBarPositionForValue(initOpts['max']));
+                    dataSet.planes[id].contrast.drawMinMaxValues();
+                }
+            }
+        }
+
+        var givenCoords = {};
+        if (initOpts['x'] != null || initOpts['y'] != null || initOpts['z'] != null) {
+            givenCoords = {x: initOpts['x'] != null ? initOpts['x'] : 0,
+                    y: initOpts['y'] != null ? initOpts['y'] : 0,
+                    z: initOpts['z'] != null ? initOpts['z'] : 0};
+
+            if (plane.getDataExtent().worldCoordinatesTransformationMatrix) {
+                givenCoords = plane.getDataExtent().getPixelForWorldCoordinates(givenCoords);
+            }
+        } else {
+            givenCoords = plane.getRelativeCrossCoordinates();
+            givenCoords.z = plane.getDataExtent().slice;
+        }
+
+        var now = new Date().getTime();
+        plane.queue.latestDrawRequestTimestamp = now;
+        plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, true, now);
+        plane.events.changeSliceForPlane(givenCoords.z);
+
+        var slider = TissueStack.phone ?
+                $("#canvas_" + plane.data_extent.plane + "_slider") :
+                $("#" + (plane.dataset_id == "" ? "" : plane.dataset_id + "_") + "canvas_main_slider");
+        if (slider && slider.length == 1) {
+            try {
+                slider.val(givenCoords.z).slider("refresh");
+            } catch(ignored) {}
+        };
+
+        plane.events.updateCoordinateDisplay();
     },
     addMeasuringContextMenu : function(div, dataSet) {
         if (!TissueStack.ComponentFactory.checkDivExistence(div)) {

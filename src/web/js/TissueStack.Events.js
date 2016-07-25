@@ -176,7 +176,7 @@ TissueStack.Events.prototype = {
 				delta = delta > 0 ? 1.5 : -1.5;
 			}
 
-			if (!e.altKey) {
+			if (!e.shiftKey) {
 				// call zoom
 				_this.zoom(e, delta);
 				return;
@@ -186,13 +186,13 @@ TissueStack.Events.prototype = {
 
 			var slider = $("#" + _this.canvas.dataset_id + "_canvas_main_slider");
 			try {
-				slider.val(_this.canvas.data_extent.slice);
-                slider.blur();
+				slider.val(_this.canvas.data_extent.slice).slider("refresh");
             } catch(ignored) {}
 
 			_this.changeSliceForPlane(_this.canvas.data_extent.slice);
 			setTimeout(function(){_this.updateCoordinateDisplay();}, 500);
 			e.stopPropagation();
+            e.preventDefault();
 		});
 
 		// this is sadly necessary to keep the window from scrolling when only the canvas should be scrolled
@@ -274,7 +274,7 @@ TissueStack.Events.prototype = {
 						crossCoords : cross_coords,
 						canvasDims : canvas_dims
 					});
-            
+
 			// send message out to others that they need to redraw as well
 			this.canvas.getCanvasElement().trigger("sync",
 						[	this.canvas.data_extent.data_id,

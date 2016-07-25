@@ -21,7 +21,7 @@ TissueStack.Queue = function (canvas) {
 TissueStack.Queue.prototype = {
 	canvas : null,
 	queue_handle : null,
-	drawingIntervalInMillis : 150,
+	drawingIntervalInMillis : 100,
 	requests : [],
 	presentlyQueuedZoomLevelAndSlice: null,
 	lowResolutionPreviewDrawn : false,
@@ -29,7 +29,7 @@ TissueStack.Queue.prototype = {
 	last_sync_timestamp: -1,
 	setDrawingInterval : function(value) {
 		if (typeof(value) !== 'number' || value < 0) {
-			value = 150; // set to default
+			value = 100; // set to default
 		}
 		this.stopQueue();
 		this.drawingIntervalInMillis = value;
