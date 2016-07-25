@@ -517,7 +517,7 @@ TissueStack.Canvas.prototype = {
         this.preCanvas.width = this.dim_x;
         this.preCanvas.height = this.dim_y;
 
-        this.queue.prefetchTiles(dataSet, timestamp);
+        this.queue.prefetchTiles(timestamp);
 
 		var startTileX = this.upper_left_x < 0 ?
             Math.floor(-this.upper_left_x / this.getDataExtent().tile_size) : 0;

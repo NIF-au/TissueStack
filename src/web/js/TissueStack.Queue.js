@@ -285,10 +285,11 @@ TissueStack.Queue.prototype = {
 		}
 
 		return true;
-    }, prefetchTiles(dataSet, timestamp) {
+    }, prefetchTiles(timestamp) {
         var extent = this.canvas.getDataExtent();
         if (!this.canvas.is_main_view || extent.getIsTiled()) return;
 
+        var dataSet = TissueStack.dataSetStore.getDataSetById(extent.data_id);
         var endTileX =
             (extent.x % extent.tile_size) === 0 ?
                 extent.x / extent.tile_size :
@@ -312,9 +313,10 @@ TissueStack.Queue.prototype = {
                             tileX,
                             tileY);
 
-                if (this.contrast &&
-                    (this.contrast.getMinimum() != this.contrast.dataset_min ||
-                     this.contrast.getMaximum() != this.contrast.dataset_max)) {
+                if (this.canvas.contrast &&
+                    (this.canvas.contrast.getMinimum() !=
+                        this.canvas.contrast.dataset_min ||
+                     this.canvas.contrast.getMaximum() != this.canvas.contrast.dataset_max)) {
                     src += ("&min=" + this.canvas.contrast.getMinimum());
                     src += ("&max=" + this.canvas.contrast.getMaximum());
                 }

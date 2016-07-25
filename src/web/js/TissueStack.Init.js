@@ -61,7 +61,7 @@ TissueStack.Init = function () {
 
 	TissueStack.Utils.sendAjaxRequest(
 		"/" + TissueStack.configuration['server_proxy_path'].value +
-		"/?service=services&sub_service=configuration&action=all", 'GET', false,
+		"/?service=services&sub_service=configuration&action=all", 'GET', true,
 		function(data, textStatus, jqXHR) {
 			if (!data.response && !data.error) {
 				alert("Did not receive anyting, neither success nor error ....");
