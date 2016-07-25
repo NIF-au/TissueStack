@@ -710,8 +710,8 @@ TissueStack.ComponentFactory = {
 
         var now = new Date().getTime();
         plane.queue.latestDrawRequestTimestamp = now;
-        plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, true, now);
         plane.events.changeSliceForPlane(givenCoords.z);
+        plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(givenCoords, true, now);
 
         var slider = TissueStack.phone ?
                 $("#canvas_" + plane.data_extent.plane + "_slider") :
@@ -719,6 +719,7 @@ TissueStack.ComponentFactory = {
         if (slider && slider.length == 1) {
             try {
                 slider.val(givenCoords.z).slider("refresh");
+                slider.blur();
             } catch(ignored) {}
         };
 

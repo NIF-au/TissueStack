@@ -51,7 +51,7 @@ TissueStack.Events.prototype = {
 		// TOUCH END and MOUSE UP
 		this.getCanvasElement().bind("mouseup", function(e) {
 			// call pan move
-			_this.panEnd();
+			_this.panEnd(e);
 		});
 
 		// CLICK
@@ -139,7 +139,7 @@ TissueStack.Events.prototype = {
 			};
 
 			// call pan move
-			_this.panEnd();
+			_this.panEnd(e);
 		});
 
 		//DOUBLE TAP TO ENLARGE IMAGES
@@ -224,10 +224,12 @@ TissueStack.Events.prototype = {
 		this.canvas.mouse_down = true;
 		this.canvas.mouse_x = coords.x;
 		this.canvas.mouse_y = coords.y;
-	}, panEnd : function() {
+	}, panEnd : function(e) {
+        if (this.canvas.isDragging)
+            this.panAndMove(e, true);
 		this.canvas.mouse_down = false;
 		this.updateCoordinateDisplay();
-	}, panAndMove : function(e) {
+	}, panAndMove : function(e, sync) {
 		var now =new Date().getTime();
 
 		var dataSet = TissueStack.dataSetStore.getDataSetById(this.canvas.getDataExtent().data_id);
@@ -276,21 +278,22 @@ TissueStack.Events.prototype = {
 					});
 
 			// send message out to others that they need to redraw as well
-			this.canvas.getCanvasElement().trigger("sync",
-						[	this.canvas.data_extent.data_id,
-						 	this.canvas.dataset_id,
-						 	now,
-						 	'PAN',
-						 	this.canvas.getDataExtent().plane,
-						 	this.canvas.getDataExtent().zoom_level,
-						 	this.canvas.getDataExtent().slice,
-						 	this.canvas.getRelativeCrossCoordinates(),
-						 	    {max_x: this.canvas.getDataExtent().x, max_y: this.canvas.getDataExtent().y,
-                                aniso_factor_x: aniso_factor_x, aniso_factor_y: aniso_factor_y, step: this.canvas.getDataExtent().step},
-						 	upper_left_corner,
-						 	cross_coords,
-						 	canvas_dims
-			            ]);
+            if (typeof sync === 'boolean' && sync)
+        		this.canvas.getCanvasElement().trigger("sync",
+        					[	this.canvas.data_extent.data_id,
+        					 	this.canvas.dataset_id,
+        					 	now,
+        					 	'PAN',
+        					 	this.canvas.getDataExtent().plane,
+        					 	this.canvas.getDataExtent().zoom_level,
+        					 	this.canvas.getDataExtent().slice,
+        					 	this.canvas.getRelativeCrossCoordinates(),
+        					 	    {max_x: this.canvas.getDataExtent().x, max_y: this.canvas.getDataExtent().y,
+                                    aniso_factor_x: aniso_factor_x, aniso_factor_y: aniso_factor_y, step: this.canvas.getDataExtent().step},
+        					 	upper_left_corner,
+        					 	cross_coords,
+        					 	canvas_dims
+        		            ]);
 		} else {
 			if (this.canvas.isDragging) this.updateCoordinateDisplay();
 			this.canvas.isDragging = false;

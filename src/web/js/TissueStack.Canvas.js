@@ -553,6 +553,7 @@ TissueStack.Canvas.prototype = {
         var tileRangeY = endTileY-startTileY+1;
         this.totalNumberOfTiles = tileRangeX * tileRangeY;
         this.tilesRendered = 0;
+        this.displayLoadingProgress();
 
 		// loop over rows
 		for (var tileX = startTileX  ; tileX <= endTileX ; tileX++) {
