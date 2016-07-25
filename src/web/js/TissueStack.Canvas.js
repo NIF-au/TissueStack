@@ -517,7 +517,8 @@ TissueStack.Canvas.prototype = {
         this.preCanvas.width = this.dim_x;
         this.preCanvas.height = this.dim_y;
 
-        this.queue.prefetchTiles(timestamp);
+        if ((TissueStack.overlay_datasets && this.underlying_canvas) || this.is_linked_dataset)
+            this.preCanvas.getContext('2d').globalAlpha = TissueStack.transparency;
 
 		var startTileX = this.upper_left_x < 0 ?
             Math.floor(-this.upper_left_x / this.getDataExtent().tile_size) : 0;
@@ -730,11 +731,20 @@ TissueStack.Canvas.prototype = {
             var imageData =
                 this.applyContrastAndColorMapToImageData(
                     preContext.getImageData(0,0, this.dim_x, this.dim_y));
+
+            if ((TissueStack.overlay_datasets && this.underlying_canvas) || this.is_linked_dataset) {
+                     this.getCanvasContext().globalCompositeOperation = 'copy';
+                     this.getCanvasContext().globalAlpha = TissueStack.transparency;
+                     this.getCanvasContext().globalCompositeOperation = 'source-over';
+             }
+
             this.getCanvasContext().putImageData(imageData, 0,0);
             this.syncDataSetCoordinates(this, timestamp, false);
 
             if (this.is_main_view && this.checkMeasurements(
                 {x: 0, y: 0, z: this.data_extent.slice})) this.drawMeasuring();
+
+            this.queue.prefetchTiles(timestamp);
         };
     },
 	syncDataSetCoordinates : function(_this, timestamp, eraseCanvas) {

@@ -530,7 +530,7 @@ TissueStack.DataSetNavigation.prototype = {
 					for (var i=0;i<selectedNodes.length;i++) {
 						var dataSet = TissueStack.dataSetStore.getDataSetById(selectedNodes[i].data.key);
                         TissueStack.ComponentFactory.redrawDataSet(dataSet);
-                        TissueStack.ComponentFactory.applyUserParameters({"plane" : "y"}, dataSetSelected);
+                        TissueStack.ComponentFactory.applyUserParameters({"plane" : "y"}, dataSet);
 					}
 
                    // link previous and succeeding ds

@@ -154,7 +154,6 @@ TissueStack.ContrastCanvas.prototype = {
 			this.getCanvasElement().bind("mouseup", function(e) {
 				_this.mouse_down = false;
 				_this.canvas.events.changeSliceForPlane(_this.canvas.getDataExtent().slice);
-                //_this.canvas.queue.prefetchTiles(new Date().getTime());
 				_this.canvas.events.updateCoordinateDisplay();
 			});
 			// MOUSE DOWN
@@ -179,7 +178,6 @@ TissueStack.ContrastCanvas.prototype = {
 				_this.mouse_down = false;
 				if(TissueStack.tablet || TissueStack.debug){
 					_this.canvas.events.changeSliceForPlane(_this.canvas.getDataExtent().slice);
-                    //_this.canvas.queue.prefetchTiles(new Date().getTime());
 					_this.canvas.events.updateCoordinateDisplay();
 				}
 			});
