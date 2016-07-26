@@ -121,22 +121,9 @@ TissueStack.DataSetNavigation.prototype = {
 		}
 
 		// for all canvases, unbind the events
-		for (var plane in dataSet.planes) {
-			if (dataSet.planes[plane].underlying_canvas) dataSet.planes[plane].underlying_canvas = null;
-			if (dataSet.planes[plane].overlay_canvas) dataSet.planes[plane].overlay_canvas = null;
-			dataSet.planes[plane].queue.latestDrawRequestTimestamp = -1;
-			dataSet.planes[plane].queue.stopQueue();
-            dataSet.planes[plane].resetMeasurements();
-			if (dataSet.planes[plane].is_main_view) {
-                dataSet.planes[plane].displayPixelValue();
-                dataSet.planes[plane].events.updateCoordinateDisplay(true, true);
-                dataSet.planes[plane].updateExtentInfo();
-            }
-			dataSet.planes[plane].events.unbindAllEvents();
-			if (dataSet.planes[plane].contrast) dataSet.planes[plane].contrast.unregisterListeners();
-            dataSet.planes[plane].cache = {};
-			dataSet.planes[plane].overlays = null;
-		}
+		for (var plane in dataSet.planes)
+            dataSet.planes[plane].dispose();
+
 		dataSet.planes = {};
 
         if (!TissueStack.phone) {

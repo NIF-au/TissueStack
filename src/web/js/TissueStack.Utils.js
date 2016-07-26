@@ -439,37 +439,24 @@ TissueStack.Utils = {
 		return url;
 	},
 	assembleTissueStackImageRequest : function(
-			protocol, dataSet, canvas, is_preview, slice, colormap, tile_size, row, col) {
-
-        if (typeof(dataSet) != "object")
-            return null;
-
-		if (typeof(protocol) != "string")
-			protocol = "http";
-		protocol = $.trim(protocol);
+        dataSet, canvas, is_preview, colormap, row, col) {
+        var ret = { url: "", cache_key: null};
 
         var host = dataSet.host;
 		if (typeof(host) != "string" || $.trim(host) == "localhost")
 			host = "";
-
 		host = $.trim(host);
 
         var dataset_id = dataSet.local_id;
-		if (typeof(dataset_id) != "number" || dataset_id <= 0)
-			return null;
-
         var isTiled = canvas.getDataExtent().getIsTiled();
-		//are we tiled or not
 		if (typeof(isTiled) != "boolean")
 			isTiled = false; // if in doubt => false
 
         var filename = dataSet.filename;
-		if (!isTiled && typeof(filename) != "string")
-			return null;
-
 		if (typeof(is_preview) != "boolean")
 			is_preview = false;
 
+        var tile_size = canvas.getDataExtent().tile_size;
 		if (!is_preview && (typeof(tile_size) != "number" || zoom < 0))
 			tile_size = 256;
 
@@ -477,16 +464,8 @@ TissueStack.Utils = {
             canvas.getDataExtent().getIsTiled() ?
                 canvas.getDataExtent().zoom_level :
                 canvas.getDataExtent().getZoomLevelFactorForZoomLevel(canvas.getDataExtent().zoom_level);
-		if (typeof(zoom) != "number" || zoom < 0)
-			return null;
 
 		var plane = canvas.getDataExtent().getOriginalPlane();
-		if (typeof(plane) != "string")
-			return null;
-
-		if (typeof(slice) != "number" || slice < 0)
-			return null;
-
 		if (typeof(colormap) != "string")
 			colormap = "grey";
 
@@ -495,48 +474,49 @@ TissueStack.Utils = {
 			image_extension = "png";
 
 		// assemble what we have so far
-		var url = (host != "" ? (protocol + "://" + host.replace(/[_]/g,".")) : "");
+		ret.url = (host != "" ? ("http://" + host.replace(/[_]/g,".")) : "");
 		var path = isTiled ?
 			TissueStack.configuration['tile_directory'].value : TissueStack.configuration['server_proxy_path'].value;
 
+        var slice = canvas.getDataExtent().slice
 		if (zoom == 1) slice = Math.floor(slice);
 		else slice = Math.ceil(slice);
 
 		if (isTiled) {
-			url += ("/" + path + "/" + dataset_id + "/" + zoom + "/" + plane + "/" + slice + "/");
+			ret.url += ("/" + path + "/" + dataset_id + "/" + zoom + "/" + plane + "/" + slice + "/");
 
 			// for preview we don't need all the params
 			if (is_preview) {
-				return url + slice + ".low.res." +
+				return ret.url + slice + ".low.res." +
 					((colormap == 'grey' || colormap == 'gray') ? "" : (colormap + ".")) + image_extension;
 			}
-
-			// for tiling we need the row/col pair in the grid
-			if (typeof(row) != "number" || row < 0) {
-				return null;
-			}
-			if (typeof(col) != "number" || col < 0) {
-				return null;
-			}
-
-			return url + row + '_' + col + ((colormap == 'grey' || colormap == 'gray') ? "" : ("_" + colormap)) + "." + image_extension;
+			ret.url += row + '_' + col + ((colormap == 'grey' || colormap == 'gray') ?
+                    "" : ("_" + colormap)) + "." + image_extension;
+            return ret;
 		} else {
-			// seems to work for server so why not use it
-		    //url = url + "/" + path + "/?volume=" + filename + "&image_type=PNG&scale=" + zoom + "&dimension="
-		    //	+ plane + "space" + "&slice=" + slice + "&colormap=" + colormap;
-			//if (is_preview) {
-			//	return url + "&quality=8";
-			//}
+            var min = canvas.contrast.getMinimum();
+            var max = canvas.contrast.getMaximum();
 
-		    url = url + "/" + path + "/?service=";
+            ret.cache_key =
+                canvas.getDataExtent().zoom_level + "/" + slice + "/" +
+                colormap + "/" + row + "/" + col+ "/" + min + "/" + max;
+
+            ret.url += "/" + path + "/?service=";
+
 		    if (is_preview)
-		    	url += "image_preview&quality=0.05";
+		    	ret.url += "image_preview&quality=0.05";
 		    else
-		    	url += "image" + "&square=" + tile_size + '&y=' + col + "&x=" + row
-		    url += "&dataset=" + filename + "&image_type=PNG&scale=" + zoom + "&dimension="
+		    	ret.url += "image" + "&square=" + tile_size + '&y=' + col + "&x=" + row
+		    ret.url += "&dataset=" + filename + "&image_type=PNG&scale=" + zoom + "&dimension="
 		    	+ plane + "&slice=" + slice + "&colormap=" + colormap;
 
-			return url;
+            if (canvas.contrast &&
+                (min != canvas.contrast.dataset_min ||
+                 max != canvas.contrast.dataset_max)) {
+                ret.url += ("&min=" + min);
+                ret.url += ("&max=" + max);
+            }
+			return ret;
 		}
 	}, adjustBorderColorWhenMouseOver : function () {
 			if (TissueStack.phone || TissueStack.tablet) {
@@ -715,6 +695,11 @@ TissueStack.Utils = {
 		var files = dataset.filename;
 		var planes = canvas.getDataExtent().plane;
 		var slices = Math.round(coords.z);
+        var host = dataset.host;
+        if (typeof(host) != "string" || $.trim(host) == "localhost")
+            host = "";
+        host = ($.trim(host) != "" ? ("http://" + host.replace(/[_]/g,".")) : "");
+
 		var xes = coords.x;
 		var ys = coords.y;
 
@@ -734,9 +719,9 @@ TissueStack.Utils = {
 				}
 
 		// assemble url
-		var url = "/" + TissueStack.configuration['server_proxy_path'].value + "/?service=query&dataset="
-		+ files + "&dimension=" + planes + "space&slice=" + slices + "&x=" + xes
-		+ "&y=" + ys;
+		var url = host + "/" + TissueStack.configuration['server_proxy_path'].value +
+         "/?service=query&dataset=" + files + "&dimension=" + planes +
+          "space&slice=" + slices + "&x=" + xes + "&y=" + ys;
 
 		// in case of an error we rely on the canvas pixel querying
 		var errorHandler = function(canvas) {

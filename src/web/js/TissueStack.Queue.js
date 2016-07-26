@@ -16,6 +16,9 @@
  */
 TissueStack.Queue = function (canvas) {
 	this.canvas = canvas;
+    this.tilesRendered = 0;
+    this.totalNumberOfTiles = 0;
+    this.cache = {};
 };
 
 TissueStack.Queue.prototype = {
@@ -27,6 +30,9 @@ TissueStack.Queue.prototype = {
 	lowResolutionPreviewDrawn : false,
 	latestDrawRequestTimestamp : 0,
 	last_sync_timestamp: -1,
+    tilesRendered : 0,
+    totalNumberOfTiles : 0,
+    cache : null,
 	setDrawingInterval : function(value) {
 		if (typeof(value) !== 'number' || value < 0) {
 			value = 100; // set to default
@@ -301,39 +307,24 @@ TissueStack.Queue.prototype = {
 
         for (var tileX = 0  ; tileX < endTileX ; tileX++) {
             for (var tileY = 0 ; tileY < endTileY ; tileY++) {
-                var src =
+                var req =
                     TissueStack.Utils.assembleTissueStackImageRequest(
-                            "http",
-                            dataSet,
-                            this.canvas,
-                            false,
-                            extent.slice,
-                            this.canvas.color_map,
-                            extent.tile_size,
-                            tileX,
-                            tileY);
+                        dataSet, this.canvas, false, this.canvas.color_map,
+                        tileX, tileY);
 
-                if (this.canvas.contrast &&
-                    (this.canvas.contrast.getMinimum() !=
-                        this.canvas.contrast.dataset_min ||
-                     this.canvas.contrast.getMaximum() != this.canvas.contrast.dataset_max)) {
-                    src += ("&min=" + this.canvas.contrast.getMinimum());
-                    src += ("&max=" + this.canvas.contrast.getMaximum());
-                }
-
-                if (!(this.canvas.cache[src] instanceof Image)) {
+                if (!this.isImageCached(req.cache_key)) {
                     var imageTile = new Image();
 
                     imageTile.crossOrigin = '';
                     var appendix = "&id=" + this.canvas.sessionId +
                     "&timestamp=" + timestamp;
-                    imageTile.src = src + appendix;
+                    imageTile.src = req.url + appendix;
 
-                    (function(this_, src) {
+                    (function(this_, cache_key) {
                         imageTile.onload = function() {
-                            this_.cache[src] = this;
+                            this_.addImageToCache(cache_key, this);
                         }
-                    })(this.canvas, src);
+                    })(this, req.cache_key);
                 }
             }
         }
@@ -367,5 +358,63 @@ TissueStack.Queue.prototype = {
 				(this.canvas.upper_left_y >= this.canvas.dim_y && this.canvas.upper_left_y - this.canvas.getDataExtent().y-1 >= this.canvas.dim_y) ?
 						this.canvas.dim_y : this.canvas.dim_y - Math.floor(this.canvas.dim_y - (this.canvas.upper_left_y - this.canvas.getDataExtent().y)));
 		}
-	}
+	}, displayLoadingProgress : function(reset, error) {
+        if (this.canvas.is_linked_dataset) // no display for overlay
+            return;
+
+        var dataset_id = this.canvas.dataset_id;
+        var plane = this.canvas.data_extent.plane
+
+        if (typeof(reset) == 'boolean' && reset) {
+            $("#" + dataset_id + " .tile_count_div progress").val(0);
+            if (typeof(error) == 'boolean' && error)
+                $("#" + dataset_id + " .tile_count_div span." + plane).html("ERR");
+            else {
+                $("#" + dataset_id + " .tile_count_div span." + plane).html("0%");
+                $("#" + dataset_id + " .tile_count_div span." + plane).hide();
+            }
+            return;
+        }
+
+        if (this.tilesRendered >= this.totalNumberOfTiles) {
+            $("#" + dataset_id + " .tile_count_div progress").val(100);
+            $("#" + dataset_id + " .tile_count_div span." + plane).html("100%");
+            $("#" + dataset_id + " .tile_count_div span." + plane).css('color', '');
+            $("#" + dataset_id + " .tile_count_div span." + plane).show();
+            return;
+        }
+
+        var perCent = Math.round((this.tilesRendered / this.totalNumberOfTiles) * 100);
+        $("#" + dataset_id + " .tile_count_div progress").val(Math.round(perCent));
+        $("#" + dataset_id + " .tile_count_div span." + plane).html(perCent + "%");
+        $("#" + dataset_id + " .tile_count_div span." + plane).css('color', 'red');
+        $("#" + dataset_id + " .tile_count_div span." + plane).show();
+    }, setTotalNumberOfTiles : function(totalNumberOfTiles) {
+        this.totalNumberOfTiles = totalNumberOfTiles;
+        this.tilesRendered = 0;
+        this.displayLoadingProgress();
+    }, hasFinishedTiling : function() {
+        return (this.tilesRendered >= this.totalNumberOfTiles);
+    },
+    incrementTileCount : function() {
+        this.tilesRendered++;
+        this.displayLoadingProgress();
+    }, dispose : function() {
+        this.latestDrawRequestTimestamp = -1;
+        this.stopQueue();
+        this.canvas = null;
+        this.cache = null;
+    }, isImageCached : function(cache_key) {
+        if (typeof cache_key !== 'string' || cache_key.length === 0)
+            return false;
+        return (this.cache && (this.cache[cache_key] instanceof Image));
+    }, addImageToCache : function(cache_key, img) {
+        if (typeof cache_key !== 'string' || cache_key.length === 0 ||
+            !(img instanceof Image)) return;
+        if (this.cache) this.cache[cache_key] = img;
+    }, getCachedImage : function(cache_key) {
+        if (typeof cache_key !== 'string' || cache_key.length === 0) return null;
+        if (this.cache) return this.cache[cache_key];
+        return null;
+    }
 };

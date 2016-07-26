@@ -727,7 +727,7 @@ TissueStack.ComponentFactory = {
     },
     addMeasuringContextMenu : function(div, dataSet) {
         if (!TissueStack.ComponentFactory.checkDivExistence(div)) {
-            alert("ComponentFactory::addProgressBar => given div does not exist!");
+            alert("ComponentFactory::addMeasuringContextMenu => given div does not exist!");
             return;
         }
 
@@ -777,13 +777,13 @@ TissueStack.ComponentFactory = {
                         {x: offsets.x - mainCanvas.upper_left_x,
                          y: mainCanvas.upper_left_y - offsets.y,
                          z: mainCanvas.data_extent.slice};
-                    mainCanvas.checkMeasurements(point);
+                    mainCanvas.measurements.checkMeasurements(point);
                     myMeasuringContext.children(".distance").html(
-                        "Distance: " + mainCanvas.measureDistance().toFixed(5));
+                        "Distance: " + mainCanvas.measurements.measureDistance().toFixed(5));
                     myMeasuringContext.children(".area").html(
-                        "Area: " + mainCanvas.measureArea().toFixed(5));
+                        "Area: " + mainCanvas.measurements.measureArea().toFixed(5));
                     myMeasuringContext.children(".distance,.area").show();
-                    if (mainCanvas.measurements.length > 0)
+                    if (mainCanvas.measurements.getNumberOfMeasurements() > 0)
                         myMeasuringContext.children(".menue_item").show();
                     else {
                         myMeasuringContext.children(".addPoint").show();
@@ -801,19 +801,19 @@ TissueStack.ComponentFactory = {
 
                     // add point action
                     myMeasuringContext.children(".addPoint").on("click", function(event) {
-                        mainCanvas.addMeasure(point);
+                        mainCanvas.measurements.addMeasure(point);
                         $(this).hide();
                         myMeasuringContext.children(".resetPath").show();
                         myMeasuringContext.children(".distance").html(
-                            "Distance: " +  mainCanvas.measureDistance().toFixed(5));
+                            "Distance: " +  mainCanvas.measurements.measureDistance().toFixed(5));
                         myMeasuringContext.children(".area").html(
-                            "Area: " + mainCanvas.measureArea().toFixed(5));
-                        if (mainCanvas.measurements.length <= 1)
+                            "Area: " + mainCanvas.measurements.measureArea().toFixed(5));
+                        if (mainCanvas.measurements.getNumberOfMeasurements() <= 1)
                             myMeasuringContext.hide();
                     });
                     // add reset action
                     myMeasuringContext.children(".resetPath").on("click", function(event) {
-                        mainCanvas.resetMeasurements();
+                        mainCanvas.measurements.resetMeasurements();
                         myMeasuringContext.children(".addPoint").show();
                         $(this).hide();
                         myMeasuringContext.hide();

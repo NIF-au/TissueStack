@@ -294,10 +294,7 @@ TissueStack.Events.prototype = {
         					 	cross_coords,
         					 	canvas_dims
         		            ]);
-		} else {
-			if (this.canvas.isDragging) this.updateCoordinateDisplay();
-			this.canvas.isDragging = false;
-		}
+		} else this.canvas.isDragging = false;
 	}, changeSliceForPlane : function(slice) {
 		var now =new Date().getTime();
 		if (typeof(slice) != "number") {

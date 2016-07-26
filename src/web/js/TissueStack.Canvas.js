@@ -33,10 +33,8 @@ TissueStack.Canvas = function(data_extent, canvas_id, dataset_id, include_cross_
 	this.contrast = null; // a shared instance of a contrast slider
 	// make parent and ourselves visible
 	this.getCanvasElement().parent().removeClass("hidden");
-    this.measurements = [];
-    this.cache = {};
-    this.tilesRendered = 0;
-    this.totalNumberOfTiles = 0;
+    this.measurements = TissueStack.desktop ?
+        new TissueStack.Measurements(this) : null;
     this.preCanvas = null;
 };
 
@@ -79,9 +77,6 @@ TissueStack.Canvas.prototype = {
 	sessionId : 0,
     is_2D : false,
     measurements : null,
-    cache : {},
-    tilesRendered : 0,
-    totalNumberOfTiles : 0,
     preCanvas : null,
     flag2D : function() {
         this.is_2D = true;
@@ -495,7 +490,7 @@ TissueStack.Canvas.prototype = {
 		if (slice < 0 || slice > this.getDataExtent().max_slices) {
             this.eraseCanvasContent();
 			this.syncDataSetCoordinates(this, timestamp, true);
-            this.displayLoadingProgress(true);
+            this.queue.displayLoadingProgress(true);
 			return;
 		}
 
@@ -506,12 +501,16 @@ TissueStack.Canvas.prototype = {
                 || (this.upper_left_y - this.getDataExtent().y) >= this.dim_y) {
             this.eraseCanvasContent();
 			this.syncDataSetCoordinates(this, timestamp, false);
-			this.displayLoadingProgress(true);
+			this.queue.displayLoadingProgress(true);
 			return;
 		}
 
 		var dataSet = TissueStack.dataSetStore.getDataSetById(this.data_extent.data_id);
 		if (!dataSet) return;
+
+        setTimeout(function() {
+            this.queue.prefetchTiles(timestamp)
+        }.bind(this), 500);
 
         this.preCanvas = document.createElement("canvas");
         this.preCanvas.width = this.dim_x;
@@ -564,9 +563,7 @@ TissueStack.Canvas.prototype = {
 
         var tileRangeX = endTileX-startTileX+1;
         var tileRangeY = endTileY-startTileY+1;
-        this.totalNumberOfTiles = tileRangeX * tileRangeY;
-        this.tilesRendered = 0;
-        this.displayLoadingProgress();
+        this.queue.setTotalNumberOfTiles(tileRangeX * tileRangeY);
 
 		// loop over rows
 		for (var tileX = startTileX  ; tileX <= endTileX ; tileX++) {
@@ -604,31 +601,15 @@ TissueStack.Canvas.prototype = {
 					colorMap = 'grey'; // fall back onto grey
 				}
 
-				var src =
+				var req =
 					TissueStack.Utils.assembleTissueStackImageRequest(
-							"http",
-							dataSet,
-                            this,
-							false,
-							slice,
-							colorMap,
-							this.getDataExtent().tile_size,
-							rowIndex,
-							colIndex
-					);
+						dataSet, this, false, colorMap, rowIndex, colIndex);
 
-
-				// conduct the actual color tile check. This happens only for overlays, in the other cases the preview logic takes care of it
-				if (this.getDataExtent().getIsTiled()) {
-                    if (colorMap != 'grey' && this.is_color_map_tiled == null
-						&& !this.checkIfWeAreColorMapTiled(src))
-						src = src.replace("_" + colorMap, "");
-				} else if (this.contrast &&
-                    (this.contrast.getMinimum() != this.contrast.dataset_min ||
-                     this.contrast.getMaximum() != this.contrast.dataset_max)) {
-                    src += ("&min=" + this.contrast.getMinimum());
-                    src += ("&max=" + this.contrast.getMaximum());
-                }
+                if (this.getDataExtent().getIsTiled() &&
+                        colorMap != 'grey' &&
+                        this.is_color_map_tiled == null &&
+                        !this.checkIfWeAreColorMapTiled(req.url))
+                            req.url = req.url.replace("_" + colorMap, "");
 
 				// damn you async loads
 				if (this.queue.latestDrawRequestTimestamp < 0 ||
@@ -637,9 +618,9 @@ TissueStack.Canvas.prototype = {
 				}
 
                 // create the image object that loads the tile we need
-                if (this.cache[src] instanceof Image) {
+                if (this.queue.isImageCached(req.cache_key)) {
                     var args = {
-                        image: this.cache[src],
+                        image: this.queue.getCachedImage(req.cache_key),
                         timestamp: timestamp,
                         imageOffset : [imageOffsetX, imageOffsetY],
                         canvas: [canvasX, canvasY],
@@ -652,39 +633,40 @@ TissueStack.Canvas.prototype = {
                     var imageTile = new Image();
 
                     imageTile.crossOrigin = '';
-                    var appendix = "&id=" + this.sessionId +
-                    "&timestamp=" + timestamp;
-                    if (this.getDataExtent().getIsTiled())
-                        appendix = "?timestamp=" + timestamp
-                    imageTile.src = src + appendix;
+                    var appendix =
+                        !this.getDataExtent().getIsTiled() ?
+                        ("&id=" + this.sessionId + "&timestamp=" + timestamp) :
+                        "";
+                    imageTile.src = req.url + appendix;
 
                     (function(_this, timestamp, imageOffsetX, imageOffsetY,
                         canvasX, canvasY, width, height,
                         deltaStartTileXAndUpperLeftCornerX,
-                        deltaStartTileYAndUpperLeftCornerY, src) {
-    					imageTile.onerror = function(e) {
-                            if (_this.tilesRendered < _this.totalNumberOfTiles)
-                                _this.tilesRendered++;
-    						_this.displayLoadingProgress();
+                        deltaStartTileYAndUpperLeftCornerY, cache_key) {
+
+                        var args = {
+                            timestamp: timestamp,
+                            imageOffset : [imageOffsetX, imageOffsetY],
+                            canvas: [canvasX, canvasY],
+                            dims: [width, height],
+                            delta: [deltaStartTileXAndUpperLeftCornerX,
+                                    deltaStartTileYAndUpperLeftCornerY]};
+
+    					imageTile.onerror = function() {
+                            args.image = this;
+                            _this.renderTile(args, true);
     					};
     					imageTile.onload = function() {
-                            if (!(_this.cache[src] instanceof Image))
-                                _this.cache[src] = this;
-                            var args = {
-                                image: this,
-                                timestamp: timestamp,
-                                imageOffset : [imageOffsetX, imageOffsetY],
-                                canvas: [canvasX, canvasY],
-                                dims: [width, height],
-                                delta: [deltaStartTileXAndUpperLeftCornerX,
-                                        deltaStartTileYAndUpperLeftCornerY],
-                                };
+                            if (_this.queue &&
+                                !_this.queue.isImageCached(cache_key))
+                                _this.queue.addImageToCache(cache_key, this);
+                            args.image = this;
                             _this.renderTile(args);
     					};
     				})(this, timestamp, imageOffsetX, imageOffsetY,
                          canvasX, canvasY, width, height,
                          deltaStartTileXAndUpperLeftCornerX,
-                         deltaStartTileYAndUpperLeftCornerY, src);
+                         deltaStartTileYAndUpperLeftCornerY, req.cache_key);
                 }
 
 				// increment canvasY
@@ -695,7 +677,11 @@ TissueStack.Canvas.prototype = {
 			canvasX += width;
 		};
 	},
-    renderTile : function(args) {
+    renderTile : function(args, showPartial) {
+        if (!this.queue) return;
+
+        if (typeof showPartial !== 'boolean') showPartial = false;
+
         var tile_size = this.getDataExtent().tile_size;
         var width = args.dims[0];
         var height = args.dims[1];
@@ -727,14 +713,15 @@ TissueStack.Canvas.prototype = {
             return;
         }
 
-        preContext.drawImage(image,
-            imageOffset[0], imageOffset[1], width, height, // tile dimensions
-            canvas[0], canvas[1], width, height); // canvas dimensions
+        if (!showPartial) {
+            preContext.drawImage(image,
+                imageOffset[0], imageOffset[1], width, height, // tile dimensions
+                canvas[0], canvas[1], width, height); // canvas dimensions
+            this.queue.incrementTileCount();
+        }
 
-        ++this.tilesRendered;
-        this.displayLoadingProgress();
-
-        if (this.tilesRendered >= this.totalNumberOfTiles) {
+        if (this.queue.hasFinishedTiling() || showPartial) {
+            if (showPartial) this.queue.displayLoadingProgress(true, true);
             if (TissueStack.overlay_datasets &&
                 (this.overlay_canvas || this.underlying_canvas))
                 this.getCanvasElement().show();
@@ -756,10 +743,10 @@ TissueStack.Canvas.prototype = {
             this.getCanvasContext().putImageData(imageData, 0,0);
             this.syncDataSetCoordinates(this, timestamp, false);
 
-            if (this.is_main_view && this.checkMeasurements(
-                {x: 0, y: 0, z: this.data_extent.slice})) this.drawMeasuring();
-
-            this.queue.prefetchTiles(timestamp);
+            if (this.is_main_view && this.measurements &&
+                 this.measurements.checkMeasurements(
+                {x: 0, y: 0, z: this.data_extent.slice}))
+                    this.measurements.drawMeasuring();
         };
     },
 	syncDataSetCoordinates : function(_this, timestamp, eraseCanvas) {
@@ -982,134 +969,28 @@ TissueStack.Canvas.prototype = {
 		}
 
 		$('#'+this.dataset_id +'_link_message').html('<a href="' + url_link_message + '" target="_blank">' + url_link_message + '</a>');
-	}, displayLoadingProgress : function(reset) {
-		if (this.is_linked_dataset) // no display for overlay
-			return;
-
-		if (typeof(reset) == 'boolean' && reset) {
-			$("#" + this.dataset_id + " .tile_count_div progress").val(0);
-			$("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).html("0%");
-			$("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).hide();
-            return;
-		}
-
-		if (this.tilesRendered >= this.totalNumberOfTiles) {
-			$("#" + this.dataset_id + " .tile_count_div progress").val(100);
-			$("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).html("100%");
-            $("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).css('color', '');
-			$("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).show();
-			return;
-		}
-
-		var perCent = Math.round((this.tilesRendered / this.totalNumberOfTiles) * 100);
-		$("#" + this.dataset_id + " .tile_count_div progress").val(Math.round(perCent));
-		$("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).html(perCent + "%");
-        $("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).css('color', 'red');
-		$("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).show();
 	}, checkIfWeAreColorMapTiled : function(url) {
 		if (this.is_color_map_tiled == null && !(this.color_map == 'grey' || this.color_map == 'gray')) {
 			this.is_color_map_tiled = TissueStack.Utils.testHttpFileExistence(url);
 		}
 		return this.is_color_map_tiled;
-    }, checkMeasurements : function(point) {
-        if (typeof point !== 'object' || point === null ||
-            typeof point.x !== 'number' || typeof point.y !== 'number' ||
-            typeof point.z !== 'number')
-            return false;
-
-        for (var p in this.measurements) // plane check
-            if (this.measurements[p].z !== point.z) {
-                this.resetMeasurements();
-                break;
-            }
-        return true;
-	}, addMeasure : function(point, isPixelMeasure) {
-        if (!this.checkMeasurements(point)) return;
-
-        if (typeof isPixelMeasure !== 'boolean')
-            isPixelMeasure = true;
-
-        // note: store them as pixels and convert only when measuring
-        var realWorldCoords = point;
-        if (isPixelMeasure) {
-            realWorldCoords = this.data_extent.getWorldCoordinatesForPixel(point);
-            if (typeof realWorldCoords === 'object')
-                realWorldCoords.z = point.z;
+    },dispose : function() {
+        if (this.underlying_canvas) this.underlying_canvas = null;
+        if (this.overlay_canvas) this.overlay_canvas = null;
+        this.queue.dispose();
+        this.queue = null;
+        if (this.measurements) {
+            this.measurements.dispose();
+            this.measurements = null;
         }
-        if (this.checkMeasurements(realWorldCoords)) {
-            this.measurements.push(realWorldCoords);
-            this.drawMe(0);
+
+        if (this.is_main_view) {
+            this.displayPixelValue();
+            this.events.updateCoordinateDisplay(true, true);
+            this.updateExtentInfo();
         }
-    }, measureDistance : function() {
-        if (this.measurements.length <= 1) return 0.0;
-
-        var distance = 0.0;
-
-        for (var i=0,j=1;j<this.measurements.length;i++,j++)
-            distance += Math.sqrt(
-                Math.pow(this.measurements[j].x - this.measurements[i].x, 2) +
-                Math.pow(this.measurements[j].y - this.measurements[i].y, 2));
-
-        return distance;
-    }, measureArea : function() {
-        if (this.measurements.length <= 2) return 0.0;
-
-        var area = 0.0;
-
-        var closedMeasurements =
-            this.measurements.concat(this.measurements[0]);
-        for (var i=0,j=1;j<closedMeasurements.length;i++,j++)
-            area +=
-                closedMeasurements[i].x * closedMeasurements[j].y -
-                closedMeasurements[i].y * closedMeasurements[j].x;
-
-        return Math.abs(area) / 2;
-    }, resetMeasurements : function() {
-        this.measurements = [];
-        this.drawMe(0);
-    }, drawMeasuring : function() {
-        if (this.measurements.length === 0) return;
-
-        var ctx = this.getCanvasContext();
-        ctx.strokeStyle="rgba(255,255,0,1)";
-        ctx.fillStyle="rgba(255,255,0,1)";
-
-        var numOfPoints = this.measurements.length;
-        var firstCoords = null;
-        var lastCoords = null;
-        for (var i=0;i<numOfPoints;i++) {
-            var pixelCoords =
-                this.data_extent.getPixelForWorldCoordinates(
-                    this.measurements[i]);
-            // correct by image offset
-            pixelCoords.x += this.upper_left_x;
-            pixelCoords.y += (this.dim_y - this.upper_left_y);
-
-            if (i === 0)
-                firstCoords = pixelCoords;
-            else {
-                ctx.beginPath();
-                ctx.moveTo(lastCoords.x, lastCoords.y);
-                ctx.lineTo(pixelCoords.x, pixelCoords.y);
-                ctx.stroke();
-                ctx.closePath();
-            }
-            ctx.beginPath();
-            ctx.arc(pixelCoords.x, pixelCoords.y, 1.5, 0, 2* Math.PI);
-            ctx.fill();
-            ctx.closePath();
-            lastCoords = pixelCoords;
-            if (i > 1 && i === numOfPoints-1) {
-                ctx.beginPath();
-                ctx.save();
-                ctx.setLineDash([1, 1]);
-                ctx.strokeStyle="rgba(0,255,0,1)";
-                ctx.moveTo(pixelCoords.x, pixelCoords.y);
-                ctx.lineTo(firstCoords.x, firstCoords.y);
-                ctx.stroke();
-                ctx.restore();
-                ctx.closePath();
-            }
-        }
+        this.events.unbindAllEvents();
+        if (this.contrast) this.contrast.unregisterListeners();
+        this.overlays = null;
     }
 };
