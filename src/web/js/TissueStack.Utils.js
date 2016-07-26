@@ -569,26 +569,14 @@ TissueStack.Utils = {
 			   	$('.left_panel').css("color","white");
 			});
 	},sendAjaxRequest : function(url, method, async, success, error) {
-		if (typeof(url) != "string" || $.trim(url) == '') {
-			return;
-		}
-		if (typeof(method) != "string" || $.trim(method) == '') {
-			method = 'GET';
-		}
+		if (typeof(url) != "string" || $.trim(url) == '') return;
+		if (typeof(method) != "string" || $.trim(method) == '') method = 'GET';
 
-		if (typeof(async) != "boolean" || async == true) {
-			async = true;
-		} else {
-			async = false;
-		}
+		async = (typeof(async) != "boolean" || async == true);
 
-		if (typeof(success) != 'function') {
-			success = null;
-		}
+		if (typeof(success) != 'function') success = null;
 
-		if (typeof(error) != 'function') {
-			error = null;
-		}
+		if (typeof(error) != 'function') error = null;
 
 		$.ajax({
 			async : async,
@@ -695,15 +683,17 @@ TissueStack.Utils = {
 				TissueStack.dataSetStore.getDataSetById(
 						TissueStack.dataSetNavigation.selectedDataSets[whichEverCanvas1.dataset_id]),
 				plane1, plane2, true);
-	},transitionToDataSetView :  function() {
-    	if (TissueStack.dataSetNavigation.selectedDataSets.count > 0) {
-    		var sel = TissueStack.dataSetNavigation.selectedDataSets["dataset_1"];
-    		window.location.hash = '#data';
-    		TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(sel, false);
-    		setTimeout(function() {
-    			TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(sel, true);
-        		TissueStack.swappedOverlayOrder = false;
-    		}, 250);
+	},transitionToDataSetView :  function(reselect) {
+        $.mobile.changePage("#data", {allowSamePageTransition: true});
+
+        if (typeof reselect !== 'boolean') reselect = false;
+        if (TissueStack.dataSetNavigation.selectedDataSets.count > 1 && reselect) {
+            var sel = TissueStack.dataSetNavigation.selectedDataSets["dataset_1"];
+            setTimeout(function() {
+                TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(sel, false);
+                TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(sel, true);
+                TissueStack.swappedOverlayOrder = false;
+            }, 250);
     	}
 	}, testHttpFileExistence : function(url) {
 		var succeeded = false;

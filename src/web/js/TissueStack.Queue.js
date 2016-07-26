@@ -285,7 +285,7 @@ TissueStack.Queue.prototype = {
 		}
 
 		return true;
-    }, prefetchTiles(timestamp) {
+    }, prefetchTiles : function(timestamp) {
         var extent = this.canvas.getDataExtent();
         if (!this.canvas.is_main_view || extent.getIsTiled()) return;
 

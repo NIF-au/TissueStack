@@ -355,13 +355,15 @@ TissueStack.BindDataSetDependentEvents = function () {
     if (TissueStack.desktop) {
    		$('#sync_data_sets').unbind("change");
         $('#sync_data_sets').bind("change", function() {
+            var reselect = false;
         	TissueStack.sync_datasets = $('#sync_data_sets')[0].checked;
         	$('#sync_data_sets').checkboxradio("refresh");
         	if (!TissueStack.sync_datasets && TissueStack.overlay_datasets) {
+                reselect = true;
         		TissueStack.overlay_datasets = false;
         		$('#overlay_data_sets').removeAttr("checked").checkboxradio("refresh");
         	}
-        	TissueStack.Utils.transitionToDataSetView();
+        	TissueStack.Utils.transitionToDataSetView(reselect);
         });
 		$('#overlay_data_sets').unbind("change");
         $('#overlay_data_sets').bind("change", function() {
@@ -370,8 +372,11 @@ TissueStack.BindDataSetDependentEvents = function () {
         	if (TissueStack.overlay_datasets) {
 	        	$('#sync_data_sets').attr("checked", "checked").checkboxradio("refresh");
 	        	TissueStack.sync_datasets = true;
-        	}
-        	TissueStack.Utils.transitionToDataSetView();
+        	} else {
+                TissueStack.sync_datasets = false;
+                $('#sync_data_sets').removeAttr("checked").checkboxradio("refresh");
+            }
+        	TissueStack.Utils.transitionToDataSetView(true);
         });
     }
 

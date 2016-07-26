@@ -79,7 +79,7 @@ TissueStack.Canvas.prototype = {
 	sessionId : 0,
     is_2D : false,
     measurements : null,
-    cache : null,
+    cache : {},
     tilesRendered : 0,
     totalNumberOfTiles : 0,
     preCanvas : null,
@@ -536,18 +536,31 @@ TissueStack.Canvas.prototype = {
             this.upper_left_y > this.dim_y ?
             Math.abs(this.upper_left_y - (startTileY+1) * this.getDataExtent().tile_size - this.dim_y): 0;
 
+        var modX =
+            this.upper_left_x + this.getDataExtent().x < this.dim_x ?
+                this.getDataExtent().x %
+                    this.getDataExtent().tile_size :
+                (this.dim_x - this.upper_left_x) %
+                    this.getDataExtent().tile_size;
         var endTileX =
             this.upper_left_x + this.getDataExtent().x < this.dim_x ?
                 Math.floor(this.getDataExtent().x /
                     this.getDataExtent().tile_size) :
                 Math.floor((this.dim_x - this.upper_left_x) /
                     this.getDataExtent().tile_size);
+        if (modX === 0) endTileX--;
+
+        var modY =
+            this.upper_left_y - this.getDataExtent().y >= 0 ?
+                this.getDataExtent().y % this.getDataExtent().tile_size :
+                this.upper_left_y % this.getDataExtent().tile_size;
         var endTileY =
             this.upper_left_y - this.getDataExtent().y >= 0 ?
                 Math.floor(this.getDataExtent().y / this.getDataExtent().tile_size) :
                 Math.floor(this.upper_left_y / this.getDataExtent().tile_size);
+        if (modY=== 0) endTileY--;
 
-		var copyOfCanvasY = canvasY;
+        var copyOfCanvasY = canvasY;
 
         var tileRangeX = endTileX-startTileX+1;
         var tileRangeY = endTileY-startTileY+1;
@@ -649,7 +662,9 @@ TissueStack.Canvas.prototype = {
                         canvasX, canvasY, width, height,
                         deltaStartTileXAndUpperLeftCornerX,
                         deltaStartTileYAndUpperLeftCornerY, src) {
-    					imageTile.onerror = function() {
+    					imageTile.onerror = function(e) {
+                            if (_this.tilesRendered < _this.totalNumberOfTiles)
+                                _this.tilesRendered++;
     						_this.displayLoadingProgress();
     					};
     					imageTile.onload = function() {
@@ -719,7 +734,7 @@ TissueStack.Canvas.prototype = {
         ++this.tilesRendered;
         this.displayLoadingProgress();
 
-        if (this.tilesRendered == this.totalNumberOfTiles) {
+        if (this.tilesRendered >= this.totalNumberOfTiles) {
             if (TissueStack.overlay_datasets &&
                 (this.overlay_canvas || this.underlying_canvas))
                 this.getCanvasElement().show();
@@ -978,7 +993,7 @@ TissueStack.Canvas.prototype = {
             return;
 		}
 
-		if (this.tilesRendered == this.totalNumberOfTiles) {
+		if (this.tilesRendered >= this.totalNumberOfTiles) {
 			$("#" + this.dataset_id + " .tile_count_div progress").val(100);
 			$("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).html("100%");
             $("#" + this.dataset_id + " .tile_count_div span." + this.data_extent.plane).css('color', '');

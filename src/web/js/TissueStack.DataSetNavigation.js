@@ -134,7 +134,7 @@ TissueStack.DataSetNavigation.prototype = {
             }
 			dataSet.planes[plane].events.unbindAllEvents();
 			if (dataSet.planes[plane].contrast) dataSet.planes[plane].contrast.unregisterListeners();
-            dataSet.planes[plane].cache = null;
+            dataSet.planes[plane].cache = {};
 			dataSet.planes[plane].overlays = null;
 		}
 		dataSet.planes = {};
@@ -455,7 +455,7 @@ TissueStack.DataSetNavigation.prototype = {
                        function() {
                                 TissueStack.reverseOverlayOrder = TissueStack.reverseOverlayOrder ? false : true;
                                 TissueStack.swappedOverlayOrder = true;
-                                TissueStack.Utils.transitionToDataSetView();
+                                TissueStack.Utils.transitionToDataSetView(true);
                        };
 
 	    		   // brief check
