@@ -62,6 +62,7 @@ TissueStack.Queue.prototype = {
 
 			// work with deep copy, is safer and also leave last request in there instead of popping it
 			var latestRequest = $.extend(true, {}, _this.requests[_this.requests.length-1]);
+
 			_this.clearRequestQueue();
 			if (!latestRequest) {
 				_this.stopQueue();
@@ -331,7 +332,8 @@ TissueStack.Queue.prototype = {
         }
         this.startPrefetcher();
 	}, getPrefetchIdentifier : function() {
-        return this.canvas.getDataExtent().zoom_level + "/" +
+        return this.canvas.getDataExtent().slice + "/" +
+            this.canvas.getDataExtent().zoom_level + "/" +
             this.canvas.color_map +
                 (this.canvas.contrast ?
                     ("/" + this.canvas.contrast.canvas.contrast.getMinimum() +
@@ -448,12 +450,12 @@ TissueStack.Queue.prototype = {
                 // as a safeguard in case of long term connectivity loss or
                 // some crazy event that would keep the image list from decreasing
                 // we have a duration check so that prefetcher task will run
-                // no longer than 1 min
+                // no longer than 5 min
                 var presentPrefetchId = this.getPrefetchIdentifier();
                 if (!this.canvas.is_main_view ||
                     typeof this.prefetchList[presentPrefetchId] !== 'object' ||
                     this.prefetchList[presentPrefetchId].length === 0 ||
-                    now > this.prefetchStart + 60*1000) {
+                    now > this.prefetchStart + 5*60*1000) {
                      this.stopPrefetcher();
                      return;
                  }
@@ -463,9 +465,9 @@ TissueStack.Queue.prototype = {
                 var todoCount = 0;
                 for (var r=0;r<reqToProcess.length;r++) {
                     var req = reqToProcess[r];
-                    // we do this in batches of 5 so as to not stress the browser
+                    // we do this in batches of 10
                     // too much
-                    if (todoCount >= 5) {
+                    if (todoCount >= 10) {
                         newList.push(req);
                         continue;
                     }
@@ -485,6 +487,6 @@ TissueStack.Queue.prototype = {
                     }
                 }
                 this.prefetchList[presentPrefetchId] = newList;
-            }.bind(this), 2500);
+            }.bind(this), 2000);
     }
 };
