@@ -19,6 +19,9 @@ TissueStack.Queue = function (canvas) {
     this.tilesRendered = 0;
     this.totalNumberOfTiles = 0;
     this.cache = {};
+    this.is_partial_render = false;
+    this.prefetchList = {};
+    this.prefetcherHandle = null;
 };
 
 TissueStack.Queue.prototype = {
@@ -33,6 +36,9 @@ TissueStack.Queue.prototype = {
     tilesRendered : 0,
     totalNumberOfTiles : 0,
     cache : null,
+    is_partial_render : false,
+    prefetchList : null,
+    prefetcherHandle : null,
 	setDrawingInterval : function(value) {
 		if (typeof(value) !== 'number' || value < 0) {
 			value = 100; // set to default
@@ -291,9 +297,18 @@ TissueStack.Queue.prototype = {
 		}
 
 		return true;
-    }, prefetchTiles : function(timestamp) {
+    }, prefetchTiles : function() {
         var extent = this.canvas.getDataExtent();
         if (!this.canvas.is_main_view || extent.getIsTiled()) return;
+
+        var aboutToPrefetchId = this.getPrefetchIdentifier();
+        // check if we are on the prefetch list...
+        if (typeof this.prefetchList[aboutToPrefetchId] === 'object') {
+            this.startPrefetcher();
+            return;
+        }
+
+        this.prefetchList[aboutToPrefetchId] = [];
 
         var dataSet = TissueStack.dataSetStore.getDataSetById(extent.data_id);
         var endTileX =
@@ -311,24 +326,17 @@ TissueStack.Queue.prototype = {
                     TissueStack.Utils.assembleTissueStackImageRequest(
                         dataSet, this.canvas, false, this.canvas.color_map,
                         tileX, tileY);
-
-                if (!this.isImageCached(req.cache_key)) {
-                    var imageTile = new Image();
-
-                    imageTile.crossOrigin = '';
-                    var appendix = "&id=" + this.canvas.sessionId +
-                    "&timestamp=" + timestamp;
-                    imageTile.src = req.url + appendix;
-
-                    (function(this_, cache_key) {
-                        imageTile.onload = function() {
-                            this_.addImageToCache(cache_key, this);
-                        }
-                    })(this, req.cache_key);
-                }
+                this.prefetchList[aboutToPrefetchId].push(req);
             }
         }
-	}, tidyUp : function() {
+        this.startPrefetcher();
+	}, getPrefetchIdentifier : function() {
+        return this.canvas.getDataExtent().zoom_level + "/" +
+            this.canvas.color_map +
+                (this.canvas.contrast ?
+                    ("/" + this.canvas.contrast.canvas.contrast.getMinimum() +
+                    "/" + this.canvas.contrast.canvas.contrast.getMaximum()) : "");
+    }, tidyUp : function() {
 		if (this.canvas.getDataExtent().slice < 0 || this.canvas.getDataExtent().slice > this.canvas.getDataExtent().max_slices
 				|| this.canvas.upper_left_x > this.canvas.dim_x || this.canvas.upper_left_x + this.canvas.data_extent.x < 0
 				|| this.canvas.upper_left_y < 0 || this.canvas.upper_left_y - this.canvas.data_extent.y > this.canvas.dim_y) {
@@ -404,6 +412,8 @@ TissueStack.Queue.prototype = {
         this.stopQueue();
         this.canvas = null;
         this.cache = null;
+        this.stopPrefetcher();
+        this.prefetchList = null;
     }, isImageCached : function(cache_key) {
         if (typeof cache_key !== 'string' || cache_key.length === 0)
             return false;
@@ -416,5 +426,65 @@ TissueStack.Queue.prototype = {
         if (typeof cache_key !== 'string' || cache_key.length === 0) return null;
         if (this.cache) return this.cache[cache_key];
         return null;
+    }, stopPrefetcher : function() {
+        if (this.prefetcherHandle) {
+            clearInterval(this.prefetcherHandle);
+            this.prefetcherHandle = null;
+            this.prefetchStart = null;
+        }
+    }, startPrefetcher : function() {
+        if (this.prefetcherHandle) return;
+
+        this.prefetcherHandle = setInterval(
+            function() {
+                var now = new Date().getTime();
+                if (this.prefetchStart === null)
+                    this.prefetchStart = now;
+                // we are rather conservative so as to not impact on performance
+                // if we are presently not the main canvas queue we don't do
+                // anything. neither do we pre-fetch if we are not in the zoom
+                // level/color/contrast setting enqueued or, of course, once
+                // we have finished prefetching altogether
+                // as a safeguard in case of long term connectivity loss or
+                // some crazy event that would keep the image list from decreasing
+                // we have a duration check so that prefetcher task will run
+                // no longer than 1 min
+                var presentPrefetchId = this.getPrefetchIdentifier();
+                if (!this.canvas.is_main_view ||
+                    typeof this.prefetchList[presentPrefetchId] !== 'object' ||
+                    this.prefetchList[presentPrefetchId].length === 0 ||
+                    now > this.prefetchStart + 60*1000) {
+                     this.stopPrefetcher();
+                     return;
+                 }
+
+                var reqToProcess = this.prefetchList[presentPrefetchId];
+                var newList = [];
+                var todoCount = 0;
+                for (var r=0;r<reqToProcess.length;r++) {
+                    var req = reqToProcess[r];
+                    // we do this in batches of 5 so as to not stress the browser
+                    // too much
+                    if (todoCount >= 5) {
+                        newList.push(req);
+                        continue;
+                    }
+                    if (!this.isImageCached(req.cache_key)) {
+                        todoCount++;
+                        newList.push(req);
+                        var imageTile = new Image();
+
+                        imageTile.crossOrigin = '';
+                        imageTile.src = req.url;
+
+                        (function(this_, cache_key) {
+                            imageTile.onload = function() {
+                                this_.addImageToCache(cache_key, this);
+                            }
+                        })(this, req.cache_key);
+                    }
+                }
+                this.prefetchList[presentPrefetchId] = newList;
+            }.bind(this), 2500);
     }
 };

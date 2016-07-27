@@ -494,8 +494,8 @@ TissueStack.Utils = {
                     "" : ("_" + colormap)) + "." + image_extension;
             return ret;
 		} else {
-            var min = canvas.contrast.getMinimum();
-            var max = canvas.contrast.getMaximum();
+            var min = canvas.contrast ? canvas.contrast.getMinimum() : 0;
+            var max = canvas.contrast ? canvas.contrast.getMaximum() : 255;
 
             ret.cache_key =
                 canvas.getDataExtent().zoom_level + "/" + slice + "/" +
