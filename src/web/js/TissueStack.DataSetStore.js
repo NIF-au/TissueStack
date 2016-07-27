@@ -33,7 +33,7 @@ TissueStack.DataSetStore.prototype = {
 		}
 		return this.datasets[id];
 	},
-	// slow !! don't use unless really necessary. rather loop with for ... in 
+	// slow !! don't use unless really necessary. rather loop with for ... in
 	getDataSetByIndex : function(index) {
 		if (typeof(index) != 'number' || index < 0 || index > this.getSize() || this.getSize() == 0) {
 			return null;
@@ -50,20 +50,20 @@ TissueStack.DataSetStore.prototype = {
 		if (!dataSet || !dataSet.planes) {
 			return null;
 		}
-		
+
 		// coin id
 		var id = dataSet.id;
 		if (!host) {
 			host = "localhost";
 		}
 		id = host + "_" + id;
-		
+
 		// check if we exist already in the tree, if so issue an alert
 		if (this.datasets[id]) {
 			alert("Data Set with Id " + id + " exists already!");
 			return null;
 		}
-		
+
 		this.datasets[id] = {};
 		this.datasets[id].host = host;
 		this.datasets[id].id = id;
@@ -72,10 +72,10 @@ TissueStack.DataSetStore.prototype = {
 		this.datasets[id].filename = dataSet.filename ? dataSet.filename : "";
 		this.datasets[id].associatedAtlas = (dataSet.lookupValues && dataSet.lookupValues.associatedAtlas) ?
 				dataSet.lookupValues.associatedAtlas : null;
-		this.datasets[id].lookupValues = 
-			(dataSet.lookupValues && dataSet.lookupValues.content) ? 
+		this.datasets[id].lookupValues =
+			(dataSet.lookupValues && dataSet.lookupValues.content) ?
 					$.parseJSON(dataSet.lookupValues.content) : null;
-		this.datasets[id].associatedDataSets = 
+		this.datasets[id].associatedDataSets =
 						(dataSet.associatedDataSets) ? 	dataSet.associatedDataSets : null;
 		if (this.datasets[id].associatedDataSets && this.datasets[id].associatedDataSets.length > 0)
 			for (ii=0;ii<this.datasets[id].associatedDataSets.length;ii++)
@@ -85,7 +85,7 @@ TissueStack.DataSetStore.prototype = {
 					this.datasets[id].associatedDataSets[ii].associatedDataSet.lookupValues.content =
 						$.parseJSON(this.datasets[id].associatedDataSets[ii].associatedDataSet.lookupValues.content);
 		if (dataSet.overlays && dataSet.overlays.length > 0)
-				this.datasets[id].overlays = dataSet.overlays; 
+				this.datasets[id].overlays = dataSet.overlays;
 		// this is the data for initialization
 		this.datasets[id].data = dataSet.planes;
         this.datasets[id].is2DData = TissueStack.ComponentFactory.is2Ddata(this.datasets[id].data);
@@ -94,7 +94,7 @@ TissueStack.DataSetStore.prototype = {
 		// this is the map node where we store the real world extents for the actual runtime canvases once they have been created
 		this.datasets[id].realWorldCoords = {};
 		this.datasetCount += 1;
-		
+
 		return this.datasets[id];
 	}, fetchDataSetsFromServer : function(host, id, customSuccessHandler) {
 		if (!host) {
@@ -112,9 +112,9 @@ TissueStack.DataSetStore.prototype = {
 			//url += ("/" + id);
 			url += ("&action=query&id=" + id);
 		}
-		
+
 		_this = this;
-		
+
 		TissueStack.Utils.sendAjaxRequest(
 				url, 'GET',	true,
 				function(data, textStatus, jqXHR) {
@@ -122,22 +122,22 @@ TissueStack.DataSetStore.prototype = {
 						alert("Did not receive anyting, neither success nor error ....");
 						return;
 					}
-					
+
 					if (data.error) {
 						var message = "Application Error: " + (data.error.description ? data.error.description : " no more info available. check logs.");
 						alert(message);
 						return;
 					}
-					
+
 					if (data.response.noResults) {
 						alert("No data sets found in configuration database");
 						if (customSuccessHandler) customSuccessHandler();
-						
+
 						return;
 					}
-					
+
 					var dataSets = data.response;
-					
+
 					for (var x=0;x<dataSets.length;x++) {
 						_this.addDataSetToStore(dataSets[x], "localhost");
 					}
@@ -146,7 +146,7 @@ TissueStack.DataSetStore.prototype = {
 				},
 				function(jqXHR, textStatus, errorThrown) {
 					alert("Error connecting to backend: " + textStatus + " " + errorThrown);
-				}				
+				}
 		);
 	},	lookupValueForRGBTriple : function(dataSet, rgbTriples) {
 		if (typeof(dataSet) != 'object' || typeof(rgbTriples) != 'object' || !rgbTriples
@@ -154,14 +154,14 @@ TissueStack.DataSetStore.prototype = {
 
 		// first look up the label info for the actual data set
 		if (typeof(dataSet.lookupValues) == 'object' && dataSet.lookupValues) {
-			var label_key = 
+			var label_key =
 				'' + rgbTriples[dataSet.filename].red + '/' + rgbTriples[dataSet.filename].green + '/' + rgbTriples[dataSet.filename].blue;
 			var label = dataSet.lookupValues[label_key];
 			if (typeof(label) != 'undefined')	rgbTriples[dataSet.filename].label = label;
 		}
 		// loop over associated data sets if they exist
-		
-		if (TissueStack.desktop && dataSet.associatedDataSets && dataSet.associatedDataSets.length > 0) 
+
+		if (TissueStack.desktop && dataSet.associatedDataSets && dataSet.associatedDataSets.length > 0)
 			for (i=0; i<dataSet.associatedDataSets.length;i++) {
 				var assocDs = dataSet.associatedDataSets[i];
 				if (!assocDs) continue;
@@ -177,7 +177,7 @@ TissueStack.DataSetStore.prototype = {
 					if (typeof(label) != 'undefined') assocRGBTriples.label = label;
 				}
 			}
-		
+
 		return rgbTriples;
 	}
 };

@@ -702,7 +702,6 @@ TissueStack.DataSetNavigation.prototype = {
                         TissueStack.ComponentFactory.createColorMapSwitcher(dsDiv);
                         TissueStack.ComponentFactory.createUrlLink(dsDiv);
                         TissueStack.ComponentFactory.createContrastSlider(dsDiv, dataSet);
-                        TissueStack.ComponentFactory.applyUserParameters({"plane" : "y"}, dataSet);
                     }
 
 					_this.showDataSet(1);
@@ -715,6 +714,7 @@ TissueStack.DataSetNavigation.prototype = {
                     if (TissueStack.tablet) {
                         TissueStack.Utils.adjustScreenContentToActualScreenSize(1);
                         TissueStack.ComponentFactory.redrawDataSet(dataSet);
+                        TissueStack.ComponentFactory.applyUserParameters({"plane" : "y"}, dataSet);
 					}
 
                     //redirect to x plane after expanded

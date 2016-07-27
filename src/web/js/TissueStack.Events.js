@@ -225,7 +225,7 @@ TissueStack.Events.prototype = {
 		this.canvas.mouse_x = coords.x;
 		this.canvas.mouse_y = coords.y;
 	}, panEnd : function(e) {
-        if (this.canvas.isDragging)
+        if (TissueStack.desktop && this.canvas.isDragging)
             this.panAndMove(e, true);
 		this.canvas.mouse_down = false;
 		this.updateCoordinateDisplay();
@@ -444,10 +444,6 @@ TissueStack.Events.prototype = {
 			return;
 
         this.canvas.changeToZoomLevel(newZoomLevel);
-        //var now = new Date().getTime();
-        //this.canvas.queue.latestDrawRequestTimestamp = now;
-        //this.canvas.drawMe(now);
-		//this.canvas.eraseCanvasContent();
 		this.canvas.queue.addToQueue(
 				{	data_id : this.canvas.data_extent.data_id,
 					dataset_id : this.canvas.dataset_id,
