@@ -260,22 +260,43 @@ TissueStack.DataSetNavigation.prototype = {
 
 		var _this = this;
 
-		$(span).contextMenu({menu: "dynaTreeContextMenu"}, function(action, el, pos) {
-			var node = _this.getDynaTreeNode(el);
+        $(span).on("contextmenu",
+			function(event) {
+                var node = _this.getDynaTreeNode(event.currentTarget);
 
-			switch( action ) {
-				case "toggleTiling":
-					if (node.data.isFolder || node.data.isBaseLayer) {
-						if (node.data.isBaseLayer) node = node.parent;
-						for (var i=0; i< node.childList.length;i++) {
-							_this.toggleTiles(node.childList[i], node.data.tiled);
-						}
-						node.data.tiled = (node.data.tiled ? false : true);
-					} else if (node.data.isOverlay) {
-						alert("Overlays cannot be changed!");
-					}
-				break;
-			}
+                myTreeContext.off("mouseover mouseout");
+                myTreeContext.on("mouseover", function() {
+                    myTreeContext.show();});
+                myTreeContext.on("mouseout", function() {
+                    myTreeContext.hide();});
+
+                $('.toggleTiling').off("mouseover mouseout click");
+                $('.toggleTiling').on("mouseover",
+                    function(event) {$(this).addClass("hover");});
+                $('.toggleTiling').on("mouseout",
+                    function(event) {$(this).removeClass("hover");});
+
+                $('.toggleTiling').on("click", function(event) {
+                    if (node.data.isFolder || node.data.isBaseLayer) {
+                        if (node.data.isBaseLayer) node = node.parent;
+                        for (var i=0; i< node.childList.length;i++) {
+                            _this.toggleTiles(node.childList[i], node.data.tiled);
+                        }
+                        node.data.tiled = (node.data.tiled ? false : true);
+                    } else if (node.data.isOverlay) {
+                        alert("Overlays cannot be changed!");
+                    }
+                });
+
+                var pos = $(event.currentTarget).position();
+                myTreeContext.css({top: pos.top, left: event.clientX});
+                myTreeContext.show();
+
+				// stop browser from showing you its context menu
+				if (event.stopPropagation)
+					event.stopPropagation();
+				else event.cancelBubble = true;
+				return false;
 		});
 	},
     checkCoordinateCompatibility : function(worldCoordinatesOne, worldCoordinatesTwo) {
