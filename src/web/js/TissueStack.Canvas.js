@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with TissueStack.  If not, see <http://www.gnu.org/licenses/>.
  */
-TissueStack.Canvas = function(data_extent, canvas_id, dataset_id, include_cross_hair, is_linked_dataset) {
+TissueStack.Canvas = function(data_extent, canvas_id, dataset_id, include_cross_hair) {
 	this.sessionId = TissueStack.Utils.generateSessionId();
 	// assemble data set id
 	this.dataset_id = typeof(dataset_id) != "string" ? "" : dataset_id;
@@ -26,9 +26,7 @@ TissueStack.Canvas = function(data_extent, canvas_id, dataset_id, include_cross_
 	this.centerUpperLeftCorner();
 	this.drawCoordinateCross(this.getCenter());
 	this.setIncludeCrossHair(include_cross_hair);
-	if (typeof(is_linked_dataset) == 'boolean' && is_linked_dataset)
-		this.is_linked_dataset = true;
-	if (!this.is_linked_dataset) this.events = new TissueStack.Events(this, this.include_cross_hair);
+	this.events = new TissueStack.Events(this, this.include_cross_hair);
 	this.queue = new TissueStack.Queue(this);
 	this.contrast = null; // a shared instance of a contrast slider
 	// make parent and ourselves visible
@@ -51,7 +49,6 @@ TissueStack.Canvas.prototype = {
 	 *    -) They can come in 'non base dataset' formats such as svg or be an internal format for canvas drawing instructions
 	 */
 	overlays: null,
-	is_linked_dataset: false,
 	is_main_view: false,
 	data_extent: null,
 	dataset_id: "",
@@ -146,9 +143,8 @@ TissueStack.Canvas.prototype = {
 		if (!this.getCanvasElement() || this.getCanvasElement().length == 0 || !coords) return;
 
 		var ctx = this.getCanvasContext();
-		if ((TissueStack.overlay_datasets && this.underlying_canvas) || this.is_linked_dataset) {
+		if (TissueStack.overlay_datasets && this.underlying_canvas)
 			ctx = this.preCanvas.getContext("2d");
-		}
 
 		var dataForPixel = ctx.getImageData(coords.x, coords.y, 1, 1);
 		if (!dataForPixel || !dataForPixel.data) return;
@@ -515,7 +511,7 @@ TissueStack.Canvas.prototype = {
         this.preCanvas.width = this.dim_x;
         this.preCanvas.height = this.dim_y;
 
-        if ((TissueStack.overlay_datasets && this.underlying_canvas) || this.is_linked_dataset)
+        if (TissueStack.overlay_datasets && this.underlying_canvas)
             this.preCanvas.getContext('2d').globalAlpha = TissueStack.transparency;
 
 		var startTileX = this.upper_left_x < 0 ?
@@ -739,11 +735,8 @@ TissueStack.Canvas.prototype = {
                 this.applyContrastAndColorMapToImageData(
                     preContext.getImageData(0,0, this.dim_x, this.dim_y));
 
-            if ((TissueStack.overlay_datasets && this.underlying_canvas) || this.is_linked_dataset) {
-                     this.getCanvasContext().globalCompositeOperation = 'copy';
-                     this.getCanvasContext().globalAlpha = TissueStack.transparency;
-                     this.getCanvasContext().globalCompositeOperation = 'source-over';
-             }
+            if (TissueStack.overlay_datasets && this.underlying_canvas)
+                this.getCanvasContext().globalAlpha = TissueStack.transparency;
 
             this.getCanvasContext().putImageData(imageData, 0,0);
             this.syncDataSetCoordinates(this, timestamp, false);

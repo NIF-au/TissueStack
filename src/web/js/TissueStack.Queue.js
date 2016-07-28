@@ -78,11 +78,8 @@ TissueStack.Queue.prototype = {
 
 			_this.latestDrawRequestTimestamp = latestRequest.timestamp;
 
-            if (_this.prepareDrawRequest(latestRequest)) {
-                if (_this.canvas.is_linked_dataset)
-                    _this.canvas.eraseCanvasContent();
+            if (_this.prepareDrawRequest(latestRequest))
                 _this.canvas.drawMe(latestRequest.timestamp);
-            }
 		}, this.drawingIntervalInMillis);
 	},
 	stopQueue : function() {
@@ -369,8 +366,7 @@ TissueStack.Queue.prototype = {
 						this.canvas.dim_y : this.canvas.dim_y - Math.floor(this.canvas.dim_y - (this.canvas.upper_left_y - this.canvas.getDataExtent().y)));
 		}
 	}, displayLoadingProgress : function(reset, error) {
-        if (this.canvas.is_linked_dataset) // no display for overlay
-            return;
+        if (TissueStack.phone) return;
 
         var dataset_id = this.canvas.dataset_id;
         var plane = this.canvas.data_extent.plane
