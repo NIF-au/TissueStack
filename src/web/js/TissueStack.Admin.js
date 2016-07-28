@@ -57,9 +57,9 @@ TissueStack.Admin.prototype = {
 		// file upload for the desktop as well as log in
 		if (TissueStack.desktop) {
 			$('#submit_new_file').unbind("click");
-			$('#submit_new_file').bind("click", 
+			$('#submit_new_file').bind("click",
 				function() {
-					$('#uploadForm').submit();	
+					$('#uploadForm').submit();
 			});
 		}
 
@@ -95,7 +95,7 @@ TissueStack.Admin.prototype = {
 
 	 		TissueStack.Utils.sendAjaxRequest(
  				"/" + TissueStack.configuration['server_proxy_path'].value +
- 				"/?service=services&sub_service=security&action=new_session&password="+ password, 'GET', true,
+ 				"/?service=services&sub_service=security&action=new_session&password="+ password, 'GET',
  				function(data, textStatus, jqXHR) {
 					if (!data.response && !data.error) {
 						_this.replaceErrorMessage("Did not receive any session, neither lose session ....");
@@ -148,7 +148,7 @@ TissueStack.Admin.prototype = {
 	 		TissueStack.Utils.sendAjaxRequest(
 	 				"/" + TissueStack.configuration['server_proxy_path'].value +
 	 				"/?service=services&sub_service=security&action=passwd&old_passwd="+ old_password
-	 				+ "&new_passwd=" + new_password, 'GET', true,
+	 				+ "&new_passwd=" + new_password, 'GET',
  				function(data, textStatus, jqXHR) {
 					if (!data.response && !data.error) {
 						_this.replaceErrorMessage("Serious Backend Error!");
@@ -246,7 +246,7 @@ TissueStack.Admin.prototype = {
 	    	 if (typeof(action) == 'string' && action === 'Convert') url += "&display_conversion_formats_only=true";
 	    	$("#directory_name").html((typeof(action) == 'string' && action === 'PreTile') ? "Data Sets" : "Upload Directory");
 
-	      	TissueStack.Utils.sendAjaxRequest(url, "GET", true,function(result) {
+	      	TissueStack.Utils.sendAjaxRequest(url, "GET", function(result) {
 	        	var listOfFileName = "";
 	      		if (result && result.response && result.response.length > 0) {
 			        $.each(result.response, function(i, uploadedFile){
@@ -268,14 +268,16 @@ TissueStack.Admin.prototype = {
 	},
 	registerFileUploadHandler : function () {
 		var _this = this;
-
-		// upload progress elements
 		var bar = $('.bar');
 		var percent = $('.percent');
 
 		 $("#uploadForm").submit(function(e){
+             // reset to zero percent
+             bar.width('0%');
+             percent.html('0%');
+
 			// error display helper
-			var errorHandling2 = function(message) {
+			var errorHandling = function(message) {
 			    bar.width('0%');
 			    percent.html('0%');
 				_this.replaceErrorMessage(message);
@@ -283,15 +285,8 @@ TissueStack.Admin.prototype = {
 
 			// extract file name and start upload monitor
 			var filename = $.trim($('#filename_1').val());
-			var progressUpdater = null;
 			if (filename == '') {
-				errorHandling2("Error: Please select a file for upload!");
-				return false;
-			}
-
-			// check session validity beforehand
-			if (!_this.checkSessionValidity(_this.session)) {
-				errorHandling2("Error: Invalid Session! Please Log In.");
+				errorHandling("Error: Please select a file for upload!");
 				return false;
 			}
 
@@ -301,138 +296,153 @@ TissueStack.Admin.prototype = {
 				slashPos = filename.lastIndexOf('/');
 			if (slashPos > 0)
 				filename = filename.substring(slashPos+1);
-	
+
 			var lowerCaseFileName = filename.toLowerCase();
-	
+
 			if (lowerCaseFileName.lastIndexOf(".mnc") < 0 &&
 				lowerCaseFileName.lastIndexOf(".nii") < 0 &&
 				lowerCaseFileName.lastIndexOf(".nii.gz") < 0 &&
 				lowerCaseFileName.lastIndexOf(".dcm") < 0 &&
 				lowerCaseFileName.lastIndexOf(".ima") < 0 &&
 				lowerCaseFileName.lastIndexOf(".zip") < 0 &&
-				lowerCaseFileName.lastIndexOf(".raw") < 0) {				
-				errorHandling2("Error: Uploaded file needs to be of the following type: .mnc, .nii, .nii.gz, .dcm, .ima, .zip or .raw!");
-				return false;	
-			}
-				
-			// check existence of file in upload beforehand
-			var stopExecution = _this.checkExistenceOfFileInUploadDirectory(_this, filename);
-			if (stopExecution)
+				lowerCaseFileName.lastIndexOf(".raw") < 0) {
+				errorHandling("Error: Uploaded file needs to be of the following type: .mnc, .nii, .nii.gz, .dcm, .ima, .zip or .raw!");
 				return false;
+			}
 
-			// reset to zero percent
-	        bar.width('0%');
-	        percent.html('0%');
-			// we query periodically and abort after 5 failed communications
-			var failedQueryAttempts = 5;
-			var error_handling = function() {
-				if (failedQueryAttempts <= 0) {
-					if (progressUpdater) clearInterval(progressUpdater);
-					if(percent.html() != 'Failed to upload File!') {
-						percent.html('Failed to upload File!');
-						_this.replaceErrorMessage("Failed to upload file. It may be connectivity or you exceeded the upload limit (10GB) !");
-	 				}
-				}
-				failedQueryAttempts--;
-			};
+			// check existence of file in upload beforehand which included session check
+			_this.checkExistenceOfFileInUploadDirectory(filename);
 
-			// the periodic request
-			progressUpdater = setInterval(function () {
-				TissueStack.Utils.sendAjaxRequest(
-						"/" + TissueStack.configuration['server_proxy_path'].value +
-						 "/?service=services&sub_service=admin&action=upload_progress&file=" + filename,
-						'GET', true,
-						function(data, textStatus, jqXHR) {
-							if ((!data.response && !data.error)
-									|| data.error || data.response.noResults) {
-								error_handling();
-								return;
-							}
-
-							try {
-								var progress = data.response.progress;
-
-								// file may not have been there due to periodic writing
-								if (progress == -1)
-									return;
-
-								//  we are finished: cancel progress monitor
-								if (progress >= 100 ) {
-							    	bar.width('100%');
-							    	percent.html('100%');
-									if (progressUpdater) clearInterval(progressUpdater);
-									_this.displayUploadDirectory();
-									_this.replaceErrorMessage("File Has Been Uploaded Successfully!");
-									$('.error_message').css("background", "#32CD32");
-
-									return;
-								}
-
-								// update percent
-						    	var percentVal = progress + '%';
-						    	bar.width(percentVal);
-						    	percent.html(percentVal);
-						    	// reset failed counter
-								failedQueryAttempts = 5;
-							} catch (anything) {
-								error_handling();
-							}
-						},
-						function(jqXHR, textStatus, errorThrown) {
-							error_handling();
-							return;
-						}
-					);
-				}, 1500);
-
-			// the actual submit for the file upload
-			$(this).ajaxSubmit({
-				url : "/" + TissueStack.configuration['server_proxy_path'].value +
-					"/?service=services&sub_service=admin&action=upload&session=" + _this.session,
-				dataType : "json",
-				success: function(data, textStatus, jqXHR) {
-					if (!data.response && !data.error) {
-						errorHandling2("No File Submission!");
-						return false;
-					}
-
-					if (data.error) {
-						errorHandling2("Error: " + (data.error.description ? data.error.description : " No File Submission!"));
-						return false;
-					}
-
-					if (data.response.noResults) {
-						errorHandling2("No Results!");
-						return false;
-					}
-				},
-				error: function(jqXHR, textStatus, errorThrown) {
-					percent.html('Failed to upload File!');
-					_this.replaceErrorMessage("Failed to upload file. It may be connectivity or you exceeded the upload limit (10GB)!");
-					return false;
-				}
-			});
 			return false;
 		});
-	},
-	checkExistenceOfFileInUploadDirectory : function(__this, filename)	{
-		var stopExecution = true;
+	}, submitFileUpload : function(filename) {
+        // the actual submit for the file upload
+        var _this = this;
+		var bar = $('.bar');
+		var percent = $('.percent');
 
+        // reset to zero percent
+        bar.width('0%');
+        percent.html('0%');
+
+        // we query periodically and abort after 5 failed communications
+        var progressUpdater = null;
+        var failedQueryAttempts = 5;
+
+		var errorHandler1 = function(message) {
+            if (progressUpdater) clearInterval(progressUpdater);
+		    bar.width('0%');
+		    percent.html('0%');
+			_this.replaceErrorMessage(message);
+		};
+        var errorHandler2 = function() {
+            if (failedQueryAttempts <= 0) {
+                if (progressUpdater) clearInterval(progressUpdater);
+                if(percent.html() != 'Failed to upload File!') {
+                    percent.html('Failed to upload File!');
+                    _this.replaceErrorMessage("Failed to upload file. It may be connectivity or you exceeded the upload limit (10GB) !");
+                }
+            }
+            failedQueryAttempts--;
+        };
+        var successHandler = function() {
+            bar.width('100%');
+            percent.html('100%');
+            if (progressUpdater) clearInterval(progressUpdater);
+            _this.displayUploadDirectory();
+            _this.replaceErrorMessage("File Has Been Uploaded Successfully!");
+            $('.error_message').css("background", "#32CD32");
+
+            TissueStack.Utils.sendAjaxRequest(
+                "/" + TissueStack.configuration['server_proxy_path'].value +
+                 "/?service=services&sub_service=admin&action=upload_progress&file=" + filename,
+                'GET');
+        }
+
+        $("#uploadForm").ajaxSubmit({
+            url : "/" + TissueStack.configuration['server_proxy_path'].value +
+                "/?service=services&sub_service=admin&action=upload&session=" + _this.session,
+            dataType : "json",
+            success: function(data, textStatus, jqXHR) {
+                if (!data.response && !data.error) {
+                    errorHandler1("No File Submission!");
+                    return false;
+                }
+                if (data.error) {
+                    errorHandler1("Error: " + (data.error.description ? data.error.description : " No File Submission!"));
+                    return false;
+                }
+                successHandler();
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                percent.html('Failed to upload File!');
+                _this.replaceErrorMessage("Failed to upload file. It may be connectivity or you exceeded the upload limit (10GB)!");
+                return false;
+            }
+        });
+
+        // the periodic request
+        progressUpdater = setInterval(function () {
+            TissueStack.Utils.sendAjaxRequest(
+                    "/" + TissueStack.configuration['server_proxy_path'].value +
+                     "/?service=services&sub_service=admin&action=upload_progress&file=" + filename,
+                    'GET',
+                    function(data, textStatus, jqXHR) {
+                        if ((!data.response && !data.error)
+                                || data.error || data.response.noResults) {
+                            errorHandler2();
+                            return;
+                        }
+
+                        try {
+                            var progress = data.response.progress;
+
+                            // file may not have been there due to periodic writing
+                            if (progress == -1)
+                                return;
+
+                            //  we are finished: cancel progress monitor
+                            if (progress >= 100 ) {
+                                successHandler();
+                                return;
+                            }
+
+                            // update percent
+                            var percentVal = progress + '%';
+                            bar.width(percentVal);
+                            percent.html(percentVal);
+                            // reset failed counter
+                            failedQueryAttempts = 5;
+                        } catch (anything) {
+                            errorHandler2();
+                        }
+                    },
+                    function(jqXHR, textStatus, errorThrown) {
+                        errorHandler2();
+                        return;
+                    }
+                );
+            }, 1500);
+    },
+	checkExistenceOfFileInUploadDirectory : function(filename)	{
+		var _this = this;
 		TissueStack.Utils.sendAjaxRequest(
 			"/" + TissueStack.configuration['server_proxy_path'].value +
 			"/?service=services&sub_service=admin&action=file_exists&file=" +
 			TissueStack.configuration['upload_directory'].value + "/" + filename +
-			"&session=" + __this.session,
-			'GET', false,
+			"&session=" + _this.session, 'GET',
 			function(data, textStatus, jqXHR) {
 				if (!data.response && !data.error) {
-					__this.replaceErrorMessage("Received neither response nor error!");
-					stopExecution = true;
+					_this.replaceErrorMessage("Received neither response nor error!");
 					return true;
 				}
 				if (data.error) {
+                    if (data.error.description.indexOf("File exists already!") != 0)
+                    {
+                        _this.replaceErrorMessage(data.error.description);
+                        return false;
+                    }
 					if (!confirm("The file exists already! Do you want to delete it?")) {
-				        stopExecution = true;
 				        return false;
 				    }
 
@@ -441,65 +451,65 @@ TissueStack.Admin.prototype = {
 						"/" + TissueStack.configuration['server_proxy_path'].value +
 						"/?service=services&sub_service=admin&action=file_delete&file=" +
 						TissueStack.configuration['upload_directory'].value + "/" + filename +
-						"&session=" + __this.session,
-						'GET', false,
+						"&session=" + _this.session, 'GET',
 						function(data, textStatus, jqXHR) {
 							if (!data.response && !data.error) {
-								__this.replaceErrorMessage("Received neither response nor error!");
-								stopExecution = true;
+								_this.replaceErrorMessage("Received neither response nor error!");
 								return false;
 							}
 
+                            if (data.error) {
+                                var errMsg = "Failed to rename file!";
+                                if (data.error.description) errMsg = data.error.description;
+                                _this.replaceErrorMessage(errMsg);
+                                return false;
+                            }
+
 							if (data.response.noResults) {
-								stopExecution = false;
+                                _this.submitFileUpload(filename);
 								return false;
 							}
 						}, function(jqXHR, textStatus, errorThrown) {
-							__this.replaceErrorMessage("Received neither response nor error!");
-							stopExecution = true;
+							_this.replaceErrorMessage("Received neither response nor error!");
 							return false;
 					});
 					return false;
 				}
 				if (data.response.noResults) {
-					stopExecution = false;
+					_this.submitFileUpload(filename);
 					return false;
 				}
 			},function(jqXHR, textStatus, errorThrown) {
-				__this.replaceErrorMessage("Received neither response nor error!");
-				stopExecution = true;
+				_this.replaceErrorMessage("Received neither response nor error!");
 				return false;
 		});
-		return stopExecution;
-	}, checkExistenceOfFileInDataDirectory : function(__this, filename)	{
-		var new_filename = null;
-
+	}, checkExistenceOfFileInDataDirectory : function(filename, msgDescription)	{
+        var _this = this;
 		TissueStack.Utils.sendAjaxRequest(
 			"/" + TissueStack.configuration['server_proxy_path'].value +
 			"/?service=services&sub_service=admin&action=file_exists&file=" +
 			TissueStack.configuration['data_directory'].value + "/" + filename +
-			"&session=" + __this.session,
-			'GET', false,
+			"&session=" + _this.session, 'GET',
 			function(data, textStatus, jqXHR) {
 				if (!data.response && !data.error) {
-					__this.replaceErrorMessage("Received neither response nor error!");
+					_this.replaceErrorMessage("Received neither response nor error!");
 					return true;
 				}
 				if (data.error) {
 					if (data.error.description.indexOf("File exists already!") != 0)
 					{
-						__this.replaceErrorMessage(data.error.description);
+						_this.replaceErrorMessage(data.error.description);
 						return false;
 					}
 					if (!confirm("A data set file with the same name exists already! Do you want to rename the new file?"))
 				        return false;
 
-				    new_filename = prompt("Please enter a new file name...", ".raw");
+				    var new_filename = prompt("Please enter a new file name...", ".raw");
 				    if (new_filename == null)
 				        return false;
 				    new_filename = new_filename.trim();
 				    if (new_filename.length < 5 || new_filename.substring(new_filename.length-4) != '.raw') {
-				    	__this.replaceErrorMessage("New file name needs to be non-empty with extension .raw");
+				    	_this.replaceErrorMessage("New file name needs to be non-empty with extension .raw");
 				    	new_filename=null;
 				        return false;
 				    }
@@ -511,34 +521,38 @@ TissueStack.Admin.prototype = {
 						TissueStack.configuration['upload_directory'].value + "/" + filename +
 						"&new_file=" +
 						TissueStack.configuration['upload_directory'].value + "/" + new_filename +
-						"&session=" + __this.session,
-						'GET', false,
+						"&session=" + _this.session,'GET',
 						function(data, textStatus, jqXHR) {
 							if (!data.response && !data.error) {
-								__this.replaceErrorMessage("Received neither response nor error!");
+								_this.replaceErrorMessage("Received neither response nor error!");
 								return false;
 							}
 
+                            if (data.error) {
+                                var errMsg = "Failed to rename file!";
+                                if (data.error.description) errMsg = data.error.description;
+                                _this.replaceErrorMessage(errMsg);
+                                return false;
+                            }
+
 							if (data.response.noResults) {
-								filename = new_filename;
+                                _this.addDataSet(new_filename, msgDescription);
 								return false;
 							}
 						}, function(jqXHR, textStatus, errorThrown) {
-							__this.replaceErrorMessage("Received neither response nor error!");
+							_this.replaceErrorMessage("Received neither response nor error!");
 							return false;
 					});
 					return false;
 				}
 				if (data.response.noResults) {
-					new_filename = filename;
-					return false;
+                    _this.addDataSet(filename, msgDescription);
 				}
 			},
 			function(jqXHR, textStatus, errorThrown) {
-				__this.replaceErrorMessage("Received neither response nor error!");
+				_this.replaceErrorMessage("Received neither response nor error!");
 				return false;
 		});
-		return new_filename;
 	}, replaceErrorMessage : function (message) {
 		var excludes = message;
 
@@ -617,13 +631,13 @@ TissueStack.Admin.prototype = {
 					}
 
 					var task_zoom_level =  eval(TissueStack.configuration['default_zoom_levels'].value);
-		            var fullyQualifiedFileName = 
+		            var fullyQualifiedFileName =
 		                TissueStack.configuration['data_directory'].value + "/" + uploaded_file.value;
 		            if (TissueStack.dataSetStore.datasetCount > 0) {
 		                for (var d in TissueStack.dataSetStore.datasets) {
-		                    if (fullyQualifiedFileName === 
+		                    if (fullyQualifiedFileName ===
 		                        TissueStack.dataSetStore.datasets[d].filename) {
-		                        task_zoom_level = 
+		                        task_zoom_level =
 		                            eval(TissueStack.dataSetStore.datasets[d].data[0].zoomLevels);
 		                    }
 		                }
@@ -646,16 +660,9 @@ TissueStack.Admin.prototype = {
 	 							return;
 	 						}
 
-							var filename =
-								_this.checkExistenceOfFileInDataDirectory(_this, uploaded_file.value);
-							if (filename == null || filename == "") {
-								return;
-							}
-
-	 						url +=
-	 							("services&sub_service=admin&action=add_dataset&session=" +
-	 								_this.session + "&filename=" + filename + "&description=" + msgDescription);
-							successHandler = _this.addDataSetSuccessHandler;
+							_this.checkExistenceOfFileInDataDirectory(
+                                uploaded_file.value, msgDescription);
+                            return;
 						} else if(action == "Convert") {
 							url += ("conversion&session=" + _this.session + "&file=" + TissueStack.configuration['upload_directory'].value + "/" + uploaded_file.value);
 							actonType = TissueStack.Tasks.ReverseTypeLookupTable["Conversion"];
@@ -671,7 +678,7 @@ TissueStack.Admin.prototype = {
 						}
 
 				  		// send ajax request
-				 		TissueStack.Utils.sendAjaxRequest(url, 'GET', true,
+				 		TissueStack.Utils.sendAjaxRequest(url, 'GET',
 							function(data, textStatus, jqXHR) {
 								if (!data.response && !data.error) {
 									_this.replaceErrorMessage("No Response Data Returned!");
@@ -706,18 +713,40 @@ TissueStack.Admin.prototype = {
 		  	if (!fileSelected) _this.replaceErrorMessage("Please select a file first!");
 		});
 	},
-	addDataSetSuccessHandler : function(_this, response) {
-		var dataSet = response;
-		var addedDataSet = TissueStack.dataSetStore.addDataSetToStore(dataSet, "localhost");
-		if (addedDataSet) {
-			if(TissueStack.desktop)	TissueStack.dataSetNavigation.addDataSetToDynaTree(addedDataSet);
-			if (TissueStack.tablet) TissueStack.dataSetNavigation.addDataSetToTabletTree(addedDataSet);
-			_this.displayUploadDirectory();
-			_this.replaceErrorMessage("Data Set Has Been Added Successfully!");
-			$('.error_message').css("background", "#32CD32");
+	addDataSet : function(filename, msgDescription) {
+        var _this = this;
+        TissueStack.Utils.sendAjaxRequest(
+            "/" + TissueStack.configuration['server_proxy_path'].value +
+            "/?service=services&sub_service=admin&action=add_dataset&session=" +
+                _this.session + "&filename=" + filename + "&description=" + msgDescription,
+            'GET',
+            function(data, textStatus, jqXHR) {
+                if (!data.response && !data.error) {
+                    _this.replaceErrorMessage("Received neither response nor error!");
+                    return false;
+                }
 
-			//_this.registerDataSetWithAnds(dataSet.id);
-		}
+                if (data.response) {
+                    var dataSet = data.response;
+            		var addedDataSet = TissueStack.dataSetStore.addDataSetToStore(dataSet, "localhost");
+            		if (addedDataSet) {
+            			if(TissueStack.desktop)	TissueStack.dataSetNavigation.addDataSetToDynaTree(addedDataSet);
+            			if (TissueStack.tablet) TissueStack.dataSetNavigation.addDataSetToTabletTree(addedDataSet);
+            			_this.displayUploadDirectory();
+            			_this.replaceErrorMessage("Data Set Has Been Added Successfully!");
+            			$('.error_message').css("background", "#32CD32");
+                    }
+                    return false;
+                }
+
+                _this.replaceErrorMessage("Failed to add dataset" +
+                    (data.error && data.error.description ?
+                        (": " + data.error.description) : "!"));
+                return false;
+            }, function(jqXHR, textStatus, errorThrown) {
+                _this.replaceErrorMessage("Received neither response nor error!");
+                return false;
+        });
 	},
 	conversionAndPreTileSuccessHandler : function(_this, response, file, type, status, zoom) {
 		$(".file_radio_list input:radio[id^="+ "'check_" + file + "']:first").attr('disabled', true).checkboxradio("refresh");
@@ -822,8 +851,7 @@ TissueStack.Admin.prototype = {
 		   TissueStack.Utils.sendAjaxRequest(
 				"/" + TissueStack.configuration['server_proxy_path'].value +
 					"/?service=services&sub_service=admin&action=cancel" +
-				"&session=" + _this.session + "&task_id=" + id,
-				'GET', true,
+				"&session=" + _this.session + "&task_id=" + id, 'GET',
 				function(data, textStatus, jqXHR) {
 					if (!data.response && !data.error) {
 						_this.replaceErrorMessage("No Task ID Applied");
@@ -873,8 +901,7 @@ TissueStack.Admin.prototype = {
 		this.queue_handles[id] = setInterval(function () {
 			TissueStack.Utils.sendAjaxRequest(
 				"/" + TissueStack.configuration['server_proxy_path'].value +
-					"/?service=services&sub_service=admin&action=progress&task_id=" + id,
-				'GET', true,
+					"/?service=services&sub_service=admin&action=progress&task_id=" + id, 'GET',
 				function(data, textStatus, jqXHR) {
 					if (!data.response && !data.error) {
 						_this.replaceErrorMessage("Task Progress Request returned neither data nor error!");
@@ -944,8 +971,7 @@ TissueStack.Admin.prototype = {
 		TissueStack.Utils.sendAjaxRequest(
 			"/" + TissueStack.configuration['server_proxy_path'].value +
 				"/?service=services&sub_service=admin&action=toggle_tiling" +
-			"&session=" + __this.session + "&id=" + id + "&flag=" + flag,
-			'GET', true,
+			"&session=" + __this.session + "&id=" + id + "&flag=" + flag, 'GET',
 			function(data, textStatus, jqXHR) {
 				// truly we don't care
 			},
@@ -993,27 +1019,5 @@ TissueStack.Admin.prototype = {
 
         $("#task_list").scroll(this.updateTableHeaders);
         $("#task_list").resize(this.updateTableHeaders);
-	},
-	checkSessionValidity : function (session_token) {
-		var isValid = false;
-
-		TissueStack.Utils.sendAjaxRequest(
-	    	"/" + TissueStack.configuration['server_proxy_path'].value +
-	    	 	"/?service=services&sub_service=security&action=check_session&session=" + session_token,
-			'GET', false,
-			function(data, textStatus, jqXHR) {
-				if ((!data.response && !data.error) || data.error) {
-					return; // NOK case
-				}
-
-				// this is the OK case!
-				if (data.response.noResults) isValid = true;
-			},
-			function(jqXHR, textStatus, errorThrown) {
-				return;
-			}
-		);
-
-		return isValid;
 	}
 };

@@ -85,6 +85,7 @@ TissueStack.Events.prototype = {
 		var _this = this;
 		var delta = 0;
 		var tmpTouches;
+        var lastMoveEvent = null;
 
 		// TOUCH START
 		this.getCanvasElement().bind("touchstart", function(e) {
@@ -102,6 +103,7 @@ TissueStack.Events.prototype = {
 			};
 
 			// handle PAN
+            lastMoveEvent = e;
 			_this.panStart(e);
 		});
 
@@ -117,6 +119,7 @@ TissueStack.Events.prototype = {
 		    	return;
 			};
 
+            lastMoveEvent = e;
 			// call panAndMove
 			_this.panAndMove(e);
 		});
@@ -137,6 +140,23 @@ TissueStack.Events.prototype = {
 				_this.zoom(e, delta);
 		    	return;
 			};
+
+            // horrible, horrible hack over stupid touchend event support...
+            if (e.originalEvent.touches &&
+                typeof e.originalEvent.touches[0] === 'object') {
+                e.pageX = e.originalEvent.touches[0].pageX;
+                e.pageY = e.originalEvent.touches[0].pageY;
+            } else if (e.originalEvent.changedTouches &&
+                typeof e.originalEvent.changedTouches[0] === 'object') {
+                e.pageX = e.originalEvent.changedTouches[0].pageX;
+                e.pageY = e.originalEvent.changedTouches[0].pageY;
+            } else if (lastMoveEvent &&
+                    lastMoveEvent.originalEvent.touches &&
+                    typeof lastMoveEvent.originalEvent.touches[0] === 'object') {
+                e.pageX = lastMoveEvent.originalEvent.touches[0].pageX;
+                e.pageY = lastMoveEvent.originalEvent.touches[0].pageY;
+                lastMoveEvent = null;
+            }
 
 			// call pan move
 			_this.panEnd(e);
@@ -206,17 +226,18 @@ TissueStack.Events.prototype = {
 		});
 	}, unbindAllEvents : function() {
 		// UNBIND COMMON EVENTS
-		this.getCanvasElement().unbind("touchend mouseup");
 		this.getCanvasElement().unbind("click");
 		$(document).unbind("sync");
 		$(document).unbind("zoom");
 
-		this.getCanvasElement().unbind("mousedown");
+		this.getCanvasElement().unbind("mousedown")
 		this.getCanvasElement().unbind("mousemove");
+        this.getCanvasElement().unbind("mouseup")
 		this.getCanvasElement().unbind('mousewheel');
 
 		this.getCanvasElement().unbind("touchstart");
 		this.getCanvasElement().unbind("touchmove");
+        this.getCanvasElement().unbind("touchend");
 		this.getCanvasElement().unbind('doubletap');
 	},panStart : function(e) {
 		var coords = TissueStack.Utils.getRelativeMouseCoords(e);
@@ -225,7 +246,7 @@ TissueStack.Events.prototype = {
 		this.canvas.mouse_x = coords.x;
 		this.canvas.mouse_y = coords.y;
 	}, panEnd : function(e) {
-        if (TissueStack.desktop && this.canvas.isDragging)
+        if (this.canvas.isDragging)
             this.panAndMove(e, true);
 		this.canvas.mouse_down = false;
 		this.updateCoordinateDisplay();

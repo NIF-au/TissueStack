@@ -17,18 +17,18 @@
 TissueStack.DataSetOverlay = function(id, canvas, protocol, host, dataset_id, dataset_plane_id, dataSetHost) {
 	if (typeof(id) != 'number')
 		throw new Error("DataSetOverlay: argument id is not a number!");
-	
+
 	if (typeof(canvas) == 'undefined')
 		throw new Error("DataSetOverlay: argument canvas is undefined!");
-		
+
 	if (typeof(protocol) != 'string' && typeof(host) != 'string')
 		throw new Error("DataSetOverlay: protocol and host have to be strings!");
 
 	if (typeof(dataset_id) != 'number' && typeof(dataset_plane_id) != 'number')
 		throw new Error("DataSetOverlay: ids have to be numeric!");
-	
+
 	this.pure_id = id;
-	this.id = canvas.canvas_id + "_overlay_" + id; 
+	this.id = canvas.canvas_id + "_overlay_" + id;
 	this.canvas = canvas;
 	this.dataset_id = dataset_id;
 	this.dataset_plane_id = dataset_plane_id;
@@ -36,9 +36,9 @@ TissueStack.DataSetOverlay = function(id, canvas, protocol, host, dataset_id, da
 	this.dataSetHost = dataSetHost;
 	this.mappingsUrl = protocol + "://" + host + "/" + TissueStack.configuration['server_proxy_path'].value
 	+ "/overlays/id_mapping_for_slice/" + this.dataset_id + "/" + this.dataset_plane_id + "/" + this.type;
-	this.overlayUrl = 
+	this.overlayUrl =
 		protocol + "://" + host + "/" + TissueStack.configuration['server_proxy_path'].value + "/overlays/overlay/";
-	this.dataSetUrl = 
+	this.dataSetUrl =
 		protocol + "://" + host + "/" + TissueStack.configuration['server_proxy_path'].value + "/data/";
 
 	// create canvas element
@@ -68,7 +68,7 @@ TissueStack.DataSetOverlay.prototype = {
 		return $('#' + this.id);
 	},
 	createCanvasElement : function() {
-		var myOwnCanvasElement = this.getMyOwnCanvasElement(); 
+		var myOwnCanvasElement = this.getMyOwnCanvasElement();
 		if (!myOwnCanvasElement || (myOwnCanvasElement && myOwnCanvasElement.length == 0)) {
 			// get parent of canvas and append overlay to it
 			$('#' + this.canvas.canvas_id).parent().append(
@@ -80,7 +80,7 @@ TissueStack.DataSetOverlay.prototype = {
 	queryLinkedDataSetMapping : function() {
 		(function(__this) {
 			TissueStack.Utils.sendAjaxRequest(
-					__this.mappingsUrl, 'GET',	true,
+					__this.mappingsUrl, 'GET',
 					function(data, textStatus, jqXHR) {
 						if (!data.response && !data.error) {
 							__this.error = "Did not receive anyting, neither success nor error ....";
@@ -93,7 +93,7 @@ TissueStack.DataSetOverlay.prototype = {
 						}
 						if (data.response.noResults)
 							return;
-						
+
 						// in this case we need only one record since all slices will refer to another data set
 						for (var key in data.response) {
 							__this.fetchLinkedDataSetIds(data.response[key]);
@@ -102,7 +102,7 @@ TissueStack.DataSetOverlay.prototype = {
 					},
 					function(jqXHR, textStatus, errorThrown) {
 						__this.error =  "Error connecting to backend: " + textStatus + " " + errorThrown;
-					}				
+					}
 			);})(this);
 	},
 	fetchLinkedDataSetIds : function(id) {
@@ -113,13 +113,13 @@ TissueStack.DataSetOverlay.prototype = {
 
 		(function(__this) {
 			TissueStack.Utils.sendAjaxRequest(
-					url, 'GET',	true,
+					url, 'GET',
 					function(data, textStatus, jqXHR) {
 						if (!data.response && !data.error) {
-							__this.error = "Did not receive anyting, neither success nor error ...."; 
+							__this.error = "Did not receive anyting, neither success nor error ....";
 							return;
 						}
-	
+
 						if (data.error) {
 							var message = "Application Error: " + (data.error.description ? data.error.description : " no more info available. check logs.");
 							__this.error = message;
@@ -129,24 +129,24 @@ TissueStack.DataSetOverlay.prototype = {
 							__this.error = null;
 							return
 						}
-						
+
 						__this.linkedDataSetIds = {};
 						__this.linkedDataSetIds['id'] =  data.response.linkedDataSet;
 						__this.linkedDataSetIds['plane_id'] =  data.response.linkedDataSetPlane;
 					},
 					function(jqXHR, textStatus, errorThrown) {
 						__this.error =  "Error connecting to backend: " + textStatus + " " + errorThrown;
-					}				
+					}
 			);})(this);
 	},
 	queryLinkedDataSet : function() {
 		// complete request url with overlay id
 		var url = this.dataSetUrl;
 		url += this.linkedDataSetIds['id'];
-		
+
 		(function(__this) {
 			TissueStack.Utils.sendAjaxRequest(
-					url, 'GET',	true,
+					url, 'GET',
 					function(data, textStatus, jqXHR) {
 						if (!data.response && !data.error) {
 							__this.error = "Did not receive anyting, neither success nor error ....";
@@ -159,10 +159,10 @@ TissueStack.DataSetOverlay.prototype = {
 						}
 						if (data.response.noResults)
 							return;
-						
-						var dataSetPlane = null; 
-						
-						// find mapping plane 
+
+						var dataSetPlane = null;
+
+						// find mapping plane
 						if (data.response.planes)
 							for (var i=0; i < data.response.planes.length; i++) {
 								if (data.response.planes[i].id === __this.linkedDataSetIds['plane_id']) {
@@ -170,7 +170,7 @@ TissueStack.DataSetOverlay.prototype = {
 									break;
 								}
 							}
-						
+
 						if (!dataSetPlane)
 							return;
 
@@ -178,9 +178,9 @@ TissueStack.DataSetOverlay.prototype = {
 						var planeId = dataSetPlane.name;
 						var zoomLevels = eval(dataSetPlane.zoomLevels);
 						var transformationMatrix = eval(dataSetPlane.transformationMatrix);
-						
+
 						// create extent
-						var extent = 
+						var extent =
 							new TissueStack.Extent(
 								__this.dataSetHost + "_" + data.response.id,
 								dataSetPlane.isTiled,
@@ -193,17 +193,17 @@ TissueStack.DataSetOverlay.prototype = {
 								dataForPlane.origY,
 								dataForPlane.step,
 								zoomLevels,
-								transformationMatrix, 
+								transformationMatrix,
 								dataSetPlane.resolutionMm);
 
-						var linkedCanvasId = 
+						var linkedCanvasId =
 							__this.canvas.canvas_id.substring(__this.canvas.dataset_id.length+1, __this.canvas.canvas_id.length)
 							+ "_overlay_" + __this.pure_id;
 						__this.linkedCanvas = new TissueStack.Canvas(extent, linkedCanvasId, __this.canvas.dataset_id, true, true);
 					},
 					function(jqXHR, textStatus, errorThrown) {
 						__this.error =  "Error connecting to backend: " + textStatus + " " + errorThrown;
-					}				
+					}
 			);})(this);
 	},
 	select : function() {
@@ -218,13 +218,13 @@ TissueStack.DataSetOverlay.prototype = {
 		// only do work if we have been selected
 		if (!this.selected)
 			return;
-		
-		if (!this.linkedDataSetIds && this.error) // retry if we had an error 
+
+		if (!this.linkedDataSetIds && this.error) // retry if we had an error
 			this.queryLinkedDataSetMapping();
-		
+
 		if (!this.linkedCanvas && this.linkedDataSetIds) // retry
 			this.queryLinkedDataSet();
-			
+
 		if (this.linkedCanvas)
 			this.linkedCanvas.drawMe();
 	}

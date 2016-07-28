@@ -20,7 +20,7 @@ TissueStack.SVGOverlay = function(id, canvas, protocol, host, dataset_id, datase
 
 	if (typeof(canvas) == 'undefined')
 		throw new Error("SVGOverlay: argument canvas is undefined!");
-		
+
 	if (typeof(protocol) != 'string' && typeof(host) != 'string')
 		throw new Error("SVGOverlay: protocol and host have to be strings!");
 
@@ -28,13 +28,13 @@ TissueStack.SVGOverlay = function(id, canvas, protocol, host, dataset_id, datase
 		throw new Error("SVGOverlay: ids have to be numeric!");
 
 	this.pure_id = id;
-	this.id = canvas.canvas_id + "_overlay_" + id; 
+	this.id = canvas.canvas_id + "_overlay_" + id;
 	this.canvas = canvas;
 	this.dataset_id = dataset_id;
 	this.dataset_plane_id = dataset_plane_id;
 	this.mappingsUrl = protocol + "://" + host + "/" + TissueStack.configuration['server_proxy_path'].value
 	+ "/overlays/id_mapping_for_slice/" + this.dataset_id + "/" + this.dataset_plane_id + "/" + this.type;
-	this.overlayUrl = 
+	this.overlayUrl =
 		protocol + "://" + host + "/" + TissueStack.configuration['server_proxy_path'].value + "/overlays/overlay/";
 
 	// create canvas element
@@ -60,7 +60,7 @@ TissueStack.SVGOverlay.prototype = {
 		return $('#' + this.id);
 	},
 	createCanvasElement : function() {
-		var myOwnCanvasElement = this.getMyOwnCanvasElement(); 
+		var myOwnCanvasElement = this.getMyOwnCanvasElement();
 		if (!myOwnCanvasElement || (myOwnCanvasElement && myOwnCanvasElement.length == 0)) {
 			// get parent of canvas and append overlay to it
 			$('#' + this.canvas.canvas_id).parent().append(
@@ -72,7 +72,7 @@ TissueStack.SVGOverlay.prototype = {
 	queryOverlayMappingsForSlices : function() {
 		(function(__this) {
 			TissueStack.Utils.sendAjaxRequest(
-					__this.mappingsUrl, 'GET',	true,
+					__this.mappingsUrl, 'GET',
 					function(data, textStatus, jqXHR) {
 						if (!data.response && !data.error) {
 							__this.error = "Did not receive anyting, neither success nor error ....";
@@ -85,45 +85,45 @@ TissueStack.SVGOverlay.prototype = {
 						}
 						if (data.response.noResults)
 							return;
-						
-						__this.slices = data.response; 
+
+						__this.slices = data.response;
 					},
 					function(jqXHR, textStatus, errorThrown) {
 						__this.error =  "Error connecting to backend: " + textStatus + " " + errorThrown;
-					}				
+					}
 			);})(this);
 	},
 	fetchOverlayForSlice : function(slice, handler) {
 		if (typeof(slice) != "number")
 			return;
-		
+
 		// complete request url with overlay id
 		var sliceMap = this.slices[''+slice];
 		if (typeof(sliceMap) === 'undefined')
 			return;
-		
+
 		var url = this.overlayUrl;
 		url += sliceMap;
 		url += ("/" + this.type + "/json");
 
 		TissueStack.Utils.sendAjaxRequest(
-				url, 'GET',	true,
+				url, 'GET',
 				function(data, textStatus, jqXHR) {
 					if (!data.response && !data.error) {
-						// nothing we can do 
+						// nothing we can do
 						return;
 					}
 					if (data.error || data.response.noResults) {
-						// nothing we can do 
+						// nothing we can do
 						return;
 					}
-					
+
 					// execute success handler
-					if (handler) handler(); 
+					if (handler) handler();
 				},
 				function(jqXHR, textStatus, errorThrown) {
-					// nothing we can do 
-				}				
+					// nothing we can do
+				}
 		);
 	},
 	select : function() {
@@ -138,16 +138,16 @@ TissueStack.SVGOverlay.prototype = {
 		// only do work if we have been selected
 		if (!this.selected)
 			return;
-		
-		if (!this.slices && this.error) // retry if we had an error 
+
+		if (!this.slices && this.error) // retry if we had an error
 			this.queryOverlayMappingsForSlices();
-		
+
 		if (!this.slices)
 			return;
-		
+
 		// TODO: implement me
 		var handler = function() {
-			// draw me 
+			// draw me
 		};
 		this.fetchOverlayForSlice(this.canvas.data_extent.slice, handler);
 	}

@@ -84,10 +84,8 @@ TissueStack.Embedded = function (div, server, data_set_id, include_cross_hair, u
         }
     	//_this.domain = TissueStack.Utils.extractHostNameFromUrl(_this.server);
 
-        // load server configuration values needed
+        // load server configuration
         _this.loadDataBaseConfiguration();
-        // load given data set configuration
-        _this.loadDataSetConfigurationFromServer();
         // this is for when the window dimensions & the div dimensions may change dynamically
         _this.registerWindowResizeEvent();
 	};
@@ -173,7 +171,7 @@ TissueStack.Embedded.prototype = {
             TissueStack.dataSetStore = new TissueStack.DataSetStore(null, true);
 
 		TissueStack.Utils.sendAjaxRequest(
-			url, 'GET',	true,
+			url, 'GET',
 			function(data, textStatus, jqXHR) {
 				if (!data.response && !data.error) {
 					_this.writeErrorMessageIntoDiv("Did not receive anyting from backend, neither success nor error ....");
@@ -219,8 +217,7 @@ TissueStack.Embedded.prototype = {
 				if (_this.initOpts) {
                     TissueStack.ComponentFactory.applyUserParameters(_this.initOpts, dataSet);
                     _this.getDiv().show();
-                } else
-                    TissueStack.ComponentFactory.redrawDataSet(dataSet);
+                } else TissueStack.ComponentFactory.redrawDataSet(dataSet);
 			},
 			function(jqXHR, textStatus, errorThrown) {
 				_this.writeErrorMessageIntoDiv("Error connecting to backend: " + textStatus + " " + errorThrown);
@@ -228,10 +225,11 @@ TissueStack.Embedded.prototype = {
 		);
 	},
 	loadDataBaseConfiguration : function() {
+        var _this = this;
 		// we do this one synchronously
 		TissueStack.Utils.sendAjaxRequest(
 			"http://" + this.server + "/" + TissueStack.configuration['server_proxy_path'].value +
-				"/?service=services&sub_service=configuration&action=all", 'GET', false,
+				"/?service=services&sub_service=configuration&action=all", 'GET',
 			function(data, textStatus, jqXHR) {
 				if (!data.response && !data.error) {
 					alert("Did not receive anyting, neither success nor error ....");
@@ -259,7 +257,7 @@ TissueStack.Embedded.prototype = {
 					TissueStack.configuration[configuration[x].name].description = configuration[x].description ? configuration[x].description : "";
 				};
 
-				TissueStack.Utils.loadColorMaps();
+				TissueStack.Utils.loadColorMaps(_this.loadDataSetConfigurationFromServer.bind(_this));
 			},
 			function(jqXHR, textStatus, errorThrown) {
 				alert("Error connecting to backend: " + textStatus + " " + errorThrown);

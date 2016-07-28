@@ -652,11 +652,11 @@ TissueStack.Canvas.prototype = {
                                     deltaStartTileYAndUpperLeftCornerY]};
 
     					imageTile.onerror = function() {
-                            if (_this.queue.latestDrawRequestTimestamp < 0 ||
-                                (timestamp && timestamp < _this.queue.latestDrawRequestTimestamp))
-                                    return;
-                            if (_this.queue)
+                            if (_this.queue) {
+                                if (_this.queue.latestDrawRequestTimestamp < 0 ||
+                                    (timestamp && timestamp < _this.queue.latestDrawRequestTimestamp)) return;
                                 _this.queue.is_partial_render = true;
+                            }
                             args.image = this;
                             _this.renderTile(args, true);
     					};

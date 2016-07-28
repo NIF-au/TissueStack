@@ -17,29 +17,29 @@
 TissueStack.CanvasOverlay = function(id, canvas, protocol, host, dataset_id, dataset_plane_id) {
 	if (typeof(id) != 'number')
 		throw new Error("CanvasOverlay: argument id is not a number!");
-	
+
 	if (typeof(canvas) == 'undefined')
 		throw new Error("CanvasOverlay: argument canvas is undefined!");
-		
+
 	if (typeof(protocol) != 'string' && typeof(host) != 'string')
 		throw new Error("CanvasOverlay: protocol and host have to be strings!");
 
 	if (typeof(dataset_id) != 'number' && typeof(dataset_plane_id) != 'number')
 		throw new Error("CanvasOverlay: ids have to be numeric!");
-	
+
 	this.pure_id = id;
-	this.id = canvas.canvas_id + "_overlay_" + id; 
+	this.id = canvas.canvas_id + "_overlay_" + id;
 	this.canvas = canvas;
 	this.dataset_id = dataset_id;
 	this.dataset_plane_id = dataset_plane_id;
 	this.mappingsUrl = protocol + "://" + host + "/" + TissueStack.configuration['server_proxy_path'].value
 	+ "/overlays/id_mapping_for_slice/" + this.dataset_id + "/" + this.dataset_plane_id + "/" + this.type;
-	this.overlayUrl = 
+	this.overlayUrl =
 		protocol + "://" + host + "/" + TissueStack.configuration['server_proxy_path'].value + "/overlays/overlay/";
-	
+
 	// create canvas element
 	this.createCanvasElement();
-	
+
 	// retrieve all overlays ids and their mapping to each slice
 	this.queryOverlayMappingsForSlices();
 };
@@ -60,7 +60,7 @@ TissueStack.CanvasOverlay.prototype = {
 		return $('#' + this.id);
 	},
 	createCanvasElement : function() {
-		var myOwnCanvasElement = this.getMyOwnCanvasElement(); 
+		var myOwnCanvasElement = this.getMyOwnCanvasElement();
 		if (!myOwnCanvasElement || (myOwnCanvasElement && myOwnCanvasElement.length == 0)) {
 			// get parent of canvas and append overlay to it
 			$('#' + this.canvas.canvas_id).parent().append(
@@ -72,7 +72,7 @@ TissueStack.CanvasOverlay.prototype = {
 	queryOverlayMappingsForSlices : function() {
 		(function(__this) {
 			TissueStack.Utils.sendAjaxRequest(
-				__this.mappingsUrl, 'GET',	true,
+				__this.mappingsUrl, 'GET',
 				function(data, textStatus, jqXHR) {
 					if (!data.response && !data.error) {
 						__this.error = "Did not receive anyting, neither success nor error ....";
@@ -85,18 +85,18 @@ TissueStack.CanvasOverlay.prototype = {
 					}
 					if (data.response.noResults)
 						return;
-					
-					__this.slices = data.response; 
+
+					__this.slices = data.response;
 				},
 				function(jqXHR, textStatus, errorThrown) {
 					__this.error =  "Error connecting to backend: " + textStatus + " " + errorThrown;
-				}				
+				}
 		);})(this);
 	},
 	fetchOverlayForSlice : function(slice, handler) {
 		if (typeof(slice) != "number")
 			return;
-		
+
 		var sliceMap = this.slices[''+slice];
 		if (typeof(sliceMap) === 'undefined')
 			return;
@@ -108,23 +108,23 @@ TissueStack.CanvasOverlay.prototype = {
 
 		(function(__this) {
 			TissueStack.Utils.sendAjaxRequest(
-					url, 'GET',	true,
+					url, 'GET',
 					function(data, textStatus, jqXHR) {
 						if (!data.response && !data.error) {
-							// nothing we can do 
+							// nothing we can do
 							return;
 						}
 						if (data.error || data.response.noResults) {
-							// nothing we can do 
+							// nothing we can do
 							return;
 						}
-						
+
 						// execute success handler
-						if (handler) handler(__this,data.response); 
+						if (handler) handler(__this,data.response);
 					},
 					function(jqXHR, textStatus, errorThrown) {
-						// nothing we can do 
-					}				
+						// nothing we can do
+					}
 		);})(this);
 	},
 	select : function() {
@@ -137,7 +137,7 @@ TissueStack.CanvasOverlay.prototype = {
 	},
 	clearCanvas : function() {
 		if (this.getMyOwnCanvasElement() == null || this.getMyOwnCanvasElement().length == 0) return;
-		
+
 		var ctx = this.getMyOwnCanvasElement()[0].getContext("2d");
 		ctx.save();
 		ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -148,19 +148,19 @@ TissueStack.CanvasOverlay.prototype = {
 		// only do work if we have been selected
 		if (!this.selected)
 			return;
-		
-		if (!this.slices && this.error) // retry if we had an error 
+
+		if (!this.slices && this.error) // retry if we had an error
 			this.queryOverlayMappingsForSlices();
-		
+
 		this.clearCanvas();
-		
+
 		if (!this.slices)
 			return;
-		
+
 		var handler = function(__this, response) {
 			// draw me
 			if (__this.getMyOwnCanvasElement() == null || __this.getMyOwnCanvasElement().length == 0) return;
-			
+
 			var context = __this.getMyOwnCanvasElement()[0].getContext("2d");
 			eval(response.content);
 		};

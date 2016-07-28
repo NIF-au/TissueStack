@@ -116,7 +116,7 @@ TissueStack.DataSetStore.prototype = {
 		_this = this;
 
 		TissueStack.Utils.sendAjaxRequest(
-				url, 'GET',	true,
+				url, 'GET',
 				function(data, textStatus, jqXHR) {
 					if (!data.response && !data.error) {
 						alert("Did not receive anyting, neither success nor error ....");

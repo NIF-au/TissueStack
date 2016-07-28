@@ -124,9 +124,9 @@ TissueStack.Utils = {
 		results = [results.elements[0], results.elements[1], results.elements[2]];
 
 		return results;
-	}, loadColorMaps : function() {
+	}, loadColorMaps : function(successHandler) {
 		TissueStack.Utils.sendAjaxRequest(
-				"/" + TissueStack.configuration['server_proxy_path'].value + "/?service=services&sub_service=colormaps&action=all", 'GET', true,
+				"/" + TissueStack.configuration['server_proxy_path'].value + "/?service=services&sub_service=colormaps&action=all", 'GET',
 				function(data, textStatus, jqXHR) {
 					if (!data) {
 						alert("Failed To Load Colormaps ....");
@@ -136,6 +136,8 @@ TissueStack.Utils = {
 					TissueStack.configuration['color_maps'].description = "Colormaps Loaded From BackEnd";
 					TissueStack.configuration['color_maps'].value = data;
 					TissueStack.Utils.indexColorMaps();
+
+                    if (typeof successHandler === 'function') successHandler();
 				},
 				function(jqXHR, textStatus, errorThrown) {
 					alert("Error connecting to backend: " + textStatus + " " + errorThrown);
@@ -548,18 +550,15 @@ TissueStack.Utils = {
 			   	$(this).css("border-color","white").css("border-width",1);
 			   	$('.left_panel').css("color","white");
 			});
-	},sendAjaxRequest : function(url, method, async, success, error) {
+	},sendAjaxRequest : function(url, method, success, error) {
 		if (typeof(url) != "string" || $.trim(url) == '') return;
 		if (typeof(method) != "string" || $.trim(method) == '') method = 'GET';
-
-		async = (typeof(async) != "boolean" || async == true);
 
 		if (typeof(success) != 'function') success = null;
 
 		if (typeof(error) != 'function') error = null;
 
 		$.ajax({
-			async : async,
 			url : url,
 			type : method,
 			cache : false,
@@ -737,7 +736,7 @@ TissueStack.Utils = {
 		}
 
   		// send ajax request
- 		TissueStack.Utils.sendAjaxRequest(url, 'GET', true,
+ 		TissueStack.Utils.sendAjaxRequest(url, 'GET',
 			function(data, textStatus, jqXHR) {
 				if (!data.response && !data.error) {
 					errorHandler(canvas);

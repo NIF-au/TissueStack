@@ -14,9 +14,9 @@ public class ConversionAction implements ClAction {
 	private String list_option = "ALL";
 	private String session = null;
 	private String task_id = null;
-	private String in_file = null;	
-	private String out_file = null;	
-	
+	private String in_file = null;
+	private String out_file = null;
+
 	public boolean setMandatoryParameters(String[] args) {
 		if (args.length < 2 ) return false;
 		this.session = args[0];
@@ -24,10 +24,10 @@ public class ConversionAction implements ClAction {
 		if (this.option.equals("LIST")) {
 			if (args.length > 2) {
 				this.list_option = args[2].toUpperCase();
-				if (!list_option.equals("DONE") && !list_option.equals("CANCELED")
+				if (!list_option.equals("DONE") && !list_option.equals("CANCELLED")
 						&& !list_option.equals("ERROR") && !list_option.equals("ACTIVE"))
 					return false;
-			}	
+			}
 			return true;
 		}
 		if (this.option.equals("START")) {
@@ -40,12 +40,12 @@ public class ConversionAction implements ClAction {
 			if (args.length < 3) return false;
 			this.task_id =  args[2];
 			return true;
-		}		
+		}
 		if (this.option.equals("STATUS")) {
 			if (args.length < 3) return false;
 			this.task_id =  args[2];
 			return true;
-		}		
+		}
 
 		return false;
 	}
@@ -55,35 +55,35 @@ public class ConversionAction implements ClAction {
 	}
 
 	public String getRequestUrl() {
-		
+
 		if (this.option.equals("LIST"))
 			return "/server/?service=services&sub_service=metadata&session=" + this.session
 					+ "&action=list_tasks&type=conversion&status=" + this.list_option;
-		
+
 		if (this.option.equals("START"))
 			return "/server/?service=conversion&session=" + this.session + "&file=" + this.in_file
 				+ "&new_raw_file=" + this.out_file;
-		
-		if (this.option.equals("CANCEL")) 
+
+		if (this.option.equals("CANCEL"))
 			return "/server/?service=services&sub_service=admin&action=cancel&session=" +
 					this.session + "&task_id=" + this.task_id;
-		
-		if (this.option.equals("STATUS")) 
+
+		if (this.option.equals("STATUS"))
 			return "/server/?service=services&sub_service=metadata&action=task_status&session=" +
 					this.session + "&type=conversion&task_id=" + this.task_id;
-		
+
 		return null;
 	}
-	
+
 	public ClActionResult performAction(final URL TissueStackServerURL) {
 		String response = null;
 		try {
 			final URL combinedURL = new URL(TissueStackServerURL.toString() + this.getRequestUrl());
 			response = TissueStackCLCommunicator.sendHttpRequest(combinedURL, null);
-			
+
 			final JSONObject parseResponse = JsonParser.parseResponse(response);
 			if (parseResponse.get("response") != null) { // success it seems
-				try {					
+				try {
 					if (this.option.equals("LIST")) {
 						JSONArray respObj = (JSONArray) parseResponse.get("response");
 						if (respObj.isEmpty())
@@ -100,7 +100,7 @@ public class ConversionAction implements ClAction {
 						return new ClActionResult(ClAction.STATUS.SUCCESS, formattedResponse.toString());
 					}
 					else if (this.option.equals("START")) {
-						return new ClActionResult(ClAction.STATUS.SUCCESS, 
+						return new ClActionResult(ClAction.STATUS.SUCCESS,
 							"Conversion started. Task id: " + (String) parseResponse.get("response"));
 					}
 					else if (this.option.equals("CANCEL")) {
@@ -120,7 +120,7 @@ public class ConversionAction implements ClAction {
 							formattedResponse.append("\n\tSTATUS:\t\t" + respObj.get("status"));
 							if (respObj.containsKey("progress"))
 								formattedResponse.append("\n\tPROGRESS:\t" + respObj.get("progress") + "%");
-								
+
 							return new ClActionResult(ClAction.STATUS.SUCCESS, formattedResponse.toString());
 						} else
 							return new ClActionResult(ClAction.STATUS.SUCCESS, "Failed to query status!");
@@ -136,9 +136,9 @@ public class ConversionAction implements ClAction {
 					} else
 						return new ClActionResult(ClAction.STATUS.ERROR, parseError.toString());
 				}
-				
+
 			} else  // potential error
-				return new ClActionResult(ClAction.STATUS.SUCCESS, JsonParser.parseError(parseResponse, response));	
+				return new ClActionResult(ClAction.STATUS.SUCCESS, JsonParser.parseError(parseResponse, response));
 		} catch(Exception any) {
 			return new ClActionResult(ClAction.STATUS.ERROR, any.toString());
 		}
@@ -146,7 +146,7 @@ public class ConversionAction implements ClAction {
 
 	public String getUsage() {
 		return "--convert start file_to_be_converted raw_file_name <== start conversion\n" +
-				"\t--convert list [status (active|done|error|canceled)] <== lists conversion tasks\n" +
+				"\t--convert list [status (active|done|error|cancelled)] <== lists conversion tasks\n" +
 			   "\t--convert status task_id <== displays status information on conversion task\n" +
 			   "\t--convert cancel task_id <== cancel a conversion task";
 	}
