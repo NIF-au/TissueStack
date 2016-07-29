@@ -5,7 +5,15 @@
 	<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
 	<title>Tissue Stack </title>
     <noscript><meta http-equiv="refresh" content="0; url=desktop.html"></noscript>
-	
-	<script src="js/libs/mobile_browser_detection.js"></script>	
+
+	<script src="js/libs/mobile-detect.min.js"></script>
 	</head>
+    <body>
+        <script>
+            var detector = new MobileDetect(window.navigator.userAgent);
+            if (detector.phone()) window.location='phone.html';
+            else if (detector.tablet()) window.location='tablet.html';
+            else window.location = 'desktop.html';
+        </script>
+    </body>
 </html>

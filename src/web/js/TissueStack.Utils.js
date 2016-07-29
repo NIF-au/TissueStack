@@ -484,6 +484,10 @@ TissueStack.Utils = {
 		if (zoom == 1) slice = Math.floor(slice);
 		else slice = Math.ceil(slice);
 
+        ret.cache_key =
+            canvas.getDataExtent().zoom_level + "/" + slice + "/" +
+            colormap + "/" + row + "/" + col;
+
 		if (isTiled) {
 			ret.url += ("/" + path + "/" + dataset_id + "/" + zoom + "/" + plane + "/" + slice + "/");
 
@@ -496,13 +500,6 @@ TissueStack.Utils = {
                     "" : ("_" + colormap)) + "." + image_extension;
             return ret;
 		} else {
-            var min = canvas.contrast ? canvas.contrast.getMinimum() : 0;
-            var max = canvas.contrast ? canvas.contrast.getMaximum() : 255;
-
-            ret.cache_key =
-                canvas.getDataExtent().zoom_level + "/" + slice + "/" +
-                colormap + "/" + row + "/" + col+ "/" + min + "/" + max;
-
             ret.url += "/" + path + "/?service=";
 
 		    if (is_preview)
@@ -511,6 +508,10 @@ TissueStack.Utils = {
 		    	ret.url += "image" + "&square=" + tile_size + '&y=' + col + "&x=" + row
 		    ret.url += "&dataset=" + filename + "&image_type=PNG&scale=" + zoom + "&dimension="
 		    	+ plane + "&slice=" + slice + "&colormap=" + colormap;
+
+            var min = canvas.contrast ? canvas.contrast.getMinimum() : 0;
+            var max = canvas.contrast ? canvas.contrast.getMaximum() : 255;
+            ret.cache_key += "/" + min + "/" + max;
 
             if (canvas.contrast &&
                 (min != canvas.contrast.dataset_min ||
