@@ -51,7 +51,7 @@
 <body>
 	<!--	TILE PAGE	    -->
       <div data-role="page" data-theme="a" id="data" style="overflow-y: hidden" >
-            <div data-role="content" style="padding: 5px;">
+            <div data-role="content" style="padding: 0px;">
    				<div id="menu_header" data-theme="a" data-role="header" data-position="fixed" data-id="Head1">
          	  	     <div data-role="navbar">
 						<ul>
@@ -61,9 +61,8 @@
 						</ul>
 			  		 </div>
                 </div>
-     	    </div>
      	    <div>
-     	    	<div class="left_panel">
+     	    	<div class="left_panel" style="overflow-y: hidden;">
      	    		<div data-mini="true" data-role="collapsible" class="text-align-center">
      	    			<h6>Extent/Zoom</h6>
      	    			<div id="canvas_extent"></div>
@@ -110,8 +109,8 @@
                     <li class="distance" style="background-color: gray;color: rgba(255,255,0,1); font-size: 15px;font-weight: normal;padding-left: 5px"></li>
                     <li class="area" style="background-color: gray;color: rgba(0,255,0,1); font-size: 15px;font-weight: normal;padding-left: 5px"></li>
                 </ul>
-
-     	    </div>
+            </div>
+     	</div>
      </div>
     <!-- END OF TILE PAGE -->
 	<!-- ADMIN PAGE -->
@@ -126,7 +125,7 @@
 						</ul>
 			  		 </div>
 	            </div>
-	 	    </div>
+            </div>
 	 		<!--ADMIN LOGIN-->
 	 		  <div id="toppanel">
 	 		  	<div id="panel">
@@ -272,7 +271,6 @@
 	  					</ul>
 	  		  		 </div>
 	              </div>
-	   	    </div>
 	   	    <div style="text-align: center;">
 	   	    	<img src="/images/uq-logo.gif" alt="UQ"/> <!--University of Queensland Logo-->
 		   	    <div class="about_message">
@@ -293,6 +291,8 @@
 		   	    	<img style="height: 50px;" src="/images/logo_EIF.gif" alt="EIF"/>
 		   	    	<img style="width: 50px; height: 50px;" src="/images/favicon_icon.png" alt="TissueStack Phone"/>
 	   	    </div>
+        </div>
+
 	   </div>
 	   <!--END OF ABOUT PAGE-->
     </body>

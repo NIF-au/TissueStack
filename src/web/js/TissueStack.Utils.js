@@ -279,34 +279,37 @@ TissueStack.Utils = {
 		}
 
         TissueStack.Utils.captureScreenDimensions(datasets);
-		//leftPanelHeight -=  heightTolerance;
+        $('#data [data-role="content"]').css(
+            {
+                "width"  : screen.width,
+                "height" : TissueStack.canvasDimensions.leftPanelHeight});
+        $('#datasets').css({"height" : TissueStack.canvasDimensions.leftPanelHeight});
 
-		//$('.left_panel').css({"width" : TissueStack.canvasDimensions.leftPanelWidth, "height": TissueStack.canvasDimensions.leftPanelWidth});
 		$('.left_panel').css({"left" : 0,
                               "top" : TissueStack.canvasDimensions.menuHeight,
                               "width" : TissueStack.canvasDimensions.leftPanelWidth,
-                              "height": TissueStack.canvasDimensions.leftPanelHeight * 0.99});
-		var sliderLength = (TissueStack.canvasDimensions.height - $('.canvasslider').outerHeight()) * 0.99;
-		$('.dataset').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height * 0.99});
+                              "height": TissueStack.canvasDimensions.leftPanelHeight});
+		var sliderLength = (TissueStack.canvasDimensions.height - $('.canvasslider').outerHeight());
+		$('.dataset').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height});
 
 		for (var x=1;x<=datasets;x++) {
             if (x == 1) {
-                $('#dataset_' + x).css({"left" : TissueStack.canvasDimensions.leftPanelWidth + 10, "top" : TissueStack.canvasDimensions.menuHeight});
-                $('#dataset_' + x + '_right_panel').css({"left" : TissueStack.canvasDimensions.width + TissueStack.canvasDimensions.leftPanelWidth + 20,
+                $('#dataset_' + x).css({"left" : TissueStack.canvasDimensions.leftPanelWidth + 2, "top" : TissueStack.canvasDimensions.menuHeight});
+                $('#dataset_' + x + '_right_panel').css({"left" : TissueStack.canvasDimensions.width + TissueStack.canvasDimensions.leftPanelWidth + 15,
                                          "top" : TissueStack.canvasDimensions.menuHeight});
                 $('#dataset_' + x + '_right_panel').css({"width" : TissueStack.canvasDimensions.rightPanelWidth,
-                                         "height": TissueStack.canvasDimensions.height  * 0.99});
+                                         "height": TissueStack.canvasDimensions.height});
             } else if (!TissueStack.overlay_datasets && x>1) {
-				$('#dataset_' + x).css({"left" : TissueStack.canvasDimensions.leftPanelWidth + 10,
-                                        "top" : TissueStack.canvasDimensions.menuHeight + 10 + TissueStack.canvasDimensions.height * 0.99});
-				$('#dataset_' + x + '_right_panel').css({"left" : TissueStack.canvasDimensions.width + TissueStack.canvasDimensions.leftPanelWidth + 20,
-                                                         "top" : TissueStack.canvasDimensions.menuHeight + 10 + TissueStack.canvasDimensions.height * 0.99});
+				$('#dataset_' + x).css({"left" : TissueStack.canvasDimensions.leftPanelWidth + 2,
+                                        "top" : TissueStack.canvasDimensions.menuHeight + 5 + TissueStack.canvasDimensions.height});
+				$('#dataset_' + x + '_right_panel').css({"left" : TissueStack.canvasDimensions.width + TissueStack.canvasDimensions.leftPanelWidth + 15,
+                                                         "top" : TissueStack.canvasDimensions.menuHeight + 5 + TissueStack.canvasDimensions.height});
 			} else if (TissueStack.overlay_datasets) {
-                $('#dataset_' + x).css({"left" : TissueStack.canvasDimensions.leftPanelWidth + 10, "top" : TissueStack.canvasDimensions.menuHeight});
-                $('#dataset_' + x + '_right_panel').css({"left" : TissueStack.canvasDimensions.width + TissueStack.canvasDimensions.leftPanelWidth + 20,
+                $('#dataset_' + x).css({"left" : TissueStack.canvasDimensions.leftPanelWidth + 2, "top" : TissueStack.canvasDimensions.menuHeight});
+                $('#dataset_' + x + '_right_panel').css({"left" : TissueStack.canvasDimensions.width + TissueStack.canvasDimensions.leftPanelWidth + 15,
                                              "top" : TissueStack.canvasDimensions.menuHeight});
                 $('#dataset_' + x + '_right_panel').css({"width" : TissueStack.canvasDimensions.rightPanelWidth,
-                                             "height": TissueStack.canvasDimensions.height  * 0.99});
+                                             "height": TissueStack.canvasDimensions.height});
             }
 
 			$('#dataset_' + x + '_right_panel').css({"width" : TissueStack.canvasDimensions.rightPanelWidth, "height": sliderLength});
@@ -339,9 +342,9 @@ TissueStack.Utils = {
 
 			TissueStack.dataSetNavigation.handleOverlaidDataSets(x, TissueStack.overlay_datasets && datasets>1);
 
-			$('#dataset_' + x + '_main_view_canvas').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height * 0.99});
+			$('#dataset_' + x + '_main_view_canvas').css({"width" : TissueStack.canvasDimensions.width, "height" : TissueStack.canvasDimensions.height});
 			$('#dataset_' + x + '_main_view_canvas canvas').attr("width", TissueStack.canvasDimensions.width);
-			$('#dataset_' + x + '_main_view_canvas canvas').attr("height", TissueStack.canvasDimensions.height * 0.99);
+			$('#dataset_' + x + '_main_view_canvas canvas').attr("height", TissueStack.canvasDimensions.height);
 
             var div = "dataset_" + x;
             TissueStack.ComponentFactory.resizeProgressBar(div);
@@ -771,18 +774,17 @@ TissueStack.Utils = {
 
 		// get the height of the menu header
 		var menuHeight = $('#menu_header').height();
-		// define some tolerance span
-		var widthTolerance = Math.floor(screenWidth * 0.01);
-		var heightTolerance = Math.floor(screenHeight * 0.01);
 
 		// get the width of the left panel
-		var leftPanelWidth = Math.floor(screenWidth * 0.15);
-		var leftPanelHeight = screenHeight - menuHeight;
-		var rightPanelWidth = Math.floor(screenWidth * 0.05);
+		var leftPanelWidth = 200;//Math.floor(screenWidth * 0.15);
+		var leftPanelHeight = screenHeight - menuHeight-5;
+		var rightPanelWidth = 60; //Math.floor(screenWidth * 0.05);
 
 		TissueStack.canvasDimensions =
-            { width: (screenWidth - leftPanelWidth - rightPanelWidth - widthTolerance),
-              height: Math.floor(leftPanelHeight / (TissueStack.overlay_datasets ? 1 : datasets)) -  heightTolerance,
+            { width: (screenWidth - leftPanelWidth - rightPanelWidth - 15),
+              height:
+               Math.floor(leftPanelHeight / (TissueStack.overlay_datasets ? 1 : datasets)) -
+               (TissueStack.overlay_datasets || datasets <= 1 ? 10 : 8),
               menuHeight: menuHeight,
               leftPanelWidth: leftPanelWidth,
               leftPanelHeight: leftPanelHeight,
