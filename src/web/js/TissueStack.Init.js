@@ -244,6 +244,22 @@ TissueStack.InitPhoneUserInterface = function (drawMe) {
 };
 
 TissueStack.BindGlobalEvents = function () {
+    if (TissueStack.desktop ||
+        TissueStack.tablet) $('#data').on('pageshow', function() {
+            if (TissueStack.dataSetNavigation &&
+                TissueStack.dataSetNavigation.selectedDataSets)
+                TissueStack.Utils.adjustScreenContentToActualScreenSize(
+                    TissueStack.dataSetNavigation.selectedDataSets.count);
+                for (var i=0; i<TissueStack.dataSetNavigation.selectedDataSets.count;i++) {
+                    var ds = TissueStack.dataSetStore.getDataSetById(
+                        TissueStack.dataSetNavigation.selectedDataSets["dataset_" + (i+1)]);
+                    var now = new Date().getTime();
+                    if (ds && ds.planes)
+                        for (var p in ds.planes)
+                                ds.planes[p].resizeCanvas(now);
+                }
+        });
+
 	// for the desktop, we want to resize stuff once the individual sections have been expanded
 	$(".left_panel div[data-role='collapsible']").each(
 			function() {

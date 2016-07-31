@@ -191,11 +191,6 @@ TissueStack.Events.prototype = {
 				return;
 			}
 
-			// annoying opera
-			if ($.browser.opera) {
-				delta = delta > 0 ? 1.5 : -1.5;
-			}
-
 			if (!e.shiftKey) {
 				// call zoom
 				_this.zoom(e, delta);
