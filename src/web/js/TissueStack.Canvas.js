@@ -486,7 +486,7 @@ TissueStack.Canvas.prototype = {
 		if (slice < 0 || slice > this.getDataExtent().max_slices) {
             this.eraseCanvasContent();
 			this.syncDataSetCoordinates(this, timestamp, true);
-            this.queue.displayLoadingProgress(true);
+            this.queue.displayLoadingProgress(timestamp, true);
 			return;
 		}
 
@@ -497,7 +497,7 @@ TissueStack.Canvas.prototype = {
                 || (this.upper_left_y - this.getDataExtent().y) >= this.dim_y) {
             this.eraseCanvasContent();
 			this.syncDataSetCoordinates(this, timestamp, false);
-			this.queue.displayLoadingProgress(true);
+			this.queue.displayLoadingProgress(timestamp, true);
 			return;
 		}
 
@@ -511,8 +511,11 @@ TissueStack.Canvas.prototype = {
         this.preCanvas.width = this.dim_x;
         this.preCanvas.height = this.dim_y;
 
-        if (TissueStack.overlay_datasets && this.underlying_canvas)
+        if (TissueStack.overlay_datasets && this.underlying_canvas) {
+            this.underlying_canvas.getCanvasElement().hide();
+            this.getCanvasContext().globalAlpha = TissueStack.transparency;
             this.preCanvas.getContext('2d').globalAlpha = TissueStack.transparency;
+        }
 
 		var startTileX = this.upper_left_x < 0 ?
             Math.floor(-this.upper_left_x / this.getDataExtent().tile_size) : 0;
@@ -720,13 +723,9 @@ TissueStack.Canvas.prototype = {
                 canvas[0], canvas[1], width, height); // canvas dimensions
         if (!this.queue.is_partial_render)
             this.queue.incrementTileCount();
-        else this.queue.displayLoadingProgress(true, true);
+        else this.queue.displayLoadingProgress(timestamp, true, true);
 
         if (this.queue.hasFinishedTiling() || this.queue.is_partial_render) {
-            if (TissueStack.overlay_datasets &&
-                (this.overlay_canvas || this.underlying_canvas))
-                this.getCanvasElement().show();
-
             if (typeof TissueStack.dataSetNavigation === 'object' && this.overlays)
                 for (var z=0;z<this.overlays.length;z++)
                     this.overlays[z].drawMe();
@@ -735,11 +734,11 @@ TissueStack.Canvas.prototype = {
                 this.applyContrastAndColorMapToImageData(
                     preContext.getImageData(0,0, this.dim_x, this.dim_y));
 
-            if (TissueStack.overlay_datasets && this.underlying_canvas)
-                this.getCanvasContext().globalAlpha = TissueStack.transparency;
-
             this.getCanvasContext().putImageData(imageData, 0,0);
             this.syncDataSetCoordinates(this, timestamp, false);
+
+            if (TissueStack.overlay_datasets && this.overlay_canvas)
+                this.getCanvasElement().show();
 
             if (this.is_main_view && this.measurements &&
                  this.measurements.checkMeasurements(

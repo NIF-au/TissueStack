@@ -365,17 +365,23 @@ TissueStack.Queue.prototype = {
 				(this.canvas.upper_left_y >= this.canvas.dim_y && this.canvas.upper_left_y - this.canvas.getDataExtent().y-1 >= this.canvas.dim_y) ?
 						this.canvas.dim_y : this.canvas.dim_y - Math.floor(this.canvas.dim_y - (this.canvas.upper_left_y - this.canvas.getDataExtent().y)));
 		}
-	}, displayLoadingProgress : function(reset, error) {
+	}, displayLoadingProgress : function(timestamp, reset, error) {
         if (TissueStack.phone) return;
+
+        if (this.latestDrawRequestTimestamp < 0 ||
+                (timestamp && timestamp < this.latestDrawRequestTimestamp)) {
+            return;
+        }
 
         var dataset_id = this.canvas.dataset_id;
         var plane = this.canvas.data_extent.plane
 
         if (typeof(reset) == 'boolean' && reset) {
+            $("#" + dataset_id + " .tile_count_div span." + plane).css('color', '');
             $("#" + dataset_id + " .tile_count_div progress").val(0);
-            if (typeof(error) == 'boolean' && error)
+            if (typeof(error) === 'boolean' && error)
                 $("#" + dataset_id + " .tile_count_div span." + plane).html("ERR");
-            else {
+        else {
                 $("#" + dataset_id + " .tile_count_div span." + plane).html("0%");
                 $("#" + dataset_id + " .tile_count_div span." + plane).hide();
             }

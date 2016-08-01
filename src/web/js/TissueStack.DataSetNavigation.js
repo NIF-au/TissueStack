@@ -289,7 +289,7 @@ TissueStack.DataSetNavigation.prototype = {
                 });
 
                 var pos = $(event.currentTarget).position();
-                myTreeContext.css({top: pos.top, left: event.clientX});
+                myTreeContext.css({top: event.clientY, left: event.clientX});
                 myTreeContext.show();
 
 				// stop browser from showing you its context menu
@@ -832,9 +832,10 @@ TissueStack.DataSetNavigation.prototype = {
                 }
                 other_plane.redrawWithCenterAndCrossAtGivenPixelCoordinates(
                         pixel_coords_for_other_plane, false, timestamp);
-                if (TissueStack.overlay_datasets && canvas.getDataExtent().zoom_level != other_plane.getDataExtent().zoom_level)
+                if (TissueStack.overlay_datasets &&
+                    canvas.getDataExtent().zoom_level != other_plane.getDataExtent().zoom_level)
                     other_plane.changeToZoomLevel(canvas.getDataExtent().zoom_level);
-                other_plane.events.changeSliceForPlane(pixel_coords_for_other_plane.z);
+                other_plane.drawMe(canvas.queue.timestamp);
 
                 if (other_plane.is_main_view) {
                     var slider = $("#" + (other_plane.dataset_id == "" ? "" : other_plane.dataset_id + "_") + "canvas_main_slider");

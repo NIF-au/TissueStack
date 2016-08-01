@@ -667,16 +667,14 @@ TissueStack.Utils = {
 						TissueStack.dataSetNavigation.selectedDataSets[whichEverCanvas1.dataset_id]),
 				plane1, plane2, true);
 	},transitionToDataSetView :  function(reselect) {
-        $.mobile.changePage("#data", {allowSamePageTransition: true});
+        //$.mobile.changePage("#data", {allowSamePageTransition: true});
 
         if (typeof reselect !== 'boolean') reselect = false;
         if (TissueStack.dataSetNavigation.selectedDataSets.count > 1 && reselect) {
             var sel = TissueStack.dataSetNavigation.selectedDataSets["dataset_1"];
-            setTimeout(function() {
-                TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(sel, false);
-                TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(sel, true);
-                TissueStack.swappedOverlayOrder = false;
-            }, 250);
+            TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(sel, false);
+            TissueStack.dataSetNavigation.getDynaTreeObject().selectKey(sel, true);
+            TissueStack.swappedOverlayOrder = false;
     	}
 	}, testHttpFileExistence : function(url) {
 		var succeeded = false;
