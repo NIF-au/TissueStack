@@ -799,11 +799,14 @@ TissueStack.DataSetNavigation.prototype = {
             var real_world_coords_for_handed_in_plane = canvas.getDataExtent().getWorldCoordinatesForPixel(pixel_coords_for_handed_in_plane);
             var pixel_coords_for_other_plane = other_plane.getDataExtent().getPixelForWorldCoordinates(real_world_coords_for_handed_in_plane);
 
+            other_plane.has_been_synced = true;
+            other_plane.queue.last_sync_timestamp = -1;
             // THIS IS VITAL TO AVOID an infinite sync chain!!!
+            /*
             for (var p in other_ds.planes) {
                 other_ds.planes[p].has_been_synced = true;
                 other_ds.planes[p].queue.last_sync_timestamp = -1;
-            }
+            }*/
 
             if (eraseCanvas) {
                 other_plane.eraseCanvasContent();
@@ -826,7 +829,7 @@ TissueStack.DataSetNavigation.prototype = {
                 if (TissueStack.overlay_datasets &&
                     canvas.getDataExtent().zoom_level != other_plane.getDataExtent().zoom_level)
                     other_plane.changeToZoomLevel(canvas.getDataExtent().zoom_level);
-                other_plane.drawMe(canvas.queue.timestamp);
+                other_plane.drawMe(timestamp);
 
                 if (other_plane.is_main_view) {
                     var slider = $("#" + (other_plane.dataset_id == "" ? "" : other_plane.dataset_id + "_") + "canvas_main_slider");

@@ -169,33 +169,6 @@ TissueStack.Queue.prototype = {
 			this.canvas.drawCoordinateCross(this.canvas.getCenter());
 		}
 
-		// CLICK ACTION
-		if (thisHerePlane === 'x' && draw_request.plane === 'z' && draw_request.action == 'CLICK') {
-			this.canvas.drawCoordinateCross(
-					{x: draw_request.canvasDims.y - (draw_request.crossCoords.y + ((draw_request.canvasDims.y - draw_request.crossCoords.y)- this.canvas.cross_x)),
-					 y:  this.canvas.cross_y});
-		} else if (thisHerePlane === 'y' && draw_request.plane === 'z' && draw_request.action == 'CLICK') {
-			this.canvas.drawCoordinateCross(
-					{x: draw_request.crossCoords.x + (this.canvas.cross_x - draw_request.crossCoords.x),
-					 y: this.canvas.cross_y});
-		} else if (thisHerePlane === 'x' && draw_request.plane === 'y' && draw_request.action == 'CLICK') {
-			this.canvas.drawCoordinateCross(
-					{x: this.canvas.cross_x,
-					 y: (draw_request.canvasDims.y - draw_request.crossCoords.y) + ((this.canvas.dim_y - this.canvas.cross_y) - (draw_request.canvasDims.y - draw_request.crossCoords.y))});
-		} else if (thisHerePlane === 'z' && draw_request.plane === 'y' && draw_request.action == 'CLICK') {
-			this.canvas.drawCoordinateCross(
-					{x: draw_request.crossCoords.x + (this.canvas.cross_x - draw_request.crossCoords.x),
-					 y:  this.canvas.cross_y});
-		} else if (thisHerePlane === 'y' && draw_request.plane === 'x' && draw_request.action == 'CLICK') {
-			this.canvas.drawCoordinateCross(
-					{x:  this.canvas.cross_x,
-						y: (draw_request.canvasDims.y - draw_request.crossCoords.y) + ((this.canvas.dim_y - this.canvas.cross_y) - (draw_request.canvasDims.y - draw_request.crossCoords.y))});
-		} else if (thisHerePlane === 'z' && draw_request.plane === 'x' && draw_request.action == 'CLICK') {
-			this.canvas.drawCoordinateCross(
-					{x: this.canvas.cross_x,
-					 y: this.canvas.dim_y - (draw_request.crossCoords.x + ((this.canvas.dim_y - this.canvas.cross_y) - draw_request.crossCoords.x))});
-		}
-
 		// COORDINATE CHANGES DUE TO VARYING ZOOM LEVELS BETWEEN THE CANVASES
 		var originalZoomLevelDims = this.canvas.getDataExtent().getZoomLevelDimensions(draw_request.zoom_level);
 		var crossXOutsideOfExtentX = (draw_request.coords.x < 0) ? -1 : 0;

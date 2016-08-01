@@ -253,10 +253,13 @@ TissueStack.BindGlobalEvents = function () {
                 for (var i=0; i<TissueStack.dataSetNavigation.selectedDataSets.count;i++) {
                     var ds = TissueStack.dataSetStore.getDataSetById(
                         TissueStack.dataSetNavigation.selectedDataSets["dataset_" + (i+1)]);
+                    TissueStack.ComponentFactory.redrawDataSet(ds);
+                    /*
                     var now = new Date().getTime();
                     if (ds && ds.planes)
                         for (var p in ds.planes)
                                 ds.planes[p].resizeCanvas(now);
+                    */
                 }
         });
 

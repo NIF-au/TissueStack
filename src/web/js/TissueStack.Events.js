@@ -378,12 +378,16 @@ TissueStack.Events.prototype = {
 		var cross_coords = {x: coords.x, y: coords.y};
 		var canvas_dims = {x: this.canvas.dim_x, y: this.canvas.dim_y};
 
+        this.canvas.drawCoordinateCross(cross_coords);
+        this.canvas.drawMe(now);
+        //this.canvas.redrawWithCenterAndCrossAtGivenPixelCoordinates(cross_coords, false, now);
+        /*
 		this.canvas.drawCoordinateCross(cross_coords);
 
 		if (TissueStack.sync_datasets && !TissueStack.overlay_datasets && TissueStack.dataSetNavigation.selectedDataSets.count > 1) {
 			this.canvas.queue.latestDrawRequestTimestamp = now;
 			this.canvas.drawMe(now);
-		}
+		}*/
 
         var aniso_factor_x = 1;
         var aniso_factor_y = 1;
