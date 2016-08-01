@@ -520,29 +520,29 @@ TissueStack.Events.prototype = {
 		var worldCoordinates = this.canvas.getDataExtent().getWorldCoordinatesForPixel(relCrossCoords);
 
 		// update coordinate info displayed
-		var __target = this;
-		if (!TissueStack.phone && !__target.canvas.is_main_view) { // if we are not the main view, delegate there...
-			var ds = TissueStack.dataSetStore.getDataSetById(__target.canvas.getDataExtent().data_id);
+		var target = this;
+		if (!TissueStack.phone && !target.canvas.is_main_view) { // if we are not the main view, delegate there...
+			var ds = TissueStack.dataSetStore.getDataSetById(target.canvas.getDataExtent().data_id);
 			if (ds && ds.planes)
 				for (p in ds.planes)
 					if (ds.planes[p].is_main_view) {
-						__target = ds.planes[p];
+						target = ds.planes[p];
 						break;
 					}
-			if (__target) {
-				relCrossCoords = __target.getRelativeCrossCoordinates();
-				relCrossCoords.z = __target.getDataExtent().slice;
+			if (target) {
+				relCrossCoords = target.getRelativeCrossCoordinates();
+				relCrossCoords.z = target.getDataExtent().slice;
 				setTimeout(function() {
-					__target.updateCoordinateInfo(
-							relCrossCoords,
-							__target.getDataExtent().getWorldCoordinatesForPixel(relCrossCoords));}
-					, 500);
+					this.updateCoordinateInfo(
+						relCrossCoords,
+                        this.getDataExtent().getWorldCoordinatesForPixel(
+                            relCrossCoords));}.bind(target), 500);
 			}
 			return;
 		}
 
 		setTimeout(function() {
-		__target.canvas.updateCoordinateInfo(relCrossCoords, worldCoordinates);}
-		, 500);
+            this.canvas.updateCoordinateInfo(
+                relCrossCoords, worldCoordinates);}.bind(target), 500);
 	}
 };
