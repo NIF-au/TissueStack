@@ -529,15 +529,15 @@ TissueStack.Events.prototype = {
 						target = ds.planes[p];
 						break;
 					}
-			if (target) {
-				relCrossCoords = target.getRelativeCrossCoordinates();
-				relCrossCoords.z = target.getDataExtent().slice;
+			if (target)
 				setTimeout(function() {
+                    relCrossCoords = this.getRelativeCrossCoordinates();
+    				relCrossCoords.z = this.getDataExtent().slice;
+
 					this.updateCoordinateInfo(
 						relCrossCoords,
                         this.getDataExtent().getWorldCoordinatesForPixel(
                             relCrossCoords));}.bind(target), 500);
-			}
 			return;
 		}
 

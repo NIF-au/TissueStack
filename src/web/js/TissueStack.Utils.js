@@ -706,9 +706,11 @@ TissueStack.Utils = {
 		var ys = coords.y;
 
 	 	if (canvas.getDataExtent().one_to_one_x != canvas.getDataExtent().origX)
-            xes *= ( canvas.getDataExtent().origX / canvas.getDataExtent().one_to_one_x);
+            xes *= Math.round(
+                canvas.getDataExtent().one_to_one_x / canvas.getDataExtent().origX );
 	 	if (canvas.getDataExtent().one_to_one_y != canvas.getDataExtent().origY)
-            ys *= ( canvas.getDataExtent().origY / canvas.getDataExtent().one_to_one_y);
+            ys *= Math.round(
+                canvas.getDataExtent().one_to_one_y / canvas.getDataExtent().origY );
 
 		xes = xes;
 		ys	= ys;
@@ -733,10 +735,11 @@ TissueStack.Utils = {
 			canvas.displayPixelValue(dataset, TissueStack.dataSetStore.lookupValueForRGBTriple(dataset, value_wrapped));
 		};
 
+        /*
 		if (canvas.hasColorMapOrContrastSetting()) {
 			setTimeout(function() {	errorHandler(canvas); } , 200);
 			return;
-		}
+		}*/
 
   		// send ajax request
  		TissueStack.Utils.sendAjaxRequest(url, 'GET',

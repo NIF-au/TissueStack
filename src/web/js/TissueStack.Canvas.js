@@ -876,21 +876,15 @@ TissueStack.Canvas.prototype = {
 				ontologies[0].children = children;
 				children = [];
 			}
-		} else if (!this.isColorMapOn()) {
-			// fallback: if no label lookup value was associated, we display either the gray value or the color rgb triples
-			var v = "R: " + dataSetPixelValues.red +
-                ", G: " + dataSetPixelValues.green +
-                ", B:" + dataSetPixelValues.blue;
-			if ((dataSetPixelValues.red == dataSetPixelValues.green) && (dataSetPixelValues.green == dataSetPixelValues.blue))
-				v = dataSetPixelValues.red;
-			info = v;
-			$("#canvas_point_value").show();
-		} else {// display r/g/b triples
-			info += ("R: " + dataSetPixelValues.red + ", G: "
+		} else {// display r/g/b triples or gray
+            dataSetPixelValues =
+                this.getCanvasPixelValue({x: this.cross_x, y: this.cross_y});
+            if (this.isColorMapOn())
+                info += ("R: " + dataSetPixelValues.red + ", G: "
 					+ dataSetPixelValues.green + ", B: "
 					+ dataSetPixelValues.blue);
-			$("#canvas_point_value").show();
-		}
+            else info += dataSetPixelValues.red;
+        }
 		$("#canvas_point_value").val(info);
 
 		// loop over associated data sets if they exist and integrate them in the tree structure
