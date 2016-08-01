@@ -486,7 +486,7 @@ TissueStack.Canvas.prototype = {
 		if (slice < 0 || slice > this.getDataExtent().max_slices) {
             this.eraseCanvasContent();
 			this.syncDataSetCoordinates(this, timestamp, true);
-            this.queue.displayLoadingProgress(timestamp, true);
+            this.queue.displayLoadingProgress(true);
 			return;
 		}
 
@@ -497,7 +497,7 @@ TissueStack.Canvas.prototype = {
                 || (this.upper_left_y - this.getDataExtent().y) >= this.dim_y) {
             this.eraseCanvasContent();
 			this.syncDataSetCoordinates(this, timestamp, false);
-			this.queue.displayLoadingProgress(timestamp, true);
+			this.queue.displayLoadingProgress(true);
 			return;
 		}
 
@@ -723,7 +723,7 @@ TissueStack.Canvas.prototype = {
                 canvas[0], canvas[1], width, height); // canvas dimensions
         if (!this.queue.is_partial_render)
             this.queue.incrementTileCount();
-        else this.queue.displayLoadingProgress(timestamp, true, true);
+        else this.queue.displayLoadingProgress(true, true);
 
         if (this.queue.hasFinishedTiling() || this.queue.is_partial_render) {
             if (typeof TissueStack.dataSetNavigation === 'object' && this.overlays)
