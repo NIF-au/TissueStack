@@ -445,18 +445,9 @@ TissueStack.DataSetNavigation.prototype = {
                             var ds = TissueStack.dataSetNavigation.selectedDataSets["dataset_" + selectedNodes.length];
                             if (!ds) return;
                             var actualDs = TissueStack.dataSetStore.getDataSetById(ds);
-                            if (actualDs && actualDs.planes) {
-                                var sync_time = new Date().getTime();
-                                for (var p in actualDs.planes) {
-                                    (function(pl) {
-                                        actualDs.planes[pl].has_been_synced = true;
-                                        actualDs.planes[pl].queue.latestDrawRequestTimestamp = sync_time;
-                                        setTimeout(function() {
-                                            actualDs.planes[pl].drawMe(sync_time);
-                                        },actualDs.planes[pl].queue.drawingIntervalInMillis);
-                                    })(p);
-                                }
-                            }
+                            if (actualDs && actualDs.planes)
+                                for (var p in actualDs.planes)
+                                    actualDs.planes[p].drawMe(new Date().getTime());
                         };
 
                    var dataSetSwapperHandler =

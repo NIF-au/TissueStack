@@ -83,6 +83,9 @@ TissueStack.Measurements.prototype = {
         if (this.measurements.length === 0) return;
 
         var ctx = this.canvas.getCanvasContext();
+        if (TissueStack.overlay_datasets && this.canvas.underlying_canvas)
+            ctx.globalAlpha = 1;
+
         ctx.strokeStyle="rgba(255,255,0,1)";
         ctx.fillStyle="rgba(255,255,0,1)";
 
@@ -123,6 +126,8 @@ TissueStack.Measurements.prototype = {
                 ctx.closePath();
             }
         }
+        if (TissueStack.overlay_datasets && this.canvas.underlying_canvas)
+            ctx.globalAlpha = TissueStack.transparency;
     },getNumberOfMeasurements : function() {
         return this.measurements.length;
     }, dispose : function() {
