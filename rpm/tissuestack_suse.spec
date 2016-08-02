@@ -38,8 +38,8 @@ rm -rf /tmp/%{name}_build
 rm -f /tmp/pre-install.log
 touch /tmp/pre-install.log
 chmod 666 /tmp/pre-install.log
-/etc/init.d/tissuestack stop &>> /tmp/pre-install.log
-httpd2 -k stop  &>> /tmp/uninstall.log
+systemctl stop tissuestack &>> /tmp/pre-install.log
+systemctl stop apache2  &>> /tmp/uninstall.log
 #clean directories that don't contain user data
 rm -rf /opt/tissuestack/web/* &>> /tmp/pre-install.log
 rm -rf /opt/tissuestack/sql &>> /tmp/pre-install.log
@@ -51,16 +51,16 @@ rm -f /tmp/uninstall.log
 touch /tmp/uninstall.log
 chmod 666 /tmp/uninstall.log
 if [ $1 -ne 1 ]; then
-	/etc/init.d/tissuestack stop &>> /tmp/uninstall.log
+	systemctl stop tissuestack stop &>> /tmp/uninstall.log
 fi
 exit 0
 
 %postun
 if [ $1 -ne 1 ]; then
-	chkconfig --del tissuestack &>> /tmp/uninstall.log
-	rm -rf /etc/init.d/tissuestack &>> /tmp/uninstall.log
+	systemctl disable tissuestack &>> /tmp/uninstall.log
+	rm -rf /etc/systemd/system/tissuestack.service &>> /tmp/uninstall.log
 	rm -rf /etc/apache2/vhosts.d/tissuestack.conf &>> /tmp/uninstall.log
-	httpd2 -k restart &>> /tmp/uninstall.log
+	systemctl restart apache2 &>> /tmp/uninstall.log
 fi
 /sbin/ldconfig
 exit 0
@@ -83,8 +83,8 @@ su -c "su - postgres <<EOF
 initdb &>> /tmp/post-install.log
 EOF
 "
-chkconfig postgresql on &>> /tmp/post-install.log
-service postgresql start &>> /tmp/post-install.log
+systemctl enable postgresql &>> /tmp/post-install.log
+systemctl start postgresql &>> /tmp/post-install.log
 sleep 5s
 su -c "su - postgres <<EOF
 psql -f /opt/tissuestack/sql/create_tissuestack_db.sql &>> /tmp/post-install.log
@@ -94,7 +94,7 @@ psql -f /opt/tissuestack/sql/create_tissuestack_config.sql tissuestack &>> /tmp/
 psql -f /opt/tissuestack/sql/update_tissuestack_config.sql tissuestack &>> /tmp/post-install.log
 EOF
 "
-chkconfig httpd on &>> /tmp/post-install.log
+systemctl enable apache2 &>> /tmp/post-install.log
 echo "/opt/tissuestack" > /tmp/escaped.string
 sed -i 's/\//\\\//g' /tmp/escaped.string &>> /tmp/post-install.log
 ESCAPED_STRING=`cat /tmp/escaped.string` &>> /tmp/post-install.log
@@ -128,11 +128,14 @@ fi
 setsebool -P httpd_can_network_connect 1 &>> /tmp/post-install.log
 setsebool -P httpd_enable_homedirs 1 &>> /tmp/post-install.log
 iptables-save &>> /tmp/post-install.log
-httpd2 -k restart &>> /tmp/post-install.log
-cp -f /opt/tissuestack/conf/tissuestack_init.sh /etc/init.d/tissuestack &>> /tmp/post-install.log
-chmod 755 /etc/init.d/tissuestack &>> /tmp/post-install.log
-chkconfig --add tissuestack &>> /tmp/post-install.log
-chkconfig tissuestack on &>> /tmp/post-install.log
-/etc/init.d/tissuestack start &>> /tmp/post-install.log
+systemctl restart apache2 &>> /tmp/post-install.log
+cp -f /opt/tissuestack/conf/tissuestack.service /etc/systemd/system/tissuestack.service &>> /tmp/post-install.log
+chmod 664 /etc/systemd/system/tissuestack.service &>> /tmp/post-install.log
+echo "/usr/local/tissuestack/%{version}/bin" > /tmp/escaped.string
+sed -i 's/\//\\\//g' /tmp/escaped.string &>> /tmp/post-install.log
+ESCAPED_STRING=`cat /tmp/escaped.string` &>> /tmp/post-install.log
+sed -i "s/##TS_BIN_DIR##/$ESCAPED_STRING/g" /etc/systemd/system/tissuestack.service &>> /tmp/post-install.log
+systemctl enable tissuestack &>> /tmp/post-install.log
+systemctl start tissuestack &>> /tmp/post-install.log
 /sbin/ldconfig
 exit 0

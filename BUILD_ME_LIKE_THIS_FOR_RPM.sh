@@ -61,6 +61,7 @@ fi
 
 if [ $IS_SUSE -ne 0 ]; then
     SPEC_FILE=tissuestack_suse.spec
+    export USES_SYSTEMCTL=1
 fi;
 
 PKI_BUILD=0
