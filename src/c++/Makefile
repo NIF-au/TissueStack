@@ -17,6 +17,7 @@ INCLUDE			=	-Iinclude -I/usr/include/nifti \
 
 LIB_PATH		=	-L/usr/lib64/dcmtk
 
+USES_SYSTEMCTL ?= 0
 IS_CENTOS_OR_FEDORA	?= 0
 IS_RELEASE		?= 0
 
@@ -150,6 +151,9 @@ server: clean prepare compile install
 	@cp -f $(PACKAGING_CONFIG_PATH)/$(APP_NAME).sh $(BUILD_SRC_PATH)$(BINS_PATH)/$(APP_NAME) &>> $(BUILD_PATH)/logs/$(APP_NAME)_copy.log
 	@if [ $(IS_DEBIAN_BASED) -gt 0 ] || [ $(IS_UBUNTU_BASED) -gt 0 ]; then \
 		cp -f $(PACKAGING_CONFIG_PATH)/$(APP_NAME)_deb_init.sh $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(APP_NAME)_init.sh &>> $(BUILD_PATH)/logs/$(APP_NAME)_copy.log; \
+	elif [ $(USES_SYSTEMCTL) -gt 0 ]; then \
+		cp -f $(PACKAGING_CONFIG_PATH)/$(APP_NAME).service $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(APP_NAME).service &>> $(BUILD_PATH)/logs/$(APP_NAME)_copy.log; \
+		cp -f $(PACKAGING_CONFIG_PATH)/$(APP_NAME)_sysctl.sh $(BUILD_SRC_PATH)$(BINS_PATH)/$(APP_NAME) &>> $(BUILD_PATH)/logs/$(APP_NAME)_copy.log; \
 	else \
 		cp -f $(PACKAGING_CONFIG_PATH)/$(APP_NAME)_init.sh $(BUILD_SRC_PATH)$(DATA_PATH)/conf/$(APP_NAME)_init.sh &>> $(BUILD_PATH)/logs/$(APP_NAME)_copy.log; \
 	fi

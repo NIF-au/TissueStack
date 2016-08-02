@@ -16,13 +16,19 @@ SPEC_FILE=tissuestack.spec
 TARGET=server
 
 IS_SUSE=`cat /etc/*-release | grep -i "suse"| wc -c`
-REDHAT_RPM_CONFIG=`yum list installed | grep "redhat-rpm-config" | wc -l`
+IS_CENTOS=`cat /etc/*-release | grep -i "centos"| wc -c`
+IS_CENTOS_6_X=`cat /etc/*-release | grep -i "centos release 6."| wc -c`
+PACKAGE_MANAGER="dnf"
+if [ $IS_CENTOS_6_X -gt 0 ]; then
+    PACKAGE_MANAGER="yum"
+fi;
+
+REDHAT_RPM_CONFIG=`"$PACKAGE_MANAGER" list installed | grep "redhat-rpm-config" | wc -l`
 if [ $IS_SUSE -eq 0 ] && [ $REDHAT_RPM_CONFIG -eq 0 ]; then
 	echo "Install redhat-rpm-config first!"
 	exit -1
 fi;
 
-IS_CENTOS_6_X=`cat /etc/*-release | grep -i "centos release 6."| wc -c`
 if [ $IS_CENTOS_6_X -gt 0 ]; then
 	CENTOS_DEVTOOLS_1_1=`yum list installed | grep "devtoolset-1.1" | wc -c`
 	if [ $CENTOS_DEVTOOLS_1_1 -eq 0 ]; then
@@ -37,11 +43,20 @@ if [ $IS_CENTOS_6_X -gt 0 ]; then
 	echo -e "cc1plus: error: unrecognized command line option -std=gnu++11\n"
 fi;
 
-IS_FEDORA=`cat /etc/*-release | grep -i "fedora"| wc -c`
-IS_CENTOS=`cat /etc/*-release | grep -i "centos"| wc -c`
+CURRENT_DIR=`pwd`
 
+IS_FEDORA=`cat /etc/*-release | grep -i "fedora"| wc -c`
 if [ $IS_CENTOS -ne 0 ] || [ $IS_FEDORA -ne 0 ]; then
 	export IS_CENTOS_OR_FEDORA=1
+fi
+
+if [ $IS_CENTOS -ne 0 ] && [ $IS_CENTOS_6_X -eq 0 ]; then
+	SPEC_FILE=tissuestack_sysctl.spec
+fi
+
+if [ $IS_FEDORA -ne 0 ]; then
+    SPEC_FILE=tissuestack_sysctl.spec
+    export USES_SYSTEMCTL=1
 fi
 
 if [ $IS_SUSE -ne 0 ]; then
@@ -57,8 +72,6 @@ if [ $# -ne 0 ]; then
         PKI_BUILD=1
     fi;
 fi;
-
-CURRENT_DIR=`pwd`
 
 echo "Calling TissueStack make with target $TARGET"
 cd $CURRENT_DIR/src/c++;make $TARGET

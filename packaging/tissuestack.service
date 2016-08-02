@@ -1,0 +1,14 @@
+[Unit]
+Description=TissueStack Image Server
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=tissuestack
+ExecStart=##TS_BIN_DIR##/tissuestack start
+ExecReload=##TS_BIN_DIR##/tissuestack restart
+ExecStop=##TS_BIN_DIR##/tissuestack stop
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
