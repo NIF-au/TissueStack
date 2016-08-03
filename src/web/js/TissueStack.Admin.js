@@ -422,7 +422,7 @@ TissueStack.Admin.prototype = {
                         return;
                     }
                 );
-            }, 1500);
+            }, 2500);
     },
 	checkExistenceOfFileInUploadDirectory : function(filename)	{
 		var _this = this;

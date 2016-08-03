@@ -366,12 +366,12 @@ const bool tissuestack::services::TissueStackAdminService::readAndStoreFileUploa
 	{
 		if (totalBytesOfFileUpload > tissuestack::services::TissueStackAdminService::FILE_UPLOAD_LIMIT)
 			return false;
-	
+
 		errno = 0;
 		tmp = readAnotherBufferFromSocketAsString(processing_strategy, socketDescriptor);
 		if (tmp.empty() && errno == EAGAIN)
 		{
-			if (eagainFailures == 2)
+			if (eagainFailures == 10)
 				break;
 			eagainFailures++;
 			sleep(1);
