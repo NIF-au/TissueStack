@@ -19,7 +19,7 @@ IS_SUSE=`cat /etc/*-release | grep -i "suse"| wc -c`
 IS_CENTOS=`cat /etc/*-release | grep -i "centos"| wc -c`
 IS_CENTOS_6_X=`cat /etc/*-release | grep -i "centos release 6."| wc -c`
 PACKAGE_MANAGER="dnf"
-if [ $IS_CENTOS_6_X -gt 0 ]; then
+if [ $IS_CENTOS -gt 0 ]; then
     PACKAGE_MANAGER="yum"
 fi;
 
