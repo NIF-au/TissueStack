@@ -879,7 +879,9 @@ TissueStack.Canvas.prototype = {
 		} else {// display r/g/b triples or gray
             dataSetPixelValues =
                 this.getCanvasPixelValue({x: this.cross_x, y: this.cross_y});
-            if (this.isColorMapOn())
+            if (this.isColorMapOn() ||
+                (dataSetPixelValues.green !== dataSetPixelValues.red &&
+                dataSetPixelValues.red !== dataSetPixelValues.blue))
                 info += ("R: " + dataSetPixelValues.red + ", G: "
 					+ dataSetPixelValues.green + ", B: "
 					+ dataSetPixelValues.blue);
