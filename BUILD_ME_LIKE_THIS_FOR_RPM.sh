@@ -50,12 +50,8 @@ if [ $IS_CENTOS -ne 0 ] || [ $IS_FEDORA -ne 0 ]; then
 	export IS_CENTOS_OR_FEDORA=1
 fi
 
-if [ $IS_CENTOS -ne 0 ] && [ $IS_CENTOS_6_X -eq 0 ]; then
+if ( [ $IS_CENTOS -ne 0 ] && [ $IS_CENTOS_6_X -eq 0 ]) || [ $IS_FEDORA -ne 0 ]; then
 	SPEC_FILE=tissuestack_sysctl.spec
-fi
-
-if [ $IS_FEDORA -ne 0 ]; then
-    SPEC_FILE=tissuestack_sysctl.spec
     export USES_SYSTEMCTL=1
 fi
 
