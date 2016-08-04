@@ -2,7 +2,7 @@
 clear
 
 export IS_RELEASE=1
-export TISSUESTACK_BUILD_VERSION=2.2
+export TISSUESTACK_BUILD_VERSION=2.3
 
 echo "Setting up build directory and copying config files"
 BUILD_DIR=/tmp/tissuestack_build_debian

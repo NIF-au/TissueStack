@@ -9,7 +9,7 @@ if [ $? -ne 0 ]; then
 	exit -1
 fi
 
-export TISSUESTACK_BUILD_VERSION=2.2
+export TISSUESTACK_BUILD_VERSION=2.3
 export IS_RELEASE=1
 
 SPEC_FILE=tissuestack.spec

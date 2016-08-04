@@ -2,7 +2,7 @@
 %global debug_package %{nil}
 %global __os_install_post /usr/lib/rpm/brp-compress %{nil}
 Name:		tissuestack-clients
-Version:	2.2
+Version:	2.3
 Release:	0%{?dist}
 Summary:	TissueStack Clients
 
