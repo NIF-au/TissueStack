@@ -118,7 +118,9 @@ int		main(int argc, char **argv)
 				break;
 
 			case 'o':
-				out_file = tmp;
+                if (tmp.find(".raw") == std::string::npos)
+    			     out_file = tmp + ".raw";
+                else out_file = tmp;
 				break;
 
 			case '?':

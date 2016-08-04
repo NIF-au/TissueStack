@@ -23,7 +23,7 @@ const unsigned int tissuestack::utils::System::getNumberOfCores()
 	unsigned int cores = std::thread::hardware_concurrency();
 
 	if (cores > 0) return static_cast<const unsigned int>(cores);
-	
+
 	return static_cast<const unsigned int>(sysconf( _SC_NPROCESSORS_ONLN ));
 }
 
@@ -123,38 +123,28 @@ const bool tissuestack::utils::System::touchFile(
 	if (fd <= 0)
 		return false;
 
-	// fast forward and write 1 byte to cause padding!
+    if (size_in_bytes <= 0) {
+        close(fd);
+        return true;
+    }
+
+    if (ftruncate(fd, size_in_bytes) < 0) {
+        close(fd);
+		unlink(file.c_str());
+		return false;
+    }
+
+    /*
+    // fast forward and write 1 byte to cause padding!
 	char buf[] = {'\0'};
+    write(fd, (void *) buf, 1);
 	if ((lseek(fd, size_in_bytes-1, SEEK_SET) < 0) ||
 			write(fd, (void *) buf, 1) < 0)
 	{
 		close(fd);
 		unlink(file.c_str());
 		return false;
-	}
-
-	/* we write zeroes in 100 MB chunks or less
-	const unsigned int BUFFER_SIZE = 1024 * 1000 * 100;
-	char * buffer = new char[BUFFER_SIZE];
-	memset(buffer, 0, BUFFER_SIZE);
-
-	unsigned long long int bytesLeft = size_in_bytes;
-	while (bytesLeft > 0)
-	{
-		unsigned int bytesToBeWritten =
-			bytesLeft >= BUFFER_SIZE ? BUFFER_SIZE : bytesLeft;
-		if ((write(fd, buffer, bytesToBeWritten)) != bytesToBeWritten)
-		{
-			delete [] buffer;
-			close(fd);
-			unlink(file.c_str());
-			return false;
-		}
-		bytesLeft = bytesLeft-bytesToBeWritten;
-	}
-
-	delete [] buffer;
-	*/
+	}*/
 
 	close(fd);
 
