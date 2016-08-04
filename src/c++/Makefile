@@ -172,7 +172,7 @@ server: clean prepare compile install
 	" > $(BUILD_SRC_PATH)$(DATA_PATH)/sql/update_$(APP_NAME)_config.sql;
 
 	@echo -e "\tCreating environment script containing the desired paths..."
-		@if [ $(IS_DEBIAN_BASED) -gt 0 ] && [ $(IS_UBUNTU_BASED) -eq 0 ]; then \
+		@if [ $(IS_DEBIAN_BASED) -gt 0 ] || [ $(IS_UBUNTU_BASED) -eq 0 ]; then \
 		 echo "#!/bin/bash\n\
 TISSUE_STACK_HOME=$(DATA_PATH)\n\
 IMAGE_SERVER_EXE=$(BINS_PATH)/$(EXE_NAME)\n\
@@ -230,7 +230,7 @@ clients: clean prepare compile-tools install-tools
 	@cp $(JARS_PATH)/*.jar $(BUILD_SRC_PATH)$(LIBS_PATH)
 
 	@echo -e "\tCreating environment script containing the desired paths..."
-		@if [ $(IS_DEBIAN_BASED) -gt 0 ] && [ $(IS_UBUNTU_BASED) -eq 0 ]; then \
+		@if [ $(IS_DEBIAN_BASED) -gt 0 ] || [ $(IS_UBUNTU_BASED) -eq 0 ]; then \
 		 echo "#!/bin/bash\n\
 TISSUE_STACK_JARS=$(LIBS_PATH)\n\
 PATH=\$$PATH:$(BINS_PATH)\n\
