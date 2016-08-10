@@ -32,8 +32,8 @@
     <!-- NAVIGATION -->
     <section id="navigation" class="block">
       <ul>
-          <li><a id="ts" onclick="showPage(event)" class="active" href="#ts">TissueStack</a></li>
-          <li><a id="cl" onclick="showPage(event)" href="#cl">TS CL Tool</a></li>
+          <li><a id="ts" onclick="showPage(event)" class="active" href="#ts">Tissuestack</a></li>
+          <li><a id="cl" onclick="showPage(event)" href="#cl">CL Tool</a></li>
       </ul>
     </section>
 
@@ -48,11 +48,211 @@
         </div>
 
         <!-- MAIN CONTENT -->
-        <div id="main_content_wrap" style="height: 90%">
+        <div id="main_content_wrap" style="padding-bottom: 50px">
           <section id="main_content" class="inner">
+              <h4>Installation Guide</h4>
               <p>
-               Installation Instructions coming soon..
+               Tissuestack requires linux as a running platform.
+               Binary packages for the following distros exist:
+               <a href="#package_ubuntu">Ubuntu</a>,
+               <a href="#package_debian"> Debian</a>,
+               <a href="#package_centos">CentOS</a>,
+               <a href="#package_fedora">Fedora</a> and
+               <a href="#package_suse">OpenSUSE</a>.</br></br>
+               Below you'll find a more detailed description on how
+               to install the package for any of the respective distros
+               (incl. download links).</br></br>
+               <span style="text-decoration: underline">REMARKS:</span></br>
+               For the more recent versions of Tissuestack you'll find two
+               packages, one for each, the server as well as the client components:</br>
+               tissuestack-VERSION.xxx (server) and tissuestack-clients-VERSION.xxx
+               (client tools)</br></br>
+               Any dependencies for the packages are dealt with by the package
+               manager/install with only one, deliberate, exception:</br> The tissuestack-clients
+               package contains a command line tool which relies on a java runtime.</br>
+               Should a runtime version greater than 1.6 not be present on the system
+               it has to be installed separately.
+               </br></br>
+               It's highly recommended that you pick the Tissuestack version
+               that's the most recent (highest version number)!</br></br>
+               Super/root user privileges are needed for installation!
+           </p></br>
+
+           <h4>Post Installation Notes</h4>
+           <p>
+               After successful installation the web interface should be accessible
+               via the apache webserver at port 80.</br>Using any browser of your choice
+               and entering the following replaced with the respective machine name or ip
+               you should now be able to use Tissuestack:</br>
+               <span style=" text-decoration: underline">http://machine_name_or_ip/</span></br></br>
+
+               While Tissuestack does -as of now- not have a user concept,
+               an admin password protects certain functionality such as upload/
+               import and deletion of datasets and configuration changes.</br>
+               It defaults to <span style="font-style: italic;">@minTischYu</span>
+                and should be changed after installation.</br></br>
+
+               It's worth noting that -for the client tools only-
+               in order for PATH inclusions to take place, a new terminal session
+               has to be established.</br>
+               Once that has been done the shell completion should present you
+               with all the Tissuestack client commands available.</br></br>
+           </p></br>
+
+           <h4>Potential Issues</h4>
+           <p>
+               Since Tissuestack uses various system components and other software
+               there is a potential that things can fail after what seems to have
+               been a successful install on the surface.</br></br>
+               That said it rarely happens especially not if a physical machine/VM
+               is dedicated to Tissuestack.</br></br>
+
+               The biggest problem in the context of installation exists on machines
+               that have already a web server running that is not apache.</br>
+               Here there will be an "argument" over usage of port 80 which needs to be addressed.</br>
+               This can be done so by changing the configuration of any of the 2 web servers
+               to an alternate port that's usually not blocked by the firewall,
+               8080 or 8008 for example.</br></br>
+
+               Similarly, if there exist one or more site configurations
+               for a apache configuration so they can get into each others'
+               way.</br> This problem would have to be solved manually by the admin,
+               tweaking configs/paths such that there is no conflict any more.</br></br>
+
+               Other potential pitfalls include the firewall and/or selinux but
+               ordinarily the common cases have been tested/accounted for and
+               the install handles them appropriately.</br></br>
+           </p></br>
+
+              <h5 id="package_centos">CentOS</h5>
               <p>
+                  Version 6 and 7 of CentOS are supported.
+                  The installation is identical with the only exception of
+                  the download links.</br></br>
+
+                  For el6 download a tissuestack package/version from:
+                  <a href="http://tissuestack.org/downloads/CentOS/el6" target="_blank">
+                  tissuestack.org</a> or
+                  <a href="http://tissuestack.com/downloads/CentOS/el6" target="_blank">
+                  tissuestack.com</a></br></br>
+                  Download the following third party dependencies:</br>
+                  <a href="http://tissuestack.org/downloads/CentOS/el6/dcmtk-3.6.0-0.el6.x86_64.rpm">
+                  DCMTK 3.6.0</a></br>
+                  <a href="http://tissuestack.org/downloads/CentOS/el6/minc-2.1-0.el6.x86_64.rpm">
+                  MINC 2.1.0</a></br>
+                  <a href="http://tissuestack.org/downloads/CentOS/el6/nifticlib-2.0-0.el6.x86_64.rpm">
+                  NIFTI CLIB 2.0.0</a></br></br>
+
+                  For el7s download a tissuestack package/version from:
+                  <a href="http://tissuestack.org/downloads/CentOS/el7" target="_blank">
+                  tissuestack.org</a> or
+                  <a href="http://tissuestack.com/downloads/CentOS/el7" target="_blank">
+                  tissuestack.com</a></br></br>
+                  Download the following third party dependencies:</br>
+                  <a href="http://tissuestack.org/downloads/CentOS/el7/dcmtk-3.6.0-16.el7.nux.x86_64.rpm">
+                  DCMTK 3.6.0</a></br>
+                  <a href="http://tissuestack.org/downloads/CentOS/el7/minc-2.1-0.el7.centos.x86_64.rpm">
+                  MINC 2.1.0</a></br>
+                  <a href="http://tissuestack.org/downloads/CentOS/el7/nifticlib-2.0-0.el7.centos.x86_64.rpm">
+                  NIFTI CLIB 2.0.0</a></br></br>
+
+                  Also install the epel repositories (if not already enabled),
+                  an easy way to do so is to use yum:
+                  <div style="border: solid 1px; width: 180px;background-color: white;">
+                      &nbsp;yum install epel-release
+                  </div></br>
+
+                  To complete the actual installation just append all downloaded
+                  packages to the yum install call, separating them by spaces:
+                  <div style="border: solid 1px; width: 350px;background-color: white;">
+                      &nbsp;yum install tissuestack-VERSION.rpm dep1 dep2 ...
+                  </div>
+              </p></br>
+
+              <h5 id="package_debian">Debian</h5>
+              <p>
+                  The package has been built/tested using version 7</br></br>
+
+                  Download a tissuestack package/version from:
+                  <a href="http://tissuestack.org/downloads/Debian/" target="_blank">
+                  tissuestack.org</a> or
+                  <a href="http://tissuestack.com/downloads/Debian" target="_blank">
+                  tissuestack.com</a></br></br>
+
+                  To complete the actual installation there are two ways to proceed,
+                  the easiest/recommended one: to install gdebi which
+                  thereafter takes care of installation (incl. dependencies)...</br>
+                  <div style="border: solid 1px; width: 250px;background-color: white;">
+                      &nbsp;apt-get install gdebi</br>
+                      &nbsp;gdebi tissuestack_VERSION.deb
+                  </div></br>
+                  Alternatively you can run the following series of dpkg and apt-get
+                  commands to perform the installation. You shouldn't be too concerned
+                  about any error messages on the way as long as the last step
+                  completes without an error.</br></br>
+                  <div style="border: solid 1px; width: 250px;background-color: white;">
+                      &nbsp;apt-get install apache2 postgresql</br>
+                      &nbsp;dpkg -i tissuestack_VERSION.deb</br>
+                      &nbsp;apt-get install -f</br>
+                  </div></br>
+                  Note: the three apt-get calls mentioned could be replaced by aptitude calls.
+              </p></br>
+
+              <h5 id="package_ubuntu">Ubuntu</h5>
+              <p>
+                  The package has been built/tested using version 14.04.</br></br>
+
+                  Download a tissuestack package/version from:
+                  <a href="http://tissuestack.org/downloads/Ubuntu/" target="_blank">
+                  tissuestack.org</a> or
+                  <a href="http://tissuestack.com/downloads/Ubuntu" target="_blank">
+                  tissuestack.com</a></br></br>
+
+                  The rest of the installation is identical to
+                  <a href="#package_debian">Debian</a>
+              </p></br>
+
+              <h5 id="package_fedora">Fedora</h5>
+              <p>
+                  The package has been built/tested using version 22</br></br>
+
+                  Download a tissuestack package/version from:
+                  <a href="http://tissuestack.org/downloads/Fedora/22" target="_blank">
+                  tissuestack.org</a> or
+                  <a href="http://tissuestack.com/downloads/Fedora/22" target="_blank">
+                  tissuestack.com</a></br></br>
+                  Download the following third party dependency:
+                  <a href="http://tissuestack.org/downloads/Fedora/22/minc-2.1-0.fc22.x86_64.rpm">
+                  MINC 2.1.0</a></br></br>
+
+                  To complete the actual installation just append all downloaded
+                  packages to the dnf install call, separating them by spaces:
+                  <div style="border: solid 1px; width: 350px;background-color: white;">
+                      &nbsp;dnf install tissuestack-VERSION.rpm dep ...
+                  </div>
+              </p></br>
+
+              <h5 id="package_suse">OpenSUSE</h5>
+              <p>
+                  The package has been built/tested using version 13.2</br></br>
+
+                  Download a tissuestack package/version from:
+                  <a href="http://tissuestack.org/downloads/OpenSUSE/13.2" target="_blank">
+                  tissuestack.org</a> or
+                  <a href="http://tissuestack.com/downloads/OpenSUSE/13.2" target="_blank">
+                  tissuestack.com</a></br></br>
+                  Download the following third party dependencies:</br>
+                  <a href="http://tissuestack.org/downloads/OpenSUSE/13.2/minc-2.1-0.x86_64.rpm">
+                  MINC 2.1.0</a></br>
+                  <a href="http://tissuestack.org/downloads/OpenSUSE/13.2/nifticlib-2.0-0.x86_64.rpm">
+                  NIFTI CLIB 2.0.0</a></br></br>
+
+                  To complete the actual installation just append all downloaded
+                  packages to the zypper install call, separating them by spaces:
+                  <div style="border: solid 1px; width: 350px;background-color: white;">
+                      &nbsp;zypper install tissuestack-VERSION.rpm dep1 dep2 ...
+                  </div>
+              </p></br>
 
           </section>
         </div>
@@ -83,7 +283,7 @@
                     <p>
 
                  <h4>Where can I get it?</h4>
-                    You can use the download link above or use the TS client packages for linux (work in progress).
+                    You can use the download link above (.zip folder symbol) or use the TS client packages for linux.
 
                 <h4>Are there any pre-requisites to using the CL tool?</h4>
                     <p>
@@ -566,7 +766,7 @@
     <div id="footer_wrap"
         style="width: 100%;min-height: 40px;height:5%;float:right;position:fixed;bottom:0;left:0;">
       <footer style="text-align: center">
-        <p class="copyright">Tissuestack maintained by <a href="https://github.com/NIF-au">NIF-au</a></p>
+        <p class="copyright" style="color: rgb(241, 241, 241)">Tissuestack maintained by <a href="https://github.com/NIF-au">NIF-au</a></p>
       </footer>
     </div>
 
