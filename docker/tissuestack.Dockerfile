@@ -1,8 +1,5 @@
 FROM ubuntu:14.04
 
-RUN mkdir /tissuestack
-WORKDIR /tissuestack
-
 RUN apt-get update
 RUN apt-get -y install make
 RUN apt-get -y install g++
@@ -14,13 +11,11 @@ RUN apt-get -y install libminc-dev
 RUN apt-get -y install libpqxx-dev
 RUN apt-get -y install libdcmtk-dev
 
-RUN mkdir -p /tissuestack/src
-COPY ./src/c++ /tissuestack/src/c++
+RUN mkdir -p /src
+COPY ./src/c++ /src/c++
 
-WORKDIR /tissuestack/src/c++
+WORKDIR /src/c++
 
 RUN make && make compile && make install
-
-WORKDIR /usr/local/tissuestack/2.3/bin
 
 CMD /usr/local/tissuestack/2.3/bin/TissueStackServer

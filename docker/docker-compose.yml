@@ -1,0 +1,32 @@
+version: "3.9"
+services:
+  tissuestack-server:
+    image: tissuestack-server
+    build:
+      context: ../
+      dockerfile: ./docker/tissuestack.Dockerfile
+    ports:
+      - 4242:4242
+    depends_on:
+      tissuestack-db:
+        condition: service_healthy
+    network_mode: "host"
+    volumes:
+      - ${TISSUESTACK_DATA_DIR}:/opt/tissuestack
+
+  tissuestack-db:
+    image: tissuestack-db
+    build:
+      context: ../
+      dockerfile: ./docker/postgres.Dockerfile
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ${POSTGRES_DATA_DIR}:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'psql -U tissuestack -d tissuestack'"]
+      interval: 1s
+      timeout: 3s
+      retries: 3
