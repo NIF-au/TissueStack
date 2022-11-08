@@ -34,3 +34,4 @@ test
 dist
 build
 node_modules
+.env
