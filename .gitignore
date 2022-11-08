@@ -37,3 +37,4 @@ node_modules
 .env
 tissuestack-data
 postgres-data
+docker-compose.override.yml
