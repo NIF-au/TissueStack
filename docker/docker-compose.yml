@@ -1,6 +1,7 @@
 version: "3.9"
 services:
   tissuestack-server:
+    restart: always
     image: tissuestack-server
     build:
       context: ../
@@ -15,6 +16,7 @@ services:
       - ${TISSUESTACK_DATA_DIR}:/opt/tissuestack
 
   tissuestack-db:
+    restart: always
     image: tissuestack-db
     build:
       context: ../
