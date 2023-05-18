@@ -3,6 +3,11 @@
 ## Create .env file
 
 Copy default.env into .env and update parameters
+```
+cd docker
+cp default.env .env
+# Modify .env here
+```
 
 ## docker compose build
 
@@ -18,6 +23,7 @@ Wait for `container for service "tissuestack-db" is unhealthy`
 
 Shell into tissuestack-db container
 ```
+docker compose exec tissuestack-db /bin/bash
 cd /sql
 bash init-db.sh
 ```
