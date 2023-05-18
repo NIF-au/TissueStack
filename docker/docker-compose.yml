@@ -6,8 +6,8 @@ services:
     build:
       context: ../
       dockerfile: ./docker/tissuestack.Dockerfile
-    ports:
-      - 4242:4242
+    # ports:
+    #   - 4242:4242
     depends_on:
       tissuestack-db:
         condition: service_healthy
